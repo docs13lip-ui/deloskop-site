@@ -29,6 +29,7 @@
   --sect:clamp(64px, 9vw, 112px);
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:17px;line-height:1.5;-webkit-font-smoothing:antialiased}
 a{color:var(--accent);text-decoration:none}
@@ -127,10 +128,20 @@ p{margin:0}
 
 /* pricing */
 .pricing .sect-head{align-items:center;text-align:center;margin-inline:auto}
-.plans{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:1000px;margin:0 auto}
-@media (max-width:860px){.plans{grid-template-columns:1fr}}
-.plan{background:var(--bg);border-radius:32px;padding:clamp(28px,3.5vw,48px);display:flex;flex-direction:column;gap:28px}
-.plan.pro{box-shadow:0 0 0 2px var(--accent)}
+.plans{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;max-width:1248px;margin:0 auto}
+@media (max-width:1180px){.plans{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.plans{grid-template-columns:1fr}}
+.plan{background:var(--bg);border-radius:28px;padding:32px 28px;display:flex;flex-direction:column;gap:22px}
+.plan.pro{box-shadow:0 0 0 2px var(--accent);background:#fff}
+.badge{display:inline-block;margin-left:6px;font-size:12px;font-weight:600;color:#fff;background:var(--accent);border-radius:999px;padding:3px 9px;vertical-align:2px}
+.per{font-size:14px;color:var(--muted);margin-top:-14px;min-height:20px}
+.price b{font-size:38px;white-space:nowrap}
+.price{flex-wrap:wrap;row-gap:0}
+.period{display:inline-flex;gap:4px;background:var(--bg);border-radius:999px;padding:4px;margin-top:8px}
+.period button{border:0;background:transparent;font:inherit;font-size:15px;font-weight:500;color:var(--ink2);padding:10px 18px;border-radius:999px;cursor:pointer;min-height:44px}
+.period button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.period em{font-style:normal;color:var(--ok);font-weight:600}
+.plans-note{text-align:center;color:var(--ink2);font-size:15px;margin-top:28px}
 .plan-name{font-size:20px;font-weight:600}
 .plan-for{font-size:16px;color:var(--muted);margin-top:4px}
 .price{display:flex;align-items:baseline;gap:10px}
@@ -160,6 +171,26 @@ footer{background:var(--card);border-top:1px solid var(--line)}
 footer .wrap{padding-block:40px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
 footer .left{display:flex;align-items:center;gap:10px}
 footer a{color:var(--ink2)}
+
+/* обратная связь */
+.fb-btn{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:30;display:flex;align-items:center;gap:8px;border:0;cursor:pointer;font:inherit;font-size:15px;font-weight:600;color:var(--ink);background:#fff;border-radius:999px;padding:12px 18px;min-height:44px;box-shadow:0 2px 6px rgba(0,0,0,.08),0 12px 32px rgba(0,0,0,.12)}
+.fb-btn:hover{color:var(--accent)}
+.fb-panel{position:fixed;right:20px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:31;width:min(380px,calc(100vw - 40px));background:#fff;border-radius:24px;padding:24px;box-shadow:0 4px 12px rgba(0,0,0,.08),0 24px 64px rgba(0,0,0,.18);display:flex;flex-direction:column;gap:14px}
+.fb-panel h3{font-size:20px;letter-spacing:-0.02em}
+.fb-kinds{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.fb-kinds button,.fb-stars button{border:1px solid var(--line);background:#fff;font:inherit;font-size:14px;color:var(--ink);border-radius:14px;padding:10px 6px;cursor:pointer;min-height:44px}
+.fb-kinds button[aria-pressed="true"]{border-color:var(--accent);background:#EEF4FE;color:var(--accent);font-weight:600}
+.fb-stars{display:flex;gap:6px;align-items:center;font-size:14px;color:var(--ink2)}
+.fb-stars button{width:44px;padding:0;font-size:16px}
+.fb-stars button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.fb-panel textarea,.fb-panel input{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:14px;padding:12px 14px;font:inherit;font-size:15px;color:var(--ink);background:var(--bg);resize:vertical}
+.fb-panel textarea{min-height:96px}
+.fb-send{border:0;border-radius:14px;background:var(--accent);color:#fff;font:inherit;font-size:16px;font-weight:600;min-height:48px;cursor:pointer}
+.fb-send:disabled{opacity:.6;cursor:default}
+.fb-close{position:absolute;right:14px;top:14px;border:0;background:transparent;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:20px;color:var(--muted)}
+.fb-note{font-size:13px;color:var(--muted)}
+.fb-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:29;background:var(--ink);color:#fff;border-radius:16px;padding:14px 18px;font-size:15px;display:flex;gap:12px;align-items:center;box-shadow:0 12px 32px rgba(0,0,0,.2);max-width:calc(100vw - 40px)}
+.fb-toast button{border:0;background:#fff;color:var(--ink);font:inherit;font-weight:600;border-radius:10px;padding:8px 12px;cursor:pointer;white-space:nowrap}
 :focus-visible{outline:3px solid rgba(11,99,229,.45);outline-offset:2px;border-radius:6px}
 </style>
 </head>
@@ -305,33 +336,48 @@ footer a{color:var(--ink2)}
   <section class="sect white pricing" id="price">
     <div class="wrap">
       <div class="sect-head">
-        <h2 class="h2">Попробуйте бесплатно. Работайте без ограничений.</h2>
+        <h2 class="h2">Попробуйте бесплатно. Растите вместе с нами.</h2>
         <p class="lead">Частным лицам — картой. Компаниям и ИП — по счёту, с закрывающими документами.</p>
+        <div class="period" role="group" aria-label="Период оплаты">
+          <button type="button" data-period="m">Помесячно</button>
+          <button type="button" data-period="y" class="on">За год <em>−17%</em></button>
+        </div>
       </div>
       <div class="plans">
-        <div class="plan">
-          <div><div class="plan-name">Бесплатно</div><div class="plan-for">Чтобы разово проверить компанию</div></div>
-          <div class="price"><b>0 ₽</b></div>
+        <div class="plan ">
+          <div><div class="plan-name">Бесплатно </div><div class="plan-for">Чтобы разово проверить компанию</div></div>
+          <div class="price"><b>0 ₽</b></div><div class="per">навсегда</div>
           <ul>
-            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>3 проверки в день</li>
-            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Итог: можно работать или нет</li>
-            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Карточка реквизитов</li>
+            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>3 проверки в день</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Светофор рисков</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Карточка реквизитов</li>
           </ul>
           <a class="cta ghost" href="#top" data-focus-inn>Проверить бесплатно</a>
         </div>
-        <div class="plan pro">
-          <div><div class="plan-name">Про</div><div class="plan-for">Для тех, кто платит контрагентам каждый день</div></div>
-          <div class="price"><b>1 490 ₽</b><span>в месяц</span></div>
+        <div class="plan ">
+          <div><div class="plan-name">Старт </div><div class="plan-for">ИП, самозанятым и частным лицам</div></div>
+          <div class="price"><b data-m="490 ₽" data-y="408 ₽">408 ₽</b><span>в месяц</span></div><div class="per" data-m="при оплате помесячно" data-y="4 900 ₽ за год — 2 месяца в подарок">4 900 ₽ за год — 2 месяца в подарок</div>
           <ul>
-            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Проверки без ограничений</li>
-            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Полный отчёт со всеми источниками</li>
-            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>ИИ-ассистент по 115-ФЗ</li>
-            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Конструктор документов</li>
-            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Слежение за изменениями у партнёров</li>
+            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Базовые проверки без лимита</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>3 полных отчёта в месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>10 вопросов ИИ-ассистенту</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Слежение за 3 компаниями</li>
           </ul>
-          <a class="cta primary" href="mailto:help@deloskop.ru?subject=%D0%A5%D0%BE%D1%87%D1%83%20%D0%9F%D1%80%D0%BE">Подключить Про</a>
+          <a class="cta ghost" href="mailto:help@deloskop.ru?subject=Подключить%20тариф%20Старт">Подключить «Старт»</a>
+        </div>
+        <div class="plan pro">
+          <div><div class="plan-name">Про <span class="badge">Рекомендуем</span></div><div class="plan-for">Малому бизнесу и бухгалтерам</div></div>
+          <div class="price"><b data-m="1 490 ₽" data-y="1 242 ₽">1 242 ₽</b><span>в месяц</span></div><div class="per" data-m="при оплате помесячно" data-y="14 900 ₽ за год — 2 месяца в подарок">14 900 ₽ за год — 2 месяца в подарок</div>
+          <ul>
+            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Базовые проверки без лимита</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>20 полных отчётов в месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>ИИ-ассистент по 115-ФЗ без лимита</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Конструктор документов</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Слежение за 10 компаниями</li>
+          </ul>
+          <a class="cta primary" href="mailto:help@deloskop.ru?subject=Подключить%20тариф%20Про">Подключить «Про»</a>
+        </div>
+        <div class="plan ">
+          <div><div class="plan-name">Бизнес </div><div class="plan-for">Отделам закупок и продаж</div></div>
+          <div class="price"><b data-m="4 990 ₽" data-y="4 158 ₽">4 158 ₽</b><span>в месяц</span></div><div class="per" data-m="при оплате помесячно" data-y="49 900 ₽ за год — 2 месяца в подарок">49 900 ₽ за год — 2 месяца в подарок</div>
+          <ul>
+            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>До 5 сотрудников</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>80 полных отчётов в месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Слежение за 50 компаниями</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Ежедневный контроль блокировок у 3 партнёров</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Выгрузка в Excel и 1С</li>
+          </ul>
+          <a class="cta ghost" href="mailto:help@deloskop.ru?subject=Подключить%20тариф%20Бизнес">Подключить «Бизнес»</a>
         </div>
       </div>
+      <p class="plans-note">Нужно больше отчётов? Докупите 10 полных отчётов за 990 ₽ или напишите нам — рассчитаем тариф для вашей компании.</p>
     </div>
   </section>
 
@@ -342,6 +388,7 @@ footer a{color:var(--ink2)}
         <details open><summary>Чем Делоскоп отличается от больших сервисов проверки?</summary><p>Мы не пересказываем реестры, а даём вывод: можно работать или нет, и что сделать, чтобы обезопасить себя.</p></details>
         <details><summary>Подойдёт ли Делоскоп частному лицу?</summary><p>Да. Проверьте подрядчика, арендодателя или будущего работодателя, прежде чем подписывать договор и платить.</p></details>
         <details><summary>Гарантирует ли проверка, что банк не заблокирует счёт?</summary><p>Нет. Решение принимает банк. Делоскоп помогает заметить риски заранее и правильно подготовить документы.</p></details>
+        <details><summary>Можно ли сменить тариф?</summary><p>Да, в любой момент. При переходе на тариф выше доплачиваете только разницу за оставшиеся дни.</p></details>
         <details><summary>Как оплатить?</summary><p>Частные лица платят картой. Компании и ИП — по счёту, закрывающие документы пришлём автоматически.</p></details>
         <details><summary>Где хранятся мои данные?</summary><p>На серверах в России, в соответствии с 152-ФЗ.</p></details>
       </div>
@@ -359,11 +406,40 @@ footer a{color:var(--ink2)}
   </div>
 </footer>
 
+<button type="button" class="fb-btn" id="fbOpen" aria-haspopup="dialog">
+  <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 4h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H9l-4 3v-3H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+  Отзыв
+</button>
+<div class="fb-panel" id="fbPanel" role="dialog" aria-modal="false" aria-labelledby="fbTitle" hidden>
+  <button type="button" class="fb-close" id="fbClose" aria-label="Закрыть">×</button>
+  <h3 id="fbTitle">Как вам Делоскоп?</h3>
+  <div class="fb-kinds" role="group" aria-label="Тип сообщения">
+    <button type="button" data-kind="praise" aria-pressed="false">Нравится</button>
+    <button type="button" data-kind="idea" aria-pressed="false">Есть идея</button>
+    <button type="button" data-kind="problem" aria-pressed="false">Не работает</button>
+  </div>
+  <div class="fb-stars" id="fbStars" role="group" aria-label="Оценка от 1 до 5">
+    <span>Оценка:</span>
+    <button type="button" data-r="1" aria-pressed="false">1</button><button type="button" data-r="2" aria-pressed="false">2</button><button type="button" data-r="3" aria-pressed="false">3</button><button type="button" data-r="4" aria-pressed="false">4</button><button type="button" data-r="5" aria-pressed="false">5</button>
+  </div>
+  <label class="sr-only" for="fbText">Ваше сообщение</label>
+  <textarea id="fbText" maxlength="4000" placeholder="Что понравилось, чего не хватает или что сломалось?"></textarea>
+  <label class="sr-only" for="fbEmail">Почта для ответа</label>
+  <input id="fbEmail" type="email" maxlength="200" placeholder="Почта для ответа — если хотите">
+  <button type="button" class="fb-send" id="fbSend">Отправить</button>
+  <p class="fb-note" id="fbNote">Сообщение увидит только команда Делоскопа.</p>
+</div>
+
 <script>
 (function(){
   var form=document.getElementById('check'), input=document.getElementById('inn'), note=document.getElementById('note');
   var def=note.textContent;
   function focusInn(e){e.preventDefault();window.scrollTo({top:0,behavior:'smooth'});setTimeout(function(){input.focus({preventScroll:true})},350);}
+  document.querySelectorAll('[data-period]').forEach(function(b){b.addEventListener('click',function(){
+    var p=b.getAttribute('data-period');
+    document.querySelectorAll('[data-period]').forEach(function(x){x.classList.toggle('on',x===b)});
+    document.querySelectorAll('.plans [data-m]').forEach(function(el){el.textContent=el.getAttribute('data-'+p)});
+  })});
   document.querySelectorAll('[data-focus-inn]').forEach(function(a){a.addEventListener('click',focusInn)});
   input.addEventListener('input',function(){note.className='note';note.textContent=def;});
   form.addEventListener('submit',function(e){
@@ -377,6 +453,52 @@ footer a{color:var(--ink2)}
     note.className='note ok';
     note.innerHTML='Сервис проверки запускается совсем скоро. Напишите на <a href="mailto:help@deloskop.ru">help@deloskop.ru</a> — сообщим о запуске первыми.';
   });
+
+  // ---- обратная связь и ошибки ----
+  var API=(location.hostname.endsWith('deloskop.ru')?'https://api.deloskop.ru':'');
+  var errs=[], sentErr=0;
+  function logErr(msg,src){ errs.push(String(msg).slice(0,300)); if(errs.length>5)errs.shift();
+    if(!API||sentErr>=5)return; sentErr++;
+    try{fetch(API+'/api/client-error',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:String(msg).slice(0,1000),source:src||'',page:location.pathname}),keepalive:true});}catch(e){} }
+  window.addEventListener('error',function(e){logErr(e.message,(e.filename||'')+':'+(e.lineno||''))});
+  window.addEventListener('unhandledrejection',function(e){logErr('Promise: '+(e.reason&&e.reason.message||e.reason))});
+  var panel=document.getElementById('fbPanel'), openB=document.getElementById('fbOpen'), fbNote=document.getElementById('fbNote');
+  var st={kind:null,rating:null};
+  function openFb(kind){panel.hidden=false; if(kind)pick(kind); document.getElementById('fbText').focus();}
+  function pick(k){st.kind=k; panel.querySelectorAll('[data-kind]').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.kind===k)});
+    document.getElementById('fbText').placeholder=k==='problem'?'Что именно не работает? Где нажали, что увидели?':k==='idea'?'Чего не хватает? Что добавить в первую очередь?':'Что понравилось больше всего?';}
+  openB.addEventListener('click',function(){panel.hidden?openFb():panel.hidden=true});
+  document.getElementById('fbClose').addEventListener('click',function(){panel.hidden=true;openB.focus()});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!panel.hidden){panel.hidden=true;openB.focus()}});
+  panel.querySelectorAll('[data-kind]').forEach(function(b){b.addEventListener('click',function(){pick(b.dataset.kind)})});
+  panel.querySelectorAll('[data-r]').forEach(function(b){b.addEventListener('click',function(){st.rating=+b.dataset.r;
+    panel.querySelectorAll('[data-r]').forEach(function(x){x.setAttribute('aria-pressed',+x.dataset.r<=st.rating)})})});
+  document.getElementById('fbSend').addEventListener('click',function(){
+    var text=document.getElementById('fbText').value.trim(), email=document.getElementById('fbEmail').value.trim(), btn=this;
+    if(!st.kind){fbNote.textContent='Выберите: нравится, есть идея или не работает.';return;}
+    if(!text&&!st.rating){fbNote.textContent='Напишите пару слов или поставьте оценку.';return;}
+    var body={kind:st.kind,rating:st.rating,message:text||null,email:email||null,page:location.pathname+location.hash,
+      context:{screen:innerWidth+'x'+innerHeight,lang:navigator.language,errors:errs}};
+    function fail(){fbNote.innerHTML='Не получилось отправить. Напишите нам на <a href="mailto:help@deloskop.ru">help@deloskop.ru</a> — ответим.';btn.disabled=false;}
+    if(!API){fail();return;}
+    btn.disabled=true; fbNote.textContent='Отправляем…';
+    fetch(API+'/api/feedback',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+      .then(function(r){if(!r.ok)throw 0; panel.querySelector('h3').textContent='Спасибо!';
+        fbNote.textContent=st.kind==='problem'?'Мы уже получили сообщение и разбираемся.':'Мы читаем каждый отзыв.';
+        document.getElementById('fbText').value=''; setTimeout(function(){panel.hidden=true;btn.disabled=false;panel.querySelector('h3').textContent='Как вам Делоскоп?'},2500);})
+      .catch(fail);
+  });
+  // мини-опрос: через 8 секунд после первой проверки, не чаще раза в 30 дней
+  function askLater(){ var k='fbAsked', now=Date.now(), last=0;
+    try{last=+localStorage.getItem(k)||0}catch(e){}
+    if(now-last<30*864e5)return;
+    setTimeout(function(){ try{localStorage.setItem(k,now)}catch(e){}
+      var t=document.createElement('div'); t.className='fb-toast'; t.setAttribute('role','status');
+      t.innerHTML='<span>Чего не хватает Делоскопу? Ответ займёт 20 секунд.</span>';
+      var b=document.createElement('button'); b.type='button'; b.textContent='Ответить';
+      b.onclick=function(){t.remove();openFb('idea')}; t.appendChild(b); document.body.appendChild(t);
+      setTimeout(function(){t.remove()},12000); },8000); }
+  form.addEventListener('submit',askLater);
 })();
 </script>
 </body>

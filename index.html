@@ -426,6 +426,7 @@ footer a{color:var(--ink2)}
   <textarea id="fbText" maxlength="4000" placeholder="Что понравилось, чего не хватает или что сломалось?"></textarea>
   <label class="sr-only" for="fbEmail">Почта для ответа</label>
   <input id="fbEmail" type="email" maxlength="200" placeholder="Почта для ответа — если хотите">
+  <input id="fbSite" name="website" type="text" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
   <button type="button" class="fb-send" id="fbSend">Отправить</button>
   <p class="fb-note" id="fbNote">Сообщение увидит только команда Делоскопа.</p>
 </div>
@@ -463,8 +464,10 @@ footer a{color:var(--ink2)}
   window.addEventListener('error',function(e){logErr(e.message,(e.filename||'')+':'+(e.lineno||''))});
   window.addEventListener('unhandledrejection',function(e){logErr('Promise: '+(e.reason&&e.reason.message||e.reason))});
   var panel=document.getElementById('fbPanel'), openB=document.getElementById('fbOpen'), fbNote=document.getElementById('fbNote');
-  var st={kind:null,rating:null};
-  function openFb(kind){panel.hidden=false; if(kind)pick(kind); document.getElementById('fbText').focus();}
+  var st={kind:null,rating:null,token:'',acts:0};
+  function getToken(){ if(!API||st.token)return; fetch(API+'/api/feedback/token').then(function(r){return r.json()}).then(function(j){st.token=j.token}).catch(function(){}); }
+  panel.addEventListener('pointerdown',function(){st.acts++}); panel.addEventListener('keydown',function(){st.acts++});
+  function openFb(kind){panel.hidden=false; getToken(); if(kind)pick(kind); document.getElementById('fbText').focus();}
   function pick(k){st.kind=k; panel.querySelectorAll('[data-kind]').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.kind===k)});
     document.getElementById('fbText').placeholder=k==='problem'?'Что именно не работает? Где нажали, что увидели?':k==='idea'?'Чего не хватает? Что добавить в первую очередь?':'Что понравилось больше всего?';}
   openB.addEventListener('click',function(){panel.hidden?openFb():panel.hidden=true});
@@ -477,7 +480,7 @@ footer a{color:var(--ink2)}
     var text=document.getElementById('fbText').value.trim(), email=document.getElementById('fbEmail').value.trim(), btn=this;
     if(!st.kind){fbNote.textContent='Выберите: нравится, есть идея или не работает.';return;}
     if(!text&&!st.rating){fbNote.textContent='Напишите пару слов или поставьте оценку.';return;}
-    var body={kind:st.kind,rating:st.rating,message:text||null,email:email||null,page:location.pathname+location.hash,
+    var body={token:st.token,website:document.getElementById('fbSite').value||null,interactions:st.acts,kind:st.kind,rating:st.rating,message:text||null,email:email||null,page:location.pathname+location.hash,
       context:{screen:innerWidth+'x'+innerHeight,lang:navigator.language,errors:errs}};
     function fail(){fbNote.innerHTML='Не получилось отправить. Напишите нам на <a href="mailto:help@deloskop.ru">help@deloskop.ru</a> — ответим.';btn.disabled=false;}
     if(!API){fail();return;}
@@ -485,7 +488,7 @@ footer a{color:var(--ink2)}
     fetch(API+'/api/feedback',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
       .then(function(r){if(!r.ok)throw 0; panel.querySelector('h3').textContent='Спасибо!';
         fbNote.textContent=st.kind==='problem'?'Мы уже получили сообщение и разбираемся.':'Мы читаем каждый отзыв.';
-        document.getElementById('fbText').value=''; setTimeout(function(){panel.hidden=true;btn.disabled=false;panel.querySelector('h3').textContent='Как вам Делоскоп?'},2500);})
+        document.getElementById('fbText').value=''; st.token=''; setTimeout(function(){panel.hidden=true;btn.disabled=false;panel.querySelector('h3').textContent='Как вам Делоскоп?'},2500);})
       .catch(fail);
   });
   // мини-опрос: через 8 секунд после первой проверки, не чаще раза в 30 дней

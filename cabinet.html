@@ -66,6 +66,7 @@ ul.list .nm span{color:var(--muted);font-size:13px}
     <svg width="30" height="27" viewBox="0 0 72 64" fill="none" aria-hidden="true"><path d="M36 18.1A16 16 0 0 1 36 45.9A16 16 0 0 1 36 18.1Z" fill="#0B63E5"/><circle cx="28" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/><circle cx="44" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/></svg>
     <span>делоскоп</span>
   </a>
+  <a class="btn" href="/admin.html" id="adminLink" hidden>Админка</a>
   <a class="btn" href="/">Проверить</a>
   <button class="btn" id="logout" hidden>Выйти</button>
 </div>
@@ -129,7 +130,7 @@ ul.list .nm span{color:var(--muted);font-size:13px}
 <script>
 (function(){
   var API=(location.hostname.endsWith('deloskop.ru')?'https://api.deloskop.ru':'');
-  var PLANS={free:'Бесплатный',start:'Старт',pro:'Профи',business:'Бизнес'};
+  var PLANS={free:'Бесплатный',start:'Старт',pro:'Профи',business:'Бизнес',team:'Команда — без лимитов'};
   var LEVELS={low:'Низкий риск',medium:'Средний риск',high:'Высокий риск'};
   var $=function(id){return document.getElementById(id)};
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -207,8 +208,9 @@ ul.list .nm span{color:var(--muted);font-size:13px}
       var u=j.user;$('login').hidden=true;$('cab').hidden=false;$('logout').hidden=false;
       $('uname').textContent=u.name||'Личный кабинет';
       $('uemail').textContent=u.email||'';
+      $('adminLink').hidden=!(u.role==='admin'||u.role==='tester');
       $('uplan').textContent='Тариф: '+(PLANS[u.plan]||u.plan)+(u.plan_until?' · до '+fmtDate(u.plan_until):'');
-      $('sLeft').textContent=u.plan==='free'?'—':u.full_reports_left;
+      $('sLeft').textContent=u.plan==='free'?'—':(u.plan==='team'?'∞':u.full_reports_left);
       return Promise.all([call('/api/me/checks').then(function(c){renderChecks(c.checks||[])}),loadWatch()]);
     }).catch(function(err){$('loading').hidden=false;$('loading').textContent='Не получилось загрузить кабинет: '+err.message});
   }

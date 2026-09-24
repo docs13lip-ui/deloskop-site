@@ -110,6 +110,15 @@ select:disabled,input:disabled{background:var(--bg);color:var(--muted)}
       </div>
     </section>
 
+
+    <section class="card">
+      <h2>Данные ФНС</h2>
+      <p class="sub" style="margin:0 0 14px" id="dSub">Открытые данные налоговой в нашей базе: что загружено и что идёт сейчас.</p>
+      <ul class="list log" id="data"></ul>
+      <div class="field" style="margin-top:12px"><button class="btn primary" type="button" id="dRun">Загрузить сейчас</button></div>
+      <p class="note" id="dNote" role="status" aria-live="polite"></p>
+    </section>
+
     <section class="card">
       <h2>Команда и доступ</h2>
       <p class="sub" style="margin:0 0 14px">Впишите почту человека и выберите роль. Если он ещё не входил на сайт — роль включится при первом входе по коду.</p>
@@ -229,15 +238,32 @@ select:disabled,input:disabled{background:var(--bg);color:var(--muted)}
     var rows=j.log||[];
     $('log').innerHTML=rows.length?rows.map(function(l){var d=l.details||{};
       var what=l.action==='role'?'роль: '+(ROLES[d.from]||'новый аккаунт')+' → '+(ROLES[d.to]||d.to)
-        :l.action==='plan'?'тариф: '+(PLANS[d.from]||d.from)+' → '+(PLANS[d.to]||d.to)+(d.until?' до '+dt(d.until):''):l.action;
+        :l.action==='etl_run'?'запуск загрузки данных ФНС':l.action==='plan'?'тариф: '+(PLANS[d.from]||d.from)+' → '+(PLANS[d.to]||d.to)+(d.until?' до '+dt(d.until):''):l.action;
       return '<li><div class="nm"><b>'+esc(l.target||'')+'</b><span>'+esc(what)+' · '+esc(l.actor||'')+' · '+dt(l.created_at,true)+'</span></div></li>'}).join('')
       :'<li class="empty" style="border:0">Изменений пока не было.</li>';
   })}
 
+
+  var dTimer=null;
+  function num(n){return n==null?'—':Number(n).toLocaleString('ru-RU')}
+  function loadData(){return call('/api/admin/data').then(function(j){
+    var rows=j.datasets||[];
+    $('dSub').textContent='Загружено наборов: '+j.loaded+' из '+j.total+(j.running?'. Загрузка идёт — таблица обновляется сама.':'.');
+    $('data').innerHTML=rows.map(function(d){
+      var st=d.stage==='error'?'<span class="tag blocked">ошибка</span>':(['download','parse','write','check'].indexOf(d.stage)>=0&&j.running?'<span class="tag tester">'+esc(d.stage_name)+'</span>':'');
+      var info=d.rows?num(d.rows)+' записей · данные на '+dt(d.state_date)+' · загружено '+dt(d.loaded_at,true):'ещё не загружен';
+      var now=d.detail&&(d.stage==='error'||j.running&&d.stage!=='done'&&d.stage!=='fresh')?' · '+esc(d.detail)+' ('+dt(d.updated_at,true)+')':'';
+      return '<li><div class="nm"><b>'+esc(d.name)+st+'</b><span>'+info+now+'</span></div></li>'}).join('');
+    $('dRun').disabled=!isAdmin||j.running;
+    clearTimeout(dTimer);if(j.running)dTimer=setTimeout(function(){loadData().catch(function(){})},20000);
+  })}
+  $('dRun').onclick=function(){var b=this;b.disabled=true;
+    call('/api/admin/data/run',{method:'POST',body:{}}).then(function(j){note($('dNote'),j.message,'ok');setTimeout(function(){loadData()},4000)})
+      .catch(function(err){note($('dNote'),err.message,'err');b.disabled=false})};
   if(!API){$('loading').textContent='Админка работает на deloskop.ru.';return}
   loadSummary().then(function(){
     $('loading').hidden=true;$('adm').hidden=false;
-    return Promise.all([loadUsers(),loadFeedback(),loadLog()]);
+    return Promise.all([loadData(),loadUsers(),loadFeedback(),loadLog()]);
   }).catch(function(err){
     $('loading').hidden=true;$('deny').hidden=false;
     $('denyText').textContent=err.status===401?'Сначала войдите в кабинет по коду из письма, потом вернитесь сюда.':err.message;

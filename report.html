@@ -105,6 +105,9 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
 .zsk .zg ul{margin:2px 0 0;padding-left:18px}
 .zsk .zd{font-size:12px;color:var(--muted);margin-top:10px}
 .zsk a.cbr{display:inline-block;margin-top:10px;font-weight:600}
+.zsk .zgt{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin-top:6px}
+.zsk .zw{margin:4px 0 0;font-size:14px;color:var(--ink2)}
+.zsk .zdo{margin:4px 0 6px;font-size:14px}.zsk .zdo span{font-weight:600}
 @media print{.lights,.lights i{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 #tip{position:fixed;z-index:50;pointer-events:none;background:#1D1D1F;color:#fff;border-radius:10px;padding:7px 10px;font-size:12px;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.18)}
 #tip b{display:block;font-size:14px}
@@ -212,9 +215,10 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
     return '<div class="zsk"><div class="zsk-top"><div class="lights" aria-hidden="true"><i class="g'+on('low')+'"></i><i class="y'+on('medium')+'"></i><i class="r'+on('high')+'"></i></div>'+
       '<div><div class="l" style="font-size:12px;color:var(--muted)">Прогноз ЗСК — платформа «Знай своего клиента» Банка России</div><h3>'+esc(z.title)+' попасть в жёлтую или красную зону</h3></div></div>'+
       '<div class="zt">'+esc(z.text)+'</div>'+
-      (z.groups.length?'<div class="zg">'+z.groups.map(function(g){return '<b>'+esc(g.typology)+'</b><ul>'+g.items.map(function(i){return '<li>'+esc(i)+'</li>'}).join('')+'</ul>'}).join('')+'</div>':'')+
+      (z.groups.length?'<div class="zg"><div class="zgt">Типологии, по которым совпали признаки</div>'+z.groups.map(function(g){return '<b>'+esc(g.typology)+'</b><ul>'+g.items.map(function(i){return '<li>'+esc(i)+'</li>'}).join('')+'</ul>'+
+        (g.why?'<p class="zw">'+esc(g.why)+'</p>':'')+(g.todo?'<p class="zdo"><span>Что сделать:</span> '+esc(g.todo)+'</p>':'')}).join('')+'</div>':'')+
       '<a class="cbr noprint" href="'+esc(z.cbr_url)+'" target="_blank" rel="noopener">Проверить красную зону на сайте ЦБ →</a>'+
-      '<div class="zd">'+esc(z.disclaimer)+'</div></div>';}
+      '<div class="zd">'+esc(z.disclaimer)+(z.sources&&z.sources.length?' Основа типологий: '+z.sources.map(function(x){return '<a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.title)+'</a>'}).join('; ')+'.':'')+'</div></div>';}
   function dossierHtml(D){
     var lst=function(a){return '<ul>'+a.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>'};
     var h='<div class="score"><div class="num">'+D.score+'<small>/100</small></div><div><b>'+esc(D.headline)+'</b>'+

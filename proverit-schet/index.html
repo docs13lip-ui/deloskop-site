@@ -164,10 +164,10 @@ function parse(raw){
     BUYER.lastIndex=0;while((mm=BUYER.exec(win))){if(mm.index>best){best=mm.index;role='buyer'}}
     x.role=role;
   });
-  m=j.match(/БИК[^\d]{0,12}(\d{9})(?!\d)/i)||j.match(/(?:^|\D)(04\d{7})(?!\d)/);
+  m=t.match(/БИК[^\d]{0,12}(\d{9})(?!\d)/i)||j.match(/БИК[^\d]{0,12}(\d{9})(?!\d)/i)||t.match(/(?:^|\D)(04\d{7})(?!\d)/)||j.match(/(?:^|\D)(04\d{7})(?!\d)/);
   if(m)r.bik=m[1];
-  var accs=[];re=/(?:^|\D)(\d{20})(?!\d)/g;
-  while((m=re.exec(j)))accs.push(m[1]);
+  function all20(s){var a=[],mm,rr=/(?:^|\D)(\d{20})(?!\d)/g;while((mm=rr.exec(s)))a.push(mm[1]);return a}
+  var accs=all20(t);if(!accs.length)accs=all20(j);
   r.ks=accs.filter(function(a){return a.indexOf('301')===0})[0]||null;
   var cand=accs.filter(function(a){return a.indexOf('301')!==0});
   if(r.bik){var good=cand.filter(function(a){return accOk(r.bik,a)});r.acc=good[0]||cand[0]||null}else r.acc=cand[0]||null;

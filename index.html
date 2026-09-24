@@ -85,6 +85,18 @@ p{margin:0}
 .row b{font-weight:600;white-space:nowrap}
 .row .ok{color:var(--ok)} .row .warn{color:var(--warn)} .row .neutral{color:var(--ink2)}
 .verdict{background:var(--bg);border-radius:16px;padding:16px 18px;font-size:15px;color:#3A3A3C}
+.row .bad{color:#B3261E} .row b.d{white-space:normal;text-align:right;max-width:58%}
+.pill.medium{background:#FFF4E0;color:var(--warn)} .pill.high{background:#FDECEA;color:#B3261E}
+.report.loading{opacity:.55;transition:opacity .2s}
+.report .src{font-size:13px;color:var(--ink2)}
+.report-actions{display:flex;gap:10px;flex-wrap:wrap}
+.report-actions button{border:1px solid #D9D9D4;background:transparent;font:inherit;font-size:15px;font-weight:600;border-radius:12px;padding:10px 16px;cursor:pointer;color:var(--ink)}
+.report-actions button:hover{border-color:var(--accent);color:var(--accent)}
+.check{position:relative}
+.sugg{position:absolute;left:0;right:0;top:calc(100% + 6px);background:var(--card);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.14);list-style:none;margin:0;padding:6px;z-index:30;max-height:360px;overflow:auto}
+.sugg li{padding:10px 12px;border-radius:10px;cursor:pointer;display:flex;flex-direction:column;gap:2px}
+.sugg li[aria-selected="true"],.sugg li:hover{background:var(--bg)}
+.sugg b{font-weight:600;font-size:16px;color:var(--ink)} .sugg span{font-size:13px;color:var(--ink2)}
 @media (max-width:520px){.report{padding:22px}.company{font-size:22px}.row{font-size:15px}}
 
 /* sections */
@@ -204,7 +216,7 @@ footer a{color:var(--ink2)}
     </a>
     <nav class="nav" aria-label="Основное меню">
       <a href="#pains">Проверка</a>
-      <a href="#ai">Ассистент 115-ФЗ</a>
+      <a href="#ai">Разбор 115-ФЗ</a>
       <a href="#docs">Документы</a>
       <a href="#price">Тарифы</a>
       <a href="#faq">Вопросы</a>
@@ -294,11 +306,12 @@ footer a{color:var(--ink2)}
   <section class="sect ai" id="ai">
     <div class="wrap">
       <div style="display:flex;flex-direction:column;gap:20px">
-        <div class="eyebrow">ИИ-ассистент</div>
-        <h2 class="h2">Банк прислал запрос по 115-ФЗ? Разберёмся вместе.</h2>
-        <p class="lead">Опишите ситуацию своими словами. Ассистент объяснит, чего хочет банк, какие документы собрать и как составить пояснение, чтобы счёт не заблокировали.</p>
+        <div class="eyebrow">Персональный разбор</div>
+        <h2 class="h2">Банк прислал запрос по 115-ФЗ? Разложим всё по полкам.</h2>
+        <p class="lead">Опишите ситуацию своими словами. За пару минут вы получите разбор именно вашего случая: чего на самом деле хочет банк, какие документы собрать и два-три варианта, как выйти из ситуации. Пояснение в банк подготовим сразу, а сложный случай передадим специалисту.</p>
+        <p style="font-size:14px;line-height:1.5;color:#8E8E93">Быстрый разбор готовит система Делоскопа на основе практики по 115-ФЗ. Нестандартные ситуации смотрит человек.</p>
       </div>
-      <div class="chat" aria-label="Пример диалога с ассистентом">
+      <div class="chat" aria-label="Пример персонального разбора">
         <div class="bubble me">Банк просит пояснить платёж поставщику за материалы и дал 5 рабочих дней. Что отправить?</div>
         <div class="bubble bot">Подготовьте договор поставки, счёт, накладные и подтверждение, что материалы использованы в работе. Я составлю пояснительное письмо — ответьте на три вопроса о сделке.</div>
         <div class="suggest"><span>Составить письмо</span><span>Список документов</span></div>
@@ -356,7 +369,7 @@ footer a{color:var(--ink2)}
           <div><div class="plan-name">Старт </div><div class="plan-for">ИП, самозанятым и частным лицам</div></div>
           <div class="price"><b data-m="490 ₽" data-y="408 ₽">408 ₽</b><span>в месяц</span></div><div class="per" data-m="при оплате помесячно" data-y="4 900 ₽ за год — 2 месяца в подарок">4 900 ₽ за год — 2 месяца в подарок</div>
           <ul>
-            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Базовые проверки без лимита</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>3 полных отчёта в месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>10 вопросов ИИ-ассистенту</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Слежение за 3 компаниями</li>
+            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Базовые проверки без лимита</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>3 полных отчёта в месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>10 персональных разборов в месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Слежение за 3 компаниями</li>
           </ul>
           <a class="cta ghost" href="mailto:help@deloskop.ru?subject=Подключить%20тариф%20Старт">Подключить «Старт»</a>
         </div>
@@ -364,7 +377,7 @@ footer a{color:var(--ink2)}
           <div><div class="plan-name">Про <span class="badge">Рекомендуем</span></div><div class="plan-for">Малому бизнесу и бухгалтерам</div></div>
           <div class="price"><b data-m="1 490 ₽" data-y="1 242 ₽">1 242 ₽</b><span>в месяц</span></div><div class="per" data-m="при оплате помесячно" data-y="14 900 ₽ за год — 2 месяца в подарок">14 900 ₽ за год — 2 месяца в подарок</div>
           <ul>
-            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Базовые проверки без лимита</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>20 полных отчётов в месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>ИИ-ассистент по 115-ФЗ без лимита</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Конструктор документов</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Слежение за 10 компаниями</li>
+            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Базовые проверки без лимита</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>20 полных отчётов в месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Персональные разборы 115-ФЗ без лимита</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Конструктор документов</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Слежение за 10 компаниями</li>
           </ul>
           <a class="cta primary" href="mailto:help@deloskop.ru?subject=Подключить%20тариф%20Про">Подключить «Про»</a>
         </div>
@@ -372,7 +385,7 @@ footer a{color:var(--ink2)}
           <div><div class="plan-name">Бизнес </div><div class="plan-for">Отделам закупок и продаж</div></div>
           <div class="price"><b data-m="4 990 ₽" data-y="4 158 ₽">4 158 ₽</b><span>в месяц</span></div><div class="per" data-m="при оплате помесячно" data-y="49 900 ₽ за год — 2 месяца в подарок">49 900 ₽ за год — 2 месяца в подарок</div>
           <ul>
-            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>До 5 сотрудников</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>80 полных отчётов в месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Слежение за 50 компаниями</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Ежедневный контроль блокировок у 3 партнёров</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Выгрузка в Excel и 1С</li>
+            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>До 5 сотрудников</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Личный специалист по сложным случаям 115-ФЗ</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>80 полных отчётов в месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Слежение за 50 компаниями</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Ежедневный контроль блокировок у 3 партнёров</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Выгрузка в Excel и 1С</li>
           </ul>
           <a class="cta ghost" href="mailto:help@deloskop.ru?subject=Подключить%20тариф%20Бизнес">Подключить «Бизнес»</a>
         </div>
@@ -451,9 +464,72 @@ footer a{color:var(--ink2)}
     if(/^\d+$/.test(v.replace(/\s/g,'')) && digits.length!==10 && digits.length!==12){
       note.className='note err';note.textContent='ИНН компании — 10 цифр, ИНН ИП или человека — 12.';input.focus();return;
     }
-    note.className='note ok';
-    note.innerHTML='Сервис проверки запускается совсем скоро. Напишите на <a href="mailto:help@deloskop.ru">help@deloskop.ru</a> — сообщим о запуске первыми.';
+    if(!/\d{10}/.test(digits)&&items.length){pickItem(0);return;}
+    runCheck(v);
   });
+
+  // ---- живая проверка ----
+  var CAPI=(location.hostname.endsWith('deloskop.ru')?'https://api.deloskop.ru':'');
+  var report=document.querySelector('.report');
+  function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  var ST={ACTIVE:'действующая',LIQUIDATING:'ликвидируется',LIQUIDATED:'ликвидирована',BANKRUPT:'банкротство',REORGANIZING:'реорганизация'};
+  var ICON='<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5L6.5 11.5L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var WARNI='<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 4.5V9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="8" cy="11.8" r="1.1" fill="currentColor"/></svg>';
+  function render(r){
+    var c=r.company||{}, lvl=r.risk_level||'low';
+    var name=c.name_short||c.name_full||('ИНН '+c.inn);
+    var sub='ИНН '+esc(c.inn)+(c.status?' · '+esc(ST[c.status]||c.status):'');
+    var rows=(r.signals||[]).map(function(x){
+      var cls=x.status==='bad'?'bad':x.status==='warn'?'warn':x.status==='ok'?'ok':'neutral';
+      return '<div class="row"><span>'+esc(x.title)+'</span><b class="d '+cls+'">'+esc(x.detail||'')+'</b></div>';
+    }).join('');
+    var d=new Date(r.checked_at||Date.now());
+    report.setAttribute('aria-label','Отчёт о проверке');
+    report.innerHTML='<div class="report-head"><div><div class="tag">Проверка на '+d.toLocaleDateString('ru-RU')+'</div>'+
+      '<div class="company">'+esc(name)+'</div><div class="sub">'+sub+'</div></div>'+
+      '<div class="pill '+lvl+'">'+(lvl==='low'?ICON:WARNI)+esc(r.risk_title||'')+'</div></div>'+
+      '<div class="rows">'+rows+'</div><div class="verdict">'+esc(r.verdict||'')+'</div>'+
+      '<div class="report-actions"><button type="button" data-act="copy">Скопировать вывод</button><button type="button" data-act="again">Проверить другую</button></div>'+
+      '<div class="src">Источники: ЕГРЮЛ/ЕГРИП и открытые данные ФНС. Это оценка риска, а не решение банка.</div>';
+    report.querySelector('[data-act="again"]').onclick=function(){input.value='';focusInn({preventDefault:function(){}})};
+    report.querySelector('[data-act="copy"]').onclick=function(e){
+      var t=name+' (ИНН '+c.inn+'): '+(r.risk_title||'')+'. '+(r.verdict||'')+' — проверено на deloskop.ru';
+      try{navigator.clipboard.writeText(t);e.target.textContent='Скопировано'}catch(_){}};
+  }
+  function runCheck(v){
+    if(!CAPI){note.className='note ok';note.textContent='Проверка работает на deloskop.ru.';return;}
+    note.className='note';note.textContent='Проверяем по реестрам…';report.classList.add('loading');
+    fetch(CAPI+'/api/check?q='+encodeURIComponent(v),{credentials:'include'})
+      .then(function(res){return res.json().then(function(j){return {ok:res.ok,j:j}})})
+      .then(function(x){report.classList.remove('loading');
+        if(!x.ok){note.className='note err';note.textContent=(x.j&&x.j.detail)||'Не получилось проверить. Попробуйте ещё раз.';return;}
+        render(x.j);note.className='note ok';note.textContent='Готово. Отчёт — рядом.';
+        if(window.innerWidth<980)report.scrollIntoView({behavior:'smooth',block:'start'});})
+      .catch(function(){report.classList.remove('loading');note.className='note err';
+        note.textContent='Сервис не ответил. Проверьте интернет и попробуйте ещё раз.';});
+  }
+
+  // ---- подсказки по названию ----
+  var list=document.createElement('ul');list.className='sugg';list.id='sugg';list.setAttribute('role','listbox');list.hidden=true;form.appendChild(list);
+  input.setAttribute('aria-controls','sugg');input.setAttribute('aria-autocomplete','list');
+  var tmr,items=[],sel=-1,lastQ='';
+  function hide(){list.hidden=true;sel=-1}
+  function pickItem(i){var it=items[i];if(!it)return;input.value=it.name;hide();runCheck(it.inn);}
+  function show(arr){items=arr||[];sel=-1;
+    if(!items.length){hide();return;}
+    list.innerHTML=items.map(function(it,i){return '<li role="option" data-i="'+i+'"><b>'+esc(it.name)+'</b><span>ИНН '+esc(it.inn)+(it.address?' · '+esc(it.address):'')+'</span></li>'}).join('');
+    list.hidden=false;}
+  list.addEventListener('mousedown',function(e){var li=e.target.closest('li');if(li){e.preventDefault();pickItem(+li.dataset.i)}});
+  input.addEventListener('input',function(){clearTimeout(tmr);var q=input.value.trim();
+    if(!CAPI||q.length<3||/^\d+$/.test(q)){hide();return;}
+    tmr=setTimeout(function(){lastQ=q;fetch(CAPI+'/api/suggest?q='+encodeURIComponent(q)).then(function(r){return r.ok?r.json():{items:[]}})
+      .then(function(j){if(lastQ===input.value.trim())show(j.items)}).catch(hide)},250);});
+  input.addEventListener('keydown',function(e){if(list.hidden)return;
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();sel=(sel+(e.key==='ArrowDown'?1:-1)+items.length)%items.length;
+      [].forEach.call(list.children,function(li,i){li.setAttribute('aria-selected',i===sel)});}
+    else if(e.key==='Enter'&&sel>=0){e.preventDefault();pickItem(sel);}
+    else if(e.key==='Escape'){hide();}});
+  input.addEventListener('blur',function(){setTimeout(hide,150)});
 
   // ---- обратная связь и ошибки ----
   var API=(location.hostname.endsWith('deloskop.ru')?'https://api.deloskop.ru':'');

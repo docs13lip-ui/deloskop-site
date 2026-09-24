@@ -117,6 +117,25 @@ p{margin:0}
 .sources .wrap{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:start}
 .sources .sect-head{margin-bottom:0}
 .chips{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.soon{margin-top:14px;font-size:14px;color:var(--muted)}
+.tagnew{display:inline-block;font-size:12px;font-weight:600;color:var(--accent);background:#EEF3FD;border-radius:999px;padding:2px 9px;margin-left:8px;vertical-align:2px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+@media (max-width:980px){.grid3{grid-template-columns:1fr}}
+.shield .sect-head{max-width:760px}
+.shield .card3{background:var(--card);box-shadow:0 1px 2px rgba(0,0,0,.04),0 12px 32px rgba(0,0,0,.05);border-radius:var(--r-lg);padding:clamp(24px,3vw,34px);display:flex;flex-direction:column;gap:12px}
+.shield .card3 h3{font-size:clamp(20px,2vw,24px);letter-spacing:-0.02em}
+.shield .card3 p{color:var(--ink2)}
+.shield .num{font-size:14px;font-weight:600;color:var(--accent)}
+.shield .check{margin-top:28px}
+.why .manifest{max-width:760px;display:flex;flex-direction:column;gap:18px;font-size:clamp(17px,1.6vw,20px);color:var(--ink2);line-height:1.55}
+.why .manifest b{color:var(--ink)}
+.why .principles{margin-top:36px}
+.why .principles article{border-top:2px solid var(--ink);padding-top:18px;display:flex;flex-direction:column;gap:10px}
+.why .principles h3{font-size:20px;letter-spacing:-0.01em}
+.why .principles p{color:var(--ink2)}
+.why .mission{margin-top:40px;font-size:clamp(22px,2.6vw,30px);font-weight:600;letter-spacing:-0.02em;line-height:1.25;max-width:820px}
+.why .fn{margin-top:20px;font-size:13px;color:var(--muted)}
+.why .fn a{color:var(--muted);text-decoration:underline}
 .chip{background:var(--card);border-radius:18px;padding:20px 22px;font-size:17px;font-weight:500}
 @media (max-width:980px){.sources .wrap{grid-template-columns:1fr;gap:40px}}
 @media (max-width:520px){.chips{grid-template-columns:1fr}}
@@ -221,8 +240,9 @@ footer a{color:var(--ink2)}
     </a>
     <nav class="nav" aria-label="Основное меню">
       <a href="#pains">Проверка</a>
+      <a href="#shield">Щит</a>
       <a href="#ai">Разбор 115-ФЗ</a>
-      <a href="#docs">Документы</a>
+      <a href="#why">О нас</a>
       <a href="#price">Тарифы</a>
       <a href="#faq">Вопросы</a>
     </nav>
@@ -255,11 +275,11 @@ footer a{color:var(--ink2)}
           <div class="pill"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5L6.5 11.5L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Низкий риск</div>
         </div>
         <div class="rows">
-          <div class="row"><span>Решения о приостановке счетов</span><b class="ok">Нет</b></div>
-          <div class="row"><span>Массовый адрес</span><b class="ok">Нет</b></div>
+          <div class="row"><span>Недостоверные сведения в ЕГРЮЛ</span><b class="ok">Нет</b></div>
+          <div class="row"><span>Прогноз зоны ЗСК</span><b class="ok">Зелёная</b></div>
           <div class="row"><span>Задолженность по налогам</span><b class="ok">Нет</b></div>
           <div class="row"><span>Руководитель сменился недавно</span><b class="warn">Внимание</b></div>
-          <div class="row"><span>Арбитражные дела</span><b class="neutral">2 как ответчик</b></div>
+          <div class="row"><span>Налоговая нагрузка</span><b class="neutral">На уровне отрасли</b></div>
         </div>
         <div class="verdict">Вывод: работать можно. Перед крупной оплатой запросите у компании документы о полномочиях нового директора.</div>
       </div>
@@ -276,7 +296,7 @@ footer a{color:var(--ink2)}
         <article class="pain">
           <svg width="44" height="44" viewBox="0 0 44 44" fill="none" aria-hidden="true"><rect x="8" y="19" width="28" height="19" rx="4" stroke="#1D1D1F" stroke-width="2.5"/><path d="M14 19V14A8 8 0 0 1 30 14V19" stroke="#1D1D1F" stroke-width="2.5"/><circle cx="22" cy="28.5" r="2.5" fill="#0B63E5"/></svg>
           <h3>Не заблокирует ли банк счёт</h3>
-          <p>Платёж сомнительной компании — частая причина запроса по 115-ФЗ. Делоскоп заранее покажет признаки, на которые смотрят банки: массовый адрес, недавние смены, остановленные счета.</p>
+          <p>Платёж сомнительной компании — частая причина запроса по 115-ФЗ. Делоскоп заранее покажет признаки, на которые смотрят банки: недостоверные сведения в реестре, недавнюю смену директора, налоговые долги и слишком низкие налоги для такой выручки.</p>
         </article>
         <article class="pain">
           <svg width="44" height="44" viewBox="0 0 44 44" fill="none" aria-hidden="true"><rect x="10" y="6" width="24" height="32" rx="3" stroke="#1D1D1F" stroke-width="2.5"/><path d="M16 15H28M16 21H28M16 27H22" stroke="#1D1D1F" stroke-width="2.5" stroke-linecap="round"/><circle cx="31" cy="31" r="6" fill="#0B63E5"/></svg>
@@ -287,34 +307,68 @@ footer a{color:var(--ink2)}
     </div>
   </section>
 
+  <section class="sect shield" id="shield">
+    <div class="wrap">
+      <div class="sect-head">
+        <div class="eyebrow">Новое · Щит</div>
+        <h2 class="h2">Посмотрите на свою компанию глазами банка и&nbsp;налоговой</h2>
+        <p class="lead">Все сервисы проверяют чужие компании. Делоскоп начинает с вашей: показывает, что видят банк и налоговая, и что сделать заранее — до запроса по 115-ФЗ или требования из налоговой.</p>
+      </div>
+      <div class="grid3">
+        <article class="card3">
+          <div class="num">01</div>
+          <h3>Как вас видит банк</h3>
+          <p>Признаки, на которые смотрят банки по 115-ФЗ, и наш прогноз вашей зоны на платформе Банка России «Знай своего клиента».</p>
+        </article>
+        <article class="card3">
+          <div class="num">02</div>
+          <h3>Как вас видит налоговая</h3>
+          <p>Налоговая нагрузка, штат, долги и отчётность — то, по чему инспекция выбирает компании для вопросов.</p>
+        </article>
+        <article class="card3">
+          <div class="num">03</div>
+          <h3>Что сделать сейчас</h3>
+          <p>Не баллы, а конкретные шаги: что поправить, какие документы подготовить, что сохранить в деле.</p>
+        </article>
+      </div>
+      <form class="check" id="shieldForm" novalidate>
+        <label for="myinn" class="sr-only">ИНН вашей компании</label>
+        <input id="myinn" type="text" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="ИНН вашей компании">
+        <button type="submit">Посмотреть на себя</button>
+      </form>
+      <p class="soon">Бесплатно. Скоро: разбор выписки из 1С — сколько денег под риском в рублях и как банк видит ваши операции с наличными.</p>
+    </div>
+  </section>
+
   <section class="sect sources">
     <div class="wrap">
       <div class="sect-head">
         <h2 class="h2">Откуда данные</h2>
         <p class="lead">Только официальные открытые источники. Рядом с каждым фактом — откуда он взят и на какую дату.</p>
+        <p class="soon">Следом подключаем решения о приостановке счетов, арбитражные дела и банкротства.</p>
       </div>
       <div class="chips">
         <div class="chip">ЕГРЮЛ и ЕГРИП</div>
-        <div class="chip">Решения о приостановке счетов</div>
-        <div class="chip">Массовые адреса и руководители</div>
+        <div class="chip">Отметки ФНС о недостоверности</div>
+        <div class="chip">Уплаченные налоги и взносы</div>
+        <div class="chip">Доходы и расходы по отчётности</div>
+        <div class="chip">Численность сотрудников</div>
         <div class="chip">Налоговая задолженность</div>
+        <div class="chip">Налоговые правонарушения</div>
+        <div class="chip">Специальные налоговые режимы</div>
         <div class="chip">Дисквалифицированные лица</div>
-        <div class="chip">Исполнительные производства</div>
-        <div class="chip">Арбитражные дела</div>
-        <div class="chip">Недобросовестные поставщики</div>
-        <div class="chip">Банкротства</div>
-        <div class="chip">Перечень Росфинмониторинга</div>
-      </div>
+        <div class="chip">Бухгалтерская отчётность (ГИР БО)</div>
+      </div></div>
     </div>
   </section>
 
   <section class="sect ai" id="ai">
     <div class="wrap">
       <div style="display:flex;flex-direction:column;gap:20px">
-        <div class="eyebrow">Персональный разбор</div>
+        <div class="eyebrow">Персональный разбор · скоро</div>
         <h2 class="h2">Банк прислал запрос по 115-ФЗ? Разложим всё по полкам.</h2>
-        <p class="lead">Опишите ситуацию своими словами. За пару минут вы получите разбор именно вашего случая: чего на самом деле хочет банк, какие документы собрать и два-три варианта, как выйти из ситуации. Пояснение в банк подготовим сразу, а сложный случай передадим специалисту.</p>
-        <p style="font-size:14px;line-height:1.5;color:#8E8E93">Быстрый разбор готовит система Делоскопа на основе практики по 115-ФЗ. Нестандартные ситуации смотрит человек.</p>
+        <p class="lead">Опишите ситуацию своими словами. За пару минут вы получите разбор именно вашего случая: чего на самом деле хочет банк, какие документы собрать и два-три варианта, как выйти из ситуации. Черновик пояснения в банк подготовим сразу.</p>
+        <p style="font-size:14px;line-height:1.5;color:#8E8E93">Разбор готовит система Делоскопа по нормам 115-ФЗ и рекомендациям Банка России. Это подсказка, а не юридическая консультация.</p>
       </div>
       <div class="chat" aria-label="Пример персонального разбора">
         <div class="bubble me">Банк просит пояснить платёж поставщику за материалы и дал 5 рабочих дней. Что отправить?</div>
@@ -327,7 +381,7 @@ footer a{color:var(--ink2)}
   <section class="sect" id="docs">
     <div class="wrap grid2">
       <article class="feature">
-        <h3>Конструктор документов</h3>
+        <h3>Конструктор документов <span class="tagnew">скоро</span></h3>
         <p>Договор, пояснение в банк, запрос документов у контрагента. Реквизиты подставляются сами из проверки.</p>
         <div class="doclist">
           <div><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="4" y="2.5" width="12" height="15" rx="2" stroke="#1D1D1F" stroke-width="1.6"/><path d="M7 7H13M7 10H13M7 13H10" stroke="#1D1D1F" stroke-width="1.6" stroke-linecap="round"/></svg>Пояснение в банк по 115-ФЗ</div>
@@ -348,6 +402,34 @@ footer a{color:var(--ink2)}
           </div>
         </div>
       </article>
+    </div>
+  </section>
+
+  <section class="sect white why" id="why">
+    <div class="wrap">
+      <div class="eyebrow">Почему мы делаем Делоскоп</div>
+      <h2 class="h2" style="margin-top:12px;max-width:820px">Честному бизнесу не должно быть страшно открывать банковское приложение</h2>
+      <div class="manifest" style="margin-top:24px">
+        <p>В начале 2026 года банки всего за две недели ограничили 2–3 миллиона счетов и карт<sup>1</sup>. Под проверку всё чаще попадают обычные компании — из-за одного платежа сомнительному поставщику или размытого назначения платежа.</p>
+        <p>С налоговой похожая история. Если поставщик окажется «технической» компанией, отвечать придётся покупателю: налоговая вправе снять вычеты по НДС и расходы по статье 54.1 Налогового кодекса.</p>
+        <p><b>Банк и налоговая видят ваш бизнес через десятки признаков. Вы их не видите.</b> Делоскоп убирает эту разницу: показывает то же, что видят они, и простыми словами объясняет, что делать.</p>
+      </div>
+      <div class="grid3 principles">
+        <article>
+          <h3>Вывод, а не справка</h3>
+          <p>Мы не пересказываем реестры. Каждая проверка заканчивается ответом: можно работать или нет, и на каких условиях.</p>
+        </article>
+        <article>
+          <h3>Только проверяемые факты</h3>
+          <p>Официальные открытые данные ФНС. Рядом с каждым фактом — источник и дата. Наши оценки мы так и называем оценками.</p>
+        </article>
+        <article>
+          <h3>Спокойствие, а не страх</h3>
+          <p>Признак — повод проверить, а не приговор. Вместо тревоги — план: что запросить, что поправить, что сохранить в деле.</p>
+        </article>
+      </div>
+      <p class="mission">Наша миссия — чтобы добросовестный бизнес тратил время на работу, а не на объяснения с банком и налоговой.</p>
+      <p class="fn"><sup>1</sup> <a href="https://www.kommersant.ru/doc/8361504" rel="noopener" target="_blank">Коммерсантъ, 19 января 2026</a>. Оценка платформы Банка России «Знай своего клиента» охватывает 7,5 млн компаний и ИП — <a href="https://cbr.ru/counteraction_m_ter/platform_zsk" rel="noopener" target="_blank">cbr.ru</a>.</p>
     </div>
   </section>
 
@@ -390,7 +472,7 @@ footer a{color:var(--ink2)}
           <div><div class="plan-name">Бизнес </div><div class="plan-for">Отделам закупок и продаж</div></div>
           <div class="price"><b data-m="4 990 ₽" data-y="4 158 ₽">4 158 ₽</b><span>в месяц</span></div><div class="per" data-m="при оплате помесячно" data-y="49 900 ₽ за год — 2 месяца в подарок">49 900 ₽ за год — 2 месяца в подарок</div>
           <ul>
-            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>До 5 сотрудников</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Личный специалист по сложным случаям 115-ФЗ</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>80 полных отчётов в месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Слежение за 50 компаниями</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Ежедневный контроль блокировок у 3 партнёров</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Выгрузка в Excel и 1С</li>
+            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>До 5 сотрудников</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Щит: разбор выписки из 1С каждый месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>80 полных отчётов в месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Слежение за 50 компаниями</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Ежедневный контроль блокировок у 3 партнёров</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Выгрузка в Excel и 1С</li>
           </ul>
           <a class="cta ghost" href="mailto:help@deloskop.ru?subject=Подключить%20тариф%20Бизнес">Подключить «Бизнес»</a>
         </div>
@@ -404,6 +486,9 @@ footer a{color:var(--ink2)}
       <h2 class="h2">Вопросы</h2>
       <div>
         <details open><summary>Чем Делоскоп отличается от больших сервисов проверки?</summary><p>Мы не пересказываем реестры, а даём вывод: можно работать или нет, и что сделать, чтобы обезопасить себя.</p></details>
+        <details><summary>Что такое Щит?</summary><p>Проверка вашей собственной компании глазами банка и налоговой. Введите свой ИНН — увидите признаки, на которые они смотрят, и что сделать заранее.</p></details>
+        <details><summary>Откуда вы знаете, как меня видит банк?</summary><p>Мы анализируем те же открытые данные, что доступны банкам, и применяем признаки из рекомендаций Банка России. Это наша оценка, а не решение банка. Официальную зону своей компании можно узнать на <a href="https://cbr.ru/counteraction_m_ter/platform_zsk" rel="noopener" target="_blank">сайте Банка России</a>.</p></details>
+        <details><summary>Кто пишет пояснения и статьи?</summary><p>Редакция Делоскопа. Каждый факт сверяем с первоисточником: законом, письмом ФНС или Банка России.</p></details>
         <details><summary>Подойдёт ли Делоскоп частному лицу?</summary><p>Да. Проверьте подрядчика, арендодателя или будущего работодателя, прежде чем подписывать договор и платить.</p></details>
         <details><summary>Гарантирует ли проверка, что банк не заблокирует счёт?</summary><p>Нет. Решение принимает банк. Делоскоп помогает заметить риски заранее и правильно подготовить документы.</p></details>
         <details><summary>Можно ли сменить тариф?</summary><p>Да, в любой момент. При переходе на тариф выше доплачиваете только разницу за оставшиеся дни.</p></details>
@@ -592,6 +677,13 @@ footer a{color:var(--ink2)}
   // ИНН из адреса (?inn=…) — например, «Проверить снова» из кабинета
   var qi=new URLSearchParams(location.search).get('inn');
   if(qi&&/^\d{10}(\d{2})?$/.test(qi)){input.value=qi;runCheck(qi);}
+  // Щит: проверка своей компании — тот же отчёт с двумя линзами, наверху страницы
+  var sf=document.getElementById('shieldForm');
+  if(sf)sf.addEventListener('submit',function(e){e.preventDefault();
+    var mi=document.getElementById('myinn'), d=mi.value.replace(/\D/g,'');
+    var sn=sf.nextElementSibling; if(!sn.dataset.t)sn.dataset.t=sn.textContent;
+    if(d.length!==10&&d.length!==12){sn.textContent='ИНН компании — 10 цифр, ИНН ИП — 12.';sn.style.color='#B3261E';mi.focus();return;}
+    sn.style.color='';sn.textContent=sn.dataset.t;input.value=d;window.scrollTo({top:0,behavior:'smooth'});runCheck(d);});
   // вошёл — вместо «Войти» показываем «Кабинет»
   if(CAPI)fetch(CAPI+'/api/me',{credentials:'include'}).then(function(r){return r.json()}).then(function(j){
     if(j&&j.user){var a=document.querySelector('[data-login]');if(a)a.textContent='Кабинет';}}).catch(function(){});

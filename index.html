@@ -230,6 +230,27 @@ footer a{color:var(--ink2)}
 .fb-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:29;background:var(--ink);color:#fff;border-radius:16px;padding:14px 18px;font-size:15px;display:flex;gap:12px;align-items:center;box-shadow:0 12px 32px rgba(0,0,0,.2);max-width:calc(100vw - 40px)}
 .fb-toast button{border:0;background:#fff;color:var(--ink);font:inherit;font-weight:600;border-radius:10px;padding:8px 12px;cursor:pointer;white-space:nowrap}
 :focus-visible{outline:3px solid rgba(11,99,229,.45);outline-offset:2px;border-radius:6px}
+
+.save .calc{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:24px;margin-top:40px}
+.save .box{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:28px}
+.save label{display:block;font-weight:600;margin-bottom:8px}
+.save input[type=text]{width:100%;font:inherit;font-size:22px;font-weight:600;padding:12px 16px;border:1px solid var(--line);border-radius:14px;background:var(--bg)}
+.save .chk{display:flex;gap:10px;align-items:flex-start;font-weight:400;margin-top:16px;font-size:16px;color:var(--ink2)}
+.save .chk input{margin-top:5px;width:18px;height:18px}
+.save .row{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid var(--line);font-size:17px}
+.save .row b{white-space:nowrap}
+.save .tot{display:flex;justify-content:space-between;gap:16px;padding-top:16px;font-size:22px;font-weight:600}
+.save .tot b{color:#B42318;white-space:nowrap}
+.save .vs{margin-top:20px;background:var(--ok-bg);color:var(--ok);border-radius:var(--r-md);padding:16px 18px;font-size:17px}
+.save .vs b{font-size:20px}
+.save .note{font-size:14px;color:var(--muted);margin-top:14px}
+.save .srv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-top:48px}
+.save .srv article{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:24px}
+.save .srv h3{font-size:20px;margin:0 0 8px}
+.save .srv .risk{font-size:15px;color:#B42318;font-weight:600;margin:0 0 8px}
+.save .srv p{margin:0;color:var(--ink2);font-size:16px}
+.save .srv .tagnew{margin-left:6px}
+@media (max-width:900px){.save .calc,.save .srv{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -431,6 +452,68 @@ footer a{color:var(--ink2)}
     </div>
   </section>
 
+  <section class="sect save" id="save">
+    <div class="wrap">
+      <div class="sect-head">
+        <div class="eyebrow">Сколько стоит одна ошибка</div>
+        <h2 class="h2">Подписка стоит меньше, чем одна неудачная сделка</h2>
+        <p class="lead">Посчитайте сами: что будет, если поставщик окажется «технической» компанией и налоговая снимет вычет по НДС.</p>
+      </div>
+      <div class="calc">
+        <div class="box">
+          <label for="sv-sum">Сумма договора с поставщиком, ₽ с НДС</label>
+          <input id="sv-sum" type="text" inputmode="numeric" value="3 000 000" autocomplete="off">
+          <label class="chk"><input id="sv-exp" type="checkbox"> Налоговая сняла ещё и расходы по налогу на прибыль — худший случай</label>
+          <label class="chk"><input id="sv-int" type="checkbox"> Налоговая сочла нарушение умышленным — штраф 40% вместо 20%</label>
+          <p class="note">Пени считаем за 2 года: выездная проверка обычно приходит позже сделки. Ключевая ставка — 14% (Банк России, 11.09.2026), правила пеней 2026 года.</p>
+        </div>
+        <div class="box" aria-live="polite">
+          <div class="row"><span>Снятый вычет НДС (22%)</span><b id="sv-vat">—</b></div>
+          <div class="row" id="sv-exp-row" hidden><span>Налог на прибыль со снятых расходов (25%)</span><b id="sv-pr">—</b></div>
+          <div class="row"><span>Штраф, ст. 122 НК (<span id="sv-fp">20</span>%)</span><b id="sv-fine">—</b></div>
+          <div class="row"><span>Пени за 2 года, ст. 75 НК</span><b id="sv-pen">—</b></div>
+          <div class="tot"><span>Итого заплатите вы</span><b id="sv-tot">—</b></div>
+          <div class="vs">Год тарифа «Про» — <b>14 900 ₽</b>. Это <b id="sv-x">—</b> от суммы, которую вы рискуете потерять на одной сделке.</div>
+          <p class="note">Это пример расчёта по нормам Налогового кодекса, а не прогноз по вашей компании. Сколько налоговая доначислит в вашем случае, зависит от проверки.</p>
+        </div>
+      </div>
+
+      <h3 class="h2" style="font-size:clamp(26px,3vw,34px);margin-top:72px">Зачем каждый сервис и от чего он защищает</h3>
+      <div class="srv">
+        <article>
+          <h3>Проверка контрагента</h3>
+          <p class="risk">Риск: снятый вычет НДС и потерянный аванс</p>
+          <p>За секунды сводим открытые данные ФНС и признаки из рекомендаций Банка России. Говорим прямо: платить можно, только по факту или лучше не работать. Досье с датой проверки — ваше доказательство осмотрительности перед налоговой (письмо ФНС № БВ-4-7/3060@).</p>
+        </article>
+        <article>
+          <h3>Щит</h3>
+          <p class="risk">Риск: заблокированный счёт</p>
+          <p>Пока счёт заблокирован, нельзя платить зарплату, налоги и поставщикам, а разблокировка идёт неделями. Щит заранее показывает, как вашу компанию видят банк и налоговая, и что поправить до запроса по 115-ФЗ.</p>
+        </article>
+        <article>
+          <h3>Проверь счёт</h3>
+          <p class="risk">Риск: деньги ушли не туда</p>
+          <p>Ошибка в реквизитах или подменённый мошенниками счёт — и деньги уходят чужим. Сверяем ИНН, БИК, контрольный ключ счёта и самого поставщика до того, как вы нажмёте «Оплатить».</p>
+        </article>
+        <article>
+          <h3>Слежение</h3>
+          <p class="risk">Риск: контрагент испортился после договора</p>
+          <p>Проверили год назад — сегодня у поставщика налоговый долг или новый директор. Сообщаем об изменениях до следующей оплаты, а не после.</p>
+        </article>
+        <article>
+          <h3>Делопись <span class="tagnew">скоро</span></h3>
+          <p class="risk">Риск: договор, который не защищает</p>
+          <p>Договор заполняется по ИНН и сам добавляет защитные пункты под риски контрагента: заверения об обстоятельствах, оплату по факту, поручительство директора.</p>
+        </article>
+        <article>
+          <h3>Время бухгалтера</h3>
+          <p class="risk">Риск: часы ручной работы</p>
+          <p>Вместо семи сайтов и сверки вручную — одна проверка и готовый вывод за секунды. Бухгалтер занимается учётом, а не поиском по реестрам.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
   <section class="sect white pricing" id="price">
     <div class="wrap">
       <div class="sect-head">
@@ -483,6 +566,7 @@ footer a{color:var(--ink2)}
     <div class="wrap">
       <h2 class="h2">Вопросы</h2>
       <div>
+        <details><summary>Зачем платить, если данные ФНС и так бесплатные?</summary><p>Данные бесплатные, но разбросаны по семи сайтам, а вывода там нет. Делоскоп за секунды сводит их и говорит, что делать: платить, только по факту или не работать. Следит за изменениями, пока вы работаете с контрагентом, и хранит досье с датой проверки — доказательство осмотрительности, если налоговая придёт через два года. Одна снятая сделка на 3 млн ₽ обходится в сотни тысяч рублей — <a href="#save">посчитайте</a>.</p></details>
         <details open><summary>Чем Делоскоп отличается от больших сервисов проверки?</summary><p>Мы не пересказываем реестры, а даём вывод: можно работать или нет, и что сделать, чтобы обезопасить себя.</p></details>
         <details><summary>Что такое Щит?</summary><p>Проверка вашей собственной компании глазами банка и налоговой. Введите свой ИНН — увидите признаки, на которые они смотрят, и что сделать заранее.</p></details>
         <details><summary>Откуда вы знаете, как меня видит банк?</summary><p>Мы анализируем те же открытые данные, что доступны банкам, и применяем признаки из рекомендаций Банка России. Это наша оценка, а не решение банка. Официальную зону своей компании можно узнать на <a href="https://cbr.ru/counteraction_m_ter/platform_zsk" rel="noopener" target="_blank">сайте Банка России</a>.</p></details>
@@ -685,6 +769,26 @@ footer a{color:var(--ink2)}
   // вошёл — вместо «Войти» показываем «Кабинет»
   if(CAPI)fetch(CAPI+'/api/me',{credentials:'include'}).then(function(r){return r.json()}).then(function(j){
     if(j&&j.user){var a=document.querySelector('[data-login]');if(a)a.textContent='Кабинет';}}).catch(function(){});
+})();
+
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  var sum=$('sv-sum'); if(!sum) return;
+  var KEY=0.14, PEN=KEY*(30/300+60/150+640/300);   // 2 года: 1–30 дн. 1/300, 31–90 — 1/150, с 91-го — 1/300
+  function rub(x){return Math.round(x).toLocaleString('ru-RU').replace(/,/g,' ')+' ₽'}
+  function calc(){
+    var raw=sum.value.replace(/\D/g,''); var S=+raw||0;
+    if(raw) sum.value=S.toLocaleString('ru-RU');
+    var vat=S*22/122, pr=$('sv-exp').checked?(S-vat)*0.25:0, fp=$('sv-int').checked?0.4:0.2;
+    var tax=vat+pr, fine=tax*fp, pen=tax*PEN, tot=tax+fine+pen;
+    $('sv-exp-row').hidden=!pr; $('sv-vat').textContent=rub(vat); $('sv-pr').textContent=rub(pr);
+    $('sv-fp').textContent=fp*100; $('sv-fine').textContent=rub(fine); $('sv-pen').textContent=rub(pen);
+    $('sv-tot').textContent=rub(tot);
+    var pct=tot?14900/tot*100:0;
+    $('sv-x').textContent=tot?(pct<1?'меньше 1%':Math.round(pct)+'%'):'—';
+  }
+  sum.addEventListener('input',calc); $('sv-exp').addEventListener('change',calc); $('sv-int').addEventListener('change',calc);
+  calc();
 })();
 </script>
 </body>

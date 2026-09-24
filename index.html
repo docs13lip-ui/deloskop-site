@@ -485,6 +485,8 @@ footer a{color:var(--ink2)}
       var cls=x.status==='bad'?'bad':x.status==='warn'?'warn':x.status==='ok'?'ok':'neutral';
       return '<div class="row"><span>'+esc(x.title)+'</span><b class="d '+cls+'">'+esc(x.detail||'')+'</b></div>';
     }).join('');
+    if(r.zsk){var zc=r.zsk.level==='high'?'bad':r.zsk.level==='medium'?'warn':'ok';
+      rows+='<div class="row"><span>Прогноз ЗСК <a href="'+esc(r.zsk.cbr_url)+'" target="_blank" rel="noopener" style="font-size:13px">проверить в ЦБ</a></span><b class="d '+zc+'">'+esc(r.zsk.title)+'</b></div>';}
     var d=new Date(r.checked_at||Date.now());
     report.setAttribute('aria-label','Отчёт о проверке');
     report.innerHTML='<div class="report-head"><div><div class="tag">Проверка на '+d.toLocaleDateString('ru-RU')+'</div>'+

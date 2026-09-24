@@ -55,6 +55,9 @@ p{margin:0}
 .btn{display:inline-flex;align-items:center;justify-content:center;border:0;cursor:pointer;font:inherit;font-weight:600;border-radius:999px;background:var(--accent);color:#fff;padding:12px 22px;font-size:15px;min-height:44px}
 .btn:hover{background:var(--accent-hover);color:#fff}
 @media (max-width:900px){.nav{display:none}}
+.topact{display:flex;align-items:center;gap:18px}
+.login{color:var(--ink);font-weight:500;font-size:15px}
+.login:hover{color:var(--accent)}
 
 /* hero */
 .hero{padding-block:clamp(48px,8vw,104px) clamp(56px,8vw,112px)}
@@ -223,7 +226,7 @@ footer a{color:var(--ink2)}
       <a href="#price">Тарифы</a>
       <a href="#faq">Вопросы</a>
     </nav>
-    <a class="btn" href="#top" data-focus-inn>Проверить</a>
+    <div class="topact"><a class="login" href="/cabinet.html" data-login>Войти</a><a class="btn" href="#top" data-focus-inn>Проверить</a></div>
   </div>
 </header>
 
@@ -586,6 +589,12 @@ footer a{color:var(--ink2)}
       b.onclick=function(){t.remove();openFb('idea')}; t.appendChild(b); document.body.appendChild(t);
       setTimeout(function(){t.remove()},12000); },8000); }
   form.addEventListener('submit',askLater);
+  // ИНН из адреса (?inn=…) — например, «Проверить снова» из кабинета
+  var qi=new URLSearchParams(location.search).get('inn');
+  if(qi&&/^\d{10}(\d{2})?$/.test(qi)){input.value=qi;runCheck(qi);}
+  // вошёл — вместо «Войти» показываем «Кабинет»
+  if(CAPI)fetch(CAPI+'/api/me',{credentials:'include'}).then(function(r){return r.json()}).then(function(j){
+    if(j&&j.user){var a=document.querySelector('[data-login]');if(a)a.textContent='Кабинет';}}).catch(function(){});
 })();
 </script>
 </body>

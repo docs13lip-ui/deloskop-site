@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Личный кабинет — Делоскоп</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#F5F5F2">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F5F5F2;--card:#fff;--ink:#1D1D1F;--ink2:#48484C;--muted:#6B6B70;--line:#E6E6E1;--accent:#0B63E5;--accent-hover:#0952C2;
+  --ok:#16723F;--ok-bg:#E8F5EE;--warn:#9A5B00;--warn-bg:#FFF4E0;--bad:#B3261E;--bad-bg:#FDECEA}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}
+.bar{max-width:860px;margin:0 auto;padding:20px 16px 0;display:flex;gap:12px;align-items:center}
+.home{margin-right:auto;display:flex;align-items:center;gap:8px;font-weight:600;font-size:18px;color:var(--ink);letter-spacing:-.02em}
+.wrap{max-width:860px;margin:16px auto 48px;padding:0 16px}
+.card{background:var(--card);border-radius:24px;padding:clamp(22px,5vw,40px);box-shadow:0 1px 2px rgba(0,0,0,.04),0 24px 60px rgba(0,0,0,.06);margin-bottom:16px}
+h1{font-size:clamp(24px,4vw,30px);letter-spacing:-.03em;line-height:1.15;margin:0 0 6px;font-weight:600}
+h2{font-size:18px;margin:0 0 4px;font-weight:600;letter-spacing:-.01em}
+.sub{color:var(--ink2);margin:0 0 18px}
+.muted{color:var(--muted);font-size:14px}
+.btn{border:1px solid #D9D9D4;background:var(--card);font:inherit;font-size:15px;font-weight:600;border-radius:12px;padding:11px 18px;cursor:pointer;color:var(--ink);min-height:44px}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn:disabled{opacity:.6;cursor:default}
+.field{display:flex;gap:10px;flex-wrap:wrap}
+.field input{flex:1 1 240px;min-height:48px;border:1px solid #D9D9D4;border-radius:12px;padding:0 14px;font:inherit;font-size:16px;background:#fff;color:var(--ink)}
+.field input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.note{margin-top:10px;font-size:14px;color:var(--muted);min-height:21px}
+.note.err{color:var(--bad)} .note.ok{color:var(--ok)}
+.who{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+.plan{display:inline-flex;gap:6px;align-items:center;background:#EEF3FD;color:var(--accent);border-radius:999px;padding:4px 12px;font-weight:600;font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:18px}
+.stat{background:var(--bg);border-radius:14px;padding:12px 14px}
+.stat b{display:block;font-size:22px;letter-spacing:-.02em}
+.stat span{color:var(--muted);font-size:13px}
+@media (max-width:560px){.stats{grid-template-columns:1fr}}
+ul.list{list-style:none;margin:14px 0 0;padding:0}
+ul.list li{display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+ul.list .nm{flex:1;min-width:0}
+ul.list .nm b{display:block;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ul.list .nm span{color:var(--muted);font-size:13px}
+.acts{display:flex;gap:14px;font-size:14px;white-space:nowrap}
+.acts button{background:none;border:0;padding:0;font:inherit;color:var(--muted);cursor:pointer}
+.acts button:hover{color:var(--bad)}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:13px;font-weight:600;white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.pill.low{background:var(--ok-bg);color:var(--ok)} .pill.medium{background:var(--warn-bg);color:var(--warn)} .pill.high{background:var(--bad-bg);color:var(--bad)}
+.pill.none{background:var(--bg);color:var(--muted)}
+.empty{color:var(--muted);padding:14px 0 2px;border-top:1px solid var(--line);margin-top:14px}
+.watchadd{margin-top:16px}
+@media (max-width:560px){ul.list li{flex-wrap:wrap}.acts{width:100%;padding-left:0}}
+</style>
+</head>
+<body>
+<div class="bar">
+  <a class="home" href="/" aria-label="Делоскоп — на главную">
+    <svg width="30" height="27" viewBox="0 0 72 64" fill="none" aria-hidden="true"><path d="M36 18.1A16 16 0 0 1 36 45.9A16 16 0 0 1 36 18.1Z" fill="#0B63E5"/><circle cx="28" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/><circle cx="44" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/></svg>
+    <span>делоскоп</span>
+  </a>
+  <a class="btn" href="/">Проверить</a>
+  <button class="btn" id="logout" hidden>Выйти</button>
+</div>
+
+<main class="wrap">
+  <p class="muted" id="loading">Загружаем кабинет…</p>
+
+  <!-- вход -->
+  <section class="card" id="login" hidden>
+    <h1>Вход в кабинет</h1>
+    <p class="sub">Без пароля: пришлём на почту код из 6 цифр. История проверок и слежение за контрагентами сохранятся в кабинете.</p>
+    <form id="fEmail" class="field" novalidate>
+      <input id="email" type="email" inputmode="email" autocomplete="email" placeholder="Ваша почта" required maxlength="254">
+      <button class="btn primary" type="submit">Получить код</button>
+    </form>
+    <form id="fCode" class="field" novalidate hidden style="margin-top:10px">
+      <input id="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="\d{6}" maxlength="6" placeholder="Код из письма">
+      <button class="btn primary" type="submit">Войти</button>
+    </form>
+    <p class="note" id="lnote" role="status" aria-live="polite"></p>
+  </section>
+
+  <!-- кабинет -->
+  <div id="cab" hidden>
+    <section class="card">
+      <div class="who">
+        <div>
+          <h1 id="uname">Кабинет</h1>
+          <div class="muted" id="uemail"></div>
+        </div>
+        <span class="plan" id="uplan">Бесплатный</span>
+      </div>
+      <div class="stats">
+        <div class="stat"><b id="sChecks">0</b><span>компаний проверено</span></div>
+        <div class="stat"><b id="sWatch">0</b><span id="sWatchL">под слежением</span></div>
+        <div class="stat"><b id="sLeft">—</b><span>подробных досье осталось в месяце</span></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Слежение за контрагентами</h2>
+      <p class="sub" style="margin:0">Сообщим, если у компании изменится уровень риска: появится долг, сменится директор, адрес признают недостоверным.</p>
+      <ul class="list" id="watch"></ul>
+      <p class="empty" id="watchEmpty" hidden>Пока никого. Добавьте ИНН ключевого поставщика или покупателя.</p>
+      <form id="fWatch" class="field watchadd" novalidate>
+        <input id="winn" type="text" inputmode="numeric" maxlength="12" placeholder="ИНН компании">
+        <input id="wnote" type="text" maxlength="200" placeholder="Заметка — например, «поставщик металла»">
+        <button class="btn" type="submit">Добавить</button>
+      </form>
+      <p class="note" id="wnote2" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="card">
+      <h2>Мои проверки</h2>
+      <ul class="list" id="checks"></ul>
+      <p class="empty" id="checksEmpty" hidden>Проверок пока нет. <a href="/">Проверить первую компанию →</a></p>
+    </section>
+  </div>
+</main>
+
+<script>
+(function(){
+  var API=(location.hostname.endsWith('deloskop.ru')?'https://api.deloskop.ru':'');
+  var PLANS={free:'Бесплатный',start:'Старт',pro:'Профи',business:'Бизнес'};
+  var LEVELS={low:'Низкий риск',medium:'Средний риск',high:'Высокий риск'};
+  var $=function(id){return document.getElementById(id)};
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function call(path,opt){opt=opt||{};opt.credentials='include';
+    if(opt.body){opt.headers={'Content-Type':'application/json'};opt.body=JSON.stringify(opt.body)}
+    return fetch(API+path,opt).then(function(r){return r.json().catch(function(){return {}}).then(function(j){
+      if(!r.ok)throw new Error((j&&j.detail&&(typeof j.detail==='string'?j.detail:'Проверьте введённые данные'))||'Сервис не ответил, попробуйте ещё раз');return j})})}
+  function fmtDate(s){try{return new Date(s).toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric',timeZone:'Europe/Moscow'})}catch(_){return ''}}
+  function pill(l){return '<span class="pill '+(LEVELS[l]?l:'none')+'">'+(LEVELS[l]||'Нет данных')+'</span>'}
+  function note(el,text,cls){el.className='note'+(cls?' '+cls:'');el.textContent=text||''}
+  function validInn(v){return /^\d{10}$|^\d{12}$/.test(v)}
+
+  // ---- вход по коду ----
+  var email='';
+  $('fEmail').onsubmit=function(e){e.preventDefault();
+    email=$('email').value.trim().toLowerCase();
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){note($('lnote'),'Проверьте адрес почты','err');return}
+    var b=this.querySelector('button');b.disabled=true;note($('lnote'),'Отправляем код…');
+    call('/api/auth/email/start',{method:'POST',body:{email:email}}).then(function(){
+      $('fCode').hidden=false;$('code').focus();note($('lnote'),'Код отправлен на '+email+'. Письмо может идти до минуты — проверьте и «Спам».','ok');
+    }).catch(function(err){note($('lnote'),err.message,'err')}).then(function(){b.disabled=false})};
+  $('fCode').onsubmit=function(e){e.preventDefault();
+    var code=$('code').value.replace(/\D/g,'');
+    if(code.length!==6){note($('lnote'),'Код — 6 цифр из письма','err');return}
+    var b=this.querySelector('button');b.disabled=true;
+    call('/api/auth/email/verify',{method:'POST',body:{email:email,code:code}}).then(load)
+      .catch(function(err){note($('lnote'),err.message,'err')}).then(function(){b.disabled=false})};
+  $('code').addEventListener('input',function(){if(this.value.replace(/\D/g,'').length===6)$('fCode').requestSubmit()});
+
+  $('logout').onclick=function(){call('/api/auth/logout',{method:'POST'}).catch(function(){}).then(function(){location.reload()})};
+
+  // ---- кабинет ----
+  function renderChecks(rows){
+    $('sChecks').textContent=rows.length;
+    $('checksEmpty').hidden=!!rows.length;
+    $('checks').innerHTML=rows.map(function(r){
+      return '<li><div class="nm"><b>'+esc(r.name||('ИНН '+r.inn))+'</b><span>ИНН '+esc(r.inn)+' · '+esc(fmtDate(r.created_at))+'</span></div>'+pill(r.risk_level)+
+        '<div class="acts">'+(r.report_id?'<a href="/report.html?id='+encodeURIComponent(r.report_id)+'">Досье</a>':'')+
+        '<a href="/?inn='+encodeURIComponent(r.inn)+'">Проверить снова</a></div></li>'}).join('');
+  }
+  function renderWatch(j){
+    var rows=j.watchlist||[];
+    $('sWatch').textContent=rows.length+' из '+(j.limit||1);
+    $('watchEmpty').hidden=!!rows.length;
+    $('watch').innerHTML=rows.map(function(r){
+      return '<li><div class="nm"><b>'+esc(r.name||('ИНН '+r.inn))+'</b><span>ИНН '+esc(r.inn)+(r.note?' · '+esc(r.note):'')+'</span></div>'+pill(r.last_level)+
+        '<div class="acts"><a href="/?inn='+encodeURIComponent(r.inn)+'">Проверить</a><button type="button" data-del="'+esc(r.inn)+'">Убрать</button></div></li>'}).join('');
+  }
+  function loadWatch(){return call('/api/me/watchlist').then(renderWatch)}
+  $('watch').addEventListener('click',function(e){var b=e.target.closest('[data-del]');if(!b)return;
+    call('/api/me/watchlist/'+encodeURIComponent(b.dataset.del),{method:'DELETE'}).then(loadWatch)
+      .catch(function(err){note($('wnote2'),err.message,'err')})});
+  $('fWatch').onsubmit=function(e){e.preventDefault();
+    var inn=$('winn').value.replace(/\D/g,'');
+    if(!validInn(inn)){note($('wnote2'),'ИНН — 10 цифр у компании или 12 у ИП','err');return}
+    var b=this.querySelector('button');b.disabled=true;
+    call('/api/me/watchlist',{method:'POST',body:{inn:inn,note:$('wnote').value.trim()||null}}).then(function(){
+      $('winn').value='';$('wnote').value='';note($('wnote2'),'Добавили. Сообщим, если что-то изменится.','ok');return loadWatch()})
+      .catch(function(err){note($('wnote2'),err.message,'err')}).then(function(){b.disabled=false})};
+
+  function load(){
+    return call('/api/me').then(function(j){
+      $('loading').hidden=true;
+      if(!j.user){$('login').hidden=false;$('cab').hidden=true;$('logout').hidden=true;return}
+      var u=j.user;$('login').hidden=true;$('cab').hidden=false;$('logout').hidden=false;
+      $('uname').textContent=u.name||'Личный кабинет';
+      $('uemail').textContent=u.email||'';
+      $('uplan').textContent='Тариф: '+(PLANS[u.plan]||u.plan)+(u.plan_until?' · до '+fmtDate(u.plan_until):'');
+      $('sLeft').textContent=u.plan==='free'?'—':u.full_reports_left;
+      return Promise.all([call('/api/me/checks').then(function(c){renderChecks(c.checks||[])}),loadWatch()]);
+    }).catch(function(err){$('loading').hidden=false;$('loading').textContent='Не получилось загрузить кабинет: '+err.message});
+  }
+  if(!API){$('loading').textContent='Кабинет работает на deloskop.ru.';return}
+  load();
+})();
+</script>
+</body>
+</html>

@@ -135,8 +135,18 @@ ul.list .nm span{color:var(--muted);font-size:13px}
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
   function call(path,opt){opt=opt||{};opt.credentials='include';
     if(opt.body){opt.headers={'Content-Type':'application/json'};opt.body=JSON.stringify(opt.body)}
-    return fetch(API+path,opt).then(function(r){return r.json().catch(function(){return {}}).then(function(j){
-      if(!r.ok)throw new Error((j&&j.detail&&(typeof j.detail==='string'?j.detail:'Проверьте введённые данные'))||'Сервис не ответил, попробуйте ещё раз');return j})})}
+    // ошибки браузера («Failed to fetch» и т. п.) показываем по-русски и с объяснением
+    return fetch(API+path,opt).catch(function(){
+      throw new Error(navigator.onLine===false
+        ?'Нет интернета: телефон или компьютер сейчас не в сети. Подключитесь и повторите.'
+        :'Нет связи с сервером Делоскопа: запрос не дошёл или ответ оборвался. Обычно это на минуту — повторите чуть позже.')
+    }).then(function(r){return r.json().catch(function(){return {}}).then(function(j){
+      if(!r.ok){
+        if(j&&typeof j.detail==='string')throw new Error(j.detail);
+        if(r.status===429)throw new Error('Слишком много попыток подряд. Подождите минуту и повторите.');
+        if(r.status>=500)throw new Error('Сервер Делоскопа не справился с запросом (ошибка '+r.status+'). Мы видим такие сбои в журнале; повторите через минуту.');
+        throw new Error('Проверьте введённые данные (ошибка '+r.status+').');}
+      return j})})}
   function fmtDate(s){try{return new Date(s).toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric',timeZone:'Europe/Moscow'})}catch(_){return ''}}
   function pill(l){return '<span class="pill '+(LEVELS[l]?l:'none')+'">'+(LEVELS[l]||'Нет данных')+'</span>'}
   function note(el,text,cls){el.className='note'+(cls?' '+cls:'');el.textContent=text||''}

@@ -92,6 +92,8 @@ p{margin:0}
 .report-actions{display:flex;gap:10px;flex-wrap:wrap}
 .report-actions button{border:1px solid #D9D9D4;background:transparent;font:inherit;font-size:15px;font-weight:600;border-radius:12px;padding:10px 16px;cursor:pointer;color:var(--ink)}
 .report-actions button:hover{border-color:var(--accent);color:var(--accent)}
+.report-actions .btn-doc{background:var(--accent);color:#fff;font-size:15px;font-weight:600;border-radius:12px;padding:10px 16px;border:1px solid var(--accent)}
+.report-actions .btn-doc:hover{background:var(--accent-hover);color:#fff}
 .check{position:relative}
 .sugg{position:absolute;left:0;right:0;top:calc(100% + 6px);background:var(--card);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.14);list-style:none;margin:0;padding:6px;z-index:30;max-height:360px;overflow:auto}
 .sugg li{padding:10px 12px;border-radius:10px;cursor:pointer;display:flex;flex-direction:column;gap:2px}
@@ -489,10 +491,14 @@ footer a{color:var(--ink2)}
       '<div class="company">'+esc(name)+'</div><div class="sub">'+sub+'</div></div>'+
       '<div class="pill '+lvl+'">'+(lvl==='low'?ICON:WARNI)+esc(r.risk_title||'')+'</div></div>'+
       '<div class="rows">'+rows+'</div><div class="verdict">'+esc(r.verdict||'')+'</div>'+
-      '<div class="report-actions"><button type="button" data-act="copy">Скопировать вывод</button><button type="button" data-act="again">Проверить другую</button></div>'+
+      '<div class="report-actions">'+(r.report_id?'<a class="btn-doc" href="/report.html?id='+encodeURIComponent(r.report_id)+'" target="_blank" rel="noopener">PDF-досье</a><button type="button" data-act="link">Ссылка на отчёт</button>':'<button type="button" data-act="copy">Скопировать вывод</button>')+'<button type="button" data-act="again">Проверить другую</button></div>'+
       '<div class="src">Источники: ЕГРЮЛ/ЕГРИП и открытые данные ФНС. Это оценка риска, а не решение банка.</div>';
     report.querySelector('[data-act="again"]').onclick=function(){input.value='';focusInn({preventDefault:function(){}})};
-    report.querySelector('[data-act="copy"]').onclick=function(e){
+    var lb=report.querySelector('[data-act="link"]');
+    if(lb)lb.onclick=function(){var u=location.origin+'/report.html?id='+encodeURIComponent(r.report_id);
+      try{navigator.clipboard.writeText(u).then(function(){lb.textContent='Ссылка скопирована'})}catch(_){}};
+    var cb=report.querySelector('[data-act="copy"]');
+    if(cb)cb.onclick=function(e){
       var t=name+' (ИНН '+c.inn+'): '+(r.risk_title||'')+'. '+(r.verdict||'')+' — проверено на deloskop.ru';
       try{navigator.clipboard.writeText(t);e.target.textContent='Скопировано'}catch(_){}};
   }

@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Досье контрагента — Делоскоп</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#F5F5F2">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F5F5F2;--card:#fff;--ink:#1D1D1F;--ink2:#48484C;--muted:#6B6B70;--line:#E6E6E1;--accent:#0B63E5;
+  --ok:#16723F;--ok-bg:#E8F5EE;--warn:#9A5B00;--warn-bg:#FFF4E0;--bad:#B3261E;--bad-bg:#FDECEA}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}
+.bar{max-width:860px;margin:0 auto;padding:20px 16px 0;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.bar .home{margin-right:auto;display:flex;align-items:center;gap:8px;font-weight:600;font-size:18px;color:var(--ink);letter-spacing:-.02em}
+.btn{border:1px solid #D9D9D4;background:var(--card);font:inherit;font-size:15px;font-weight:600;border-radius:12px;padding:10px 16px;cursor:pointer;color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn:hover{border-color:var(--accent)}
+.doc{max-width:860px;margin:16px auto 48px;background:var(--card);border-radius:24px;padding:clamp(22px,5vw,48px);box-shadow:0 1px 2px rgba(0,0,0,.04),0 24px 60px rgba(0,0,0,.06)}
+.dhead{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;border-bottom:2px solid var(--ink);padding-bottom:16px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:17px}
+.dtitle{font-size:13px;color:var(--muted);text-align:right;line-height:1.45}
+.dtitle b{display:block;color:var(--ink);font-size:15px}
+h1{font-size:clamp(24px,4vw,32px);letter-spacing:-.03em;line-height:1.15;margin:22px 0 4px;font-weight:600}
+.sub{color:var(--ink2)}
+.risk{display:flex;gap:14px;align-items:center;margin:20px 0 6px;padding:16px 18px;border-radius:16px;background:var(--ok-bg);color:var(--ok)}
+.risk.medium{background:var(--warn-bg);color:var(--warn)} .risk.high{background:var(--bad-bg);color:var(--bad)}
+.risk b{font-size:19px;white-space:nowrap}
+.risk span{color:var(--ink);font-size:15px}
+h2{font-size:16px;margin:28px 0 8px;font-weight:600;letter-spacing:-.01em}
+table{width:100%;border-collapse:collapse}
+td,th{text-align:left;vertical-align:top;padding:9px 0;border-top:1px solid var(--line)}
+th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
+.sig td:first-child{width:38%;padding-right:16px}
+.sig .st{font-weight:600}
+.sig .ok{color:var(--ok)} .sig .warn{color:var(--warn)} .sig .bad{color:var(--bad)} .sig .info{color:var(--ink2)}
+.sig small{display:block;color:var(--muted);font-size:12px;font-weight:400}
+.sign{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:36px}
+.sign div{border-top:1px solid var(--ink);padding-top:6px;font-size:12px;color:var(--muted)}
+.foot{margin-top:28px;font-size:12px;color:var(--muted);line-height:1.55}
+.foot .link{color:var(--ink);word-break:break-all}
+.msg{max-width:860px;margin:60px auto;padding:0 16px;text-align:center;color:var(--ink2)}
+@media (max-width:560px){th,.sig td:first-child{width:auto;display:block;padding-bottom:0;border:0}td,th{display:block}tr{display:block;border-top:1px solid var(--line);padding:6px 0}td{border:0;padding-top:2px}.sign{grid-template-columns:1fr}.dhead{flex-direction:column}.dtitle{text-align:left}}
+@media print{
+  @page{size:A4;margin:14mm 14mm 16mm}
+  body{background:#fff;font-size:11pt}
+  .bar,.noprint{display:none!important}
+  .doc{box-shadow:none;margin:0;padding:0;border-radius:0;max-width:none}
+  .risk{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  tr{break-inside:avoid}
+  a{color:var(--ink)}
+}
+</style>
+</head>
+<body>
+<div class="bar noprint">
+  <a class="home" href="/"><svg width="30" height="27" viewBox="0 0 72 64" fill="none" aria-hidden="true"><path d="M36 18.1A16 16 0 0 1 36 45.9A16 16 0 0 1 36 18.1Z" fill="#0B63E5"/><circle cx="28" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/><circle cx="44" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/></svg>делоскоп</a>
+  <button class="btn" type="button" id="share" hidden>Скопировать ссылку</button>
+  <button class="btn primary" type="button" id="pdf" hidden>Скачать PDF</button>
+</div>
+<p class="msg" id="msg">Загружаем отчёт…</p>
+<article class="doc" id="doc" hidden></article>
+<script>
+(function(){
+  var API=(location.hostname.endsWith('deloskop.ru')?'https://api.deloskop.ru':'');
+  var id=new URLSearchParams(location.search).get('id')||'';
+  var msg=document.getElementById('msg'), doc=document.getElementById('doc');
+  function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  function d(v){if(!v)return '';var x=new Date(v);return isNaN(x)?esc(v):x.toLocaleDateString('ru-RU')}
+  var ST={ACTIVE:'Действующая',LIQUIDATING:'Ликвидируется',LIQUIDATED:'Ликвидирована',BANKRUPT:'Банкротство',REORGANIZING:'Реорганизация'};
+  var STX={ok:'Норма',info:'Справочно',warn:'Внимание',bad:'Риск'};
+  var LOGO='<svg width="26" height="23" viewBox="0 0 72 64" fill="none" aria-hidden="true"><path d="M36 18.1A16 16 0 0 1 36 45.9A16 16 0 0 1 36 18.1Z" fill="#0B63E5"/><circle cx="28" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/><circle cx="44" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/></svg>';
+  function fail(t){msg.innerHTML=t+' <a href="/">Проверить компанию</a>';}
+  if(!/^[A-Za-z0-9_-]{8,24}$/.test(id)){fail('Ссылка на отчёт неполная.');return;}
+  if(!API){fail('Отчёты открываются на deloskop.ru.');return;}
+  fetch(API+'/api/report/'+encodeURIComponent(id)).then(function(r){if(!r.ok)throw r.status;return r.json()}).then(render)
+    .catch(function(s){fail(s===404?'Отчёт не найден — проверьте ссылку.':'Не получилось загрузить отчёт. Попробуйте обновить страницу.')});
+
+  function render(r){
+    var c=r.company||{}, lvl=r.risk_level||'low', at=new Date(r.checked_at);
+    var name=c.name_full||c.name_short||('ИНН '+c.inn);
+    var link=location.origin+'/report.html?id='+encodeURIComponent(id);
+    document.title='Досье: '+(c.name_short||name)+' — Делоскоп';
+    var rows=[['Полное наименование',c.name_full],['ИНН',c.inn],['КПП',c.kpp],[c.kind==='INDIVIDUAL'?'ОГРНИП':'ОГРН',c.ogrn],
+      ['Статус',ST[c.status]||c.status],['Дата регистрации',d(c.reg_date)],['Адрес',c.address],
+      [c.kind==='INDIVIDUAL'?'Предприниматель':(c.director_post||'Руководитель'),c.director_name],
+      ['Основной вид деятельности',c.okved?(c.okved+(c.okved_name?' — '+c.okved_name:'')):'']]
+      .filter(function(x){return x[1]}).map(function(x){return '<tr><th>'+esc(x[0])+'</th><td>'+esc(x[1])+'</td></tr>'}).join('');
+    var sig=(r.signals||[]).map(function(x){
+      var src=[x.source,x.as_of?('на '+d(x.as_of)):''].filter(Boolean).join(', ');
+      return '<tr><td>'+esc(x.title)+(src?'<small>'+esc(src)+'</small>':'')+'</td><td><span class="st '+esc(x.status)+'">'+STX[x.status]+'</span>'+(x.detail?' — '+esc(x.detail):'')+'</td></tr>';
+    }).join('');
+    doc.innerHTML=
+      '<div class="dhead"><div class="brand">'+LOGO+'делоскоп</div><div class="dtitle"><b>Досье контрагента</b>№ '+esc(id)+'<br>Сформировано '+at.toLocaleDateString('ru-RU',{timeZone:'Europe/Moscow'})+' в '+at.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Moscow'})+' (МСК)</div></div>'+
+      '<h1>'+esc(c.name_short||name)+'</h1><div class="sub">ИНН '+esc(c.inn)+(c.status?' · '+esc((ST[c.status]||c.status).toLowerCase()):'')+'</div>'+
+      '<div class="risk '+lvl+'"><b>'+esc(r.risk_title||'')+'</b><span>'+esc(r.verdict||'')+'</span></div>'+
+      '<h2>Сведения о компании</h2><table>'+rows+'</table>'+
+      '<h2>Результаты проверки</h2><table class="sig">'+sig+'</table>'+
+      '<h2>Что проверено</h2><div class="sub">Сведения ЕГРЮЛ/ЕГРИП, отметки ФНС о недостоверности, задолженность по налогам, налоговые правонарушения, среднесписочная численность, доходы и расходы, уплаченные налоги, спецрежимы, реестр дисквалифицированных лиц — по открытым данным ФНС России.</div>'+
+      '<div class="sign"><div>Проверку провёл (ФИО, должность)</div><div>Подпись, дата</div></div>'+
+      '<div class="foot">Досье подтверждает, что проверка контрагента проведена до заключения сделки (проявление должной осмотрительности). Это оценка риска по открытым данным, а не решение банка или налогового органа.<br>Подлинность досье: <span class="link">'+esc(link)+'</span></div>';
+    msg.hidden=true; doc.hidden=false;
+    var pdf=document.getElementById('pdf'), share=document.getElementById('share');
+    pdf.hidden=share.hidden=false;
+    pdf.onclick=function(){window.print()};
+    share.onclick=function(){
+      var done=function(){share.textContent='Ссылка скопирована'};
+      if(navigator.share&&/Mobi/i.test(navigator.userAgent)){navigator.share({title:document.title,url:link}).catch(function(){});return;}
+      try{navigator.clipboard.writeText(link).then(done,function(){prompt('Ссылка на отчёт:',link)})}catch(e){prompt('Ссылка на отчёт:',link)}};
+    if(new URLSearchParams(location.search).get('print')==='1')setTimeout(function(){window.print()},400);
+  }
+})();
+</script>
+</body>
+</html>

@@ -54,7 +54,7 @@ p{margin:0}
 .nav a:hover{color:var(--accent)}
 .btn{display:inline-flex;align-items:center;justify-content:center;border:0;cursor:pointer;font:inherit;font-weight:600;border-radius:999px;background:var(--accent);color:#fff;padding:12px 22px;font-size:15px;min-height:44px}
 .btn:hover{background:var(--accent-hover);color:#fff}
-@media (max-width:900px){.nav{display:none}}
+@media (max-width:900px){.top .wrap{height:auto;flex-wrap:wrap;row-gap:0;padding-top:12px;padding-bottom:0;column-gap:10px}.topact{gap:12px;margin-left:auto}.topact .btn{padding:10px 16px}.nav{order:3;width:100%;overflow-x:auto;gap:22px;padding:6px 0 12px;font-size:15px;scrollbar-width:none;-webkit-overflow-scrolling:touch}.nav::-webkit-scrollbar{display:none}.nav a{white-space:nowrap}}
 .topact{display:flex;align-items:center;gap:18px}
 .login{color:var(--ink);font-weight:500;font-size:15px}
 .login:hover{color:var(--accent)}
@@ -118,6 +118,7 @@ p{margin:0}
 .sources .sect-head{margin-bottom:0}
 .chips{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .soon{margin-top:14px;font-size:14px;color:var(--muted)}
+.report{scroll-margin-top:120px}
 .tagnew{display:inline-block;font-size:12px;font-weight:600;color:var(--accent);background:#EEF3FD;border-radius:999px;padding:2px 9px;margin-left:8px;vertical-align:2px}
 .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
 @media (max-width:980px){.grid3{grid-template-columns:1fr}}
@@ -138,7 +139,7 @@ p{margin:0}
 .why .fn a{color:var(--muted);text-decoration:underline}
 .chip{background:var(--card);border-radius:18px;padding:20px 22px;font-size:17px;font-weight:500}
 @media (max-width:980px){.sources .wrap{grid-template-columns:1fr;gap:40px}}
-@media (max-width:520px){.chips{grid-template-columns:1fr}}
+@media (max-width:520px){.chips{gap:8px}.chip{padding:14px 14px;font-size:15px;border-radius:14px}}
 
 .ai{background:var(--dark);color:#F5F5F7}
 .ai .wrap{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center}
@@ -211,6 +212,7 @@ footer a{color:var(--ink2)}
 /* обратная связь */
 .fb-btn{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:30;display:flex;align-items:center;gap:8px;border:0;cursor:pointer;font:inherit;font-size:15px;font-weight:600;color:var(--ink);background:#fff;border-radius:999px;padding:12px 18px;min-height:44px;box-shadow:0 2px 6px rgba(0,0,0,.08),0 12px 32px rgba(0,0,0,.12)}
 .fb-btn:hover{color:var(--accent)}
+@media (max-width:640px){.fb-btn{width:48px;height:48px;padding:0;justify-content:center;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px))}.fb-btn .fb-t{display:none}}
 .fb-panel{position:fixed;right:20px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:31;width:min(380px,calc(100vw - 40px));background:#fff;border-radius:24px;padding:24px;box-shadow:0 4px 12px rgba(0,0,0,.08),0 24px 64px rgba(0,0,0,.18);display:flex;flex-direction:column;gap:14px}
 .fb-panel h3{font-size:20px;letter-spacing:-0.02em}
 .fb-kinds{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
@@ -264,7 +266,7 @@ footer a{color:var(--ink2)}
           <input id="inn" name="inn" type="text" inputmode="search" autocomplete="off" placeholder="ИНН или название компании">
           <button type="submit">Проверить</button>
         </form>
-        <p class="note" id="note" role="status" aria-live="polite">Первые проверки — бесплатно.</p>
+        <p class="note" id="note" role="status" aria-live="polite">3 проверки в день — бесплатно, без регистрации.</p>
       </div>
 
       <div class="report" aria-label="Пример отчёта">
@@ -380,28 +382,22 @@ footer a{color:var(--ink2)}
     </div>
   </section>
 
-  <section class="sect" id="docs">
+  <section class="sect" id="schet">
     <div class="wrap grid2">
+      <div style="display:flex;flex-direction:column;gap:18px;justify-content:center">
+        <div class="eyebrow">Новое · бесплатно</div>
+        <h2 class="h2">Проверь счёт перед оплатой</h2>
+        <p class="lead">Загрузите счёт в PDF или вставьте реквизиты. За минуту скажем, можно ли платить, и подскажем назначение платежа. Файл не уходит с вашего компьютера.</p>
+        <div><a class="btn" href="/proverit-schet/">Проверить счёт</a></div>
+      </div>
       <article class="feature">
-        <h3>Конструктор документов <span class="tagnew">скоро</span></h3>
-        <p>Договор, пояснение в банк, запрос документов у контрагента. Реквизиты подставляются сами из проверки.</p>
+        <h3>Что проверяем</h3>
         <div class="doclist">
-          <div><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="4" y="2.5" width="12" height="15" rx="2" stroke="#1D1D1F" stroke-width="1.6"/><path d="M7 7H13M7 10H13M7 13H10" stroke="#1D1D1F" stroke-width="1.6" stroke-linecap="round"/></svg>Пояснение в банк по 115-ФЗ</div>
-          <div><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="4" y="2.5" width="12" height="15" rx="2" stroke="#1D1D1F" stroke-width="1.6"/><path d="M7 7H13M7 10H13M7 13H10" stroke="#1D1D1F" stroke-width="1.6" stroke-linecap="round"/></svg>Запрос документов у контрагента</div>
-          <div><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="4" y="2.5" width="12" height="15" rx="2" stroke="#1D1D1F" stroke-width="1.6"/><path d="M7 7H13M7 10H13M7 13H10" stroke="#1D1D1F" stroke-width="1.6" stroke-linecap="round"/></svg>Договор поставки или услуг</div>
-        </div>
-      </article>
-      <article class="feature">
-        <h3>Карточка реквизитов</h3>
-        <p>Аккуратная карточка компании в один клик: отправить партнёру, вставить в счёт или распечатать.</p>
-        <div class="card-rq" aria-label="Пример карточки реквизитов">
-          <div class="t">ООО «Пример» <svg width="27" height="24" viewBox="0 0 72 64" fill="none" aria-hidden="true"><path d="M36 18.1A16 16 0 0 1 36 45.9A16 16 0 0 1 36 18.1Z" fill="#0B63E5"/><circle cx="28" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/><circle cx="44" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/></svg></div>
-          <div class="kv">
-            <div><span>ИНН / КПП</span>0000000000 / 000000000</div>
-            <div><span>ОГРН</span>0000000000000</div>
-            <div><span>Банк</span>АО «Банк»</div>
-            <div><span>Р/с</span>40702810000000000000</div>
-          </div>
+          <div><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>ИНН поставщика настоящий</div>
+          <div><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Расчётный счёт сходится с БИК — ловит подмену реквизитов</div>
+          <div><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Деньги уйдут компании, а не на личную карту</div>
+          <div><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>НДС по верной ставке 22%</div>
+          <div><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Поставщик без признаков технической компании</div>
         </div>
       </article>
     </div>
@@ -439,7 +435,7 @@ footer a{color:var(--ink2)}
     <div class="wrap">
       <div class="sect-head">
         <h2 class="h2">Попробуйте бесплатно. Растите вместе с нами.</h2>
-        <p class="lead">Частным лицам — картой. Компаниям и ИП — по счёту, с закрывающими документами.</p>
+        <p class="lead">Компаниям и ИП — по счёту, с закрывающими документами. Оплата картой на сайте — скоро.</p>
         <div class="period" role="group" aria-label="Период оплаты">
           <button type="button" data-period="m">Помесячно</button>
           <button type="button" data-period="y" class="on">За год <em>−17%</em></button>
@@ -450,7 +446,7 @@ footer a{color:var(--ink2)}
           <div><div class="plan-name">Бесплатно </div><div class="plan-for">Чтобы разово проверить компанию</div></div>
           <div class="price"><b>0 ₽</b></div><div class="per">навсегда</div>
           <ul>
-            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>3 проверки в день</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Светофор рисков</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Карточка реквизитов</li>
+            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>3 проверки в день</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Светофор рисков</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Проверь счёт перед оплатой</li>
           </ul>
           <a class="cta ghost" href="#top" data-focus-inn>Проверить бесплатно</a>
         </div>
@@ -458,7 +454,7 @@ footer a{color:var(--ink2)}
           <div><div class="plan-name">Старт </div><div class="plan-for">ИП, самозанятым и частным лицам</div></div>
           <div class="price"><b data-m="490 ₽" data-y="408 ₽">408 ₽</b><span>в месяц</span></div><div class="per" data-m="при оплате помесячно" data-y="4 900 ₽ за год — 2 месяца в подарок">4 900 ₽ за год — 2 месяца в подарок</div>
           <ul>
-            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Базовые проверки без лимита</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>3 полных отчёта в месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>10 персональных разборов в месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Слежение за 3 компаниями</li>
+            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Базовые проверки без лимита</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>3 полных отчёта в месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>10 персональных разборов в месяц <span class="tagnew">скоро</span></span></li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Слежение за 3 компаниями</li>
           </ul>
           <a class="cta ghost" href="mailto:help@deloskop.ru?subject=Подключить%20тариф%20Старт">Подключить «Старт»</a>
         </div>
@@ -466,7 +462,7 @@ footer a{color:var(--ink2)}
           <div><div class="plan-name">Про <span class="badge">Рекомендуем</span></div><div class="plan-for">Малому бизнесу и бухгалтерам</div></div>
           <div class="price"><b data-m="1 490 ₽" data-y="1 242 ₽">1 242 ₽</b><span>в месяц</span></div><div class="per" data-m="при оплате помесячно" data-y="14 900 ₽ за год — 2 месяца в подарок">14 900 ₽ за год — 2 месяца в подарок</div>
           <ul>
-            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Базовые проверки без лимита</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>20 полных отчётов в месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Персональные разборы 115-ФЗ без лимита</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Конструктор документов</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Слежение за 10 компаниями</li>
+            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Базовые проверки без лимита</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>20 полных отчётов в месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Персональные разборы 115-ФЗ без лимита <span class="tagnew">скоро</span></span></li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Конструктор документов <span class="tagnew">скоро</span></span></li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Слежение за 10 компаниями</li>
           </ul>
           <a class="cta primary" href="mailto:help@deloskop.ru?subject=Подключить%20тариф%20Про">Подключить «Про»</a>
         </div>
@@ -474,7 +470,7 @@ footer a{color:var(--ink2)}
           <div><div class="plan-name">Бизнес </div><div class="plan-for">Отделам закупок и продаж</div></div>
           <div class="price"><b data-m="4 990 ₽" data-y="4 158 ₽">4 158 ₽</b><span>в месяц</span></div><div class="per" data-m="при оплате помесячно" data-y="49 900 ₽ за год — 2 месяца в подарок">49 900 ₽ за год — 2 месяца в подарок</div>
           <ul>
-            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>До 5 сотрудников</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Щит: разбор выписки из 1С каждый месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>80 полных отчётов в месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Слежение за 50 компаниями</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Ежедневный контроль блокировок у 3 партнёров</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Выгрузка в Excel и 1С</li>
+            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>До 5 сотрудников</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Щит: разбор выписки из 1С каждый месяц <span class="tagnew">скоро</span></span></li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>80 полных отчётов в месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Слежение за 50 компаниями</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Ежедневный контроль блокировок у 3 партнёров <span class="tagnew">скоро</span></span></li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Выгрузка в Excel и 1С <span class="tagnew">скоро</span></span></li>
           </ul>
           <a class="cta ghost" href="mailto:help@deloskop.ru?subject=Подключить%20тариф%20Бизнес">Подключить «Бизнес»</a>
         </div>
@@ -494,7 +490,7 @@ footer a{color:var(--ink2)}
         <details><summary>Подойдёт ли Делоскоп частному лицу?</summary><p>Да. Проверьте подрядчика, арендодателя или будущего работодателя, прежде чем подписывать договор и платить.</p></details>
         <details><summary>Гарантирует ли проверка, что банк не заблокирует счёт?</summary><p>Нет. Решение принимает банк. Делоскоп помогает заметить риски заранее и правильно подготовить документы.</p></details>
         <details><summary>Можно ли сменить тариф?</summary><p>Да, в любой момент. При переходе на тариф выше доплачиваете только разницу за оставшиеся дни.</p></details>
-        <details><summary>Как оплатить?</summary><p>Частные лица платят картой. Компании и ИП — по счёту, закрывающие документы пришлём автоматически.</p></details>
+        <details><summary>Как оплатить?</summary><p>Пока тарифы подключаем по заявке: напишите на <a href="mailto:help@deloskop.ru">help@deloskop.ru</a> — пришлём счёт для компании или ИП и закрывающие документы. Оплата картой на сайте появится скоро.</p></details>
         <details><summary>Где хранятся мои данные?</summary><p>На серверах в России, в соответствии с 152-ФЗ.</p></details>
       </div>
     </div>
@@ -511,9 +507,9 @@ footer a{color:var(--ink2)}
   </div>
 </footer>
 
-<button type="button" class="fb-btn" id="fbOpen" aria-haspopup="dialog">
+<button type="button" class="fb-btn" id="fbOpen" aria-haspopup="dialog" aria-label="Оставить отзыв">
   <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 4h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H9l-4 3v-3H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-  Отзыв
+  <span class="fb-t">Отзыв</span>
 </button>
 <div class="fb-panel" id="fbPanel" role="dialog" aria-modal="false" aria-labelledby="fbTitle" hidden>
   <button type="button" class="fb-close" id="fbClose" aria-label="Закрыть">×</button>

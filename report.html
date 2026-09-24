@@ -83,6 +83,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
 .chart.wide{grid-column:1/-1}
 .chart h3{margin:0;font-size:14px;font-weight:600}
 .chart .cs{font-size:12px;color:var(--muted);margin:2px 0 6px}
+.hb{display:flex;flex-direction:column;gap:12px;margin-top:10px}.hb-top{display:flex;justify-content:space-between;gap:12px;font-size:14px;color:var(--ink2)}.hb-top b{color:var(--ink);white-space:nowrap}.hb-track{height:10px;border-radius:999px;background:#EEF0EC;margin-top:5px;overflow:hidden}.hb-track i{display:block;height:100%;border-radius:999px;background:#0B63E5;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .chart svg{display:block;width:100%;height:auto;overflow:visible}
 .chart svg text{font-family:inherit;fill:var(--muted);font-size:11px}
 .chart svg text.val{fill:var(--ink);font-weight:600}
@@ -177,13 +178,10 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
     return '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(opt.title)+'">'+g+'</svg>';
   }
   function hbarChart(data){
-    var W=760,rowH=30,L=250,R=110,H=data.length*rowH+6,mx=Math.max.apply(null,data.map(function(d){return d.value}))||1,g='';
-    data.forEach(function(d,i){var y=i*rowH+6,w=Math.max(2,(W-L-R)*d.value/mx),bh=16,yb=y+(rowH-bh)/2-3;
-      g+='<rect x="0" y="'+y+'" width="'+W+'" height="'+rowH+'" fill="transparent" data-tip="'+esc(d.name)+'" data-val="'+esc(money(d.value))+'"/>';
-      g+='<text x="0" y="'+(yb+12)+'" style="fill:var(--ink2);font-size:12px">'+esc(d.name.length>38?d.name.slice(0,37)+'…':d.name)+'</text>';
-      g+='<path pointer-events="none" d="M'+L+','+yb+'H'+(L+w-4)+'Q'+(L+w)+','+yb+' '+(L+w)+','+(yb+4)+'V'+(yb+bh-4)+'Q'+(L+w)+','+(yb+bh)+' '+(L+w-4)+','+(yb+bh)+'H'+L+'Z" fill="'+C1+'"/>';
-      g+='<text class="val" x="'+(L+w+8)+'" y="'+(yb+12)+'">'+money(d.value)+'</text>';});
-    return '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Структура уплаченных налогов">'+g+'</svg>';
+    var mx=Math.max.apply(null,data.map(function(d){return d.value}))||1;
+    return '<div class="hb" role="img" aria-label="Структура уплаченных налогов">'+data.map(function(d){
+      return '<div class="hb-row" data-tip="'+esc(d.name)+'" data-val="'+esc(money(d.value))+'"><div class="hb-top"><span>'+esc(d.name)+'</span><b>'+money(d.value)+'</b></div>'+
+        '<div class="hb-track"><i style="width:'+Math.max(1,100*d.value/mx).toFixed(1)+'%"></i></div></div>'}).join('')+'</div>';
   }
   function balanceChart(b){
     var parts=[['Собственный капитал',Math.max(b.equity,0),C1],['Долгосрочные долги',b.long_debt,C2],['Краткосрочные долги',b.short_debt,C3]].filter(function(p){return p[1]>0});

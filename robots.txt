@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
 Disallow: /nalichnye/tests/
+Disallow: /tests/
 
 Sitemap: https://deloskop.ru/sitemap.xml

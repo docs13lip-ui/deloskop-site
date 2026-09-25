@@ -125,6 +125,10 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
   tr{break-inside:avoid}
   a{color:var(--ink)}
 }
+.q{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;margin-left:5px;border-radius:50%;border:0;background:#E3E6E0;color:#48484C;font:600 11px/1 inherit;cursor:pointer;vertical-align:1px;padding:0}.q:hover,.q[aria-expanded=true]{background:#0B63E5;color:#fff}
+#qpop{position:absolute;z-index:60;max-width:300px;background:#fff;color:#1D1D1F;border-radius:14px;padding:12px 14px;font-size:13.5px;line-height:1.45;box-shadow:0 12px 36px rgba(0,0,0,.18);border:1px solid #E6E6E1}#qpop b{display:block;margin-bottom:4px;font-size:14px}
+.debts .hb-track i.pay{background:#eb6834}.debts .hb-track i.loan{background:#9A5B00}.debts .dn{font-size:13px;color:var(--ink2);margin-top:12px;line-height:1.45}
+@media print{.q,#qpop{display:none!important}}
 </style>
 </head>
 <body>
@@ -195,14 +199,62 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
       lg+='<span><i style="background:'+p[2]+'"></i>'+esc(p[0])+' — '+money(p[1])+'</span>';x+=w+2;});
     return '<svg viewBox="0 0 '+W+' 26" role="img" aria-label="Структура пассивов" style="margin-top:10px">'+g+'</svg><div class="legend">'+lg+'</div>';
   }
+
+  // ---- словарь: простыми словами о каждом термине ----
+  var GL=[
+    [/^Выручка/,'Выручка','Все деньги, которые компания получила от продаж за год, до вычета расходов. Показывает размер бизнеса, но не заработок.'],
+    [/^Чистая прибыль/,'Чистая прибыль','Что осталось у компании после всех расходов и налогов. Если число с минусом — это убыток: компания потратила больше, чем заработала.'],
+    [/^Активы/,'Активы','Всё, чем владеет компания: деньги на счетах, товары, оборудование, недвижимость и долги ей от покупателей.'],
+    [/^Собственный капитал/,'Собственный капитал','Активы минус все долги — то, что останется владельцам, если раздать долги. Отрицательный капитал значит, что долгов больше, чем имущества.'],
+    [/^Фирме должны|дебитор/i,'Фирме должны (дебиторская задолженность)','Деньги, которые покупатели и партнёры ещё не заплатили компании на дату отчёта. Большая сумма — часть выручки «зависла» у клиентов, и живых денег у компании меньше, чем кажется.'],
+    [/^Фирма должна|кредитор/i,'Фирма должна (кредиторская задолженность)','Неоплаченные счета поставщиков, долги по зарплате и налогам на дату отчёта. При отсрочках это нормально. Тревожно, если сумма растёт быстрее выручки — компания может задерживать платежи.'],
+    [/^Кредиты и займы/,'Кредиты и займы','Деньги, взятые в долг у банков, владельцев или других компаний, которые нужно вернуть с процентами.'],
+    [/^Долг перед бюджетом|^Задолженность всего/,'Долг перед бюджетом','Неуплаченные налоги, пени и штрафы по данным ФНС. Крупный долг — риск, что налоговая заблокирует счёт компании, и ваши деньги по сделке застрянут.'],
+    [/^Налоги и взносы|^Уплачено налогов/,'Налоги и взносы','Сколько компания реально перечислила в бюджет за год: налоги и страховые взносы за сотрудников.'],
+    [/^Налоговая нагрузка/,'Налоговая нагрузка','Какую долю от доходов компания отдаёт в виде налогов. Если она сильно ниже средней по отрасли, налоговая задаёт вопросы — и может снять вычеты у контрагентов.'],
+    [/^Сотрудники/,'Сотрудники','Среднесписочная численность по отчёту в ФНС. Ноль или один человек при крупных оборотах — частый признак «технической» компании.'],
+    [/^Доходы за год/,'Доходы за год','Все поступления компании за год по данным ФНС.'],
+    [/^Результат за год/,'Результат за год','Доходы минус расходы за год. Минус — компания потратила больше, чем получила.'],
+    [/^Доля заёмных средств/,'Доля заёмных средств','Какая часть имущества компании куплена в долг. Больше 90 % — компания сильно зависит от кредиторов.'],
+    [/^Текущая ликвидность/,'Текущая ликвидность','Хватит ли оборотных средств (деньги, товары, долги клиентов), чтобы расплатиться по долгам ближайшего года. Меньше 1 — может не хватить; от 1,5 — запас есть.'],
+    [/^Оборачиваемость дебиторки/,'Оборачиваемость дебиторки','За сколько дней в среднем клиенты расплачиваются с компанией. Чем меньше, тем быстрее к ней приходят деньги.'],
+    [/^Средний рост выручки/,'Средний рост выручки','На сколько процентов в среднем за год менялась выручка за доступные годы.'],
+    [/^Деньги на счетах/,'Деньги на счетах','Деньги в кассе и на банковских счетах на дату отчёта — то, чем компания может заплатить прямо сейчас.'],
+    [/^Доход на одного сотрудника/,'Доход на сотрудника','Доходы компании, делённые на число сотрудников. Слишком большое значение при маленьком штате — повод спросить, чьими силами выполняется работа.'],
+    [/^Налог на прибыль/,'Налог на прибыль','Налог, который компания на общей системе платит с прибыли. Если прибыль есть, а налога нет — стоит уточнить режим налогообложения.'],
+    [/^На чём держится/,'На чём держится компания','Из каких денег куплено имущество: свои (собственный капитал) или взятые в долг. Чем больше своих, тем устойчивее компания.'],
+    [/^Кто кому должен/,'Кто кому должен','Сравнение: сколько компании должны покупатели, сколько она сама должна поставщикам и банкам. Помогает понять, не живёт ли компания за чужой счёт.']
+  ];
+  function gl(label){for(var i=0;i<GL.length;i++)if(GL[i][0].test(label))return i;return -1;}
+  function qb(label){var i=gl(label);return i<0?'':'<button type="button" class="q" data-q="'+i+'" aria-label="Что это значит: '+esc(GL[i][1])+'" aria-expanded="false">?</button>';}
+  function bindQ(root){var pop=null,cur=null;
+    function close(){if(pop){pop.remove();pop=null;}if(cur){cur.setAttribute('aria-expanded','false');cur=null;}}
+    root.addEventListener('click',function(e){var b=e.target.closest('.q');if(!b){if(!e.target.closest('#qpop'))close();return;}
+      e.preventDefault();if(cur===b){close();return;}close();var g=GL[+b.getAttribute('data-q')];
+      pop=document.createElement('div');pop.id='qpop';pop.setAttribute('role','tooltip');
+      var t=document.createElement('b');t.textContent=g[1];pop.appendChild(t);pop.appendChild(document.createTextNode(g[2]));
+      document.body.appendChild(pop);var r=b.getBoundingClientRect(),w=pop.offsetWidth;
+      pop.style.left=Math.max(8,Math.min(r.left+scrollX-20,scrollX+innerWidth-w-8))+'px';pop.style.top=(r.bottom+scrollY+8)+'px';
+      b.setAttribute('aria-expanded','true');cur=b;});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});}
+  function debtsChart(x){
+    var rows=[['Фирме должны покупатели',x.receivables,''],['Фирма должна поставщикам',x.payables,'pay'],['Кредиты и займы',x.loans,'loan']].filter(function(r){return r[1]>0});
+    if(!rows.length)return '';var mx=Math.max.apply(null,rows.map(function(r){return r[1]}))||1;
+    var h='<div class="hb">'+rows.map(function(r){return '<div class="hb-row" data-tip="'+esc(r[0])+'" data-val="'+esc(money(r[1]))+'"><div class="hb-top"><span>'+esc(r[0])+qb(r[0].replace(' покупатели',''))+'</span><b>'+money(r[1])+'</b></div><div class="hb-track"><i class="'+r[2]+'" style="width:'+Math.max(1,100*r[1]/mx).toFixed(1)+'%"></i></div></div>'}).join('')+'</div>';
+    var owe=(x.payables||0)+(x.loans||0),n='';
+    if(x.receivables&&owe){n=owe>x.receivables*1.5?'Сама компания должна заметно больше, чем должны ей: её расчёты зависят от кредиторов и новых поступлений.':
+      x.receivables>owe*1.5?'Компании должны больше, чем она должна сама: деньги есть, но часть из них пока у покупателей.':'Долги компании и долги перед ней примерно уравновешены.';}
+    return h+(n?'<div class="dn">'+n+'</div>':'');
+  }
   function kpiHtml(k){return '<div class="kpis">'+k.map(function(x){
       var d='';if(x.delta!=null){var up=x.delta>=0,good=(up===x.good_up);d='<div class="d '+(good?'up':'down')+'">'+(up?'▲ +':'▼ ')+x.delta+' % за год</div>';}
-      return '<div class="kpi"><div class="l">'+esc(x.label)+'</div><div class="v">'+esc(x.text||money(x.value))+'</div>'+d+'</div>';}).join('')+'</div>';}
+      return '<div class="kpi"><div class="l">'+esc(x.label)+qb(x.label)+'</div><div class="v">'+esc(x.text||money(x.value))+'</div>'+d+'</div>';}).join('')+'</div>';}
   function chartsHtml(ch){var h='';
-    if(ch.revenue&&ch.revenue.length)h+='<div class="chart"><h3>Выручка</h3><div class="cs">по годам, по данным бухотчётности</div>'+colChart(ch.revenue,{title:'Выручка по годам'})+'</div>';
-    if(ch.profit&&ch.profit.length)h+='<div class="chart"><h3>Чистая прибыль</h3><div class="cs">убыток — красным</div>'+colChart(ch.profit,{title:'Чистая прибыль по годам'})+'</div>';
-    if(ch.income_tax&&ch.income_tax.length>1)h+='<div class="chart"><h3>Налог на прибыль</h3><div class="cs">по годам</div>'+colChart(ch.income_tax,{title:'Налог на прибыль по годам'})+'</div>';
-    if(ch.balance)h+='<div class="chart"><h3>На чём держится компания</h3><div class="cs">структура источников средств за '+ch.balance.year+' год</div>'+balanceChart(ch.balance)+'</div>';
+    if(ch.revenue&&ch.revenue.length)h+='<div class="chart"><h3>Выручка'+qb('Выручка')+'</h3><div class="cs">по годам, по данным бухотчётности</div>'+colChart(ch.revenue,{title:'Выручка по годам'})+'</div>';
+    if(ch.profit&&ch.profit.length)h+='<div class="chart"><h3>Чистая прибыль'+qb('Чистая прибыль')+'</h3><div class="cs">убыток — красным</div>'+colChart(ch.profit,{title:'Чистая прибыль по годам'})+'</div>';
+    if(ch.income_tax&&ch.income_tax.length>1)h+='<div class="chart"><h3>Налог на прибыль'+qb('Налог на прибыль')+'</h3><div class="cs">по годам</div>'+colChart(ch.income_tax,{title:'Налог на прибыль по годам'})+'</div>';
+    if(ch.balance)h+='<div class="chart"><h3>На чём держится компания'+qb('На чём держится')+'</h3><div class="cs">структура источников средств за '+ch.balance.year+' год</div>'+balanceChart(ch.balance)+'</div>';
+    if(ch.debts){var dc=debtsChart(ch.debts);if(dc)h+='<div class="chart"><h3>Кто кому должен'+qb('Кто кому должен')+'</h3><div class="cs">по бухотчётности за '+ch.debts.year+' год</div><div class="debts">'+dc+'</div></div>';}
     if(ch.taxes&&ch.taxes.length)h+='<div class="chart wide"><h3>Какие налоги платит компания</h3><div class="cs">уплачено за год по данным ФНС</div>'+hbarChart(ch.taxes)+'</div>';
     return h?'<div class="sec"><h2>Финансы в цифрах</h2>'+'<div class="charts">'+h+'</div></div>':'';}
   function bindTips(root){var tip=document.getElementById('tip');if(!tip){tip=document.createElement('div');tip.id='tip';tip.hidden=true;document.body.appendChild(tip);}
@@ -231,7 +283,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
     if(D.charts)h+=chartsHtml(D.charts);
     D.sections.forEach(function(sct){
       h+='<div class="sec"><h2><span class="dot '+esc(sct.tone)+'"></span>'+esc(sct.title)+'</h2><table>'+
-        sct.rows.map(function(x){return '<tr><th>'+esc(x[0])+'</th><td>'+esc(x[1])+'</td></tr>'}).join('')+'</table>'+
+        sct.rows.map(function(x){return '<tr><th>'+esc(x[0])+qb(x[0])+'</th><td>'+esc(x[1])+'</td></tr>'}).join('')+'</table>'+
         (sct.comment?'<div class="note '+esc(sct.tone)+'">'+esc(sct.comment)+'</div>':'')+'</div>';
     });
     h+='<div class="sec"><h2>Что это значит для вашей сделки</h2><div class="eyes">'+
@@ -266,7 +318,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
       '<div class="sign"><div>Проверку провёл (ФИО, должность)</div><div>Подпись, дата</div></div>'+
       '<div class="foot">Досье подтверждает, что проверка контрагента проведена до заключения сделки (проявление должной осмотрительности). Это оценка риска по открытым данным, а не решение банка или налогового органа.<br>Подлинность досье: <span class="link">'+esc(link)+'</span></div>';
     msg.hidden=true; doc.hidden=false;
-    bindTips(doc);
+    bindTips(doc);bindQ(doc);
     var pdf=document.getElementById('pdf'), share=document.getElementById('share');
     pdf.hidden=share.hidden=false;
     pdf.onclick=function(){window.print()};

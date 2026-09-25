@@ -139,6 +139,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
 </div>
 <p class="msg" id="msg">Загружаем отчёт…</p>
 <article class="doc" id="doc" hidden></article>
+<script src="/js/usloviya.js"></script>
 <script>
 (function(){
   var API=(location.hostname.endsWith('deloskop.ru')?'https://api.deloskop.ru':'');
@@ -313,11 +314,13 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
       '<div class="risk '+lvl+'"><b>'+esc(r.risk_title||'')+'</b><span>'+esc(r.verdict||'')+'</span></div>'+
       (D?dossierHtml(D):'<h2>Сведения о компании</h2><table>'+rows+'</table>')+
       '<h2>Светофор по признакам риска</h2><table class="sig">'+sig+'</table>'+
-      (D?'<h2>Что запросить у контрагента до оплаты</h2><ul class="checklist">'+D.documents.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>':'')+
+      (window.Usloviya?'<h2>Условия сделки</h2><div data-usl></div>':(D?'<h2>Что запросить у контрагента до оплаты</h2><ul class="checklist">'+D.documents.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>':''))+
       '<h2>Что проверено</h2><div class="sub">Сведения ЕГРЮЛ/ЕГРИП, отметки ФНС о недостоверности, задолженность по налогам, налоговые правонарушения, среднесписочная численность, доходы и расходы, уплаченные налоги, спецрежимы, реестр дисквалифицированных лиц — по открытым данным ФНС России.</div>'+
       '<div class="sign"><div>Проверку провёл (ФИО, должность)</div><div>Подпись, дата</div></div>'+
       '<div class="foot">Досье подтверждает, что проверка контрагента проведена до заключения сделки (проявление должной осмотрительности). Это оценка риска по открытым данным, а не решение банка или налогового органа.<br>Подлинность досье: <span class="link">'+esc(link)+'</span></div>';
     msg.hidden=true; doc.hidden=false;
+    var ub=doc.querySelector('[data-usl]');
+    if(ub)try{Usloviya.mount(ub,r,{open:true})}catch(e){ub.textContent=r.verdict||''}
     bindTips(doc);bindQ(doc);
     var pdf=document.getElementById('pdf'), share=document.getElementById('share');
     pdf.hidden=share.hidden=false;

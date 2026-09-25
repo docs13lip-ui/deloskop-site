@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Проверка контрагентов по выписке из 1С бесплатно — Делоскоп</title>
+<meta name="description" content="Загрузите выписку из 1С — покажем всех поставщиков, кому вы платили, сколько денег на кону по статье 54.1 НК и что сделать на этой неделе. Выписка не уходит с вашего компьютера.">
+<link rel="canonical" href="https://deloskop.ru/kontragenty-iz-vypiski/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Кому вы платите: проверка поставщиков по выписке — Делоскоп">
+<meta property="og:description" content="Все поставщики из выписки 1С, деньги на кону по статье 54.1 НК и три дела на неделю. Выписка не уходит с вашего компьютера.">
+<meta property="og:url" content="https://deloskop.ru/kontragenty-iz-vypiski/">
+<meta property="og:image" content="https://deloskop.ru/ikonka-512.png">
+<meta name="theme-color" content="#F5F5F2">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F5F5F2;--card:#fff;--ink:#1D1D1F;--ink2:#48484C;--muted:#6B6B70;--line:#E6E6E1;--accent:#0B63E5;--accent-hover:#084BB0;--r:24px;--ok:#137A3E;--okbg:#E9F7EF;--warn:#8A5A00;--warnbg:#FFF6E0;--bad:#B42318;--badbg:#FDECEC}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}a:hover{color:var(--accent-hover)}
+.top{position:sticky;top:0;z-index:5;background:rgba(245,245,242,.86);backdrop-filter:saturate(180%) blur(16px);-webkit-backdrop-filter:saturate(180%) blur(16px);border-bottom:1px solid rgba(0,0,0,.05)}
+.top .in{max-width:1120px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:22px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:19px;color:var(--ink);letter-spacing:-.02em;margin-right:auto}
+.top nav{display:flex;gap:22px;font-size:15px}.top nav a{color:var(--ink2)}.top nav a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:12px;background:var(--accent);color:#fff!important;font-weight:600;font-size:15px}
+@media (max-width:760px){.top .in{flex-wrap:wrap;row-gap:4px;padding-bottom:8px}.top nav{order:3;width:100%;overflow-x:auto;gap:20px;scrollbar-width:none}.top nav::-webkit-scrollbar{display:none}.top nav a{white-space:nowrap}}
+main{max-width:820px;margin:0 auto;padding:28px 20px 64px}
+.crumbs{font-size:14px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap}.crumbs a{color:var(--muted)}
+h1{font-size:clamp(30px,5vw,44px);line-height:1.1;letter-spacing:-.03em;margin:14px 0 12px;font-weight:600}
+.sub{font-size:19px;color:var(--ink2);margin:0}
+.tool{margin-top:24px;background:var(--card);border-radius:var(--r);padding:24px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 16px 40px rgba(0,0,0,.05)}
+.drop{display:block;border:2px dashed var(--line);border-radius:18px;padding:30px 18px;text-align:center;cursor:pointer;color:var(--ink2)}
+.drop.over,.drop:hover{border-color:var(--accent);background:#F3F7FE}
+.drop b{display:block;color:var(--ink);font-size:19px;margin-bottom:4px}.drop input{display:none}
+.drop small{display:block;color:var(--muted);font-size:14px;margin-top:6px}
+.row2{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-top:14px}
+.link{border:0;background:none;color:var(--accent);font:inherit;font-size:15px;cursor:pointer;padding:0}
+#msg{min-height:22px;font-size:15px;color:var(--muted);margin-top:10px}
+.priv{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--muted);margin:14px 0 0}
+.priv svg{flex:0 0 18px;margin-top:2px}
+/* режим налогов */
+.seg{display:inline-flex;flex-wrap:wrap;gap:4px;background:#EFEFEA;border-radius:12px;padding:4px}
+.seg button{border:0;background:none;border-radius:9px;padding:7px 12px;font:inherit;font-size:14px;color:var(--ink2);cursor:pointer}
+.seg button.on{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.lbl{font-size:14px;color:var(--muted);margin:0 0 6px}
+/* итог */
+#out{margin-top:26px}
+.stake{border-radius:22px;padding:24px 24px 20px;background:#111113;color:#fff}
+.stake .k{font-size:14px;color:#B8B8BD;letter-spacing:.01em}
+.stake .v{font-size:clamp(34px,6vw,52px);font-weight:600;letter-spacing:-.03em;line-height:1.05;margin:6px 0 8px;font-variant-numeric:tabular-nums}
+.stake .v small{font-size:.45em;font-weight:500;color:#B8B8BD;letter-spacing:0}
+.stake p{margin:0;color:#D1D1D6;font-size:16px}
+.stake .cta{margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.stake .cta button{min-height:46px;border:0;border-radius:12px;background:var(--accent);color:#fff;font:inherit;font-weight:600;font-size:16px;padding:0 18px;cursor:pointer}
+.stake .cta button:hover{background:var(--accent-hover)}.stake .cta button[disabled]{opacity:.6;cursor:default}
+.stake .cta span{font-size:14px;color:#B8B8BD}
+.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 0}
+.fact{background:var(--card);border-radius:16px;padding:14px 16px}
+.fact b{display:block;font-size:20px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.fact span{font-size:13px;color:var(--muted);line-height:1.35;display:block}
+@media (max-width:640px){.facts{grid-template-columns:repeat(2,1fr)}}
+.block{margin-top:26px}
+.block h2{font-size:24px;letter-spacing:-.02em;margin:0 0 10px;font-weight:600}
+.todo{counter-reset:t;list-style:none;padding:0;margin:0}
+.todo li{counter-increment:t;position:relative;background:var(--card);border-radius:16px;padding:14px 16px 14px 52px;margin:0 0 8px;font-size:16px;color:var(--ink2)}
+.todo li:before{content:counter(t);position:absolute;left:16px;top:13px;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.flow{border-radius:14px;padding:12px 16px;font-size:16px;margin:0 0 8px}
+.flow.warn{background:var(--warnbg)}.flow.info{background:#EEF3FB}
+/* поставщики */
+.sup{background:var(--card);border-radius:18px;padding:16px 18px;margin:0 0 10px}
+.sup .h{display:flex;gap:12px;align-items:baseline;justify-content:space-between}
+.sup .n{font-weight:600;font-size:17px;line-height:1.3;letter-spacing:-.01em;min-width:0;overflow-wrap:anywhere}
+.sup .s{font-weight:600;font-size:17px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.sup .m{font-size:14px;color:var(--muted);margin-top:2px;display:flex;gap:6px 14px;flex-wrap:wrap}
+.bar{height:6px;border-radius:3px;background:#EFEFEA;margin:10px 0 8px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ink);border-radius:3px}
+.sig{font-size:15px;margin:6px 0 0;padding-left:18px;position:relative;color:var(--ink2)}
+.sig:before{content:'';position:absolute;left:2px;top:.62em;width:7px;height:7px;border-radius:50%;background:#B8B8BD}
+.sig.bad:before{background:var(--bad)}.sig.warn:before{background:#E0A100}
+.badge{display:inline-block;font-size:12px;font-weight:600;border-radius:999px;padding:2px 9px;vertical-align:2px;margin-left:6px;white-space:nowrap}
+.badge.high{background:var(--badbg);color:var(--bad)}.badge.medium{background:var(--warnbg);color:var(--warn)}.badge.low{background:var(--okbg);color:var(--ok)}.badge.lock{background:#EFEFEA;color:var(--muted)}
+.sup .st{font-size:14px;color:var(--muted);margin-top:8px}.sup .st b{color:var(--ink);font-weight:600}
+.more-btn{width:100%;min-height:46px;border:1px solid var(--line);background:#fff;border-radius:14px;font:inherit;font-size:15px;cursor:pointer;color:var(--ink2)}
+.note{font-size:14px;color:var(--muted);margin-top:14px}
+.how{margin-top:44px}.how h2{font-size:26px;letter-spacing:-.02em;margin:0 0 12px;font-weight:600}
+.how ol,.how ul{padding-left:22px;color:var(--ink2)}.how li{margin:6px 0}
+.how p{color:var(--ink2)}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.how table{width:100%;border-collapse:collapse;font-size:16px;background:var(--card);border-radius:16px;overflow:hidden}
+.how th,.how td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+.how th{font-weight:600;background:#FAFAF8}.how tr:last-child td{border-bottom:0}
+.src{margin-top:36px;font-size:15px;color:var(--muted)}.src h2{font-size:18px;margin:0 0 8px;color:var(--ink)}
+.src ol{padding-left:20px;margin:0}.src li{margin:4px 0}.src a{color:var(--ink2);text-decoration:underline;text-decoration-color:var(--line)}
+.more{margin-top:44px}.more h2{font-size:22px;margin:0 0 12px}
+.cards{display:grid;gap:14px}
+.card{display:block;background:var(--card);border-radius:20px;padding:20px 22px;color:var(--ink)}
+.card:hover{box-shadow:0 12px 32px rgba(0,0,0,.07);color:var(--ink)}
+.card small{color:var(--accent);font-weight:600;font-size:13px}.card b{display:block;font-size:19px;line-height:1.3;margin:4px 0 6px;font-weight:600;letter-spacing:-.01em}.card span{color:var(--muted);font-size:15px}
+footer{max-width:1120px;margin:0 auto;padding:28px 20px 40px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:14px;color:var(--muted);border-top:1px solid var(--line)}
+footer a{color:var(--muted)}
+@media print{.top,.tool .drop,.row2,.stake .cta,.how,.more,.src,footer,.priv{display:none!important}body{background:#fff}.stake{background:#fff;color:#000;border:1px solid #ccc}.stake p,.stake .k{color:#333}}
+</style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Кому вы платите — Делоскоп","url":"https://deloskop.ru/kontragenty-iz-vypiski/","applicationCategory":"BusinessApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"RUB"},"description":"Проверка поставщиков по выписке из 1С: деньги на кону по статье 54.1 НК и три дела на неделю. Выписка не уходит с компьютера."}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"Куда уходит моя выписка?","acceptedAnswer":{"@type":"Answer","text":"Никуда. Выписка читается прямо в браузере на вашем компьютере. Если вы сами нажмёте «Проверить по реестрам», на сервер уйдёт только список ИНН поставщиков — без сумм, дат и назначений платежей."}},
+{"@type":"Question","name":"Что такое «деньги на кону»?","acceptedAnswer":{"@type":"Answer","text":"Сумма, которую налоговая может доначислить, если признает поставщика технической компанией по статье 54.1 НК: вычет НДС, налог с расходов и штраф. Мягкий сценарий — с налоговой реконструкцией и штрафом 20%, жёсткий — без реконструкции и со штрафом 40%. Пени считаются отдельно."}},
+{"@type":"Question","name":"Какую выписку загрузить?","acceptedAnswer":{"@type":"Answer","text":"Файл обмена с 1С (kl_to_1c.txt или похожий), который выгружает любой интернет-банк: «Выписка → Экспорт в 1С». Лучше за квартал или год. Можно загрузить несколько файлов сразу — например, по разным счетам."}}]}</script>
+</head>
+<body>
+<header class="top"><div class="in">
+  <a class="brand" href="/" aria-label="Делоскоп — на главную"><svg width="30" height="27" viewBox="0 0 72 64" fill="none" aria-hidden="true"><path d="M36 18.1A16 16 0 0 1 36 45.9A16 16 0 0 1 36 18.1Z" fill="#0B63E5"/><circle cx="28" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/><circle cx="44" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/></svg><span>делоскоп</span></a>
+  <nav aria-label="Разделы"><a href="/proverit-schet/">Проверь счёт</a><a href="/delopis/">Делопись</a><a href="/115-fz/">115-ФЗ</a><a href="/nalogi/">Налоги</a><a href="/#shield">Щит</a><a href="/cabinet.html">Кабинет</a></nav>
+  <a class="btn" href="/">Проверить</a>
+</div></header>
+<main>
+<nav class="crumbs" aria-label="Навигация"><a href="/">Делоскоп</a><span>›</span><a href="/#shield">Щит</a></nav>
+<h1>Кому вы платите</h1>
+<p class="sub">Загрузите выписку из 1С — покажем всех поставщиков, сколько денег на кону, если кто-то из них окажется «технической» компанией, и что сделать на этой неделе.</p>
+
+<section class="tool" aria-label="Разбор выписки">
+  <label class="drop" id="drop"><b>Перетащите выписку из 1С</b>или нажмите, чтобы выбрать файл<small>Файл обмена .txt из интернет-банка: «Выписка → Экспорт в 1С». Можно несколько файлов сразу</small><input type="file" id="file" accept=".txt,text/plain" multiple></label>
+  <div class="row2">
+    <div><p class="lbl">Ваш режим налогов</p><div class="seg" id="regime" role="radiogroup" aria-label="Режим налогов"></div></div>
+    <button type="button" class="link" id="demo">Посмотреть на примере</button>
+  </div>
+  <div id="msg" role="status" aria-live="polite"></div>
+  <p class="priv"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l7 3v6c0 4.4-3 8-7 9-4-1-7-4.6-7-9V6l7-3z" stroke="#1D1D1F" stroke-width="1.8"/><path d="M9 12l2 2 4-4" stroke="#0B63E5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Выписка не уходит с вашего компьютера: всё считается прямо в браузере. Проверку по реестрам вы запускаете сами — тогда на сервер уходит только список ИНН, без сумм и назначений.</span></p>
+  <div id="out" hidden></div>
+</section>
+
+<section class="how">
+<h2>Как считаем деньги на кону</h2>
+<p>Если налоговая решит, что поставщик — «техническая» компания без реальной работы, она снимет то, что вы по нему заявили. Насколько жёстко — зависит от того, докажете ли вы, что работа реальная и поставщика выбирали осмотрительно.</p>
+<div class="tw"><table>
+<tr><th>Сценарий</th><th>Что снимут</th><th>Штраф</th></tr>
+<tr><td><strong>Мягкий</strong> — работа реальная, исполнитель неизвестен</td><td>Вычет НДС. Расходы оставят по рыночной цене — налоговая реконструкция</td><td>20% от недоимки</td></tr>
+<tr><td><strong>Жёсткий</strong> — налоговая докажет, что вы знали</td><td>Вычет НДС и налог с расходов: 25% на ОСН, 15% на УСН «доходы минус расходы»</td><td>40% от недоимки</td></tr>
+</table></div>
+<p>Сверху начисляют пени за каждый день — их считаем отдельно, в сумму на кону не включаем. На УСН 6% налог с расходов не зависит, поэтому денег на кону нет — но переводы сомнительным компаниям всё равно видит банк.</p>
+<h2 style="margin-top:32px">Что видно из одной выписки</h2>
+<ul>
+<li><strong>Ошибка в ИНН получателя</strong> — такого ИНН не существует: деньги ушли не туда или реквизиты подменили.</li>
+<li><strong>Ключевые поставщики</strong> — на ком держится больше 30% расходов. Их налоговая смотрит первыми.</li>
+<li><strong>Разовые крупные платежи</strong> — сделки «один раз и много» проверяют чаще.</li>
+<li><strong>Размытое назначение</strong> — «оплата по счёту» без предмета. И банк, и налоговая начинают с назначения.</li>
+<li><strong>Переводы физлицам и доля налогов</strong> — то, на что банк смотрит по 115-ФЗ.</li>
+</ul>
+</section>
+
+<section class="src"><h2>Основания</h2><ol>
+<li><a href="https://www.consultant.ru/document/cons_doc_LAW_19671/" rel="nofollow noopener" target="_blank">Статья 54.1 Налогового кодекса</a> — пределы прав налогоплательщика.</li>
+<li><a href="https://www.consultant.ru/document/cons_doc_LAW_352052/" rel="nofollow noopener" target="_blank">Письмо ФНС от 10.03.2021 № БВ-4-7/3060@</a> — налоговая реконструкция, пп. 17–21.</li>
+<li>Статья 122 НК — штраф 20% при неосторожности, 40% при умысле.</li>
+<li><a href="https://base.garant.ru/71729876/" rel="nofollow noopener" target="_blank">Методические рекомендации Банка России № 18-МР</a> — доля налогов 0,9% от списаний.</li>
+<li><a href="https://its.1c.ru/db/content/metod8dev/src/developers/dataexchange/bankexchange/clibnkdexchange/i8103262.htm" rel="nofollow noopener" target="_blank">Формат обмена 1С с банком</a> — как читаем выписку.</li>
+</ol><p class="note">Это автоматический разбор, а не заключение налогового консультанта. Решение о проверке принимает налоговая, о блокировке — банк.</p></section>
+
+<section class="more"><h2>Дальше по Щиту</h2><div class="cards">
+<a class="card" href="/nalichnye/"><small>Щит</small><b>Наличные глазами банка</b><span>Та же выписка: снятие, инкассация и что увидит банк по 115-ФЗ</span></a>
+<a class="card" href="/nalogi/statya-54-1-nk-prostymi-slovami/"><small>Налоги</small><b>Статья 54.1 НК простыми словами: когда налоговая снимет вычет</b><span>5 минут чтения</span></a>
+<a class="card" href="/nalogi/priznaki-tehnicheskoj-kompanii/"><small>Налоги</small><b>Признаки технической компании</b><span>Как их видит налоговая и как проверить поставщика</span></a>
+</div></section>
+</main>
+
+<script src="/kontragenty-iz-vypiski/engine.js"></script>
+<script>(function(){
+'use strict';
+var E=window.DeloVypiska;
+var API=(location.hostname.endsWith('deloskop.ru')?'https://api.deloskop.ru':'');
+var $=function(id){return document.getElementById(id)};
+var drop=$('drop'),file=$('file'),out=$('out'),msg=$('msg'),seg=$('regime');
+var state={parsed:null,regime:'osn',res:null,risk:null,remote:null,locked:0,showAll:false,demo:false};
+try{var saved=localStorage.getItem('deloskop.regime');if(saved&&E.REGIMES[saved])state.regime=saved}catch(e){}
+
+function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+var rub=function(n){return E.money(n)+' ₽'};
+function dt(iso){if(!iso)return '';var p=iso.split('-');return p[2]+'.'+p[1]+'.'+p[0]}
+function plural(n,a,b,c){var m=n%10,h=n%100;return m===1&&h!==11?a:m>=2&&m<=4&&(h<10||h>=20)?b:c}
+
+/* режим налогов */
+Object.keys(E.REGIMES).forEach(function(k){
+  var b=document.createElement('button');b.type='button';b.textContent=E.REGIMES[k].title;b.dataset.k=k;
+  b.setAttribute('role','radio');
+  b.onclick=function(){state.regime=k;try{localStorage.setItem('deloskop.regime',k)}catch(e){}paintSeg();if(state.parsed)recalc()};
+  seg.appendChild(b);
+});
+function paintSeg(){[].forEach.call(seg.children,function(b){var on=b.dataset.k===state.regime;b.className=on?'on':'';b.setAttribute('aria-checked',on)})}
+paintSeg();
+
+function recalc(){state.res=E.analyze(state.parsed,{regime:state.regime});render()}
+
+function render(){
+  var r=state.res,t=r.totals;
+  if(!r.suppliers.length){out.hidden=false;out.innerHTML='<div class="flow warn">В выписке нет платежей поставщикам — только налоги, зарплата или переводы между своими счетами.</div>';return}
+  var ex=E.exposure(r,state.risk),reg=E.REGIMES[state.regime];
+  var checked=!!state.risk, n=r.suppliers.length;
+  var head;
+  if(!reg.base&&!reg.vat){
+    head='<div class="k">УСН 6%: налоговых денег на кону нет</div><div class="v">'+rub(t.supplier)+'</div><p>столько ушло '+n+' '+plural(n,'поставщику','поставщикам','поставщикам')+'. Налог на УСН 6% от расходов не зависит, но переводы сомнительным компаниям видит банк — проверка по реестрам всё равно полезна.</p>';
+  }else if(checked){
+    head='<div class="k">Деньги на кону по статье 54.1 НК</div><div class="v">'+(ex.risk.n?rub(ex.risk.soft)+' <small>— '+rub(ex.risk.hard)+'</small>':'0 ₽')+'</div><p>'+
+      (ex.risk.n?ex.risk.n+' '+plural(ex.risk.n,'поставщик','поставщика','поставщиков')+' с высоким риском. Первая сумма — если докажете реальность работ, вторая — если нет.':'Среди проверенных поставщиков нет высокого риска.')+
+      (ex.watch.n?' Ещё '+ex.watch.n+' — под наблюдением: до '+rub(ex.watch.hard)+'.':'')+'</p>';
+  }else{
+    var top=r.suppliers[0];
+    head='<div class="k">Поставщикам ушло</div><div class="v">'+rub(t.supplier)+'</div><p>'+n+' '+plural(n,'поставщик','поставщика','поставщиков')+
+      (r.period.from?' с '+dt(r.period.from)+' по '+dt(r.period.to):'')+'. Если главный из них — '+esc(top.name||top.inn)+' — окажется «технической» компанией, на кону от '+rub(top.stake.soft)+' до '+rub(top.stake.hard)+'.</p>';
+  }
+  var cta='';
+  if(!state.demo){
+    if(!checked)cta='<div class="cta"><button type="button" id="check">Проверить поставщиков по реестрам</button><span>Уйдут только ИНН. Три главных — бесплатно</span></div>';
+    else if(state.locked)cta='<div class="cta"><button type="button" onclick="location.href=\'/cabinet.html#plans\'">Открыть всех '+n+'</button><span>Проверены '+ex.risk.checked+' из '+n+'. Остальные — в подписке</span></div>';
+  }else cta='<div class="cta"><span>Это пример с вымышленными компаниями. Загрузите свою выписку — покажем ваших поставщиков.</span></div>';
+
+  var facts='<div class="facts">'+
+    fact(rub(t.out),'всего списано')+fact(rub(t.budget),'налоги и взносы · '+(t.out?E.pct(t.budget/t.out):'0%'))+
+    fact(rub(t.salary+t.person),'зарплата и физлица')+fact(r.docs+'','платежей в выписке')+'</div>';
+
+  var todo='<div class="block"><h2>Три дела на неделю</h2><ol class="todo">'+r.todo.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ol></div>';
+  var flows=r.flows.length?'<div class="block"><h2>Что видит банк</h2>'+r.flows.map(function(f){return '<div class="flow '+f.level+'">'+esc(f.text)+'</div>'}).join('')+'</div>':'';
+
+  var list=state.showAll?r.suppliers:r.suppliers.slice(0,10);
+  var sup='<div class="block"><h2>Поставщики</h2>'+list.map(supCard).join('')+
+    (r.suppliers.length>10&&!state.showAll?'<button type="button" class="more-btn" id="all">Показать всех — '+r.suppliers.length+'</button>':'')+'</div>';
+
+  out.innerHTML='<div class="stake">'+head+cta+'</div>'+facts+todo+flows+sup+
+    '<p class="note">Суммы НДС взяты из назначений платежей; где НДС не указан, вычет не считаем. Пени в сумму на кону не входят. Это автоматический разбор, а не заключение налогового консультанта.</p>';
+  out.hidden=false;
+  var c=$('check');if(c)c.onclick=checkRegistry;
+  var a=$('all');if(a)a.onclick=function(){state.showAll=true;render()};
+}
+function fact(v,k){return '<div class="fact"><b>'+v+'</b><span>'+k+'</span></div>'}
+
+var LVL={high:['high','высокий риск'],medium:['medium','есть вопросы'],low:['low','надёжен']};
+function supCard(s){
+  var rm=state.remote&&s.inn?state.remote[s.inn]:null, lvl=state.risk&&s.inn?state.risk[s.inn]:null;
+  var badge=lvl&&LVL[lvl]?'<span class="badge '+LVL[lvl][0]+'">'+LVL[lvl][1]+'</span>':(state.risk&&s.inn&&s.innValid&&state.locked?'<span class="badge lock">в подписке</span>':'');
+  var name=(rm&&rm.name)||s.name||'Без названия';
+  var sig=s.signals.map(function(x){return '<div class="sig '+x.level+'">'+esc(x.text)+'</div>'}).join('');
+  if(rm&&rm.reasons&&rm.reasons.length)sig=rm.reasons.slice(0,3).map(function(x){return '<div class="sig '+(lvl==='high'?'bad':'warn')+'">'+esc(x)+'</div>'}).join('')+sig;
+  var reg=E.REGIMES[state.regime];
+  var st=!(reg.base||reg.vat)||!s.stake.hard?'':'<div class="st">Если окажется «технической»: '+(s.stake.soft?'<b>'+rub(s.stake.soft)+'</b> — <b>'+rub(s.stake.hard)+'</b>':'до <b>'+rub(s.stake.hard)+'</b>, вычета НДС по нему нет — риск только в расходах')+'</div>';
+  var link=s.inn&&s.innValid&&!state.demo?' · <a href="/?inn='+s.inn+'" target="_blank" rel="noopener">досье</a>':'';
+  return '<div class="sup"><div class="h"><div class="n">'+esc(name)+badge+'</div><div class="s">'+rub(s.sum)+'</div></div>'+
+    '<div class="m"><span>'+(s.inn?'ИНН '+s.inn:'ИНН не указан')+'</span><span>'+E.pct(s.share)+' расходов</span><span>'+s.count+' '+plural(s.count,'платёж','платежа','платежей')+'</span>'+
+    (s.first?'<span>'+(s.first===s.last?dt(s.first):dt(s.first)+' — '+dt(s.last))+'</span>':'')+(s.vat?'<span>НДС '+rub(s.vat)+'</span>':'')+(link?'<span>'+link.replace(/^ · /,'')+'</span>':'')+'</div>'+
+    '<div class="bar"><i style="width:'+Math.max(1,Math.round(s.share*100))+'%"></i></div>'+sig+st+'</div>';
+}
+
+/* проверка по реестрам: только ИНН, по убыванию суммы */
+function checkRegistry(){
+  var btn=$('check');
+  var inns=state.res.suppliers.filter(function(s){return s.inn&&s.innValid}).map(function(s){return s.inn});
+  if(!inns.length)return;
+  if(!API){msg.textContent='Проверка по реестрам работает на deloskop.ru.';return}
+  btn.disabled=true;btn.textContent='Проверяем…';
+  fetch(API+'/api/shield/counterparties',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({inns:inns.slice(0,500)})})
+    .then(function(res){return res.json().catch(function(){return {}}).then(function(j){return {s:res.status,j:j}})})
+    .then(function(x){
+      if(x.s===200&&x.j.items){
+        state.risk={};state.remote={};
+        x.j.items.forEach(function(it){state.risk[it.inn]=it.risk_level;state.remote[it.inn]=it});
+        state.locked=x.j.locked||0;render();
+        out.querySelector('.stake').scrollIntoView({behavior:'smooth',block:'start'});
+      }else if(x.s===404){btn.disabled=false;btn.textContent='Проверить поставщиков по реестрам';
+        msg.innerHTML='Пакетная проверка включается в ближайшем обновлении. Пока откройте досье любого поставщика по ссылке в карточке.';}
+      else{btn.disabled=false;btn.textContent='Проверить поставщиков по реестрам';
+        msg.innerHTML=esc(x.j.detail||'Проверка не удалась. Попробуйте ещё раз.')+(x.s===429||x.s===402?' <a href="/cabinet.html">Войти или выбрать тариф</a>':'');}
+    })
+    .catch(function(){btn.disabled=false;btn.textContent='Проверить поставщиков по реестрам';msg.textContent='Нет связи с сервером. Разбор выписки выше — полный, реестры проверим позже.'});
+}
+
+/* файлы */
+function readFiles(files){
+  files=[].slice.call(files||[]);if(!files.length)return;
+  msg.textContent='Читаем выписку у вас в браузере…';
+  Promise.all(files.map(function(f){return f.arrayBuffer().then(function(b){return E.parse(E.decode(b))})}))
+    .then(function(list){
+      var good=list.filter(function(p){return p.ok});
+      if(!good.length){msg.textContent='Не нашли платежей. Нужен файл обмена с 1С (.txt, начинается с «1CClientBankExchange»): в интернет-банке — «Выписка → Экспорт в 1С».';out.hidden=true;return}
+      msg.textContent=good.length<list.length?'Часть файлов не похожа на выписку 1С — их пропустили.':'';
+      state.parsed=good;state.risk=null;state.remote=null;state.locked=0;state.showAll=false;state.demo=false;recalc();
+      out.scrollIntoView({behavior:'smooth',block:'start'});
+    })
+    .catch(function(){msg.textContent='Не получилось прочитать файл. Выгрузите выписку ещё раз в формате 1С.'});
+}
+file.onchange=function(){readFiles(file.files)};
+['dragenter','dragover'].forEach(function(e){drop.addEventListener(e,function(ev){ev.preventDefault();drop.classList.add('over')})});
+['dragleave','drop'].forEach(function(e){drop.addEventListener(e,function(ev){ev.preventDefault();drop.classList.remove('over')})});
+drop.addEventListener('drop',function(ev){readFiles(ev.dataTransfer.files)});
+
+/* пример: вымышленные компании, в реестры не уходит */
+$('demo').onclick=function(){
+  var me='40702810900000000001';
+  function d(n,date,sum,acc,inn,name,p){return 'СекцияДокумент=Платежное поручение\nНомер='+n+'\nДата='+date+'\nСумма='+sum+'\nПлательщикСчет='+me+'\nПлательщикИНН=7700000016\nПолучательСчет='+acc+'\nПолучательИНН='+inn+'\nПолучатель1='+name+'\nДатаСписано='+date+'\nНазначениеПлатежа='+p+'\nКонецДокумента'}
+  var t=['1CClientBankExchange','РасчСчет='+me,
+    d(1,'03.07.2026','2440000.00','40702810100000000011','5001000010','ООО «Пример-Бетон»','Оплата за поставку бетона М300 по договору № 12. В т.ч. НДС 22% - 440000.00'),
+    d(2,'04.08.2026','1220000.00','40702810100000000011','5001000010','ООО «Пример-Бетон»','Оплата за поставку бетона по счету 88. В т.ч. НДС 22% - 220000.00'),
+    d(3,'10.07.2026','1830000.00','40702810100000000022','5001000027','ООО «Пример-Снаб»','Оплата по счету № 7 от 09.07.2026. В т.ч. НДС 22% - 330000.00'),
+    d(4,'12.07.2026','366000.00','40702810100000000033','5001000034','ООО «Пример-Логистик»','Оплата за перевозку грузов за июль. В т.ч. НДС 22% - 66000.00'),
+    d(5,'20.07.2026','150000.00','40802810100000000044','500100000400','ИП Примеров П. П.','Оплата за ремонт техники. НДС не облагается'),
+    d(6,'25.07.2026','95000.00','40702810100000000055','5001000059','ООО «Пример-Офис»','Оплата по договору'),
+    d(7,'28.07.2026','60000.00','03100643000000017300','7727406020','Казначейство России (ФНС России)','Единый налоговый платеж').replace('КонецДокумента','ПоказательКБК=18201061201010000510\nКонецДокумента'),
+    d(8,'30.07.2026','420000.00','40817810100000000066','','Сотрудники','Заработная плата за июль 2026'),
+    'КонецФайла'].join('\n');
+  state.parsed=[E.parse(t)];state.risk=null;state.remote=null;state.locked=0;state.showAll=false;state.demo=true;msg.textContent='';recalc();
+  out.scrollIntoView({behavior:'smooth',block:'start'});
+};
+window.__kontr={state:state,render:render};
+})();
+</script>
+<footer><span>© 2026 Делоскоп · Материалы носят информационный характер и не заменяют консультацию юриста</span>
+<span><a href="/proverit-schet/">Проверь счёт</a> · <a href="/kontragenty-iz-vypiski/">Кому вы платите</a> · <a href="/115-fz/">115-ФЗ</a> · <a href="/nalogi/">Налоги</a> · <a href="mailto:help@deloskop.ru">help@deloskop.ru</a></span></footer>
+<script src="/obnovleniya.js" defer></script>
+</body>
+</html>

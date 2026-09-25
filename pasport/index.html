@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Паспорт добросовестности компании — одна ссылка для банка и партнёров — Делоскоп</title>
+<meta name="description" content="Бесплатная живая страница о вашей компании по открытым данным ФНС: статус, следы реальной работы, отметки реестров, QR-код для бумаги и отпечаток данных против подделки. Отправьте банку, заказчику и новому партнёру.">
+<link rel="canonical" href="https://deloskop.ru/pasport/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Паспорт добросовестности — Делоскоп">
+<meta property="og:description" content="Всё, что открытые реестры говорят о компании, — на сегодняшнюю дату, одной ссылкой и QR-кодом.">
+<meta property="og:url" content="https://deloskop.ru/pasport/">
+<meta property="og:image" content="https://deloskop.ru/ikonka-512.png">
+<meta name="theme-color" content="#F5F5F2">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F5F5F2;--card:#fff;--ink:#1D1D1F;--ink2:#48484C;--muted:#6B6B70;--line:#E6E6E1;--accent:#0B63E5;--accent-hover:#084BB0;--ok:#137A3E;--ok-bg:#E9F7EF;--warn:#8A5A00;--warn-bg:#FFF6E0;--bad:#B42318;--bad-bg:#FDECEC;--r:24px}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}a:hover{color:var(--accent-hover)}
+button{font:inherit}
+.top{position:sticky;top:0;z-index:5;background:rgba(245,245,242,.86);backdrop-filter:saturate(180%) blur(16px);-webkit-backdrop-filter:saturate(180%) blur(16px);border-bottom:1px solid rgba(0,0,0,.05)}
+.top .in{max-width:1120px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:22px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:19px;color:var(--ink);letter-spacing:-.02em;margin-right:auto}
+.top nav{display:flex;gap:22px;font-size:15px}.top nav a{color:var(--ink2)}.top nav a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:12px;background:var(--accent);color:#fff!important;font-weight:600;font-size:15px}
+@media (max-width:760px){.top .in{flex-wrap:wrap;row-gap:4px;padding-bottom:8px}.top nav{order:3;width:100%;overflow-x:auto;gap:20px;scrollbar-width:none}.top nav::-webkit-scrollbar{display:none}.top nav a{white-space:nowrap}}
+main{max-width:920px;margin:0 auto;padding:28px 20px 72px}
+.crumbs{font-size:14px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap}.crumbs a{color:var(--muted)}
+h1{font-size:clamp(32px,5.4vw,52px);line-height:1.06;letter-spacing:-.035em;margin:14px 0 14px;font-weight:600}
+h2{font-size:clamp(24px,3vw,30px);letter-spacing:-.02em;line-height:1.2;margin:48px 0 14px;font-weight:600}
+.sub{font-size:20px;color:var(--ink2);max-width:680px;margin:0}
+.muted{color:var(--muted)}
+/* форма ИНН */
+.ask{margin-top:28px;display:flex;gap:10px;flex-wrap:wrap;max-width:640px}
+.ask input{flex:1 1 240px;min-height:56px;border:1px solid var(--line);border-radius:16px;padding:0 18px;font:inherit;font-size:19px;background:#fff;letter-spacing:.02em}
+.ask input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px rgba(11,99,229,.12)}
+.ask button{min-height:56px;border:0;border-radius:16px;background:var(--accent);color:#fff;font-weight:600;font-size:17px;padding:0 24px;cursor:pointer}
+.ask button:hover{background:var(--accent-hover)}
+.hint{font-size:15px;color:var(--muted);margin:10px 0 0}
+.hint a{color:var(--ink2);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+#msg{min-height:24px;font-size:15px;color:var(--muted);margin-top:10px}
+#msg.err{color:var(--bad)}
+/* лендинг */
+.who{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.who div{background:var(--card);border-radius:20px;padding:20px 22px}
+.who b{display:block;font-size:18px;letter-spacing:-.01em;margin-bottom:4px}.who span{color:var(--ink2);font-size:16px}
+@media (max-width:640px){.who{grid-template-columns:1fr}}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.cmp{width:100%;border-collapse:collapse;background:var(--card);border-radius:18px;overflow:hidden;font-size:16px}
+.cmp th,.cmp td{text-align:left;padding:13px 16px;border-bottom:1px solid var(--line);vertical-align:top}
+.cmp th{font-weight:600;background:#FAFAF8}.cmp tr:last-child td{border-bottom:0}
+.cmp td:nth-child(2){color:var(--ink)}.cmp td:nth-child(3){color:var(--muted)}
+.steps{counter-reset:s;list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.steps li{counter-increment:s;background:var(--card);border-radius:18px;padding:16px 20px 16px 62px;position:relative;color:var(--ink2);font-size:17px}
+.steps li::before{content:counter(s);position:absolute;left:20px;top:15px;width:28px;height:28px;border-radius:50%;background:var(--ink);color:#fff;font-weight:600;font-size:15px;display:grid;place-items:center}
+.steps b{color:var(--ink)}
+details{background:var(--card);border-radius:18px;padding:16px 20px;margin-bottom:10px}
+summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:12px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:'+';color:var(--muted);font-weight:400;font-size:22px;line-height:1}
+details[open] summary::after{content:'−'}
+details p{margin:10px 0 0;color:var(--ink2);font-size:17px}
+/* паспорт */
+.pp{position:relative;margin-top:26px;background:var(--card);border-radius:28px;padding:30px 32px 0;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04),0 22px 60px rgba(0,0,0,.07)}
+.pp .guil{position:absolute;inset:0;pointer-events:none;opacity:.55}
+.pp-in{position:relative;display:grid;grid-template-columns:1fr auto;gap:28px;align-items:start}
+.kick{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.pp h1{font-size:clamp(28px,4.4vw,42px);margin:10px 0 8px}
+.ids{font-size:15px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 16px;font-variant-numeric:tabular-nums}
+.ids b{color:var(--ink2);font-weight:500}
+.verdict{margin-top:22px;border-radius:18px;padding:16px 18px 16px 50px;position:relative}
+.verdict::before{content:'';position:absolute;left:20px;top:23px;width:14px;height:14px;border-radius:50%;background:currentColor;box-shadow:0 0 0 5px rgba(255,255,255,.7)}
+.verdict b{display:block;font-size:21px;letter-spacing:-.02em;line-height:1.3}
+.verdict span{display:block;color:var(--ink2);font-size:16px;margin-top:4px}
+.verdict.ok{background:var(--ok-bg);color:var(--ok)}.verdict.warn{background:var(--warn-bg);color:var(--warn)}.verdict.bad{background:var(--bad-bg);color:var(--bad)}
+.facts{margin:18px 0 0;display:grid;grid-template-columns:auto 1fr;gap:6px 18px;font-size:15px}
+.facts dt{color:var(--muted)}.facts dd{margin:0;color:var(--ink2)}
+.qrbox{width:208px;text-align:center}
+.qrbox .q{background:#fff;border-radius:18px;padding:8px;border:1px solid var(--line);line-height:0}
+.qrbox .q svg{width:100%;height:auto}
+.fp{margin-top:12px;font-size:12px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.fp b{display:block;font-size:24px;letter-spacing:.14em;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums;text-transform:none;margin-top:2px}
+.when{font-size:13px;color:var(--muted);margin-top:8px;line-height:1.4}
+.mrz{position:relative;margin:26px -32px 0;padding:14px 32px 16px;border-top:1px dashed var(--line);font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:13px;letter-spacing:.18em;color:#A1A1A6;white-space:nowrap;overflow:hidden;text-overflow:clip;line-height:1.5}
+.demo-flag{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:999px;background:var(--warn-bg);color:var(--warn);font-size:12px;letter-spacing:.02em;text-transform:none;vertical-align:2px}
+@media (max-width:720px){.pp{padding:24px 20px 0;border-radius:24px}.pp-in{grid-template-columns:1fr}.qrbox{width:100%;display:grid;grid-template-columns:132px 1fr;gap:16px;text-align:left;align-items:center}.fp{margin-top:0}.mrz{margin:22px -20px 0;padding:12px 20px 14px;font-size:11px}.facts{grid-template-columns:1fr;gap:0}.facts dt{font-size:13px;margin-top:10px}.pp .guil{opacity:.3}}
+.cmpbar{margin-top:16px;border-radius:16px;padding:14px 18px;font-size:16px}
+.cmpbar.same{background:var(--ok-bg);color:var(--ok)}.cmpbar.changed{background:var(--warn-bg);color:var(--warn)}
+.cmpbar b{font-weight:600}
+.acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.acts button,.acts a{min-height:44px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:0 16px;font-size:15px;font-weight:500;color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.acts button:hover,.acts a:hover{border-color:#CFCFC9;color:var(--ink)}
+.acts .main{background:var(--ink);color:#fff;border-color:var(--ink)}
+.acts .main:hover{background:#000;color:#fff}
+.grp{margin-top:34px}
+.grp h2{margin:0 0 10px;font-size:22px;display:flex;align-items:baseline;gap:10px}
+.grp h2 small{font-size:14px;color:var(--muted);font-weight:400;letter-spacing:0}
+.list{background:var(--card);border-radius:20px;overflow:hidden}
+.item{display:grid;grid-template-columns:28px 1fr;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:0}
+.item i{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:13px;font-weight:700;margin-top:2px}
+.item.ok i{background:var(--ok-bg);color:var(--ok)}.item.warn i{background:var(--warn-bg);color:var(--warn)}.item.bad i{background:var(--bad-bg);color:var(--bad)}.item.info i{background:#EEF0F3;color:var(--muted)}
+.item b{font-weight:500;color:var(--ink)}
+.item .d{color:var(--ink2);font-size:16px}
+.item small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.item .prep{margin-top:8px;font-size:15px;color:var(--ink2);background:#FAFAF8;border-radius:12px;padding:9px 12px}
+.item .prep em{font-style:normal;font-weight:600;color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips span{background:var(--card);border-radius:999px;padding:7px 14px;font-size:15px;color:var(--ink2)}
+.chips span::before{content:'✓';color:var(--ok);font-weight:700;margin-right:7px}
+.bank{margin-top:34px;background:#111113;color:#fff;border-radius:var(--r);padding:26px 26px 24px}
+.bank h2{margin:0 0 8px;font-size:24px;color:#fff}
+.bank p{color:#B8B8BD;margin:0 0 12px;font-size:16px}
+.bank .z{display:flex;gap:12px;align-items:center;background:rgba(255,255,255,.06);border-radius:14px;padding:12px 14px;margin:12px 0 14px;font-size:16px}
+.bank .z i{width:12px;height:12px;border-radius:50%;flex:none}
+.bank a{color:#8AB8FF}
+.bank .z a{margin-left:auto;font-size:14px;white-space:nowrap}
+.limits{margin-top:34px;font-size:15px;color:var(--muted);border-top:1px solid var(--line);padding-top:18px}
+.limits b{color:var(--ink2)}
+.srcs{margin:8px 0 0;padding-left:20px}
+.cta{margin-top:40px;background:var(--card);border-radius:var(--r);padding:26px}
+.cta h2{margin:0 0 6px;font-size:24px}.cta p{margin:0;color:var(--ink2);font-size:16px}
+.cta .ask{margin-top:16px}
+.badge{display:none;margin-top:14px;background:var(--card);border-radius:18px;padding:18px}
+.badge.on{display:block}
+.badge textarea{width:100%;min-height:96px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;color:var(--ink2);resize:vertical}
+.badge .row{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:12px;font-size:15px;color:var(--muted)}
+.skel{margin-top:26px;height:360px;border-radius:28px;background:linear-gradient(90deg,#ECECE8 0,#F7F7F4 40%,#ECECE8 80%);background-size:200% 100%;animation:sk 1.2s linear infinite}
+@keyframes sk{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.skel{animation:none}}
+.src-note{font-size:13px;color:var(--muted);margin-top:6px}
+footer{max-width:1120px;margin:0 auto;padding:28px 20px 40px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:14px;color:var(--muted);border-top:1px solid var(--line)}
+footer a{color:var(--muted)}
+.print-only{display:none}
+@media print{
+  @page{size:A4;margin:14mm}
+  body{background:#fff;font-size:12pt}
+  .top,footer,.acts,.cta,.badge,#landing,.crumbs,#msg,.noprint{display:none!important}
+  main{max-width:none;padding:0}
+  .pp{box-shadow:none;border:1px solid #D9D9D4;break-inside:avoid}
+  .grp,.bank{break-inside:avoid}
+  .bank{background:#fff;color:#000;border:1px solid #D9D9D4}.bank h2{color:#000}.bank p{color:#333}.bank .z{background:#F5F5F2}.bank a{color:#000}
+  .list,.chips span{border:1px solid #E6E6E1}
+  .print-only{display:block}
+  a[href]{color:inherit}
+}
+</style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"Паспорт добросовестности — это сертификат?","acceptedAnswer":{"@type":"Answer","text":"Нет. Это сводка открытых данных ФНС и других реестров на дату проверки. Он не заменяет документы, которые партнёр вправе запросить, и не гарантирует надёжность. Зато его невозможно купить или подправить: страница собирается заново при каждом открытии."}},
+{"@type":"Question","name":"Сколько стоит паспорт?","acceptedAnswer":{"@type":"Answer","text":"Паспорт бесплатный. Делоскоп не берёт денег с компаний за содержание паспорта и не меняет его по просьбе владельца."}},
+{"@type":"Question","name":"Как проверить, что бумажный паспорт не подделан?","acceptedAnswer":{"@type":"Answer","text":"Наведите камеру на QR-код: откроется живая страница на deloskop.ru. Сравните отпечаток данных на бумаге и на экране. Если они разные — с даты печати что-то изменилось, и верить нужно экрану."}},
+{"@type":"Question","name":"Видит ли паспорт операции по счёту и наличные?","acceptedAnswer":{"@type":"Answer","text":"Нет. Обороты, снятие наличных и назначения платежей видит только банк. Паспорт показывает то же, что видят все по открытым реестрам."}}
+]}</script>
+</head>
+<body>
+<header class="top"><div class="in">
+  <a class="brand" href="/" aria-label="Делоскоп — на главную"><svg width="30" height="27" viewBox="0 0 72 64" fill="none" aria-hidden="true"><path d="M36 18.1A16 16 0 0 1 36 45.9A16 16 0 0 1 36 18.1Z" fill="#0B63E5"/><circle cx="28" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/><circle cx="44" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/></svg><span>делоскоп</span></a>
+  <nav aria-label="Разделы"><a href="/proverit-schet/">Проверь счёт</a><a href="/delopis/">Делопись</a><a href="/115-fz/">115-ФЗ</a><a href="/nalogi/">Налоги</a><a href="/#shield">Щит</a><a href="/cabinet.html">Кабинет</a></nav>
+  <a class="btn" href="/">Проверить</a>
+</div></header>
+
+<main>
+<nav class="crumbs" aria-label="Навигация"><a href="/">Делоскоп</a><span>›</span><a href="/pasport/">Паспорт добросовестности</a></nav>
+
+<!-- Лендинг: открыт, пока в адресе нет ИНН -->
+<section id="landing">
+  <h1>Паспорт добросовестности</h1>
+  <p class="sub">Одна ссылка, которую не стыдно отправить банку, заказчику и новому партнёру: всё, что открытые реестры говорят о&nbsp;вашей компании, — на сегодняшнюю дату и с&nbsp;QR-кодом для бумаги.</p>
+  <form class="ask" id="askTop" novalidate>
+    <input id="innTop" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="ИНН компании или ИП" aria-label="ИНН компании или ИП">
+    <button type="submit">Открыть паспорт</button>
+  </form>
+  <p class="hint">Бесплатно и без регистрации. <a href="/pasport/?demo=1">Посмотреть пример</a> на вымышленной компании.</p>
+
+  <h2>Кому отправить</h2>
+  <div class="who">
+    <div><b>Банку</b><span>Когда пришёл запрос по 115-ФЗ: паспорт показывает, что компания настоящая, — к нему остаётся приложить документы по самой операции.</span></div>
+    <div><b>Заказчику</b><span>В тендер и на согласование договора: служба безопасности видит те же реестры, что и вы, без недели переписки.</span></div>
+    <div><b>Новому поставщику</b><span>Работать с отсрочкой проще, когда партнёр сам показывает, что ему нечего прятать.</span></div>
+    <div><b>Себе</b><span>Раз в месяц: не появилось ли отметки, о&nbsp;которой вы узнаете последним — после банка и налоговой.</span></div>
+  </div>
+
+  <h2>Чем отличается от сертификатов</h2>
+  <div class="tw"><table class="cmp">
+    <thead><tr><th></th><th>Паспорт Делоскопа</th><th>Платные свидетельства и рейтинги</th></tr></thead>
+    <tbody>
+      <tr><td>Цена</td><td>0&nbsp;₽</td><td>от нескольких тысяч рублей в год</td></tr>
+      <tr><td>Срок</td><td>Сразу</td><td>до 30 рабочих дней</td></tr>
+      <tr><td>Актуальность</td><td>Собирается заново при каждом открытии</td><td>На дату выдачи, год без изменений</td></tr>
+      <tr><td>Критерии</td><td>Открыты: видно каждый признак и его источник</td><td>Часто закрыты</td></tr>
+      <tr><td>Подделка</td><td>QR ведёт на живую страницу, отпечаток показывает устаревшую копию</td><td>Бумагу можно отксерить после отзыва</td></tr>
+      <tr><td>Если есть проблемы</td><td>Показываем честно — и подсказываем, что подготовить</td><td>Свидетельство просто не выдают</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Как проверить подлинность</h2>
+  <ol class="steps">
+    <li><b>Наведите камеру на QR-код.</b> Откроется страница на deloskop.ru — не картинка, а свежая сверка с реестрами.</li>
+    <li><b>Сравните отпечаток данных.</b> Шесть знаков на бумаге и на экране. Они меняются, только если в реестрах изменилось что-то существенное.</li>
+    <li><b>Разные — верьте экрану.</b> Страница сама скажет, что копия устарела, и покажет, что именно видно сейчас.</li>
+  </ol>
+
+  <h2>Вопросы</h2>
+  <details><summary>Это сертификат или гарантия?</summary><p>Нет. Это сводка открытых данных ФНС и других реестров на дату проверки. Партнёр по-прежнему вправе запросить документы. Зато паспорт нельзя купить или подправить: страница собирается заново при каждом открытии.</p></details>
+  <details><summary>Можно ли убрать неприятную отметку?</summary><p>Только в первоисточнике. Если отметка ошибочная — например, недостоверный адрес, — подайте уточнение в ФНС. Как только реестр обновится, изменится и паспорт. Под каждой отметкой мы подсказываем, что подготовить.</p></details>
+  <details><summary>Видит ли паспорт операции по счёту и наличные?</summary><p>Нет. Обороты, снятие наличных и назначения платежей видит только банк. Посмотреть на свою выписку глазами банка можно отдельно — <a href="/115-fz/snyatie-nalichnyh-s-raschetnogo-scheta/">начните с правил снятия наличных</a>.</p></details>
+  <details><summary>Кто может открыть паспорт моей компании?</summary><p>Любой, кто знает ИНН, — ведь это открытые данные. Паспорт ничего не добавляет к ним, кроме порядка и честного объяснения.</p></details>
+</section>
+
+<!-- Паспорт: собирается из /api/check -->
+<section id="view" hidden aria-live="polite"></section>
+<div id="msg" role="status"></div>
+</main>
+
+<footer><span>© 2026 Делоскоп · Сводка открытых данных, не сертификат и не гарантия · Не заменяет консультацию юриста</span>
+<span><a href="/proverit-schet/">Проверь счёт</a> · <a href="/delopis/">Делопись</a> · <a href="/115-fz/">115-ФЗ</a> · <a href="/nalogi/">Налоги</a> · <a href="mailto:help@deloskop.ru">help@deloskop.ru</a></span></footer>
+
+<script src="/pasport/qr.js"></script>
+<script src="/pasport/engine.js"></script>
+<script>
+(function(){
+  'use strict';
+  var E=window.PasportEngine, Q=window.DeloQR;
+  var API=(location.hostname.endsWith('deloskop.ru')?'https://api.deloskop.ru':'');
+  var ORIGIN='https://deloskop.ru';
+  var P=new URLSearchParams(location.search);
+  var inn=(P.get('inn')||'').replace(/\D/g,''), demo=P.get('demo')==='1';
+  var view=document.getElementById('view'), landing=document.getElementById('landing'), msg=document.getElementById('msg');
+
+  function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function say(t,err){msg.textContent=t||'';msg.className=err?'err':''}
+  function msk(d,opt){return d.toLocaleString('ru-RU',Object.assign({timeZone:'Europe/Moscow'},opt))}
+
+  // --- форма ИНН (лендинг и низ паспорта) ---
+  function bindAsk(form,input){
+    input.addEventListener('input',function(){input.value=input.value.replace(/[^\d]/g,'').slice(0,12)});
+    form.addEventListener('submit',function(e){e.preventDefault();var v=input.value.replace(/\D/g,'');
+      if(!E.innValid(v)){say(v.length===10||v.length===12?'В ИНН ошибка: не сходится контрольная цифра.':'ИНН — это 10 цифр у компании или 12 у предпринимателя.',true);input.focus();return;}
+      location.href='/pasport/?inn='+v;});
+  }
+  bindAsk(document.getElementById('askTop'),document.getElementById('innTop'));
+
+  // --- что подготовить: подсказки владельцу паспорта по типу отметки ---
+  var PREP=[
+    [/массов.*адрес|адрес.*массов/i,'Договор аренды и фото входа с вывеской. Банки спокойнее относятся к бизнес-центрам, если видно, что офис настоящий.'],
+    [/недостовер/i,'Если данные верны — подайте в ФНС форму Р13014 с подтверждающими документами; отметка снимется после обновления реестра.'],
+    [/долг|задолж|недоимк/i,'Погасите и закажите справку об отсутствии задолженности в личном кабинете налогоплательщика — её и прикладывайте.'],
+    [/числен|сотрудн|работник/i,'Коротко опишите модель работы: подрядчики, субподряд, сезонность. Приложите 2–3 договора с исполнителями.'],
+    [/налог|нагрузк/i,'Посчитайте свою нагрузку против средней по отрасли и объясните разницу: крупные закупки, вычеты, убыток прошлых лет.'],
+    [/дисквал/i,'Проверьте, актуальны ли сведения о руководителе, и при необходимости смените его в ЕГРЮЛ.'],
+    [/суд|арбитраж|(^|[^р])иск/i,'Держите наготове одно предложение по каждому делу: предмет спора и чем закончилось.'],
+    [/исполнит|пристав/i,'Приложите платёжку о погашении — производство закрывается не сразу.'],
+    [/ЗСК|зон/i,'Проверьте официальную зону на сайте Банка России через свой банк и подготовьте пояснения по крупным операциям.'],
+    [/массов.*руковод|руковод.*массов|учредител.*массов/i,'Объясните связь компаний (холдинг, семейный бизнес) и приложите схему владения.']
+  ];
+  function prep(t){for(var i=0;i<PREP.length;i++)if(PREP[i][0].test(t))return PREP[i][1];return ''}
+
+  // --- гильош: защитная сетка, как на бумаге с водяными знаками, но из кода ---
+  function guilloche(seed){
+    var w=920,h=420,paths='',k=(seed%7)+5;
+    for(var n=0;n<9;n++){var d='',R=150+n*9,r=38+n*3,a=R*0.62;
+      for(var t=0;t<=Math.PI*2*k+0.001;t+=0.02){var x=(R-r)*Math.cos(t)+a*Math.cos((R-r)/r*t),y=(R-r)*Math.sin(t)-a*Math.sin((R-r)/r*t);
+        d+=(t?'L':'M')+(w*0.78+x*0.9).toFixed(1)+' '+(h*0.42+y*0.55).toFixed(1);}
+      paths+='<path d="'+d+'" fill="none" stroke="#0B63E5" stroke-opacity="'+(0.035+n*0.004).toFixed(3)+'" stroke-width="0.6"/>';}
+    return '<svg class="guil" viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="xMaxYMin slice" aria-hidden="true">'+paths+'</svg>';
+  }
+
+  // --- машиночитаемая строка: шутка для внимательных и контрольная сумма для всех ---
+  var LAT={'А':'A','Б':'B','В':'V','Г':'G','Д':'D','Е':'E','Ё':'E','Ж':'ZH','З':'Z','И':'I','Й':'I','К':'K','Л':'L','М':'M','Н':'N','О':'O','П':'P','Р':'R','С':'S','Т':'T','У':'U','Ф':'F','Х':'KH','Ц':'TS','Ч':'CH','Ш':'SH','Щ':'SHCH','Ъ':'','Ы':'Y','Ь':'','Э':'E','Ю':'IU','Я':'IA'};
+  function mrz(name,innv,code){
+    var n=String(name||'').toUpperCase().replace(/[«»"']/g,'').split('').map(function(ch){return LAT[ch]!=null?LAT[ch]:ch}).join('').replace(/[^A-Z0-9]+/g,'<').replace(/^<|<$/g,'');
+    var line='PD<RUS'+n+'<<'+innv+'<<'+code;
+    while(line.length<88)line+='<';
+    return line;
+  }
+
+  function item(cls,mark,x,withPrep){
+    var p=withPrep?prep(x.title+' '+x.detail):'';
+    var src=[x.source,x.asOf?('на '+new Date(x.asOf).toLocaleDateString('ru-RU')):''].filter(Boolean).join(', ');
+    return '<div class="item '+cls+'"><i aria-hidden="true">'+mark+'</i><div><b>'+esc(x.title)+'</b>'+(x.detail?' <span class="d">— '+esc(x.detail)+'</span>':'')+
+      (src?'<small>'+esc(src)+'</small>':'')+(p?'<div class="prep"><em>Если это ваша компания:</em> '+esc(p)+'</div>':'')+'</div></div>';
+  }
+
+  function render(r){
+    var c=r.company||{}, g=E.classify(r), h=E.headline(g), code=E.fingerprint(r);
+    var name=c.name_short||c.name_full||('ИНН '+c.inn), at=new Date(r.checked_at||Date.now());
+    var url=E.passportUrl(ORIGIN,c.inn,code,at), live=ORIGIN+'/pasport/?inn='+c.inn;
+    var cmp=E.compare({f:P.get('f'),d:P.get('d')},code);
+    document.title='Паспорт добросовестности: '+name+' — Делоскоп';
+    var city=(String(c.address||'').match(/(?:^|,\s*)(г\.?\s*[^,]+)/)||[])[1]||'';
+    var reg=c.reg_date?new Date(c.reg_date).getFullYear():'';
+    var qr=Q.svg(url,{size:190,label:'QR-код: живая страница паспорта'});
+
+    var facts=[['Полное название',c.name_full],['Адрес',c.address],[c.kind==='INDIVIDUAL'?'Предприниматель':(c.director_post||'Руководитель'),c.director_name],['Деятельность',c.okved?(c.okved+(c.okved_name?' — '+c.okved_name:'')):'']]
+      .filter(function(f){return f[1]}).map(function(f){return '<dt>'+esc(f[0])+'</dt><dd>'+esc(f[1])+'</dd>'}).join('');
+
+    var html=
+      '<article class="pp">'+guilloche(+String(c.inn).slice(-3)||7)+
+      '<div class="pp-in"><div>'+
+        '<div class="kick">Паспорт добросовестности'+(r.demo?'<span class="demo-flag">пример · вымышленная компания</span>':'')+'</div>'+
+        '<h1>'+esc(name)+'</h1>'+
+        '<div class="ids"><span>ИНН <b>'+esc(c.inn)+'</b></span>'+(c.ogrn?'<span>'+(c.kind==='INDIVIDUAL'?'ОГРНИП':'ОГРН')+' <b>'+esc(c.ogrn)+'</b></span>':'')+(reg?'<span>с '+reg+' года</span>':'')+(city?'<span>'+esc(city)+'</span>':'')+'</div>'+
+        '<div class="verdict '+h.tone+'"><b>'+esc(h.title)+'</b><span>'+esc(h.text)+'</span></div>'+
+        (facts?'<dl class="facts">'+facts+'</dl>':'')+
+      '</div>'+
+      '<div class="qrbox"><div class="q">'+qr+'</div><div><div class="fp">Отпечаток данных<b>'+E.fpPretty(code)+'</b></div>'+
+        '<div class="when">Сверено с реестрами<br>'+msk(at,{day:'numeric',month:'long',year:'numeric'})+', '+msk(at,{hour:'2-digit',minute:'2-digit'})+' МСК</div></div></div>'+
+      '</div>'+
+      '<div class="mrz" aria-hidden="true">'+esc(mrz(name,c.inn,code))+'</div>'+
+      '</article>';
+
+    if(cmp.state==='same')html+='<div class="cmpbar same"><b>Совпадает с бумажной копией'+(cmp.printed?' от '+cmp.printed.toLocaleDateString('ru-RU'):'')+'.</b> С тех пор в реестрах ничего существенного не изменилось.</div>';
+    if(cmp.state==='changed')html+='<div class="cmpbar changed"><b>Бумажная копия'+(cmp.printed?' от '+cmp.printed.toLocaleDateString('ru-RU'):'')+' устарела:</b> там отпечаток '+E.fpPretty(cmp.printedCode)+', сейчас '+E.fpPretty(code)+'. Верьте этой странице — ниже то, что видно сегодня.</div>';
+
+    html+='<div class="acts noprint">'+
+      '<button type="button" class="main" data-a="copy">Скопировать ссылку</button>'+
+      '<button type="button" data-a="print">Распечатать</button>'+
+      '<button type="button" data-a="svg">QR для печати</button>'+
+      '<button type="button" data-a="png">QR картинкой</button>'+
+      '<button type="button" data-a="badge" aria-expanded="false">Знак для сайта</button></div>'+
+      '<div class="badge noprint" id="badge"><div class="row"><img src="/pasport/znak.svg" width="232" height="56" alt="Паспорт добросовестности на Делоскопе"><span>Поставьте знак на свой сайт — он ведёт на эту живую страницу.</span></div>'+
+      '<textarea readonly id="badgeCode" aria-label="Код знака для сайта">'+esc('<a href="'+live+'" target="_blank" rel="noopener"><img src="'+ORIGIN+'/pasport/znak.svg" width="232" height="56" alt="Паспорт добросовестности на Делоскопе"></a>')+'</textarea>'+
+      '<div class="acts"><button type="button" data-a="badgecopy">Скопировать код</button></div></div>'+
+      '<p class="print-only src-note">Живая страница: '+esc(live)+' · отпечаток '+E.fpPretty(code)+' · сверено '+at.toLocaleDateString('ru-RU')+'</p>';
+
+    if(g.real.length)html+='<section class="grp"><h2>Следы реальной работы <small>'+g.real.length+'</small></h2><div class="list">'+g.real.map(function(x){return item('ok','✓',x)}).join('')+'</div></section>';
+    if(g.serious.length)html+='<section class="grp"><h2>Серьёзные отметки <small>'+g.serious.length+'</small></h2><div class="list">'+g.serious.map(function(x){return item('bad','!',x,true)}).join('')+'</div></section>';
+    if(g.ask.length)html+='<section class="grp"><h2>О чём могут спросить <small>'+g.ask.length+'</small></h2><div class="list">'+g.ask.map(function(x){return item('warn','?',x,true)}).join('')+'</div></section>';
+    if(g.clean.length)html+='<section class="grp"><h2>Проверено — чисто <small>'+g.clean.length+'</small></h2><div class="chips">'+g.clean.map(function(x){return '<span>'+esc(x.title)+(x.detail?': '+esc(x.detail):'')+'</span>'}).join('')+'</div></section>';
+    if(g.info.length)html+='<section class="grp"><h2>Справочно <small>'+g.info.length+'</small></h2><div class="list">'+g.info.map(function(x){return item('info','i',x)}).join('')+'</div></section>';
+
+    var z=r.zsk, zc=z?(z.level==='high'?'#F97066':z.level==='medium'?'#FDB022':'#32D583'):'';
+    html+='<section class="bank"><h2>Что увидит банк</h2>'+
+      '<p>Эти же реестры банк смотрит первыми. Но решение по 115-ФЗ он принимает ещё и по вашему счёту: обороты, снятие наличных, транзит, назначения платежей. Этого в паспорте нет — и быть не должно.</p>'+
+      (z?'<div class="z"><i style="background:'+zc+'"></i><span>Прогноз ЗСК — '+esc(String(z.title||'').toLowerCase())+' попасть в жёлтую или красную зону <span style="color:#8E8E93">(оценка Делоскопа)</span></span><a href="'+esc(z.cbr_url||'https://cbr.ru/counteraction_m_ter/platform_zsk')+'" target="_blank" rel="noopener">Официально — в ЦБ →</a></div>':'')+
+      '<p style="margin:0"><a href="/115-fz/snyatie-nalichnyh-s-raschetnogo-scheta/">Как банк смотрит на снятие наличных →</a></p></section>';
+
+    var srcs={};(r.signals||[]).forEach(function(x){if(x.source&&!Object.keys(srcs).some(function(k){return k.indexOf(x.source)===0||x.source.indexOf(k)===0}))srcs[x.source]=1});if(!Object.keys(srcs).some(function(k){return /ЕГР/.test(k)}))srcs['ЕГРЮЛ/ЕГРИП']=1;
+    html+='<div class="limits"><b>Честно о границах.</b> Это сводка открытых данных на '+at.toLocaleDateString('ru-RU')+', а не сертификат, гарантия или решение банка. Делоскоп не берёт денег с компаний за содержание паспорта и не меняет его по их просьбе: исправить можно только первоисточник.'+
+      '<div style="margin-top:8px">Источники: '+Object.keys(srcs).map(esc).join(' · ')+'.</div></div>';
+
+    html+='<section class="cta noprint"><h2>Паспорт своей компании</h2><p>Посмотрите, что видят о вас банк и партнёры, — и отправьте им ссылку раньше, чем они спросят.</p>'+
+      '<form class="ask" id="askBottom" novalidate><input id="innBottom" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="ИНН компании или ИП" aria-label="ИНН компании или ИП"><button type="submit">Открыть паспорт</button></form></section>';
+
+    view.innerHTML=html;
+    bindAsk(document.getElementById('askBottom'),document.getElementById('innBottom'));
+
+    function download(blob,name){var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500)}
+    function copy(text,btn,done){var ok=function(){var t=btn.textContent;btn.textContent=done;setTimeout(function(){btn.textContent=t},2200)};
+      if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(ok,function(){prompt('Скопируйте:',text)});else prompt('Скопируйте:',text);}
+    var big=Q.svg(url,{size:1024,label:'QR-код паспорта'});
+    view.querySelector('.acts').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;var a=b.dataset.a;
+      if(a==='copy'){if(navigator.share&&/Mobi/i.test(navigator.userAgent)){navigator.share({title:document.title,url:live}).catch(function(){});return;}copy(live,b,'Ссылка скопирована');}
+      if(a==='print')window.print();
+      if(a==='svg')download(new Blob([big],{type:'image/svg+xml'}),'pasport-'+c.inn+'-qr.svg');
+      if(a==='png'){var img=new Image();img.onload=function(){var cv=document.createElement('canvas');cv.width=cv.height=1024;var cx=cv.getContext('2d');cx.imageSmoothingEnabled=false;cx.drawImage(img,0,0,1024,1024);
+        cv.toBlob(function(bl){if(bl)download(bl,'pasport-'+c.inn+'-qr.png')},'image/png')};img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(big);}
+      if(a==='badge'){var bd=document.getElementById('badge'),on=!bd.classList.contains('on');bd.classList.toggle('on',on);b.setAttribute('aria-expanded',on);}
+    });
+    view.querySelector('[data-a="badgecopy"]').addEventListener('click',function(e){copy(document.getElementById('badgeCode').value,e.target,'Код скопирован')});
+  }
+  // Запуск — в самом конце, когда все таблицы и функции уже определены.
+  (function start(){
+    if(!inn&&!demo)return; // обычный лендинг
+
+    // Страница конкретной компании — не для поисковиков (дубли открытых данных), лендинг — для них.
+    var mr=document.createElement('meta');mr.name='robots';mr.content='noindex, follow';document.head.appendChild(mr);
+    landing.hidden=true; view.hidden=false;
+    if(demo){render(Object.assign({},E.DEMO,{checked_at:new Date().toISOString()}));return;}
+    if(!E.innValid(inn)){view.innerHTML='';say('В ссылке неверный ИНН. Проверьте его или откройте паспорт заново.',true);landing.hidden=false;view.hidden=true;return;}
+    if(!API){render(Object.assign({},E.DEMO,{checked_at:new Date().toISOString()}));say('Живые данные открываются на deloskop.ru — здесь показан пример.');return;}
+
+    view.innerHTML='<div class="skel" aria-hidden="true"></div>';say('Сверяем с реестрами…');
+    fetch(API+'/api/check?q='+encodeURIComponent(inn)+'&from=pasport',{credentials:'include'})
+      .then(function(res){return res.json().then(function(j){return {ok:res.ok,status:res.status,j:j}},function(){return {ok:false,status:res.status,j:{}}})})
+      .then(function(x){
+        if(!x.ok){view.innerHTML='';
+          say(x.status===429?'Бесплатные проверки на сегодня закончились. Паспорт откроется завтра — или войдите в кабинет.':((x.j&&x.j.detail)||'Не получилось собрать паспорт. Обновите страницу через минуту.'),true);return;}
+        say('');render(x.j);})
+      .catch(function(){view.innerHTML='';say('Сервис не ответил. Проверьте интернет и обновите страницу.',true);});
+
+  })();
+})();
+</script>
+<script src="/obnovleniya.js" defer></script>
+</body>
+</html>

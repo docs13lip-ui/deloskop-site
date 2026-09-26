@@ -363,7 +363,7 @@ footer a{color:var(--ink2)}
         </div>
         <div class="rows">
           <div class="row"><span>Недостоверные сведения в ЕГРЮЛ</span><b class="ok">Нет</b></div>
-          <div class="row"><span>Прогноз зоны ЗСК</span><b class="ok">Зелёная</b></div>
+          <div class="row"><span>Прогноз зоны ЗСК · наша оценка</span><b class="ok">Зелёная</b></div>
           <div class="row"><span>Задолженность по налогам</span><b class="ok">Нет</b></div>
           <div class="row"><span>Руководитель сменился недавно</span><b class="warn">Внимание</b></div>
           <div class="row"><span>Налоговая нагрузка</span><b class="neutral">На уровне отрасли</b></div>
@@ -432,7 +432,7 @@ footer a{color:var(--ink2)}
       <div class="sect-head">
         <h2 class="h2">Откуда данные</h2>
         <p class="lead">Только официальные открытые источники. Рядом с каждым фактом — откуда он взят и на какую дату.</p>
-        <p class="soon">Следом подключаем решения о приостановке счетов, арбитражные дела и банкротства.</p>
+        <p class="soon">Следом подключаем решения о&nbsp;приостановке счетов, арбитражные дела и&nbsp;банкротства. Пока источник не&nbsp;подключён, так и&nbsp;пишем: «не&nbsp;проверено» — это не&nbsp;то же самое, что «не&nbsp;обнаружено».</p>
       </div>
       <div class="chips">
         <div class="chip">ЕГРЮЛ и ЕГРИП</div>
@@ -491,7 +491,7 @@ footer a{color:var(--ink2)}
       <div class="eyebrow">Почему мы делаем Делоскоп</div>
       <h2 class="h2" style="margin-top:12px;max-width:820px">Честному бизнесу не должно быть страшно открывать банковское приложение</h2>
       <div class="manifest" style="margin-top:24px">
-        <p>В начале 2026 года банки всего за две недели ограничили 2–3 миллиона счетов и карт<sup>1</sup>. Под проверку всё чаще попадают обычные компании — из-за одного платежа сомнительному поставщику или размытого назначения платежа.</p>
+        <p>Банк России через платформу «Знай своего клиента» относит каждую из 7,5&nbsp;млн компаний и&nbsp;ИП к&nbsp;зелёной, жёлтой или красной группе риска<sup>1</sup>. Под проверку попадают и&nbsp;обычные компании — из-за одного платежа сомнительному поставщику или размытого назначения платежа.</p>
         <p>С налоговой похожая история. Если поставщик окажется «технической» компанией, отвечать придётся покупателю: налоговая вправе снять вычеты по НДС и расходы по статье 54.1 Налогового кодекса.</p>
         <p><b>Банк и налоговая видят ваш бизнес через десятки признаков. Вы их не видите.</b> Делоскоп убирает эту разницу: показывает то же, что видят они, и простыми словами объясняет, что делать.</p>
       </div>
@@ -510,7 +510,7 @@ footer a{color:var(--ink2)}
         </article>
       </div>
       <p class="mission">Наша миссия — чтобы добросовестный бизнес тратил время на работу, а не на объяснения с банком и налоговой.</p>
-      <p class="fn"><sup>1</sup> <a href="https://www.kommersant.ru/doc/8361504" rel="noopener" target="_blank">Коммерсантъ, 19 января 2026</a>. Оценка платформы Банка России «Знай своего клиента» охватывает 7,5 млн компаний и ИП — <a href="https://cbr.ru/counteraction_m_ter/platform_zsk" rel="noopener" target="_blank">cbr.ru</a>.</p>
+      <p class="fn"><sup>1</sup> <a href="https://cbr.ru/counteraction_m_ter/platform_zsk/" rel="noopener" target="_blank">Банк России, платформа «Знай своего клиента»</a>. Информация платформы для банков вспомогательная: окончательный уровень риска клиента каждый банк определяет сам.</p>
     </div>
   </section>
 
@@ -731,7 +731,7 @@ footer a{color:var(--ink2)}
       return '<div class="row"><span>'+esc(x.title)+'</span><b class="d '+cls+'">'+esc(x.detail||'')+'</b></div>';
     }).join('');
     if(r.zsk){var zc=r.zsk.level==='high'?'bad':r.zsk.level==='medium'?'warn':'ok';
-      rows+='<div class="row"><span>Прогноз ЗСК <a href="'+esc(r.zsk.cbr_url)+'" target="_blank" rel="noopener" style="font-size:13px">проверить в ЦБ</a></span><b class="d '+zc+'">'+esc(r.zsk.title)+'</b></div>';}
+      rows+='<div class="row"><span>Прогноз ЗСК · наша оценка, не статус Банка России <a href="'+esc(r.zsk.cbr_url)+'" target="_blank" rel="noopener" style="font-size:13px">проверить в ЦБ</a></span><b class="d '+zc+'">'+esc(r.zsk.title)+'</b></div>';}
     var d=new Date(r.checked_at||Date.now());
     report.setAttribute('aria-label','Отчёт о проверке');
     report.innerHTML='<div class="report-head"><div><div class="tag">Проверка на '+d.toLocaleDateString('ru-RU')+'</div>'+

@@ -171,7 +171,7 @@ p{margin:0}
 .plan{background:var(--bg);border-radius:28px;padding:32px 28px;display:flex;flex-direction:column;gap:22px}
 .plan.pro{box-shadow:0 0 0 2px var(--accent);background:#fff}
 .badge{display:inline-block;margin-left:6px;font-size:12px;font-weight:600;color:#fff;background:var(--accent);border-radius:999px;padding:3px 9px;vertical-align:2px}
-.per{font-size:14px;color:var(--muted);margin-top:-14px;min-height:20px}
+.per{font-size:14px;color:var(--muted);margin-top:-14px;min-height:40px}
 .price b{font-size:38px;white-space:nowrap}
 .price{flex-wrap:wrap;row-gap:0}
 .period{display:inline-flex;gap:4px;background:var(--bg);border-radius:999px;padding:4px;margin-top:8px}
@@ -188,6 +188,11 @@ p{margin:0}
 .plan li{display:flex;gap:12px;align-items:center}
 .plan li svg,.doclist svg{flex-shrink:0}
 .plan .cta{text-align:center;font-size:18px;font-weight:600;border-radius:16px;padding:17px}
+.knopki{display:flex;flex-direction:column;gap:4px}
+.knopki .cta{font-size:16px;padding:15px 8px;white-space:nowrap}
+@media (min-width:1181px){.pricing .price{flex-wrap:nowrap}.pricing .price b{font-size:clamp(36px,3vw,56px)}.pricing .plan>.cta{font-size:16px;padding:15px 8px;white-space:nowrap}}  /* 4 колонки: цена и «в месяц» в одну строку */
+.cta2{display:flex;align-items:center;justify-content:center;min-height:44px;font-size:15px;font-weight:500;color:var(--accent);border-radius:12px;text-align:center}
+.cta2:hover{background:rgba(11,99,229,.06)}
 .cta.primary{background:var(--accent);color:#fff}
 .cta.primary:hover{background:var(--accent-hover);color:#fff}
 .cta.ghost{background:var(--card);color:var(--ink);border:1px solid #D8D8D2}
@@ -484,7 +489,7 @@ footer a{color:var(--ink2)}
         <article>
           <h3>Проверка контрагента</h3>
           <p class="risk">Риск: снятый вычет НДС и потерянный аванс</p>
-          <p>За секунды сводим открытые данные ФНС и признаки из рекомендаций Банка России. Говорим прямо: платить можно, только по факту или лучше не работать. Досье с датой проверки — ваше доказательство осмотрительности перед налоговой (письмо ФНС № БВ-4-7/3060@).</p>
+          <p>За секунды сводим открытые данные ФНС и признаки из рекомендаций Банка России. Говорим прямо: платить можно, только по факту или лучше не работать. Досье с датой проверки — часть доказательств должной осмотрительности перед налоговой (письмо ФНС № БВ-4-7/3060@).</p>
         </article>
         <article>
           <h3>Щит</h3>
@@ -519,10 +524,10 @@ footer a{color:var(--ink2)}
     <div class="wrap">
       <div class="sect-head">
         <h2 class="h2">Попробуйте бесплатно. Растите вместе с нами.</h2>
-        <p class="lead">Компаниям и ИП — по счёту, с закрывающими документами. Оплата картой на сайте — скоро.</p>
+        <p class="lead">Помесячно — без обязательств на год, отменить можно в любой момент. Компаниям и ИП — по счёту на месяц, квартал или год, с закрывающими документами. Оплата картой на сайте — скоро.</p>
         <div class="period" role="group" aria-label="Период оплаты">
-          <button type="button" data-period="m">Помесячно</button>
-          <button type="button" data-period="y" class="on">За год <em>−20%</em></button>
+          <button type="button" data-period="m" class="on" aria-pressed="true">Помесячно</button>
+          <button type="button" data-period="y" aria-pressed="false">За год <em>−20%</em></button>
         </div>
       </div>
       <div class="plans">
@@ -536,27 +541,27 @@ footer a{color:var(--ink2)}
         </div>
         <div class="plan ">
           <div><div class="plan-name">Старт </div><div class="plan-for">ИП, самозанятым и частным лицам</div></div>
-          <div class="price"><b data-m="490 ₽" data-y="392 ₽">392 ₽</b><span>в месяц</span></div><div class="per" data-m="при оплате помесячно" data-y="4 700 ₽ за год — экономия 1 180 ₽">4 700 ₽ за год — экономия 1 180 ₽</div>
+          <div class="price"><b data-m="490 ₽" data-y="392 ₽">490 ₽</b><span>в месяц</span></div><div class="per" data-m="или 4 700 ₽ за год — экономия 1 180 ₽" data-y="4 700 ₽ одним платежом — экономия 1 180 ₽">или 4 700 ₽ за год — экономия 1 180 ₽</div>
           <ul>
             <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Базовые проверки без лимита</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>3 полных отчёта в месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>10 персональных разборов в месяц <span class="tagnew">скоро</span></span></li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Слежение за 3 компаниями</li>
           </ul>
-          <a class="cta ghost" href="mailto:help@deloskop.ru?subject=Подключить%20тариф%20Старт">Подключить «Старт»</a>
+          <div class="knopki" data-cena-m="490 ₽" data-cena-g="4 700 ₽"><a class="cta ghost" data-tarif="start" data-srok="mes" href="/schet/?tarif=start&amp;srok=mes">Оплачивать помесячно</a><a class="cta2" data-tarif="start" data-srok="god" href="/schet/?tarif=start&amp;srok=god">Оплатить год — 4 700 ₽</a></div>
         </div>
         <div class="plan pro">
           <div><div class="plan-name">Про <span class="badge">Рекомендуем</span></div><div class="plan-for">Малому бизнесу и бухгалтерам</div></div>
-          <div class="price"><b data-m="1 490 ₽" data-y="1 192 ₽">1 192 ₽</b><span>в месяц</span></div><div class="per" data-m="при оплате помесячно" data-y="14 300 ₽ за год — экономия 3 580 ₽">14 300 ₽ за год — экономия 3 580 ₽</div>
+          <div class="price"><b data-m="1 490 ₽" data-y="1 192 ₽">1 490 ₽</b><span>в месяц</span></div><div class="per" data-m="или 14 300 ₽ за год — экономия 3 580 ₽" data-y="14 300 ₽ одним платежом — экономия 3 580 ₽">или 14 300 ₽ за год — экономия 3 580 ₽</div>
           <ul>
             <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Базовые проверки без лимита</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>20 полных отчётов в месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Персональные разборы 115-ФЗ без лимита <span class="tagnew">скоро</span></span></li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Делопись: договоры с защитой под контрагента</span></li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Слежение за 10 компаниями</li>
           </ul>
-          <a class="cta primary" href="mailto:help@deloskop.ru?subject=Подключить%20тариф%20Про">Подключить «Про»</a>
+          <div class="knopki" data-cena-m="1 490 ₽" data-cena-g="14 300 ₽"><a class="cta primary" data-tarif="pro" data-srok="mes" href="/schet/?tarif=pro&amp;srok=mes">Оплачивать помесячно</a><a class="cta2" data-tarif="pro" data-srok="god" href="/schet/?tarif=pro&amp;srok=god">Оплатить год — 14 300 ₽</a></div>
         </div>
         <div class="plan ">
           <div><div class="plan-name">Бизнес </div><div class="plan-for">Отделам закупок и продаж</div></div>
-          <div class="price"><b data-m="4 990 ₽" data-y="3 992 ₽">3 992 ₽</b><span>в месяц</span></div><div class="per" data-m="при оплате помесячно" data-y="47 900 ₽ за год — экономия 11 980 ₽">47 900 ₽ за год — экономия 11 980 ₽</div>
+          <div class="price"><b data-m="4 990 ₽" data-y="3 992 ₽">4 990 ₽</b><span>в месяц</span></div><div class="per" data-m="или 47 900 ₽ за год — экономия 11 980 ₽" data-y="47 900 ₽ одним платежом — экономия 11 980 ₽">или 47 900 ₽ за год — экономия 11 980 ₽</div>
           <ul>
             <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>До 5 сотрудников</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Щит: разбор выписки из 1С каждый месяц <span class="tagnew">скоро</span></span></li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>80 полных отчётов в месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Слежение за 50 компаниями</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Ежедневный контроль блокировок у 3 партнёров <span class="tagnew">скоро</span></span></li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Выгрузка в Excel и 1С <span class="tagnew">скоро</span></span></li>
           </ul>
-          <a class="cta ghost" href="mailto:help@deloskop.ru?subject=Подключить%20тариф%20Бизнес">Подключить «Бизнес»</a>
+          <div class="knopki" data-cena-m="4 990 ₽" data-cena-g="47 900 ₽"><a class="cta ghost" data-tarif="biznes" data-srok="mes" href="/schet/?tarif=biznes&amp;srok=mes">Оплачивать помесячно</a><a class="cta2" data-tarif="biznes" data-srok="god" href="/schet/?tarif=biznes&amp;srok=god">Оплатить год — 47 900 ₽</a></div>
         </div>
       </div>
       <p class="plans-note">Нужно больше отчётов? Докупите 10 полных отчётов за 990 ₽ или напишите нам — рассчитаем тариф для вашей компании. <a href="/tarify/#podbor">Подобрать тариф без переплаты и посчитать окупаемость →</a></p>
@@ -567,7 +572,7 @@ footer a{color:var(--ink2)}
     <div class="wrap">
       <h2 class="h2">Вопросы</h2>
       <div>
-        <details><summary>Зачем платить, если данные ФНС и так бесплатные?</summary><p>Данные бесплатные, но разбросаны по семи сайтам, а вывода там нет. Делоскоп за секунды сводит их и говорит, что делать: платить, только по факту или не работать. Следит за изменениями, пока вы работаете с контрагентом, и хранит досье с датой проверки — доказательство осмотрительности, если налоговая придёт через два года. Одна снятая сделка на 3 млн ₽ обходится в сотни тысяч рублей — <a href="#save">посчитайте</a>.</p></details>
+        <details><summary>Зачем платить, если данные ФНС и так бесплатные?</summary><p>Данные бесплатные, но разбросаны по семи сайтам, а вывода там нет. Делоскоп за секунды сводит их и говорит, что делать: платить, только по факту или не работать. Следит за изменениями, пока вы работаете с контрагентом, и хранит досье с датой проверки — часть доказательств должной осмотрительности, если налоговая придёт через два года. Одна снятая сделка на 3 млн ₽ обходится в сотни тысяч рублей — <a href="#save">посчитайте</a>.</p></details>
         <details open><summary>Чем Делоскоп отличается от больших сервисов проверки?</summary><p>Мы не пересказываем реестры, а даём вывод: можно работать или нет, и что сделать, чтобы обезопасить себя.</p></details>
         <details><summary>Что такое Щит?</summary><p>Проверка вашей собственной компании глазами банка и налоговой. Введите свой ИНН — увидите признаки, на которые они смотрят, и что сделать заранее.</p></details>
         <details><summary>Откуда вы знаете, как меня видит банк?</summary><p>Мы анализируем те же открытые данные, что доступны банкам, и применяем признаки из рекомендаций Банка России. Это наша оценка, а не решение банка. Официальную зону своей компании можно узнать на <a href="https://cbr.ru/counteraction_m_ter/platform_zsk" rel="noopener" target="_blank">сайте Банка России</a>.</p></details>
@@ -575,7 +580,7 @@ footer a{color:var(--ink2)}
         <details><summary>Подойдёт ли Делоскоп частному лицу?</summary><p>Да. Проверьте подрядчика, арендодателя или будущего работодателя, прежде чем подписывать договор и платить.</p></details>
         <details><summary>Гарантирует ли проверка, что банк не заблокирует счёт?</summary><p>Нет. Решение принимает банк. Делоскоп помогает заметить риски заранее и правильно подготовить документы.</p></details>
         <details><summary>Можно ли сменить тариф?</summary><p>Да, в любой момент. При переходе на тариф выше доплачиваете только разницу за оставшиеся дни.</p></details>
-        <details><summary>Как оплатить?</summary><p>Пока тарифы подключаем по заявке: напишите на <a href="mailto:help@deloskop.ru">help@deloskop.ru</a> — пришлём счёт для компании или ИП и закрывающие документы. Оплата картой на сайте появится скоро.</p></details>
+        <details><summary>Как оплатить?</summary><p>Компании и ИП — по счёту с расчётного счёта: нажмите кнопку тарифа, выберите срок и впишите ИНН плательщика — счёт откроется сразу, без НДС. Доступ — в день поступления денег, акт — для бухгалтерии. Оплата картой на сайте появится после подключения банка.</p></details>
         <details><summary>Где хранятся мои данные?</summary><p>На серверах в России, в соответствии с 152-ФЗ.</p></details>
       </div>
     </div>
@@ -625,8 +630,17 @@ footer a{color:var(--ink2)}
   function focusInn(e){e.preventDefault();window.scrollTo({top:0,behavior:'smooth'});setTimeout(function(){input.focus({preventScroll:true})},350);}
   document.querySelectorAll('[data-period]').forEach(function(b){b.addEventListener('click',function(){
     var p=b.getAttribute('data-period');
-    document.querySelectorAll('[data-period]').forEach(function(x){x.classList.toggle('on',x===b)});
+    document.querySelectorAll('[data-period]').forEach(function(x){x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',x===b?'true':'false')});
     document.querySelectorAll('.plans [data-m]').forEach(function(el){el.textContent=el.getAttribute('data-'+p)});
+    var srok=p==='y'?'god':'mes';
+    document.querySelectorAll('.knopki').forEach(function(k){  /* главная кнопка — под выбранный период, вторая — тихая ссылка */
+      var a=k.querySelector('.cta'),c=k.querySelector('.cta2');
+      if(!a||!c||a.getAttribute('data-srok')===srok)return;
+      var h=a.getAttribute('href');a.setAttribute('href',c.getAttribute('href'));c.setAttribute('href',h);
+      a.setAttribute('data-srok',srok);c.setAttribute('data-srok',srok==='god'?'mes':'god');
+      a.textContent=srok==='god'?'Оплатить год':'Оплачивать помесячно';
+      c.textContent=srok==='god'?'Оплачивать помесячно — '+k.getAttribute('data-cena-m'):'Оплатить год — '+k.getAttribute('data-cena-g');
+    });
   })});
   document.querySelectorAll('[data-focus-inn]').forEach(function(a){a.addEventListener('click',focusInn)});
   input.addEventListener('input',function(){note.className='note';note.textContent=def;});
@@ -806,5 +820,6 @@ footer a{color:var(--ink2)}
 })();
 </script>
 <script src="/obnovleniya.js" defer></script>
+<script src="/js/schet.js" defer></script>
 </body>
 </html>

@@ -82,3 +82,24 @@ ok('годовая скидка не меньше 20% и не больше 21%',
   });
 });
 console.log(`\n${n} тестов пройдено`);
+
+// Кнопки оплаты: главная кнопка следует за периодом, href и срок меняются местами (для модуля оплаты)
+ok('knopki: переключение «Помесячно» ↔ «За год»', () => {
+  function el(attrs, text) {
+    return { a: Object.assign({}, attrs), textContent: text,
+      getAttribute(k) { return this.a[k]; }, setAttribute(k, v) { this.a[k] = v; } };
+  }
+  const a = el({ 'data-srok': 'mes', href: 'mailto:m' }, 'Оплачивать помесячно');
+  const b = el({ 'data-srok': 'god', href: 'mailto:g' }, 'Оплатить год — 14 300 ₽');
+  const k = el({ 'data-cena-m': '1 490 ₽', 'data-cena-g': '14 300 ₽' });
+  k.querySelector = (s) => (s === '.cta' ? a : b);
+  const doc = { querySelectorAll: () => [k] };
+  T.knopki('god', doc);
+  assert.strictEqual(a.textContent, 'Оплатить год'); assert.strictEqual(a.a.href, 'mailto:g'); assert.strictEqual(a.a['data-srok'], 'god');
+  assert.strictEqual(b.textContent, 'Оплачивать помесячно — 1 490 ₽'); assert.strictEqual(b.a['data-srok'], 'mes');
+  T.knopki('god', doc); // повтор ничего не ломает
+  assert.strictEqual(a.a.href, 'mailto:g');
+  T.knopki('mes', doc);
+  assert.strictEqual(a.textContent, 'Оплачивать помесячно'); assert.strictEqual(a.a.href, 'mailto:m');
+  assert.strictEqual(b.textContent, 'Оплатить год — 14 300 ₽');
+});

@@ -75,6 +75,16 @@ select:disabled,input:disabled{background:var(--bg);color:var(--muted)}
 .help{background:var(--bg);border-radius:14px;padding:12px 14px;font-size:14px;color:var(--ink2);margin-top:14px}
 .help b{color:var(--ink)}
 @media (max-width:560px){.users .ctl{width:100%}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.rek{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.rek label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.rek input:not([type=radio]){min-height:44px;border:1px solid #D9D9D4;border-radius:10px;padding:0 12px;font:inherit;font-size:15px;color:var(--ink);background:#fff}
+.rek input[aria-invalid=true]{border-color:var(--bad)}
+.rek .w{grid-column:1/-1}.rek fieldset{border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0}
+.rek legend{font-weight:600;font-size:14px;color:var(--ink);padding:0 6px}.rek label.r{flex-direction:row;align-items:center;gap:8px;font-size:15px;color:var(--ink)}
+.sch .sum{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sch .ctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sch .ctl .btn{min-height:36px;padding:6px 12px;font-size:14px}
+@media (max-width:560px){.rek,.rek fieldset{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -111,6 +121,37 @@ select:disabled,input:disabled{background:var(--bg);color:var(--muted)}
     </section>
 
 
+    <section class="card" id="schSek" hidden>
+      <h2>Счета</h2>
+      <p class="sub" style="margin:0 0 12px">Заявки с формы «Получить счёт». Пришли деньги — «Оплачено»: доступ откроется на срок счёта, у клиента появится акт.</p>
+      <div class="field" style="gap:8px"><select id="schF" aria-label="Какие счета показать"><option value="">Все</option><option value="zayavka">Заявки без реквизитов</option><option value="vystavlen" selected>Ждут оплаты</option><option value="oplachen">Оплачены</option><option value="annulirovan">Аннулированы</option></select></div>
+      <p class="note" id="schNote" role="status" aria-live="polite"></p>
+      <ul class="list" id="schList"></ul>
+    </section>
+    <section class="card" id="rekSek" hidden>
+      <h2>Реквизиты для счетов</h2>
+      <p class="sub" style="margin:0 0 12px" id="rekSub">Из них собирается каждый новый счёт. Уже выставленные счета не меняются.</p>
+      <form id="rekF" novalidate class="rek">
+        <label>ФИО ИП<input data-r="fio" autocomplete="off" placeholder="Фамилия Имя Отчество"></label>
+        <label>ИНН ИП<input data-r="inn" inputmode="numeric" maxlength="12" autocomplete="off"></label>
+        <label>ОГРНИП<input data-r="ogrnip" inputmode="numeric" maxlength="15" autocomplete="off"></label>
+        <label class="w">Адрес для писем и претензий<input data-r="adres" autocomplete="off" placeholder="можно абонентский ящик"></label>
+        <label>E-mail в счёте<input data-r="email" type="email" autocomplete="off" placeholder="help@deloskop.ru"></label>
+        <label>Строка про НДС<input data-r="nds_tekst" autocomplete="off" placeholder="Без налога (НДС)"></label>
+        <fieldset class="w"><legend>Счёт в Сбербанке</legend>
+          <label>Банк<input data-b="sber.bank" autocomplete="off" placeholder="ПАО Сбербанк"></label><label>Город<input data-b="sber.gorod" autocomplete="off"></label>
+          <label>БИК<input data-b="sber.bik" inputmode="numeric" maxlength="9" autocomplete="off"></label><label>Корсчёт<input data-b="sber.ks" inputmode="numeric" maxlength="20" autocomplete="off"></label>
+          <label class="w">Расчётный счёт<input data-b="sber.rs" inputmode="numeric" maxlength="20" autocomplete="off"></label></fieldset>
+        <fieldset class="w"><legend>Счёт в Альфа-Банке</legend>
+          <label>Банк<input data-b="alfa.bank" autocomplete="off" placeholder="АО «Альфа-Банк»"></label><label>Город<input data-b="alfa.gorod" autocomplete="off"></label>
+          <label>БИК<input data-b="alfa.bik" inputmode="numeric" maxlength="9" autocomplete="off"></label><label>Корсчёт<input data-b="alfa.ks" inputmode="numeric" maxlength="20" autocomplete="off"></label>
+          <label class="w">Расчётный счёт<input data-b="alfa.rs" inputmode="numeric" maxlength="20" autocomplete="off"></label></fieldset>
+        <fieldset class="w"><legend>Выставлять счета на</legend>
+          <label class="r"><input type="radio" name="aktiv" value="sber"> Сбербанк</label> <label class="r"><input type="radio" name="aktiv" value="alfa"> Альфа-Банк</label></fieldset>
+        <div class="w"><button class="btn primary" type="submit">Сохранить реквизиты</button></div>
+      </form>
+      <p class="note" id="rekNote" role="status" aria-live="polite"></p>
+    </section>
     <section class="card">
       <h2>Данные ФНС</h2>
       <p class="sub" style="margin:0 0 14px" id="dSub">Открытые данные налоговой в нашей базе: что загружено и что идёт сейчас.</p>
@@ -263,6 +304,7 @@ select:disabled,input:disabled{background:var(--bg);color:var(--muted)}
   if(!API){$('loading').textContent='Админка работает на deloskop.ru.';return}
   loadSummary().then(function(){
     $('loading').hidden=true;$('adm').hidden=false;
+    if(window.DlkScheta)DlkScheta.start(call,function(){return isAdmin},$('me').textContent);
     return Promise.all([loadData(),loadUsers(),loadFeedback(),loadLog()]);
   }).catch(function(err){
     $('loading').hidden=true;$('deny').hidden=false;
@@ -270,6 +312,8 @@ select:disabled,input:disabled{background:var(--bg);color:var(--muted)}
   });
 })();
 </script>
+<script src="/js/schet.js"></script>
+<script src="/js/admin-scheta.js"></script>
 <script src="/obnovleniya.js" defer></script>
 </body>
 </html>

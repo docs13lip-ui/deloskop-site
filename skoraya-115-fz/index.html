@@ -195,7 +195,7 @@ main{max-width:860px}
     <button type="button" data-sc="otkaz" aria-pressed="false"><b>Не провёл платёж</b><span>Отказ в конкретной операции, остальное работает</span></button>
     <button type="button" data-sc="dbo" aria-pressed="false"><b>Отключил интернет-банк или карту</b><span>Платить можно только в отделении</span></button>
     <button type="button" data-sc="rastorzhenie" aria-pressed="false"><b>Расторгает договор счёта</b><span>Уведомил о закрытии счёта</span></button>
-    <button type="button" data-sc="zsk" aria-pressed="false"><b>Красная зона ЗСК</b><span>Операции остановили во всех банках сразу</span></button>
+    <button type="button" data-sc="zsk" aria-pressed="false"><b>Красная зона ЗСК</b><span>Высокий риск у Банка России — банк остановил или может остановить операции</span></button>
     <button type="button" data-sc="unknown" aria-pressed="false"><b>Не знаю точно</b><span>Что-то не работает, банк не объяснил</span></button>
   </div>
 </section>
@@ -206,7 +206,7 @@ main{max-width:860px}
   <div class="grid">
     <div class="f"><label for="eventDate">Когда банк сообщил о мере</label><input type="date" id="eventDate"><small>От этой даты считаются сроки</small></div>
     <div class="f" id="dueWrap" hidden><label for="dueDate">Срок ответа из запроса</label><input type="date" id="dueDate"><small>Если в запросе нет срока — оставьте пустым</small></div>
-    <div class="f" id="zskWrap" hidden><label for="zskBank">Кто присвоил высокий риск</label><select id="zskBank"><option value="cb">Только платформа ЦБ</option><option value="bank">И банк, и ЦБ</option></select><small>Видно в уведомлении банка</small></div>
+    <div class="f" id="zskWrap" hidden><label for="zskBank">Банк уже применил меры?</label><select id="zskBank"><option value="mery">Да — списания и карты остановлены</option><option value="net_mer">Нет — риск у ЦБ, счёт пока работает</option></select><small>Путь разный: после мер — только комиссия</small></div>
     <div class="f"><label>Кто вы</label><div class="seg" role="group" aria-label="Форма бизнеса"><button type="button" data-form="ooo" aria-pressed="true">Компания</button><button type="button" data-form="ip" aria-pressed="false">ИП</button></div></div>
     <div class="f"><label for="turnover">Платежи со счёта в месяц, ₽</label><input id="turnover" inputmode="numeric" placeholder="например, 3 000 000"><small>Чтобы показать, сколько денег встанет в пути</small></div>
     <div class="f" id="payWrap" hidden><label for="payroll">Зарплата за прошлый месяц, ₽</label><input id="payroll" inputmode="numeric" placeholder="например, 450 000"><small>Столько можно выплатить и в красной зоне</small></div>
@@ -236,10 +236,10 @@ main{max-width:860px}
 <li><a href="http://www.cbr.ru/StaticHtml/File/155903/mrp.pdf" rel="noopener" target="_blank">Банк России: методические рекомендации для предпринимателей (PDF)</a></li>
 <li><a href="http://www.cbr.ru/StaticHtml/File/155903/templates.zip" rel="noopener" target="_blank">Банк России: шаблоны заявлений</a></li>
 <li>Положение Банка России от 23.09.2024 № 842-П — требования к заявлениям в межведомственную комиссию</li>
-<li>Гражданский кодекс РФ: ст. 192, 193 (сроки), п. 3 ст. 859 (остаток при закрытии счёта)</li>
+<li>Гражданский кодекс РФ: ст. 192, 193 (сроки), п. 3, 5, 6 ст. 859 (расторжение и остаток при закрытии счёта)</li>
 <li>Постановления Правительства РФ о переносе выходных: от 04.10.2024 № 1335, от 24.09.2025 № 1466, от 17.09.2026 № 1187</li>
 </ol>
-<p class="disc">Обновлено 25 сентября 2026. Сервис помогает подготовиться, но не заменяет консультацию юриста. Срок рассмотрения в межведомственной комиссии считаем по худшему варианту — 20 рабочих дней: так в методических рекомендациях Банка России; на странице ЦБ для предпринимателей указано 15. Нашли неточность — напишите на <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>.</p>
+<p class="disc">Обновлено 26 сентября 2026. Сервис помогает подготовиться, но не заменяет консультацию юриста. Межведомственная комиссия рассматривает заявление до 20 рабочих дней (п. 13.5 ст. 7 115-ФЗ, Положение Банка России № 842-П); 15 рабочих дней — срок пересмотра оценки ЗСК самим Банком России (п. 1.1 ст. 7.8), он доступен, только пока банк не применил меры. Нашли неточность — напишите на <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>.</p>
 </section>
 </main>
 <footer><span>© 2026 Делоскоп · Материалы носят информационный характер и не заменяют консультацию юриста</span>

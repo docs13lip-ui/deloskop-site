@@ -21,6 +21,29 @@ def mes_god(t):
     return math.ceil(t['god'] / 12)
 
 
+def cena_i_knopki(t, nb=NB):
+    """Карточка платного тарифа: по умолчанию «Помесячно» (владелец, 26.09.2026) — крупно цена месяца,
+    под ней сразу цена года и экономия. Две кнопки: «Оплачивать помесячно» и «Оплатить год».
+    data-m / data-y — тексты для переключателя; data-tarif / data-srok — точки подключения модуля оплаты."""
+    from urllib.parse import quote
+    r = lambda x: f'{x:,}'.replace(',', nb) + nb + '₽'
+    m, g = t['mesyac'], t['god']
+    ek = m * 12 - g
+    rn = lambda x: f'{x:,}'.replace(',', NB) + NB + '₽'  # в мелкой строке всегда неразрывные: «3 580 ₽» не рвётся
+    per_m = f'или {rn(g)} за год — экономия {rn(ek)}'
+    per_y = f'{rn(g)} одним платежом — экономия {rn(ek)}'
+    price = (f'<div class="price"><b data-m="{r(m)}" data-y="{r(mes_god(t))}">{r(m)}</b><span>в месяц</span></div>'
+             f'<div class="per" data-m="{per_m}" data-y="{per_y}">{per_m}</div>')
+    # кнопки ведут на форму «Получить счёт» (п. 23): с JS — окно поверх (js/schet.js), без JS — страница /schet/
+    mail = lambda srok: f'/schet/?tarif={t["id"]}&amp;srok={srok}'
+    vid = 'primary' if t.get('rekomenduem') else 'ghost'
+    cta = (f'<div class="knopki" data-cena-m="{r(m)}" data-cena-g="{r(g)}">'
+           f'<a class="cta {vid}" data-tarif="{t["id"]}" data-srok="mes" href="{mail("mes")}">Оплачивать помесячно</a>'
+           f'<a class="cta2" data-tarif="{t["id"]}" data-srok="god" href="{mail("god")}">Оплатить год — {r(g)}</a>'
+           f'</div>')
+    return price, cta
+
+
 CHECK = '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 
 
@@ -36,12 +59,7 @@ for t in D['tarify']:
         price = f'<div class="price"><b>0{NB}₽</b></div><div class="per">навсегда</div>'
         cta = '<a class="cta ghost" href="/">Проверить бесплатно</a>'
     else:
-        ek = t['mesyac'] * 12 - t['god']
-        price = (f'<div class="price"><b data-m="{rub(t["mesyac"])}" data-y="{rub(mes_god(t))}">{rub(mes_god(t))}</b><span>в месяц</span></div>'
-                 f'<div class="per" data-m="при оплате помесячно" data-y="{rub(t["god"])} за год — экономия {rub(ek)}">{rub(t["god"])} за год — экономия {rub(ek)}</div>')
-        subj = 'Подключить тариф ' + t['nazvanie']
-        from urllib.parse import quote
-        cta = f'<a class="cta {"primary" if t.get("rekomenduem") else "ghost"}" href="mailto:help@deloskop.ru?subject={quote(subj)}">Подключить «{t["nazvanie"]}»</a>'
+        price, cta = cena_i_knopki(t)
     badge = ' <span class="badge">Рекомендуем</span>' if t.get('rekomenduem') else ''
     cards.append(f'''<div class="plan{' pro' if t.get('rekomenduem') else ''}" id="t-{t['id']}">
   <div><div class="plan-name">{t['nazvanie']}{badge}</div><div class="plan-for">{html.escape(t['dlya'])}</div></div>
@@ -61,11 +79,13 @@ for t in D['tarify']:
 pak = D['paket_otchetov']
 R = D['raschet']
 faq = [
+    ("Можно платить помесячно?", "Да. Помесячно — без обязательств на год: отменили в кабинете — следующий месяц не спишется, доступ сохранится до конца оплаченного месяца. За год — на 20% дешевле, цена зафиксирована на весь год."),
     ("Почему за год дешевле на 20%?", "Оплата вперёд избавляет нас от двенадцати списаний и помогает планировать развитие. Этой экономией мы делимся с вами. Годовая цена округлена вниз до сотни рублей, поэтому скидка никогда не меньше 20%."),
-    ("Что такое полный отчёт и чем он отличается от базовой проверки?", "Базовая проверка — светофор рисков и главные факты о компании за секунды. Полный отчёт — досье: отчётность с графиками, Индекс Делоскопа с причинами и PDF с датой проверки. Такой PDF — ваше доказательство осмотрительности, если налоговая спросит о сделке через два года."),
+    ("Что такое полный отчёт и чем он отличается от базовой проверки?", "Базовая проверка — светофор рисков и главные факты о компании за секунды. Полный отчёт — досье: отчётность с графиками, Индекс Делоскопа с причинами и PDF с датой проверки. Такой PDF — часть доказательств должной осмотрительности, если налоговая спросит о сделке через два года."),
     (f"Что делать, если отчётов не хватило?", f"Докупите пакет: {pak['tekst']} за {rub(pak['cena'])}. Пакет добавляется к любому платному тарифу. Калькулятор выше сам подскажет, когда выгоднее пакет, а когда — тариф выше."),
     ("Можно ли сменить тариф?", "Да, в любой момент. При переходе на тариф выше доплачиваете только разницу за оставшиеся дни."),
-    ("Как оплатить компании или ИП?", "Пока тарифы подключаем по заявке: напишите на help@deloskop.ru — пришлём счёт и закрывающие документы для бухгалтерии. Оплата картой на сайте появится скоро."),
+    ("Как оплатить компании или ИП?", "По счёту с расчётного счёта: нажмите кнопку тарифа, выберите месяц, квартал или год и впишите ИНН плательщика — реквизиты компании подставим из ЕГРЮЛ, счёт откроется сразу, его можно скачать в PDF. Доступ откроем в день поступления денег, акт пришлём для бухгалтерии. Кассовый чек при оплате с расчётного счёта не нужен. Оплата картой на сайте появится после подключения банка."),
+    ("Цены с НДС?", "Нет. Исполнитель применяет УСН и освобождён от НДС (п. 1 ст. 145 НК РФ), поэтому в счёте и акте — «Без налога (НДС)». Сумма в счёте — ровно цена тарифа."),
     ("Гарантирует ли подписка, что счёт не заблокируют?", "Нет. Решение принимает банк. Делоскоп помогает заранее увидеть то, на что смотрят банк и налоговая, и подготовить документы, пока это ещё легко."),
     ("Влияет ли подписка на Индекс Делоскопа моей компании?", "Нет. Индекс нельзя купить или улучшить за деньги — только фактами из государственных реестров. Это правило записано в открытой методике."),
 ]
@@ -73,7 +93,7 @@ MAIL = '<a href="mailto:help@deloskop.ru">help@deloskop.ru</a>'
 faq_html = ''.join('<details><summary>' + html.escape(q) + '</summary><p>' + html.escape(a).replace('help@deloskop.ru', MAIL) + '</p></details>' for q, a in faq)
 ld = [
     {"@context": "https://schema.org", "@type": "WebPage", "name": "Тарифы Делоскопа", "url": "https://deloskop.ru/tarify/", "inLanguage": "ru",
-     "description": "Тарифы Делоскопа: бесплатно, Старт, Про и Бизнес. За год — скидка 20%. Калькулятор подбирает тариф без переплаты и считает окупаемость в рублях.",
+     "description": "Тарифы Делоскопа: бесплатно, Старт, Про и Бизнес — помесячно или за год со скидкой 20%. Калькулятор подбирает тариф без переплаты и считает окупаемость в рублях.",
      "dateModified": D['versiya']},
     {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faq]},
     {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
@@ -102,6 +122,8 @@ main{max-width:1120px}
 .cta{display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:14px;font-weight:600;font-size:16px}
 .cta.primary{background:var(--accent);color:#fff}.cta.primary:hover{background:var(--accent-hover);color:#fff}
 .cta.ghost{background:#EEF3FC;color:var(--accent)}
+.knopki{display:flex;flex-direction:column;gap:2px}
+.cta2{display:flex;align-items:center;justify-content:center;min-height:44px;font-size:15px;font-weight:500;color:var(--accent);border-radius:12px}.cta2:hover{background:#F2F6FD}
 .pod{font-size:15px;color:var(--muted);margin:6px 0 0}
 h2.big{font-size:clamp(28px,4vw,40px);letter-spacing:-.03em;line-height:1.1;margin:72px 0 10px;font-weight:600}
 .lid{font-size:19px;color:var(--ink2);margin:0 0 20px;max-width:720px}
@@ -147,7 +169,9 @@ h2.big{font-size:clamp(28px,4vw,40px);letter-spacing:-.03em;line-height:1.1;marg
 @media print{.top,.kalk,.period,footer{display:none}body{background:#fff}}
 '''
 
-opis = "Тарифы Делоскопа: бесплатно, Старт, Про и Бизнес. За год — скидка 20%. Подбор тарифа без переплаты и окупаемость в рублях: сколько стоит одна неудачная сделка и блокировка счёта."
+_T = {t['id']: t for t in D['tarify']}
+opis = (f"Тарифы Делоскопа: бесплатно, Старт — {rub(_T['start']['mesyac'])} в месяц, Про — {rub(_T['pro']['mesyac'])}, Бизнес — {rub(_T['biznes']['mesyac'])}. "
+        f"За год — скидка {D['skidka_god_procent']}%. Подбор тарифа без переплаты и окупаемость в рублях.")
 t_pro = next(t for t in D['tarify'] if t['id'] == 'pro')
 
 page = f'''<!doctype html>
@@ -186,16 +210,16 @@ page = f'''<!doctype html>
 <article>
 <h1>Тарифы</h1>
 <p class="sub">Подписка стоит меньше одной ошибки. Мы считаем это в рублях — и советуем тариф дешевле, если его хватит.</p>
-<div class="meta">Цены с 26 сентября 2026 · за год — скидка 20%</div>
+<div class="meta">Цены с 26 сентября 2026 · помесячно или за год со скидкой 20%</div>
 
 <div class="period" role="group" aria-label="Период оплаты">
-  <button type="button" data-period="mes" aria-pressed="false">Помесячно</button>
-  <button type="button" data-period="god" aria-pressed="true" class="on">За год <em>−20%</em></button>
+  <button type="button" data-period="mes" aria-pressed="true" class="on">Помесячно</button>
+  <button type="button" data-period="god" aria-pressed="false">За год <em>−20%</em></button>
 </div>
 <div class="plans">
 {chr(10).join(cards)}
 </div>
-<p class="pod">Нужно больше отчётов? {pak['tekst'].capitalize()} — {rub(pak['cena'])} к любому платному тарифу. Компаниям и ИП — по счёту, с закрывающими документами. Оплата картой на сайте — скоро.</p>
+<p class="pod">Нужно больше отчётов? {pak['tekst'].capitalize()} — {rub(pak['cena'])} к любому платному тарифу. Помесячно — отменить можно в любой момент, следующий месяц просто не спишется. Компаниям и ИП — <a href="/schet/">по счёту</a> на месяц, квартал или год, с закрывающими документами. Цены указаны без НДС: исполнитель применяет УСН и освобождён от НДС (п. 1 ст. 145 НК РФ). Оплата картой на сайте — скоро.</p>
 
 <h2 class="big" id="podbor">Подбор без переплаты</h2>
 <p class="lid">Расскажите, как вы работаете, — покажем самый дешёвый тариф, которого хватит, и сколько денег он защищает.</p>
@@ -273,9 +297,34 @@ page = f'''<!doctype html>
 <span><a href="/proverit-schet/">Проверь счёт</a> · <a href="/delopis/">Делопись</a> · <a href="/115-fz/">115-ФЗ</a> · <a href="/nalogi/">Налоги</a> · <a href="/indeks/">Индекс</a> · <a href="mailto:help@deloskop.ru">help@deloskop.ru</a></span></footer>
 <script type="application/json" id="tarify-data">{json.dumps(D, ensure_ascii=False)}</script>
 <script src="tarify.js" defer></script>
+<script src="/js/schet.js" defer></script>
 <script src="/obnovleniya.js" defer></script>
 </body>
 </html>
 '''
 open(os.path.join(ROOT, 'tarify/index.html'), 'w', encoding='utf-8').write(page)
 print('ok', len(page))
+
+# ---------- главная: блок тарифов из того же tarify.json ----------
+import re as _re
+_mp = os.path.join(ROOT, 'index.html')
+_m = open(_mp, encoding='utf-8').read()
+for t in D['tarify']:
+    if t['mesyac'] == 0:
+        continue
+    price, cta = cena_i_knopki(t, nb=' ')  # на главной — обычный пробел, как в остальном блоке
+    i = _m.index(f'<div class="plan-name">{t["nazvanie"]} ')
+    j = _m.index('\n        </div>', _m.index('</ul>', i))  # конец карточки
+    card = _m[i:j]
+    card = _re.sub(r'<div class="price">.*?</div><div class="per"[^>]*>.*?</div>', lambda _: price, card, count=1, flags=_re.S)
+    card = _re.sub(r'(<a class="cta [^"]*"[^>]*>Подключить «[^»]+»</a>|<div class="knopki".*?</a></div>)', lambda _: cta, card, count=1, flags=_re.S)
+    _m = _m[:i] + card + _m[j:]
+_m = _m.replace('<button type="button" data-period="m">Помесячно</button>\n          <button type="button" data-period="y" class="on">За год <em>−20%</em></button>',
+                '<button type="button" data-period="m" class="on" aria-pressed="true">Помесячно</button>\n          <button type="button" data-period="y" aria-pressed="false">За год <em>−20%</em></button>')
+_kak_old = '<details><summary>Как оплатить?</summary><p>Пока тарифы подключаем по заявке: напишите на <a href="mailto:help@deloskop.ru">help@deloskop.ru</a> — пришлём счёт для компании или ИП и закрывающие документы. Оплата картой на сайте появится скоро.</p></details>'
+_kak_new = '<details><summary>Как оплатить?</summary><p>Компании и ИП — по счёту с расчётного счёта: нажмите кнопку тарифа, выберите срок и впишите ИНН плательщика — счёт откроется сразу, без НДС. Доступ — в день поступления денег, акт — для бухгалтерии. Оплата картой на сайте появится после подключения банка.</p></details>'
+_m = _m.replace(_kak_old, _kak_new)
+if '/js/schet.js' not in _m:
+    _m = _m.replace('</body>', '<script src="/js/schet.js" defer></script>\n</body>', 1)
+open(_mp, 'w', encoding='utf-8').write(_m)
+print('главная ok')

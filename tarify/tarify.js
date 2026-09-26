@@ -60,7 +60,22 @@
     return res;
   }
 
-  var API = { podobrat: podobrat, okupaemost: okupaemost, doliPenej: doliPenej };
+  /* Две кнопки оплаты в карточке: главная — под выбранный период, вторая — тихая ссылка на другой.
+     Меняем местами href и data-srok, чтобы модуль оплаты получил верный срок. */
+  function knopki(srok, doc) {
+    doc = doc || (typeof document !== "undefined" ? document : null);
+    if (!doc) return;
+    doc.querySelectorAll(".knopki").forEach(function (k) {
+      var a = k.querySelector(".cta"), b = k.querySelector(".cta2");
+      if (!a || !b || a.getAttribute("data-srok") === srok) return;
+      var h = a.getAttribute("href"); a.setAttribute("href", b.getAttribute("href")); b.setAttribute("href", h);
+      a.setAttribute("data-srok", srok); b.setAttribute("data-srok", srok === "god" ? "mes" : "god");
+      a.textContent = srok === "god" ? "Оплатить год" : "Оплачивать помесячно";
+      b.textContent = srok === "god" ? "Оплачивать помесячно — " + k.getAttribute("data-cena-m") : "Оплатить год — " + k.getAttribute("data-cena-g");
+    });
+  }
+
+  var API = { podobrat: podobrat, okupaemost: okupaemost, doliPenej: doliPenej, knopki: knopki };
   if (typeof module !== "undefined" && module.exports) { module.exports = API; return; }
   root.DeloskopTarify = API;
 
@@ -69,7 +84,7 @@
   if (!el) return;
   var D = JSON.parse(el.textContent);
   var $ = function (id) { return document.getElementById(id); };
-  var period = "god";
+  var period = "mes";  // по умолчанию помесячно (владелец, 26.09.2026)
 
   function rub(x) { return Math.round(x).toLocaleString("ru-RU").replace(/ |,/g, " ") + " ₽"; }
   function chislo(inp) { var v = +String(inp.value).replace(/\D/g, ""); return isFinite(v) ? v : 0; }
@@ -102,6 +117,7 @@
         x.classList.toggle("on", on); x.setAttribute("aria-pressed", on ? "true" : "false");
       });
       document.querySelectorAll("[data-m]").forEach(function (n) { n.textContent = n.getAttribute(period === "god" ? "data-y" : "data-m"); });
+      knopki(period === "god" ? "god" : "mes");
       schet();
     });
   });

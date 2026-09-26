@@ -8,8 +8,9 @@
   function todayIso() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
   function money(v) { var n = parseFloat(String(v || '').replace(/[^\d,.]/g, '').replace(',', '.')); return isFinite(n) ? n : 0; }
 
-  var st = { sc: '', form: 'ooo', eventDate: '', dueDate: '', zskBank: 'cb', turnover: '', payroll: '', ops: [], checked: {}, lf: {}, letterEdited: false, letter: '', stmt: null };
+  var st = { sc: '', form: 'ooo', eventDate: '', dueDate: '', zskBank: 'mery', turnover: '', payroll: '', ops: [], checked: {}, lf: {}, letterEdited: false, letter: '', stmt: null };
   try { var saved = JSON.parse(localStorage.getItem(KEY) || 'null'); if (saved && typeof saved === 'object') for (var k in saved) st[k] = saved[k]; } catch (e) { /* приватный режим */ }
+  if (st.zskBank !== 'net_mer') st.zskBank = 'mery'; /* старые сохранения 'cb'/'bank' → безопасный путь через комиссию */
   function save() { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { /* ничего */ } }
 
   function toast(t) { var el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.remove('on'); }, 1800); }
@@ -47,7 +48,7 @@
     $('payWrap').hidden = st.sc !== 'zsk';
   }
   [['eventDate', 'eventDate'], ['dueDate', 'dueDate'], ['zskBank', 'zskBank'], ['turnover', 'turnover'], ['payroll', 'payroll']].forEach(function (p) {
-    var el = $(p[0]); el.value = st[p[1]] || (p[0] === 'zskBank' ? 'cb' : '');
+    var el = $(p[0]); el.value = st[p[1]] || (p[0] === 'zskBank' ? 'mery' : '');
     el.addEventListener('input', function () { st[p[1]] = el.value; save(); });
     el.addEventListener('change', function () { st[p[1]] = el.value; save(); if (!$('out').hidden) render(); });
   });
@@ -160,7 +161,7 @@
     return '<table><tr><th>' + esc(title) + '</th><th>ИНН</th><th class="n">Сумма</th></tr>' + rows.map(function (r) { return '<tr><td>' + esc(r.name) + '</td><td>' + esc(r.inn || '—') + '</td><td class="n">' + esc(S.rub(r.sum)) + '</td></tr>'; }).join('') + '</table>';
   }
   function letterTitle(sc) {
-    return { zapros: 'Ответ на запрос банка', otkaz: 'Заявление в банк', dbo: 'Заявление в банк', rastorzhenie: 'Заявление об остатке', zsk: st.zskBank === 'bank' ? 'Заявление в межведомственную комиссию' : 'Заявление в Банк России', unknown: 'Заявление в банк' }[sc];
+    return { zapros: 'Ответ на запрос банка', otkaz: 'Заявление в банк', dbo: 'Заявление в банк', rastorzhenie: 'Заявление об остатке', zsk: st.zskBank === 'net_mer' ? 'Заявление в Банк России' : 'Заявление в межведомственную комиссию', unknown: 'Заявление в банк' }[sc];
   }
   var LF = {
     bank: ['Банк', 'АО «Банк»'], company: ['Компания или ИП', 'ООО «Леон»'], inn: ['ИНН', '10 или 12 цифр'], account: ['Расчётный счёт', '40702810…'],

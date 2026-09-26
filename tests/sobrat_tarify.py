@@ -200,11 +200,7 @@ page = f'''<!doctype html>
 <script type="application/ld+json">{json.dumps(ld, ensure_ascii=False)}</script>
 </head>
 <body>
-<header class="top"><div class="in">
-  <a class="brand" href="/" aria-label="Делоскоп — на главную"><svg width="30" height="27" viewBox="0 0 72 64" fill="none" aria-hidden="true"><path d="M36 18.1A16 16 0 0 1 36 45.9A16 16 0 0 1 36 18.1Z" fill="#0B63E5"/><circle cx="28" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/><circle cx="44" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/></svg><span>делоскоп</span></a>
-  <nav aria-label="Разделы"><a href="/proverit-schet/">Проверь счёт</a><a href="/delopis/">Делопись</a><a href="/115-fz/">115-ФЗ</a><a href="/nalogi/">Налоги</a><a href="/indeks/">Индекс</a><a href="/cabinet.html">Кабинет</a></nav>
-  <a class="btn" href="/">Проверить</a>
-</div></header>
+<!--shapka--><!--/shapka-->
 <main>
 <nav class="crumbs" aria-label="Навигация"><a href="/">Делоскоп</a><span>›</span><span>Тарифы</span></nav>
 <article>

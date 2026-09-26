@@ -150,7 +150,7 @@
       '<label class="sf-f"><span>ИНН плательщика</span><input type="text" inputmode="numeric" autocomplete="off" maxlength="14" data-p="inn" aria-describedby="' + id + '-inn" placeholder="10 цифр у компании, 12 у ИП"><div class="sf-h" id="' + id + '-inn" aria-live="polite"></div></label>' +
       '<label class="sf-f"><span>E-mail для счёта и закрывающих документов</span><input type="email" inputmode="email" autocomplete="email" maxlength="254" data-p="email" aria-describedby="' + id + '-email" placeholder="buh@company.ru"><div class="sf-h" id="' + id + '-email"></div></label>' +
       '<input class="sf-hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" data-p="website">' +
-      '<label class="sf-g"><input type="checkbox" data-p="soglasie_pd" aria-describedby="' + id + '-sogl"><span>Согласен на обработку персональных данных по <a href="/politika/" target="_blank" rel="noopener">политике</a> — чтобы выставить счёт и прислать документы</span></label><div class="sf-h" id="' + id + '-sogl"></div>' +
+      '<label class="sf-g"><input type="checkbox" data-p="soglasie_pd" aria-describedby="' + id + '-sogl"><span>Даю <a href="/soglasie/" target="_blank" rel="noopener">согласие на обработку персональных данных</a> — чтобы выставить счёт и прислать документы (<a href="/politika/" target="_blank" rel="noopener">политика</a>)</span></label><div class="sf-h" id="' + id + '-sogl"></div>' +
       '<button class="sf-go" type="submit" data-go>Получить счёт</button>' +
       '<p class="sf-err" role="alert" data-err></p>' +
       '<p class="sf-mel">Счёт — для компаний и ИП, без НДС. Оплата счёта означает согласие с <a href="/oferta/" target="_blank" rel="noopener">условиями оферты</a>. Физлицам оплата картой откроется после подключения банка.</p>' +
@@ -244,6 +244,7 @@
     });
 
     function uspeh(j, z) {
+      if (window.dlkGoal) window.dlkGoal("invoice_created", { nomer: String(j.nomer || "") });
       var h = j.gotov ? "Счёт № " + j.nomer + " готов" : "Заявка № " + j.nomer + " принята";
       var tekst = j.gotov
         ? "Откройте счёт, скачайте PDF и оплатите с расчётного счёта. В назначении платежа — номер счёта: так мы увидим оплату в тот же день." + (j.pismo ? " Копию отправили на " + esc(j.email) + ". Если письма нет 10 минут — проверьте «Спам»." : "")

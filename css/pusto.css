@@ -1,0 +1,33 @@
+/* Делоскоп — пустые состояния и «Недавние проверки» (claude/Дизайн_система_v1.md §3.9).
+   Токены — те же имена, что в /css/ds.css; запасные значения — для страниц, ещё не переведённых на ds.css (п. 28). */
+.pusto{max-width:760px;margin:clamp(32px,8vh,88px) auto 48px;padding:0 16px}
+.pusto__h{font-size:clamp(32px,5vw,48px);line-height:1.08;letter-spacing:-.025em;font-weight:600;margin:0 0 12px;text-wrap:balance}
+.pusto__lead{font-size:18px;line-height:1.5;color:var(--ink-2,var(--ink2,#48484C));margin:0 0 24px;max-width:600px}
+.pusto__form{display:flex;gap:8px;padding:8px;background:var(--surface,var(--card,#fff));border-radius:32px;box-shadow:0 1px 2px rgba(29,29,31,.04),0 12px 32px rgba(29,29,31,.06);max-width:560px}
+.pusto__form:focus-within{box-shadow:0 1px 2px rgba(29,29,31,.04),0 12px 32px rgba(29,29,31,.06),0 0 0 3px var(--accent,#0B63E5)}
+.pusto__form input{flex:1;min-width:0;border:0;background:transparent;font-family:inherit;font-size:18px;line-height:1.2;color:var(--ink,#1D1D1F);padding:0 16px;min-height:48px}
+.pusto__form input:focus{outline:none}
+.pusto__form input::placeholder{color:var(--muted,#6B6B70)}
+.pusto__btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 24px;border:0;border-radius:999px;background:var(--accent,#0B63E5);color:#fff;font-family:inherit;font-size:16px;font-weight:600;line-height:1;cursor:pointer;white-space:nowrap}
+.pusto__btn:hover{background:var(--accent-hover,#084BB0)}
+.pusto__note{min-height:22px;margin:10px 0 0 16px;font-size:15px;color:var(--muted,#6B6B70)}
+.pusto__note.err{color:var(--bad,#B3261E)}
+.pusto__alt{margin:20px 0 0;font-size:15px;color:var(--muted,#6B6B70)}
+.pusto__alt a{white-space:nowrap}
+@media (max-width:640px){.pusto__form{flex-direction:column;border-radius:24px}.pusto__btn{width:100%;min-height:52px}.pusto__note{margin-left:8px}}
+/* недавние проверки */
+.ned{margin-top:40px;max-width:560px}
+.ned__h{font-size:13px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#6B6B70);margin:0 0 8px}
+.ned__list{list-style:none;margin:0;padding:0}
+.ned__list li{display:flex;align-items:center;gap:12px;border-top:1px solid var(--line,#E6E6E1)}
+.ned__list a{flex:1;min-width:0;display:block;padding:12px 0;color:var(--ink,#1D1D1F);text-decoration:none}
+.ned__list a:hover b{color:var(--accent,#0B63E5)}
+.ned__list b{display:block;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ned__list span{font-size:13px;color:var(--muted,#6B6B70)}
+.ned__lvl{flex:none;font-style:normal;font-size:13px;font-weight:600;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.ned__lvl--low{background:var(--ok-bg,#E8F5EE);color:var(--ok,#16723F)}
+.ned__lvl--medium{background:var(--warn-bg,#FFF4E0);color:var(--warn,#9A5B00)}
+.ned__lvl--high{background:var(--bad-bg,#FDECEA);color:var(--bad,#B3261E)}
+.ned__clear{margin-top:8px;background:none;border:0;padding:8px 0;font:inherit;font-size:13px;color:var(--muted,#6B6B70);cursor:pointer}
+.ned__clear:hover{color:var(--bad,#B3261E)}
+@media print{.pusto,.ned{display:none!important}}

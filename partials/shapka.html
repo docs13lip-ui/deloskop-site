@@ -1,0 +1,67 @@
+<a class="skip" href="#main">Перейти к содержанию</a>
+<header class="shapka" data-shapka>
+ <div class="shapka__in">
+  <a class="shapka__logo" href="/" aria-label="Делоскоп — на главную"><svg width="36" height="32" viewBox="0 0 72 64" fill="none" aria-hidden="true"><path d="M36 18.1A16 16 0 0 1 36 45.9A16 16 0 0 1 36 18.1Z" fill="#0B63E5"/><circle cx="28" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/><circle cx="44" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/></svg><span class="shapka__word">делоскоп</span></a>
+  <nav class="shapka__nav" aria-label="Основное меню">
+   <ul class="shapka__list">
+    <li><a class="shapka__link" href="/" data-match="^/(index\.html|report\.html)?$">Проверка</a></li>
+    <li class="shapka__dd">
+     <button class="shapka__link" type="button" aria-expanded="false" aria-controls="dd-vypiska" data-match="^/(nalichnye|kontragenty-iz-vypiski|proverit-schet)/">Выписка<svg class="shapka__chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+     <ul class="shapka__menu" id="dd-vypiska">
+      <li><a href="/nalichnye/"><b>Наличные глазами банка</b><span>Как банк видит ваши операции с наличными</span></a></li>
+      <li><a href="/kontragenty-iz-vypiski/"><b>Кому вы платите</b><span>Проверка контрагентов из вашей выписки</span></a></li>
+      <li><a href="/proverit-schet/"><b>Проверь счёт</b><span>Проверить получателя до оплаты</span></a></li>
+     </ul>
+    </li>
+    <li class="shapka__dd">
+     <button class="shapka__link" type="button" aria-expanded="false" aria-controls="dd-115" data-match="^/(skoraya-115-fz|pasport|115-fz)/">115-ФЗ<svg class="shapka__chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+     <ul class="shapka__menu" id="dd-115">
+      <li><a href="/skoraya-115-fz/"><b>Скорая 115-ФЗ</b><span>Банк ограничил счёт: что делать сейчас</span></a></li>
+      <li><a href="/pasport/"><b>Паспорт компании</b><span>Страница о вашей компании для банка и партнёров</span></a></li>
+      <li><a href="/115-fz/"><b>Разборы 115-ФЗ</b><span>Простыми словами, с нормами и практикой</span></a></li>
+     </ul>
+    </li>
+    <li><a class="shapka__link" href="/indeks/" data-match="^/indeks/">Индекс</a></li>
+    <li><a class="shapka__link" href="/tarify/" data-match="^/tarify/">Тарифы</a></li>
+   </ul>
+  </nav>
+  <div class="shapka__right">
+   <button class="shapka__link shapka__new" type="button" data-whatsnew aria-haspopup="dialog"><span class="shapka__new-l">Что нового</span><span class="shapka__new-s" aria-hidden="true">Новое</span><span class="shapka__dot" data-whatsnew-dot hidden><span class="vh">есть непрочитанное</span></span><span class="shapka__cnt num" data-whatsnew-count hidden></span></button>
+   <a class="shapka__link shapka__login" href="/cabinet.html" data-auth-out>Войти</a>
+   <a class="shapka__link shapka__login" href="/cabinet.html" data-auth-in hidden>Кабинет</a>
+   <a class="shapka__btn" href="/#inn" data-check>Проверить</a>
+   <button class="shapka__burger" type="button" aria-expanded="false" aria-controls="mnav" aria-label="Открыть меню"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16M4 16h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+  </div>
+ </div>
+</header>
+<dialog class="mnav" id="mnav" aria-label="Меню">
+ <div class="mnav__top">
+  <a class="shapka__logo" href="/" aria-label="Делоскоп — на главную"><svg width="36" height="32" viewBox="0 0 72 64" fill="none" aria-hidden="true"><path d="M36 18.1A16 16 0 0 1 36 45.9A16 16 0 0 1 36 18.1Z" fill="#0B63E5"/><circle cx="28" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/><circle cx="44" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/></svg><span class="shapka__word">делоскоп</span></a>
+  <button class="shapka__burger" type="button" data-close aria-label="Закрыть меню"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+ </div>
+ <nav class="mnav__body" aria-label="Основное меню">
+  <ul class="mnav__list">
+   <li><a class="mnav__link" href="/" data-match="^/(index\.html|report\.html)?$">Проверка</a></li>
+   <li><span class="mnav__link mnav__group" data-match="^/(nalichnye|kontragenty-iz-vypiski|proverit-schet)/">Выписка</span>
+    <ul class="mnav__sub">
+     <li><a href="/nalichnye/">Наличные глазами банка</a></li>
+     <li><a href="/kontragenty-iz-vypiski/">Кому вы платите</a></li>
+     <li><a href="/proverit-schet/">Проверь счёт</a></li>
+    </ul></li>
+   <li><span class="mnav__link mnav__group" data-match="^/(skoraya-115-fz|pasport|115-fz)/">115-ФЗ</span>
+    <ul class="mnav__sub">
+     <li><a href="/skoraya-115-fz/">Скорая 115-ФЗ</a></li>
+     <li><a href="/pasport/">Паспорт компании</a></li>
+     <li><a href="/115-fz/">Разборы 115-ФЗ</a></li>
+    </ul></li>
+   <li><a class="mnav__link" href="/indeks/" data-match="^/indeks/">Индекс</a></li>
+   <li><a class="mnav__link" href="/tarify/" data-match="^/tarify/">Тарифы</a></li>
+  </ul>
+  <div class="mnav__extra">
+   <button class="mnav__row" type="button" data-whatsnew aria-haspopup="dialog">Что нового<span class="shapka__dot" data-whatsnew-dot hidden><span class="vh">есть непрочитанное</span></span></button>
+   <a class="mnav__row" href="/cabinet.html" data-auth-out>Войти</a>
+   <a class="mnav__row" href="/cabinet.html" data-auth-in hidden>Кабинет</a>
+  </div>
+  <a class="shapka__btn shapka__btn--lg mnav__cta" href="/#inn" data-check>Проверить компанию</a>
+ </nav>
+</dialog>

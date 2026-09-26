@@ -1,0 +1,18 @@
+/* СОБРАНО tests/sobrat_shapku.py из /css/ds.css — руками не править. Подвал §3.2 дизайн-системы. */
+.podval{--bg:#F5F5F2;--surface:#FFFFFF;--surface-2:#EEEEEA;--ink:#1D1D1F;--ink-2:#48484C;--muted:#6B6B70;--line:#E6E6E1; --accent:#0B63E5;--accent-hover:#084BB0;--accent-soft:#EAF1FD;--on-accent:#FFFFFF; --ok:#16723F;--ok-bg:#E8F5EE;--warn:#9A5B00;--warn-bg:#FFF4E0;--high:#C2410C;--high-bg:#FFEDE3;--bad:#B3261E;--bad-bg:#FDECEA; --font:Onest,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; --t-display:clamp(44px,6.4vw,72px);--t-h1:clamp(36px,4.6vw,56px);--t-h2:clamp(28px,3.2vw,40px);--t-h3:22px; --t-lead:20px;--t-body:17px;--t-small:15px;--t-caption:13px; --s-1:4px;--s-2:8px;--s-3:12px;--s-4:16px;--s-5:24px;--s-6:32px;--s-7:48px;--s-8:64px;--s-9:96px;--s-10:128px; --wide:1200px;--text:760px;--gutter:clamp(16px,5vw,48px);--section:clamp(64px,9vw,120px); --r-s:10px;--r-m:16px;--r-l:24px;--r-xl:32px;--r-pill:999px; --shadow:0 1px 2px rgba(29,29,31,.04),0 12px 32px rgba(29,29,31,.06); --ease:cubic-bezier(.2,.7,.2,1);--fast:160ms;--slow:240ms; --header-h:64px;}
+.podval{background:var(--surface);border-top:1px solid var(--line);color:var(--muted);font:400 var(--t-small)/1.5 var(--font);margin-top:var(--s-8);padding:var(--s-8) 0 var(--s-7);text-align:left}
+.podval *{box-sizing:border-box}
+.podval__in{max-width:calc(var(--wide) + 2*var(--gutter));margin:0 auto;padding:0 var(--gutter)}
+.podval__cols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--s-6)}
+.podval .podval__h{margin:0 0 var(--s-3);color:var(--ink);font:600 var(--t-small)/1.4 var(--font)}
+.podval ul{list-style:none;margin:0;padding:0}
+.podval li{margin:0 0 var(--s-2);padding:0}.podval li::before{content:none}
+.podval nav,.podval ul,.podval li,.podval p,.podval a{position:static;float:none;width:auto;height:auto;min-height:0;border:0;box-shadow:none;background:none;text-transform:none;letter-spacing:normal;overflow:visible}
+.podval p{font-size:inherit;line-height:inherit}
+.podval a{display:inline;padding:0;border-radius:0;font:inherit;color:var(--ink-2);text-decoration:none}.podval a:hover{color:var(--accent);background:none}
+.podval a:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+.podval__niz{display:flex;justify-content:space-between;gap:var(--s-3) var(--s-6);flex-wrap:wrap;margin-top:var(--s-7);padding-top:var(--s-5);border-top:1px solid var(--line);font-size:var(--t-caption);line-height:1.4}
+.podval .podval__niz p{margin:0;color:var(--muted);font-size:var(--t-caption)}
+@media (max-width:900px){.podval__cols{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.podval{padding:var(--s-7) 0 var(--s-6)}.podval__cols{gap:var(--s-5) var(--s-4)}.podval li{margin-bottom:var(--s-3)}}
+@media print{.podval{display:none}}

@@ -403,7 +403,7 @@ footer a{color:var(--muted)}
     var z=r.zsk, zc=z?(z.level==='high'?'#F97066':z.level==='medium'?'#FDB022':'#32D583'):'';
     html+='<section class="bank"><h2>Что увидит банк</h2>'+
       '<p>Эти же реестры банк смотрит первыми. Но решение по 115-ФЗ он принимает ещё и по вашему счёту: обороты, снятие наличных, транзит, назначения платежей. Этого в паспорте нет — и быть не должно.</p>'+
-      (z?'<div class="z"><i style="background:'+zc+'"></i><span>Прогноз ЗСК — '+esc(String(z.title||'').toLowerCase())+' попасть в жёлтую или красную зону <span style="color:#8E8E93">(оценка Делоскопа)</span></span><a href="'+esc(z.cbr_url||'https://cbr.ru/counteraction_m_ter/platform_zsk')+'" target="_blank" rel="noopener">Официально — в ЦБ →</a></div>':'')+
+      (z?'<div class="z"><i style="background:'+zc+'"></i><span>Прогноз ЗСК — '+esc(String(z.title||'').toLowerCase())+' попасть в жёлтую или красную зону <span style="color:#8E8E93">(оценка Делоскопа, не статус Банка России)</span></span><a href="'+esc(z.cbr_url||'https://cbr.ru/counteraction_m_ter/platform_zsk')+'" target="_blank" rel="noopener">Официально — в ЦБ →</a></div>':'')+
       '<p style="margin:0"><a href="/115-fz/snyatie-nalichnyh-s-raschetnogo-scheta/">Как банк смотрит на снятие наличных →</a></p></section>';
 
     var srcs={};(r.signals||[]).forEach(function(x){if(x.source&&!Object.keys(srcs).some(function(k){return k.indexOf(x.source)===0||x.source.indexOf(k)===0}))srcs[x.source]=1});if(!Object.keys(srcs).some(function(k){return /ЕГР/.test(k)}))srcs['ЕГРЮЛ/ЕГРИП']=1;

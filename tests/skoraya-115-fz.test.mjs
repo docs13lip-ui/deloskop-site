@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 // Тесты движка «Скорой 115-ФЗ». Запуск: node --test tests/
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -53,10 +54,59 @@ test('красная зона: разрешённые операции зави�
   assert.ok(ip.items.some(x => x.includes('450 000')));
   const ooo = S.worksNow('zsk', { form: 'ooo' });
   assert.ok(!ooo.items.some(x => x.includes('на жизнь')));
-  const p = S.buildPlan({ scenario: 'zsk', today: '2026-09-25', eventDate: '2026-09-25', zskBank: 'cb' });
+  const p = S.buildPlan({ scenario: 'zsk', today: '2026-09-25', eventDate: '2026-09-25', zskBank: 'net_mer' });
   assert.ok(p.steps.some(s => s.basis.includes('п. 1.1 ст. 7.8')));
-  const p2 = S.buildPlan({ scenario: 'zsk', today: '2026-09-25', eventDate: '2026-09-25', zskBank: 'bank' });
+  const p2 = S.buildPlan({ scenario: 'zsk', today: '2026-09-25', eventDate: '2026-09-25', zskBank: 'mery' });
   assert.ok(p2.steps.some(s => s.label.includes('межведомственную')));
+});
+
+/* п. 40 очереди: ошибки в нормах (аудит Юриста 115-ФЗ, 26.09.2026) */
+test('п. 40: остаток при расторжении — п. 5 ст. 859, не п. 3', () => {
+  const src = readFileSync(new URL('../skoraya-115-fz/engine.js', import.meta.url), 'utf8');
+  assert.doesNotMatch(src, /не позднее 7 дней \(п\. 3 ст\. 859/);
+  assert.doesNotMatch(src, /установленный п\. 3 ст\. 859/);
+  assert.doesNotMatch(src, /остатка на новый счёт', 'п\. 3 ст\. 859/);
+  const L = S.buildLetter('rastorzhenie', {});
+  assert.match(L, /п\. 5 ст\. 859/);
+  assert.doesNotMatch(L, /п\. 3 ст\. 859/);
+  const p = S.buildPlan({ scenario: 'rastorzhenie', today: '2026-09-25', eventDate: '2026-09-25' });
+  const ost = p.steps.find(s => s.label.includes('перечислении остатка'));
+  assert.match(ost.basis, /п\. 5 ст\. 859/);
+  assert.ok(p.steps.some(s => s.basis.includes('п. 3 и 6 ст. 859') && s.date === '2026-11-24'));
+});
+
+test('п. 40: после уведомления о расторжении зарплата не в «что работает»', () => {
+  const w = S.worksNow('rastorzhenie', {});
+  assert.ok(!w.items[0].includes('зарплата'));
+  assert.match(w.items[0], /бюджет/);
+  assert.ok(w.items.some(x => x.includes('другом банке')));
+});
+
+test('п. 40: меры ЗСК применены — только комиссия, без пересмотра в ЦБ за 15 дней', () => {
+  for (const v of ['mery', undefined, 'cb', 'bank']) {
+    const p = S.buildPlan({ scenario: 'zsk', today: '2026-09-25', eventDate: '2026-09-25', zskBank: v });
+    assert.ok(!p.steps.some(s => s.basis.includes('п. 1.1 ст. 7.8') || /15 рабочих/.test(s.basis)), String(v));
+    assert.ok(p.steps.some(s => s.basis.includes('п. 1 ст. 7.8')));
+    assert.equal(p.money, null);
+    const L = S.buildLetter('zsk', { zskBank: v });
+    assert.match(L, /В межведомственную комиссию/);
+  }
+  assert.doesNotMatch(S.SCENARIOS.zsk.verdict, /Банк России или/);
+  const n = S.buildPlan({ scenario: 'zsk', today: '2026-09-25', eventDate: '2026-09-25', zskBank: 'net_mer', turnover: 3000000 });
+  assert.ok(n.steps.some(s => s.basis.includes('только пока меры не применены')));
+  assert.equal(n.money.fast.days, 0);
+  assert.match(n.info.verdict, /15 рабочих дней/);
+  assert.doesNotMatch(S.buildPlan({ scenario: 'zsk', today: '2026-09-25', eventDate: '2026-09-25' }).info.verdict, /15 рабочих/);
+  assert.match(S.buildLetter('zsk', { zskBank: 'net_mer' }), /^В Банк России/);
+});
+
+test('п. 40: статья ЗСК — п. 6 ст. 7.7 для разрешённых операций, пути развёдены', () => {
+  const html = readFileSync(new URL('../115-fz/zsk-zony-riska/index.html', import.meta.url), 'utf8');
+  assert.ok(!html.includes('пункте 5 статьи 7.7'));
+  assert.ok(html.includes('пункте 6 статьи 7.7'));
+  assert.ok(html.includes('Банк уже применил меры'));
+  assert.ok(html.includes('банк меры ещё не применил'));
+  assert.ok(!html.includes('проблемы сразу везде'));
 });
 
 test('дата события в будущем не ломает план', () => {
@@ -83,7 +133,7 @@ test('письмо: подставляет поля и приложения, б�
   assert.match(L, /Приложения:\n1\. Договор поставки\.\n2\. УПД\./);
   const E = S.buildLetter('zsk', {});
   assert.match(E, /\[ИНН\]/);
-  assert.match(E, /В Банк России/);
+  assert.match(E, /В межведомственную комиссию при Банке России/);
 });
 
 test('выписка 1С: дубли, свой счёт, наличные, топ-3', () => {
@@ -121,7 +171,7 @@ test('декодирование выписки в 1251', () => {
 
 test('шаги плана идут по возрастанию дат, шаги без даты — в конце', () => {
   for (const sc of Object.keys(S.SCENARIOS)) {
-    for (const zskBank of ['cb', 'bank']) {
+    for (const zskBank of ['mery', 'net_mer']) {
       const p = S.buildPlan({ scenario: sc, today: '2026-09-25', eventDate: '2026-09-21', zskBank });
       const ds = p.steps.map(s => s.date);
       const firstNull = ds.indexOf(null);

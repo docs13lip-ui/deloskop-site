@@ -1,0 +1,69 @@
+# Делоскоп: автопроверка и автовыкладка сайта
+# На каждый PR — тесты. На каждый merge в main — тесты, затем деплой в Timeweb App Platform (приложение 258987).
+# Нужен секрет репозитория TIMEWEB_TOKEN (токен API Timeweb Cloud; вставляет владелец, в код не пишется).
+name: Проверка и выкладка
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      bez_testov:
+        description: "Срочно выложить без тестов (только если тесты сломаны не по вине сайта)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: vykladka-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  testy:
+    name: Тесты
+    runs-on: ubuntu-latest
+    if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.bez_testov) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Тарифы
+        run: python3 tests/test_tarify.py
+      - name: Шапка и подвал собраны
+        run: python3 tests/sobrat_shapku.py --check
+      - name: Тесты страниц
+        run: node --test tests/*.test.*
+
+  vykladka:
+    name: Выкладка в Timeweb
+    needs: testy
+    if: ${{ always() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && (needs.testy.result == 'success' || needs.testy.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Запустить деплой коммита
+        env:
+          TIMEWEB_TOKEN: ${{ secrets.TIMEWEB_TOKEN }}
+        run: |
+          if [ -z "$TIMEWEB_TOKEN" ]; then
+            echo "::warning::Секрет TIMEWEB_TOKEN не задан — автовыкладка пропущена, выложить вручную в Timeweb."
+            exit 0
+          fi
+          code=$(curl -s -o otvet.json -w "%{http_code}" -X POST \
+            "https://api.timeweb.cloud/api/v1/apps/258987/deploy" \
+            -H "Authorization: Bearer $TIMEWEB_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"commit_sha\":\"${GITHUB_SHA}\"}")
+          echo "Ответ Timeweb: $code"; head -c 600 otvet.json; echo
+          test "$code" -ge 200 -a "$code" -lt 300
+      - name: Дождаться, что сайт отвечает
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS -o /dev/null https://deloskop.ru/; then echo "Сайт отвечает"; exit 0; fi
+            sleep 10
+          done
+          echo "::error::Сайт не ответил за 5 минут после деплоя"; exit 1

@@ -1,0 +1,137 @@
+/* СОБРАНО tests/sobrat_shapku.py из /partials/shapka.css и токенов /css/ds.css — руками не править. */
+a.skip,.shapka,dialog.mnav,.wn-bar,dialog.dlo,.ck-bar{--bg:#F5F5F2;--surface:#FFFFFF;--surface-2:#EEEEEA;--ink:#1D1D1F;--ink-2:#48484C;--muted:#6B6B70;--line:#E6E6E1; --accent:#0B63E5;--accent-hover:#084BB0;--accent-soft:#EAF1FD;--on-accent:#FFFFFF; --ok:#16723F;--ok-bg:#E8F5EE;--warn:#9A5B00;--warn-bg:#FFF4E0;--high:#C2410C;--high-bg:#FFEDE3;--bad:#B3261E;--bad-bg:#FDECEA; --font:Onest,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; --t-display:clamp(44px,6.4vw,72px);--t-h1:clamp(36px,4.6vw,56px);--t-h2:clamp(28px,3.2vw,40px);--t-h3:22px; --t-lead:20px;--t-body:17px;--t-small:15px;--t-caption:13px; --s-1:4px;--s-2:8px;--s-3:12px;--s-4:16px;--s-5:24px;--s-6:32px;--s-7:48px;--s-8:64px;--s-9:96px;--s-10:128px; --wide:1200px;--text:760px;--gutter:clamp(16px,5vw,48px);--section:clamp(64px,9vw,120px); --r-s:10px;--r-m:16px;--r-l:24px;--r-xl:32px;--r-pill:999px; --shadow:0 1px 2px rgba(29,29,31,.04),0 12px 32px rgba(29,29,31,.06); --ease:cubic-bezier(.2,.7,.2,1);--fast:160ms;--slow:240ms; --header-h:64px;}
+@media (max-width:640px){a.skip,.shapka,dialog.mnav,.wn-bar,dialog.dlo,.ck-bar{--t-lead:18px;--t-body:16px;--header-h:56px}}
+/* ===== шапка (claude/Дизайн_шапка_логотип_и_Скорая_v2.md, часть 1) =====
+   Все правила — с префиксом .shapka / .mnav / .skip / .wn-: старые страницы ещё не на ds.css,
+   их стили (a{…}, header{…}, .btn) не должны протекать в шапку, а шапка — в страницу. */
+.shapka,.shapka *,.mnav,.mnav *,.wn-bar,.wn-bar *,.dlo,.dlo *,a.skip{box-sizing:border-box}
+.shapka [hidden],.mnav [hidden],.wn-bar [hidden]{display:none!important}
+.vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+a.skip{position:absolute;left:var(--s-4);top:-100px;z-index:100;display:inline-block;padding:var(--s-3) var(--s-4);border-radius:var(--r-s);background:var(--accent);color:var(--on-accent);font:600 15px/1 var(--font);text-decoration:none}
+a.skip:focus{top:var(--s-2);color:var(--on-accent)}
+
+.shapka{position:sticky;top:0;z-index:40;display:block;height:var(--header-h);margin:0;padding:0;background:var(--bg);border-bottom:1px solid transparent;color:var(--ink);font:400 var(--t-body)/1.4 var(--font);text-align:left;transition:border-color var(--fast) var(--ease)}
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+ .shapka{background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:saturate(180%) blur(12px);backdrop-filter:saturate(180%) blur(12px)}
+}
+.shapka.is-scrolled{border-bottom-color:var(--line)}
+.shapka a,.mnav a{display:inline;padding:0;margin:0;border:0;border-radius:0;background:none;box-shadow:none;font:inherit;color:inherit;text-decoration:none}
+.shapka ul,.mnav ul{list-style:none;margin:0;padding:0}
+.shapka li,.mnav li{margin:0;padding:0}
+.shapka li::before,.mnav li::before{content:none}
+.shapka button,.mnav button{margin:0;font:inherit;letter-spacing:normal;text-transform:none}
+.shapka :focus-visible,.mnav :focus-visible,.wn-bar :focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+.shapka .shapka__in{max-width:calc(var(--wide) + 2*var(--gutter));height:100%;margin:0 auto;padding:0 var(--gutter);display:flex;align-items:center;gap:var(--s-4)}
+
+.shapka .shapka__logo,.mnav .shapka__logo{display:inline-flex;align-items:center;gap:var(--s-2);min-height:44px;flex:none;color:var(--ink);text-decoration:none}
+.shapka .shapka__logo:hover,.mnav .shapka__logo:hover{color:var(--ink)}
+.shapka__logo svg{display:block;flex:none}
+.shapka__logo circle{stroke:var(--ink)}
+.shapka__word{font:600 22px/1 var(--font);letter-spacing:-.03em}
+
+.shapka .shapka__nav{flex:1;min-width:0;display:flex;justify-content:center}
+.shapka .shapka__list{display:flex;gap:var(--s-1)}
+.shapka .shapka__list>li{position:relative}
+.shapka .shapka__link{position:relative;display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 10px;border:0;border-radius:var(--r-pill);background:none;color:var(--ink-2);font:500 15px/1 var(--font);text-decoration:none;white-space:nowrap;cursor:pointer;transition:color var(--fast) var(--ease),background var(--fast) var(--ease)}
+.shapka .shapka__link:hover{color:var(--ink);background:var(--surface-2)}
+.shapka .shapka__link.is-active,.shapka .shapka__link[aria-current=page]{color:var(--ink)}
+.shapka .shapka__link.is-active::after,.shapka .shapka__link[aria-current=page]::after{content:"";position:absolute;left:50%;bottom:1px;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--ink)}
+.shapka__chev{width:12px;height:12px;transition:transform var(--fast) var(--ease)}
+.shapka .shapka__link[aria-expanded=true]{color:var(--ink);background:var(--surface-2)}
+.shapka .shapka__link[aria-expanded=true] .shapka__chev{transform:rotate(180deg)}
+
+.shapka .shapka__menu{position:absolute;top:calc(100% + 8px);left:50%;min-width:300px;padding:var(--s-2);background:var(--surface);border-radius:var(--r-l);box-shadow:var(--shadow);opacity:0;visibility:hidden;transform:translate(-50%,-4px);transition:opacity var(--fast) var(--ease),transform var(--fast) var(--ease),visibility 0s linear var(--fast)}
+.shapka .shapka__menu::before{content:"";position:absolute;left:0;right:0;top:-8px;height:8px}
+.shapka .shapka__dd.is-open .shapka__menu{opacity:1;visibility:visible;transform:translate(-50%,0);transition-delay:0s}
+.shapka .shapka__menu a{display:block;padding:var(--s-3) var(--s-4);border-radius:var(--r-m);color:var(--ink)}
+.shapka .shapka__menu a:hover,.shapka .shapka__menu a:focus-visible{background:var(--surface-2);color:var(--ink)}
+.shapka .shapka__menu a[aria-current=page] b{color:var(--accent)}
+.shapka .shapka__menu b{display:block;font:600 15px/1.3 var(--font);color:inherit}
+.shapka .shapka__menu span{display:block;margin-top:2px;font:400 var(--t-caption)/1.4 var(--font);color:var(--muted)}
+
+.shapka .shapka__right{display:flex;align-items:center;gap:var(--s-1);flex:none}
+.shapka__new-s{display:none}
+.shapka__dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-left:2px}
+.shapka__cnt{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:var(--r-pill);background:var(--accent);color:var(--on-accent);font:600 11px/1 var(--font)}
+.shapka__dot[hidden],.shapka__cnt[hidden]{display:none}
+.shapka .shapka__btn,.mnav .shapka__btn{display:inline-flex;align-items:center;justify-content:center;min-height:40px;margin-left:var(--s-2);padding:0 18px;border-radius:var(--r-pill);background:var(--accent);color:var(--on-accent);font:600 15px/1 var(--font);white-space:nowrap;transition:background var(--fast) var(--ease)}
+.shapka .shapka__btn:hover,.mnav .shapka__btn:hover{background:var(--accent-hover);color:var(--on-accent)}
+.mnav .shapka__btn--lg{min-height:56px;margin-left:0;padding:0 28px;font-size:17px}
+.shapka .shapka__burger,.mnav .shapka__burger{display:none;width:44px;height:44px;place-items:center;padding:0;border:0;border-radius:var(--r-pill);background:none;color:var(--ink);cursor:pointer}
+.shapka .shapka__burger:hover,.mnav .shapka__burger:hover{background:var(--surface-2)}
+
+@media (max-width:1199px){.shapka__new-l{display:none}.shapka__new-s{display:inline}}
+@media (max-width:1024px){
+ .shapka .shapka__nav,.shapka .shapka__new,.shapka .shapka__login{display:none}
+ .shapka .shapka__burger{display:inline-grid}
+ .shapka .shapka__right{margin-left:auto}
+}
+@media (max-width:640px){.shapka__word{font-size:20px}}
+@media (max-width:359px){.shapka .shapka__btn{display:none}}
+@media print{.shapka,.mnav,.skip,.wn-bar{display:none!important}}
+
+/* мобильное меню — лист сверху */
+html.is-locked{overflow:hidden}
+dialog.mnav{position:fixed;inset:0 0 auto 0;width:100%;max-width:none;height:auto;max-height:100dvh;margin:0;padding:0 0 calc(var(--s-6) + env(safe-area-inset-bottom));border:0;border-radius:0 0 var(--r-xl) var(--r-xl);background:var(--bg);color:var(--ink);font:400 var(--t-body)/1.4 var(--font);text-align:left;box-shadow:var(--shadow);overflow-y:auto;overscroll-behavior:contain}
+dialog.mnav[open]{animation:mnav-in var(--slow) var(--ease)}
+@keyframes mnav-in{from{opacity:0;transform:translateY(-16px)}}
+dialog.mnav::backdrop{background:rgba(17,17,19,.4);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.mnav .mnav__top,.mnav .mnav__body{max-width:calc(var(--wide) + 2*var(--gutter));margin:0 auto;padding:0 var(--gutter)}
+.mnav .mnav__top{height:var(--header-h);display:flex;align-items:center;justify-content:space-between}
+.mnav .mnav__top .shapka__burger{display:inline-grid}
+.mnav .mnav__list{margin-top:var(--s-4)}
+.mnav .mnav__list>li{border-top:1px solid var(--line);padding:var(--s-3) 0}
+.mnav .mnav__list>li:first-child{border-top:0}
+.mnav .mnav__link,.mnav .mnav__sub a{display:flex;align-items:center;min-height:44px;color:var(--ink);font:600 22px/1.25 var(--font);letter-spacing:-.01em}
+.mnav .mnav__link.is-active,.mnav .mnav__link[aria-current=page],.mnav .mnav__sub a[aria-current=page]{color:var(--accent)}
+.mnav .mnav__group{min-height:32px;color:var(--muted);font:500 var(--t-caption)/1.25 var(--font);letter-spacing:.06em;text-transform:uppercase}
+.mnav .mnav__group.is-active{color:var(--accent)}
+.mnav .mnav__extra{display:flex;flex-direction:column;margin-top:var(--s-4);padding-top:var(--s-4);border-top:1px solid var(--line)}
+.mnav .mnav__row{display:flex;align-items:center;gap:var(--s-2);min-height:44px;padding:0;border:0;background:none;color:var(--ink-2);font:500 17px/1 var(--font);text-align:left;cursor:pointer}
+.mnav .mnav__cta{display:flex;width:100%;margin-top:var(--s-5)}
+
+/* полоса «Новое» под шапкой (claude/Дизайн_что_нового_для_проверяющих.md, п. 1) — не липкая */
+.wn-bar{background:var(--accent-soft);color:var(--ink);font:400 var(--t-small)/1.4 var(--font);text-align:left}
+.wn-bar .wn-bar__in{max-width:calc(var(--wide) + 2*var(--gutter));min-height:44px;margin:0 auto;padding:0 var(--gutter);display:flex;align-items:center;gap:var(--s-3)}
+.wn-bar .wn-bar__t{flex:1;min-width:0;margin:0;padding:var(--s-2) 0;font-size:var(--t-small);color:var(--ink)}
+.wn-bar .wn-bar__t b{font-weight:600}
+.wn-bar a{display:inline;padding:0;background:none;color:var(--accent);font-weight:600;text-decoration:none;white-space:nowrap}
+.wn-bar a:hover{color:var(--accent-hover);text-decoration:underline}
+.wn-bar .wn-bar__x{flex:none;display:inline-grid;place-items:center;width:44px;height:44px;margin-right:-10px;padding:0;border:0;border-radius:var(--r-pill);background:none;color:var(--ink-2);cursor:pointer}
+.wn-bar .wn-bar__x:hover{background:rgba(11,99,229,.08);color:var(--ink)}
+
+/* окно «Что нового» — открывается ТОЛЬКО по пункту в шапке */
+dialog.dlo{width:min(640px,calc(100% - 32px));max-width:none;max-height:calc(100dvh - 32px);margin:auto;padding:clamp(24px,5vw,44px);border:0;border-radius:var(--r-xl);background:var(--surface);color:var(--ink);font:400 var(--t-body)/1.5 var(--font);text-align:left;box-shadow:0 24px 80px rgba(0,0,0,.25);overflow:auto}
+dialog.dlo[open]{animation:mnav-in var(--slow) var(--ease)}
+dialog.dlo::backdrop{background:rgba(17,17,19,.55)}
+.dlo .dlo-tag{display:inline-block;margin-bottom:14px;padding:6px 14px;border-radius:var(--r-pill);background:var(--accent-soft);color:var(--accent);font:600 14px/1.2 var(--font)}
+.dlo h2{margin:0 0 22px;font:600 clamp(28px,5vw,38px)/1.1 var(--font);letter-spacing:-.02em}
+.dlo h3{margin:24px 0 10px;color:var(--muted);font:600 15px/1.3 var(--font);letter-spacing:.06em;text-transform:uppercase}
+.dlo ul{list-style:none;margin:0;padding:0}
+.dlo li{position:relative;margin:0;padding:9px 0 9px 30px;border-bottom:1px solid var(--line);font-size:clamp(18px,2.6vw,21px);line-height:1.35}
+.dlo li:last-child{border-bottom:0}
+.dlo .dlo-n li::before{content:"";position:absolute;left:4px;top:18px;width:10px;height:10px;border-radius:50%;background:var(--accent)}
+.dlo .dlo-p li::before{content:"✓";position:absolute;left:2px;top:8px;color:var(--ok);font-weight:600}
+.dlo a{display:inline;padding:0;background:none;color:var(--accent);text-decoration:none}
+.dlo a:hover{text-decoration:underline}
+.dlo .dlo-note{margin:20px 0 0;color:var(--ink-2);font-size:16px;line-height:1.45}
+.dlo .dlo-btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+.dlo .dlo-ok{min-height:52px;padding:0 28px;border:0;border-radius:var(--r-pill);background:var(--accent);color:var(--on-accent);font:600 17px/1 var(--font);cursor:pointer}
+.dlo .dlo-ok:hover{background:var(--accent-hover)}
+.dlo .dlo-all{align-self:center;font-size:16px}
+@media (prefers-reduced-motion:reduce){dialog.mnav[open],dialog.dlo[open]{animation:none}.shapka,.shapka *,.mnav *{transition:none!important}}
+
+/* баннер cookies (claude/ИП_правовой_пакет_v1.md, раздел 6) — внизу, компактный, не закрывает поле ИНН */
+.ck-bar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -8px 24px rgba(29,29,31,.06);color:var(--ink);font:400 var(--t-small)/1.4 var(--font);text-align:left}
+.ck-bar .ck-bar__in{max-width:calc(var(--wide) + 2*var(--gutter));margin:0 auto;padding:var(--s-3) var(--gutter) calc(var(--s-3) + env(safe-area-inset-bottom));display:flex;align-items:center;gap:var(--s-3) var(--s-5)}
+.ck-bar .ck-bar__t{flex:1;min-width:0;margin:0;font-size:var(--t-small);color:var(--ink-2)}
+.ck-bar a{display:inline;padding:0;background:none;color:var(--accent);text-decoration:underline;text-underline-offset:.18em}
+.ck-bar .ck-bar__b{display:flex;gap:var(--s-2);flex:none}
+.ck-bar button{min-height:40px;padding:0 18px;border:0;border-radius:var(--r-pill);font:600 15px/1 var(--font);cursor:pointer;white-space:nowrap}
+.ck-bar .ck-bar__ok{background:var(--accent);color:var(--on-accent)}
+.ck-bar .ck-bar__ok:hover{background:var(--accent-hover)}
+.ck-bar .ck-bar__no{background:var(--surface-2);color:var(--ink)}
+.ck-bar :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media (max-width:640px){.ck-bar .ck-bar__in{flex-direction:column;align-items:stretch;gap:var(--s-2);padding-top:10px}.ck-bar .ck-bar__t{font-size:var(--t-caption)}.ck-bar .ck-bar__b button{flex:1;min-height:40px;padding:0 12px}}
+@media print{.ck-bar{display:none!important}}
+@media (min-width:1025px){.ck-bar{left:auto;right:24px;bottom:24px;width:440px;border:0;border-radius:var(--r-l);box-shadow:0 12px 40px rgba(29,29,31,.16)}.ck-bar .ck-bar__in{flex-direction:column;align-items:stretch;padding:var(--s-5);gap:var(--s-4)}.ck-bar .ck-bar__b button{flex:1}}

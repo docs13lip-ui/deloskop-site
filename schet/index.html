@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Получить счёт — Делоскоп</title>
+<meta name="description" content="Счёт на тариф Делоскопа для компании или ИП: месяц, квартал или год. Оплата с расчётного счёта, без НДС, доступ в день поступления денег.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#F5F5F2">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F5F5F2;--card:#fff;--ink:#1D1D1F;--ink2:#48484C;--muted:#6B6B70;--line:#E6E6E1;--accent:#0B63E5;--accent-hover:#084BB0;--ok:#16723F;--warn:#9A5B00;--or:#C2410C;--bad:#B3261E;--r:24px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}a:hover{color:var(--accent-hover)}
+.top{position:sticky;top:0;z-index:5;background:rgba(245,245,242,.86);backdrop-filter:saturate(180%) blur(16px);-webkit-backdrop-filter:saturate(180%) blur(16px);border-bottom:1px solid rgba(0,0,0,.05)}
+.top .in{max-width:1120px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:22px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:19px;color:var(--ink);letter-spacing:-.02em;margin-right:auto}
+.top nav{display:flex;gap:22px;font-size:15px}.top nav a{color:var(--ink2)}.top nav a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:12px;background:var(--accent);color:#fff!important;font-weight:600;font-size:15px}
+@media (max-width:760px){.top .in{flex-wrap:wrap;row-gap:4px;padding-bottom:8px}.top nav{order:3;width:100%;overflow-x:auto;gap:20px;scrollbar-width:none}.top nav::-webkit-scrollbar{display:none}.top nav a{white-space:nowrap}}
+main{max-width:1120px;margin:0 auto;padding:28px 20px 64px}
+.crumbs{font-size:14px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap}.crumbs a{color:var(--muted)}
+h1{font-size:clamp(32px,5vw,48px);line-height:1.06;letter-spacing:-.035em;margin:12px 0 10px;font-weight:600}
+.sub{font-size:clamp(18px,2.2vw,21px);line-height:1.45;color:var(--ink2);margin:0 0 28px;max-width:680px}
+.dve{display:grid;grid-template-columns:minmax(0,520px) minmax(0,1fr);gap:40px;align-items:start}
+.card{background:var(--card);border-radius:var(--r);padding:28px 28px 24px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 16px 40px rgba(0,0,0,.05)}
+.shagi{list-style:none;margin:0;padding:0;counter-reset:s}
+.shagi li{position:relative;padding:0 0 22px 52px;counter-increment:s;font-size:16px;color:var(--ink2);line-height:1.5}
+.shagi li::before{content:counter(s);position:absolute;left:0;top:0;width:36px;height:36px;border-radius:50%;background:#E8F0FD;color:var(--accent);font-weight:600;display:flex;align-items:center;justify-content:center;font-size:16px}
+.shagi b{display:block;color:var(--ink);font-size:18px;font-weight:600;margin:5px 0 2px}
+.fakt{background:var(--card);border-radius:18px;padding:18px 20px;font-size:15px;color:var(--ink2);margin-top:8px}
+.fakt p{margin:0 0 8px}.fakt p:last-child{margin:0}
+footer{max-width:1120px;margin:0 auto;padding:28px 20px 40px;border-top:1px solid var(--line);font-size:14px;color:var(--muted);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+footer a{color:var(--muted)}
+@media (max-width:900px){.dve{grid-template-columns:1fr;gap:28px}}
+@media (max-width:620px){.card{padding:22px 16px 18px;border-radius:20px}main{padding:20px 16px 48px}}
+</style>
+</head>
+<body>
+<header class="top"><div class="in">
+  <a class="brand" href="/" aria-label="Делоскоп — на главную"><svg width="30" height="27" viewBox="0 0 72 64" fill="none" aria-hidden="true"><path d="M36 18.1A16 16 0 0 1 36 45.9A16 16 0 0 1 36 18.1Z" fill="#0B63E5"/><circle cx="28" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/><circle cx="44" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/></svg><span>делоскоп</span></a>
+  <nav aria-label="Разделы"><a href="/proverit-schet/">Проверь счёт</a><a href="/delopis/">Делопись</a><a href="/115-fz/">115-ФЗ</a><a href="/nalogi/">Налоги</a><a href="/indeks/">Индекс</a><a href="/cabinet.html">Кабинет</a></nav>
+  <a class="btn" href="/">Проверить</a>
+</div></header>
+<main>
+<nav class="crumbs" aria-label="Навигация"><a href="/">Делоскоп</a><span>›</span><a href="/tarify/">Тарифы</a><span>›</span><span>Счёт</span></nav>
+<h1>Счёт для компании или ИП</h1>
+<p class="sub">Выберите тариф и срок, впишите ИНН плательщика — счёт с реквизитами будет готов сразу.</p>
+<div class="dve">
+  <div class="card" id="forma"><noscript><p>Форме нужен JavaScript. Напишите на <a href="mailto:help@deloskop.ru?subject=%D0%A1%D1%87%D1%91%D1%82">help@deloskop.ru</a>: тариф, срок и ИНН плательщика — пришлём счёт.</p></noscript></div>
+  <div>
+    <ol class="shagi">
+      <li><b>Получите счёт</b>Реквизиты вашей компании подставим из ЕГРЮЛ по ИНН — вписывать ничего не нужно. Счёт откроется по ссылке, его можно скачать в PDF и переслать бухгалтеру.</li>
+      <li><b>Оплатите с расчётного счёта</b>В назначении платежа — номер счёта. Он уже вписан в готовый текст назначения, его можно скопировать.</li>
+      <li><b>Доступ — в день оплаты</b>Откроем тариф на почту из заявки и пришлём акт для бухгалтерии.</li>
+    </ol>
+    <div class="fakt">
+      <p><b>Без НДС.</b> Исполнитель применяет УСН и освобождён от НДС (п. 1 ст. 145 НК РФ), поэтому в счёте «Без налога (НДС)».</p>
+      <p><b>Касса не нужна.</b> Оплата компанией или ИП с расчётного счёта — без кассового чека (п. 9 ст. 2 закона № 54-ФЗ).</p>
+      <p><b>Квартал</b> — три месяца по цене месяца, <b>год</b> — на 20% дешевле. Сравнить тарифы — <a href="/tarify/">на странице тарифов</a>.</p>
+    </div>
+  </div>
+</div>
+</main>
+<footer><span>© 2026 Делоскоп · Материалы носят информационный характер и не заменяют консультацию юриста</span>
+<span><a href="/tarify/">Тарифы</a> · <a href="/115-fz/">115-ФЗ</a> · <a href="/nalogi/">Налоги</a> · <a href="/indeks/">Индекс</a> · <a href="mailto:help@deloskop.ru">help@deloskop.ru</a></span></footer>
+<script src="/js/schet.js"></script>
+<script>
+(function(){var q=new URLSearchParams(location.search);
+  DeloskopSchet.forma(document.getElementById('forma'),{tarif:q.get('tarif')||'pro',srok:q.get('srok')||'mes'});})();
+</script>
+</body>
+</html>

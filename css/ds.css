@@ -69,6 +69,8 @@ a:hover{color:var(--accent-hover)}
 .seg{display:inline-flex;padding:4px;background:var(--surface-2);border-radius:var(--r-pill)}
 .seg button{min-height:40px;padding:0 18px;border:0;border-radius:var(--r-pill);background:transparent;font:500 15px/1 var(--font);color:var(--ink-2);cursor:pointer}
 .seg button[aria-pressed=true]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.seg--fit{display:flex;max-width:100%;margin:0 0 var(--s-5)}.seg--fit button{flex:1 1 auto;padding:0 14px;line-height:1.15}
+@media (max-width:640px){.seg--fit button{padding:0 10px;font-size:14px}}
 
 /* ——— дополнения site-v3 (26.09): временная шапка документов и шаблон документа на ширине 760 ——— */
 .hdr{position:sticky;top:0;z-index:20;height:var(--header-h);background:rgba(245,245,242,.88);-webkit-backdrop-filter:saturate(180%) blur(12px);backdrop-filter:saturate(180%) blur(12px);border-bottom:1px solid var(--line)}
@@ -101,3 +103,41 @@ a:hover{color:var(--accent-hover)}
 @media (max-width:640px){.doc .toc{columns:1}}
 .note{background:var(--accent-soft);border-radius:var(--r-m);padding:var(--s-4) var(--s-5);color:var(--ink-2);font-size:var(--t-small)}
 @media (prefers-reduced-motion:reduce){*{transition-duration:0ms!important;animation-duration:0ms!important;scroll-behavior:auto!important}}
+
+/* ===== Тариф основателя (/osnovatel/, claude/Арт-директор_основатель_26.09.md) ===== */
+.osn-hero{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--s-8);align-items:center;padding-block:clamp(40px,7vw,96px) var(--s-7)}
+.osn-hero h1{margin-top:var(--s-3)}
+.osn-hero .lead{margin-top:var(--s-4)}
+.osn-card{padding:var(--s-6);border-radius:var(--r-xl);background:var(--surface);box-shadow:var(--shadow)}
+.osn-price{display:flex;align-items:baseline;gap:var(--s-2);margin-top:var(--s-3)}
+.osn-price b{font-size:var(--t-h1);font-weight:600;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.osn-price>span{font-size:var(--t-body);color:var(--ink-2)}
+.osn-was{margin-top:var(--s-2);font-size:var(--t-small);color:var(--muted)}
+.osn-seats{margin-top:var(--s-5)}
+.osn-seats__bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.osn-seats__bar i{display:block;width:0;height:100%;border-radius:3px;background:var(--ink)}
+.osn-seats p{margin-top:var(--s-2);font-size:var(--t-small);color:var(--ink-2)}
+.osn-card .btn{width:100%;margin-top:var(--s-5)}
+.osn-card .btn[aria-disabled=true]{opacity:.5;pointer-events:none}
+.osn-card .small{margin-top:var(--s-3);color:var(--muted)}
+.osn-three{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s-4);margin:0;padding:0;list-style:none}
+.osn-three li{padding:var(--s-5);border-radius:var(--r-l);background:var(--surface)}
+.osn-three b{display:block;font-size:var(--t-h3);line-height:1.25;letter-spacing:-.01em}
+.osn-three li>span{display:block;margin-top:var(--s-2);font-size:var(--t-small);line-height:1.45;color:var(--ink-2)}
+.osn-inc{columns:2;column-gap:var(--s-7);margin:var(--s-5) 0 0;padding:0;list-style:none;font-size:var(--t-small);color:var(--ink-2)}
+.osn-inc li{break-inside:avoid;position:relative;padding:8px 0 8px 28px;border-top:1px solid var(--line)}
+.osn-inc li::before{content:"";position:absolute;left:2px;top:14px;width:12px;height:7px;border-left:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:rotate(-45deg)}
+.osn-sec{padding-block:var(--s-7)}
+.osn-faq{max-width:760px}
+.osn-faq h2{margin-bottom:var(--s-4)}
+.osn-faq details{border-top:1px solid var(--line)}
+.osn-faq summary{display:flex;justify-content:space-between;gap:var(--s-4);min-height:56px;align-items:center;font-size:var(--t-body);font-weight:600;cursor:pointer;list-style:none}
+.osn-faq summary::-webkit-details-marker{display:none}
+.osn-faq summary::after{content:"+";font-weight:400;font-size:24px;color:var(--muted)}
+.osn-faq details[open] summary::after{content:"−"}
+.osn-faq p{padding-bottom:var(--s-4);font-size:var(--t-small);line-height:1.5;color:var(--ink-2)}
+.osn-badge{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px 0 8px;border-radius:var(--r-pill);background:var(--ink);color:var(--bg);font:600 13px/1 var(--font);white-space:nowrap}
+.osn-badge svg circle{stroke:var(--bg)}
+@media (max-width:1024px){.osn-hero{grid-template-columns:1fr;gap:var(--s-6)}.osn-card{max-width:520px}}
+@media (max-width:640px){.osn-hero{padding-block:var(--s-6) var(--s-5)}.osn-three{grid-template-columns:1fr}.osn-inc{columns:1}}
+.osn-hero .crumbs{margin-bottom:var(--s-5)}

@@ -1,0 +1,71 @@
+/* Делоскоп — блок «Скорая под ключ» (#paket на /skoraya-115-fz/), ТЗ claude/Дизайн_шапка_логотип_и_Скорая_v2.md, часть 2.
+   Страница «Скорой» пока на своих стилях, поэтому токены ds.css заведены только в области блока (.pkg).
+   Значения токенов обязаны совпадать с /css/ds.css — это держит tests/skoraya_paket.test.js. */
+.pkg{
+ --bg:#F5F5F2;--surface:#FFFFFF;--surface-2:#EEEEEA;--ink:#1D1D1F;--ink-2:#48484C;--muted:#6B6B70;--line:#E6E6E1;
+ --accent:#0B63E5;--accent-hover:#084BB0;--on-accent:#FFFFFF;
+ --font:Onest,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+ --t-h2:clamp(28px,3.2vw,40px);--t-h3:22px;--t-lead:20px;--t-body:17px;--t-small:15px;--t-caption:13px;
+ --s-1:4px;--s-2:8px;--s-3:12px;--s-4:16px;--s-5:24px;--s-6:32px;--s-7:48px;--s-8:64px;
+ --wide:1200px;--gutter:clamp(16px,5vw,48px);
+ --r-s:10px;--r-m:16px;--r-l:24px;--r-xl:32px;--r-pill:999px;
+ --shadow:0 1px 2px rgba(29,29,31,.04),0 12px 32px rgba(29,29,31,.06);
+ --ease:cubic-bezier(.2,.7,.2,1);--fast:160ms;
+ --header-h:64px;
+ margin:var(--s-8) calc(50% - min(var(--wide) / 2, 50vw - var(--gutter))) 0;
+ font-family:var(--font);color:var(--ink);scroll-margin-top:calc(var(--header-h) + var(--s-4))
+}
+@media (max-width:640px){.pkg{--t-lead:18px;--t-body:16px;--header-h:56px}}
+.pkg *,.pkg *::before,.pkg *::after{box-sizing:border-box}
+.pkg p{margin:0}
+.pkg a{color:var(--accent)}
+.pkg a:hover{color:var(--accent-hover)}
+.pkg :focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+.pkg__head{max-width:760px}
+.pkg__eyebrow{font-size:var(--t-caption);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.pkg h2{margin:var(--s-3) 0 0;font-size:var(--t-h2);line-height:1.1;letter-spacing:-.02em;font-weight:600;text-wrap:balance}
+.pkg__lead{margin-top:var(--s-4)!important;font-size:var(--t-lead);line-height:1.5;color:var(--ink-2)}
+.pkg__steps{display:flex;flex-wrap:wrap;gap:var(--s-3) var(--s-6);margin:var(--s-5) 0 0;padding:0;list-style:none;font-size:var(--t-small);color:var(--ink-2)}
+.pkg__steps li{display:flex;align-items:center;gap:var(--s-2)}
+.pkg__step-n{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--surface-2);color:var(--ink);font-size:13px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+
+.pkg__grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:var(--s-8);align-items:start;margin-top:var(--s-7)}
+.pkg__group+.pkg__group{margin-top:var(--s-7)}
+.pkg h3{display:flex;align-items:baseline;gap:var(--s-2);margin:0;font-size:var(--t-h3);line-height:1.25;letter-spacing:-.01em;font-weight:600}
+.pkg__cnt{font-size:var(--t-caption);font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
+.pkg__list{margin:var(--s-4) 0 0;padding:0;list-style:none}
+.pkg-item{display:grid;grid-template-columns:32px minmax(0,1fr);gap:var(--s-1) var(--s-3);padding:var(--s-4) 0;border-top:1px solid var(--line)}
+.pkg-item__n{font-size:15px;font-weight:600;line-height:1.55;color:var(--muted);font-variant-numeric:tabular-nums}
+.pkg-item__t{font-size:var(--t-body);font-weight:600;line-height:1.4}
+.pkg-item__d{grid-column:2;font-size:var(--t-small);line-height:1.45;color:var(--ink-2);max-width:620px}
+.pkg__fit{margin-top:var(--s-6)!important;font-size:var(--t-small);color:var(--ink-2);max-width:620px}
+.pkg__legal{display:block;margin-top:var(--s-5);padding:var(--s-5);border-radius:var(--r-m);background:var(--surface-2);font-size:var(--t-small);line-height:1.45;color:var(--ink-2);max-width:680px}
+.pkg__legal b{color:var(--ink)}
+
+.pkg__card{position:sticky;top:calc(var(--header-h) + var(--s-5));padding:var(--s-6);border-radius:var(--r-xl);background:var(--surface);box-shadow:var(--shadow)}
+.pkg__price{margin:var(--s-3) 0 var(--s-1)!important;font-size:clamp(40px,4.6vw,56px);font-weight:600;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pkg__cap{font-size:var(--t-caption);line-height:1.45;color:var(--muted)}
+.pkg__sum{margin:var(--s-5) 0;padding:0;list-style:none;font-size:var(--t-small);color:var(--ink-2)}
+.pkg__sum li{position:relative;padding:6px 0 6px 28px}
+.pkg__sum li::before{content:"";position:absolute;left:2px;top:11px;width:12px;height:7px;border-left:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:rotate(-45deg)}
+.pkg__cta{display:flex;align-items:center;justify-content:center;width:100%;min-height:56px;padding:0 var(--s-5);border-radius:var(--r-m);background:var(--accent);color:var(--on-accent)!important;font-size:var(--t-body);font-weight:600;text-decoration:none;transition:background var(--fast) var(--ease)}
+.pkg__cta:hover{background:var(--accent-hover)}
+.pkg__cta--sm{width:auto;min-height:48px;flex:none}
+.pkg__card-note{margin-top:var(--s-3)!important}
+.pkg__card .pkg__cap+.pkg__cap{margin-top:var(--s-2)}
+.pkg__card .pkg__price+.pkg__cap{margin-top:0}
+
+.pkg__bar{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:var(--s-4);padding:var(--s-3) var(--gutter) calc(var(--s-3) + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--line)}
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.pkg__bar{background:color-mix(in srgb,var(--surface) 90%,transparent);-webkit-backdrop-filter:saturate(180%) blur(12px);backdrop-filter:saturate(180%) blur(12px)}}
+.pkg__bar[hidden]{display:none}
+.pkg__bar p{display:flex;flex-direction:column}
+.pkg__bar-price{font-size:22px;font-weight:600;line-height:1.1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+@media (max-width:1024px){
+ .pkg__grid{grid-template-columns:1fr;gap:var(--s-6)}
+ .pkg__card{position:static;order:-1;max-width:560px}
+}
+@media (max-width:480px){.pkg__card{padding:var(--s-5)}}
+@media (min-width:1025px){.pkg__bar{display:none!important}}
+@media print{.pkg{display:none!important}}

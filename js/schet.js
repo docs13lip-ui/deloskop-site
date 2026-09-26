@@ -26,8 +26,11 @@
   function ksOk(bik, ks) { return bikOk(bik) && /^301\d{17}$/.test(ks || "") && ks.slice(-3) === bik.slice(-3) && klyuch23("0" + bik.slice(4, 6) + ks); }
   function ogrnipOk(s) { return /^\d{15}$/.test(s || "") && Number(BigInt(s.slice(0, 14)) % 13n % 10n) === +s[14]; }
 
+  // разовые продукты (сейчас — «Скорая под ключ»): цена в tarify.json → <id>.cena_rub, срок не выбирается
+  function produktIz(D, id) { var p = D && id && D[id]; return p && p.razovo && p.cena_rub > 0 ? p : null; }
   function tarifIz(D, id) { return (D && D.tarify || []).filter(function (t) { return t.id === id && t.mesyac > 0; })[0] || null; }
   function summa(D, tarif, srok) {
+    var p = produktIz(D, tarif); if (p) return p.cena_rub;
     var t = tarifIz(D, tarif); if (!t || !SROKI[srok]) return null;
     return srok === "god" ? t.god : t.mesyac * SROKI[srok];
   }
@@ -63,12 +66,20 @@
     return s.charAt(0).toUpperCase() + s.slice(1);
   }
   function tekstZayavki(z, D) {
+    if (z.produkt) {
+      var p = produktIz(D, z.produkt);
+      return "Прошу выставить счёт.\nУслуга: " + (p ? p.nazvanie : z.produkt) + ", разовый платёж" +
+        (p ? " — " + rub(p.cena_rub).replace(/ /g, " ") : "") + "\nИНН плательщика: " + (z.inn || "") +
+        (z.nazvanie ? " (" + z.nazvanie + ")" : "") + "\nE-mail для счёта, анкеты и документов: " + (z.email || "");
+    }
     var t = tarifIz(D, z.tarif), s = summa(D, z.tarif, z.srok);
     return "Прошу выставить счёт.\nТариф: " + (t ? t.nazvanie : z.tarif) + ", " + SROK_TEKST[SROKI[z.srok]] +
       (s ? " — " + rub(s).replace(/ /g, " ") : "") + "\nИНН плательщика: " + (z.inn || "") +
       (z.nazvanie ? " (" + z.nazvanie + ")" : "") + "\nE-mail для счёта и закрывающих документов: " + (z.email || "");
   }
   function mailtoZayavki(z, D) {
+    if (z.produkt) { var p = produktIz(D, z.produkt);
+      return "mailto:help@deloskop.ru?subject=" + encodeURIComponent("Счёт: " + (p ? p.nazvanie : z.produkt)) + "&body=" + encodeURIComponent(tekstZayavki(z, D)); }
     var t = tarifIz(D, z.tarif);
     return "mailto:help@deloskop.ru?subject=" + encodeURIComponent("Счёт: " + (t ? t.nazvanie : z.tarif) + ", " + SROK_IMYA[z.srok].toLowerCase()) +
       "&body=" + encodeURIComponent(tekstZayavki(z, D));
@@ -76,13 +87,18 @@
   function ddmm(iso) { if (!iso) return ""; var p = String(iso).slice(0, 10).split("-"); return p[2] + "." + p[1] + "." + p[0]; }
 
   var api = { innOk: innOk, emailOk: emailOk, bikOk: bikOk, rsOk: rsOk, ksOk: ksOk, ogrnipOk: ogrnipOk, summa: summa,
-    rub: rub, propis: propis, podpisSummy: podpisSummy, tekstZayavki: tekstZayavki, mailtoZayavki: mailtoZayavki, ddmm: ddmm,
+    rub: rub, produktIz: produktIz, propis: propis, podpisSummy: podpisSummy, tekstZayavki: tekstZayavki, mailtoZayavki: mailtoZayavki, ddmm: ddmm,
     SROKI: SROKI, SROK_TEKST: SROK_TEKST, NDS: NDS };
   if (typeof module !== "undefined" && module.exports) { module.exports = api; }
   if (typeof document === "undefined") return;
 
   // ---------- браузер ----------
   var API = location.hostname.endsWith("deloskop.ru") ? "https://api.deloskop.ru" : "";
+  // Первая строка окна счёта для разовых продуктов: что будет после оплаты (у каждого продукта — своё)
+  var LID_PRODUKTA = {
+    skoraya_pod_klyuch: "Разовый платёж с расчётного счёта компании или ИП. В день поступления денег пришлём на почту ссылку на анкету и загрузку выписки.",
+    osnovatel: "Тариф «Про» на 12 месяцев, оплата с расчётного счёта компании или ИП. Доступ и номер основателя — в день поступления денег."
+  };
   var D = null, zhdut = [];
   function sTarifami(fn) {
     if (D) return fn(D);
@@ -132,6 +148,7 @@
     ".sf .sf-ok{width:48px;height:48px;border-radius:50%;background:var(--ok-bg,#E8F5EE);display:flex;align-items:center;justify-content:center;margin:0 0 14px}" +
     "dialog.sf-dlg{border:0;border-radius:24px;padding:28px 28px 24px;width:min(480px,calc(100vw - 32px));max-height:calc(100dvh - 32px);box-shadow:0 30px 80px rgba(0,0,0,.25);background:#fff;overflow:auto;box-sizing:border-box}" +
     "dialog.sf-dlg::backdrop{background:rgba(29,29,31,.45)}" +
+    "dialog.sf-dlg .sf h3{padding-right:44px}" +
     "dialog.sf-dlg .sf-x{position:absolute;top:14px;right:14px;width:40px;height:40px;border:0;border-radius:50%;background:#F0F0EC;font-size:22px;line-height:1;cursor:pointer;color:var(--ink,#1D1D1F)}" +
     "@media (max-width:640px){dialog.sf-dlg{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;border-radius:0;padding:24px 16px calc(24px + env(safe-area-inset-bottom))}.sf .sf-seg button{padding:8px 13px}}";
   function stili() { if (document.getElementById("sf-css")) return; var s = document.createElement("style"); s.id = "sf-css"; s.textContent = CSS; document.head.appendChild(s); }
@@ -139,25 +156,29 @@
   var nomerFormy = 0;
   function forma(box, nach, vDialoge) {
     stili();
-    var st = { tarif: nach.tarif || "pro", srok: SROKI[nach.srok] ? nach.srok : "mes", nazvanie: null, poisk: 0 };
+    var st = { tarif: nach.tarif || "pro", srok: SROKI[nach.srok] ? nach.srok : "mes", nazvanie: null, poisk: 0,
+      produkt: /^[a-z_]{3,40}$/.test(nach.produkt || "") ? nach.produkt : null };
     var id = "sf" + (++nomerFormy);
     box.innerHTML = '<form class="sf" novalidate>' +
       '<h3 id="' + id + '-h" tabindex="-1"></h3>' +
-      '<p class="sf-lead">Оплата с расчётного счёта компании или ИП. Доступ откроем в день поступления денег.</p>' +
-      '<div class="sf-seg" role="radiogroup" aria-label="Тариф" data-seg="tarif"></div>' +
-      '<div class="sf-seg" role="radiogroup" aria-label="Срок" data-seg="srok"></div>' +
+      (st.produkt
+        ? '<p class="sf-lead">' + (LID_PRODUKTA[st.produkt] || LID_PRODUKTA.skoraya_pod_klyuch) + '</p>'
+        : '<p class="sf-lead">Оплата с расчётного счёта компании или ИП. Доступ откроем в день поступления денег.</p>' +
+          '<div class="sf-seg" role="radiogroup" aria-label="Тариф" data-seg="tarif"></div>' +
+          '<div class="sf-seg" role="radiogroup" aria-label="Срок" data-seg="srok"></div>') +
       '<div class="sf-sum" aria-live="polite"><b data-sum>—</b><span><span data-pod></span><br>' + NDS + '</span></div>' +
       '<label class="sf-f"><span>ИНН плательщика</span><input type="text" inputmode="numeric" autocomplete="off" maxlength="14" data-p="inn" aria-describedby="' + id + '-inn" placeholder="10 цифр у компании, 12 у ИП"><div class="sf-h" id="' + id + '-inn" aria-live="polite"></div></label>' +
       '<label class="sf-f"><span>E-mail для счёта и закрывающих документов</span><input type="email" inputmode="email" autocomplete="email" maxlength="254" data-p="email" aria-describedby="' + id + '-email" placeholder="buh@company.ru"><div class="sf-h" id="' + id + '-email"></div></label>' +
       '<input class="sf-hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" data-p="website">' +
-      '<label class="sf-g"><input type="checkbox" data-p="soglasie_pd" aria-describedby="' + id + '-sogl"><span>Даю <a href="/soglasie/" target="_blank" rel="noopener">согласие на обработку персональных данных</a> — чтобы выставить счёт и прислать документы (<a href="/politika/" target="_blank" rel="noopener">политика</a>)</span></label><div class="sf-h" id="' + id + '-sogl"></div>' +
       '<button class="sf-go" type="submit" data-go>Получить счёт</button>' +
       '<p class="sf-err" role="alert" data-err></p>' +
-      '<p class="sf-mel">Счёт — для компаний и ИП, без НДС. Оплата счёта означает согласие с <a href="/oferta/" target="_blank" rel="noopener">условиями оферты</a>. Физлицам оплата картой откроется после подключения банка.</p>' +
+      // п. 57: для счёта основание обработки — договор (п. 5 ч. 1 ст. 6 152-ФЗ), галочка согласия не нужна (правовой пакет, разд. 4)
+      '<p class="sf-mel" data-oferta>Нажимая кнопку, вы принимаете <a href="/oferta/" target="_blank" rel="noopener">оферту</a>; как мы обрабатываем данные — в <a href="/politika/" target="_blank" rel="noopener">Политике</a>.</p>' +
+      '<p class="sf-mel">Счёт — для компаний и ИП, без НДС. Физлицам оплата картой откроется после подключения банка.</p>' +
       '</form>';
     var f = box.querySelector("form"), $ = function (s) { return f.querySelector(s); };
-    var pInn = $('[data-p=inn]'), pEm = $('[data-p=email]'), pSo = $('[data-p=soglasie_pd]');
-    var hInn = document.getElementById(id + "-inn"), hEm = document.getElementById(id + "-email"), hSo = document.getElementById(id + "-sogl");
+    var pInn = $('[data-p=inn]'), pEm = $('[data-p=email]');
+    var hInn = document.getElementById(id + "-inn"), hEm = document.getElementById(id + "-email");
 
     function seg(el, vals, cur, name) {
       el.innerHTML = vals.map(function (v) { return '<button type="button" role="radio" aria-checked="' + (v[0] === cur) + '" data-v="' + v[0] + '">' + esc(v[1]) + "</button>"; }).join("");
@@ -165,6 +186,13 @@
     }
     function risovat() {
       sTarifami(function (DD) {
+        if (st.produkt) {
+          var p = produktIz(DD, st.produkt);
+          $("h3").textContent = "Счёт на «" + (p ? p.nazvanie : "Скорую под ключ").replace(/^Скорая/, "Скорую") + "»";
+          $("[data-sum]").textContent = p ? rub(p.cena_rub) : "—";
+          $("[data-pod]").textContent = p ? "разово" + (p.podarok ? " · " + p.podarok + " в подарок" : "") : "";
+          return;
+        }
         var platnye = (DD && DD.tarify || []).filter(function (t) { return t.mesyac > 0; });
         if (!platnye.length) platnye = [{ id: "start", nazvanie: "Старт" }, { id: "pro", nazvanie: "Про" }, { id: "biznes", nazvanie: "Бизнес" }];
         var t = platnye.filter(function (x) { return x.id === st.tarif; })[0] || platnye[0]; st.tarif = t.id;
@@ -214,26 +242,26 @@
       if (!emailOk(v)) { pole(pEm, hEm, "Проверьте адрес почты"); return false; }
       pole(pEm, hEm, ""); return true;
     }
-    pSo.addEventListener("change", function () { if (pSo.checked) pole(pSo, hSo, ""); });
 
     f.addEventListener("submit", function (e) {
       e.preventDefault();
-      var a = proveritInn(true), b = proveritEm(), c = pSo.checked;
-      if (!c) pole(pSo, hSo, "Отметьте согласие — без него не сможем отправить счёт");
-      if (!a) return pInn.focus(); if (!b) return pEm.focus(); if (!c) return pSo.focus();
-      var z = { tarif: st.tarif, srok: st.srok, inn: innChist(), email: pEm.value.trim(), soglasie_pd: true,
+      var a = proveritInn(true), b = proveritEm();
+      if (!a) return pInn.focus(); if (!b) return pEm.focus();
+      var z = { tarif: st.produkt || st.tarif, srok: st.produkt ? "razovo" : st.srok, produkt: st.produkt || undefined, inn: innChist(), email: pEm.value.trim(), soglasie_pd: true,
         nazvanie: st.nazvanie, ref: ref(), website: $('[data-p=website]').value };
       var go = $("[data-go]"), err = $("[data-err]"); err.textContent = "";
       go.disabled = true; go.innerHTML = '<span class="sf-spin" aria-hidden="true"></span><span>Выставляем счёт…</span>';
-      [pInn, pEm, pSo].forEach(function (x) { x.disabled = true; });
-      function vernut() { go.disabled = false; go.textContent = "Получить счёт"; [pInn, pEm, pSo].forEach(function (x) { x.disabled = false; }); }
+      [pInn, pEm].forEach(function (x) { x.disabled = true; });
+      function vernut() { go.disabled = false; go.textContent = "Получить счёт"; [pInn, pEm].forEach(function (x) { x.disabled = false; }); }
       fetch(API + "/api/schet", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(z) })
         .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { r: r, j: j }; }); })
         .then(function (o) {
           if (o.r.ok && o.j.ok) return uspeh(o.j, z);
           vernut();
+          // сервер ещё не знает разовый продукт (API до schet-v2) — заявка не теряется: письмо с готовым текстом
+          if (o.r.status === 422 && z.produkt && (o.j.pole === "tarif" || o.j.pole === "srok")) return zapasnoj(z, true);
           if (o.r.status === 422 && o.j.pole) {
-            var m = { inn: [pInn, hInn], email: [pEm, hEm], soglasie_pd: [pSo, hSo] }[o.j.pole];
+            var m = { inn: [pInn, hInn], email: [pEm, hEm] }[o.j.pole];
             if (m) { pole(m[0], m[1], o.j.detail); m[0].focus(); return; }
             err.textContent = o.j.detail || "Проверьте поля формы"; return;
           }
@@ -244,14 +272,14 @@
     });
 
     function uspeh(j, z) {
-      if (window.dlkGoal) window.dlkGoal("invoice_created", { nomer: String(j.nomer || "") });
+      if (window.dlkGoal) window.dlkGoal("invoice_created", { nomer: String(j.nomer || ""), produkt: z.produkt || z.tarif });
       var h = j.gotov ? "Счёт № " + j.nomer + " готов" : "Заявка № " + j.nomer + " принята";
       var tekst = j.gotov
         ? "Откройте счёт, скачайте PDF и оплатите с расчётного счёта. В назначении платежа — номер счёта: так мы увидим оплату в тот же день." + (j.pismo ? " Копию отправили на " + esc(j.email) + ". Если письма нет 10 минут — проверьте «Спам»." : "")
         : "Счёт с реквизитами пришлём на " + esc(j.email) + " в течение рабочего дня. Он появится и по ссылке ниже — сохраните её.";
       f.innerHTML = '<div class="sf-ok" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#16723F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>' +
         '<h3 tabindex="-1">' + esc(h) + "</h3>" +
-        '<p class="sf-lead">' + esc(j.pokupatel || "") + " · тариф «" + esc(j.tarif) + "» · " + esc(SROK_TEKST[j.mesyacev] || "") + " · " + rub(j.summa) + "</p>" +
+        '<p class="sf-lead">' + esc(j.pokupatel || "") + (z.produkt ? " · «" + esc(j.tarif) + "», разово" : " · тариф «" + esc(j.tarif) + "» · " + esc(SROK_TEKST[j.mesyacev] || "")) + " · " + rub(j.summa) + "</p>" +
         '<p style="font-size:15px;margin:0 0 6px">' + tekst + "</p>" +
         (j.gotov ? '<a class="sf-go" href="' + esc(j.url) + '" target="_blank" rel="noopener">Открыть счёт и скачать PDF</a>' : "") +
         '<button type="button" class="' + (j.gotov ? "sf-go2" : "sf-go") + '" data-copy>Скопировать ссылку на счёт</button>' +
@@ -260,9 +288,13 @@
       f.querySelector("[data-copy]").onclick = function () { kopirovat(j.url, this, "Ссылка скопирована"); };
       try { if (window.ym && window.DLK_METRIKA) window.ym(window.DLK_METRIKA, "reachGoal", "invoice_created"); } catch (e) {}
     }
-    function zapasnoj(z) {
+    function zapasnoj(z, pismom) {
       var err = $("[data-err]");
-      err.innerHTML = "Не получилось отправить заявку через сайт. Отправьте её письмом — текст уже готов:";
+      if (f.querySelector("[data-copy2]")) return;
+      err.innerHTML = pismom
+        ? "Счета на «Скорую под ключ» пока выставляем по письму. Отправьте заявку — текст уже готов, ответим счётом:"
+        : "Не получилось отправить заявку через сайт. Отправьте её письмом — текст уже готов:";
+      if (pismom) err.style.color = "var(--sf-ink2)";
       var box2 = document.createElement("div");
       box2.innerHTML = '<a class="sf-go2" href="' + esc(mailtoZayavki(z, D)) + '">Отправить письмом на help@deloskop.ru</a>' +
         '<button type="button" class="sf-go2" data-copy2>Скопировать текст заявки</button>';
@@ -282,7 +314,7 @@
   var dlg = null;
   function otkryt(nach) {
     stili();
-    if (!window.HTMLDialogElement) { location.href = "/schet/?tarif=" + encodeURIComponent(nach.tarif || "") + "&srok=" + encodeURIComponent(nach.srok || ""); return; }
+    if (!window.HTMLDialogElement) { location.href = nach.produkt ? "/schet/?produkt=" + encodeURIComponent(nach.produkt) : "/schet/?tarif=" + encodeURIComponent(nach.tarif || "") + "&srok=" + encodeURIComponent(nach.srok || ""); return; }
     if (!dlg) {
       dlg = document.createElement("dialog"); dlg.className = "sf-dlg"; dlg.setAttribute("aria-label", "Получить счёт");
       document.body.appendChild(dlg);
@@ -303,6 +335,15 @@
     e.preventDefault();
     // «Помесячно / за год» на карточке переключает только цену; срок в окне выбирается заново
     otkryt({ tarif: a.dataset.tarif, srok: a.dataset.srok });
+  });
+
+  // разовые продукты: <a data-schet data-produkt="…" href="/schet/?produkt=…"> → окно; без JS — страница /schet/
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest("[data-schet][data-produkt]");
+    if (!a || e.ctrlKey || e.metaKey || e.shiftKey || e.button > 0) return;
+    e.preventDefault();
+    if (window.dlkGoal) window.dlkGoal("pkg_cta", { produkt: a.dataset.produkt });
+    otkryt({ produkt: a.dataset.produkt });
   });
 
   root.DeloskopSchet = { otkryt: otkryt, forma: forma, api: api };

@@ -4,6 +4,8 @@
   "skidka_god_procent": 20,
   "pravilo_okrugleniya": "Годовая цена = месяц × 12 × 0,8, округлённая вниз до сотни рублей: скидка никогда не меньше обещанных 20%.",
   "paket_otchetov": {"shtuk": 10, "cena": 990, "tekst": "10 полных отчётов"},
+  "skoraya_pod_klyuch": {"nazvanie": "Скорая под ключ", "cena_rub": 4990, "razovo": true, "podarok": "месяц «Про»", "soglasovano": "владелец, 26.09.2026"},
+  "osnovatel": {"nazvanie": "Тариф основателя", "cena_rub": 7150, "razovo": true, "dostup": "pro", "mesyacev": 12, "mest": 300, "soglasovano": "владелец, 26.09.2026"},
   "tarify": [
     {
       "id": "free", "nazvanie": "Бесплатно", "dlya": "Чтобы разово проверить компанию",

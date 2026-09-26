@@ -57,7 +57,7 @@ def stranicy():
                 if f.endswith(".html"):
                     vse.append(os.path.relpath(os.path.join(d, f), KOREN))
     novye = []
-    for d in ("oferta", "politika", "soglasie", "vozvrat", "rekvizity", "cookies"):
+    for d in ("oferta", "politika", "soglasie", "vozvrat", "rekvizity", "cookies", "rassylki", "partneram/usloviya"):
         if os.path.exists(put(d, "index.html")):
             novye.append(d + "/index.html")
     res = []
@@ -94,8 +94,9 @@ KOLONKI = [
         ("Реквизиты и контакты", "/rekvizity/"), ("help@deloskop.ru", "mailto:help@deloskop.ru")]),
     ("Документы", [
         ("Публичная оферта", "/oferta/"), ("Политика обработки ПДн", "/politika/"),
-        ("Согласие на обработку ПДн", "/soglasie/"), ("Cookies и Метрика", "/cookies/"), ("Возврат денег", "/vozvrat/"),
-        ("Реквизиты", "/rekvizity/")]),
+        ("Согласие на обработку ПДн", "/soglasie/"), ("Согласие на рассылки", "/rassylki/"),
+        ("Cookies и Метрика", "/cookies/"), ("Возврат денег", "/vozvrat/"),
+        ("Условия для партнёров", "/partneram/usloviya/"), ("Реквизиты", "/rekvizity/")]),
 ]
 
 
@@ -110,6 +111,7 @@ def podval_html(r):
     return ('<!--podval--><div class="podval" role="contentinfo"><div class="podval__in">'
             '<div class="podval__cols">' + "".join(cols) + '</div>'
             '<div class="podval__niz"><p>' + stroka + '</p>'
+            '<p>Сотрудничество, отзывы и предложения — <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>. Принимаем 24/7</p>'
             '<p>Материалы носят информационный характер и не заменяют консультацию юриста</p></div>'
             '</div></div><!--/podval-->')
 

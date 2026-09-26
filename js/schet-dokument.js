@@ -23,7 +23,7 @@
     var p = d.prodavec, b = p && p.bank, pk = d.pokupatel;
     var plash = "";
     if (d.status === "zayavka") plash = '<div class="plash">Заявка принята. Реквизиты для оплаты появятся на этой странице в течение рабочего дня — пришлём письмо на почту из заявки.</div>';
-    else if (d.status === "oplachen") plash = '<div class="plash ok">Оплачен ' + S.ddmm(d.akt && d.akt.data) + ". Доступ по тарифу «" + esc(d.tarif) + "» — по " + S.ddmm(d.akt && d.akt.period_po) + " включительно.</div>";
+    else if (d.status === "oplachen") plash = '<div class="plash ok">' + oplachenTekst(d) + "</div>";
     else if (d.status === "annulirovan") plash = '<div class="plash net">Счёт аннулирован — оплачивать его не нужно. <a href="/schet/">Получить новый счёт</a></div>';
     else plash = '<div class="plash">Оплатите до ' + S.ddmm(d.oplatit_do) + " с расчётного счёта компании или ИП. Номер счёта — в назначении платежа: так мы увидим оплату в тот же день.</div>";
 
@@ -67,12 +67,23 @@
       '<p class="prop">' + esc(d.nds_tekst) + ". Счёт действителен до " + S.ddmm(d.oplatit_do) + ".</p>" +
       (p ? '<div class="nazn"><b>Назначение платежа:</b> ' + esc(d.naznachenie) + "</div>" : "") +
       (p ? '<div class="podp"><div>Индивидуальный предприниматель</div><div>' + esc(fioKorotko(p.fio)) + "</div></div>" : "") +
-      '<p class="mel">Оплата счёта означает согласие с условиями оферты deloskop.ru/oferta/. Доступ открывается в день зачисления оплаты на срок тарифа.</p></div>';
+      '<p class="mel">Оплата счёта означает согласие с условиями оферты deloskop.ru/oferta/. ' +
+      (d.srok === "razovo" && d.vid === "usluga" ? "Пакет выдаём не позднее 1 рабочего дня после оплаты, анкеты и выписки (раздел 5 оферты)." : "Доступ открывается в день зачисления оплаты на срок тарифа.") + "</p></div>";
+  }
+
+  // schet-v2: разовые продукты. Услуга («Скорая под ключ») — акт на дату выдачи пакета; лицензия — на дату оплаты.
+  function oplachenTekst(d) {
+    var data = S.ddmm((d.oplachen || (d.akt && d.akt.data) || "").slice(0, 10));
+    if (d.srok === "razovo" && d.vid === "usluga")
+      return "Оплачен " + data + ". " + (d.okazano ? "Пакет выдан " + S.ddmm(d.okazano) + " — акт во вкладке «Акт»." : "Ссылку на анкету пришлём на почту из заявки — пакет соберём не позднее 1 рабочего дня после того, как вы её заполните и загрузите выписку.");
+    var po = d.dostup_do || (d.akt && d.akt.period_po);
+    return "Оплачен " + data + ". Доступ по " + (d.produkt === "osnovatel" ? "«Тарифу основателя»" + (d.nomer_osnovatelya ? " (основатель № " + d.nomer_osnovatelya + ")" : "") : "тарифу «" + esc(d.tarif) + "»") +
+      (po ? " — по " + S.ddmm(po) + " включительно." : ".");
   }
 
   function aktHtml(d) {
     var p = d.prodavec, pk = d.pokupatel, a = d.akt;
-    var naim = "Предоставление доступа к сервису «Делоскоп» (deloskop.ru), тариф «" + d.tarif + "», на период с " + S.ddmm(a.period_s) + " по " + S.ddmm(a.period_po);
+    var naim = a.naimenovanie || ("Предоставление доступа к сервису «Делоскоп» (deloskop.ru), тариф «" + d.tarif + "», на период с " + S.ddmm(a.period_s) + " по " + S.ddmm(a.period_po));
     return '<div class="list">' +
       "<h2>Акт № " + esc(d.nomer) + " от " + S.ddmm(a.data) + "</h2>" +
       '<div class="str"><span>Исполнитель:</span><span>' + prodavecStr(p) + "</span></div>" +
@@ -80,7 +91,7 @@
       '<div class="str"><span>Основание:</span><span>Счёт № ' + esc(d.nomer) + " от " + S.ddmm(d.data) + ", оферта deloskop.ru/oferta/</span></div>" +
       pozicii(d, naim) +
       '<p class="prop">Всего на сумму ' + den(d.itogo) + " руб.<br><b>" + esc(S.propis(d.itogo)) + "</b>. " + esc(d.nds_tekst) + ".</p>" +
-      '<p class="prop">Доступ к сервису предоставлен Заказчику на указанный период.</p>' +
+      '<p class="prop">' + esc(a.itog || "Доступ к сервису предоставлен Заказчику на указанный период.") + '</p>' +
       '<div class="podp"><div>Исполнитель: ИП ' + esc(fioKorotko(p.fio)) + '</div><div>Заказчик: ' + esc(pk.nazvanie) + "</div></div></div>";
   }
 })();

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Проверка контрагентов по выписке из 1С бесплатно — Делоскоп</title>
-<meta name="description" content="Загрузите выписку из 1С — покажем всех поставщиков, кому вы платили, сколько денег на кону по статье 54.1 НК и что сделать на этой неделе. Выписка не уходит с вашего компьютера.">
+<meta name="description" content="Загрузите выписку из 1С — покажем, кому вы платили, сколько денег на кону по статье 54.1 НК и что сделать на этой неделе. Выписка не уходит с компьютера.">
 <link rel="canonical" href="https://deloskop.ru/kontragenty-iz-vypiski/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Кому вы платите: проверка поставщиков по выписке — Делоскоп">
@@ -99,7 +99,12 @@ h1{font-size:clamp(30px,5vw,44px);line-height:1.1;letter-spacing:-.03em;margin:1
 .card small{color:var(--accent);font-weight:600;font-size:13px}.card b{display:block;font-size:19px;line-height:1.3;margin:4px 0 6px;font-weight:600;letter-spacing:-.01em}.card span{color:var(--muted);font-size:15px}
 footer{max-width:1120px;margin:0 auto;padding:28px 20px 40px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:14px;color:var(--muted);border-top:1px solid var(--line)}
 footer a{color:var(--muted)}
-@media print{.top,.tool .drop,.row2,.stake .cta,.how,.more,.src,footer,.priv{display:none!important}body{background:#fff}.stake{background:#fff;color:#000;border:1px solid #ccc}.stake p,.stake .k{color:#333}}
+@media print{.top,.tool .drop,.row2,.stake .cta,.how,.faq,.more,.src,footer,.priv{display:none!important}body{background:#fff}.stake{background:#fff;color:#000;border:1px solid #ccc}.stake p,.stake .k{color:#333}}
+.faq{margin-top:40px}.faq h2{font-size:26px;letter-spacing:-.02em;margin:0 0 8px}
+.faq details{background:var(--card);border-radius:18px;padding:16px 20px;margin:10px 0}
+.faq summary{cursor:pointer;font-weight:600;font-size:17px;list-style:none}.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:'+';float:right;color:var(--muted);font-weight:400}.faq details[open] summary::after{content:'–'}
+.faq p{margin:10px 0 0;color:var(--ink2);font-size:16px}
 </style>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Кому вы платите — Делоскоп","url":"https://deloskop.ru/kontragenty-iz-vypiski/","applicationCategory":"BusinessApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"RUB"},"description":"Проверка поставщиков по выписке из 1С: деньги на кону по статье 54.1 НК и три дела на неделю. Выписка не уходит с компьютера."}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
@@ -216,6 +221,12 @@ footer a{color:var(--muted)}
 <li><strong>Размытое назначение</strong> — «оплата по счёту» без предмета. И банк, и налоговая начинают с назначения.</li>
 <li><strong>Переводы физлицам и доля налогов</strong> — то, на что банк смотрит по 115-ФЗ.</li>
 </ul>
+</section>
+
+<section class="faq"><h2>Частые вопросы</h2>
+<details><summary>Куда уходит моя выписка?</summary><p>Никуда. Выписка читается прямо в браузере на вашем компьютере. Если вы сами нажмёте «Проверить по реестрам», на сервер уйдёт только список ИНН поставщиков — без сумм, дат и назначений платежей.</p></details>
+<details><summary>Что такое «деньги на кону»?</summary><p>Сумма, которую налоговая может доначислить, если признает поставщика технической компанией по статье 54.1 НК: вычет НДС, налог с расходов и штраф. Мягкий сценарий — с налоговой реконструкцией и штрафом 20%, жёсткий — без реконструкции и со штрафом 40%. Пени считаются отдельно.</p></details>
+<details><summary>Какую выписку загрузить?</summary><p>Файл обмена с 1С (kl_to_1c.txt или похожий), который выгружает любой интернет-банк: «Выписка → Экспорт в 1С». Лучше за квартал или год. Можно загрузить несколько файлов сразу — например, по разным счетам.</p></details>
 </section>
 
 <section class="src"><h2>Основания</h2><ol>
@@ -381,6 +392,6 @@ window.__kontr={state:state,render:render};
 })();
 </script>
 <script src="/obnovleniya.js" defer></script>
-<!--podval--><div class="podval" role="contentinfo"><div class="podval__in"><div class="podval__cols"><nav class="podval__col" aria-label="Продукты"><p class="podval__h">Продукты</p><ul><li><a href="/">Проверка по ИНН</a></li><li><a href="/indeks/">Индекс Делоскопа</a></li><li><a href="/#shield">Щит</a></li><li><a href="/nalichnye/">Наличные глазами банка</a></li><li><a href="/kontragenty-iz-vypiski/">Кому вы платите</a></li><li><a href="/proverit-schet/">Проверь счёт</a></li><li><a href="/skoraya-115-fz/">Скорая 115-ФЗ</a></li><li><a href="/pasport/">Паспорт</a></li><li><a href="/delopis/">Делопись</a></li><li><a href="/tarify/">Тарифы</a></li></ul></nav><nav class="podval__col" aria-label="Знания"><p class="podval__h">Знания</p><ul><li><a href="/115-fz/">115-ФЗ простыми словами</a></li><li><a href="/nalogi/">Налоги</a></li><li><a href="/obnovleniya/">Что нового</a></li></ul></nav><nav class="podval__col" aria-label="Компания"><p class="podval__h">Компания</p><ul><li><a href="/indeks/#metodika">Методика Индекса</a></li><li><a href="/cabinet.html">Кабинет</a></li><li><a href="/rekvizity/">Реквизиты и контакты</a></li><li><a href="mailto:help@deloskop.ru">help@deloskop.ru</a></li></ul></nav><nav class="podval__col" aria-label="Документы"><p class="podval__h">Документы</p><ul><li><a href="/oferta/">Публичная оферта</a></li><li><a href="/politika/">Политика обработки ПДн</a></li><li><a href="/soglasie/">Согласие на обработку ПДн</a></li><li><a href="/cookies/">Cookies и Метрика</a></li><li><a href="/vozvrat/">Возврат денег</a></li><li><a href="/rekvizity/">Реквизиты</a></li></ul></nav></div><div class="podval__niz"><p>© 2026 Делоскоп</p><p>Материалы носят информационный характер и не заменяют консультацию юриста</p></div></div></div><!--/podval-->
+<!--podval--><div class="podval" role="contentinfo"><div class="podval__in"><div class="podval__cols"><nav class="podval__col" aria-label="Продукты"><p class="podval__h">Продукты</p><ul><li><a href="/">Проверка по ИНН</a></li><li><a href="/indeks/">Индекс Делоскопа</a></li><li><a href="/#shield">Щит</a></li><li><a href="/nalichnye/">Наличные глазами банка</a></li><li><a href="/kontragenty-iz-vypiski/">Кому вы платите</a></li><li><a href="/proverit-schet/">Проверь счёт</a></li><li><a href="/skoraya-115-fz/">Скорая 115-ФЗ</a></li><li><a href="/pasport/">Паспорт</a></li><li><a href="/delopis/">Делопись</a></li><li><a href="/tarify/">Тарифы</a></li></ul></nav><nav class="podval__col" aria-label="Знания"><p class="podval__h">Знания</p><ul><li><a href="/115-fz/">115-ФЗ простыми словами</a></li><li><a href="/nalogi/">Налоги</a></li><li><a href="/obnovleniya/">Что нового</a></li></ul></nav><nav class="podval__col" aria-label="Компания"><p class="podval__h">Компания</p><ul><li><a href="/indeks/#metodika">Методика Индекса</a></li><li><a href="/cabinet.html">Кабинет</a></li><li><a href="/rekvizity/">Реквизиты и контакты</a></li><li><a href="mailto:help@deloskop.ru">help@deloskop.ru</a></li></ul></nav><nav class="podval__col" aria-label="Документы"><p class="podval__h">Документы</p><ul><li><a href="/oferta/">Публичная оферта</a></li><li><a href="/politika/">Политика обработки ПДн</a></li><li><a href="/soglasie/">Согласие на обработку ПДн</a></li><li><a href="/rassylki/">Согласие на рассылки</a></li><li><a href="/cookies/">Cookies и Метрика</a></li><li><a href="/vozvrat/">Возврат денег</a></li><li><a href="/partneram/usloviya/">Условия для партнёров</a></li><li><a href="/rekvizity/">Реквизиты</a></li></ul></nav></div><div class="podval__niz"><p>© 2026 Делоскоп</p><p>Сотрудничество, отзывы и предложения — <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>. Принимаем 24/7</p><p>Материалы носят информационный характер и не заменяют консультацию юриста</p></div></div></div><!--/podval-->
 </body>
 </html>

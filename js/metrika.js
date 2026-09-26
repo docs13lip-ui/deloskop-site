@@ -2,7 +2,7 @@
    Счётчик 113083788, Вебвизор выключен. Код Метрики не загружается, пока человек не нажал «Принять»
    в баннере cookies; «Только необходимые» — не загружается. Выбор хранится в браузере 12 месяцев.
    Цели: window.dlkGoal("check_started" | "report_opened" | "invoice_created" | "registration" |
-   "article_to_tool" | "whatsnew_open", {параметры}) — без согласия ничего не отправляет. */
+   "article_to_tool" | "whatsnew_open" | "pkg_view" | "pkg_cta", {параметры}) — без согласия ничего не отправляет. */
 (function () {
   "use strict";
   var ID = 113083788;

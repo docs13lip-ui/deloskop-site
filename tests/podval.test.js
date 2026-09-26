@@ -73,7 +73,7 @@ test('документы продавца: title ≤ 70, description ≤ 160, ca
 test('оферта — в лицензионной редакции налогового юриста, без выделенного НДС', () => {
   const t = chitat('oferta/index.html');
   assert.ok(t.includes('простой неисключительной лицензии'));
-  assert.ok(t.includes('п. 1 ст. 145 НК РФ'));
+  assert.ok(/п\.(\s|&nbsp;)1 ст\.(\s|&nbsp;)145 НК РФ/.test(t));
   assert.ok(t.includes('на дату открытия доступа'));
   assert.ok(!/НДС 2[02]\s?%/.test(t), 'выделенный НДС в оферте');
   assert.ok(t.includes('<!--r:ispolnitel-->') && t.includes('<!--rekvizity-->'));
@@ -91,10 +91,13 @@ test('пока реквизиты не заполнены — строки ИП 
   }
 });
 
-test('форма счёта: согласие ведёт на отдельный текст согласия (ч. 1 ст. 9 152-ФЗ)', () => {
+test('форма счёта: без галочки согласия, строка про оферту и Политику (п. 57; основание — договор, п. 5 ч. 1 ст. 6 152-ФЗ)', () => {
   const js = chitat('js/schet.js');
-  assert.ok(js.includes('href="/soglasie/"'));
-  assert.ok(js.includes('href="/oferta/"'));
+  assert.ok(!js.includes('type="checkbox" data-p="soglasie_pd"'), 'галочка согласия в форме счёта не нужна');
+  assert.ok(js.includes('Нажимая кнопку, вы принимаете <a href="/oferta/"'));
+  assert.ok(js.includes('как мы обрабатываем данные — в <a href="/politika/"'));
+  // пока на сервере schet-v1, поле обязательно — форма шлёт его сама; schet-v2 его игнорирует
+  assert.ok(js.includes('soglasie_pd: true'));
 });
 
 test('налоговые правки п. 36 на месте', () => {

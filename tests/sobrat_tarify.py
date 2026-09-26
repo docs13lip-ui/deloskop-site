@@ -109,6 +109,13 @@ main{max-width:1120px}
 .period button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .period em{font-style:normal;color:var(--ok);font-weight:600}
 .plans{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:22px 0 10px}
+.osn-band{display:flex;align-items:center;justify-content:space-between;gap:16px 40px;flex-wrap:wrap;margin:26px 0 0;padding:20px 24px;border-radius:var(--r);background:#EEF3FC}
+.osn-band h2{margin:0;font-size:22px;line-height:1.25;letter-spacing:-.01em}
+.osn-band p{margin:4px 0 0;font-size:15px;color:var(--ink2)}
+.osn-band__r{display:flex;align-items:center;gap:16px}
+.osn-band__p{font-weight:600;font-size:22px;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap}
+.osn-band .cta{min-width:140px}
+@media (max-width:620px){.osn-band{padding:20px}.osn-band__r{width:100%;justify-content:space-between}}
 .plan{background:var(--card);border-radius:var(--r);padding:24px 22px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
 .plan.pro{box-shadow:0 0 0 2px var(--accent),0 16px 40px rgba(11,99,229,.12)}
 .plan-name{font-size:21px;font-weight:600;letter-spacing:-.01em;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -174,6 +181,13 @@ opis = (f"Тарифы Делоскопа: бесплатно, Старт — {r
         f"За год — скидка {D['skidka_god_procent']}%. Подбор тарифа без переплаты и окупаемость в рублях.")
 t_pro = next(t for t in D['tarify'] if t['id'] == 'pro')
 
+_osn = D.get('osnovatel')
+OSN_BAND = (f'''<aside class="osn-band" aria-labelledby="osn-band-h">
+ <div><h2 id="osn-band-h">Тариф основателя</h2><p>«Про» на&nbsp;год для первых {_osn.get('mest', 300)} клиентов. Цена не&nbsp;растёт, пока подписка не&nbsp;прервана.</p></div>
+ <div class="osn-band__r"><span class="osn-band__p"><span data-cena="osnovatel">{f"{_osn['cena_rub']:,}".replace(',', NB)}</span>&nbsp;₽/год</span><a class="cta primary" href="/osnovatel/">Подробнее</a></div>
+</aside>
+''' if _osn and _osn.get('cena_rub') else '')
+
 page = f'''<!doctype html>
 <html lang="ru">
 <head>
@@ -208,7 +222,7 @@ page = f'''<!doctype html>
 <p class="sub">Подписка стоит меньше одной ошибки. Мы считаем это в рублях — и советуем тариф дешевле, если его хватит.</p>
 <div class="meta">Цены с 26 сентября 2026 · помесячно или за год со скидкой 20%</div>
 
-<div class="period" role="group" aria-label="Период оплаты">
+{OSN_BAND}<div class="period" role="group" aria-label="Период оплаты">
   <button type="button" data-period="mes" aria-pressed="true" class="on">Помесячно</button>
   <button type="button" data-period="god" aria-pressed="false">За год <em>−20%</em></button>
 </div>
@@ -324,3 +338,39 @@ if '/js/schet.js' not in _m:
     _m = _m.replace('</body>', '<script src="/js/schet.js" defer></script>\n</body>', 1)
 open(_mp, 'w', encoding='utf-8').write(_m)
 print('главная ok')
+
+
+# Разовые продукты (п. 6 «Скорая под ключ», п. 4 «Основатель»): цены на страницах — только из tarify.json,
+# в узлах <span data-cena="<ключ>">. Обходим все страницы, где такие узлы бывают (26.09: + оферта, /osnovatel/).
+import re as _re3
+_RAZOVYE = {k: v for k, v in D.items() if isinstance(v, dict) and v.get('razovo') and v.get('cena_rub')}
+for _f in ('skoraya-115-fz/index.html', 'oferta/index.html', 'osnovatel/index.html', 'tarify/index.html', 'index.html'):
+    _sk = os.path.join(ROOT, _f)
+    if not os.path.exists(_sk):
+        continue
+    _t = open(_sk, encoding='utf-8').read()
+    _t2 = _t
+    for _k, _v in _RAZOVYE.items():
+        _c = _v['cena_rub']
+        _t2 = _re3.sub(r'(<span[^>]* data-cena="' + _k + r'">)[^<]*(</span>)', lambda m, _c=_c: m.group(1) + f'{_c:,}'.replace(',', NB) + m.group(2), _t2)
+    if _t2 != _t:
+        open(_sk, 'w', encoding='utf-8').write(_t2)
+
+# Цены тарифов в тексте других страниц: <span data-cena="pro.god"> / "pro.mesyac" (например, «Обычный год «Про»» на /osnovatel/)
+_TAR = {x['id']: x for x in D['tarify']}
+for _f in ('osnovatel/index.html',):
+    _sk = os.path.join(ROOT, _f)
+    if not os.path.exists(_sk):
+        continue
+    _t = open(_sk, encoding='utf-8').read()
+    _t2 = _re3.sub(r'(<span[^>]* data-cena="(\w+)\.(god|mesyac)">)[^<]*(</span>)',
+                   lambda m: m.group(1) + f"{_TAR[m.group(2)][m.group(3)]:,}".replace(',', NB) + m.group(4), _t)
+    # «Что входит» — тот же список, что в карточке тарифа на /tarify/ (один источник правды)
+    def _spisok(m):
+        tar = _TAR[m.group(1)]
+        punkty = list(tar['chto']) + ['Счёт, акт и закрывающие документы']
+        return (m.group(0)[:m.group(0).index('<!--tarif-list-->') + len('<!--tarif-list-->')]
+                + ''.join('<li>' + html.escape(x) + '</li>' for x in punkty) + '<!--/tarif-list-->')
+    _t2 = _re3.sub(r'data-tarif-list="(\w+)"><!--tarif-list-->.*?<!--/tarif-list-->', _spisok, _t2, flags=_re3.S)
+    if _t2 != _t:
+        open(_sk, 'w', encoding='utf-8').write(_t2)

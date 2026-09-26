@@ -59,3 +59,10 @@ test('лента: время выкладки ЧЧ:ММ у выложенных 
     assert.match(s, /<time datetime="/, f);
   }
 });
+
+test('robots.txt: кабинет, админка и страницы счетов закрыты; ?ref= склеивается (п. 72 д)', () => {
+  const r = fs.readFileSync(path.join(__dirname, '..', 'robots.txt'), 'utf8');
+  for (const d of ['Disallow: /cabinet.html', 'Disallow: /admin.html', 'Disallow: /schet/dokument/', 'Clean-param: ref /', 'Sitemap: https://deloskop.ru/sitemap.xml'])
+    assert.ok(r.includes(d), 'нет строки ' + d);
+  assert.ok(!/Disallow: \/\s*$/m.test(r), 'сайт целиком закрыт');
+});

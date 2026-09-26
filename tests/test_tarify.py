@@ -41,7 +41,7 @@ ok('страница: tarify.js стартует с помесячно', 'var pe
 for tid in ('start', 'pro', 'biznes'):
     t = T[tid]
     ek = t["mesyac"] * 12 - t["god"]
-    ok(f'страница: карточка {tid} — месяц крупно', f'>{R_(t["mesyac"])}</b><span>в месяц</span>' in pg)
+    ok(f'страница: карточка {tid} — месяц крупно', f'>{R_(t["mesyac"])}</b><span data-m="в месяц" data-y="в месяц при оплате за год">в месяц</span>' in pg)
     ok(f'страница: карточка {tid} — год и экономия', f'>или {R_(t["god"])} за год — экономия {R_(ek)}</div>' in pg)
     ok(f'страница: карточка {tid} — две кнопки', f'data-tarif="{tid}" data-srok="mes"' in pg and f'>Оплатить год — {R_(t["god"])}</a>' in pg)
 ok('страница: цены месяца в описании для поиска', all(R_(T[x]["mesyac"]) in re.search(r'<meta name="description" content="([^"]+)"', pg).group(1) for x in ('start', 'pro', 'biznes')))
@@ -76,5 +76,11 @@ ok('страница: «Без НДС» с нормой', 'освобождён 
 _sp = open(os.path.join(R, 'schet/index.html'), encoding='utf-8').read()
 ok('/schet/: noindex и не в sitemap', 'name="robots" content="noindex"' in _sp and '/schet/' not in open(os.path.join(R, 'sitemap.xml'), encoding='utf-8').read())
 ok('/schet/dokument/: noindex', 'content="noindex"' in open(os.path.join(R, 'schet/dokument/index.html'), encoding='utf-8').read())
+
+# п. 72 (а): на главной нет годовых цен, которых нет в tarify.json (на живом 26.09 были 4 900 / 14 900 / 49 900 против 4 700 / 14 300 / 47 900)
+_goda = {T[x]["god"] for x in ('start', 'pro', 'biznes')}
+_na_glavnoj = {int(re.sub(r'\D', '', m)) for m in re.findall(r'(\d[\d\u00a0\u202f ]*)[\u00a0 ]₽ за год', main)}
+ok('главная: все цены «за год» = tarify.json', _na_glavnoj <= _goda and len(_na_glavnoj) > 0)
+ok('главная и /tarify/: подпись «в месяц при оплате за год» у цены года', main.count('data-y="в месяц при оплате за год"') == 3 and pg.count('data-y="в месяц при оплате за год"') == 3)
 
 print(f'\n{n} проверок пройдено')

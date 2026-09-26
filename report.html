@@ -224,6 +224,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
 <article class="doc" id="doc" hidden></article>
 <script src="/js/usloviya.js"></script>
 <script src="/js/nedavnie.js"></script>
+<script src="/js/inn.js"></script>
 <script>
 (function(){
   var API=(location.hostname.endsWith('deloskop.ru')?'https://api.deloskop.ru':'');
@@ -245,8 +246,9 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
     i.addEventListener('input',function(){n.className='pusto__note';n.textContent=''});
     f.onsubmit=function(e){e.preventDefault();
       var v=i.value.replace(/\D/g,'');
-      if(v.length!==10&&v.length!==12){n.className='pusto__note err';
-        n.textContent=/[A-Za-zА-Яа-яЁё]/.test(i.value)?'Здесь — только ИНН. По названию найдём на главной.':'ИНН компании — 10 цифр, ИНН ИП — 12.';i.focus();return;}
+      if(/[A-Za-zА-Яа-яЁё]/.test(i.value)){n.className='pusto__note err';n.textContent='Здесь — только ИНН. По названию найдём на главной.';i.focus();return;}
+      var oi=window.DlkInn?DlkInn.oshibka(v):((v.length!==10&&v.length!==12)?'ИНН компании — 10 цифр, ИНН ИП — 12.':'');
+      if(oi){n.className='pusto__note err';n.textContent=oi;i.focus();return;}
       location.href='/?inn='+v;};
     if(!/Mobi/i.test(navigator.userAgent))i.focus();
   }
@@ -258,6 +260,13 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
   function load(){
     fetch(API+'/api/report/'+encodeURIComponent(id)).then(function(r){if(!r.ok)throw r.status;return r.json()}).then(function(d){if(window.dlkGoal)dlkGoal('report_opened');return render(d);})
       .catch(function(s){if(s===404||s===410)pusto('Отчёт по этой ссылке не найден: возможно, в ней опечатка. Проверьте компанию заново — это займёт несколько секунд.');else oshibka();});
+  }
+  // ссылка вида /report.html?inn=… — сразу запускаем проверку на главной (там поиск, отчёт и «Недавние»)
+  var qinn=(new URLSearchParams(location.search).get('inn')||'').replace(/\D/g,'');
+  if(!id&&qinn){
+    if(!window.DlkInn||DlkInn.ok(qinn)){location.replace('/?inn='+qinn);return;}
+    pusto('В ссылке ИНН '+qinn+' — '+(qinn.length===10||qinn.length===12?'с опечаткой: контрольная цифра не сходится.':'неполный.')+' Сверьте цифры и проверьте компанию заново.');
+    document.getElementById('pustoInn').value=qinn;return;
   }
   if(!id){pusto();return;}
   if(!/^[A-Za-z0-9_-]{8,24}$/.test(id)){pusto('Ссылка на отчёт неполная — похоже, при копировании потерялась часть адреса. Проверьте компанию заново.');return;}

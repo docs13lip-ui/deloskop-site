@@ -2,5 +2,9 @@ User-agent: *
 Allow: /
 Disallow: /nalichnye/tests/
 Disallow: /tests/
+Disallow: /cabinet.html
+Disallow: /admin.html
+Disallow: /schet/dokument/
+Clean-param: ref /
 
 Sitemap: https://deloskop.ru/sitemap.xml

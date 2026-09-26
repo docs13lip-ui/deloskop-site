@@ -38,3 +38,9 @@ test('1-МР Банка России: обе ветки порога и ссыл
     assert.ok(s.includes('https://www.cbr.ru/Crosscut/LawActs/File/12196'), f + ': нет ссылки на 1-МР на cbr.ru');
   }
 });
+
+test('«Снятие наличных»: НДФЛ — по первоисточнику (ст. 224 НК), без ссылки на страницу банка (п. 72 в, юрист 115-ФЗ)', () => {
+  const t = fs.readFileSync(path.join(__dirname, '..', '115-fz/snyatie-nalichnyh-s-raschetnogo-scheta/index.html'), 'utf8');
+  assert.ok(!/sberbank\.ru/.test(t), 'ссылка на sberbank.ru');
+  assert.ok(t.includes('cons_doc_LAW_28165') && t.includes('статья 224'));
+});

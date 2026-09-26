@@ -32,7 +32,7 @@ def cena_i_knopki(t, nb=NB):
     rn = lambda x: f'{x:,}'.replace(',', NB) + NB + '₽'  # в мелкой строке всегда неразрывные: «3 580 ₽» не рвётся
     per_m = f'или {rn(g)} за год — экономия {rn(ek)}'
     per_y = f'{rn(g)} одним платежом — экономия {rn(ek)}'
-    price = (f'<div class="price"><b data-m="{r(m)}" data-y="{r(mes_god(t))}">{r(m)}</b><span>в месяц</span></div>'
+    price = (f'<div class="price"><b data-m="{r(m)}" data-y="{r(mes_god(t))}">{r(m)}</b><span data-m="в месяц" data-y="в месяц при оплате за год">в месяц</span></div>'
              f'<div class="per" data-m="{per_m}" data-y="{per_y}">{per_m}</div>')
     # кнопки ведут на форму «Получить счёт» (п. 23): с JS — окно поверх (js/schet.js), без JS — страница /schet/
     mail = lambda srok: f'/schet/?tarif={t["id"]}&amp;srok={srok}'
@@ -266,7 +266,7 @@ page = f'''<!doctype html>
     <div class="nal" id="o-nal" hidden>Наличные — отдельная зона внимания банка: частые снятия и крупные суммы наличными — один из признаков из рекомендаций Банка России. <a href="/115-fz/snyatie-nalichnyh-s-raschetnogo-scheta/">Как снимать без вопросов банка →</a></div>
   </div>
 </div>
-<p class="pod">Расчёт по нормам Налогового кодекса: вычет НДС {R['nds']}%, штраф {R['shtraf_122']}% по ст. 122 НК, пени за 2 года по ст. 75 НК при ключевой ставке {round(R['klyuchevaya_stavka']*100, 2):g}% ({R['klyuchevaya_stavka_istochnik']}). Это пример, а не прогноз по вашей компании. {R['dnej_prostoya_poyasnenie']}</p>
+<p class="pod">Расчёт по нормам Налогового кодекса: вычет НДС {R['nds']}%, штраф {R['shtraf_122']}% по ст. 122 НК, пени за 2 года по ст. 75 НК — оценка по нынешней ключевой ставке {round(R['klyuchevaya_stavka']*100, 2):g}% ({R['klyuchevaya_stavka_istochnik']}); в 2024–2025 годах ставка доходила до 21%, поэтому по давним сделкам пени выше. Это пример, а не прогноз по вашей компании. {R['dnej_prostoya_poyasnenie']}</p>
 
 <div class="uzko">
 <h2 class="big" id="god">Месяц × 12 или сразу за год</h2>

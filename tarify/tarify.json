@@ -35,6 +35,7 @@
   "raschet": {
     "klyuchevaya_stavka": 0.14,
     "klyuchevaya_stavka_istochnik": "действует с 27.07.2026, Банк России сохранил её 11.09.2026",
+    "klyuchevaya_stavka_sleduyushchee_reshenie": "2026-10-23",
     "nds": 22,
     "nalog_na_pribyl": 25,
     "shtraf_122": 20,

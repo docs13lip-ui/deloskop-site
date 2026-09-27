@@ -55,3 +55,45 @@ test('Д: «не проверено» ≠ «не обнаружено» — об
   assert.match(chitat('index.html'), /не&nbsp;проверено/);
   assert.match(chitat('indeks/index.html'), /Нет данных — не нарушение/);
 });
+
+// Прорыв «Т» (27.09, 10:05): честность — и для картинок. Правка текста не чинит смысл, если его несёт рисунок.
+// Словарь запретов проверяем внутри <svg>, в aria-label, alt и title — там, где читатель видит смысл раньше подписи.
+const ZAPRETY = [
+  [/×\s*2(?!\d)/, '«×2» — обещание кратных шансов до отчёта точности'],
+  [/(?<!не\s)(?<!не&nbsp;)вероятност/i, '«вероятность» без отрицания'],
+  [/шанс/i, '«шанс» на рисунке'],
+  [/гарантир/i, '«гарантируем» на рисунке'],
+  [/заблокирован\S*\s+(?:\S+\s+){0,3}(?:млн|миллион)/i, '«заблокировано … млн» без источника'],
+];
+function kuskiRisunkov(t) {
+  const kuski = [];
+  for (const m of t.matchAll(/<svg[\s\S]*?<\/svg>/g)) kuski.push(m[0]);
+  for (const m of t.matchAll(/\s(?:aria-label|alt|title)="([^"]*)"/g)) kuski.push(m[1]);
+  return kuski;
+}
+
+test('Т: рисунки и подписи для незрячих не обещают больше текста (словарь честности)', () => {
+  for (const f of html) {
+    const t = fs.readFileSync(f, 'utf8');
+    for (const k of kuskiRisunkov(t)) for (const [re, pochemu] of ZAPRETY) {
+      assert.ok(!re.test(k), path.relative(KOREN, f) + ': ' + pochemu + ' → «' + (k.match(re) || [''])[0] + '»');
+    }
+  }
+});
+
+test('Т: словарь сам по себе работает (ловит «×2» и пропускает «не вероятность»)', () => {
+  const plohoj = '<svg><text class="x2">×2</text></svg>';
+  assert.ok(kuskiRisunkov(plohoj).some((k) => ZAPRETY[0][0].test(k)));
+  const horoshij = '<svg role="img" aria-label="Шкала — оценка признаков, не вероятность."></svg>';
+  assert.ok(!kuskiRisunkov(horoshij).some((k) => ZAPRETY.some(([re]) => re.test(k))));
+});
+
+test('Г: шкала на /indeks/ — зоны и отметки 1…99, без дуг «×2»', () => {
+  const t = chitat('indeks/index.html');
+  const svg = t.match(/<svg class="lineyka"[\s\S]*?<\/svg>/)[0];
+  assert.ok(!/class="x2"/.test(t), 'остался класс .x2');
+  for (const z of ['Опасно', 'Высокий риск', 'Есть вопросы', 'Надёжная']) assert.ok(svg.includes(z), z);
+  assert.match(svg, /class="tk">1</);
+  assert.match(svg, /class="tk">99</);
+  assert.ok(!/компания закроет текущие долги вдвое/.test(t));
+});

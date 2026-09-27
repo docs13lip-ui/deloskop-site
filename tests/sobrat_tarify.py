@@ -296,7 +296,7 @@ page = f'''<!doctype html>
 <section class="src"><h2>Источники</h2><ol>
 <li><a href="https://www.consultant.ru/law/hotdocs/91121.html" rel="noopener" target="_blank">Федеральный закон от 15.10.2025 № 376-ФЗ — запрет автосписаний после отказа потребителя, с 1 марта 2026</a></li>
 <li><a href="https://www.consultant.ru/document/cons_doc_LAW_19671/" rel="noopener" target="_blank">Налоговый кодекс РФ: ст. 54.1, 75, 122, 171–172</a></li>
-<li><a href="https://www.cbr.ru/press/keypr/" rel="noopener" target="_blank">Банк России: ключевая ставка 14% с 11 сентября 2026</a></li>
+<li><a href="https://www.cbr.ru/hd_base/KeyRate/" rel="noopener" target="_blank">Банк России: ключевая ставка {round(R['klyuchevaya_stavka']*100, 2):g}% — {R['klyuchevaya_stavka_istochnik']}</a></li>
 <li><a href="https://www.consultant.ru/document/cons_doc_LAW_32834/" rel="noopener" target="_blank">Федеральный закон № 115-ФЗ, ст. 7 — отказ в операциях и реабилитация</a></li>
 </ol></section>
 <p class="disc">Цены указаны за доступ к сервису. Материалы носят информационный характер и не заменяют консультацию юриста.</p>

@@ -1,0 +1,38 @@
+/* Делоскоп — «Проверь счёт»: блок «Проверка реквизитов» (.acc), Очередь п. 82; вид — Арт-директор 27.09 §3а и 28.09 §3–4.
+   Страница пока на своих стилях, поэтому токены ds.css заведены только в области блока (.acc-box).
+   Значения токенов обязаны совпадать с /css/ds.css — это держит tests/acc.test.js. Цвет риска — только у ошибки и найденных приостановок. */
+.acc-box{
+ --surface:#FFFFFF;--surface-2:#EEEEEA;--ink:#1D1D1F;--ink-2:#48484C;--muted:#6B6B70;--line:#E6E6E1;
+ --bad:#B3261E;--high:#C2410C;
+ --font:Onest,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+ --t-h3:22px;--t-body:17px;--t-small:15px;--t-caption:13px;
+ --r-l:24px;
+ display:grid;gap:14px;margin:0 0 18px;padding:clamp(18px,3vw,26px);border-radius:var(--r-l);
+ background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);font-family:var(--font);color:var(--ink)
+}
+.acc-box *,.acc-box *::before,.acc-box *::after{box-sizing:border-box}
+.acc-box__eyebrow{margin:0;font-size:var(--t-caption);font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.acc-box__t{margin:0;font:600 var(--t-h3)/1.25 var(--font);letter-spacing:-.02em;text-wrap:balance}
+.acc{margin:0;padding:0;list-style:none}
+.acc li{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:2px 12px;padding:14px 0;border-top:1px solid var(--line);align-items:start}
+.acc li:first-child{border-top:0;padding-top:0}
+.acc__i{display:inline-block;width:12px;height:12px;margin-top:5px;border-radius:50%}
+.acc .is-fact .acc__i{background:var(--ink-2)}
+.acc .is-calc .acc__i{width:9px;height:9px;margin:6px 0 0 1px;border-radius:2px;transform:rotate(45deg);box-shadow:inset 0 0 0 2px var(--ink-2)}
+.acc .is-none .acc__i{box-shadow:inset 0 0 0 1.5px var(--muted)}
+.acc .is-bad .acc__i{border-radius:2px;background:var(--bad)}
+.acc .is-high .acc__i{width:0;height:0;border-radius:0;border:6px solid transparent;border-bottom:11px solid var(--high);border-top:0;margin-top:4px}
+.acc__n{margin:0;font:600 var(--t-body)/1.4 var(--font)}
+.acc__m{grid-column:2/-1;margin:0;font-size:var(--t-small);line-height:1.45;color:var(--ink-2)}
+.acc__v{font-size:var(--t-small);font-weight:600;white-space:nowrap}
+.acc .is-none .acc__v{color:var(--ink-2);font-weight:500}
+.acc .is-bad .acc__v{color:var(--bad)}
+.acc .is-high .acc__v{color:var(--high)}
+.acc-box__leg{display:flex;flex-wrap:wrap;gap:6px 18px;margin:0;padding-top:12px;border-top:1px solid var(--line);font-size:var(--t-caption);color:var(--muted)}
+.acc-box__leg>span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.acc-box__leg .acc__i{margin-top:0}
+.acc-box__leg .is-fact .acc__i{background:var(--ink-2)}
+.acc-box__leg .is-calc .acc__i{width:8px;height:8px;border-radius:2px;transform:rotate(45deg);box-shadow:inset 0 0 0 2px var(--ink-2)}
+.acc-box__leg .is-none .acc__i{box-shadow:inset 0 0 0 1.5px var(--muted)}
+@media (max-width:640px){.acc li{grid-template-columns:22px minmax(0,1fr)} .acc__v{grid-column:2;white-space:normal}}
+@media print{.acc-box{box-shadow:none;border:1px solid #ccc}}

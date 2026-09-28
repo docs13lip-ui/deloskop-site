@@ -65,6 +65,16 @@
       var a = f.querySelector("[name=aktiv]:checked"); p.aktivnyj_bank = a ? a.value : null;
       return p;
     }
+    function sobratPub() {
+      var q = {};
+      [].forEach.call(f.querySelectorAll("[data-p]"), function (i) { q[i.dataset.p] = i.type === "checkbox" ? i.checked : i.value.trim(); });
+      return q;
+    }
+    function naSajte(v) {
+      if (v && v.est) return "На сайте показываем: ИП " + v.fio + ", ИНН " + v.inn + ", ОГРНИП " + v.ogrnip + " — на страницах документов сразу, в подвале — после ближайшей выкладки.";
+      var q = sobratPub();
+      return q.pokazyvat ? "На сайт пока не выводим: проверьте ФИО, ИНН (12 цифр) и ОГРНИП — контрольные цифры не сходятся." : "На сайте реквизиты не показываем (галочка «Показывать на сайте» снята).";
+    }
     function proverka() {   // подсветка сразу, до сохранения: ключ счёта ловит опечатку в одной цифре
       var p = sobrat(), bad = [];
       function m(k, cond) { var i = pole(k); var b = !!i.value && !cond; i.setAttribute("aria-invalid", b); if (b) bad.push(i); }
@@ -77,8 +87,14 @@
       e.preventDefault();
       var bad = proverka();
       call("/api/admin/rekvizity", { method: "POST", body: sobrat() }).then(function (j) {
-        note($("rekNote"), j.nehvataet.length ? "Сохранено. Для счёта ещё нужно: " + j.nehvataet.join("; ") + "." : "Сохранено. Новые счета выставляются с этими реквизитами.", j.nehvataet.length ? "" : "ok");
+        var t = j.nehvataet.length ? "Сохранено. Для счёта ещё нужно: " + j.nehvataet.join("; ") + "." : "Сохранено. Новые счета выставляются с этими реквизитами.";
+        note($("rekNote"), t, j.nehvataet.length ? "" : "ok");
         if (bad.length) bad[0].focus();
+        if ($("rekPub").hidden) return;
+        // rekv-v1: что показывать на сайте — отдельным запросом (schet.py не меняли)
+        return call("/api/admin/rekvizity/publichnye", { method: "POST", body: sobratPub() }).then(function (k) {
+          note($("rekNote"), t + " " + naSajte(k.na_sajte), j.nehvataet.length ? "" : "ok");
+        });
       }).catch(function (e2) { note($("rekNote"), e2.message, "err"); });
     };
     call("/api/admin/rekvizity").then(function (j) {
@@ -91,6 +107,14 @@
       $("rekSub").textContent = (j.nehvataet.length ? "Счета пока не выставляются — не хватает: " + j.nehvataet.join("; ") + ". Заявки при этом сохраняются." : "Реквизиты в порядке: новые счета выставляются сразу.") +
         (j.pisma ? "" : " Письма клиентам не отправляются — не задан SMTP (переменные окружения API): отвечайте по шаблонам «Продаж».");
       proverka();
+      // rekv-v1: блок «На сайте» появляется, только когда на сервере есть /api/admin/rekvizity/publichnye
+      call("/api/admin/rekvizity/publichnye").then(function (k) {
+        var d = k.dobavka || {};
+        [].forEach.call(f.querySelectorAll("[data-p]"), function (i) { if (i.type === "checkbox") i.checked = !!d[i.dataset.p]; else i.value = d[i.dataset.p] || ""; });
+        if (!isAdmin()) [].forEach.call(f.querySelectorAll("[data-p]"), function (x) { x.disabled = true; });
+        $("rekPubNote").textContent = naSajte(k.na_sajte) + " Расчётные счета, телефон и личная почта на сайт не попадают. Адрес — тот, что выше, «для писем и претензий»: домашний не указывайте.";
+        $("rekPub").hidden = false;
+      }).catch(function () { /* API без rekv-v1 — блока нет */ });
     }).catch(function () { rek.hidden = true; });
     spisok();
   }

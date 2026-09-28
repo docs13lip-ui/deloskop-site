@@ -1,6 +1,9 @@
-# Делоскоп: автопроверка и автовыкладка сайта
-# На каждый PR — тесты. На каждый merge в main — тесты, затем деплой в Timeweb App Platform (приложение 258987).
-# Нужен секрет репозитория TIMEWEB_TOKEN (токен API Timeweb Cloud; вставляет владелец, в код не пишется).
+# Делоскоп: проверка и выкладка сайта — ЕДИНЫЙ поток (v2, 28.09.2026, [Ночные запуски]).
+# Заменяет два файла: прежний proverka-i-vykladka.yml (тесты + деплой) и proverki.yml из site-v5 (расширенные проверки PR).
+#   PR в main      → полный набор проверок + сводка «что меняет PR» (красный крестик = не сливать).
+#   merge в main   → те же проверки → деплой в Timeweb (приложение 258987) → сайт отвечает новой версией
+#                    → IndexNow: Яндексу уходят изменённые страницы из sitemap (сам, без кнопки).
+# Нужен секрет репозитория TIMEWEB_TOKEN (уже есть — автовыкладка работает с 26.09).
 name: Проверка и выкладка
 
 on:
@@ -15,42 +18,113 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: read
+
 concurrency:
   group: vykladka-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   testy:
     name: Тесты
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.bez_testov) }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Тарифы
+
+      - name: Цены на страницах = tarify.json
         run: python3 tests/test_tarify.py
+
       - name: Шапка и подвал собраны
         run: python3 tests/sobrat_shapku.py --check
-      - name: Тесты страниц
+
+      - name: Тесты страниц (правовые тексты, SEO, ссылки, ИНН, сроки)
         run: node --test tests/*.test.*
+
+      - name: IndexNow — какие адреса уйдут Яндексу
+        run: python3 tests/test_indexnow.py
+
+      - name: Метка версии для автовыкладки (верхний id ленты уникален)
+        run: python3 tests/test_versiya_lenty.py
+
+      - name: Сборщики ничего не меняют (цены и шапку не правили руками)
+        run: |
+          python3 tests/sobrat_tarify.py . > /dev/null
+          python3 tests/sobrat_shapku.py > /dev/null
+          if ! git diff --quiet; then
+            echo "::error::После сборщиков страницы изменились — цены, шапку или подвал правили руками. Локально: python3 tests/sobrat_tarify.py . && python3 tests/sobrat_shapku.py — и закоммитить."
+            git -c core.quotepath=false diff --stat
+            exit 1
+          fi
+
+      - name: Время выкладки в ленте «Что нового»
+        # не блокирует: время ставит Выкладка перед слиянием (tests/postavit_vremya.py)
+        continue-on-error: true
+        run: |
+          if ! python3 tests/postavit_vremya.py --check; then
+            echo "::warning::У новых записей ленты нет времени выкладки. Перед слиянием: python3 tests/postavit_vremya.py"
+            exit 1
+          fi
+
+      - name: Сводка изменений для Выкладки
+        if: always() && github.event_name == 'pull_request'
+        run: |
+          BASE=${{ github.event.pull_request.base.sha }}
+          {
+            echo "### Что меняет этот PR"
+            echo ""
+            echo "| Изменение | Файлов |"
+            echo "|---|---|"
+            echo "| Добавлено | $(git diff --name-only --diff-filter=A $BASE HEAD | wc -l) |"
+            echo "| Изменено | $(git diff --name-only --diff-filter=M $BASE HEAD | wc -l) |"
+            echo "| Удалено | $(git diff --name-only --diff-filter=D $BASE HEAD | wc -l) |"
+            echo ""
+            echo "Сверьте с КАК_ВЫЛОЖИТЬ_*.md комплекта: число файлов и список удалений должны совпасть."
+            echo ""
+            echo "<details><summary>Список файлов</summary>"
+            echo ""
+            echo '```'
+            git -c core.quotepath=false diff --name-status $BASE HEAD
+            echo '```'
+            echo "</details>"
+            echo ""
+            echo "### Страницы для IndexNow после деплоя"
+            echo '```'
+            python3 tests/indexnow.py --ot $BASE --proverka || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
   vykladka:
     name: Выкладка в Timeweb
     needs: testy
     if: ${{ always() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && (needs.testy.result == 'success' || needs.testy.result == 'skipped') }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - name: Запустить деплой коммита
         env:
           TIMEWEB_TOKEN: ${{ secrets.TIMEWEB_TOKEN }}
         run: |
           if [ -z "$TIMEWEB_TOKEN" ]; then
             echo "::warning::Секрет TIMEWEB_TOKEN не задан — автовыкладка пропущена, выложить вручную в Timeweb."
+            echo "NET_TOKENA=1" >> "$GITHUB_ENV"
             exit 0
           fi
           code=$(curl -s -o otvet.json -w "%{http_code}" -X POST \
@@ -60,10 +134,45 @@ jobs:
             -d "{\"commit_sha\":\"${GITHUB_SHA}\"}")
           echo "Ответ Timeweb: $code"; head -c 600 otvet.json; echo
           test "$code" -ge 200 -a "$code" -lt 300
-      - name: Дождаться, что сайт отвечает
+
+      - name: Дождаться новой версии на живом сайте
+        if: env.NET_TOKENA != '1'
+        # Не просто «сайт отвечает», а «отвечает ЭТОЙ версией»: верхняя запись ленты «Что нового» на живом = в коммите.
         run: |
-          for i in $(seq 1 30); do
-            if curl -fsS -o /dev/null https://deloskop.ru/; then echo "Сайт отвечает"; exit 0; fi
-            sleep 10
+          ZHDEM=$(python3 tests/versiya_lenty.py)
+          echo "Ждём на живом запись ленты: ${ZHDEM:-— (нет id, проверяю только ответ сайта)}"
+          for i in $(seq 1 40); do
+            ZHIVOE=$(curl -fsS "https://deloskop.ru/obnovleniya.json?v=${GITHUB_SHA}" 2>/dev/null | python3 tests/versiya_lenty.py - || true)
+            if [ -n "$ZHIVOE" ] && { [ -z "$ZHDEM" ] || [ "$ZHIVOE" = "$ZHDEM" ]; }; then
+              echo "Живой сайт на новой версии (лента: $ZHIVOE), попытка $i"; break
+            fi
+            sleep 15
           done
-          echo "::error::Сайт не ответил за 5 минут после деплоя"; exit 1
+          if [ -n "$ZHDEM" ] && [ "$ZHIVOE" != "$ZHDEM" ]; then
+            echo "::error::За 10 минут живой сайт не показал новую версию: ждали $ZHDEM, на сайте ${ZHIVOE:-нет ответа}. Смотреть журнал сборки в Timeweb → deloskop-site."
+            exit 1
+          fi
+
+      - name: Главные страницы отвечают 200
+        if: env.NET_TOKENA != '1'
+        run: |
+          ploho=0
+          for p in / /tarify/ /indeks/ /osnovatel/ /oferta/ /politika/ /skoraya-115-fz/ /obnovleniya/ /sitemap.xml /robots.txt; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "https://deloskop.ru${p}?v=${GITHUB_SHA}")
+            echo "$code  $p"
+            [ "$code" = "200" ] || ploho=1
+          done
+          if [ "$ploho" = "1" ]; then echo "::error::Не все главные страницы отвечают 200 — см. список выше."; exit 1; fi
+
+      - name: IndexNow — сообщить Яндексу об изменённых страницах
+        if: env.NET_TOKENA != '1' && github.event_name == 'push'
+        # не блокирует выкладку: сайт уже на живом; при сбое — кнопка «IndexNow — сообщить Яндексу» вручную
+        continue-on-error: true
+        env:
+          OT: ${{ github.event.before }}
+        run: |
+          if [ -n "$OT" ] && [ "$OT" != "0000000000000000000000000000000000000000" ]; then
+            python3 tests/indexnow.py --ot "$OT" | tee -a "$GITHUB_STEP_SUMMARY"
+          else
+            python3 tests/indexnow.py | tee -a "$GITHUB_STEP_SUMMARY"
+          fi

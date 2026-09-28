@@ -1,0 +1,46 @@
+# IndexNow — сообщить Яндексу об изменённых страницах (п. 31, автоматизация шаг 4; 26.09.2026).
+# Запускать ПОСЛЕ деплоя в Timeweb (иначе Яндекс придёт за старой версией):
+#   GitHub → Actions → «IndexNow — сообщить Яндексу» → Run workflow → Run.
+# По умолчанию — страницы из последнего слияния в main; можно указать коммит «с какого» или «все страницы».
+# Отправляет только страницы из sitemap.xml. Ключ публичный (файл в корне сайта), секретов не нужно.
+name: IndexNow — сообщить Яндексу
+
+on:
+  workflow_dispatch:
+    inputs:
+      ot:
+        description: 'С какого коммита считать изменения (пусто — последнее слияние в main)'
+        required: false
+        default: ''
+      vse:
+        description: 'Отправить все страницы из sitemap.xml'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  indexnow:
+    name: Отправить адреса в IndexNow
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Отправить
+        env:
+          OT: ${{ inputs.ot }}
+          VSE: ${{ inputs.vse }}
+        run: |
+          if [ "$VSE" = "true" ]; then
+            python3 tests/indexnow.py --vse | tee -a "$GITHUB_STEP_SUMMARY"
+          elif [ -n "$OT" ]; then
+            python3 tests/indexnow.py --ot "$OT" | tee -a "$GITHUB_STEP_SUMMARY"
+          else
+            python3 tests/indexnow.py | tee -a "$GITHUB_STEP_SUMMARY"
+          fi

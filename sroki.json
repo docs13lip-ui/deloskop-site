@@ -1,0 +1,129 @@
+{
+  "_kak": "Цифры с датой жизни: ставки, пороги, лимиты и сроки, которые стоят в текстах и расчётах сайта. У каждой — где она на сайте (файл + фраза, которую ищет тест), первоисточник и дата «перепроверить до». Тест tests/sroki.test.js краснеет со следующего дня после proverit_do и если фразы больше нет в файле. Сверили цифру — обновить proverit_do, sverka и, если нужно, текст. Ставку ЦБ держит tarify.json (klyuchevaya_stavka_sleduyushchee_reshenie) — здесь та же дата. Новая цифра на сайте с датой жизни = новая строка здесь. Тексты правят профильные юристы.",
+  "versiya": "2026-09-27 черновик v1 — до сверки [Налогового юриста] и [Юриста 115-ФЗ]",
+  "sroki": [
+    {
+      "id": "stavka_cb",
+      "cifra": "Ключевая ставка Банка России 14%",
+      "gde": [{"fajl": "tarify/index.html", "ishchem": "ключевая ставка 14%"}],
+      "pochemu_menyaetsya": "Решение совета директоров Банка России; пресс-релиз в 13:30 МСК",
+      "istochnik": "https://www.cbr.ru/hd_base/KeyRate/",
+      "sverka": "2026-09-27: 14% — снижена 24.07.2026 (действует с 27.07), сохранена 11.09.2026; следующие заседания 23.10 и 18.12.2026 (cbr.ru/dkp/cal_mp/)",
+      "proverit_do": "2026-10-23",
+      "otvetstvennyj": "Выкладка"
+    },
+    {
+      "id": "peni_organizacij_5_1",
+      "cifra": "Пени организаций: 1–30 дней — 1/300 ставки, 31–90 — 1/150, с 91-го — 1/300",
+      "gde": [
+        {"fajl": "tarify/tarify.js", "ishchem": "1/150"},
+        {"fajl": "index.html", "ishchem": "640/300"}
+      ],
+      "pochemu_menyaetsya": "П. 5.1 ст. 75 НК (362-ФЗ от 29.10.2024) действует по 31.12.2026. Не продлят — с 01.01.2027 общий порядок п. 4: 1/300 первые 30 дней, затем 1/150 до уплаты. Для расчёта «пени за 2 года» это почти вдвое больше: 0,667 налога вместо 0,369 при ставке 14%",
+      "istochnik": "https://www.consultant.ru/document/cons_doc_LAW_19671/10fdf2faa7c30851b7673ac4ca893589c88f24f7/",
+      "sverka": "2026-09-27: п. 5.1 — с 01.01.2025 по 31.12.2026 (КонсультантПлюс)",
+      "proverit_do": "2026-12-15",
+      "otvetstvennyj": "Налоговый юрист"
+    },
+    {
+      "id": "nds_22",
+      "cifra": "Основная ставка НДС 22% с 01.01.2026",
+      "gde": [{"fajl": "proverit-schet/index.html", "ishchem": "22%"}],
+      "pochemu_menyaetsya": "Ставки НК меняются обычно с 1 января — сверять ежегодно в декабре",
+      "istochnik": "https://www.nalog.gov.ru/new2026/",
+      "sverka": "2026-09-27: 22% (ст. 164 НК в ред. 425-ФЗ)",
+      "proverit_do": "2026-12-15",
+      "otvetstvennyj": "Налоговый юрист"
+    },
+    {
+      "id": "pribyl_25",
+      "cifra": "Налог на прибыль 25%",
+      "gde": [{"fajl": "kontragenty-iz-vypiski/index.html", "ishchem": "25% у компаний"}],
+      "pochemu_menyaetsya": "Ст. 284 НК; ежегодная сверка",
+      "istochnik": "https://www.consultant.ru/document/cons_doc_LAW_28165/",
+      "sverka": "2026-09-27: 25% с 2025 года",
+      "proverit_do": "2026-12-15",
+      "otvetstvennyj": "Налоговый юрист"
+    },
+    {
+      "id": "ndfl_shkala",
+      "cifra": "НДФЛ 13%, с дохода свыше 2,4 млн ₽ за год — 15% (шкала 13–22%)",
+      "gde": [{"fajl": "partneram/usloviya/index.html", "ishchem": "2,4 млн"}],
+      "pochemu_menyaetsya": "Ст. 224 НК; ежегодная сверка",
+      "istochnik": "https://www.consultant.ru/document/cons_doc_LAW_28165/",
+      "sverka": "2026-09-27: шкала с 2025 года без изменений",
+      "proverit_do": "2026-12-15",
+      "otvetstvennyj": "Налоговый юрист"
+    },
+    {
+      "id": "npd_6",
+      "cifra": "НПД 6% с доходов от организаций и ИП; лимит 2,4 млн ₽ в год",
+      "gde": [{"fajl": "partneram/usloviya/index.html", "ishchem": "6% вместо 13%"}],
+      "pochemu_menyaetsya": "Эксперимент по 422-ФЗ установлен по 31.12.2028; ставки и лимит — в ст. 4 и 10 422-ФЗ",
+      "istochnik": "https://www.consultant.ru/document/cons_doc_LAW_311977/",
+      "sverka": "2026-09-27: без изменений (по данным сайта, первоисточник — сверить Налоговому юристу)",
+      "proverit_do": "2026-12-15",
+      "otvetstvennyj": "Налоговый юрист"
+    },
+    {
+      "id": "vznosy_30",
+      "cifra": "Страховые взносы обычно 30%",
+      "gde": [{"fajl": "115-fz/snyatie-nalichnyh-s-raschetnogo-scheta/index.html", "ishchem": "ст. 425 НК"}],
+      "pochemu_menyaetsya": "Тарифы и единая предельная база — ежегодно с 1 января",
+      "istochnik": "https://www.consultant.ru/document/cons_doc_LAW_28165/",
+      "sverka": "2026-09-27: 30% в пределах базы (ст. 425 НК)",
+      "proverit_do": "2026-12-15",
+      "otvetstvennyj": "Налоговый юрист"
+    },
+    {
+      "id": "usn_nds_porog",
+      "cifra": "Освобождение от НДС на УСН — доход до 20 млн ₽, по 2029 год включительно",
+      "gde": [],
+      "pochemu_menyaetsya": "228-ФЗ от 04.07.2026 изменил пп. 1 и 5 ст. 145 НК. На сайте цифры пока нет — она в документах ИП и партнёров; появится на сайте — добавить gde",
+      "istochnik": "https://www.ipbr.org/about/news/2026/07/14/vat",
+      "sverka": "2026-09-27: 20 млн ₽ в 2026–2029 (228-ФЗ); сверить формулировку «15 млн — 2030, 10 млн — с 2031» по тексту закона",
+      "proverit_do": "2026-12-15",
+      "otvetstvennyj": "Налоговый юрист"
+    },
+    {
+      "id": "nalichnye_1mln",
+      "cifra": "Операции юрлица с наличными от 1 млн ₽ — обязательный контроль",
+      "gde": [{"fajl": "nalichnye/index.html", "ishchem": "от 1 млн"}],
+      "pochemu_menyaetsya": "Пп. 1 п. 1 ст. 6 115-ФЗ — меняется поправками к закону",
+      "istochnik": "https://www.consultant.ru/document/cons_doc_LAW_32834/",
+      "sverka": "2026-09-27: 1 млн ₽ (сверено 26.09 12:05)",
+      "proverit_do": "2026-12-15",
+      "otvetstvennyj": "Юрист 115-ФЗ"
+    },
+    {
+      "id": "limit_nalichnyh_100k",
+      "cifra": "Лимит расчётов наличными между организациями и ИП — 100 000 ₽ по одному договору",
+      "gde": [{"fajl": "115-fz/snyatie-nalichnyh-s-raschetnogo-scheta/index.html", "ishchem": "100 000"}],
+      "pochemu_menyaetsya": "Указание Банка России от 09.12.2019 № 5348-У (ред. от 13.06.2024)",
+      "istochnik": "https://www.consultant.ru/document/cons_doc_LAW_350539/",
+      "sverka": "2026-09-27: 100 000 ₽",
+      "proverit_do": "2026-12-15",
+      "otvetstvennyj": "Юрист 115-ФЗ"
+    },
+    {
+      "id": "mr1_30mln",
+      "cifra": "1-МР: взнос наличных на счёт организации или ИП от 30 млн ₽ за 30 дней",
+      "gde": [{"fajl": "nalichnye/shchit-texts.js", "ishchem": "30 млн"}],
+      "pochemu_menyaetsya": "Методические рекомендации Банка России от 20.05.2026 № 1-МР; ЦБ может заменить рекомендации",
+      "istochnik": "https://www.consultant.ru/document/cons_doc_LAW_534626/",
+      "sverka": "2026-09-27: 30 млн ₽ за 30 дней для ЮЛ/ИП, 5 млн ₽ для физлиц (обзор ГАРАНТ, 21.05.2026)",
+      "proverit_do": "2026-12-15",
+      "otvetstvennyj": "Юрист 115-ФЗ"
+    },
+    {
+      "id": "sroki_115",
+      "cifra": "Сроки 115-ФЗ: банк 7 раб. дней, Банк России по ЗСК 15 раб. дней, МВК 20 раб. дней",
+      "gde": [{"fajl": "skoraya-115-fz/engine.js", "ishchem": "MVK_DAYS = 20"}],
+      "pochemu_menyaetsya": "Пп. 13.4, 13.5 ст. 7 и ст. 7.8 115-ФЗ, Положение Банка России № 842-П",
+      "istochnik": "https://www.consultant.ru/document/cons_doc_LAW_32834/",
+      "sverka": "2026-09-27: совпадают (сверка норм «Скорой» 26.09 16:05)",
+      "proverit_do": "2026-12-15",
+      "otvetstvennyj": "Юрист 115-ФЗ"
+    }
+  ]
+}

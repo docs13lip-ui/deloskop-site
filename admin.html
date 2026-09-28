@@ -148,6 +148,10 @@ select:disabled,input:disabled{background:var(--bg);color:var(--muted)}
           <label class="w">Расчётный счёт<input data-b="alfa.rs" inputmode="numeric" maxlength="20" autocomplete="off"></label></fieldset>
         <fieldset class="w"><legend>Выставлять счета на</legend>
           <label class="r"><input type="radio" name="aktiv" value="sber"> Сбербанк</label> <label class="r"><input type="radio" name="aktiv" value="alfa"> Альфа-Банк</label></fieldset>
+        <fieldset class="w" id="rekPub" hidden><legend>На сайте — оферта, «Реквизиты», подвал</legend>
+          <label>Дата регистрации ИП<input data-p="data_registracii" inputmode="numeric" maxlength="10" autocomplete="off" placeholder="ДД.ММ.ГГГГ"></label><label>Инспекция, зарегистрировавшая ИП<input data-p="organ_registracii" autocomplete="off" placeholder="как в листе записи ЕГРИП"></label>
+          <label class="r w"><input type="checkbox" data-p="pokazyvat"> Показывать на сайте ФИО, ИНН, ОГРНИП, дату и инспекцию регистрации и адрес для писем</label>
+          <p class="note w" id="rekPubNote">Расчётные счета, телефон и личная почта на сайт не попадают. Адрес — тот, что выше, «для писем и претензий»: домашний не указывайте.</p></fieldset>
         <div class="w"><button class="btn primary" type="submit">Сохранить реквизиты</button></div>
       </form>
       <p class="note" id="rekNote" role="status" aria-live="polite"></p>

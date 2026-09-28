@@ -112,7 +112,7 @@
       if (k === 'staff') { var n = num(s.detail); if (n != null) f.staff = n; }
     });
     (D.kpi || []).forEach(function (x) {
-      if (/выручк/i.test(x.label || '') && typeof x.value === 'number' && x.value > 0) f.revenue = x.value;
+      if (/выручк/i.test(x.label || '') && typeof x.value === 'number' && x.value > 0) { f.revenue = x.value; var y = /(20\d\d)/.exec((x.label || '') + ' ' + (x.year || x.god || '')); if (y) f.revenueYear = y[1]; }
       if (/сотрудник|численност|штат/i.test(x.label || '') && typeof x.value === 'number') f.staff = x.value;
     });
     if (f.ageMonths != null && f.ageMonths < 12) f.warn.young = (f.warn.young || 0) + 1;
@@ -139,17 +139,87 @@
   //  • выручка неизвестна → по возрасту: до 6 мес — 100 тыс., до года — 300 тыс., до 3 лет — 1 млн, старше — 3 млн;
   //  • компании младше года — никогда не больше возрастного потолка;
   //  • тон «можно с пределом» — половина; «только по факту» и «стоп» — ноль.
-  function prepayCap(f, t) {
-    if (t === 'post' || t === 'stop') return { cap: 0, rule: t === 'stop' ? 'Вперёд не платить' : 'Оплата только по факту' };
-    var byAge = f.ageMonths == null ? 1000000 : f.ageMonths < 6 ? 100000 : f.ageMonths < 12 ? 300000 : f.ageMonths < 36 ? 1000000 : 3000000;
-    var cap, rule;
+  // OSTOROZHNO — «осторожный предел» (предложение Маркетинга 28.09, раздел 3.5; решение — за [Данными]):
+  // если ни один источник долгов (приставы, налоги) не проверен, предел считается как «с пределом» — вдвое меньше.
+  // Пока false: методика не меняется, а честность держит строка «Не проверяли» под пределом.
+  var OSTOROZHNO = false;
+  var DELITEL = 26;                                        // две недели выручки: 52 недели / 2
+  var POTOLKI = [[6, 100000], [12, 300000], [36, 1000000], [Infinity, 3000000]]; // [младше N мес, потолок]
+  function potolok(m) { if (m == null) return 1000000; for (var i = 0; i < POTOLKI.length; i++) if (m < POTOLKI[i][0]) return POTOLKI[i][1]; return 3000000; }
+
+  function prepayCap(f, t, np) {
+    if (t === 'post' || t === 'stop') return { cap: 0, rule: t === 'stop' ? 'Вперёд не платить' : 'Оплата только по факту', raschet: { tone: t } };
+    var byAge = potolok(f.ageMonths);
+    var cap, rule, R = { tone: t, byAge: byAge, ageMonths: f.ageMonths, revenue: f.revenue || null, revenueYear: f.revenueYear || null };
     if (f.revenue) {
-      cap = f.revenue / 26; rule = 'не больше двух недель выручки компании';
-      if (f.ageMonths != null && f.ageMonths < 12 && byAge < cap) { cap = byAge; rule = 'потолок для компании младше года'; }
-    } else { cap = byAge; rule = f.ageMonths == null ? 'осторожный потолок — выручка и возраст неизвестны' : 'потолок по возрасту компании (выручка неизвестна)'; }
-    if (t === 'cap') { cap = cap / 2; rule += ', вдвое меньше из-за замечаний'; }
-    return { cap: niceFloor(cap), rule: rule };
+      cap = f.revenue / DELITEL; rule = 'не больше двух недель выручки компании'; R.base = 'revenue'; R.dveNedeli = cap;
+      if (f.ageMonths != null && f.ageMonths < 12 && byAge < cap) { cap = byAge; rule = 'потолок для компании младше года'; R.ageCapped = true; }
+    } else { cap = byAge; R.base = f.ageMonths == null ? 'unknown' : 'age'; rule = f.ageMonths == null ? 'осторожный потолок — выручка и возраст неизвестны' : 'потолок по возрасту компании (выручка неизвестна)'; }
+    R.doPolovinu = cap;
+    var ostor = OSTOROZHNO && np && np.dolgiVse && t === 'go';
+    if (t === 'cap' || ostor) { cap = cap / 2; rule += ostor ? ', вдвое меньше: долги не проверены' : ', вдвое меньше из-за замечаний'; R.half = ostor ? 'ostorozhno' : 'zamechaniya'; }
+    R.itog = niceFloor(cap);
+    return { cap: R.itog, rule: rule, raschet: R };
   }
+
+  // Какие источники долгов НЕ проверены в этой проверке. Правило «не проверяли ≠ не нашли» (Юрист 115-ФЗ, 27.09):
+  // источник считается проверенным, только если сервер прямо сказал found / not_found (блок damia или список istochniki)
+  // либо в ответе есть найденный долг этого вида. Иначе — «не проверяли», как бы ни выглядели остальные данные.
+  var DOLGI = [
+    { id: 'fssp', kind: 'fssp', title: 'долги у приставов', klyuchi: ['fssp'] },
+    { id: 'nalogi', kind: 'dolg', title: 'долги по налогам', klyuchi: ['nalogi', 'fns_debt', 'nedoimki', 'dolgi_nalogi'] }
+  ];
+  function statusIstochnika(r, klyuchi) {
+    var dm = r && r.damia || {}, spisok = r && r.istochniki || [];
+    for (var i = 0; i < klyuchi.length; i++) {
+      var b = dm[klyuchi[i]]; if (b && b.status) return b.status;
+      for (var j = 0; j < spisok.length; j++) if (spisok[j] && (spisok[j].kod === klyuchi[i] || spisok[j].id === klyuchi[i]) && spisok[j].status) return spisok[j].status;
+    }
+    return null;
+  }
+  function neProvereno(r, f) {
+    var net = [];
+    DOLGI.forEach(function (d) {
+      if (f.bad[d.kind] || f.warn[d.kind]) return;               // долг найден — источник точно видели
+      var s = statusIstochnika(r, d.klyuchi);
+      if (s === 'found' || s === 'not_found' || s === 'not_applicable') return;
+      net.push(d.title);
+    });
+    var p = r && r.damia && r.damia.polnota;
+    return { spisok: net, dolgiVse: net.length === DOLGI.length, provereno: p && p.provereno != null ? p.provereno : null, iz: p && p.iz != null ? p.iz : null, data: r && (r.damia && r.damia.data_svedeniy || r.checked_at) || null };
+  }
+
+  function dataRu(s) { var d = new Date(s); if (isNaN(d)) return ''; function z(n) { return (n < 10 ? '0' : '') + n; } return z(d.getDate()) + '.' + z(d.getMonth() + 1) + '.' + d.getFullYear(); }
+  function mesText(m) { return m < 12 ? m + '\u00a0мес.' : ageText(m); }
+
+  // «Как посчитали» — открытая формула предела под суммой (Прорыв «Ф», тексты Маркетинга 28.09, раздел 3.3).
+  function kakPoschitali(f, t, pc, reasonsList, np) {
+    var R = pc.raschet || {}, kak = '';
+    if (t === 'post' || t === 'stop') {
+      var pr = f.status === 'LIQUIDATED' ? 'компания ликвидирована' : (reasonsList[0] || (t === 'stop' ? 'стоп-признак в данных' : 'серьёзное замечание в данных'));
+      kak = 'Вперёд — 0\u00a0₽: ' + pr + ' — ' + (t === 'stop' ? 'не платите вперёд.' : 'платите после поставки или акта.');
+    } else {
+      var polovina = R.half ? ' · ' + (R.half === 'ostorozhno' ? 'долги не проверены' : zamechaniya(reasonsList)) + ' → половина: ' + money(R.itog) : '';
+      if (R.base === 'revenue' && R.ageCapped) {
+        kak = 'Как посчитали: две недели выручки — ' + money(R.dveNedeli) + ', но компании ' + mesText(R.ageMonths) + ' — не больше потолка для возраста до года: ' + money(R.byAge) + polovina + '.';
+      } else if (R.base === 'revenue') {
+        kak = 'Как посчитали: выручка' + (R.revenueYear ? ' за ' + R.revenueYear : '') + ' — ' + money(R.revenue) + ' ÷ ' + DELITEL + ' = ' + money(R.dveNedeli) + ' (две недели выручки)' + polovina + ', округлили вниз.';
+      } else if (R.base === 'age') {
+        kak = 'Как посчитали: выручки в отчётности нет — берём потолок по возрасту (' + ageText(R.ageMonths) + '): ' + money(R.byAge) + polovina + '.';
+      } else {
+        kak = 'Как посчитали: выручка и возраст неизвестны — берём осторожный потолок ' + money(R.byAge) + polovina + '.';
+      }
+    }
+    var ne = '';
+    if (np && np.spisok.length && (t === 'go' || t === 'cap')) {
+      ne = 'Не проверяли: ' + np.spisok.join(', ') + '. Если они есть — вперёд лучше не платить.' +
+        (np.provereno != null && np.iz ? ' Проверено ' + np.provereno + ' из ' + np.iz + ' источников' + (np.data ? ' на ' + dataRu(np.data) : '') + '.' : '');
+    }
+    return { kak: kak, ne: ne,
+      podpis: 'Ориентир Делоскопа, не норма закона. Методика — в разборе «Сколько платить вперёд незнакомой компании».', url: STATYA };
+  }
+  var STATYA = '/nalogi/skolko-platit-vpered-neznakomoj-kompanii/';
+  function zamechaniya(list) { var n = Math.max(1, list.length); return 'есть ' + n + ' ' + plural(n, 'замечание', 'замечания', 'замечаний'); }
 
   function reasonText(x) {
     var d = String(x.detail || '').trim();
@@ -268,10 +338,11 @@
 
   function decide(r, opts) {
     opts = opts || {};
-    var f = facts(r), t = tone(f), pc = prepayCap(f, t), amount = parseAmount(opts.amount), regime = opts.regime || 'osno';
+    var f = facts(r), t = tone(f), np = neProvereno(r, f), pc = prepayCap(f, t, np), amount = parseAmount(opts.amount), regime = opts.regime || 'osno';
     var list = docs(f, t, amount, regime);
     return {
-      facts: f, tone: t, cap: pc.cap, capRule: pc.rule,
+      facts: f, tone: t, cap: pc.cap, capRule: pc.rule, raschet: pc.raschet, neProvereno: np,
+      kak: kakPoschitali(f, t, pc, reasons(f), np),
       headline: headline(f, t, pc.cap), reasons: reasons(f), advice: advice(f, t),
       amount: amount, regime: regime, stake: atStake(amount, regime), prepay: prepayAdvice(amount, pc.cap, t),
       docs: list, letter: letter(f, list, amount)
@@ -289,6 +360,10 @@
     '.usl-r{margin:4px 0 0;font-size:14.5px;color:var(--ink2,#48484C)}' +
     '.usl-a{margin:0;font-size:14.5px;color:var(--ink2,#48484C)}' +
     '.usl-cap{font-size:12.5px;color:var(--muted,#6B6B70)}' +
+    '.usl-kak{display:flex;flex-direction:column;gap:6px;border-top:1px solid #E6E6E1;padding-top:10px}' +
+    '.usl-kak p{margin:0;font-size:14px;color:var(--ink2,#48484C);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}' +
+    '.usl-kak .usl-ne{color:#8A5A00;background:#FFF6E0;border-radius:10px;padding:8px 10px}' +
+    '.usl-kak a{color:var(--accent,#0B63E5)}' +
     '.usl-sum{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border-top:1px solid #E6E6E1;padding-top:12px}' +
     '.usl-sum label{font-size:13px;color:var(--muted,#6B6B70);grid-column:1/-1}' +
     '.usl-in{display:flex;align-items:center;background:#fff;border:1px solid #DADAD4;border-radius:12px;padding:0 12px;min-width:0}' +
@@ -337,7 +412,6 @@
       var v = decide(r, st), f = v.facts;
       box.className = 'usl ' + v.tone;
       var why = v.reasons.length ? v.reasons.join(', ') : (r && r.verdict ? String(r.verdict).replace(/^Вывод:\s*/i, '') : '');
-      var capLine = v.cap ? 'Предел предоплаты — ориентир Делоскопа, не норма закона: ' + v.capRule + '.' : '';
       var stake = '';
       if (v.stake) {
         stake = v.stake.zero
@@ -357,7 +431,10 @@
           '<div class="usl-in"><input id="' + uid + 'a" inputmode="numeric" autocomplete="off" placeholder="например, 500 000" value="' + (st.amount ? esc(money(st.amount).replace(/ ₽$/, '')) : '') + '"><span>₽</span></div>' +
           '<select aria-label="Ваш режим налогов">' + sel + '</select></div>' +
         (v.amount ? '<div class="usl-out" aria-live="polite"><div>' + esc(v.prepay) + '</div>' + stake + '</div>' : '')) +
-        (capLine && !o.compact ? '<div class="usl-cap">' + esc(capLine) + '</div>' : '') +
+        '<div class="usl-kak" data-u="kak"><p>' + esc(v.kak.kak) + '</p>' +
+          (v.kak.ne ? '<p class="usl-ne">' + esc(v.kak.ne) + '</p>' : '') +
+          '<p class="usl-cap">Ориентир Делоскопа, не норма закона. Методика — в разборе <a href="' + STATYA + '">«Сколько платить вперёд незнакомой компании»</a>.</p>' +
+        '</div>' +
         '<details' + openAttr + '><summary><span>Что запросить у них<small>' + v.docs.length + ' ' + plural(v.docs.length, 'документ', 'документа', 'документов') + '</small></span></summary>' +
           '<ol>' + v.docs.map(function (d) { return '<li>' + esc(d.title) + '<span>' + esc(d.why) + (d.links.length ? ' · ' + d.links.map(function (l) { return '<a href="' + esc(l.u) + '"' + (/^https?:/.test(l.u) ? ' target="_blank" rel="noopener"' : '') + '>' + esc(l.t) + '</a>'; }).join(', ') : '') + '</span></li>'; }).join('') + '</ol>' +
           '<p class="usl-note">Список соразмерен сумме сделки — так требует п. 16 письма ФНС от 10.03.2021 № БВ-4-7/3060@.</p>' +
@@ -389,6 +466,8 @@
   return {
     decide: decide, mount: mount, facts: facts, tone: tone, prepayCap: prepayCap, atStake: atStake,
     docs: docs, letter: letter, parseAmount: parseAmount, money: money, niceFloor: niceFloor, kindOf: kindOf,
+    neProvereno: neProvereno, kakPoschitali: kakPoschitali, STATYA: STATYA,
+    METODIKA: { DELITEL: DELITEL, POTOLKI: POTOLKI, OSTOROZHNO: OSTOROZHNO },
     RATES: { VAT: VAT, PROFIT: PROFIT, USN_DR: USN_DR }
   };
 });

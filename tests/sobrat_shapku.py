@@ -200,15 +200,18 @@ def podval_css():
 def ispolnitel(r):
     if r["_est"]:
         return "индивидуальный предприниматель %s (ОГРНИП %s, ИНН %s)" % (e(r["fio"]), e(r["ogrnip"]), e(r["inn"]))
-    return ('индивидуальный предприниматель, сведения о котором указаны в разделе '
-            '<a href="/rekvizity/">«Реквизиты»</a>')
+    # rekv-v1: пока в rekvizity.json пусто — js/rekvizity.js подставит данные из админки (GET /api/rekvizity),
+    # не дожидаясь пересборки; при следующей сборке tests/rekvizity_iz_api.py запишет их сюда статично.
+    return ('<span data-rekv="ispolnitel">индивидуальный предприниматель, сведения о котором указаны в разделе '
+            '<a href="/rekvizity/">«Реквизиты»</a></span>')
 
 
 def tablica(r):
     if not r["_est"]:
-        return ('<div class="note">Реквизиты продавца появятся здесь сразу после государственной регистрации '
+        return ('<div class="note" data-rekv="tablica">Реквизиты продавца появятся здесь сразу после государственной регистрации '
                 'индивидуального предпринимателя. До этого оплата на сайте не принимается. '
-                'Вопросы — <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>.</div>')
+                'Вопросы — <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>.</div>'
+                '<script src="/js/rekvizity.js" defer></script>')
     stroki = [("Продавец", "Индивидуальный предприниматель " + e(r["fio"])), ("ИНН", e(r["inn"])),
               ("ОГРНИП", e(r["ogrnip"]))]
     if r.get("data_registracii") or r.get("organ_registracii"):
@@ -223,7 +226,7 @@ def tablica(r):
         stroki.append(("Телефон", e(r["telefon"])))
     if r.get("rkn_reestr_nomer"):
         stroki.append(("Реестр операторов ПДн", "№ " + e(r["rkn_reestr_nomer"])))
-    stroki.append(("НДС", "Без НДС — УСН, освобождение по п. 1 ст. 145 НК РФ"))
+    stroki.append(("НДС", "Без НДС — УСН, освобождение по п.&nbsp;1 ст.&nbsp;145 НК&nbsp;РФ"))
     tr = "".join("<tr><td>%s</td><td>%s</td></tr>" % s for s in stroki)
     return '<div class="table-wrap"><table class="table"><tbody>' + tr + "</tbody></table></div>"
 

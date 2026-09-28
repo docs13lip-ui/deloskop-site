@@ -68,7 +68,12 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
 .checklist li{padding:7px 0 7px 28px;border-top:1px solid var(--line);position:relative}
 .checklist li::before{content:"";position:absolute;left:2px;top:10px;width:14px;height:14px;border:1.5px solid var(--ink2);border-radius:4px}
 .dates{font-size:12px;color:var(--muted);margin-top:6px}
-@media (max-width:560px){.two,.eyes{grid-template-columns:1fr}.score .num{font-size:38px}}
+.score.wait{grid-template-columns:auto 1fr}
+.score.wait .num{font-size:20px;font-weight:600;letter-spacing:-.01em;color:var(--ink2);white-space:nowrap}
+.score.wait .lbl a{color:var(--ink)}
+.igbar{position:relative;height:8px;margin-top:10px;border-radius:99px;background:#EEEEEA;max-width:420px}.igbar i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:#48484C}.igbar b{position:absolute;top:-3px;bottom:-3px;width:2px;background:#1D1D1F}
+.score .zona{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600;background:var(--bg)}
+@media (max-width:560px){.two,.eyes{grid-template-columns:1fr}.score .num{font-size:38px}.score.wait .num{font-size:18px}.score.wait{grid-template-columns:1fr;gap:4px}.risk{flex-direction:column;align-items:flex-start;gap:4px}.risk b{white-space:normal}}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:20px}
 .kpi{background:var(--bg);border-radius:14px;padding:12px 14px}
 .kpi .l{font-size:12px;color:var(--muted)}
@@ -227,6 +232,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
   <div class="ned" id="ned" hidden></div>
 </section>
 <article class="doc" id="doc" hidden></article>
+<script src="/js/indeks-vorota.js"></script>
 <script src="/js/usloviya.js"></script>
 <script src="/js/nedavnie.js"></script>
 <script src="/js/inn.js"></script>
@@ -385,7 +391,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
       tip.textContent='';var b=document.createElement('b');b.textContent=t.getAttribute('data-val');tip.appendChild(b);tip.appendChild(document.createTextNode(t.getAttribute('data-tip')));
       tip.hidden=false;var x=Math.min(e.clientX+14,innerWidth-tip.offsetWidth-8);tip.style.left=x+'px';tip.style.top=(e.clientY+14)+'px';});
     root.addEventListener('pointerleave',function(){tip.hidden=true});}
-  var ZSK=null;
+  var ZSK=null, R=null;
   function zskHtml(z){var on=function(l){return z.level===l?' on':''};
     return '<div class="zsk"><div class="zsk-top"><div class="lights" aria-hidden="true"><i class="g'+on('low')+'"></i><i class="y'+on('medium')+'"></i><i class="r'+on('high')+'"></i></div>'+
       '<div><div class="l" style="font-size:12px;color:var(--muted)">Прогноз ЗСК (платформа «Знай своего клиента» Банка России)</div><h3>'+esc(z.title)+' попасть в жёлтую или красную зону</h3><div class="zmark">Наша оценка по открытым данным — не статус Банка России</div></div></div>'+
@@ -397,10 +403,21 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
         (g.why?'<p class="zw">'+esc(g.why)+'</p>':'')+(g.todo?'<p class="zdo"><span>Что сделать:</span> '+esc(g.todo)+'</p>':'')}).join('')+'</div>':'')+
       '<a class="cbr noprint" href="'+esc(z.cbr_url)+'" target="_blank" rel="noopener">Проверить красную зону на сайте ЦБ →</a>'+
       '<div class="zd">'+esc(z.disclaimer)+(z.sources&&z.sources.length?' Основа типологий: '+z.sources.map(function(x){return '<a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.title)+'</a>'}).join('; ')+'.':'')+'</div></div>';}
+  // Индекс — только за «воротами полноты» (п. 71, 81): число 1–99 и зона — когда сервер разрешил; иначе «считаем, собрано N %».
+  function indeksHtml(r){
+    var V=window.IndeksVorota?IndeksVorota.vid(r):{rezhim:'schitaem',polnota:null};
+    if(V.rezhim==='ip')return '';
+    if(V.rezhim==='chislo')
+      return '<div class="score"><div class="num">'+V.ball+'<small> из 99</small></div><div><b>Индекс Делоскопа</b><span class="zona">'+esc(V.zona)+'</span>'+
+        '<div class="lbl">Объяснимая оценка признаков по открытым данным, собрано '+V.polnota+'% данных · <a href="/indeks/#metodika">как считаем</a></div>'+
+        '<div class="meter"><i style="left:'+Math.round((V.ball-1)/98*100)+'%"></i></div></div></div>';
+    var t=window.IndeksVorota?IndeksVorota.tekstSchitaem(V):'Пока смотрите вердикт по фактам ниже.';
+    var bar=V.polnota!=null?'<div class="igbar" role="img" aria-label="Собрано '+V.polnota+'% данных, для балла нужно '+V.porog+'%"><i style="width:'+V.polnota+'%"></i><b style="left:'+V.porog+'%"></b></div>':'';
+    return '<div class="score wait" data-indeks="schitaem"><div class="num">Индекс&nbsp;— считаем</div><div><div class="lbl">'+esc(t)+' <a href="/indeks/#metodika">Как считаем</a></div>'+bar+'</div></div>';
+  }
   function dossierHtml(D){
     var lst=function(a){return '<ul>'+a.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>'};
-    var h='<div class="score"><div class="num">'+D.score+'<small>/100</small></div><div><b>'+esc(D.headline)+'</b>'+
-      '<div class="lbl">Индекс надёжности Делоскопа — сводная оценка по всем признакам ниже</div><div class="meter"><i style="left:'+D.score+'%"></i></div></div></div>';
+    var h=indeksHtml(R);
     if(D.strengths.length||D.concerns.length)
       h+='<div class="two">'+(D.strengths.length?'<div class="box plus"><h3>Сильные стороны</h3>'+lst(D.strengths)+'</div>':'')+
          (D.concerns.length?'<div class="box minus"><h3>На что обратить внимание</h3>'+lst(D.concerns)+'</div>':'<div class="box minus"><h3>На что обратить внимание</h3><ul><li>Существенных замечаний нет</li></ul></div>')+'</div>';
@@ -415,7 +432,9 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
     h+='<div class="sec"><h2>Что это значит для вашей сделки</h2><div class="eyes">'+
       '<div class="box"><h3>'+esc(D.bank.title)+'</h3>'+esc(D.bank.text)+'</div>'+
       '<div class="box"><h3>'+esc(D.tax.title)+'</h3>'+esc(D.tax.text)+'</div></div></div>';
-    if(D.data_dates)h+='<div class="dates">Актуальность данных: '+esc(D.data_dates)+'.</div>';
+    var TD=window.IndeksVorota?IndeksVorota.triDaty(R,function(v){var x=new Date(v);return isNaN(x)?String(v):x.toLocaleDateString('ru-RU')}):[];
+    if(TD.length)h+='<div class="dates">'+TD.map(esc).join('<br>')+'</div>';
+    else if(D.data_dates)h+='<div class="dates">Актуальность данных: '+esc(D.data_dates)+'.</div>';
     return h;
   }
   function render(r){
@@ -432,7 +451,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
       var src=[x.source,x.as_of?('на '+d(x.as_of)):''].filter(Boolean).join(', ');
       return '<tr><td>'+esc(x.title)+(src?'<small>'+esc(src)+'</small>':'')+'</td><td><span class="st '+esc(x.status)+'">'+STX[x.status]+'</span>'+(x.detail?' — '+esc(x.detail):'')+'</td></tr>';
     }).join('');
-    var D=r.dossier; ZSK=r.zsk;
+    var D=r.dossier; ZSK=r.zsk; R=r;
     doc.innerHTML=
       '<div class="dhead"><div class="brand">'+LOGO+'делоскоп</div><div class="dtitle"><b>Досье контрагента</b>№ '+esc(id)+'<br>Сформировано '+at.toLocaleDateString('ru-RU',{timeZone:'Europe/Moscow'})+' в '+at.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Moscow'})+' (МСК)</div></div>'+
       '<h1>'+esc(c.name_short||name)+'</h1><div class="sub">ИНН '+esc(c.inn)+(c.status?' · '+esc((ST[c.status]||c.status).toLowerCase()):'')+'</div>'+

@@ -89,6 +89,8 @@ footer a{color:var(--muted)}
 <link rel="stylesheet" href="/css/fonts.css">
 <link rel="stylesheet" href="/css/podval.css">
 <link rel="stylesheet" href="/css/shapka.css">
+<link rel="stylesheet" href="/css/acc.css">
+<script src="/js/acc.js" defer></script>
 <script src="/js/shapka.js" defer></script>
 <script src="/js/metrika.js" defer></script>
 </head>
@@ -263,20 +265,13 @@ function localChecks(r,sel){
   if(!sel)add('bad','ИНН поставщика','Не нашли в счёте. Без ИНН компанию не проверить — запросите счёт с полными реквизитами.');
   else if(!sel.ok)add('bad','ИНН поставщика','ИНН '+sel.inn+' с ошибкой в контрольной цифре. Такого ИНН не бывает: это опечатка или подделка.');
   else add('ok','ИНН поставщика',sel.inn+' — контрольная цифра верная.');
-  if(!r.bik)add('warn','БИК банка','Не нашли. Проверьте реквизиты банка вручную.');
-  else if(r.bik.indexOf('04')!==0)add('bad','БИК банка',r.bik+' — российский БИК начинается с «04».');
-  if(!r.acc)add('warn','Расчётный счёт','Не нашли 20-значный номер счёта.');
-  else{
-    if(r.bik){
-      if(accOk(r.bik,r.acc))add('ok','Расчётный счёт','Формат реквизитов проверен: '+fmtAcc(r.acc)+' сходится с БИК по контрольному ключу.');
-      else add('bad','Расчётный счёт',fmtAcc(r.acc)+' не сходится с БИК '+r.bik+'. Опечатка, изменённая цифра или счёт из другого банка — уточните реквизиты у поставщика.');
-    }
-    add('info','Владелец счёта','Принадлежность счёта поставщику не подтверждена. Это знает только банк получателя. Если реквизиты новые или пришли письмом — перезвоните поставщику по номеру, который знаете давно.');
+  // БИК, контрольный ключ счёта и принадлежность счёта — в блоке «Проверка реквизитов» (js/acc.js, п. 82).
+  if(r.acc){
     var p=r.acc.slice(0,5),legal=sel&&sel.inn.length===10;
-    if(/^(40817|40820|42301|42307|42601)/.test(p))add('bad','Чей это счёт','Счёт '+p+'… — личный счёт физического лица, а не компании. Платить по счёту компании на личный счёт нельзя.');
-    else if(legal&&p==='40802')add('warn','Чей это счёт','Счёт 40802… открывают ИП, а в счёте ИНН организации. Уточните у поставщика.');
-    else if(sel&&!legal&&/^4070[1-3]/.test(p))add('warn','Чей это счёт','Счёт '+p+'… открывают организациям, а в счёте ИНН предпринимателя. Уточните у поставщика.');
-    else if(/^40(70[1-3]|802)/.test(p))add('ok','Чей это счёт',(p==='40802'?'Счёт предпринимателя':'Счёт организации')+' — подходит для оплаты.');
+    if(/^(40817|40820|42301|42307|42601)/.test(p))add('bad','Тип счёта','Счёт '+p+'… — личный счёт физического лица, а не компании. Платить по счёту компании на личный счёт нельзя.');
+    else if(legal&&p==='40802')add('warn','Тип счёта','Счёт 40802… открывают ИП, а в счёте ИНН организации. Уточните у поставщика.');
+    else if(sel&&!legal&&/^4070[1-3]/.test(p))add('warn','Тип счёта','Счёт '+p+'… открывают организациям, а в счёте ИНН предпринимателя. Уточните у поставщика.');
+    else if(/^40(70[1-3]|802)/.test(p))add('ok','Тип счёта',(p==='40802'?'Счёт 40802… — такой открывают предпринимателям.':'Счёт '+p+'… — такой открывают организациям.'));
   }
   if(r.ks&&r.bik){
     if(ksOk(r.bik,r.ks)&&r.ks.slice(-3)===r.bik.slice(-3))add('ok','Корреспондентский счёт','Сходится с БИК.');
@@ -302,8 +297,14 @@ function purpose(r){
 
 /* ---------- вывод ---------- */
 var CL={ok:'ok',warn:'warn',bad:'bad',info:'neutral'};
+function accDannye(r,remote){
+  var pr=remote&&(remote.priostanovki||(remote.damia&&(remote.damia.priostanovki||remote.damia.nalogbi)))||null;
+  return {bik:r.bik,acc:r.acc,bankNazvanie:r.bank,bank:remote&&remote.bik_info||null,priostanovki:pr&&pr.status?pr:null};
+}
 function render(r,sel,local,remote,remoteErr){
   var all=local.slice();
+  var AD=accDannye(r,remote),AS=window.DlkAcc?DlkAcc.stroki(AD):[];
+  var accBad=AS.some(function(x){return x.cls==='is-bad'}),accHigh=AS.some(function(x){return x.cls==='is-high'});
   if(remote){
     var co=remote.company||{};
     var lvl=remote.risk_level;
@@ -312,10 +313,10 @@ function render(r,sel,local,remote,remoteErr){
     if(co.status&&co.status!=='ACTIVE')all.push({st:'bad',title:'Статус в ЕГРЮЛ',detail:'Компания не действует: '+({LIQUIDATING:'ликвидируется или ФНС готовит исключение из ЕГРЮЛ',LIQUIDATED:'ликвидирована',BANKRUPT:'дело о банкротстве',REORGANIZING:'реорганизация'}[co.status]||co.status)+'.'});
     if(r.kpp&&co.kpp&&r.kpp!==co.kpp)all.push({st:'warn',title:'КПП',detail:'В счёте '+r.kpp+', в ЕГРЮЛ '+co.kpp+'. Так бывает у филиалов, но стоит уточнить.'});
   }
-  var worst=all.some(function(x){return x.st==='bad'})?'bad':all.some(function(x){return x.st==='warn'})?'warn':'ok';
+  var worst=(accBad||all.some(function(x){return x.st==='bad'}))?'bad':(accHigh||all.some(function(x){return x.st==='warn'}))?'warn':'ok';
   var head={bad:['Стоп: не платите, пока не выясните','В счёте есть серьёзная проблема — посмотрите красные пункты.'],
             warn:['Проверьте перед оплатой','Критичного не нашли, но есть вопросы к поставщику.'],
-            ok:remote?['Серьёзных проблем не нашли','Формат реквизитов верный, у поставщика нет серьёзных рисков по открытым данным. Принадлежность счёта поставщику не подтверждена.']:['Формат реквизитов верный','Принадлежность счёта поставщику не подтверждена. Осталось проверить самого поставщика — смотрите ниже.']}[worst];
+            ok:remote?['Серьёзных проблем не нашли','Ошибок в реквизитах не нашли, у поставщика нет серьёзных рисков по открытым данным. Принадлежность счёта поставщику не подтверждена.']:['Ошибок в реквизитах не нашли','Принадлежность счёта поставщику не подтверждена. Осталось проверить самого поставщика — смотрите ниже.']}[worst];
   if(!remote&&worst==='ok')worst='warn';
   var chips=r.inns.length>1?'<div class="chips"><span>ИНН в счёте:</span>'+r.inns.map(function(x){
       return '<button type="button" data-inn="'+x.inn+'" class="'+(sel&&x.inn===sel.inn?'on':'')+'">'+x.inn+(x.role==='seller'?' · поставщик':x.role==='buyer'?' · покупатель':'')+'</button>'}).join('')+'</div>':'';
@@ -323,12 +324,13 @@ function render(r,sel,local,remote,remoteErr){
   var rem=remoteErr?'<p class="note warn">'+remoteErr+'</p>':'';
   var pur=purpose(r);
   out.innerHTML='<div class="res '+worst+'"><div class="verdict-big">'+head[0]+'</div><p>'+head[1]+'</p></div>'+chips+
-    '<div class="rows">'+rows+'</div>'+rem+
+    '<div id="accHost"></div><div class="rows">'+rows+'</div>'+rem+
     (r.bank||r.total?'<p class="meta2">'+(r.bank?'Банк: '+esc(r.bank)+'. ':'')+(r.total?'Сумма к оплате: '+money(r.total)+' ₽.':'')+'</p>':'')+
     '<div class="pur"><b>Назначение платежа</b><div id="purText">'+esc(pur)+'</div><button type="button" id="copyPur">Скопировать</button></div>'+
     (remote&&remote.report_id?'<p class="meta2"><a href="/report.html?id='+encodeURIComponent(remote.report_id)+'" target="_blank" rel="noopener">Полное досье поставщика (PDF)</a></p>':'')+
     '<p class="small">Это автоматическая проверка реквизитов и открытых данных ФНС, а не гарантия. Если поставщик прислал новые реквизиты письмом — перезвоните ему по известному номеру.</p>';
   out.hidden=false;
+  if(window.DlkAcc)DlkAcc.render(document,$('accHost'),AD);
   $('copyPur').onclick=function(e){try{navigator.clipboard.writeText(pur);e.target.textContent='Скопировано'}catch(_){}};
   [].forEach.call(out.querySelectorAll('[data-inn]'),function(b){b.onclick=function(){
     var s=r.inns.filter(function(x){return x.inn===b.dataset.inn})[0];run(r,s)}});

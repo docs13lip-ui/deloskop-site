@@ -297,13 +297,13 @@ function purpose(r){
 
 /* ---------- вывод ---------- */
 var CL={ok:'ok',warn:'warn',bad:'bad',info:'neutral'};
-function accDannye(r,remote){
+function accDannye(r,remote,sel){
   var pr=remote&&(remote.priostanovki||(remote.damia&&(remote.damia.priostanovki||remote.damia.nalogbi)))||null;
-  return {bik:r.bik,acc:r.acc,bankNazvanie:r.bank,bank:remote&&remote.bik_info||null,priostanovki:pr&&pr.status?pr:null};
+  return {bik:r.bik,acc:r.acc,inn:(remote&&remote.company&&remote.company.inn)||(sel&&sel.inn)||null,bankNazvanie:r.bank,bank:remote&&remote.bik_info||null,priostanovki:pr&&pr.status?pr:null};
 }
 function render(r,sel,local,remote,remoteErr){
   var all=local.slice();
-  var AD=accDannye(r,remote),AS=window.DlkAcc?DlkAcc.stroki(AD):[];
+  var AD=accDannye(r,remote,sel),AS=window.DlkAcc?DlkAcc.stroki(AD):[];
   var accBad=AS.some(function(x){return x.cls==='is-bad'}),accHigh=AS.some(function(x){return x.cls==='is-high'});
   if(remote){
     var co=remote.company||{};

@@ -73,11 +73,20 @@ def rekv():
     with open(put("rekvizity.json"), encoding="utf-8") as fh:
         r = json.load(fh)
     r["_est"] = bool(r.get("fio") and r.get("inn") and r.get("ogrnip"))
+    sv = r.get("sverka_egrip") if r["_est"] and isinstance(r.get("sverka_egrip"), dict) else {}
+    # п. 123: только населённый пункт по ЕГРИП; адрес регистрации в шаблоны не выводим никогда
+    r["_gorod"] = sv.get("gorod") or ""
+    r["_sverka"] = sv if sv.get("data") else {}
     return r
 
 
 def e(s):
     return html.escape(str(s or ""), quote=True)
+
+
+def gorod(r):
+    """«г.&nbsp;Липецк» — сокращение не отрывается от названия на узком экране."""
+    return re.sub(r"^(г|пгт|рп|п|с|д|х|ст-ца|сл|ст|нп|кп|дп|аул)\. ", r"\1.&nbsp;", e(r.get("_gorod")))
 
 
 # ---------- подвал ----------
@@ -108,6 +117,8 @@ def podval_html(r):
     stroka = "© 2026 Делоскоп"
     if r["_est"]:
         stroka += " · ИП %s · ИНН %s · ОГРНИП %s" % (e(r["fio"]), e(r["inn"]), e(r["ogrnip"]))
+        if r.get("_gorod"):
+            stroka += " · " + gorod(r)
     return ('<!--podval--><div class="podval" role="contentinfo"><div class="podval__in">'
             '<div class="podval__cols">' + "".join(cols) + '</div>'
             '<div class="podval__niz"><p>' + stroka + '</p>'
@@ -199,7 +210,8 @@ def podval_css():
 # ---------- реквизиты в документах ----------
 def ispolnitel(r):
     if r["_est"]:
-        return "индивидуальный предприниматель %s (ОГРНИП %s, ИНН %s)" % (e(r["fio"]), e(r["ogrnip"]), e(r["inn"]))
+        mesto = (", место нахождения — " + gorod(r)) if r.get("_gorod") else ""
+        return "индивидуальный предприниматель %s (ОГРНИП %s, ИНН %s%s)" % (e(r["fio"]), e(r["ogrnip"]), e(r["inn"]), mesto)
     # rekv-v1: пока в rekvizity.json пусто — js/rekvizity.js подставит данные из админки (GET /api/rekvizity),
     # не дожидаясь пересборки; при следующей сборке tests/rekvizity_iz_api.py запишет их сюда статично.
     return ('<span data-rekv="ispolnitel">индивидуальный предприниматель, сведения о котором указаны в разделе '
@@ -216,6 +228,8 @@ def tablica(r):
               ("ОГРНИП", e(r["ogrnip"]))]
     if r.get("data_registracii") or r.get("organ_registracii"):
         stroki.append(("Регистрация", (e(r.get("data_registracii")) + ", " + e(r.get("organ_registracii"))).strip(", ")))
+    if r.get("_gorod"):
+        stroki.append(("Место нахождения", gorod(r) + " — по ЕГРИП"))
     if r.get("adres_dlya_pisem"):
         stroki.append(("Адрес для писем и претензий", e(r["adres_dlya_pisem"])))
     for b in r.get("banki", []):
@@ -227,6 +241,12 @@ def tablica(r):
     if r.get("rkn_reestr_nomer"):
         stroki.append(("Реестр операторов ПДн", "№ " + e(r["rkn_reestr_nomer"])))
     stroki.append(("НДС", "Без НДС — УСН, освобождение по п.&nbsp;1 ст.&nbsp;145 НК&nbsp;РФ"))
+    sv = r.get("_sverka") or {}
+    if sv:
+        # п. 126: продавец проверяет себя сам — тем же сервисом, что и контрагентов
+        stroki.append(("Сверено с ЕГРИП", e(sv["data"]) + " — " + e(sv.get("sovpalo") or "ИНН, ОГРНИП и статус") +
+                       ' совпадают. Проверили себя тем же сервисом, что и ваших контрагентов: '
+                       '<a href="/report.html?inn=' + e(r["inn"]) + '">открыть проверку</a>'))
     tr = "".join("<tr><td>%s</td><td>%s</td></tr>" % s for s in stroki)
     return '<div class="table-wrap"><table class="table"><tbody>' + tr + "</tbody></table></div>"
 
@@ -251,6 +271,8 @@ def sobrat_stranicu(txt, r, podval, shapka=None):
         txt = vstavit_shapku(txt, shapka)
     # 4) реквизиты
     txt = re.sub(r"<!--r:ispolnitel-->.*?<!--/r-->", lambda m: "<!--r:ispolnitel-->" + ispolnitel(r) + "<!--/r-->", txt, flags=re.S)
+    txt = re.sub(r"<!--r:gorod-->.*?<!--/r-->",
+                 lambda m: "<!--r:gorod-->" + ((" (" + gorod(r) + ")") if r.get("_gorod") else "") + "<!--/r-->", txt, flags=re.S)
     txt = re.sub(r"<!--rekvizity-->.*?<!--/rekvizity-->", lambda m: "<!--rekvizity-->" + tablica(r) + "<!--/rekvizity-->", txt, flags=re.S)
     return txt
 

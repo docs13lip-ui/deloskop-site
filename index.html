@@ -719,7 +719,7 @@ footer a{color:var(--ink2)}
   var CAPI=(location.hostname.endsWith('deloskop.ru')?'https://api.deloskop.ru':'');
   var report=document.querySelector('.report');
   function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
-  var ST={ACTIVE:'действующая',LIQUIDATING:'ликвидируется',LIQUIDATED:'ликвидирована',BANKRUPT:'банкротство',REORGANIZING:'реорганизация'};
+  var ST={ACTIVE:'действующая',LIQUIDATING:'ликвидируется или исключается из ЕГРЮЛ',LIQUIDATED:'ликвидирована',BANKRUPT:'банкротство',REORGANIZING:'реорганизация'};
   var ICON='<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5L6.5 11.5L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var WARNI='<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 4.5V9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="8" cy="11.8" r="1.1" fill="currentColor"/></svg>';
   function render(r){

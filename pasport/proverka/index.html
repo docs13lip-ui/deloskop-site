@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Проверка подлинности Паспорта — Делоскоп</title>
+<meta name="description" content="Проверка подлинности Паспорта контрагента Делоскопа по номеру, дате и отпечатку.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#F5F5F2">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+:root{--bg:#F5F5F2;--card:#fff;--ink:#1D1D1F;--ink2:#48484C;--muted:#6B6B70;--line:#E6E6E1;--rule:#1D1D1F;--accent:#0B63E5;
+  --ok:#16723F;--ok-bg:#E8F5EE;--warn:#9A5B00;--warn-bg:#FFF4E0;--bad:#B3261E;--bad-bg:#FDECEA;--off:#8A8A8F}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}
+.bar{max-width:860px;margin:0 auto;padding:20px 16px 0;display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;align-items:center}
+.bar .nazad{margin-right:auto;font-weight:600;color:var(--ink2)}
+.btn{border:1px solid #D9D9D4;background:var(--card);font:inherit;font-size:15px;font-weight:600;border-radius:12px;padding:10px 16px;cursor:pointer;color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn:hover{border-color:var(--accent)}
+.msg{max-width:860px;margin:40px auto;padding:0 16px;color:var(--ink2);font-size:17px}
+.pk{max-width:860px;margin:16px auto 48px;background:var(--card);border-radius:24px;padding:clamp(22px,5vw,56px);box-shadow:0 1px 2px rgba(0,0,0,.04),0 24px 60px rgba(0,0,0,.06)}
+.kol{display:flex;justify-content:space-between;gap:16px;align-items:flex-end;border-bottom:2px solid var(--rule);padding-bottom:14px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:17px;letter-spacing:-.01em}
+.kol .pr{font-size:12.5px;color:var(--muted);text-align:right;line-height:1.5}
+.kol .pr b{display:block;color:var(--ink);font-size:13px;letter-spacing:.14em;text-transform:uppercase;font-weight:600}
+.obrazec{display:inline-block;margin-top:14px;font-size:12.5px;font-weight:600;color:var(--warn);background:var(--warn-bg);border-radius:8px;padding:4px 10px}
+h1{font-size:clamp(24px,4vw,32px);letter-spacing:-.025em;line-height:1.15;margin:26px 0 6px;font-weight:600}
+.rek{color:var(--ink2);font-size:14px}
+.itog{margin:26px 0 8px;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.itog h2{margin:0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:12px 18px;border-bottom:1px solid var(--line);background:#FAFAF8}
+.itog ol{list-style:none;margin:0;padding:0}
+.itog li{display:grid;grid-template-columns:28px 1fr;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.itog li:last-child{border-bottom:0}
+.itog .nn{font-weight:600;color:var(--muted)}
+.itog .t{font-weight:600}
+.itog .s{color:var(--ink2);font-size:14px;margin-top:2px}
+.summa{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.summa select{font:inherit;font-size:15px;padding:9px 12px;border:1px solid #D9D9D4;border-radius:10px;background:#fff;color:inherit;max-width:100%}
+.summa input{font:inherit;font-size:15px;padding:9px 12px;border:1px solid #D9D9D4;border-radius:10px;width:200px;max-width:100%}
+.polnota{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13.5px;color:var(--ink2);margin:14px 0 0}
+.legenda{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted);margin:10px 0 0}
+.m{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 6px 0 1px;vertical-align:-1px;flex:none;box-sizing:border-box}
+.m.m-ist{background:var(--ink)}.m.m-ras{background:var(--accent);border-radius:1px;transform:rotate(45deg) scale(.78)}.m.m-net{border:1.5px solid var(--off)}.m.m-sl{border:1.5px solid var(--line)}
+.ogl li .m{margin-top:6px}
+.ogl{margin:28px 0 0;padding:0;list-style:none;columns:2;column-gap:32px;font-size:14px}
+.ogl li{break-inside:avoid;display:flex;gap:6px;padding:3px 0;border-bottom:1px dotted var(--line)}
+.ogl a{color:var(--ink)}
+.ogl .st{margin-left:auto;color:var(--muted);font-size:12.5px;white-space:nowrap}
+.rz{margin:34px 0 0;padding-top:14px;border-top:1px solid var(--rule);break-inside:auto}
+.rz h2{display:flex;gap:10px;align-items:baseline;font-size:19px;letter-spacing:-.015em;margin:0 0 10px;font-weight:600;break-after:avoid}
+.rz h2 .no{color:var(--muted);min-width:1.6em}
+.rz h2 .zn{margin-left:auto;font-size:12.5px;font-weight:600;border-radius:8px;padding:3px 9px;white-space:nowrap}
+.zn.ok{color:var(--ok);background:var(--ok-bg)}.zn.warn{color:var(--warn);background:var(--warn-bg)}.zn.bad{color:var(--bad);background:var(--bad-bg)}.zn.info{color:var(--ink2);background:#F0F0EC}.zn.off{color:var(--off);background:#F3F3F0}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th,td{text-align:left;vertical-align:top;padding:9px 0;border-bottom:1px solid var(--line)}
+th{font-weight:500;color:var(--ink2);width:38%;padding-right:16px}
+td small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+tr{break-inside:avoid}
+tr.warn td b{color:var(--warn)}tr.bad td b{color:var(--bad)}
+td b{font-weight:600}
+.vyvod{margin:10px 0 0;font-size:14.5px}
+.net{color:var(--ink2);font-size:14.5px;background:#FAFAF8;border-radius:12px;padding:12px 14px}
+.stroka{margin-top:10px;font-size:12px;color:var(--muted);line-height:1.5}
+.nz li{margin:6px 0}
+.podl{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:start}
+.podl .qr svg{display:block;width:132px;height:132px}
+.hash{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;word-break:break-all;color:var(--ink2)}
+.podpis{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:40px;font-size:12.5px;color:var(--muted)}
+.podpis div{border-top:1px solid var(--rule);padding-top:6px}
+.foot{margin-top:28px;font-size:12px;color:var(--muted);line-height:1.55}
+@media (max-width:600px){.ogl{columns:1}table,tbody,tr,th,td{display:block;width:auto}th{border:0;padding:10px 0 0;width:auto}td{padding-top:2px}.podl{grid-template-columns:1fr}.kol{flex-direction:column;align-items:flex-start}.kol .pr{text-align:left}}
+@media print{
+  @page{size:A4;margin:16mm 16mm 18mm;
+    @bottom-left{content:"Делоскоп · Паспорт контрагента · deloskop.ru";font:9pt 'Onest',Arial,sans-serif;color:#6B6B70}
+    @bottom-right{content:"стр. " counter(page) " из " counter(pages);font:9pt 'Onest',Arial,sans-serif;color:#6B6B70}}
+  body{background:#fff;font-size:10.5pt}
+  .bar,.noprint{display:none!important}
+  .pk{box-shadow:none;margin:0;padding:0;border-radius:0;max-width:none}
+  .m,.zn,.obrazec,.itog h2,.net{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .itog,.podl,.podpis{break-inside:avoid}
+  a{color:var(--ink)}
+}
+</style>
+<link rel="stylesheet" href="/css/fonts.css">
+<link rel="stylesheet" href="/css/podval.css">
+<link rel="stylesheet" href="/css/shapka.css">
+<script src="/js/shapka.js" defer></script>
+<script src="/js/metrika.js" defer></script>
+</head>
+<body>
+<!--shapka-->
+<a class="skip" href="#main">Перейти к содержанию</a>
+<header class="shapka" data-shapka>
+ <div class="shapka__in">
+  <a class="shapka__logo" href="/" aria-label="Делоскоп — на главную"><svg width="36" height="32" viewBox="0 0 72 64" fill="none" aria-hidden="true"><path d="M36 18.1A16 16 0 0 1 36 45.9A16 16 0 0 1 36 18.1Z" fill="#0B63E5"/><circle cx="28" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/><circle cx="44" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/></svg><span class="shapka__word">делоскоп</span></a>
+  <nav class="shapka__nav" aria-label="Основное меню">
+   <ul class="shapka__list">
+    <li><a class="shapka__link" href="/" data-match="^/(index\.html|report\.html)?$">Проверка</a></li>
+    <li class="shapka__dd">
+     <button class="shapka__link" type="button" aria-expanded="false" aria-controls="dd-vypiska" data-match="^/(nalichnye|kontragenty-iz-vypiski|proverit-schet)/">Выписка<svg class="shapka__chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+     <ul class="shapka__menu" id="dd-vypiska">
+      <li><a href="/nalichnye/"><b>Наличные глазами банка</b><span>Как банк видит ваши операции с наличными</span></a></li>
+      <li><a href="/kontragenty-iz-vypiski/"><b>Кому вы платите</b><span>Проверка контрагентов из вашей выписки</span></a></li>
+      <li><a href="/proverit-schet/"><b>Проверь счёт</b><span>Проверить получателя до оплаты</span></a></li>
+     </ul>
+    </li>
+    <li class="shapka__dd">
+     <button class="shapka__link" type="button" aria-expanded="false" aria-controls="dd-115" data-match="^/(skoraya-115-fz|pasport|115-fz)/">115-ФЗ<svg class="shapka__chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+     <ul class="shapka__menu" id="dd-115">
+      <li><a href="/skoraya-115-fz/"><b>Скорая 115-ФЗ</b><span>Банк ограничил счёт: что делать сейчас</span></a></li>
+      <li><a href="/pasport/"><b>Паспорт компании</b><span>Страница о вашей компании для банка и партнёров</span></a></li>
+      <li><a href="/115-fz/"><b>Разборы 115-ФЗ</b><span>Простыми словами, с нормами и практикой</span></a></li>
+     </ul>
+    </li>
+    <li><a class="shapka__link" href="/indeks/" data-match="^/indeks/">Индекс</a></li>
+    <li><a class="shapka__link" href="/tarify/" data-match="^/tarify/">Тарифы</a></li>
+   </ul>
+  </nav>
+  <div class="shapka__right">
+   <button class="shapka__link shapka__new" type="button" data-whatsnew aria-haspopup="dialog"><span class="shapka__new-l">Что нового</span><span class="shapka__new-s" aria-hidden="true">Новое</span><span class="shapka__dot" data-whatsnew-dot hidden><span class="vh">есть непрочитанное</span></span><span class="shapka__cnt num" data-whatsnew-count hidden></span></button>
+   <a class="shapka__link shapka__login" href="/cabinet.html" data-auth-out>Войти</a>
+   <a class="shapka__link shapka__login" href="/cabinet.html" data-auth-in hidden>Кабинет</a>
+   <a class="shapka__btn" href="/#inn" data-check>Проверить</a>
+   <button class="shapka__burger" type="button" aria-expanded="false" aria-controls="mnav" aria-label="Открыть меню"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16M4 16h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+  </div>
+ </div>
+</header>
+<dialog class="mnav" id="mnav" aria-label="Меню">
+ <div class="mnav__top">
+  <a class="shapka__logo" href="/" aria-label="Делоскоп — на главную"><svg width="36" height="32" viewBox="0 0 72 64" fill="none" aria-hidden="true"><path d="M36 18.1A16 16 0 0 1 36 45.9A16 16 0 0 1 36 18.1Z" fill="#0B63E5"/><circle cx="28" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/><circle cx="44" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/></svg><span class="shapka__word">делоскоп</span></a>
+  <button class="shapka__burger" type="button" data-close aria-label="Закрыть меню"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+ </div>
+ <nav class="mnav__body" aria-label="Основное меню">
+  <ul class="mnav__list">
+   <li><a class="mnav__link" href="/" data-match="^/(index\.html|report\.html)?$">Проверка</a></li>
+   <li><span class="mnav__link mnav__group" data-match="^/(nalichnye|kontragenty-iz-vypiski|proverit-schet)/">Выписка</span>
+    <ul class="mnav__sub">
+     <li><a href="/nalichnye/">Наличные глазами банка</a></li>
+     <li><a href="/kontragenty-iz-vypiski/">Кому вы платите</a></li>
+     <li><a href="/proverit-schet/">Проверь счёт</a></li>
+    </ul></li>
+   <li><span class="mnav__link mnav__group" data-match="^/(skoraya-115-fz|pasport|115-fz)/">115-ФЗ</span>
+    <ul class="mnav__sub">
+     <li><a href="/skoraya-115-fz/">Скорая 115-ФЗ</a></li>
+     <li><a href="/pasport/">Паспорт компании</a></li>
+     <li><a href="/115-fz/">Разборы 115-ФЗ</a></li>
+    </ul></li>
+   <li><a class="mnav__link" href="/indeks/" data-match="^/indeks/">Индекс</a></li>
+   <li><a class="mnav__link" href="/tarify/" data-match="^/tarify/">Тарифы</a></li>
+  </ul>
+  <div class="mnav__extra">
+   <button class="mnav__row" type="button" data-whatsnew aria-haspopup="dialog">Что нового<span class="shapka__dot" data-whatsnew-dot hidden><span class="vh">есть непрочитанное</span></span></button>
+   <a class="mnav__row" href="/cabinet.html" data-auth-out>Войти</a>
+   <a class="mnav__row" href="/cabinet.html" data-auth-in hidden>Кабинет</a>
+  </div>
+  <a class="shapka__btn shapka__btn--lg mnav__cta" href="/#inn" data-check>Проверить компанию</a>
+ </nav>
+</dialog>
+<!--/shapka-->
+<span id="main" tabindex="-1"></span>
+<style>.pv #pv p{margin:12px 0}.pv #pvf{margin:20px 0 8px}</style>
+<article class="pk pv">
+  <div class="kol"><div class="brand"><svg width="26" height="23" viewBox="0 0 72 64" fill="none" aria-hidden="true"><path d="M36 18.1A16 16 0 0 1 36 45.9A16 16 0 0 1 36 18.1Z" fill="#0B63E5"/><circle cx="28" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/><circle cx="44" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/></svg>делоскоп</div><div class="pr"><b>Проверка подлинности</b>Паспорт контрагента</div></div>
+  <h1>Проверка Паспорта</h1>
+  <div id="pv"><p class="net">Откройте эту страницу по QR-коду из Паспорта или введите номер ниже.</p></div>
+  <form class="summa" id="pvf"><input name="n" placeholder="Номер: П-20260929-1A2B3C4D" aria-label="Номер Паспорта" autocomplete="off"><button class="btn" type="submit">Проверить</button></form>
+  <section class="rz"><h2>Что здесь видно и что нет</h2>
+    <ul class="nz">
+      <li>Номер, дата формирования и начало отпечатка SHA-256 — те, что Делоскоп вложил в QR-код при выдаче. Сверьте их с разделом 17 Паспорта: совпадают — страница и QR-код выданы вместе.</li>
+      <li>Сведения закрытых разделов, имена людей и данные платных источников по QR-коду не открываются: Паспорт пересылают кому угодно, а эта страница открыта всем.</li>
+      <li>Сверка номера с копией на нашем сервере появится, когда Паспорта начнут храниться у нас (срок хранения — 5 лет). Сейчас страница не защищает от подделки самого листа — только показывает, что было в QR-коде.</li>
+      <li>Сведения о компании меняются. Свежая картина — новой проверкой по ИНН.</li>
+    </ul>
+  </section>
+</article>
+<script>
+(function(){
+  var q=new URLSearchParams(location.search), pv=document.getElementById('pv'), f=document.getElementById('pvf');
+  function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  var n=(q.get('n')||'').trim(), d=(q.get('d')||'').replace(/\D/g,''), h=(q.get('h')||'').replace(/[^0-9a-f]/gi,'').slice(0,16), inn=(q.get('inn')||'').replace(/\D/g,'');
+  if(inn.length!==10)inn='';                       // только организации: ИНН ИП на этой странице не показываем
+  f.n.value=n;
+  f.onsubmit=function(e){e.preventDefault();var v=f.n.value.trim();if(v)location.search='?n='+encodeURIComponent(v);};
+  if(!n)return;
+  if(n==='ОБРАЗЕЦ'){pv.innerHTML='<p class="vyvod">Это образец Паспорта: компания вымышленная, данные для примера. У настоящего Паспорта номер выглядит так — П-20260929-1A2B3C4D.</p><p><a class="btn" href="/pasport/kontragent/?demo=1">Открыть образец</a></p>';return;}
+  var ok=/^П-\d{8}-[0-9A-F]{8}$/.test(n), dn=n.slice(2,10);
+  if(!ok){pv.innerHTML='<p class="net">Номер «'+esc(n)+'» не похож на номер Паспорта Делоскопа: он выглядит так — П-20260929-1A2B3C4D. Проверьте, нет ли опечатки.</p>';return;}
+  var dt=dn.slice(6,8)+'.'+dn.slice(4,6)+'.'+dn.slice(0,4);
+  var shodno=!h||h.slice(0,8).toUpperCase()===n.slice(11);
+  var otp=h?(h.slice(0,4)+'-'+h.slice(4,8)+'-'+h.slice(8,12)+'-'+h.slice(12,16)).toUpperCase():'';
+  pv.innerHTML='<table><tr><th>Номер Паспорта</th><td><b>'+esc(n)+'</b></td></tr><tr><th>Сформирован</th><td>'+esc(dt)+'</td></tr>'+
+    (otp?'<tr><th>Отпечаток (начало)</th><td><b>'+esc(otp)+'</b></td></tr>':'')+
+    (inn?'<tr><th>Организация</th><td>ИНН '+esc(inn)+'</td></tr>':'')+'</table>'+
+    '<p class="vyvod">'+(shodno?'Номер и отпечаток в QR-коде согласованы: номер содержит начало отпечатка. Сверьте эти строки с разделом 17 Паспорта.':'Номер и отпечаток в QR-коде не согласованы — такой QR-код Делоскоп не выдавал. Запросите у отправителя Паспорт заново или проверьте компанию сами.')+'</p>'+
+    (inn?'<p><a class="btn primary" href="/report.html?inn='+inn+'">Проверить компанию сейчас</a></p>':'');
+})();
+</script>
+<!--podval--><div class="podval" role="contentinfo"><div class="podval__in"><div class="podval__cols"><nav class="podval__col" aria-label="Продукты"><p class="podval__h">Продукты</p><ul><li><a href="/">Проверка по ИНН</a></li><li><a href="/indeks/">Индекс Делоскопа</a></li><li><a href="/#shield">Щит</a></li><li><a href="/nalichnye/">Наличные глазами банка</a></li><li><a href="/kontragenty-iz-vypiski/">Кому вы платите</a></li><li><a href="/proverit-schet/">Проверь счёт</a></li><li><a href="/skoraya-115-fz/">Скорая 115-ФЗ</a></li><li><a href="/pasport/">Паспорт</a></li><li><a href="/delopis/">Делопись</a></li><li><a href="/tarify/">Тарифы</a></li></ul></nav><nav class="podval__col" aria-label="Знания"><p class="podval__h">Знания</p><ul><li><a href="/115-fz/">115-ФЗ простыми словами</a></li><li><a href="/nalogi/">Налоги</a></li><li><a href="/obnovleniya/">Что нового</a></li></ul></nav><nav class="podval__col" aria-label="Компания"><p class="podval__h">Компания</p><ul><li><a href="/indeks/#metodika">Методика Индекса</a></li><li><a href="/cabinet.html">Кабинет</a></li><li><a href="/rekvizity/">Реквизиты и контакты</a></li><li><a href="mailto:help@deloskop.ru">help@deloskop.ru</a></li></ul></nav><nav class="podval__col" aria-label="Документы"><p class="podval__h">Документы</p><ul><li><a href="/oferta/">Публичная оферта</a></li><li><a href="/politika/">Политика обработки ПДн</a></li><li><a href="/soglasie/">Согласие на обработку ПДн</a></li><li><a href="/rassylki/">Согласие на рассылки</a></li><li><a href="/cookies/">Cookies и Метрика</a></li><li><a href="/vozvrat/">Возврат денег</a></li><li><a href="/partneram/usloviya/">Условия для партнёров</a></li><li><a href="/rekvizity/">Реквизиты</a></li></ul></nav></div><div class="podval__niz"><p>© 2026 Делоскоп</p><p>Сотрудничество, отзывы и предложения — <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>. Принимаем 24/7</p><p>Материалы носят информационный характер и не заменяют консультацию юриста</p></div></div></div><!--/podval-->
+<script src="/obnovleniya.js" defer></script>
+</body>
+</html>

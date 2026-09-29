@@ -17,6 +17,7 @@
   else root.DlkAcc = api;
 })(typeof self !== 'undefined' ? self : this, function () {
   var NB = ' ';
+  var BI_DO = 'https://service.nalog.ru/bi.do';   // сервис ФНС «Решения о приостановлении»: ИНН + БИК, бесплатно
 
   function dmy(iso) {
     if (!iso) return '';
@@ -27,7 +28,7 @@
   function key23(s) { var w = [7, 1, 3], x = 0; for (var i = 0; i < s.length; i++) x += (+s[i]) * w[i % 3]; return x % 10 === 0; }
   function klyuchSchyota(bik, acc) { return /^\d{9}$/.test(bik || '') && /^\d{20}$/.test(acc || '') ? key23(bik.slice(-3) + acc) : null; }
 
-  /* d = {bik, acc, bankNazvanie?, bank?:{ok, name, bik, as_of}, priostanovki?:{status, as_of, text}}
+  /* d = {bik, acc, inn?, bankNazvanie?, bank?:{ok, name, bik, as_of}, priostanovki?:{status, as_of, text}}
    * bank и priostanovki — только из ответа сервера; без них строки честно «не сверяли» / нет строки. */
   function stroki(d) {
     d = d || {};
@@ -72,8 +73,12 @@
         meta: 'Контрольный ключ не' + NB + 'сошёлся' + NB + '— в' + NB + 'номере опечатка или счёт не' + NB + 'из' + NB + 'этого банка. Попросите поставщика прислать реквизиты заново.' });
     }
 
-    // 3. Приостановки ФНС — только если сервер прислал (DaMIA, п. 99)
+    // 3. Приостановки ФНС. Сервер прислал (DaMIA, п. 99) — показываем его ответ. Не прислал или «не проверяли» —
+    //    честное «Не проверяли» и ссылка на бесплатный сервис ФНС (ИНН + БИК), где клиент проверит сам:
+    //    массово мы этот сервис не опрашиваем, капчу не обходим, ответ ФНС видит только клиент.
     var p = d.priostanovki;
+    var inn = /^\d{10}(\d{2})?$/.test(d.inn || '') ? d.inn : null;
+    var bi = { href: BI_DO, text: 'Проверить на' + NB + 'сайте ФНС' };
     if (p && p.status === 'found') {
       out.push({ cls: 'is-high', nazv: 'Решения ФНС о' + NB + 'приостановке операций по' + NB + 'счетам', verdikt: 'Найдены',
         meta: (p.text || 'Банк не' + NB + 'проведёт расходные операции поставщика; поступления на' + NB + 'счёт идут.') +
@@ -81,9 +86,12 @@
     } else if (p && p.status === 'not_found') {
       out.push({ cls: 'is-fact', nazv: 'Решения ФНС о' + NB + 'приостановке операций по' + NB + 'счетам', verdikt: 'Не' + NB + 'найдены',
         meta: 'Сервис ФНС' + (p.as_of ? ' на' + NB + dmy(p.as_of) : '') + '.' });
-    } else if (p) {
-      out.push({ cls: 'is-none', nazv: 'Решения ФНС о' + NB + 'приостановке', verdikt: 'Не' + NB + 'проверяли',
-        meta: 'Сегодня не' + NB + 'проверили' + NB + '— это не' + NB + 'значит, что решений нет. Проверить самим: service.nalog.ru/bi.do' });
+    } else if (p || bikFormat) {
+      out.push({ cls: 'is-none', nazv: 'Решения ФНС о' + NB + 'приостановке операций по' + NB + 'счетам', verdikt: 'Не' + NB + 'проверяли',
+        meta: 'Мы сегодня не' + NB + 'проверяли' + NB + '— это не' + NB + 'значит, что решений нет. Проверьте сами за' + NB + 'минуту на' + NB + 'бесплатном сервисе ФНС: введите ' +
+          (inn ? 'ИНН ' + inn : 'ИНН поставщика') + (bikFormat ? ' и' + NB + 'БИК ' + bik : ' и' + NB + 'БИК его банка') +
+          '. Ответ увидите только вы. Если решение есть, банк не' + NB + 'проведёт расходные операции поставщика' + NB + '— не' + NB + 'платите вперёд, пока его не' + NB + 'отменят.',
+        ssylka: bi });
     }
 
     // 4. Принадлежность — всегда отдельной строкой
@@ -111,7 +119,12 @@
       var li = el('li', x.cls);
       var i = el('span', 'acc__i'); i.setAttribute('aria-hidden', 'true');
       li.appendChild(i); li.appendChild(el('p', 'acc__n', x.nazv)); li.appendChild(el('span', 'acc__v', x.verdikt));
-      li.appendChild(el('p', 'acc__m', x.meta));
+      var m = el('p', 'acc__m', x.meta);
+      if (x.ssylka) {
+        var a = el('a', 'acc__a', x.ssylka.text); a.href = x.ssylka.href; a.target = '_blank'; a.rel = 'noopener';
+        m.appendChild(doc.createTextNode(' ')); m.appendChild(a);
+      }
+      li.appendChild(m);
       ul.appendChild(li);
     });
     sec.appendChild(ul);
@@ -126,5 +139,5 @@
     return s;
   }
 
-  return { stroki: stroki, zagolovok: zagolovok, render: render, klyuchSchyota: klyuchSchyota };
+  return { stroki: stroki, zagolovok: zagolovok, render: render, klyuchSchyota: klyuchSchyota, BI_DO: BI_DO };
 });

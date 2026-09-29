@@ -40,7 +40,12 @@ def klyuch(koren=ROOT):
 
 
 def adresa_sitemap(koren=ROOT):
-    return re.findall(r"<loc>([^<]+)</loc>", (koren / "sitemap.xml").read_text(encoding="utf-8"))
+    """Адреса из sitemap.xml и (karta-v1) sitemap-companies.xml — карточки компаний, если они собраны."""
+    out = re.findall(r"<loc>([^<]+)</loc>", (koren / "sitemap.xml").read_text(encoding="utf-8"))
+    sk = koren / "sitemap-companies.xml"
+    if sk.exists():
+        out += re.findall(r"<loc>([^<]+)</loc>", sk.read_text(encoding="utf-8"))
+    return out
 
 
 def fajl_v_adres(put):

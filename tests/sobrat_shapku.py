@@ -112,6 +112,9 @@ KOLONKI = [
 def podval_html(r):
     cols = []
     for zag, ssylki in KOLONKI:
+        # karta-v1: «Компании» — в подвале, только когда хаб карточек уже собран (tests/kartochki.py)
+        if zag == "Знания" and os.path.exists(put("company", "index.html")):
+            ssylki = ssylki + [("Компании", "/company/")]
         li = "".join('<li><a href="%s">%s</a></li>' % (e(h), e(t)) for t, h in ssylki)
         cols.append('<nav class="podval__col" aria-label="%s"><p class="podval__h">%s</p><ul>%s</ul></nav>' % (e(zag), e(zag), li))
     stroka = "© 2026 Делоскоп"

@@ -13,6 +13,8 @@ test('главная: перехват мягкой 404 стоит первым 
   assert.ok(i > 0 && i < t.indexOf('<title>'), 'скрипт должен идти до <title> и остальных скриптов');
   assert.ok(t.includes("'/cabinet':'/cabinet.html'") && t.includes("'/report':'/report.html'"));
   assert.ok(t.includes("location.replace"));
+  // karta-v1: /company/{ИНН юрлица}… без собранной карточки — на живую проверку этого ИНН; 12 цифр (ИП) — обычная 404
+  assert.ok(t.includes("/^\\/company\\/(\\d{10})(?:[-\\/]|$)/") && t.includes("location.replace('/?inn='+ci[1])"));
 });
 
 test('404.html закрыта от индекса', () => {

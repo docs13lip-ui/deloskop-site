@@ -73,7 +73,7 @@ test('отзыв подключён на отчёте, Паспорте конт
 
 test('полоса беты: одна строка, крестик прячет на неделю, хранилище — в try', () => {
   const p = chitat('partials/beta.html');
-  assert.ok(p.includes('Открытая бета: всё бесплатно.'));
+  assert.ok(p.includes('Открытая бета до&nbsp;13&nbsp;октября: всё бесплатно.'), 'полоса беты: срок беты — решение владельца 30.09 (до 13.10 включительно)');
   assert.ok(p.includes('mailto:help@deloskop.ru'));
   assert.ok(p.includes('aria-label="Скрыть на неделю"'));
   assert.ok(/try\{if\(\+localStorage\.getItem\("dlk_beta_skryt"\)>Date\.now\(\)\)/.test(p));

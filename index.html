@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<script>/* Мягкая 404 (п. 32): сервер отдаёт главную на любой адрес — уводим на настоящую страницу «нет такой страницы», чтобы поисковики не видели дубли главной. */(function(){var p=location.pathname,a={'/cabinet':'/cabinet.html','/report':'/report.html','/admin':'/admin.html'},k=p.replace(/\/+$/,'');if(p==='/'||p==='/index.html')return;var m=document.createElement('meta');m.name='robots';m.content='noindex';document.head.appendChild(m);location.replace(a[k]?a[k]+location.search+location.hash:'/404.html?s='+encodeURIComponent(p));})();</script>
+<script>/* Мягкая 404 (п. 32): сервер отдаёт главную на любой адрес — уводим на настоящую страницу «нет такой страницы», чтобы поисковики не видели дубли главной. */(function(){var p=location.pathname,a={'/cabinet':'/cabinet.html','/report':'/report.html','/admin':'/admin.html'},k=p.replace(/\/+$/,'');if(p==='/'||p==='/index.html')return;var m=document.createElement('meta');m.name='robots';m.content='noindex';document.head.appendChild(m);var ci=/^\/company\/(\d{10})(?:[-\/]|$)/.exec(p);if(ci){location.replace('/?inn='+ci[1]);return;}location.replace(a[k]?a[k]+location.search+location.hash:'/404.html?s='+encodeURIComponent(p));})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Делоскоп — проверка контрагентов по ИНН</title>
 <meta name="description" content="Проверяем компанию по открытым реестрам и простыми словами говорим, чем она опасна: блокировкой счёта по 115-ФЗ или налоговыми доначислениями.">

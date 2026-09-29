@@ -7,7 +7,8 @@ const path = require("node:path");
 const R = (p) => fs.readFileSync(path.join(__dirname, "..", p), "utf8");
 const S = require("../js/schet.js");
 const D = JSON.parse(R("tarify/tarify.json"));
-const html = R("skoraya-115-fz/index.html");
+const { platnyj, vidimoe } = require("./beta_vid.js"); // beta-v1: устройство оплаты — в «платном» виде
+const html = vidimoe(platnyj(R("skoraya-115-fz/index.html")));
 const blok = html.slice(html.indexOf('<section class="pkg'), html.indexOf("</section>\n\n<section class=\"more"));
 const tekst = (s) => s.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/[  ]/g, " ").replace(/\s+/g, " ").trim();
 const NB = /[  ]/g;

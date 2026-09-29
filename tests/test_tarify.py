@@ -32,6 +32,9 @@ ok('главная: ссылка на /tarify/', 'href="/tarify/' in main)
 ok('главная: пакет отчётов', f'10 полных отчётов за {r(D["paket_otchetov"]["cena"])}' in main)
 
 pg = rd('tarify/index.html')
+sys.path.insert(0, os.path.join(R, 'tests'))
+import beta as _B  # beta-v1: кнопки оплаты проверяем в «платном» виде — они спрятаны, а не потеряны
+_platnyj = lambda t: _B.vidimoe(_B.primenit(t, False, polosa=''))
 emb = re.search(r'<script type="application/json" id="tarify-data">(.*?)</script>', pg, re.S).group(1)
 ok('страница: встроенные данные = tarify.json', json.loads(emb) == D)
 nb = ' '
@@ -64,7 +67,7 @@ for f in ('115-fz/zablokirovali-schet-chto-delat/index.html', '115-fz/zsk-zony-r
     ok(f'{f}: МВК — до 20 рабочих дней', not re.search(r'(комиссия рассматривает её|рассмотрение —) 15', rd(f)) and re.search(r'до 20(\u00a0|&nbsp;| )рабочих', rd(f)))
 # ---------- п. 23: кнопки тарифов ведут на форму «Получить счёт», а не в mailto ----------
 import re as _re2
-for _nm, _html in (('страница', pg), ('главная', open(os.path.join(R, 'index.html'), encoding='utf-8').read())):
+for _nm, _html in (('страница', _platnyj(pg)), ('главная', _platnyj(open(os.path.join(R, 'index.html'), encoding='utf-8').read()))):
     _kn = _re2.findall(r'<a class="cta[^"]*" data-tarif="([a-z]+)" data-srok="([a-z]+)" href="([^"]+)"', _html)
     ok(f'{_nm}: 6 кнопок тарифов с data-tarif/data-srok', len(_kn) == 6)
     ok(f'{_nm}: кнопки ведут на /schet/ с тем же тарифом и сроком',

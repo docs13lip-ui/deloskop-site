@@ -172,6 +172,7 @@ main{max-width:860px}
 <link rel="stylesheet" href="/css/paket.css">
 <script src="/js/shapka.js" defer></script>
 <script src="/js/metrika.js" defer></script>
+<meta name="deloskop-rezhim" content="beta">
 </head>
 <body>
 <!--shapka-->
@@ -243,6 +244,7 @@ main{max-width:860px}
  </nav>
 </dialog>
 <!--/shapka-->
+<!--beta-polosa--><div class="beta-bar" role="region" aria-label="Открытая бета" data-beta-bar><div class="beta-bar__in"><span class="beta-bar__metka">бета</span><p class="beta-bar__t"><b>Открытая бета: всё бесплатно.</b> <span class="beta-bar__dop">Оплата и&nbsp;реквизиты появятся позже. </span><a href="mailto:help@deloskop.ru?subject=%D0%91%D0%B5%D1%82%D0%B0%20%D0%94%D0%B5%D0%BB%D0%BE%D1%81%D0%BA%D0%BE%D0%BF%D0%B0">Нашли ошибку&nbsp;— напишите</a></p><button class="beta-bar__x" type="button" aria-label="Скрыть на неделю" data-beta-x><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div></div><script>try{if(+localStorage.getItem("dlk_beta_skryt")>Date.now())document.querySelector("[data-beta-bar]").hidden=true}catch(e){}</script><!--/beta-polosa-->
 <main id="main">
 <nav class="crumbs" aria-label="Навигация"><a href="/">Делоскоп</a><span>›</span><a href="/115-fz/">115-ФЗ</a></nav>
 <div class="hero">
@@ -295,7 +297,7 @@ main{max-width:860px}
   <h2 id="pkg-h">Пакет документов для разговора с&nbsp;банком по&nbsp;115-ФЗ</h2>
   <p class="pkg__lead">Вы загружаете выписку и отвечаете на вопросы анкеты. Делоскоп собирает документы под вашу ситуацию — в Word, чтобы вы могли проверить, поправить и подать их сами. Выписка загружается в защищённый кабинет и удаляется через 30&nbsp;дней после последней доработки.</p>
   <ol class="pkg__steps">
-   <li><span class="pkg__step-n" aria-hidden="true">1</span>Оплатите пакет</li>
+   <li><span class="pkg__step-n" aria-hidden="true">1</span><!--oplata--><template data-oplata>Оплатите пакет</template><!--/oplata--><!--v-bete-->Пройдите бесплатный план выше<!--/v-bete--></li>
    <li><span class="pkg__step-n" aria-hidden="true">2</span>Загрузите выписку и заполните анкету</li>
    <li><span class="pkg__step-n" aria-hidden="true">3</span>Получите документы не позднее 1&nbsp;рабочего дня</li>
   </ol>
@@ -348,15 +350,15 @@ main{max-width:860px}
     <li>Напоминания о сроках на почту</li>
     <li>Месяц тарифа «Про» в подарок</li>
    </ul>
-   <a class="pkg__cta" href="/schet/?produkt=skoraya_pod_klyuch" data-schet data-produkt="skoraya_pod_klyuch" aria-haspopup="dialog">Получить пакет</a>
+   <!--oplata--><template data-oplata><a class="pkg__cta" data-oplata-href="/schet/?produkt=skoraya_pod_klyuch" data-schet data-produkt="skoraya_pod_klyuch" aria-haspopup="dialog">Получить пакет</a></template><!--/oplata--><!--v-bete--><a class="pkg__cta" href="#sc">Начать с бесплатного плана</a><!--/v-bete-->
    <p class="pkg__cap pkg__card-note">Черновики — не консультация юриста и не гарантия исхода. <a href="#pkg-legal">Подробнее</a></p>
-   <p class="pkg__cap">По счёту для компании или ИП. Оплата картой — после подключения банка. <a href="/oferta/#skoraya">Условия оферты</a></p>
+   <!--oplata--><template data-oplata><p class="pkg__cap">По счёту для компании или ИП. Оплата картой — после подключения банка. <a data-oplata-href="/oferta/#skoraya">Условия оферты</a></p></template><!--/oplata--><!--v-bete--><p class="pkg__cap">Идёт открытая бета: пакет под ключ пока не продаём, бесплатный план открыт целиком. Цена — какой она будет после беты.</p><!--/v-bete-->
   </aside>
  </div>
 
  <div class="pkg__bar" data-pkg-bar hidden>
   <p><span class="pkg__bar-price"><span data-cena="skoraya_pod_klyuch">4 990</span>&nbsp;₽</span><span class="pkg__cap">Скорая под ключ · разово</span></p>
-  <a class="pkg__cta pkg__cta--sm" href="/schet/?produkt=skoraya_pod_klyuch" data-schet data-produkt="skoraya_pod_klyuch" aria-haspopup="dialog">Получить пакет</a>
+  <!--oplata--><template data-oplata><a class="pkg__cta pkg__cta--sm" data-oplata-href="/schet/?produkt=skoraya_pod_klyuch" data-schet data-produkt="skoraya_pod_klyuch" aria-haspopup="dialog">Получить пакет</a></template><!--/oplata--><!--v-bete--><a class="pkg__cta pkg__cta--sm" href="#sc">Бесплатный план</a><!--/v-bete-->
  </div>
 </section>
 

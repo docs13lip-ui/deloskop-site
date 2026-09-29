@@ -50,6 +50,10 @@ jobs:
 
       - name: Тесты страниц (правовые тексты, SEO, ссылки, ИНН, сроки)
         run: node --test tests/*.test.*
+        
+      - name: Карточки компаний — ворота, ИП, люди, Индекс, SEO (karta-v1)
+        run: python3 tests/test_kartochki.py
+              
 
       - name: IndexNow — какие адреса уйдут Яндексу
         run: python3 tests/test_indexnow.py

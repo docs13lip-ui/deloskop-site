@@ -1,2 +1,5 @@
 __pycache__/
 *.pyc
+# karta-v1: сведения для карточек не публикуем — они живут у того, кто собирает
+tests/kartochki_dannye/
+*.jsonl

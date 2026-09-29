@@ -1,0 +1,45 @@
+/* Карточка компании /company/{инн}-{slug}/ (karta-v1, 29.09.2026). Только токены /css/ds.css — своих цветов и кеглей нет.
+   1280: две колонки 1fr + 340 px, правая липкая; 390: одна колонка (Арт-директор, карточка §6). */
+.co-wrap{padding-block:var(--s-5) var(--s-8)}
+.co-krosh{margin:0 0 var(--s-4)}.co-krosh a{color:var(--muted);text-decoration:none}.co-krosh a:hover{color:var(--accent)}
+.co-head h1{font-size:clamp(30px,4vw,48px);overflow-wrap:anywhere}
+.co-sub{margin-top:var(--s-3);color:var(--ink-2);font-size:var(--t-small)}
+.co-act{display:flex;flex-wrap:wrap;gap:var(--s-3);margin-top:var(--s-5)}
+.co-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:var(--s-6);margin-top:var(--s-7);align-items:start}
+.co-aside{position:sticky;top:calc(var(--header-h) + var(--s-4));display:grid;gap:var(--s-4)}
+.co-sec{background:var(--surface);border-radius:var(--r-l);padding:clamp(20px,3vw,32px);margin-bottom:var(--s-4)}
+.co-sec h2{font-size:var(--t-h3);line-height:1.25;margin-bottom:var(--s-4)}
+.co-h3{font-size:18px;line-height:1.3;margin-bottom:var(--s-3)}
+.co-ind{display:flex;gap:var(--s-5);align-items:center;background:var(--surface);border-radius:var(--r-l);padding:clamp(20px,3vw,32px);margin-bottom:var(--s-4)}
+.co-ind__n{font-size:72px;line-height:1;font-weight:600;letter-spacing:-.03em;white-space:nowrap}.co-ind__n small{font-size:var(--t-small);color:var(--muted);font-weight:500;letter-spacing:0}
+.co-ind__z{font-weight:600}
+.co-ind--wait .co-ind__n{font-size:24px;color:var(--ink-2)}
+.co-bar-pol{position:relative;height:8px;border-radius:var(--r-pill);background:var(--surface-2);margin-top:var(--s-3);max-width:360px}
+.co-bar-pol i{position:absolute;left:0;top:0;bottom:0;border-radius:var(--r-pill);background:var(--muted)}
+.co-bar-pol b{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink)}
+.co-vv{list-style:none;margin:0;padding:0}
+.co-v{display:grid;grid-template-columns:12px 1fr;gap:var(--s-3);padding:var(--s-3) 0;border-top:1px solid var(--line)}.co-v:first-child{border-top:0;padding-top:0}
+.co-v p{font-weight:500}
+.co-v__z{width:12px;height:12px;border-radius:50%;margin-top:7px;background:var(--surface-2)}
+.co-v--ok .co-v__z{background:var(--ok)}.co-v--warn .co-v__z{background:var(--warn)}.co-v--info .co-v__z{background:var(--line);box-shadow:inset 0 0 0 1px var(--muted)}
+.co-src{display:block;margin-top:2px;font-size:var(--t-caption);color:var(--muted)}
+.co-pered{background:var(--accent-soft)}
+.co-pered ul{margin:0;padding-left:1.1em}.co-pered li{margin:0 0 var(--s-2)}
+.co-np{margin-top:var(--s-4);padding-top:var(--s-4);border-top:1px solid var(--line)}
+.co-np__h{font-weight:600;font-size:var(--t-small);margin-bottom:var(--s-2)}
+.co-np ul{list-style:none;margin:0 0 var(--s-2);padding:0;font-size:var(--t-small);color:var(--ink-2)}
+.co-chart{display:block;width:100%;max-width:480px;height:auto;margin:0 0 var(--s-4)}
+.co-bar{fill:var(--surface-2)}.co-bar--last{fill:var(--accent)}
+.co-bar-t{font:500 13px var(--font);fill:var(--muted);text-anchor:middle}
+.co-sec .table th{text-align:left}.co-sec .table td.num,.co-sec .table th:last-child{text-align:right}
+.co-ogov p+p{margin-top:var(--s-2)}
+.co-side .small{color:var(--ink-2);margin-bottom:var(--s-4)}
+.co-w100{width:100%}
+.co-sos{list-style:none;margin:0;padding:0}
+.co-sos li{padding:var(--s-2) 0;border-top:1px solid var(--line)}.co-sos li:first-child{border-top:0}
+.co-sos a{display:block;font-weight:500;text-decoration:none;overflow-wrap:anywhere}
+.co-sos--cols{columns:2 280px;column-gap:var(--s-6)}.co-sos--cols li{break-inside:avoid;border-top:0;border-bottom:1px solid var(--line)}
+.co-head .lead{margin:var(--s-4) 0 var(--s-6)}
+@media (max-width:900px){.co-grid{grid-template-columns:minmax(0,1fr)}.co-aside{position:static}}
+@media (max-width:640px){.co-act .btn{width:100%}.co-ind{flex-direction:column;align-items:flex-start;gap:var(--s-3)}}
+@media print{.co-act,.co-aside,.co-pered{display:none}.co-grid{display:block}}

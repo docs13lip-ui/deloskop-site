@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Паспорт добросовестности: одна ссылка для банка — Делоскоп</title>
-<meta name="description" content="Бесплатная живая страница о вашей компании по открытым данным ФНС: статус, следы реальной работы, QR-код для бумаги и защита от подделки. Для банка и партнёров.">
+<title>Паспорт компании по ИНН — бесплатно, с источником и датой — Делоскоп</title>
+<meta name="description" content="Бесплатный Паспорт компании по открытым реестрам: статус, руководитель, следы реальной работы — у каждой строки источник и дата. QR-код для бумаги.">
 <link rel="canonical" href="https://deloskop.ru/pasport/">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Паспорт добросовестности — Делоскоп">
+<meta property="og:title" content="Паспорт компании — Делоскоп">
 <meta property="og:description" content="Всё, что открытые реестры говорят о компании, — на сегодняшнюю дату, одной ссылкой и QR-кодом.">
 <meta property="og:url" content="https://deloskop.ru/pasport/">
 <meta property="og:image" content="https://deloskop.ru/ikonka-512.png">
@@ -50,9 +50,25 @@ h2{font-size:clamp(24px,3vw,30px);letter-spacing:-.02em;line-height:1.2;margin:4
 .who b{display:block;font-size:18px;letter-spacing:-.01em;margin-bottom:4px}.who span{color:var(--ink2);font-size:16px}
 @media (max-width:640px){.who{grid-template-columns:1fr}}
 .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
-table.cmp{width:100%;border-collapse:collapse;background:var(--card);border-radius:18px;overflow:hidden;font-size:16px}
-.cmp th,.cmp td{text-align:left;padding:13px 16px;border-bottom:1px solid var(--line);vertical-align:top}
-.cmp th{font-weight:600;background:#FAFAF8}.cmp tr:last-child td{border-bottom:0}
+table.cmp,table.kak{width:100%;border-collapse:collapse;background:var(--card);border-radius:18px;overflow:hidden;font-size:16px}
+.cmp th,.cmp td,.kak th,.kak td{text-align:left;padding:13px 16px;border-bottom:1px solid var(--line);vertical-align:top}
+.cmp th{font-weight:600;background:#FAFAF8}.cmp tr:last-child td,.kak tr:last-child td{border-bottom:0}
+.kak th{font-weight:500;color:var(--muted);width:34%}.kak td{color:var(--ink)}
+.roli{margin-top:22px;display:grid;grid-template-columns:repeat(2,1fr);gap:12px;max-width:760px}
+.rol{display:block;background:var(--card);border-radius:18px;padding:16px 20px;color:var(--ink)!important;border:1px solid transparent;transition:border-color .15s}
+.rol:hover{border-color:#CFCFC9}.rol b{display:block;font-size:18px;letter-spacing:-.01em}.rol span{display:block;color:var(--ink2);font-size:15px;margin-top:2px}
+@media (max-width:640px){.roli{grid-template-columns:1fr}}
+.tri3{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:10px}
+.tri3 li{background:var(--card);border-radius:16px;padding:14px 18px;color:var(--ink2);font-size:17px}.tri3 b{color:var(--ink)}
+.obr{display:block;margin-top:18px;background:var(--card);border-radius:22px;padding:22px 24px;color:var(--ink)!important;box-shadow:0 1px 2px rgba(0,0,0,.04),0 16px 40px rgba(0,0,0,.06);max-width:640px}
+.obr__k{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--warn);font-weight:600}
+.obr__t{font-size:24px;font-weight:600;letter-spacing:-.02em;margin-top:6px}.obr__n{font-size:15px;color:var(--muted)}
+.obr__l{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:6px;font-size:15px;color:var(--ink2)}
+.obr__l i{font-style:normal;display:inline-block;width:20px;color:var(--accent)}
+.obr__cta{display:inline-block;margin-top:14px;font-size:15px;font-weight:600;color:var(--accent)}
+.askmsg{font-size:15px;color:var(--ink2);margin:10px 0 0;min-height:0}.askmsg.err{color:var(--bad)}
+.ne{margin:0;padding-left:20px;color:var(--ink2);font-size:17px}.ne li{margin:6px 0}
+.dalee{margin-top:18px;font-size:15px;color:var(--muted)}.dalee a{color:var(--ink2);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
 .cmp td:nth-child(2){color:var(--ink)}.cmp td:nth-child(3){color:var(--muted)}
 .steps{counter-reset:s;list-style:none;padding:0;margin:0;display:grid;gap:12px}
 .steps li{counter-increment:s;background:var(--card);border-radius:18px;padding:16px 20px 16px 62px;position:relative;color:var(--ink2);font-size:17px}
@@ -149,12 +165,9 @@ footer a{color:var(--muted)}
   a[href]{color:inherit}
 }
 </style>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
-{"@type":"Question","name":"Паспорт добросовестности — это сертификат?","acceptedAnswer":{"@type":"Answer","text":"Нет. Это сводка открытых данных ФНС и других реестров на дату проверки. Он не заменяет документы, которые партнёр вправе запросить, и не гарантирует надёжность. Зато его невозможно купить или подправить: страница собирается заново при каждом открытии."}},
-{"@type":"Question","name":"Сколько стоит паспорт?","acceptedAnswer":{"@type":"Answer","text":"Паспорт бесплатный. Делоскоп не берёт денег с компаний за содержание паспорта и не меняет его по просьбе владельца."}},
-{"@type":"Question","name":"Как проверить, что бумажный паспорт не подделан?","acceptedAnswer":{"@type":"Answer","text":"Наведите камеру на QR-код: откроется живая страница на deloskop.ru. Сравните отпечаток данных на бумаге и на экране. Если они разные — с даты печати что-то изменилось, и верить нужно экрану."}},
-{"@type":"Question","name":"Видит ли паспорт операции по счёту и наличные?","acceptedAnswer":{"@type":"Answer","text":"Нет. Обороты, снятие наличных и назначения платежей видит только банк. Паспорт показывает то же, что видят все по открытым реестрам."}}
-]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebPage", "name": "Паспорт компании", "url": "https://deloskop.ru/pasport/", "inLanguage": "ru", "description": "Бесплатный Паспорт компании по открытым реестрам: у каждой строки источник и дата сведений.", "isPartOf": {"@type": "WebSite", "name": "Делоскоп", "url": "https://deloskop.ru/"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Делоскоп", "item": "https://deloskop.ru/"}, {"@type": "ListItem", "position": 2, "name": "Паспорт компании", "item": "https://deloskop.ru/pasport/"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Это сертификат или гарантия?", "acceptedAnswer": {"@type": "Answer", "text": "Нет. Это сводка открытых данных на дату проверки с источником у каждой строки. Контрагент или банк вправе запросить у вас документы."}}, {"@type": "Question", "name": "Сколько стоит?", "acceptedAnswer": {"@type": "Answer", "text": "Живой Паспорт — бесплатно, всегда. Платными будут только дополнительные услуги: снимок Паспорта на дату сделки с хранением, слежение за изменениями и возможность приложить свои документы."}}, {"@type": "Question", "name": "Можно ли убрать неприятную отметку?", "acceptedAnswer": {"@type": "Answer", "text": "Только в первоисточнике: подайте уточнение туда, откуда сведения. Как реестр обновится, изменится Паспорт. Содержимое Паспорта нельзя купить или подправить."}}, {"@type": "Question", "name": "Почему в Паспорте есть «не проверяли»?", "acceptedAnswer": {"@type": "Answer", "text": "Потому что «не проверяли» и «не нашли» — разные вещи. Мы честно пишем, каких источников не хватает и почему, а общий вывод ограничен полнотой проверки."}}, {"@type": "Question", "name": "Кто может открыть Паспорт компании?", "acceptedAnswer": {"@type": "Answer", "text": "Любой, кто знает ИНН: это открытые данные. Паспорт добавляет к ним порядок, даты и объяснение."}}, {"@type": "Question", "name": "Это проверка паспорта директора?", "acceptedAnswer": {"@type": "Answer", "text": "Нет. Паспорт компании — о юридическом лице. Паспорт гражданина мы не проверяем."}}, {"@type": "Question", "name": "Почему нет Паспорта для предпринимателей?", "acceptedAnswer": {"@type": "Answer", "text": "Пока не выпускаем: сведения об индивидуальных предпринимателях — персональные данные, для них у нас отдельные правила. Проверить предпринимателя перед оплатой можно обычной проверкой по ИНН."}}, {"@type": "Question", "name": "Что значит «Индекс — считаем, собрано N%»?", "acceptedAnswer": {"@type": "Answer", "text": "Балл Индекса мы показываем, только когда собрано достаточно источников. До этого — вывод по фактам."}}]}</script>
 <link rel="stylesheet" href="/css/fonts.css">
 <link rel="stylesheet" href="/css/podval.css">
 <link rel="stylesheet" href="/css/shapka.css">
@@ -233,51 +246,94 @@ footer a{color:var(--muted)}
 <!--/shapka-->
 
 <main id="main">
-<nav class="crumbs" aria-label="Навигация"><a href="/">Делоскоп</a><span>›</span><a href="/pasport/">Паспорт добросовестности</a></nav>
+<nav class="crumbs" aria-label="Навигация"><a href="/">Делоскоп</a><span>›</span><a href="/pasport/">Паспорт компании</a></nav>
 
 <!-- Лендинг: открыт, пока в адресе нет ИНН -->
 <section id="landing">
-  <h1>Паспорт добросовестности</h1>
-  <p class="sub">Одна ссылка, которую не стыдно отправить банку, заказчику и новому партнёру: всё, что открытые реестры говорят о&nbsp;вашей компании, — на сегодняшнюю дату и с&nbsp;QR-кодом для бумаги.</p>
-  <form class="ask" id="askTop" novalidate>
-    <input id="innTop" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="ИНН компании или ИП" aria-label="ИНН компании или ИП">
-    <button type="submit">Открыть паспорт</button>
+  <h1>Паспорт компании</h1>
+  <p class="sub">Всё, что открытые реестры говорят о&nbsp;компании, — на одной странице и на сегодняшнюю дату. У&nbsp;каждой строки источник и дата сведений. Чего не проверили — так и пишем.</p>
+  <form class="ask" id="askTop" data-rol="kontragent" novalidate>
+    <input id="innTop" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="ИНН организации" aria-label="ИНН организации">
+    <button type="submit">Собрать Паспорт</button>
   </form>
-  <p class="hint">Бесплатно и без регистрации. <a href="/pasport/?demo=1">Посмотреть пример</a> на вымышленной компании.</p>
-
-  <h2>Кому отправить</h2>
-  <div class="who">
-    <div><b>Банку</b><span>Когда пришёл запрос по 115-ФЗ: паспорт показывает, что компания настоящая, — к нему остаётся приложить документы по самой операции.</span></div>
-    <div><b>Заказчику</b><span>В тендер и на согласование договора: служба безопасности видит те же реестры, что и вы, без недели переписки.</span></div>
-    <div><b>Новому поставщику</b><span>Работать с отсрочкой проще, когда партнёр сам показывает, что ему нечего прятать.</span></div>
-    <div><b>Себе</b><span>Раз в месяц: не появилось ли отметки, о&nbsp;которой вы узнаете последним — после банка и налоговой.</span></div>
+  <p class="hint">Бесплатно. Для организаций; Паспорт индивидуального предпринимателя пока не выпускаем.</p>
+  <div class="roli">
+    <a class="rol" href="#kontragent"><b>Проверяю контрагента</b><span>Перед договором или оплатой: можно ли работать и на каких условиях</span></a>
+    <a class="rol" href="#svoya"><b>Показываю свою компанию</b><span>Банку по запросу, заказчику в тендере, новому партнёру</span></a>
   </div>
 
-  <h2>Чем отличается от сертификатов</h2>
-  <div class="tw"><table class="cmp">
-    <thead><tr><th></th><th>Паспорт Делоскопа</th><th>Платные свидетельства и рейтинги</th></tr></thead>
-    <tbody>
-      <tr><td>Цена</td><td>0&nbsp;₽</td><td>от нескольких тысяч рублей в год</td></tr>
-      <tr><td>Срок</td><td>Сразу</td><td>до 30 рабочих дней</td></tr>
-      <tr><td>Актуальность</td><td>Собирается заново при каждом открытии</td><td>На дату выдачи, год без изменений</td></tr>
-      <tr><td>Критерии</td><td>Открыты: видно каждый признак и его источник</td><td>Часто закрыты</td></tr>
-      <tr><td>Подделка</td><td>QR ведёт на живую страницу, отпечаток показывает устаревшую копию</td><td>Бумагу можно отксерить после отзыва</td></tr>
-      <tr><td>Если есть проблемы</td><td>Показываем честно — и подсказываем, что подготовить</td><td>Свидетельство просто не выдают</td></tr>
-    </tbody>
+  <h2 id="kontragent">Перед оплатой — всё о&nbsp;контрагенте в&nbsp;одном документе</h2>
+  <p>Реквизиты и статус, руководитель и учредители, лицензии, финансы, налоги, предел аванса и список документов, которые стоит запросить у&nbsp;контрагента под вашу сумму, — 17&nbsp;разделов, объяснённых человеческим языком. Каждая строка — со ссылкой на первоисточник, поэтому Паспорт можно приложить к&nbsp;договору как подтверждение, что вы проверяли контрагента.</p>
+  <ul class="tri3">
+    <li><b>Итог в&nbsp;трёх строках.</b> Можно ли работать и на каких условиях, три главных факта с&nbsp;датами, сколько на кону при вашей сумме.</li>
+    <li><b>Каждая строка — с&nbsp;источником.</b> Реестр, дата сведений, дата получения.</li>
+    <li><b>«Не проверяли» ≠ «не нашли».</b> Отдельный раздел «Чего мы не знаем и почему». Его мы не прячем за оплату.</li>
+  </ul>
+  <a class="obr" href="/pasport/kontragent/?demo=1">
+    <span class="obr__k">Образец · компания вымышленная</span>
+    <span class="obr__t" style="display:block">Паспорт компании</span>
+    <span class="obr__n" style="display:block">ООО «Образцовая мастерская» · сведения на дату проверки</span>
+    <span class="obr__l" style="display:grid">
+      <span><i>●</i>Реквизиты и статус — подтверждено источником, ЕГРЮЛ</span>
+      <span><i>◆</i>Предел аванса — рассчитано Делоскопом, с&nbsp;формулой</span>
+      <span><i>○</i>Исполнительные производства — не проверяли: источник подключается</span>
+    </span>
+    <span class="obr__cta">Открыть образец целиком →</span>
+  </a>
+  <form class="ask" id="askKontr" data-rol="kontragent" novalidate>
+    <input id="innKontr" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="ИНН контрагента" aria-label="ИНН контрагента">
+    <button type="submit">Собрать Паспорт контрагента</button>
+  </form>
+
+  <h2 id="svoya">Одна ссылка для банка, заказчика и партнёра</h2>
+  <p>Когда банк просит пояснить деятельность или заказчик — подтвердить надёжность, отправьте ссылку на Паспорт своей компании. Он собирается заново при каждом открытии, а на бумаге есть QR-код: получатель сверит копию с&nbsp;живой страницей.</p>
+  <div class="who">
+    <div><b>Банку</b><span>Когда пришёл запрос по 115-ФЗ: Паспорт показывает, что компания настоящая, — к&nbsp;нему остаётся приложить документы по самой операции.</span></div>
+    <div><b>Заказчику</b><span>В тендер и на согласование договора: служба безопасности видит те же реестры, что и вы, без недели переписки.</span></div>
+    <div><b>Новому поставщику</b><span>Работать с&nbsp;отсрочкой проще, когда партнёр сам показывает, что ему нечего прятать.</span></div>
+    <div><b>Себе</b><span>Раз в месяц: не появилось ли отметки, о&nbsp;которой вы узнаете последним — после банка и налоговой.</span></div>
+  </div>
+  <form class="ask" id="askSvoya" data-rol="svoya" novalidate>
+    <input id="innSvoya" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="ИНН вашей организации" aria-label="ИНН вашей организации">
+    <button type="submit">Открыть Паспорт своей компании</button>
+  </form>
+  <p class="hint"><a href="/pasport/?demo=1">Посмотреть пример</a> на вымышленной компании.</p>
+
+  <h2>Как устроен Паспорт</h2>
+  <div class="tw"><table class="kak">
+    <tr><th>Цена</th><td>Живой Паспорт — бесплатно</td></tr>
+    <tr><th>Когда готов</th><td>Сразу после ввода ИНН</td></tr>
+    <tr><th>Свежесть</th><td>Собирается заново при каждом открытии; у&nbsp;каждой строки — дата сведений</td></tr>
+    <tr><th>Критерии</th><td>Открыты: видно каждый признак, источник и формулу</td></tr>
+    <tr><th>Копия на бумаге</th><td>QR ведёт на страницу проверки: номер, дата и отпечаток показывают, та ли это копия</td></tr>
+    <tr><th>Если есть замечания</th><td>Показываем их и подсказываем, что подготовить</td></tr>
   </table></div>
 
   <h2>Как проверить подлинность</h2>
   <ol class="steps">
-    <li><b>Наведите камеру на QR-код.</b> Откроется страница на deloskop.ru — не картинка, а свежая сверка с реестрами.</li>
-    <li><b>Сравните отпечаток данных.</b> Шесть знаков на бумаге и на экране. Они меняются, только если в реестрах изменилось что-то существенное.</li>
-    <li><b>Разные — верьте экрану.</b> Страница сама скажет, что копия устарела, и покажет, что именно видно сейчас.</li>
+    <li><b>Наведите камеру на QR-код.</b> Откроется страница на deloskop.ru — не картинка, а сверка с&nbsp;реестрами.</li>
+    <li><b>Сравните номер и отпечаток</b> на бумаге и на экране. Отпечаток меняется, только если в&nbsp;реестрах изменилось что-то существенное.</li>
+    <li><b>Разные — верьте экрану.</b> Страница сама скажет, что копия устарела, и покажет, что видно сейчас.</li>
   </ol>
 
+  <h2>Чего Паспорт не делает</h2>
+  <ul class="ne">
+    <li>Не проверяет паспорт гражданина и не показывает ИНН физлиц.</li>
+    <li>Не видит обороты, операции и снятие наличных — их видит только банк. <a href="/nalichnye/">Посмотреть выписку глазами банка</a></li>
+    <li>Не заменяет документы от самого контрагента — какие запросить, подсказываем.</li>
+    <li>Не является заключением о&nbsp;надёжности и не гарантирует исход проверки банком или налоговой.</li>
+  </ul>
+
   <h2>Вопросы</h2>
-  <details><summary>Это сертификат или гарантия?</summary><p>Нет. Это сводка открытых данных ФНС и других реестров на дату проверки. Партнёр по-прежнему вправе запросить документы. Зато паспорт нельзя купить или подправить: страница собирается заново при каждом открытии.</p></details>
-  <details><summary>Можно ли убрать неприятную отметку?</summary><p>Только в первоисточнике. Если отметка ошибочная — например, недостоверный адрес, — подайте уточнение в ФНС. Как только реестр обновится, изменится и паспорт. Под каждой отметкой мы подсказываем, что подготовить.</p></details>
-  <details><summary>Видит ли паспорт операции по счёту и наличные?</summary><p>Нет. Обороты, снятие наличных и назначения платежей видит только банк. Посмотреть на свою выписку глазами банка можно отдельно — <a href="/115-fz/snyatie-nalichnyh-s-raschetnogo-scheta/">начните с правил снятия наличных</a>.</p></details>
-  <details><summary>Кто может открыть паспорт моей компании?</summary><p>Любой, кто знает ИНН, — ведь это открытые данные. Паспорт ничего не добавляет к ним, кроме порядка и честного объяснения.</p></details>
+  <details><summary>Это сертификат или гарантия?</summary><p>Нет. Это сводка открытых данных на дату проверки с источником у каждой строки. Контрагент или банк вправе запросить у вас документы.</p></details>
+  <details><summary>Сколько стоит?</summary><p>Живой Паспорт — бесплатно, всегда. Платными будут только дополнительные услуги: снимок Паспорта на дату сделки с хранением, слежение за изменениями и возможность приложить свои документы.</p></details>
+  <details><summary>Можно ли убрать неприятную отметку?</summary><p>Только в первоисточнике: подайте уточнение туда, откуда сведения. Как реестр обновится, изменится Паспорт. Содержимое Паспорта нельзя купить или подправить.</p></details>
+  <details><summary>Почему в Паспорте есть «не проверяли»?</summary><p>Потому что «не проверяли» и «не нашли» — разные вещи. Мы честно пишем, каких источников не хватает и почему, а общий вывод ограничен полнотой проверки.</p></details>
+  <details><summary>Кто может открыть Паспорт компании?</summary><p>Любой, кто знает ИНН: это открытые данные. Паспорт добавляет к ним порядок, даты и объяснение.</p></details>
+  <details><summary>Это проверка паспорта директора?</summary><p>Нет. Паспорт компании — о юридическом лице. Паспорт гражданина мы не проверяем.</p></details>
+  <details><summary>Почему нет Паспорта для предпринимателей?</summary><p>Пока не выпускаем: сведения об индивидуальных предпринимателях — персональные данные, для них у нас отдельные правила. Проверить предпринимателя перед оплатой можно обычной проверкой по ИНН.</p></details>
+  <details><summary>Что значит «Индекс — считаем, собрано N%»?</summary><p>Балл Индекса мы показываем, только когда собрано достаточно источников. До этого — вывод по фактам.</p></details>
+  <p class="dalee">Дальше: <a href="/indeks/">Методика Индекса</a> · <a href="/nalogi/skolko-platit-vpered-neznakomoj-kompanii/">Сколько платить вперёд незнакомой компании</a></p>
 </section>
 
 <!-- Паспорт: собирается из /api/check -->
@@ -306,10 +362,28 @@ footer a{color:var(--muted)}
   function bindAsk(form,input){
     input.addEventListener('input',function(){input.value=input.value.replace(/[^\d]/g,'').slice(0,12)});
     form.addEventListener('submit',function(e){e.preventDefault();var v=input.value.replace(/\D/g,'');
-      if(!E.innValid(v)){say(v.length===10||v.length===12?'В ИНН ошибка: не сходится контрольная цифра.':'ИНН — это 10 цифр у компании или 12 у предпринимателя.',true);input.focus();return;}
-      location.href='/pasport/?inn='+v;});
+      var out=form.nextElementSibling&&form.nextElementSibling.classList.contains('askmsg')?form.nextElementSibling:null;
+      function tell(t,err){if(!out){out=document.createElement('p');out.className='askmsg';out.setAttribute('role','status');form.parentNode.insertBefore(out,form.nextSibling);}
+        out.textContent=t;out.classList.toggle('err',!!err);}
+      if(!E.innValid(v)){tell(v.length===10||v.length===12?'В ИНН ошибка: не сходится контрольная цифра.':'ИНН организации — 10 цифр.',true);input.focus();return;}
+      if(v.length===12){tell('Паспорт индивидуального предпринимателя пока не выпускаем. Проверить предпринимателя перед оплатой можно обычной проверкой — ',false);
+        var a=document.createElement('a');a.href='/?inn='+v;a.textContent='проверить по ИНН '+v;out.appendChild(a);return;}
+      if(form.getAttribute('data-rol')==='svoya'){location.href='/pasport/?inn='+v;return;}
+      sobratKontr(v,tell,form.querySelector('button'));});
   }
-  bindAsk(document.getElementById('askTop'),document.getElementById('innTop'));
+  // Паспорт контрагента = досье (одна проверка) → /pasport/kontragent/?id=…
+  function sobratKontr(v,tell,btn){
+    if(!API){location.href='/pasport/kontragent/?demo=1';return;}
+    btn.disabled=true;tell('Сверяем с реестрами и собираем Паспорт…');
+    fetch(API+'/api/check?q='+encodeURIComponent(v)+'&from=pasport',{credentials:'include'})
+      .then(function(res){return res.json().then(function(j){return {ok:res.ok,status:res.status,j:j}},function(){return {ok:false,status:res.status,j:{}}})})
+      .then(function(x){btn.disabled=false;
+        if(!x.ok){tell(x.status===429?'Бесплатные проверки на сегодня закончились. Паспорт соберётся завтра — или войдите в кабинет.':((x.j&&x.j.detail)||'Не получилось собрать Паспорт. Попробуйте через минуту.'),true);return;}
+        if(x.j&&x.j.report_id){location.href='/pasport/kontragent/?id='+encodeURIComponent(x.j.report_id);return;}
+        location.href='/?inn='+v;})
+      .catch(function(){btn.disabled=false;tell('Сервис не ответил. Проверьте интернет и попробуйте ещё раз.',true);});
+  }
+  ['Top','Kontr','Svoya'].forEach(function(k){var f=document.getElementById('ask'+k);if(f)bindAsk(f,document.getElementById('inn'+k));});
 
   // --- что подготовить: подсказки владельцу паспорта по типу отметки ---
   var PREP=[
@@ -357,7 +431,7 @@ footer a{color:var(--muted)}
     var name=c.name_short||c.name_full||('ИНН '+c.inn), at=new Date(r.checked_at||Date.now());
     var url=E.passportUrl(ORIGIN,c.inn,code,at), live=ORIGIN+'/pasport/?inn='+c.inn;
     var cmp=E.compare({f:P.get('f'),d:P.get('d')},code);
-    document.title='Паспорт добросовестности: '+name+' — Делоскоп';
+    document.title='Паспорт компании: '+name+' — Делоскоп';
     var city=(String(c.address||'').match(/(?:^|,\s*)(г\.?\s*[^,]+)/)||[])[1]||'';
     var reg=c.reg_date?new Date(c.reg_date).getFullYear():'';
     var qr=Q.svg(url,{size:190,label:'QR-код: живая страница паспорта'});
@@ -368,7 +442,7 @@ footer a{color:var(--muted)}
     var html=
       '<article class="pp">'+guilloche(+String(c.inn).slice(-3)||7)+
       '<div class="pp-in"><div>'+
-        '<div class="kick">Паспорт добросовестности'+(r.demo?'<span class="demo-flag">пример · вымышленная компания</span>':'')+'</div>'+
+        '<div class="kick">Паспорт компании'+(r.demo?'<span class="demo-flag">пример · вымышленная компания</span>':'')+'</div>'+
         '<h1>'+esc(name)+'</h1>'+
         '<div class="ids"><span>ИНН <b>'+esc(c.inn)+'</b></span>'+(c.ogrn?'<span>'+(c.kind==='INDIVIDUAL'?'ОГРНИП':'ОГРН')+' <b>'+esc(c.ogrn)+'</b></span>':'')+(reg?'<span>с '+reg+' года</span>':'')+(city?'<span>'+esc(city)+'</span>':'')+'</div>'+
         '<div class="verdict '+h.tone+'"><b>'+esc(h.title)+'</b><span>'+esc(h.text)+'</span></div>'+
@@ -389,15 +463,15 @@ footer a{color:var(--muted)}
       '<button type="button" data-a="svg">QR для печати</button>'+
       '<button type="button" data-a="png">QR картинкой</button>'+
       '<button type="button" data-a="badge" aria-expanded="false">Знак для сайта</button></div>'+
-      '<div class="badge noprint" id="badge"><div class="row"><img src="/pasport/znak.svg" width="232" height="56" alt="Паспорт добросовестности на Делоскопе"><span>Поставьте знак на свой сайт — он ведёт на эту живую страницу.</span></div>'+
-      '<textarea readonly id="badgeCode" aria-label="Код знака для сайта">'+esc('<a href="'+live+'" target="_blank" rel="noopener"><img src="'+ORIGIN+'/pasport/znak.svg" width="232" height="56" alt="Паспорт добросовестности на Делоскопе"></a>')+'</textarea>'+
+      '<div class="badge noprint" id="badge"><div class="row"><img src="/pasport/znak.svg" width="232" height="56" alt="Паспорт компании на Делоскопе"><span>Поставьте знак на свой сайт — он ведёт на эту живую страницу.</span></div>'+
+      '<textarea readonly id="badgeCode" aria-label="Код знака для сайта">'+esc('<a href="'+live+'" target="_blank" rel="noopener"><img src="'+ORIGIN+'/pasport/znak.svg" width="232" height="56" alt="Паспорт компании на Делоскопе"></a>')+'</textarea>'+
       '<div class="acts"><button type="button" data-a="badgecopy">Скопировать код</button></div></div>'+
       '<p class="print-only src-note">Живая страница: '+esc(live)+' · отпечаток '+E.fpPretty(code)+' · сверено '+at.toLocaleDateString('ru-RU')+'</p>';
 
     if(g.real.length)html+='<section class="grp"><h2>Следы реальной работы <small>'+g.real.length+'</small></h2><div class="list">'+g.real.map(function(x){return item('ok','✓',x)}).join('')+'</div></section>';
     if(g.serious.length)html+='<section class="grp"><h2>Серьёзные отметки <small>'+g.serious.length+'</small></h2><div class="list">'+g.serious.map(function(x){return item('bad','!',x,true)}).join('')+'</div></section>';
     if(g.ask.length)html+='<section class="grp"><h2>О чём могут спросить <small>'+g.ask.length+'</small></h2><div class="list">'+g.ask.map(function(x){return item('warn','?',x,true)}).join('')+'</div></section>';
-    if(g.clean.length)html+='<section class="grp"><h2>Проверено — чисто <small>'+g.clean.length+'</small></h2><div class="chips">'+g.clean.map(function(x){return '<span>'+esc(x.title)+(x.detail?': '+esc(x.detail):'')+'</span>'}).join('')+'</div></section>';
+    if(g.clean.length)html+='<section class="grp"><h2>Проверили — отметок не нашли <small>'+g.clean.length+'</small></h2><div class="chips">'+g.clean.map(function(x){return '<span>'+esc(x.title)+(x.detail?': '+esc(x.detail):'')+'</span>'}).join('')+'</div></section>';
     if(g.info.length)html+='<section class="grp"><h2>Справочно <small>'+g.info.length+'</small></h2><div class="list">'+g.info.map(function(x){return item('info','i',x)}).join('')+'</div></section>';
 
     var z=r.zsk, zc=z?(z.level==='high'?'#F97066':z.level==='medium'?'#FDB022':'#32D583'):'';
@@ -407,11 +481,11 @@ footer a{color:var(--muted)}
       '<p style="margin:0"><a href="/115-fz/snyatie-nalichnyh-s-raschetnogo-scheta/">Как банк смотрит на снятие наличных →</a></p></section>';
 
     var srcs={};(r.signals||[]).forEach(function(x){if(x.source&&!Object.keys(srcs).some(function(k){return k.indexOf(x.source)===0||x.source.indexOf(k)===0}))srcs[x.source]=1});if(!Object.keys(srcs).some(function(k){return /ЕГР/.test(k)}))srcs['ЕГРЮЛ/ЕГРИП']=1;
-    html+='<div class="limits"><b>Честно о границах.</b> Это сводка открытых данных на '+at.toLocaleDateString('ru-RU')+', а не сертификат, гарантия или решение банка. Делоскоп не берёт денег с компаний за содержание паспорта и не меняет его по их просьбе: исправить можно только первоисточник.'+
+    html+='<div class="limits"><b>Честно о границах.</b> Это сводка открытых данных на '+at.toLocaleDateString('ru-RU')+', а не сертификат, гарантия или решение банка. Делоскоп не берёт денег с компаний за содержание Паспорта и не меняет его по их просьбе: исправить можно только первоисточник.'+
       '<div style="margin-top:8px">Источники: '+Object.keys(srcs).map(esc).join(' · ')+'.</div></div>';
 
-    html+='<section class="cta noprint"><h2>Паспорт своей компании</h2><p>Посмотрите, что видят о вас банк и партнёры, — и отправьте им ссылку раньше, чем они спросят.</p>'+
-      '<form class="ask" id="askBottom" novalidate><input id="innBottom" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="ИНН компании или ИП" aria-label="ИНН компании или ИП"><button type="submit">Открыть паспорт</button></form></section>';
+    html+='<section class="cta noprint"><h2>Паспорт другой компании</h2><p>Соберите Паспорт контрагента перед оплатой — или Паспорт своей компании, чтобы отправить ссылку банку раньше, чем он спросит.</p>'+
+      '<form class="ask" id="askBottom" data-rol="kontragent" novalidate><input id="innBottom" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="ИНН организации" aria-label="ИНН организации"><button type="submit">Собрать Паспорт</button></form></section>';
 
     view.innerHTML=html;
     bindAsk(document.getElementById('askBottom'),document.getElementById('innBottom'));

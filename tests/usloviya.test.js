@@ -50,7 +50,7 @@ t('недостоверность → «Не платите вперёд», пр
 t('ликвидированная → «Сделку не заключать»', function () {
   var v = U.decide(resp({ company: { inn: '7700000003', status: 'LIQUIDATED', reg_date: '2010-01-01' } }));
   assert.strictEqual(v.headline, 'Сделку не заключать');
-  assert.ok(/недействителен/.test(v.advice));
+  assert.ok(/заключить нельзя/.test(v.advice));
 });
 
 t('налоговый долг → только по факту + справка КНД 1120101', function () {
@@ -157,6 +157,12 @@ t('«Ликвидируется» у DaData — это и ликвидация, 
   assert.strictEqual(v.tone, 'stop');
   assert.ok(!/ликвидатор вправе/.test(v.advice), 'у компании под исключением ликвидатора нет');
   assert.ok(/исключени/.test(v.reasons[0]), 'причина называет и исключение из ЕГРЮЛ');
-  assert.ok(/трёх месяцев/.test(v.advice) && /21\.1 129-ФЗ/.test(v.advice), 'кредитору — срок и норма');
+  assert.ok(/три месяца/.test(v.advice) && /шесть/.test(v.advice) && /ст\. 21\.1, ст\. 21\.3 129-ФЗ/.test(v.advice), 'кредитору — срок по основанию (3 или 6 месяцев) и норма');
+  assert.ok(/Вестник/.test(v.advice), 'откуда считать срок — со дня публикации в «Вестнике»');
+});
+t('Прекращённая компания: не «договор недействителен» (это вывод суда), а «заключить нельзя»', function () {
+  var v = U.decide(resp({ company: { inn: '7700000003', name_short: 'ООО «Бывшее»', status: 'LIQUIDATED', reg_date: '2012-03-01' } }));
+  assert.ok(!/недействител/.test(v.advice), v.advice);
+  assert.ok(/заключить нельзя/.test(v.advice) && /не оплачивайте/.test(v.advice), v.advice);
 });
 console.log('\nПройдено тестов: ' + n);

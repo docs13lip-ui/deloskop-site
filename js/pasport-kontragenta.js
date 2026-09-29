@@ -16,7 +16,7 @@
 })(typeof self !== 'undefined' ? self : this, function (root) {
   'use strict';
 
-  var VERSIYA = 'Паспорт v2.1';
+  var VERSIYA = 'Паспорт v2.2';
   // Определение Индекса и подпись предела аванса — дословно [Юриста 115-ФЗ] 29.09 (222-ФЗ), разд. 3 пп. 1 и 4.
   var OPREDELENIE_INDEKSA = 'Индекс Делоскопа — оценка признаков риска для сделки по открытым и лицензированным данным: регистрационных, налоговых, признаков по 115-ФЗ и нарушений. Это не кредитный рейтинг и не мнение о способности компании исполнять финансовые обязательства.';
   var PODPIS_PREDELA = 'Сколько разумно платить вперёд с учётом найденных признаков — расчёт Делоскопа по открытой формуле. Это не оценка способности компании вернуть деньги.';
@@ -42,14 +42,18 @@
       prichina: 'Бухгалтерской отчётности в полученных сведениях нет: компания могла её не сдавать или ещё не должна была сдать.' },
     { id: 'nalogi', n: 7, title: 'Налоги: режим, уплачено, долги', vid: 'istochnik', istochnik: 'открытые данные ФНС', dostup: 'free',
       prichina: 'Сведений ФНС о налогах, долгах и штрафах в ответе нет — наборы ФНС ещё загружаются.' },
-    { id: 'sudy', n: 8, title: 'Арбитражные суды и банкротство', vid: 'istochnik', istochnik: 'картотека арбитражных дел', dostup: 'free', damia: ['sudy', 'bankrotstvo'],
-      prichina: 'Источник подключается — сведения появятся в Паспорте автоматически.' },
+    { id: 'sudy', n: 8, title: 'Арбитражные суды и банкротство', vid: 'istochnik', istochnik: 'картотека арбитражных дел, Федресурс', dostup: 'free', damia: ['sudy', 'bankrotstvo'],
+      prichina: 'Не проверяли: картотеку арбитражных дел и сообщения о банкротстве мы пока не подключили.',
+      sam: [['kad.arbitr.ru', 'https://kad.arbitr.ru/', 'дела, где компания истец или ответчик'], ['bankrot.fedresurs.ru', 'https://bankrot.fedresurs.ru/', 'сообщения о банкротстве и намерении кредитора']] },
     { id: 'scheta', n: 9, title: 'Счета: приостановки и обеспечительные меры ФНС', vid: 'istochnik', istochnik: 'ФНС: решения о приостановлении операций', dostup: 'pro', damia: ['priostanovki', 'mery'],
-      prichina: 'Проверяется по паре «ИНН компании + БИК её банка». Проверьте сами — бесплатно на сайте ФНС service.nalog.ru/bi.do, БИК возьмите из счёта; ответ ФНС видите только вы. Ограничения банков по 115-ФЗ не публикуются нигде.' },
+      prichina: 'Проверяется по паре «ИНН компании + БИК её банка». Проверьте сами — бесплатно на сайте ФНС service.nalog.ru/bi.do, БИК возьмите из счёта; ответ ФНС видите только вы. Ограничения банков по 115-ФЗ не публикуются нигде.',
+      sam: [['service.nalog.ru/bi.do', 'https://service.nalog.ru/bi.do', 'решения ФНС о приостановлении операций: ИНН + БИК']] },
     { id: 'pristavy', n: 10, title: 'Исполнительные производства', vid: 'istochnik', istochnik: 'ФССП', dostup: 'free', damia: ['fssp'],
-      prichina: 'Источник подключается — сведения появятся в Паспорте автоматически.' },
+      prichina: 'Не проверяли: банк данных исполнительных производств мы пока не подключили. В базе ФССП юрлицо ищут по названию и региону.',
+      sam: [['fssp.gov.ru/iss/ip', 'https://fssp.gov.ru/iss/ip', 'банк данных исполнительных производств']] },
     { id: 'goszakaz', n: 11, title: 'Госзаказ: контракты и РНП', vid: 'istochnik', istochnik: 'ЕИС «Закупки»', dostup: 'free', damia: ['kontrakty', 'rnp'],
-      prichina: 'Источник подключается — сведения появятся в Паспорте автоматически.' },
+      prichina: 'Не проверяли: реестр недобросовестных поставщиков и госконтракты мы пока не подключили.',
+      sam: [['zakupki.gov.ru — РНП', 'https://zakupki.gov.ru/epz/dishonestsupplier/search/results.html', 'реестр недобросовестных поставщиков'], ['zakupki.gov.ru — контракты', 'https://zakupki.gov.ru/epz/contract/search/results.html', 'госконтракты компании']] },
     { id: 'stoplisty', n: 12, title: 'Стоп-листы', vid: 'istochnik', istochnik: 'Росфинмониторинг, Банк России', dostup: 'free',
       prichina: 'Перечни Росфинмониторинга и Банка России подключаются — до загрузки не проверяли.' },
     { id: 'indeks', n: 13, title: 'Индекс Делоскопа', vid: 'raschet', istochnik: 'методика Индекса, deloskop.ru/indeks/', dostup: 'free' },
@@ -122,7 +126,8 @@
 
   function pustoj(def) {
     return { id: def.id, n: def.n, title: def.title, vid: def.vid, dostup: def.dostup, status: 'not_checked', ton: 'info',
-      prichina: def.prichina || '', istochnik: def.istochnik, data_svedeniy: null, polucheno: null, fakty: [], vyvod: '', chto_delat: '' };
+      prichina: def.prichina || '', istochnik: def.istochnik, data_svedeniy: null, polucheno: null, fakty: [], vyvod: '', chto_delat: '',
+      sam: (def.sam || []).map(function (a) { return { tekst: a[0], url: a[1], chto: a[2] || '' }; }) };
   }
 
   function sobrat(r, opts) {
@@ -156,6 +161,12 @@
       ['Дата регистрации', dataRu(c.reg_date)], ['Адрес юридического лица', c.address]];
     R1.forEach(function (x) { if (x[1]) fakt('rekvizity', x[0], x[1], { ton: 'info', istochnik: 'ЕГРЮЛ' }); });
     if (c.status) fakt('rekvizity', 'Статус', ST[c.status] || c.status, { ton: c.status === 'ACTIVE' ? 'ok' : 'bad', istochnik: 'ЕГРЮЛ' });
+
+    // 8. Банкротство по ЕГРЮЛ (прочерки, 30.09): запись о банкротстве в ЕГРЮЛ — факт первоисточника.
+    // Нет записи — раздел остаётся «не проверяли» (картотеку судов и Федресурс не смотрели), но говорим, что видно по ЕГРЮЛ.
+    if (c.status === 'BANKRUPT') fakt('sudy', 'Банкротство по ЕГРЮЛ', 'в ЕГРЮЛ есть запись о процедуре банкротства', { ton: 'bad', istochnik: 'ЕГРЮЛ' }), map.sudy.chastichno = 'картотеку арбитражных дел и сообщения Федресурса не проверяли';
+    // Только для действующей: у ликвидированной причину прекращения (в том числе конкурсное производство) даст код статуса — dadata-max-v1.
+    else if (c.status === 'ACTIVE') map.sudy.prichina = 'По ЕГРЮЛ записи о банкротстве нет: компания действующая. Картотеку арбитражных дел и сообщения Федресурса мы пока не подключили.';
 
     // 3. Люди — ФИО только при persons (флаг PERSONS_PUBLIC, п. 92)
     if (c.director_post || c.director_name)
@@ -268,6 +279,7 @@
     var nz = map.ne_znaem;
     spisok.forEach(function (x) {
       if (x.status === 'not_checked' && x.vid !== 'sluzhebnyj') nz.fakty.push({ tekst: x.n + '. ' + x.title, znachenie: x.prichina || 'не проверяли', ton: 'info', data: null, istochnik: x.istochnik });
+      else if (x.chastichno && x.status === 'found') nz.fakty.push({ tekst: x.n + '. ' + x.title, znachenie: x.chastichno, ton: 'info', data: null, istochnik: x.istochnik });
     });
     VSEGDA_NE_ZNAEM.forEach(function (t) { nz.fakty.push({ tekst: t, znachenie: '', ton: 'info', data: null, istochnik: 'Делоскоп' }); });
     nz.status = 'found'; nz.prichina = ''; nz.polucheno = polucheno; nz.data_svedeniy = polucheno;
@@ -288,6 +300,69 @@
 
     meta.dostup = dostup;
     return { ip: false, meta: meta, itog: itog, razdely: spisok };
+  }
+
+  // «Подписант на дату подписи» (Прорыв «Я-3», Ночные 29.09 23:05). Считается на странице из того, что ввёл
+  // заказчик Паспорта (должность подписанта, основание, дата подписи), и сведений Паспорта. Имена людей сюда
+  // не попадают ни с какой стороны: сравниваем должности, не персоны. Сервер ничего не получает, в отпечаток не входит.
+  // Дату записи о руководителе API пока не отдаёт — поэтому для подписи раньше даты Паспорта честно отправляем к выписке ЕГРЮЛ.
+  var SSYLKI_PODPISANTA = {
+    mchd: { t: 'Проверить МЧД в реестре ФНС ↗', u: 'https://m4d.nalog.gov.ru/emchd/check-status' },
+    notar: { t: 'Нотариальная доверенность — реестр ФНП ↗', u: 'https://www.reestr-dover.ru/' },
+    egrul: { t: 'Выписка ЕГРЮЛ на сайте ФНС ↗', u: 'https://egrul.nalog.ru/' },
+    pb: { t: '«Прозрачный бизнес» ФНС ↗', u: 'https://pb.nalog.ru/' }
+  };
+  function datuIz(s) {
+    var m = String(s || '').trim().match(/^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})$/);
+    if (!m) return null;
+    var d = new Date(+m[3], +m[2] - 1, +m[1]);
+    return d.getDate() === +m[1] && d.getMonth() === +m[2] - 1 ? d : null;
+  }
+  function dolzhnostKlyuch(s) {
+    return String(s || '').toLowerCase().replace(/ё/g, 'е').replace(/[^а-яa-z ]/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+  function tuZheDolzhnost(a, b) {
+    a = dolzhnostKlyuch(a); b = dolzhnostKlyuch(b);
+    if (!a || !b) return false;
+    if (a === b || a.indexOf(b) >= 0 || b.indexOf(a) >= 0) return true;
+    var gd = /(генеральн\S* )?директор|руководител/;           // «Директор» и «Генеральный директор» — одна роль
+    return gd.test(a) && gd.test(b) && !/заместител|финансов|коммерческ|исполнительн|технич/.test(a + ' ' + b);
+  }
+  function podpisant(r, p, vvod) {
+    r = r || {}; vvod = vvod || {};
+    var c = r.company || {}, post = String(c.director_post || '').trim();
+    var naDatu = dataRu((p && p.meta && p.meta.sformirovan) || r.checked_at);
+    var out = [];
+    function s(ton, tekst, ssylki, vid) { out.push({ ton: ton, tekst: tekst, ssylki: ssylki || [], vid: vid || (ton === 'off' ? 'net' : 'raschet') }); }
+    if (!p || p.ip) return out;
+    if (post) s('info', 'По ЕГРЮЛ на ' + naDatu + ' без доверенности действует: ' + post.toLowerCase() + '.', [], 'istochnik');
+    else s('off', 'Руководителя в полученных сведениях нет — кто вправе подписывать без доверенности, посмотрите в выписке ЕГРЮЛ.', [SSYLKI_PODPISANTA.egrul]);
+
+    var lyudi = (p.razdely || []).filter(function (x) { return x.id === 'lyudi' || x.id === 'rekvizity'; });
+    lyudi.forEach(function (x) {
+      x.fakty.forEach(function (f) {
+        if ((f.ton === 'bad' || f.ton === 'warn') && /дисквалиф|руководител|директор|недостоверн/i.test(f.tekst))
+          s(f.ton, 'В разделе ' + x.n + ' отметка «' + f.tekst + '»' + (f.data ? ' на ' + dataRu(f.data) : '') + ' — выясните, кто вправе подписывать, до того как принять документ.', [SSYLKI_PODPISANTA.pb], 'istochnik');
+      });
+    });
+
+    var dolzh = String(vvod.dolzhnost || '').trim(), osn = vvod.osnovanie || '';
+    if (dolzh && osn === 'ustav' && post) {
+      if (tuZheDolzhnost(dolzh, post)) s('ok', 'Должность подписанта совпадает с руководителем по ЕГРЮЛ. Сверьте подпись с документом о назначении.', []);
+      else s('warn', 'Подписал «' + dolzh + '», а без доверенности действует ' + post.toLowerCase() + '. Запросите доверенность подписанта.', [SSYLKI_PODPISANTA.mchd, SSYLKI_PODPISANTA.notar]);
+    }
+    if (osn === 'mchd') s('info', 'Электронная доверенность: проверьте в реестре ФНС, что она действовала на дату подписи, доверитель — ИНН ' + (c.inn || 'компании') + ' и в ней есть полномочие на такой документ.', [SSYLKI_PODPISANTA.mchd]);
+    if (osn === 'bumaga') s('info', 'Бумажная доверенность: нотариальную проверьте в реестре ФНП; простую — запросите копию за подписью руководителя по ЕГРЮЛ.', [SSYLKI_PODPISANTA.notar]);
+
+    var dp = datuIz(vvod.data), ds = datuIz(naDatu);
+    if (String(vvod.data || '').trim() && !dp) s('off', 'Дату подписи не распознали — нужен вид ДД.ММ.ГГГГ.', []);
+    else if (dp && ds) {
+      var dn = Math.round((dp - ds) / 864e5);
+      if (dn < 0) s('info', 'Документ подписан ' + dataRu(dp) + ' — раньше даты сведений Паспорта (' + naDatu + '). Сменился ли руководитель между этими датами, видно по дате записи в выписке ЕГРЮЛ; мы эту дату пока не получаем.', [SSYLKI_PODPISANTA.egrul]);
+      else if (dn > 30) s('warn', 'Паспорт собран за ' + dn + ' дн. до подписи — пересоберите его по ссылке: сведения о руководителе могли измениться.', []);
+      else s('ok', 'Сведения Паспорта — на ' + naDatu + ', подпись — ' + dataRu(dp) + ': разница ' + dn + ' дн.', []);
+    }
+    return out;
   }
 
   // Номер Паспорта: «П-ГГГГММДД-XXXXXXXX» — дата формирования + 8 знаков отпечатка. ИНН и номера досье внутри нет.
@@ -334,7 +409,7 @@
   }
 
   return { VERSIYA: VERSIYA, RAZDELY: RAZDELY, sobrat: sobrat, proverit: proverit, razdelDlya: razdelDlya,
-    vypustit: vypustit, nomerIz: nomerIz, qrSsylka: qrSsylka, podval: podval, SLOVAR_222: SLOVAR_222,
+    vypustit: vypustit, nomerIz: nomerIz, podpisant: podpisant, datuIz: datuIz, tuZheDolzhnost: tuZheDolzhnost, SSYLKI_PODPISANTA: SSYLKI_PODPISANTA, qrSsylka: qrSsylka, podval: podval, SLOVAR_222: SLOVAR_222,
     OPREDELENIE_INDEKSA: OPREDELENIE_INDEKSA, PODPIS_PREDELA: PODPIS_PREDELA,
     kanon: kanon, otpechatok: otpechatok, otpechatokKratko: otpechatokKratko, dataRu: dataRu, isIp: isIp, VSEGDA_NE_ZNAEM: VSEGDA_NE_ZNAEM };
 });

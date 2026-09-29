@@ -68,6 +68,10 @@ tr.warn td b{color:var(--warn)}tr.bad td b{color:var(--bad)}
 td b{font-weight:600}
 .vyvod{margin:10px 0 0;font-size:14.5px}
 .net{color:var(--ink2);font-size:14.5px;background:#FAFAF8;border-radius:12px;padding:12px 14px}
+.sam{margin-top:8px;font-size:14px;line-height:1.55;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline}
+.sam .sam-t{color:var(--ink2)}.sam a{font-weight:500}.sam small{color:var(--muted);font-size:12.5px}
+.sam .kinn{font:inherit;font-size:13px;border:1px solid var(--line);background:#fff;border-radius:9px;padding:4px 10px;cursor:pointer;color:var(--ink2)}
+.sam .kinn:hover{border-color:var(--ink2)}
 .stroka{margin-top:10px;font-size:12px;color:var(--muted);line-height:1.5}
 .nz li{margin:6px 0}
 .podl{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:start}
@@ -86,6 +90,12 @@ td b{font-weight:600}
 .rs-r label{display:inline-flex;align-items:center;gap:7px;font-size:15px;color:var(--ink);cursor:pointer}
 .rs-r input{width:17px;height:17px;margin:0;accent-color:var(--accent)}
 .rs .stroka{margin-top:14px}
+.rs-h3{margin:22px 0 8px;font-size:15.5px;font-weight:600;letter-spacing:-.01em}
+.pd{list-style:none;margin:14px 0 0;padding:0;font-size:14px;line-height:1.5}
+.pd li{display:flex;gap:9px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--line)}
+.pd li .m{flex:none;margin-top:6px}
+.pd li.warn{color:var(--warn)}.pd li.bad{color:var(--bad)}.pd li.off{color:var(--ink2)}
+.pd a{color:var(--accent)}
 @media (max-width:600px){.rs{padding:16px 14px}.rs-g{grid-template-columns:1fr}}
 .podpis{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:40px;font-size:12.5px;color:var(--muted)}
 .podpis div{border-top:1px solid var(--rule);padding-top:6px}
@@ -183,7 +193,7 @@ td b{font-weight:600}
  </nav>
 </dialog>
 <!--/shapka-->
-<!--beta-polosa--><div class="beta-bar" role="region" aria-label="Открытая бета" data-beta-bar><div class="beta-bar__in"><span class="beta-bar__metka">бета</span><p class="beta-bar__t"><b>Открытая бета: всё бесплатно.</b> <span class="beta-bar__dop">Оплата и&nbsp;реквизиты появятся позже. </span><a href="mailto:help@deloskop.ru?subject=%D0%91%D0%B5%D1%82%D0%B0%20%D0%94%D0%B5%D0%BB%D0%BE%D1%81%D0%BA%D0%BE%D0%BF%D0%B0">Нашли ошибку&nbsp;— напишите</a></p><button class="beta-bar__x" type="button" aria-label="Скрыть на неделю" data-beta-x><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div></div><script>try{if(+localStorage.getItem("dlk_beta_skryt")>Date.now())document.querySelector("[data-beta-bar]").hidden=true}catch(e){}</script><!--/beta-polosa-->
+<!--beta-polosa--><div class="beta-bar" role="region" aria-label="Открытая бета" data-beta-bar><div class="beta-bar__in"><span class="beta-bar__metka">бета</span><p class="beta-bar__t"><b>Открытая бета до&nbsp;13&nbsp;октября: всё бесплатно.</b> <span class="beta-bar__dop">Оплата и&nbsp;реквизиты появятся позже. </span><a href="mailto:help@deloskop.ru?subject=%D0%91%D0%B5%D1%82%D0%B0%20%D0%94%D0%B5%D0%BB%D0%BE%D1%81%D0%BA%D0%BE%D0%BF%D0%B0">Нашли ошибку&nbsp;— напишите</a></p><button class="beta-bar__x" type="button" aria-label="Скрыть на неделю" data-beta-x><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div></div><script>try{if(+localStorage.getItem("dlk_beta_skryt")>Date.now())document.querySelector("[data-beta-bar]").hidden=true}catch(e){}</script><!--/beta-polosa-->
 <span id="main" tabindex="-1"></span>
 <div class="bar noprint">
   <a class="nazad" id="nazad" href="/">← К досье</a>
@@ -223,6 +233,13 @@ td b{font-weight:600}
   var REZH_IMYA={osn:'Мы на общей системе',usn_dr:'Мы на УСН «доходы минус расходы»',usn_d:'Мы на УСН «доходы»'};
   var REZH={osn:'(для компании на общей системе, ставки 2026 года)',usn_dr:'(для УСН «доходы минус расходы», ставки 2026 года)',usn_d:'(для УСН «доходы»)'};
 
+  // «Проверьте сами» (прочерки 30.09, Прорыв Я-8): источник не подключён — даём дорогу к первоисточнику и ИНН в буфер.
+  var INN='';
+  function samHtml(x){
+    if(!x.sam||!x.sam.length||x.status==='locked')return '';
+    return '<div class="sam"><span class="sam-t">Проверьте сами, бесплатно:</span>'+x.sam.map(function(a){return '<span><a href="'+esc(a.url)+'" target="_blank" rel="noopener">'+esc(a.tekst)+'</a>'+(a.chto?' <small>— '+esc(a.chto)+'</small>':'')+'</span>'}).join('')+
+      (INN?'<button type="button" class="kinn noprint" data-inn="'+esc(INN)+'">Скопировать ИНН '+esc(INN)+'</button>':'')+'</div>';
+  }
   function razdelHtml(x,link,hash){
     var z=znachok(x), h='<section class="rz'+(x.status==='locked'?' noprint':'')+'" id="r'+x.n+'"><h2><span class="no">'+x.n+'.</span>'+esc(x.title)+'<span class="zn '+z[0]+'">'+esc(z[1])+'</span></h2>';
     if(x.id==='ne_znaem'){
@@ -238,13 +255,15 @@ td b{font-weight:600}
       return h+'</section>';
     }
     if(x.status==='not_checked'||x.status==='not_applicable'||x.status==='locked'){
-      h+='<p class="net">'+esc(x.prichina||'Не проверяли.')+'</p>';
+      h+='<p class="net">'+esc(x.prichina||'Не проверяли.')+'</p>'+samHtml(x);
     } else {
       h+='<table>'+x.fakty.map(function(f){
         var src=[f.istochnik,f.data?'на '+P.dataRu(f.data):''].filter(Boolean).join(', ');
         return '<tr class="'+esc(f.ton)+'"><th>'+esc(f.tekst)+'</th><td>'+(f.ton==='warn'||f.ton==='bad'?'<b>'+nbsp(f.znachenie)+'</b>':nbsp(f.znachenie))+(src&&x.id!=='predel'&&x.id!=='zaprosit'?'<small>'+esc(src)+'</small>':'')+'</td></tr>'}).join('')+'</table>';
       if(x.vyvod)h+='<p class="vyvod">'+esc(x.vyvod)+'</p>';
       if(x.ssylka)h+='<p class="vyvod noprint"><a href="'+esc(x.ssylka)+'">Методика расчёта — открыто</a></p>';
+      if(x.chastichno)h+='<p class="net">'+esc(x.chastichno.charAt(0).toUpperCase()+x.chastichno.slice(1))+'.</p>';
+      if(x.chastichno||x.status==='found'&&x.id==='sudy')h+=samHtml(x);
     }
     if(x.status==='locked')return h+'<p class="vyvod"><a href="/tarify/">Тарифы</a></p></section>';
     if(x.id==='indeks')h+='<div class="stroka">'+esc(P.OPREDELENIE_INDEKSA)+'</div>';
@@ -261,8 +280,19 @@ td b{font-weight:600}
   var RS={};
   var RS_RESH=[['platit','Платить'],['po_faktu','Платить после поставки или акта'],['ne_platit','Не платить']];
   function segodnya(){var d=new Date();function z(n){return (n<10?'0':'')+n}return z(d.getDate())+'.'+z(d.getMonth()+1)+'.'+d.getFullYear();}
-  function rsZapomnit(){var f=document.getElementById('rs');if(!f)return;['dok','summa','dokumenty','dolzhnost','data'].forEach(function(k){RS[k]=f[k].value});var c=f.querySelector('input[name=resh]:checked');RS.resh=c?c.value:'';}
-  function reshenieHtml(sovet,summa){
+  function rsZapomnit(){var f=document.getElementById('rs');if(!f)return;['dok','summa','dokumenty','dolzhnost','data','pdolzh','pdata'].forEach(function(k){RS[k]=f[k].value});var c=f.querySelector('input[name=resh]:checked');RS.resh=c?c.value:'';var o=f.querySelector('input[name=posn]:checked');RS.posn=o?o.value:'';}
+  // «Подписант на дату подписи» (Ночные 29.09 23:05): должность, основание и дата — от заказчика; сверка — P.podpisant, без сети.
+  var RS_OSN=[['ustav','Руководитель, без доверенности'],['bumaga','Бумажная доверенность'],['mchd','Электронная доверенность (МЧД)']];
+  function podpisantHtml(r,p){
+    var sp=P.podpisant(r,p,{dolzhnost:RS.pdolzh,osnovanie:RS.posn,data:RS.pdata});
+    return sp.map(function(x){return '<li class="'+x.ton+'"><span class="m m-'+({istochnik:'ist',raschet:'ras',net:'net'}[x.vid]||'ras')+'" role="img" aria-label="'+({istochnik:'подтверждено источником',raschet:'рассчитано Делоскопом',net:'не проверяли'}[x.vid]||'рассчитано Делоскопом')+'"></span><span>'+esc(x.tekst)+(x.ssylki.length?' '+x.ssylki.map(function(a){return '<a href="'+a.u+'" target="_blank" rel="noopener nofollow">'+esc(a.t)+'</a>'}).join(' · '):'')+'</span></li>'}).join('');
+  }
+  function podpisantSvyazat(r,p){
+    var f=document.getElementById('rs'),ul=document.getElementById('pd');if(!f||!ul)return;
+    f.addEventListener('input',function(e){if(!/^(pdolzh|pdata|posn)$/.test(e.target.name||''))return;rsZapomnit();ul.innerHTML=podpisantHtml(r,p);});
+    f.addEventListener('change',function(e){if((e.target.name||'')!=='posn')return;rsZapomnit();ul.innerHTML=podpisantHtml(r,p);});
+  }
+  function reshenieHtml(sovet,summa,r,p){
     function pole(k,podpis,ph,cls,def){var v=RS[k]!=null&&RS[k]!==''?RS[k]:(def||'');return '<label'+(cls?' class="'+cls+'"':'')+'>'+podpis+'<input type="text" name="'+k+'" autocomplete="off" placeholder="'+esc(ph)+'" value="'+esc(v)+'"></label>';}
     return '<form class="rs" id="rs" aria-labelledby="rs-h" onsubmit="return false"><h2 id="rs-h">Решение о сделке</h2>'+
       '<p class="rs-p noprint">Заполните перед печатью — и Паспорт станет не справкой о компании, а решением о сделке со сведениями на дату. Поля остаются в вашем браузере: мы их не получаем и не храним.</p>'+
@@ -274,11 +304,18 @@ td b{font-weight:600}
         pole('dolzhnost','Решение принял (должность)','Финансовый директор')+
         pole('data','Дата решения','',null,segodnya())+
       '</div>'+
+      '<h3 class="rs-h3">Подписант контрагента на дату подписи</h3>'+
+      '<div class="rs-g">'+
+        pole('pdolzh','Подписал со стороны контрагента (должность)','Генеральный директор')+
+        pole('pdata','Дата подписи документа','ДД.ММ.ГГГГ')+
+        '<fieldset><legend>Основание полномочий</legend><div class="rs-r">'+RS_OSN.map(function(x){return '<label><input type="radio" name="posn" value="'+x[0]+'"'+(RS.posn===x[0]?' checked':'')+'>'+esc(x[1])+'</label>'}).join('')+'</div></fieldset>'+
+      '</div>'+
+      '<ul class="pd" id="pd" aria-live="polite">'+podpisantHtml(r,p)+'</ul>'+
       '<div class="stroka">Заполнено заказчиком Паспорта, в отпечаток SHA-256 не входит. Ориентир Делоскопа по сведениям на дату Паспорта — «'+esc(sovet)+'» (разделы 14 и 15); решение принимает ваша компания.</div></form>';
   }
 
   function render(r,opts){
-    var p=P.sobrat(r,opts), m=p.meta;
+    var p=P.sobrat(r,opts), m=p.meta; INN=m.inn||"";
     document.title='Паспорт контрагента: '+m.nazvanie+' — Делоскоп';
     // Ссылка «для коллеги» — по ИНН, не по номеру досье: получатель соберёт Паспорт заново, на день открытия,
     // а номер досье (ключ к сведениям этой проверки) из рук не уходит (Ночные 29.09 19:07, Прорыв «Я-2»).
@@ -309,10 +346,14 @@ td b{font-weight:600}
         '<div class="legenda"><span><span class="m m-ist"></span>подтверждено источником</span><span><span class="m m-ras"></span>рассчитано Делоскопом</span><span><span class="m m-net"></span>не проверяли — причина в разделе</span></div>'+
         '<ol class="ogl" aria-label="Разделы Паспорта">'+p.razdely.map(function(x){var z=znachok(x);return '<li>'+mark(x)+'<a href="#r'+x.n+'">'+x.n+'. '+esc(x.title)+'</a><span class="st">'+esc(z[1])+'</span></li>'}).join('')+'</ol>'+
         p.razdely.map(function(x){return razdelHtml(x,qr,hash)}).join('')+
-        reshenieHtml(it.vyvod||'см. досье',it.na_konu&&it.na_konu.summa)+
+        reshenieHtml(it.vyvod||'см. досье',it.na_konu&&it.na_konu.summa,r,p)+
         '<div class="podpis"><div>Проверку провёл (ФИО, должность)</div><div>Подпись, дата</div></div>'+
         '<div class="foot">'+esc(P.podval(vremya(m.sformirovan),m.nomer||''))+'</div>';
       pk.innerHTML=h; msg.hidden=true; pk.hidden=false;
+      pk.onclick=function(e){var b=e.target.closest&&e.target.closest('.kinn');if(!b)return;var v=b.getAttribute('data-inn');
+        function ok(){b.textContent='ИНН скопирован — вставьте в поиск';}
+        try{navigator.clipboard.writeText(v).then(ok,function(){window.prompt('ИНН компании',v)});}catch(_){window.prompt('ИНН компании',v);}};
+      podpisantSvyazat(r,p);
       var f=document.getElementById('summa');
       if(f)f.onsubmit=function(e){e.preventDefault();var v=U.parseAmount(f.summa.value);rsZapomnit();RS.summa='';render(r,{usloviya:U,indeksVorota:window.IndeksVorota,nomer:opts.nomer,dostup:opts.dostup,summa:v||null,rezhim:f.rezhim.value});};
       var pdf=document.getElementById('pdf'), share=document.getElementById('share');

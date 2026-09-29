@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Получить счёт — Делоскоп</title>
+<!--oplata--><template data-oplata><title>Получить счёт — Делоскоп</title></template><!--/oplata--><!--v-bete--><title>Счета в бете — Делоскоп</title><!--/v-bete-->
 <meta name="description" content="Счёт на тариф Делоскопа для компании или ИП: месяц, квартал или год. Оплата с расчётного счёта, без НДС, доступ в день поступления денег.">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#F5F5F2">
@@ -44,6 +44,7 @@ footer a{color:var(--muted)}
 <script src="/js/shapka.js" defer></script>
 <script src="/obnovleniya.js" defer></script>
 <script src="/js/metrika.js" defer></script>
+<meta name="deloskop-rezhim" content="beta">
 </head>
 <body>
 <!--shapka-->
@@ -115,14 +116,15 @@ footer a{color:var(--muted)}
  </nav>
 </dialog>
 <!--/shapka-->
+<!--beta-polosa--><div class="beta-bar" role="region" aria-label="Открытая бета" data-beta-bar><div class="beta-bar__in"><span class="beta-bar__metka">бета</span><p class="beta-bar__t"><b>Открытая бета: всё бесплатно.</b> <span class="beta-bar__dop">Оплата и&nbsp;реквизиты появятся позже. </span><a href="mailto:help@deloskop.ru?subject=%D0%91%D0%B5%D1%82%D0%B0%20%D0%94%D0%B5%D0%BB%D0%BE%D1%81%D0%BA%D0%BE%D0%BF%D0%B0">Нашли ошибку&nbsp;— напишите</a></p><button class="beta-bar__x" type="button" aria-label="Скрыть на неделю" data-beta-x><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div></div><script>try{if(+localStorage.getItem("dlk_beta_skryt")>Date.now())document.querySelector("[data-beta-bar]").hidden=true}catch(e){}</script><!--/beta-polosa-->
 <main id="main">
 <nav class="crumbs" aria-label="Навигация"><a href="/">Делоскоп</a><span>›</span><a href="/tarify/">Тарифы</a><span>›</span><span>Счёт</span></nav>
 <h1>Счёт для компании или ИП</h1>
-<p class="sub">Выберите тариф и срок, впишите ИНН плательщика — счёт с реквизитами будет готов сразу.</p>
+<!--oplata--><template data-oplata><p class="sub">Выберите тариф и срок, впишите ИНН плательщика — счёт с реквизитами будет готов сразу.</p></template><!--/oplata--><!--v-bete--><p class="sub">Идёт открытая бета: Делоскоп работает бесплатно, счета не выставляем. Форма вернётся, когда откроем оплату.</p><!--/v-bete-->
 <div class="dve">
   <div class="card" id="forma"><noscript><p>Форме нужен JavaScript. Напишите на <a href="mailto:help@deloskop.ru?subject=%D0%A1%D1%87%D1%91%D1%82">help@deloskop.ru</a>: тариф, срок и ИНН плательщика — пришлём счёт.</p></noscript></div>
   <div>
-    <ol class="shagi">
+<!--oplata--><template data-oplata>    <ol class="shagi">
       <li><b>Получите счёт</b>Реквизиты вашей компании подставим из ЕГРЮЛ по ИНН — вписывать ничего не нужно. Счёт откроется по ссылке, его можно скачать в PDF и переслать бухгалтеру.</li>
       <li><b>Оплатите с расчётного счёта</b>В назначении платежа — номер счёта. Он уже вписан в готовый текст назначения, его можно скопировать.</li>
       <li><b>Доступ — в день оплаты</b>Откроем тариф на почту из заявки и пришлём акт для бухгалтерии.</li>
@@ -130,8 +132,8 @@ footer a{color:var(--muted)}
     <div class="fakt">
       <p><b>Без НДС.</b> Исполнитель применяет УСН и освобождён от НДС (п. 1 ст. 145 НК РФ), поэтому в счёте «Без налога (НДС)».</p>
       <p><b>Касса не нужна.</b> Оплата компанией или ИП с расчётного счёта — без кассового чека (п. 9 ст. 2 закона № 54-ФЗ).</p>
-      <p><b>Квартал</b> — три месяца по цене месяца, <b>год</b> — на 20% дешевле. Сравнить тарифы — <a href="/tarify/">на странице тарифов</a>.</p>
-    </div>
+      <p><b>Квартал</b> — три месяца по цене месяца, <b>год</b> — на 20% дешевле. Сравнить тарифы — <a data-oplata-href="/tarify/">на странице тарифов</a>.</p>
+    </div></template><!--/oplata--><!--v-bete--><!--/v-bete-->
   </div>
 </div>
 </main>

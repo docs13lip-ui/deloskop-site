@@ -74,6 +74,14 @@ test('нет реквизитов / неполные / ошибка сети —
 test('сборщик: пока rekvizity.json пуст — на документах заглушки с меткой и скрипт; подвал без ИП', () => {
   const r = JSON.parse(chitat('rekvizity.json'));
   if (r.fio && r.inn && r.ogrnip) return; // реквизиты уже статичны — проверяет podval.test.js
+  if (JSON.parse(chitat('tarify/tarify.json')).beta === true) { // beta-v1: в бете — честная строка, без скрипта реквизитов
+    for (const f of ['rekvizity/index.html', 'oferta/index.html', 'politika/index.html']) {
+      const t = chitat(f);
+      assert.ok(t.includes('<div class="note" data-rekv="beta">'), f + ': нет строки беты');
+      assert.ok(!/js\/rekvizity\.js/.test(t), f + ': в бете скрипт реквизитов не нужен');
+    }
+    return;
+  }
   for (const f of ['rekvizity/index.html', 'oferta/index.html', 'politika/index.html']) {
     const t = chitat(f);
     assert.ok(t.includes('<div class="note" data-rekv="tablica">'), f + ': нет метки таблицы');

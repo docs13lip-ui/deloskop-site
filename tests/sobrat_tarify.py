@@ -3,6 +3,9 @@
 Запуск из корня репозитория: python3 tests/sobrat_tarify.py ."""
 import json, html, os, sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import beta as BETA  # noqa: E402  (beta-v1: открытая бета — флаг "beta" в tarify.json)
+
 ROOT = sys.argv[1]
 D = json.load(open(os.path.join(ROOT, 'tarify/tarify.json'), encoding='utf-8'))
 _ix = open(os.path.join(ROOT, 'indeks/index.html'), encoding='utf-8').read()
@@ -37,10 +40,13 @@ def cena_i_knopki(t, nb=NB):
     # кнопки ведут на форму «Получить счёт» (п. 23): с JS — окно поверх (js/schet.js), без JS — страница /schet/
     mail = lambda srok: f'/schet/?tarif={t["id"]}&amp;srok={srok}'
     vid = 'primary' if t.get('rekomenduem') else 'ghost'
-    cta = (f'<div class="knopki" data-cena-m="{r(m)}" data-cena-g="{r(g)}">'
+    cta = (f'<!--oplata--><div class="knopki" data-cena-m="{r(m)}" data-cena-g="{r(g)}">'
            f'<a class="cta {vid}" data-tarif="{t["id"]}" data-srok="mes" href="{mail("mes")}">Оплачивать помесячно</a>'
            f'<a class="cta2" data-tarif="{t["id"]}" data-srok="god" href="{mail("god")}">Оплатить год — {r(g)}</a>'
-           f'</div>')
+           f'</div><!--/oplata-->'
+           # beta-v1: в открытой бете вместо оплаты — действие; цена остаётся как сведения «после беты»
+           f'<!--v-bete--><div class="knopki knopki--beta"><a class="cta {vid}" href="/#inn">В бете — бесплатно</a>'
+           f'<span class="knopki__pod">Цена — после беты</span></div><!--/v-bete-->')
     return price, cta
 
 
@@ -89,6 +95,10 @@ faq = [
     ("Гарантирует ли подписка, что счёт не заблокируют?", "Нет. Решение принимает банк. Делоскоп помогает заранее увидеть то, на что смотрят банк и налоговая, и подготовить документы, пока это ещё легко."),
     ("Влияет ли подписка на Индекс Делоскопа моей компании?", "Нет. Индекс нельзя купить или улучшить за деньги — только фактами из государственных реестров. Это правило записано в открытой методике."),
 ]
+if D.get('beta') is True:  # beta-v1: честный ответ «сколько стоит сейчас»; «как оплатить» — вернётся вместе с оплатой
+    faq = [("Сколько стоит Делоскоп сейчас?", "Ничего. Идёт открытая бета: все возможности открыты бесплатно, счета мы не выставляем. "
+            "Цены на этой странице — какими они станут после беты. Нашли ошибку или что-то непонятно — напишите на help@deloskop.ru.")] + \
+          [x for x in faq if not x[0].startswith("Как оплатить")]
 MAIL = '<a href="mailto:help@deloskop.ru">help@deloskop.ru</a>'
 faq_html = ''.join('<details><summary>' + html.escape(q) + '</summary><p>' + html.escape(a).replace('help@deloskop.ru', MAIL) + '</p></details>' for q, a in faq)
 ld = [
@@ -132,6 +142,8 @@ main{max-width:1120px}
 .knopki{display:flex;flex-direction:column;gap:2px}
 .cta2{display:flex;align-items:center;justify-content:center;min-height:44px;font-size:15px;font-weight:500;color:var(--accent);border-radius:12px}.cta2:hover{background:#F2F6FD}
 .pod{font-size:15px;color:var(--muted);margin:6px 0 0}
+.knopki--beta{gap:6px}.knopki__pod{display:block;text-align:center;font-size:14px;color:var(--muted)}
+.beta-note{margin:14px 0 0;padding:14px 18px;border-radius:16px;background:#EAF1FD;color:var(--ink2);font-size:16px;line-height:1.5}.beta-note b{color:var(--ink);font-weight:600}
 h2.big{font-size:clamp(28px,4vw,40px);letter-spacing:-.03em;line-height:1.1;margin:72px 0 10px;font-weight:600}
 .lid{font-size:19px;color:var(--ink2);margin:0 0 20px;max-width:720px}
 .kalk{background:var(--card);border-radius:var(--r);box-shadow:0 1px 2px rgba(0,0,0,.04),0 16px 40px rgba(0,0,0,.05);display:grid;grid-template-columns:1fr 420px;overflow:clip}
@@ -221,6 +233,7 @@ page = f'''<!doctype html>
 <h1>Тарифы</h1>
 <p class="sub">Подписка стоит меньше одной ошибки. Мы считаем это в рублях — и советуем тариф дешевле, если его хватит.</p>
 <div class="meta">Цены с 26 сентября 2026 · помесячно или за год со скидкой 20%</div>
+<!--oplata--><!--/oplata--><!--v-bete--><p class="beta-note"><b>Идёт открытая бета — всё бесплатно.</b> Счета не выставляем, реквизиты и оплата появятся позже. Цены ниже — какими они станут после беты.</p><!--/v-bete-->
 
 {OSN_BAND}<div class="period" role="group" aria-label="Период оплаты">
   <button type="button" data-period="mes" aria-pressed="true" class="on">Помесячно</button>
@@ -229,7 +242,7 @@ page = f'''<!doctype html>
 <div class="plans">
 {chr(10).join(cards)}
 </div>
-<p class="pod">Нужно больше отчётов? {pak['tekst'].capitalize()} — {rub(pak['cena'])} к любому платному тарифу. Помесячно — отменить можно в любой момент, следующий месяц просто не спишется. Компаниям и ИП — <a href="/schet/">по счёту</a> на месяц, квартал или год, с закрывающими документами. Цены указаны без НДС: исполнитель применяет УСН и освобождён от НДС (п. 1 ст. 145 НК РФ). Оплата картой на сайте — скоро.</p>
+<p class="pod">Нужно больше отчётов? {pak['tekst'].capitalize()} — {rub(pak['cena'])} к любому платному тарифу. Помесячно — отменить можно в любой момент, следующий месяц просто не спишется. <!--oplata-->Компаниям и ИП — <a href="/schet/">по счёту</a> на месяц, квартал или год, с закрывающими документами. <!--/oplata--><!--v-bete--><!--/v-bete-->Цены указаны без НДС: исполнитель применяет УСН и освобождён от НДС (п. 1 ст. 145 НК РФ).<!--oplata--> Оплата картой на сайте — скоро.<!--/oplata--><!--v-bete--><!--/v-bete--></p>
 
 <h2 class="big" id="podbor">Подбор без переплаты</h2>
 <p class="lid">Расскажите, как вы работаете, — покажем самый дешёвый тариф, которого хватит, и сколько денег он защищает.</p>
@@ -312,6 +325,7 @@ page = f'''<!doctype html>
 </body>
 </html>
 '''
+page = BETA.primenit(page, D.get('beta') is True, polosa='')  # полосу ставит sobrat_shapku.py (нужна шапка)
 open(os.path.join(ROOT, 'tarify/index.html'), 'w', encoding='utf-8').write(page)
 print('ok', len(page))
 
@@ -327,7 +341,7 @@ for t in D['tarify']:
     j = _m.index('\n        </div>', _m.index('</ul>', i))  # конец карточки
     card = _m[i:j]
     card = _re.sub(r'<div class="price">.*?</div><div class="per"[^>]*>.*?</div>', lambda _: price, card, count=1, flags=_re.S)
-    card = _re.sub(r'(<a class="cta [^"]*"[^>]*>Подключить «[^»]+»</a>|<div class="knopki".*?</a></div>)', lambda _: cta, card, count=1, flags=_re.S)
+    card = _re.sub(r'(<!--oplata-->(?:<template data-oplata>)?<div class="knopki".*?<!--/v-bete-->|<a class="cta [^"]*"[^>]*>Подключить «[^»]+»</a>|<div class="knopki".*?</a></div>)', lambda _: cta, card, count=1, flags=_re.S)
     _m = _m[:i] + card + _m[j:]
 _m = _m.replace('<button type="button" data-period="m">Помесячно</button>\n          <button type="button" data-period="y" class="on">За год <em>−20%</em></button>',
                 '<button type="button" data-period="m" class="on" aria-pressed="true">Помесячно</button>\n          <button type="button" data-period="y" aria-pressed="false">За год <em>−20%</em></button>')
@@ -336,6 +350,7 @@ _kak_new = '<details><summary>Как оплатить?</summary><p>Компан�
 _m = _m.replace(_kak_old, _kak_new)
 if '/js/schet.js' not in _m:
     _m = _m.replace('</body>', '<script src="/js/schet.js" defer></script>\n</body>', 1)
+_m = BETA.primenit(_m, D.get('beta') is True)
 open(_mp, 'w', encoding='utf-8').write(_m)
 print('главная ok')
 

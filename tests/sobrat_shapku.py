@@ -18,6 +18,11 @@
      в <head> — /css/shapka.css, /js/shapka.js и /obnovleniya.js (defer); у <main> — id="main"
      (ссылка «Перейти к содержанию»).
 
+  6. ОТКРЫТАЯ БЕТА (beta-v1, решение владельца 29.09.2026) — флаг tarify/tarify.json → "beta". В бете:
+     блоки <!--oplata-->…<!--/oplata--> уходят в <template>, показываются <!--v-bete-->…<!--/v-bete-->;
+     полоса /partials/beta.html под шапкой; в подвале и документах — без ИНН и ОГРНИП, даже если
+     rekvizity.json заполнен. Флаг false — всё возвращается байт в байт (tests/beta.py, tests/test_beta.py).
+
 Запуск: python3 tests/sobrat_shapku.py        — собрать
         python3 tests/sobrat_shapku.py --check — только проверить (код 1, если нужна сборка)
 """
@@ -27,6 +32,9 @@ import os
 import re
 import subprocess
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import beta as BETA  # noqa: E402
 
 KOREN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ISKLYUCHIT = {"admin.html"}  # служебная страница — без публичного подвала
@@ -77,6 +85,16 @@ def rekv():
     # п. 123: только населённый пункт по ЕГРИП; адрес регистрации в шаблоны не выводим никогда
     r["_gorod"] = sv.get("gorod") or ""
     r["_sverka"] = sv if sv.get("data") else {}
+    return r
+
+
+def rekv_sajta():
+    """Реквизиты с учётом режима сайта. beta-v1: в открытой бете реквизиты ИП на сайт не выводим (решение
+    владельца 29.09.2026), даже если rekvizity.json заполнен. Этим пользуются main() и tests/kartochki.py."""
+    r = rekv()
+    r["_beta"] = BETA.vklyuchena(KOREN)
+    if r["_beta"]:
+        r["_est"] = False
     return r
 
 
@@ -147,7 +165,7 @@ def tokeny_ds():
 
 def shapka_css():
     tok, mob = tokeny_ds()
-    oblast = "a.skip,.shapka,dialog.mnav,.wn-bar,dialog.dlo,.ck-bar"
+    oblast = "a.skip,.shapka,dialog.mnav,.wn-bar,.beta-bar,dialog.dlo,.ck-bar"
     with open(put("partials", "shapka.css"), encoding="utf-8") as fh:
         src = fh.read()
     return ("/* СОБРАНО tests/sobrat_shapku.py из /partials/shapka.css и токенов /css/ds.css — руками не править. */\n"
@@ -222,6 +240,10 @@ def ispolnitel(r):
 
 
 def tablica(r):
+    if r.get("_beta"):
+        return ('<div class="note" data-rekv="beta">Идёт открытая бета: Делоскоп работает бесплатно, оплата на сайте '
+                'не принимается, поэтому реквизиты продавца здесь пока не публикуем. Они появятся до того, как мы начнём '
+                'принимать оплату. Вопросы — <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>.</div>')
     if not r["_est"]:
         return ('<div class="note" data-rekv="tablica">Реквизиты продавца появятся здесь сразу после государственной регистрации '
                 'индивидуального предпринимателя. До этого оплата на сайте не принимается. '
@@ -277,12 +299,14 @@ def sobrat_stranicu(txt, r, podval, shapka=None):
     txt = re.sub(r"<!--r:gorod-->.*?<!--/r-->",
                  lambda m: "<!--r:gorod-->" + ((" (" + gorod(r) + ")") if r.get("_gorod") else "") + "<!--/r-->", txt, flags=re.S)
     txt = re.sub(r"<!--rekvizity-->.*?<!--/rekvizity-->", lambda m: "<!--rekvizity-->" + tablica(r) + "<!--/rekvizity-->", txt, flags=re.S)
+    # 5) открытая бета: оплата ↔ «в бете бесплатно», метка режима, полоса под шапкой
+    txt = BETA.primenit(txt, r.get("_beta", False))
     return txt
 
 
 def main():
     check = "--check" in sys.argv
-    r = rekv()
+    r = rekv_sajta()
     podval = podval_html(r)
     shapka = shapka_html()
     izmeneno = []

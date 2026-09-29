@@ -745,6 +745,7 @@ def html_kartochki(k, V, sosedi):
 <link rel="stylesheet" href="/css/ds.css">
 <link rel="stylesheet" href="/css/co.css">
 <script type="application/ld+json">{ld}</script>
+<script src="/js/otzyv.js" defer></script>
 </head>
 <body class="co">
 <!--shapka--><!--/shapka-->
@@ -893,7 +894,7 @@ def zapisat(put, txt):
 
 def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None):
     kart, otchet = otobrat(zapisi, limit, spros, kontrol)
-    r = ss.rekv()
+    r = ss.rekv_sajta()  # beta-v1: режим сайта (в бете — без реквизитов ИП и с полосой беты)
     papka = os.path.join(koren, PAPKA)
     nuzhnye = {adres_str(k).strip("/").split("/", 1)[1] for k in kart}
     # карточки, которые больше не проходят ворота, убираем — адрес уйдёт в «мягкую 404» → живую проверку

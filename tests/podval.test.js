@@ -82,6 +82,11 @@ test('оферта — в лицензионной редакции налого
 test('пока реквизиты не заполнены — строки ИП в подвале нет, в документах ссылка на /rekvizity/', () => {
   const r = JSON.parse(chitat('rekvizity.json'));
   const p = podval(chitat('index.html'))[0];
+  if (JSON.parse(chitat('tarify/tarify.json')).beta === true) { // beta-v1: в бете реквизитов нет, даже если заполнены
+    assert.ok(!/ОГРНИП|ИНН \d/.test(p));
+    assert.ok(chitat('rekvizity/index.html').includes('Идёт открытая бета: Делоскоп работает бесплатно'));
+    return;
+  }
   if (!r.fio || !r.inn || !r.ogrnip) {
     assert.ok(!/ОГРНИП/.test(p));
     assert.ok(chitat('oferta/index.html').includes('сведения о котором указаны в разделе'));

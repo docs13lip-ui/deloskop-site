@@ -7,6 +7,7 @@ const path = require('path');
 const KOREN = path.join(__dirname, '..');
 const chitat = f => fs.readFileSync(path.join(KOREN, f), 'utf8');
 const D = JSON.parse(chitat('tarify/tarify.json'));
+const { platnyj, vidimoe } = require('./beta_vid.js'); // beta-v1: оплату проверяем в «платном» виде
 const rub = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 
 test('tarify.json: «osnovatel» — разовый продукт 7 150 ₽, 300 мест, доступ «Про» на 12 месяцев (согласовано владельцем)', () => {
@@ -19,7 +20,7 @@ test('tarify.json: «osnovatel» — разовый продукт 7 150 ₽, 30
 });
 
 test('/osnovatel/: цены — только из tarify.json, SEO и FAQ по правилам', () => {
-  const t = chitat('osnovatel/index.html');
+  const t = vidimoe(platnyj(chitat('osnovatel/index.html')));
   const title = t.match(/<title>([^<]*)<\/title>/)[1];
   assert.ok(title.length <= 70);
   assert.ok(t.match(/<meta name="description" content="([^"]*)"/)[1].length <= 160);

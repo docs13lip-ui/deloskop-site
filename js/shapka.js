@@ -3,8 +3,21 @@
    (окно открывается только по событию deloskop:whatsnew от кнопки в шапке). */
 (function () {
   "use strict";
+  // 0. Полоса «Открытая бета» (beta-v1): крестик прячет её на неделю; хранилище недоступно — просто прячем
+  var NEDELYA = 7 * 24 * 3600 * 1000;
+  function betaPolosa() {
+    var bar = document.querySelector("[data-beta-bar]");
+    if (!bar) return;
+    var x = bar.querySelector("[data-beta-x]");
+    if (x) x.addEventListener("click", function () {
+      bar.hidden = true;
+      try { localStorage.setItem("dlk_beta_skryt", String(Date.now() + NEDELYA)); } catch (e) {}
+      if (window.dlkGoal) window.dlkGoal("beta_bar_close");
+    });
+  }
   function init() {
     var h = document.querySelector("[data-shapka]");
+    betaPolosa();
     if (!h) return;
     var path = location.pathname;
     var m = document.getElementById("mnav");

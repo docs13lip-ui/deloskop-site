@@ -191,6 +191,7 @@ p{margin:0}
 @media (min-width:1181px){.pricing .price{flex-wrap:nowrap}.pricing .price b{font-size:clamp(36px,3vw,56px)}.pricing .plan>.cta{font-size:16px;padding:15px 8px;white-space:nowrap}}  /* 4 колонки: цена и «в месяц» в одну строку */
 .cta2{display:flex;align-items:center;justify-content:center;min-height:44px;font-size:15px;font-weight:500;color:var(--accent);border-radius:12px;text-align:center}
 .cta2:hover{background:rgba(11,99,229,.06)}
+.knopki__pod{display:block;text-align:center;font-size:14px;color:var(--muted);margin-top:4px}
 .cta.primary{background:var(--accent);color:#fff}
 .cta.primary:hover{background:var(--accent-hover);color:#fff}
 .cta.ghost{background:var(--card);color:var(--ink);border:1px solid #D8D8D2}
@@ -263,6 +264,7 @@ footer a{color:var(--ink2)}
 <link rel="stylesheet" href="/css/shapka.css">
 <script src="/js/shapka.js" defer></script>
 <script src="/js/metrika.js" defer></script>
+<meta name="deloskop-rezhim" content="beta">
 </head>
 <body>
 
@@ -335,6 +337,7 @@ footer a{color:var(--ink2)}
  </nav>
 </dialog>
 <!--/shapka-->
+<!--beta-polosa--><div class="beta-bar" role="region" aria-label="Открытая бета" data-beta-bar><div class="beta-bar__in"><span class="beta-bar__metka">бета</span><p class="beta-bar__t"><b>Открытая бета: всё бесплатно.</b> <span class="beta-bar__dop">Оплата и&nbsp;реквизиты появятся позже. </span><a href="mailto:help@deloskop.ru?subject=%D0%91%D0%B5%D1%82%D0%B0%20%D0%94%D0%B5%D0%BB%D0%BE%D1%81%D0%BA%D0%BE%D0%BF%D0%B0">Нашли ошибку&nbsp;— напишите</a></p><button class="beta-bar__x" type="button" aria-label="Скрыть на неделю" data-beta-x><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div></div><script>try{if(+localStorage.getItem("dlk_beta_skryt")>Date.now())document.querySelector("[data-beta-bar]").hidden=true}catch(e){}</script><!--/beta-polosa-->
 <span id="main" tabindex="-1"></span>
 
 <main id="top">
@@ -580,7 +583,7 @@ footer a{color:var(--ink2)}
     <div class="wrap">
       <div class="sect-head">
         <h2 class="h2">Попробуйте бесплатно. Растите вместе с нами.</h2>
-        <p class="lead">Помесячно — без обязательств на год, отменить можно в любой момент. Компаниям и ИП — по счёту на месяц, квартал или год, с закрывающими документами. Оплата картой на сайте — скоро.</p>
+        <!--oplata--><template data-oplata><p class="lead">Помесячно — без обязательств на год, отменить можно в любой момент. Компаниям и ИП — по счёту на месяц, квартал или год, с закрывающими документами. Оплата картой на сайте — скоро.</p></template><!--/oplata--><!--v-bete--><p class="lead">Сейчас идёт открытая бета: все возможности открыты бесплатно, счета не выставляем. Цены ниже — какими они станут после беты.</p><!--/v-bete-->
         <div class="period" role="group" aria-label="Период оплаты">
           <button type="button" data-period="m" class="on" aria-pressed="true">Помесячно</button>
           <button type="button" data-period="y" aria-pressed="false">За год <em>−20%</em></button>
@@ -601,7 +604,7 @@ footer a{color:var(--ink2)}
           <ul>
             <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Базовые проверки без лимита</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>3 полных отчёта в месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>10 персональных разборов в месяц <span class="tagnew">скоро</span></span></li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Слежение за 3 компаниями</li>
           </ul>
-          <div class="knopki" data-cena-m="490 ₽" data-cena-g="4 700 ₽"><a class="cta ghost" data-tarif="start" data-srok="mes" href="/schet/?tarif=start&amp;srok=mes">Оплачивать помесячно</a><a class="cta2" data-tarif="start" data-srok="god" href="/schet/?tarif=start&amp;srok=god">Оплатить год — 4 700 ₽</a></div>
+          <!--oplata--><template data-oplata><div class="knopki" data-cena-m="490 ₽" data-cena-g="4 700 ₽"><a class="cta ghost" data-tarif="start" data-srok="mes" data-oplata-href="/schet/?tarif=start&amp;srok=mes">Оплачивать помесячно</a><a class="cta2" data-tarif="start" data-srok="god" data-oplata-href="/schet/?tarif=start&amp;srok=god">Оплатить год — 4 700 ₽</a></div></template><!--/oplata--><!--v-bete--><div class="knopki knopki--beta"><a class="cta ghost" href="/#inn">В бете — бесплатно</a><span class="knopki__pod">Цена — после беты</span></div><!--/v-bete-->
         </div>
         <div class="plan pro">
           <div><div class="plan-name">Про <span class="badge">Рекомендуем</span></div><div class="plan-for">Малому бизнесу и бухгалтерам</div></div>
@@ -609,7 +612,7 @@ footer a{color:var(--ink2)}
           <ul>
             <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Базовые проверки без лимита</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>20 полных отчётов в месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Персональные разборы 115-ФЗ без лимита <span class="tagnew">скоро</span></span></li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Делопись: договоры с защитой под контрагента</span></li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Слежение за 10 компаниями</li>
           </ul>
-          <div class="knopki" data-cena-m="1 490 ₽" data-cena-g="14 300 ₽"><a class="cta primary" data-tarif="pro" data-srok="mes" href="/schet/?tarif=pro&amp;srok=mes">Оплачивать помесячно</a><a class="cta2" data-tarif="pro" data-srok="god" href="/schet/?tarif=pro&amp;srok=god">Оплатить год — 14 300 ₽</a></div>
+          <!--oplata--><template data-oplata><div class="knopki" data-cena-m="1 490 ₽" data-cena-g="14 300 ₽"><a class="cta primary" data-tarif="pro" data-srok="mes" data-oplata-href="/schet/?tarif=pro&amp;srok=mes">Оплачивать помесячно</a><a class="cta2" data-tarif="pro" data-srok="god" data-oplata-href="/schet/?tarif=pro&amp;srok=god">Оплатить год — 14 300 ₽</a></div></template><!--/oplata--><!--v-bete--><div class="knopki knopki--beta"><a class="cta primary" href="/#inn">В бете — бесплатно</a><span class="knopki__pod">Цена — после беты</span></div><!--/v-bete-->
         </div>
         <div class="plan ">
           <div><div class="plan-name">Бизнес </div><div class="plan-for">Отделам закупок и продаж</div></div>
@@ -617,7 +620,7 @@ footer a{color:var(--ink2)}
           <ul>
             <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>До 5 сотрудников</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Щит: разбор выписки из 1С каждый месяц <span class="tagnew">скоро</span></span></li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>80 полных отчётов в месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Слежение за 50 компаниями</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Ежедневный контроль блокировок у 3 партнёров <span class="tagnew">скоро</span></span></li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Выгрузка в Excel и 1С <span class="tagnew">скоро</span></span></li>
           </ul>
-          <div class="knopki" data-cena-m="4 990 ₽" data-cena-g="47 900 ₽"><a class="cta ghost" data-tarif="biznes" data-srok="mes" href="/schet/?tarif=biznes&amp;srok=mes">Оплачивать помесячно</a><a class="cta2" data-tarif="biznes" data-srok="god" href="/schet/?tarif=biznes&amp;srok=god">Оплатить год — 47 900 ₽</a></div>
+          <!--oplata--><template data-oplata><div class="knopki" data-cena-m="4 990 ₽" data-cena-g="47 900 ₽"><a class="cta ghost" data-tarif="biznes" data-srok="mes" data-oplata-href="/schet/?tarif=biznes&amp;srok=mes">Оплачивать помесячно</a><a class="cta2" data-tarif="biznes" data-srok="god" data-oplata-href="/schet/?tarif=biznes&amp;srok=god">Оплатить год — 47 900 ₽</a></div></template><!--/oplata--><!--v-bete--><div class="knopki knopki--beta"><a class="cta ghost" href="/#inn">В бете — бесплатно</a><span class="knopki__pod">Цена — после беты</span></div><!--/v-bete-->
         </div>
       </div>
       <p class="plans-note">Нужно больше отчётов? Докупите 10 полных отчётов за 990 ₽ или напишите нам — рассчитаем тариф для вашей компании. <a href="/tarify/#podbor">Подобрать тариф без переплаты и посчитать окупаемость →</a></p>
@@ -636,7 +639,7 @@ footer a{color:var(--ink2)}
         <details><summary>Подойдёт ли Делоскоп частному лицу?</summary><p>Да. Проверьте подрядчика, арендодателя или будущего работодателя, прежде чем подписывать договор и платить.</p></details>
         <details><summary>Гарантирует ли проверка, что банк не заблокирует счёт?</summary><p>Нет. Решение принимает банк. Делоскоп помогает заметить риски заранее и правильно подготовить документы.</p></details>
         <details><summary>Можно ли сменить тариф?</summary><p>Да, в любой момент. При переходе на тариф выше доплачиваете только разницу за оставшиеся дни.</p></details>
-        <details><summary>Как оплатить?</summary><p>Компании и ИП — по счёту с расчётного счёта: нажмите кнопку тарифа, выберите срок и впишите ИНН плательщика — счёт откроется сразу, без НДС. Доступ — в день поступления денег, акт — для бухгалтерии. Оплата картой на сайте появится после подключения банка.</p></details>
+        <!--oplata--><template data-oplata><details><summary>Как оплатить?</summary><p>Компании и ИП — по счёту с расчётного счёта: нажмите кнопку тарифа, выберите срок и впишите ИНН плательщика — счёт откроется сразу, без НДС. Доступ — в день поступления денег, акт — для бухгалтерии. Оплата картой на сайте появится после подключения банка.</p></details></template><!--/oplata--><!--v-bete--><details><summary>Сколько это стоит сейчас?</summary><p>Ничего. Идёт открытая бета: всё открыто бесплатно, счета не выставляем. Нашли ошибку или что-то непонятно — напишите на <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>, это сейчас самое ценное.</p></details><!--/v-bete-->
         <details><summary>Где хранятся мои данные?</summary><p>На серверах в России, в соответствии с 152-ФЗ.</p></details>
       </div>
     </div>

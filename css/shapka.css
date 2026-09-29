@@ -1,10 +1,10 @@
 /* СОБРАНО tests/sobrat_shapku.py из /partials/shapka.css и токенов /css/ds.css — руками не править. */
-a.skip,.shapka,dialog.mnav,.wn-bar,dialog.dlo,.ck-bar{--bg:#F5F5F2;--surface:#FFFFFF;--surface-2:#EEEEEA;--ink:#1D1D1F;--ink-2:#48484C;--muted:#6B6B70;--line:#E6E6E1; --accent:#0B63E5;--accent-hover:#084BB0;--accent-soft:#EAF1FD;--on-accent:#FFFFFF; --ok:#16723F;--ok-bg:#E8F5EE;--warn:#9A5B00;--warn-bg:#FFF4E0;--high:#C2410C;--high-bg:#FFEDE3;--bad:#B3261E;--bad-bg:#FDECEA; --font:Onest,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; --t-display:clamp(44px,6.4vw,72px);--t-h1:clamp(36px,4.6vw,56px);--t-h2:clamp(28px,3.2vw,40px);--t-h3:22px; --t-lead:20px;--t-body:17px;--t-small:15px;--t-caption:13px; --s-1:4px;--s-2:8px;--s-3:12px;--s-4:16px;--s-5:24px;--s-6:32px;--s-7:48px;--s-8:64px;--s-9:96px;--s-10:128px; --wide:1200px;--text:760px;--gutter:clamp(16px,5vw,48px);--section:clamp(64px,9vw,120px); --r-s:10px;--r-m:16px;--r-l:24px;--r-xl:32px;--r-pill:999px; --shadow:0 1px 2px rgba(29,29,31,.04),0 12px 32px rgba(29,29,31,.06); --ease:cubic-bezier(.2,.7,.2,1);--fast:160ms;--slow:240ms; --header-h:64px;}
-@media (max-width:640px){a.skip,.shapka,dialog.mnav,.wn-bar,dialog.dlo,.ck-bar{--t-lead:18px;--t-body:16px;--header-h:56px}}
+a.skip,.shapka,dialog.mnav,.wn-bar,.beta-bar,dialog.dlo,.ck-bar{--bg:#F5F5F2;--surface:#FFFFFF;--surface-2:#EEEEEA;--ink:#1D1D1F;--ink-2:#48484C;--muted:#6B6B70;--line:#E6E6E1; --accent:#0B63E5;--accent-hover:#084BB0;--accent-soft:#EAF1FD;--on-accent:#FFFFFF; --ok:#16723F;--ok-bg:#E8F5EE;--warn:#9A5B00;--warn-bg:#FFF4E0;--high:#C2410C;--high-bg:#FFEDE3;--bad:#B3261E;--bad-bg:#FDECEA; --font:Onest,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; --t-display:clamp(44px,6.4vw,72px);--t-h1:clamp(36px,4.6vw,56px);--t-h2:clamp(28px,3.2vw,40px);--t-h3:22px; --t-lead:20px;--t-body:17px;--t-small:15px;--t-caption:13px; --s-1:4px;--s-2:8px;--s-3:12px;--s-4:16px;--s-5:24px;--s-6:32px;--s-7:48px;--s-8:64px;--s-9:96px;--s-10:128px; --wide:1200px;--text:760px;--gutter:clamp(16px,5vw,48px);--section:clamp(64px,9vw,120px); --r-s:10px;--r-m:16px;--r-l:24px;--r-xl:32px;--r-pill:999px; --shadow:0 1px 2px rgba(29,29,31,.04),0 12px 32px rgba(29,29,31,.06); --ease:cubic-bezier(.2,.7,.2,1);--fast:160ms;--slow:240ms; --header-h:64px;}
+@media (max-width:640px){a.skip,.shapka,dialog.mnav,.wn-bar,.beta-bar,dialog.dlo,.ck-bar{--t-lead:18px;--t-body:16px;--header-h:56px}}
 /* ===== шапка (claude/Дизайн_шапка_логотип_и_Скорая_v2.md, часть 1) =====
    Все правила — с префиксом .shapka / .mnav / .skip / .wn-: старые страницы ещё не на ds.css,
    их стили (a{…}, header{…}, .btn) не должны протекать в шапку, а шапка — в страницу. */
-.shapka,.shapka *,.mnav,.mnav *,.wn-bar,.wn-bar *,.dlo,.dlo *,a.skip{box-sizing:border-box}
+.shapka,.shapka *,.mnav,.mnav *,.wn-bar,.wn-bar *,.beta-bar,.beta-bar *,.dlo,.dlo *,a.skip{box-sizing:border-box}
 .shapka [hidden],.mnav [hidden],.wn-bar [hidden]{display:none!important}
 .vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 a.skip{position:absolute;left:var(--s-4);top:-100px;z-index:100;display:inline-block;padding:var(--s-3) var(--s-4);border-radius:var(--r-s);background:var(--accent);color:var(--on-accent);font:600 15px/1 var(--font);text-decoration:none}
@@ -99,6 +99,21 @@ dialog.mnav::backdrop{background:rgba(17,17,19,.4);-webkit-backdrop-filter:blur(
 .wn-bar a:hover{color:var(--accent-hover);text-decoration:underline}
 .wn-bar .wn-bar__x{flex:none;display:inline-grid;place-items:center;width:44px;height:44px;margin-right:-10px;padding:0;border:0;border-radius:var(--r-pill);background:none;color:var(--ink-2);cursor:pointer}
 .wn-bar .wn-bar__x:hover{background:rgba(11,99,229,.08);color:var(--ink)}
+
+/* полоса «Открытая бета» под шапкой (beta-v1, решение владельца 29.09.2026) — не липкая, закрывается на неделю */
+.beta-bar{background:var(--surface);border-bottom:1px solid var(--line);color:var(--ink-2);font:400 var(--t-small)/1.4 var(--font);text-align:left}
+.beta-bar[hidden]{display:none!important}
+.beta-bar .beta-bar__in{max-width:calc(var(--wide) + 2*var(--gutter));min-height:44px;margin:0 auto;padding:0 var(--gutter);display:flex;align-items:center;gap:var(--s-3)}
+.beta-bar .beta-bar__metka{flex:none;display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:var(--r-pill);background:var(--accent-soft);color:var(--accent);font:600 12px/1 var(--font);letter-spacing:.06em;text-transform:uppercase}
+.beta-bar .beta-bar__t{flex:1;min-width:0;margin:0;padding:var(--s-2) 0;font-size:var(--t-small);color:var(--ink-2)}
+.beta-bar .beta-bar__t b{font-weight:600;color:var(--ink)}
+.beta-bar a{display:inline;padding:0;background:none;color:var(--accent);font-weight:600;text-decoration:none;white-space:nowrap}
+.beta-bar a:hover{color:var(--accent-hover);text-decoration:underline}
+.beta-bar .beta-bar__x{flex:none;display:inline-grid;place-items:center;width:44px;height:44px;margin-right:-10px;padding:0;border:0;border-radius:var(--r-pill);background:none;color:var(--muted);cursor:pointer}
+.beta-bar .beta-bar__x:hover{background:var(--surface-2);color:var(--ink)}
+.beta-bar :focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+@media (max-width:640px){.beta-bar .beta-bar__dop{display:none}.beta-bar .beta-bar__in{gap:var(--s-2)}}
+@media print{.beta-bar{display:none!important}}
 
 /* окно «Что нового» — открывается ТОЛЬКО по пункту в шапке */
 dialog.dlo{width:min(640px,calc(100% - 32px));max-width:none;max-height:calc(100dvh - 32px);margin:auto;padding:clamp(24px,5vw,44px);border:0;border-radius:var(--r-xl);background:var(--surface);color:var(--ink);font:400 var(--t-body)/1.5 var(--font);text-align:left;box-shadow:0 24px 80px rgba(0,0,0,.25);overflow:auto}

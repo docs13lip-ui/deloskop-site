@@ -216,6 +216,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
 <!--/shapka-->
 <span id="main" tabindex="-1"></span>
 <div class="bar noprint">
+  <a class="btn" id="pasportK" hidden href="/pasport/kontragent/">Паспорт контрагента</a>
   <button class="btn" type="button" id="share" hidden>Скопировать ссылку</button>
   <button class="btn primary" type="button" id="pdf" hidden>Скачать PDF</button>
 </div>
@@ -243,7 +244,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
   var msg=document.getElementById('msg'), doc=document.getElementById('doc');
   function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
   function d(v){if(!v)return '';var x=new Date(v);return isNaN(x)?esc(v):x.toLocaleDateString('ru-RU')}
-  var ST={ACTIVE:'Действующая',LIQUIDATING:'Ликвидируется',LIQUIDATED:'Ликвидирована',BANKRUPT:'Банкротство',REORGANIZING:'Реорганизация'};
+  var ST={ACTIVE:'Действующая',LIQUIDATING:'Ликвидируется или исключается из ЕГРЮЛ',LIQUIDATED:'Ликвидирована',BANKRUPT:'Банкротство',REORGANIZING:'Реорганизация'};
   var STX={ok:'Норма',info:'Справочно',warn:'Внимание',bad:'Риск'};
   var LOGO='<svg width="26" height="23" viewBox="0 0 72 64" fill="none" aria-hidden="true"><path d="M36 18.1A16 16 0 0 1 36 45.9A16 16 0 0 1 36 18.1Z" fill="#0B63E5"/><circle cx="28" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/><circle cx="44" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/></svg>';
   function fail(t){msg.innerHTML=t+' <a href="/">Проверить компанию</a>';}
@@ -469,6 +470,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
     bindTips(doc);bindQ(doc);
     var pdf=document.getElementById('pdf'), share=document.getElementById('share');
     pdf.hidden=share.hidden=false;
+    var pk=document.getElementById('pasportK');if(pk&&!(c.kind==='INDIVIDUAL'||String(c.inn||'').length===12)){pk.href='/pasport/kontragent/?id='+encodeURIComponent(id);pk.hidden=false;}
     pdf.onclick=function(){window.print()};
     share.onclick=function(){
       var done=function(){share.textContent='Ссылка скопирована'};

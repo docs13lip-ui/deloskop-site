@@ -151,4 +151,12 @@ t('полномочия: ссылки на проверку МЧД и нотар
   assert.ok(d.links.some(function (l) { return /m4d\.nalog\.gov\.ru/.test(l.u); }));
   assert.ok(d.links.some(function (l) { return /reestr-dover\.ru/.test(l.u); }));
 });
+
+t('«Ликвидируется» у DaData — это и ликвидация, и предстоящее исключение из ЕГРЮЛ: без «ликвидатора» и с трёхмесячным сроком для кредитора', function () {
+  var v = U.decide(resp({ company: { inn: '7700000002', name_short: 'ООО «Уходящее»', status: 'LIQUIDATING', reg_date: '2015-03-01' } }));
+  assert.strictEqual(v.tone, 'stop');
+  assert.ok(!/ликвидатор вправе/.test(v.advice), 'у компании под исключением ликвидатора нет');
+  assert.ok(/исключени/.test(v.reasons[0]), 'причина называет и исключение из ЕГРЮЛ');
+  assert.ok(/трёх месяцев/.test(v.advice) && /21\.1 129-ФЗ/.test(v.advice), 'кредитору — срок и норма');
+});
 console.log('\nПройдено тестов: ' + n);

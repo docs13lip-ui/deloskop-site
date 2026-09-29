@@ -62,9 +62,16 @@ test('БИК не с «04» — ошибка; БИК нет — «Не нашл�
   assert.equal(A.stroki({})[0].cls, 'is-none');
 });
 
-test('приостановки ФНС — строка только если сервер прислал; «не проверяли» ≠ «нет»', () => {
+test('приостановки ФНС — «не проверяли» ≠ «нет»; без ответа сервера — ссылка на сервис ФНС с ИНН и БИК', () => {
   const nazv = (d) => A.stroki(d).filter((x) => /приостановке/.test(plain(x.nazv)));
-  assert.equal(nazv({ bik: BIK }).length, 0);
+  const bez = nazv({ bik: BIK, inn: '7707083893' })[0];
+  assert.equal(bez.cls, 'is-none', 'сервер молчит — это «не проверяли», не «нет»');
+  assert.match(plain(bez.meta), /ИНН 7707083893 и БИК /);
+  assert.match(plain(bez.meta), /это не значит, что решений нет/);
+  assert.equal(bez.ssylka.href, 'https://service.nalog.ru/bi.do');
+  assert.equal(nazv({ bik: '123456789' }).length, 0, 'БИК с ошибкой — сначала исправить реквизиты');
+  assert.equal(nazv({}).length, 0);
+  assert.equal(nazv({ bik: BIK, priostanovki: { status: 'found' } })[0].ssylka, undefined, 'есть ответ сервера — ссылка не нужна');
   assert.equal(nazv({ bik: BIK, priostanovki: { status: 'found', as_of: '2026-09-28' } })[0].cls, 'is-high');
   const f = nazv({ bik: BIK, priostanovki: { status: 'found' } })[0];
   assert.match(plain(f.meta), /поступления на счёт идут/, 'формула юриста: расходные операции не проведут, поступления идут (ст. 76 НК)');

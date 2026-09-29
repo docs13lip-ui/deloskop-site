@@ -93,7 +93,7 @@ t('Раскладка признаков для партнёра', () => {
 t('Ликвидация и высокий ЗСК — серьёзные отметки', () => {
   const r = JSON.parse(JSON.stringify(base)); r.company.status = 'LIQUIDATING'; r.zsk.level = 'high';
   const g = E.classify(r);
-  assert.strictEqual(g.serious[0].detail, 'Ликвидируется');
+  assert.strictEqual(g.serious[0].detail, 'Ликвидируется или исключается из ЕГРЮЛ');
   assert.ok(g.serious.some(x => x.title === 'Прогноз ЗСК'));
   assert.strictEqual(E.headline(g).tone, 'bad');
 });

@@ -75,6 +75,9 @@
 
   function zapustit(doc) {
     if (!doc.querySelector('[data-rekv]')) return;
+    // beta-v1: в открытой бете реквизиты ИП на сайт не выводим (решение владельца 29.09.2026)
+    var rezhim = doc.querySelector('meta[name="deloskop-rezhim"]');
+    if (rezhim && rezhim.getAttribute('content') === 'beta') return;
     var host = (typeof location !== 'undefined' && location.hostname) || '';
     var API = /(^|\.)deloskop\.ru$/.test(host) ? 'https://api.deloskop.ru' : '';
     if (!API && typeof location !== 'undefined' && location.protocol === 'file:') return;

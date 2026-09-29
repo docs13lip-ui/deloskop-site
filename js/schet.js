@@ -86,7 +86,14 @@
   }
   function ddmm(iso) { if (!iso) return ""; var p = String(iso).slice(0, 10).split("-"); return p[2] + "." + p[1] + "." + p[0]; }
 
-  var api = { innOk: innOk, emailOk: emailOk, bikOk: bikOk, rsOk: rsOk, ksOk: ksOk, ogrnipOk: ogrnipOk, summa: summa,
+  // beta-v1: открытая бета — счета не выставляем (решение владельца 29.09.2026). Режим ставит сборщик:
+  // <meta name="deloskop-rezhim" content="beta"> (tests/beta.py). Форма остаётся в коде и вернётся флагом.
+  function vBete(doc) {
+    doc = doc || (typeof document !== "undefined" ? document : null);
+    var m = doc && doc.querySelector && doc.querySelector('meta[name="deloskop-rezhim"]');
+    return !!(m && m.getAttribute("content") === "beta");
+  }
+  var api = { vBete: vBete, innOk: innOk, emailOk: emailOk, bikOk: bikOk, rsOk: rsOk, ksOk: ksOk, ogrnipOk: ogrnipOk, summa: summa,
     rub: rub, produktIz: produktIz, propis: propis, podpisSummy: podpisSummy, tekstZayavki: tekstZayavki, mailtoZayavki: mailtoZayavki, ddmm: ddmm,
     SROKI: SROKI, SROK_TEKST: SROK_TEKST, NDS: NDS };
   if (typeof module !== "undefined" && module.exports) { module.exports = api; }
@@ -154,7 +161,20 @@
   function stili() { if (document.getElementById("sf-css")) return; var s = document.createElement("style"); s.id = "sf-css"; s.textContent = CSS; document.head.appendChild(s); }
 
   var nomerFormy = 0;
+  var BETA_HTML = '<h3 tabindex="-1">В бете счета не выставляем</h3>' +
+    '<p>Идёт открытая бета: весь Делоскоп открыт бесплатно — проверка, отчёт, Паспорт, Щит, Скорая. ' +
+    'Платить не нужно. Реквизиты и оплата появятся позже.</p>' +
+    '<p><a class="sf-go" href="/#inn">Проверить компанию бесплатно</a></p>' +
+    '<p class="sf-mel">Нашли ошибку или чего-то не хватает — напишите на <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>.</p>';
+  function formaBeta(box) {
+    stili();
+    box.innerHTML = '<div class="sf sf-beta" data-beta>' + BETA_HTML + '</div>';
+    var h = box.querySelector("h3");
+    return { fokus: function () { try { h.focus(); } catch (e) {} } };
+  }
+
   function forma(box, nach, vDialoge) {
+    if (vBete()) return formaBeta(box);
     stili();
     var st = { tarif: nach.tarif || "pro", srok: SROKI[nach.srok] ? nach.srok : "mes", nazvanie: null, poisk: 0,
       produkt: /^[a-z_]{3,40}$/.test(nach.produkt || "") ? nach.produkt : null };
@@ -322,6 +342,7 @@
       dlg.addEventListener("close", function () { document.documentElement.style.overflow = ""; });
     }
     dlg.innerHTML = '<button type="button" class="sf-x" aria-label="Закрыть">×</button><div></div>';
+    dlg.setAttribute("aria-label", vBete() ? "Открытая бета" : "Получить счёт");
     dlg.querySelector(".sf-x").onclick = function () { dlg.close(); };
     var fm = forma(dlg.lastChild, nach, true);
     document.documentElement.style.overflow = "hidden";
@@ -346,5 +367,5 @@
     otkryt({ produkt: a.dataset.produkt });
   });
 
-  root.DeloskopSchet = { otkryt: otkryt, forma: forma, api: api };
+  root.DeloskopSchet = { otkryt: otkryt, forma: forma, api: api, vBete: vBete, BETA_HTML: BETA_HTML };
 })(typeof window !== "undefined" ? window : this);

@@ -201,6 +201,55 @@ class TestPasportNaKartochke(unittest.TestCase):
         self.assertNotIn("◐", "".join(K.STATUS_METKA.values()))
 
 
+class TestChestnostKarta2(unittest.TestCase):
+    """karta-v2: карточка не обещает непроверяемое (Ф6) и не выдаёт пустое поле за проверку (Ф7)."""
+
+    @staticmethod
+    def html_s(**sig):
+        r = O.zapis(4)
+        if sig:
+            r["signals"].append(dict({"title": "Дисквалификация руководителя", "detail": "не обнаружена", "as_of": "2026-09-29"}, **sig))
+        k = K.iz_check(r)
+        return K.html_kartochki(k, K.vyvody(k), [])
+
+    @staticmethod
+    def stroka_diskval(t):
+        m = re.search(r'<div class="fact"><span>Дисквалификация[^<]*</span>.*?</div>', t, re.S)
+        return m.group(0) if m else ""
+
+    def test_polnyj_otchet_ne_obeshchaet_nepodklyuchennoe(self):
+        t = self.html_s()
+        for blok in re.findall(r'<aside class="co-side card"[^>]*>(?:(?!</aside>).)*?</aside>', t, re.S):
+            if "Похожие компании" in blok:
+                continue
+            tekst = re.sub(r"<[^>]+>", " ", blok)
+            self.assertNotRegex(tekst, K.NE_OBESHCHAEM, tekst)
+        self.assertIn("что проверить самим", t)
+
+    def test_diskval_iz_dadata_ne_proverka(self):
+        s = self.stroka_diskval(self.html_s(status="ok", source="DaData, ЕГРЮЛ"))
+        self.assertTrue(s, "строка дисквалификации пропала")
+        self.assertIn("не проверяли", s)
+        self.assertNotIn("подтверждено", s)
+        self.assertNotIn("не обнаружена", s)
+        self.assertIn("Реестр дисквалифицированных лиц ФНС — подключаем", s)
+        self.assertNotIn("дата сведений", s)
+
+    def test_diskval_bez_daty_ne_proverka(self):
+        s = self.stroka_diskval(self.html_s(status="bad", source="ЕГРЮЛ", as_of=""))
+        self.assertIn("не проверяли", s)
+
+    def test_diskval_najdennaya_otmetka_ostaetsya(self):
+        s = self.stroka_diskval(self.html_s(status="bad", detail="до 12.03.2027", source="ЕГРЮЛ"))
+        self.assertIn("● подтверждено источником", s)
+        self.assertIn("до 12.03.2027", s)
+
+    def test_diskval_iz_reestra_fns_proverka(self):
+        s = self.stroka_diskval(self.html_s(status="ok", source="ФНС, реестр дисквалифицированных лиц", as_of="2026-09-27"))
+        self.assertIn("● подтверждено источником", s)
+        self.assertIn("не обнаружена", s)
+
+
 class TestMelochi(unittest.TestCase):
     def test_imya(self):
         self.assertEqual(K.imya('ООО "ТД "ЧЕРНОЗЕМЬЕ"'), "ООО «ТД Черноземье»")

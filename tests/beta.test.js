@@ -120,3 +120,15 @@ test('лента «Что нового»: запись об открытой б�
   assert.ok(/бета/i.test(z.zagolovok));
   assert.ok(z.chto_proverit.every((x) => x.ssylka));
 });
+
+// [Арт-директор] 30.09 §4, стоп-лист пп. 45–46: под шапкой одна полоса; cookie-баннер на 390 не закрывает поле ИНН
+test('пока видна «Открытая бета», полоса «Новое» не появляется', () => {
+  const o = fs.readFileSync(path.join(__dirname, '..', 'obnovleniya.js'), 'utf8');
+  assert.ok(/querySelector\("\[data-beta-bar\]"\);\s*if \(beta && !beta\.hidden\) return;/.test(o));
+});
+test('cookie-баннер: на ≤ 640 px короткий текст, длинный скрыт', () => {
+  const m = fs.readFileSync(path.join(__dirname, '..', 'js', 'metrika.js'), 'utf8');
+  const c = fs.readFileSync(path.join(__dirname, '..', 'partials', 'shapka.css'), 'utf8');
+  assert.ok(m.includes('ck-bar__kr') && m.includes('ck-bar__dl'));
+  assert.ok(/max-width:640px\)\{[^}]*\}\.ck-bar \.ck-bar__t\{[^}]*\}\.ck-bar \.ck-bar__dl\{display:none\}\.ck-bar \.ck-bar__kr\{display:inline\}/.test(c));
+});

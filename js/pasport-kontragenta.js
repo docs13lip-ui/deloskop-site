@@ -413,6 +413,12 @@
   var OTM_SNIMOK = 'Снимок экрана: чтобы на нём были видны адрес страницы, ИНН, результат, дата и время. Так снимок оформляют как доказательство; оценивает его суд.';
   var OTM_EP = 'Сильнее снимка — выписка ЕГРЮЛ в PDF с электронной подписью ФНС: бесплатно, на той же странице.';
   var OTM_EP_HOST = 'egrul.nalog.ru';
+  // papka-v1.1 «ЗСК-дневник» (Ночные 01.10 01:05, п. 180): сведения платформы ЗСК меняются каждый день —
+  // cbr.ru/counteraction_m_ter/platform_zsk/proverka-po-inn/ (проверено 01.10.2026): «Информация платформы ЗСК ежедневно
+  // передается в кредитные организации», «Информация является справочной». Поэтому у сверки с ЦБ свой срок свежести — день, а не 30.
+  var OTM_ZSK = 'Сведения ЗСК Банк России передаёт банкам ежедневно — в день оплаты проверьте ещё раз.';
+  function zskAdres(u) { return /^https:\/\/(www\.)?cbr\.ru\/counteraction_m_ter\/platform_zsk\//i.test(String(u || '').trim()); }
+  function dnejTekst(n) { var d = n % 10, s = n % 100; return n + ' ' + (d === 1 && s !== 11 ? 'день' : d >= 2 && d <= 4 && (s < 12 || s > 14) ? 'дня' : 'дней'); }
   function hostIz(u) { var m = /^https:\/\/([a-z0-9.-]+)(?::\d+)?(\/|$)/i.exec(String(u || '').trim()); return m ? m[1].toLowerCase() : ''; }
   function tuZheSajt(adres, ssylka) { // адрес — https и тот же сайт (или его поддомен), что у ссылки раздела
     var a = hostIz(adres), b = hostIz(ssylka).replace(/^www\./, '');
@@ -451,9 +457,11 @@
       vvod.rez === 'ne_udalos' ? 'Раздел остаётся непроверенным — вернитесь к нему до оплаты.' :
       (!ep && !pril ? 'Сохраните снимок экрана и укажите номер приложения — так отметку можно подтвердить.' : '');
     if (hostIz(ist.url) === OTM_EP_HOST && !ep && vvod.rez !== 'ne_udalos') sovet = (sovet + ' ' + OTM_EP).trim();
-    if (dnej > OTM_SVEZHEST_DNEJ) sovet = ('Проверке больше ' + OTM_SVEZHEST_DNEJ + ' дней — перед оплатой перепроверьте. ' + sovet).trim();
+    var zsk = zskAdres(ist.url);
+    if (zsk) sovet = ((dnej > 0 ? 'Сверка с Банком России была ' + dnejTekst(dnej) + ' назад. ' : '') + OTM_ZSK + ' ' + sovet).trim();
+    else if (dnej > OTM_SVEZHEST_DNEJ) sovet = ('Проверке больше ' + OTM_SVEZHEST_DNEJ + ' дней — перед оплатой перепроверьте. ' + sovet).trim();
     return { ok: true, razdel: x.n, id: x.id, rez: vvod.rez, ton: OTM_TON[vvod.rez], ist: i, url: ist.url, adres: adres,
-      data: dataRu(d), vremya: dd(vr[0]) + ':' + dd(vr[1]), tz: tz, kogda: kogda, dnej: dnej, pril: pril, ep: ep,
+      data: dataRu(d), vremya: dd(vr[0]) + ':' + dd(vr[1]), tz: tz, kogda: kogda, dnej: dnej, pril: pril, ep: ep, zsk: zsk,
       dolzhnost: dolzh, tekst: tekst, stroki: stroki, sovet: sovet, ogovorka: OTM_OGOVORKA };
   }
   // Сводка для «Решения о сделке»: какие разделы заказчик проверил сам. Порядок — по номеру раздела.
@@ -552,7 +560,7 @@
   return { VERSIYA: VERSIYA, RAZDELY: RAZDELY, sobrat: sobrat, proverit: proverit, razdelDlya: razdelDlya,
     vypustit: vypustit, nomerIz: nomerIz, podpisant: podpisant, datuIz: datuIz, tuZheDolzhnost: tuZheDolzhnost, SSYLKI_PODPISANTA: SSYLKI_PODPISANTA, qrSsylka: qrSsylka, podval: podval, SLOVAR_222: SLOVAR_222,
     OPREDELENIE_INDEKSA: OPREDELENIE_INDEKSA, PODPIS_PREDELA: PODPIS_PREDELA,
-    otmetka: otmetka, otmetkiSvodka: otmetkiSvodka, dataIzRu: dataIzRu, tuZheSajt: tuZheSajt, OTM_SNIMOK: OTM_SNIMOK, OTM_EP: OTM_EP, OTM_EP_HOST: OTM_EP_HOST, OTM_OGOVORKA: OTM_OGOVORKA, OTM_REZ: OTM_REZ, OTM_SVEZHEST_DNEJ: OTM_SVEZHEST_DNEJ,
+    otmetka: otmetka, otmetkiSvodka: otmetkiSvodka, dataIzRu: dataIzRu, tuZheSajt: tuZheSajt, OTM_SNIMOK: OTM_SNIMOK, OTM_EP: OTM_EP, OTM_EP_HOST: OTM_EP_HOST, OTM_OGOVORKA: OTM_OGOVORKA, OTM_REZ: OTM_REZ, OTM_SVEZHEST_DNEJ: OTM_SVEZHEST_DNEJ, OTM_ZSK: OTM_ZSK, zskAdres: zskAdres, dnejTekst: dnejTekst,
     netBezDaty: netBezDaty, diskvalProveren: diskvalProveren, DISKVAL_SAM: DISKVAL_SAM,
     kanon: kanon, otpechatok: otpechatok, otpechatokKratko: otpechatokKratko, dataRu: dataRu, isIp: isIp, VSEGDA_NE_ZNAEM: VSEGDA_NE_ZNAEM };
 });

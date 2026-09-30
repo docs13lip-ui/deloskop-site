@@ -54,11 +54,12 @@ test('ошибки ввода: без результата, дата в буду
 });
 
 test('давняя проверка (> 30 дней) — просим перепроверить перед оплатой', () => {
-  const o = P.otmetka(stop(), { rez: 'net', ist: 0, data: '15.08.2026', vremya: '10:00' }, SEG);
+  // papka-v1.1: у ЗСК (ist 0) свой срок свежести — день (tests/papka.test.js); правило 30 дней проверяем на списке нелегальных ЦБ (ist 1).
+  const o = P.otmetka(stop(), { rez: 'net', ist: 1, data: '15.08.2026', vremya: '10:00' }, SEG);
   assert.ok(o.ok);
   assert.ok(o.dnej > P.OTM_SVEZHEST_DNEJ);
   assert.match(o.sovet, /перепроверьте/);
-  assert.ok(!/перепроверьте/.test(P.otmetka(stop(), { rez: 'net', ist: 0, data: '30.09.2026', vremya: '10:00' }, SEG).sovet));
+  assert.ok(!/перепроверьте/.test(P.otmetka(stop(), { rez: 'net', ist: 1, data: '30.09.2026', vremya: '10:00' }, SEG).sovet));
 });
 
 test('сводка для «Решения о сделке» — по номеру раздела, с оговоркой; пусто — пустая строка', () => {

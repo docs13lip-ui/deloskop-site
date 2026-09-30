@@ -134,6 +134,25 @@ td b{font-weight:600}
 .podpis{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:40px;font-size:12.5px;color:var(--muted)}
 .podpis div{border-top:1px solid var(--rule);padding-top:6px}
 .foot{margin-top:28px;font-size:12px;color:var(--muted);line-height:1.55}
+/* «Папка к договору» (Ночные 30.09 23:05): опись приложений — на экране блоком, в печати отдельной страницей только по кнопке «Папка к договору» */
+.pp{margin-top:34px;padding-top:18px;border-top:1px solid var(--rule)}
+.pp h2{font-size:19px;margin:0 0 4px;letter-spacing:-.01em}
+.pp .pp-k{font-size:13px;color:var(--ink2);margin:0 0 12px}
+.pp table{width:100%;border-collapse:collapse;font-size:13.5px;line-height:1.45}
+.pp table{table-layout:fixed}
+.pp th,.pp td{text-align:left;vertical-align:top;padding:7px 10px 7px 0;border-top:1px solid var(--line);border-bottom:0;width:auto}
+.pp th:nth-child(1){width:34px}.pp th:nth-child(3){width:24%}.pp th:nth-child(4){width:17%}.pp th:nth-child(5){width:14%}
+.pp thead th{font-size:12px;font-weight:600;color:var(--muted);border-top:0;padding-top:0}
+.pp td.n{font-weight:700;white-space:nowrap}
+.pp td small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.pp td.u{word-break:break-all;max-width:220px}
+.pp .pust{color:var(--muted)}
+.pp .pp-w{margin:10px 0 0;padding:9px 12px;border-radius:10px;background:#FFF4E5;color:#8A4B00;font-size:13.5px}
+.pp .pp-z{margin:12px 0 0;padding:9px 12px;border-radius:10px;background:#FAFAF8;border:1px solid var(--line);font-size:13.5px;line-height:1.45}
+.pp .pp-z.warn{background:#FFF4E5;border-color:#FFE0B8;color:#8A4B00}
+.pp .pp-i{margin-top:12px;font-size:14px;font-weight:600}
+.pp .pp-p{margin-top:6px;font-size:13px;color:var(--ink2)}
+@media (max-width:600px){.pp table{table-layout:auto}.pp thead{display:none}.pp tr{border-top:1px solid var(--line);padding:9px 0}.pp td{border:0;padding:2px 0}.pp td.u{max-width:none}.pp td[data-t]::before{content:attr(data-t) ": ";color:var(--muted);font-size:12.5px}}
 @media (max-width:600px){.ogl{columns:1}table,tbody,tr,th,td{display:block;width:auto}th{border:0;padding:10px 0 0;width:auto}td{padding-top:2px}.podl{grid-template-columns:1fr}.kol{flex-direction:column;align-items:flex-start}.kol .pr{text-align:left}}
 @media print{
   @page{size:A4;margin:16mm 16mm 18mm;
@@ -150,6 +169,10 @@ td b{font-weight:600}
   .ls-l .pril{display:inline!important;margin-left:8px;color:var(--ink2);white-space:nowrap}.ls-pr{display:none}.ls-l a[href^="http"]::after{content:" (" attr(href) ")";font-size:10.5px;color:var(--muted)}
   .rs{border:0;padding:0;border-top:1px solid var(--rule);border-radius:0;padding-top:14px}
   a{color:var(--ink)}
+  html:not(.papka-pechat) #papka-r{display:none!important}
+  #papka-r{break-before:page;border-top:0;margin-top:0;padding-top:0}
+  #papka-r tr{break-inside:avoid}
+  .pp .pp-w{display:none}
 }
 </style>
 <link rel="stylesheet" href="/css/fonts.css">
@@ -235,12 +258,14 @@ td b{font-weight:600}
 <div class="bar noprint">
   <a class="nazad" id="nazad" href="/">← К досье</a>
   <button class="btn" type="button" id="share" hidden title="По ссылке Паспорт соберётся заново — со сведениями на день открытия">Ссылка для коллеги</button>
+  <button class="btn" type="button" id="papka" hidden title="Один PDF: Паспорт, решение о сделке и опись приложений на отдельной странице">Папка к договору</button>
   <button class="btn primary" type="button" id="pdf" hidden>Сохранить PDF</button>
 </div>
 <p class="msg" id="msg">Собираем Паспорт…</p>
 <article class="pk" id="pk" hidden></article>
 <script src="/js/usloviya.js"></script>
 <script src="/js/lestnica.js"></script>
+<script src="/js/papka.js"></script>
 <script src="/js/indeks-vorota.js"></script>
 <script src="/pasport/engine.js"></script>
 <script src="/pasport/qr.js"></script>
@@ -314,7 +339,7 @@ td b{font-weight:600}
   function otmKlik(e,p){
     var t=e.target, b;
     if(!t.closest)return false;
-    function obnovit(n){var x=p.razdely.filter(function(r){return String(r.n)===String(n)})[0];var box=pk.querySelector('[data-sam="'+n+'"]');if(x&&box){box.outerHTML=samHtml(x);}otmSvodka();}
+    function obnovit(n){var x=p.razdely.filter(function(r){return String(r.n)===String(n)})[0];var box=pk.querySelector('[data-sam="'+n+'"]');if(x&&box){box.outerHTML=samHtml(x);}otmSvodka();papkaObnovit();}
     if(t.matches&&t.matches('[data-otm-ist]'))return true;
     if((b=t.closest('[data-otm-open]'))){var n=b.getAttribute('data-otm-open'),f=pk.querySelector('[data-otm-f="'+n+'"]');if(f){f.hidden=!f.hidden;if(!f.hidden){var r=f.querySelector('input[name=rez]:checked')||f.querySelector('input[name=rez]');r&&r.focus();}}return true;}
     if((b=t.closest('[data-otm-del]'))){var n2=b.getAttribute('data-otm-del');delete OTM[n2];obnovit(n2);var nb=pk.querySelector('[data-otm-open="'+n2+'"]');nb&&nb.focus();return true;}
@@ -385,9 +410,11 @@ td b{font-weight:600}
   var L=window.Lestnica||null;
   function molodaya(r){var f=U&&U.facts?U.facts(r):null;return !!(f&&f.ageMonths!=null&&f.ageMonths<12);}
   function lsPriznaki(r){return RS.pr?RS.pr:(molodaya(r)?['molodaya']:[]);}
+  var LS_SPISOK=[];
   function lestnicaHtml(summa,r){
     if(!L)return '';
     var v=L.stupen({summa:RS.summa!=null&&RS.summa!==''?RS.summa:summa,zakupki:RS.zakupki,priznaki:lsPriznaki(r)});
+    LS_SPISOK=v.spisok||[];
     if(!v.n)return '<p class="ls-p">'+esc(v.pochemu)+'</p>';
     return '<div class="ls-sh" aria-hidden="true">'+[1,2,3,4].map(function(k){return '<i'+(k<=v.n?' class="on"':'')+'></i>'}).join('')+'</div>'+
       '<div class="ls-t">Ступень '+v.n+' из 4 — '+esc(v.nazvanie.toLowerCase())+'<small>'+esc(v.kogda)+'</small></div>'+
@@ -400,8 +427,42 @@ td b{font-weight:600}
   }
   function lestnicaSvyazat(summa,r){
     var f=document.getElementById('rs'),box=document.getElementById('ls');if(!f||!box)return;
-    function obnovit(e){if(!/^(summa|zakupki|pr)$/.test(e.target.name||''))return;rsZapomnit();box.innerHTML=lestnicaHtml(summa,r);}
+    function obnovit(e){if(!/^(summa|zakupki|pr)$/.test(e.target.name||''))return;rsZapomnit();box.innerHTML=lestnicaHtml(summa,r);papkaObnovit();}
     f.addEventListener('input',obnovit);f.addEventListener('change',obnovit);
+  }
+  // «Папка к договору» (Ночные 30.09 23:05): опись приложений из отметок, лестницы и поля «Запросили у контрагента» — js/papka.js, без сети.
+  // На экране — блок после Паспорта; в печать попадает только по кнопке «Папка к договору» (обычный «Сохранить PDF» — без описи).
+  var K=window.Papka||null, PP={};
+  function papkaOpis(){
+    if(!K)return null;
+    var f=document.getElementById('rs');
+    return K.opis({pasport:PP,otmetki:Object.keys(OTM).map(function(k){return OTM[k]}),lestnica:LS_SPISOK,zaprosili:f&&f.dokumenty?f.dokumenty.value:RS.dokumenty});
+  }
+  function papkaHtml(o){
+    if(!o)return '';
+    return '<h2 id="pp-h">'+esc(o.zagolovok)+'</h2>'+
+      '<p class="pp-k">'+esc(o.kompaniya)+(o.otpechatok?' · отпечаток '+esc(o.otpechatok):'')+'</p>'+
+      (o.stroki.length?'<table><thead><tr><th>№</th><th>Документ</th><th>Откуда</th><th>Когда получен</th><th>Кто</th></tr></thead><tbody>'+
+        o.stroki.map(function(x){return '<tr><td class="n">'+esc(x.n)+'</td><td>'+esc(x.chto)+'<small>'+esc(x.primechanie)+'</small></td>'+
+          '<td class="u" data-t="Откуда">'+esc(x.otkuda)+'</td><td data-t="Когда получен">'+(x.kogda?esc(x.kogda):'<span class="pust">____________</span>')+'</td><td data-t="Кто">'+(x.kto?esc(x.kto):'<span class="pust">__________</span>')+'</td></tr>'}).join('')+
+        '</tbody></table>':'')+
+      o.preduprezhdeniya.map(function(t){return '<p class="pp-w" role="alert">'+esc(t)+'</p>'}).join('')+
+      (o.zsk?'<p class="pp-z'+(o.zsk.est?(o.zsk.rez==='net'?' ok':' warn'):'')+'">'+esc(o.zsk.tekst)+'</p>':'')+
+      '<p class="pp-i">'+esc(o.itogoTekst)+'</p>'+
+      (o.stroki.length?'<p class="pp-p">'+esc(o.podskazka)+'</p><div class="podpis pp-pod"><div>Опись составил: подпись и расшифровка</div><div>Дата</div></div>':'')+
+      '<div class="stroka">'+esc(o.ogovorka)+' '+esc(K.VERSIYA)+'.</div>'+
+      '<p class="pp-p noprint">В PDF опись попадёт отдельной страницей по кнопке «Папка к договору» наверху.</p>';
+  }
+  function papkaObnovit(){var e=document.getElementById('papka-r');if(e)e.innerHTML=papkaHtml(papkaOpis());}
+  function papkaPechat(){
+    var o=papkaOpis(), li=pk.querySelectorAll('.ls-l .pril'), bylo=[];
+    papkaObnovit();
+    [].forEach.call(li,function(s,i){bylo[i]=s.textContent;var v=o&&o.lsNomera[i];s.textContent=v==='в Паспорте'?'в этом Паспорте':(v||'прил. № ____');});
+    document.documentElement.classList.add('papka-pechat');
+    try{window.dlkGoal&&window.dlkGoal('papka_pdf',{prilozhenij:o?o.itogo:0})}catch(_){}
+    function vernut(){document.documentElement.classList.remove('papka-pechat');[].forEach.call(li,function(s,i){s.textContent=bylo[i]});window.removeEventListener('afterprint',vernut);}
+    window.addEventListener('afterprint',vernut);
+    window.print();
   }
   function reshenieHtml(sovet,summa,r,p){
     function pole(k,podpis,ph,cls,def){var v=RS[k]!=null&&RS[k]!==''?RS[k]:(def||'');return '<label'+(cls?' class="'+cls+'"':'')+'>'+podpis+'<input type="text" name="'+k+'" autocomplete="off" placeholder="'+esc(ph)+'" value="'+esc(v)+'"></label>';}
@@ -465,7 +526,9 @@ td b{font-weight:600}
         p.razdely.map(function(x){return razdelHtml(x,qr,hash)}).join('')+
         reshenieHtml(it.vyvod||'см. досье',it.na_konu&&it.na_konu.summa,r,p)+
         '<div class="podpis"><div>Проверку провёл (ФИО, должность)</div><div>Подпись, дата</div></div>'+
-        '<div class="foot">'+esc(P.podval(vremya(m.sformirovan),m.nomer||''))+'</div>';
+        '<div class="foot">'+esc(P.podval(vremya(m.sformirovan),m.nomer||''))+'</div>'+
+        (K?'<section class="pp" id="papka-r" aria-labelledby="pp-h"></section>':'');
+      PP={nomer:m.nomer,data:vremya(m.sformirovan),nazvanie:m.nazvanie,inn:m.inn,otpechatok:P.otpechatokKratko(hash)};
       pk.innerHTML=h; msg.hidden=true; pk.hidden=false;
       pk.onchange=function(e){var t=e.target;if(!t.matches||!t.matches('[data-otm-ist]'))return;var op=t.options[t.selectedIndex];if(t.form&&op)t.form.adres.value=op.getAttribute('data-url');};
       pk.onclick=function(e){if(otmKlik(e,p))return;var b=e.target.closest&&e.target.closest('.kinn');if(!b)return;var v=b.getAttribute('data-inn');
@@ -473,10 +536,13 @@ td b{font-weight:600}
         try{navigator.clipboard.writeText(v).then(ok,function(){window.prompt('ИНН компании',v)});}catch(_){window.prompt('ИНН компании',v);}};
       podpisantSvyazat(r,p);
       lestnicaSvyazat(it.na_konu&&it.na_konu.summa,r);
+      var rsf=document.getElementById('rs');if(rsf)rsf.addEventListener('input',function(e){if((e.target.name||'')==='dokumenty')papkaObnovit();});
+      papkaObnovit();
       var f=document.getElementById('summa');
       if(f)f.onsubmit=function(e){e.preventDefault();var v=U.parseAmount(f.summa.value);rsZapomnit();RS.summa='';render(r,{usloviya:U,indeksVorota:window.IndeksVorota,nomer:opts.nomer,dostup:opts.dostup,summa:v||null,rezhim:f.rezhim.value});};
-      var pdf=document.getElementById('pdf'), share=document.getElementById('share');
+      var pdf=document.getElementById('pdf'), share=document.getElementById('share'), pb=document.getElementById('papka');
       pdf.hidden=share.hidden=false; pdf.onclick=function(){window.print()};
+      if(pb&&K){pb.hidden=false;pb.onclick=papkaPechat;}
       share.onclick=function(){try{navigator.clipboard.writeText(link).then(function(){share.textContent='Ссылка скопирована';share.title='По ссылке Паспорт соберётся заново — со сведениями на день открытия'},function(){prompt('Ссылка на Паспорт:',link)})}catch(e){prompt('Ссылка на Паспорт:',link)}};
       if(q.get('print')==='1')setTimeout(function(){window.print()},400);
     });

@@ -29,10 +29,18 @@ ok('слежение за 5 — Старт не подходит, Про', () =>
   const p = T.podobrat(D, { otchetov: 5, slezhenie: 5, polzovatelej: 1 }, 'god');
   assert.strictEqual(p.luchshij.id, 'pro'); assert.strictEqual(p.luchshij.pakety, 0);
 });
-ok('25 отчётов — Про + 1 пакет, а не Бизнес', () => {
+ok('25 развёрнутых — Про + 2 пакета по 3, а не Бизнес', () => {
   const p = T.podobrat(D, { otchetov: 25, slezhenie: 5, polzovatelej: 1 }, 'god');
-  assert.strictEqual(p.luchshij.id, 'pro'); assert.strictEqual(p.luchshij.pakety, 1);
-  assert.strictEqual(p.alternativa.id, 'biznes'); assert.strictEqual(p.alternativa.god - p.luchshij.god, 21720);
+  assert.strictEqual(p.luchshij.id, 'pro'); assert.strictEqual(p.luchshij.pakety, 2);
+  assert.strictEqual(p.luchshij.god, 14300 + 2 * 990 * 12);
+  assert.strictEqual(p.alternativa.id, 'biznes'); assert.strictEqual(p.alternativa.god - p.luchshij.god, 47900 - 38060);
+});
+ok('40 развёрнутых — пакетов 7 выходит дороже: Бизнес', () => {
+  const p = T.podobrat(D, { otchetov: 40, slezhenie: 5, polzovatelej: 1 }, 'god');
+  assert.strictEqual(p.luchshij.id, 'biznes');
+});
+ok('пакет — 3 развёрнутые за 990 ₽ (владелец 30.09.2026)', () => {
+  assert.strictEqual(T.paket(D).shtuk, 3); assert.strictEqual(T.paket(D).cena_rub, 990);
 });
 ok('2 сотрудника — только Бизнес', () => {
   const p = T.podobrat(D, { otchetov: 1, slezhenie: 0, polzovatelej: 2 }, 'mes');

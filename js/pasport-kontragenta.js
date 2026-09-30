@@ -7,7 +7,8 @@
  * Правила солидности (держат тесты tests/pasport_kontragenta.test.js):
  *  • у раздела со сведениями — источник и дата; «не проверяли» ≠ «не нашли»;
  *  • раздел 16 «Чего мы не знаем» не бывает пустым;
- *  • «на кону» — только с формулой; ИП — Паспорт не выпускаем; без флага persons — ни одного ФИО.
+ *  • «на кону» — только с формулой; ИП — Паспорт не выпускаем; без флага persons — ни одного ФИО;
+ *  • «нет» — только с реестром и датой (Ф8, 30.09): «нет» без даты сведений — не проверка, а «не проверяли».
  */
 (function (root, factory) {
   var api = factory(root);
@@ -16,7 +17,7 @@
 })(typeof self !== 'undefined' ? self : this, function (root) {
   'use strict';
 
-  var VERSIYA = 'Паспорт v2.2';
+  var VERSIYA = 'Паспорт v2.6';
   // Определение Индекса и подпись предела аванса — дословно [Юриста 115-ФЗ] 29.09 (222-ФЗ), разд. 3 пп. 1 и 4.
   var OPREDELENIE_INDEKSA = 'Индекс Делоскопа — оценка признаков риска для сделки по открытым и лицензированным данным: регистрационных, налоговых, признаков по 115-ФЗ и нарушений. Это не кредитный рейтинг и не мнение о способности компании исполнять финансовые обязательства.';
   var PODPIS_PREDELA = 'Сколько разумно платить вперёд с учётом найденных признаков — расчёт Делоскопа по открытой формуле. Это не оценка способности компании вернуть деньги.';
@@ -31,17 +32,26 @@
 
   // 17 разделов эталона. vid: istochnik — сведения первоисточника (●), raschet — расчёт Делоскопа (◐), sluzhebnyj — о самом документе.
   var RAZDELY = [
-    { id: 'rekvizity', n: 1, title: 'Реквизиты и статус', vid: 'istochnik', istochnik: 'ЕГРЮЛ', dostup: 'free' },
+    { id: 'rekvizity', n: 1, title: 'Реквизиты и статус', vid: 'istochnik', istochnik: 'ЕГРЮЛ', dostup: 'free',
+      prichina: 'Реквизитов и статуса в полученных сведениях нет — посмотрите их в выписке ЕГРЮЛ.',
+      sam: [['egrul.nalog.ru', 'https://egrul.nalog.ru/', 'выписка ЕГРЮЛ: реквизиты и статус']] },
     { id: 'istoriya', n: 2, title: 'История изменений', vid: 'istochnik', istochnik: 'ЕГРЮЛ, наблюдение Делоскопа', dostup: 'pro',
-      prichina: 'Историю изменений ведём с первой проверки компании в Делоскопе: смена директора, адреса или учредителей появится здесь при следующих проверках.' },
-    { id: 'lyudi', n: 3, title: 'Руководитель и учредители', vid: 'istochnik', istochnik: 'ЕГРЮЛ', dostup: 'free' },
+      prichina: 'Историю изменений ведём с первой проверки компании в Делоскопе: смена директора, адреса или учредителей появится здесь при следующих проверках.',
+      sam: [['egrul.nalog.ru', 'https://egrul.nalog.ru/', 'у каждой записи в выписке — дата внесения (ГРН): видно, когда сменились директор и адрес']] },
+    { id: 'lyudi', n: 3, title: 'Руководитель и учредители', vid: 'istochnik', istochnik: 'ЕГРЮЛ', dostup: 'free',
+      prichina: 'Руководителя и учредителей в полученных сведениях нет — посмотрите их в выписке ЕГРЮЛ.',
+      sam: [['egrul.nalog.ru', 'https://egrul.nalog.ru/', 'руководитель и учредители']] },
     { id: 'svyazi', n: 4, title: 'Связи и группа компаний', vid: 'raschet', istochnik: 'расчёт Делоскопа по ЕГРЮЛ', dostup: 'pro',
       prichina: 'Связи через руководителей и учредителей считаем по всей базе ЕГРЮЛ — покажем, когда база загрузится целиком (октябрь 2026). Неполную картину выдавать за полную не будем.' },
-    { id: 'deyatelnost', n: 5, title: 'Деятельность: виды, лицензии, допуски', vid: 'istochnik', istochnik: 'ЕГРЮЛ, реестры лицензий', dostup: 'free' },
+    { id: 'deyatelnost', n: 5, title: 'Деятельность: виды, лицензии, допуски', vid: 'istochnik', istochnik: 'ЕГРЮЛ, реестры лицензий', dostup: 'free',
+      prichina: 'Видов деятельности и лицензий в полученных сведениях нет — посмотрите их в выписке ЕГРЮЛ.',
+      sam: [['egrul.nalog.ru', 'https://egrul.nalog.ru/', 'виды деятельности и сведения о лицензиях']] },
     { id: 'finansy', n: 6, title: 'Финансы и штат', vid: 'istochnik', istochnik: 'ГИР БО, открытые данные ФНС', dostup: 'pro',
-      prichina: 'Бухгалтерской отчётности в полученных сведениях нет: компания могла её не сдавать или ещё не должна была сдать.' },
+      prichina: 'Бухгалтерской отчётности в полученных сведениях нет: компания могла её не сдавать или ещё не должна была сдать.',
+      sam: [['bo.nalog.gov.ru', 'https://bo.nalog.gov.ru/', 'ГИР БО: бухгалтерская отчётность по годам']] },
     { id: 'nalogi', n: 7, title: 'Налоги: режим, уплачено, долги', vid: 'istochnik', istochnik: 'открытые данные ФНС', dostup: 'free',
-      prichina: 'Сведений ФНС о налогах, долгах и штрафах в ответе нет — наборы ФНС ещё загружаются.' },
+      prichina: 'Сведений ФНС о налогах, долгах и штрафах в ответе нет — наборы ФНС ещё загружаются.',
+      sam: [['pb.nalog.ru', 'https://pb.nalog.ru/', '«Прозрачный бизнес» ФНС: режим, уплаченные налоги, недоимки, штат']] },
     { id: 'sudy', n: 8, title: 'Арбитражные суды и банкротство', vid: 'istochnik', istochnik: 'картотека арбитражных дел, Федресурс', dostup: 'free', damia: ['sudy', 'bankrotstvo'],
       prichina: 'Не проверяли: картотеку арбитражных дел и сообщения о банкротстве мы пока не подключили.',
       sam: [['kad.arbitr.ru', 'https://kad.arbitr.ru/', 'дела, где компания истец или ответчик'], ['bankrot.fedresurs.ru', 'https://bankrot.fedresurs.ru/', 'сообщения о банкротстве и намерении кредитора']] },
@@ -54,8 +64,11 @@
     { id: 'goszakaz', n: 11, title: 'Госзаказ: контракты и РНП', vid: 'istochnik', istochnik: 'ЕИС «Закупки»', dostup: 'free', damia: ['kontrakty', 'rnp'],
       prichina: 'Не проверяли: реестр недобросовестных поставщиков и госконтракты мы пока не подключили.',
       sam: [['zakupki.gov.ru — РНП', 'https://zakupki.gov.ru/epz/dishonestsupplier/search/results.html', 'реестр недобросовестных поставщиков'], ['zakupki.gov.ru — контракты', 'https://zakupki.gov.ru/epz/contract/search/results.html', 'госконтракты компании']] },
-    { id: 'stoplisty', n: 12, title: 'Стоп-листы', vid: 'istochnik', istochnik: 'Росфинмониторинг, Банк России', dostup: 'free',
-      prichina: 'Перечни Росфинмониторинга и Банка России подключаются — до загрузки не проверяли.' },
+    { id: 'stoplisty', n: 12, title: 'Стоп-листы', vid: 'istochnik', istochnik: 'Росфинмониторинг, Банк России', dostup: 'free', vneshnij: true,
+      prichina: 'Не проверяли: перечни Росфинмониторинга и список Банка России мы пока не подключили. Красную группу ЗСК автоматически проверить нельзя — сервис Банка России закрыт капчей и показывает ответ только тому, кто спросил. Проверьте сами: это займёт полминуты, ИНН скопируйте кнопкой ниже. Жёлтую группу публично не узнать нигде — только в своём банке.',
+      sam: [['cbr.ru — проверка по ИНН', 'https://cbr.ru/counteraction_m_ter/platform_zsk/proverka-po-inn/', 'Банк России: есть ли сведения о высоком (красном) уровне риска по ЗСК'],
+        ['cbr.ru — список нелегальных', 'https://www.cbr.ru/inside/warning-list/', 'Банк России: компании с признаками нелегальной деятельности на финансовом рынке'],
+        ['fedsfm.ru — перечень', 'https://www.fedsfm.ru/documents/terrorists-catalog-portal-act', 'Росфинмониторинг: перечень организаций, связанных с экстремизмом или терроризмом']] },
     { id: 'indeks', n: 13, title: 'Индекс Делоскопа', vid: 'raschet', istochnik: 'методика Индекса, deloskop.ru/indeks/', dostup: 'free' },
     { id: 'predel', n: 14, title: 'Предел аванса и как посчитали', vid: 'raschet', istochnik: 'открытая формула Делоскопа', dostup: 'free' },
     { id: 'zaprosit', n: 15, title: 'Что запросить у контрагента', vid: 'raschet', istochnik: 'письмо ФНС от 10.03.2021 № БВ-4-7/3060@, ст. 54.1 НК', dostup: 'pro' },
@@ -65,7 +78,7 @@
 
   // Признак из ответа сервера → раздел. Порядок важен: первое совпадение.
   var KUDA = [
-    ['stoplisty', /перечн|росфинмониторинг|экстремист|террор|санкц|стоп-лист/i],
+    ['stoplisty', /перечн|росфинмониторинг|экстремист|террор|санкц|стоп-лист|нелегальн/i],
     ['pristavy', /пристав|исполнительн|фссп/i],
     ['scheta', /приостановл|блокировк|обеспечительн/i],
     ['goszakaz', /недобросовестн|(^|[^а-яё])рнп([^а-яё]|$)|контракт|закупк/i],
@@ -99,6 +112,23 @@
     var c = (r && r.company) || {};
     return c.kind === 'INDIVIDUAL' || String(c.inn || '').replace(/\D/g, '').length === 12;
   }
+  // Ф8 (Ночные 30.09): «нет» — утверждение, а не пустое поле. Принимаем его только с датой сведений,
+  // кроме ЕГРЮЛ: там отсутствие записи (о недостоверности, о ликвидации) и есть сведения реестра на дату выписки.
+  var NET = /^\s*(нет|не\s+(найден|обнаружен|выявлен|значится|числится)\S*|отметок\s+нет|отсутству\S*|сведений\s+нет)(?=[\s.,;:!)]|$)/i;
+  function netBezDaty(tekst, znachenie, ton, data, istochnik) {
+    if (ton === 'bad' || ton === 'warn' || data) return false;
+    if (/^\s*ЕГРЮЛ\s*$/i.test(String(istochnik || ''))) return false;
+    return NET.test(String(znachenie || '')) || NET.test(String(tekst || '').replace(/^.*?[—:]\s*/, ''));
+  }
+  // Дисквалификация: DaData management.disqualified не заполняется (документация DaData, find-party) — «нет» оттуда не проверка.
+  // Проверено — только отметка источника (bad/warn) или ответ реестра дисквалифицированных лиц ФНС с датой.
+  function diskvalProveren(s) {
+    if (!s) return false;
+    if (s.status === 'bad' || s.status === 'warn') return true;
+    return !!s.as_of && /реестр\S*\s+дисквалифицир/i.test(String(s.source || ''));
+  }
+  var DISKVAL_SAM = { tekst: 'service.nalog.ru/disqualified.do', url: 'https://service.nalog.ru/disqualified.do', chto: 'поиск по ФИО руководителя' };
+
   function tonIz(status) { return status === 'bad' ? 'bad' : status === 'warn' ? 'warn' : status === 'ok' ? 'ok' : 'info'; }
   function hudshij(a, b) { var R = { bad: 3, warn: 2, info: 1, ok: 0 }; return (R[b] || 0) > (R[a] || 0) ? b : a; }
 
@@ -176,11 +206,32 @@
     if (c.okved) fakt('deyatelnost', 'Основной вид деятельности', c.okved + (c.okved_name ? ' — ' + c.okved_name : ''), { ton: 'info', istochnik: 'ЕГРЮЛ' });
 
     // Признаки из реестров → по разделам
+    var diskvalEst = false, neProv = {};
+    function neProverili(id, chto) { (neProv[id] = neProv[id] || []).push(chto); }
     (r.signals || []).forEach(function (s) {
       var id = razdelDlya(s.title);
       var det = String(s.detail || '');
+      if (/дисквалиф/i.test(String(s.title || ''))) {
+        if (!diskvalProveren(s)) return;                      // Ф8: «нет» без реестра ФНС и даты — не факт, ниже станет «не проверяли»
+        diskvalEst = true;
+      } else if (netBezDaty(s.title, det, tonIz(s.status), s.as_of, s.source)) {
+        neProverili(id, '«' + String(s.title || '') + '» — источник ответил без даты сведений, проверкой не считаем'); return;
+      }
       if (!persons && id === 'lyudi' && c.director_name) det = det.split(c.director_name).join('руководитель');
       fakt(id, String(s.title || ''), det, { ton: tonIz(s.status), data: s.as_of || null, istochnik: s.source || null });
+    });
+
+    // 3. Дисквалификация не проверена → строка «не проверяли» в разделе 3 и в разделе 16 + дорога к реестру ФНС
+    if (!diskvalEst) {
+      neProverili('lyudi', 'реестр дисквалифицированных лиц ФНС не проверяли — мы его пока не подключили');
+      map.lyudi.sam.push(DISKVAL_SAM);
+      if (map.lyudi.status === 'not_checked') map.lyudi.prichina = 'Руководителя и учредителей в полученных сведениях нет — посмотрите их в выписке ЕГРЮЛ. Реестр дисквалифицированных лиц ФНС мы тоже не проверяли.';
+    }
+    Object.keys(neProv).forEach(function (id) {
+      var x = map[id]; if (!x) return;
+      var t = neProv[id].join('; ');
+      if (x.status === 'found') x.chastichno = x.chastichno ? x.chastichno + '; ' + t : t;
+      else if (id !== 'lyudi') x.prichina = (x.prichina ? x.prichina + ' ' : '') + 'Не проверяли: ' + t + '.';
     });
 
     // 6. Финансы из досье (ГИР БО)
@@ -265,7 +316,9 @@
     // Вывод и «что делать» у разделов со сведениями
     spisok.forEach(function (x) {
       if (x.status === 'found' && x.vid !== 'sluzhebnyj' && x.id !== 'predel' && x.id !== 'zaprosit')
-        x.vyvod = x.ton === 'bad' ? 'Есть серьёзные отметки — разберите их до оплаты.' : x.ton === 'warn' ? 'Есть моменты для вопросов контрагенту.' : 'Сведения получены, настораживающих отметок в этом разделе нет.';
+        x.vyvod = x.ton === 'bad' ? 'Есть серьёзные отметки — разберите их до оплаты.' : x.ton === 'warn' ? 'Есть моменты для вопросов контрагенту.'
+          : x.chastichno ? 'В полученных сведениях настораживающих отметок нет. Проверено не всё — что не смотрели, ниже.'
+          : 'Сведения получены, настораживающих отметок в этом разделе нет.';
       // связи пока — только факты реестров (массовый адрес ФНС): подписываем их источником, а не расчётом
       if (x.id === 'svyazi' && x.status === 'found') {
         var src = x.fakty.map(function (f) { return f.istochnik; }).filter(function (v, i, a) { return v && a.indexOf(v) === i; });
@@ -328,6 +381,83 @@
     var gd = /(генеральн\S* )?директор|руководител/;           // «Директор» и «Генеральный директор» — одна роль
     return gd.test(a) && gd.test(b) && !/заместител|финансов|коммерческ|исполнительн|технич/.test(a + ' ' + b);
   }
+
+  // «Отметка самопроверки» (Прорыв Ночных 30.09 14:05, сверстано 17:05). Заказчик сам открыл первоисточник по ссылке
+  // «проверьте сами» и отмечает результат — Паспорт становится протоколом его осмотрительности на дату.
+  // Правила: отметка — слово пользователя, не наше: статус раздела остаётся «не проверяли», в отпечаток SHA-256
+  // не входит (P.vypustit считает из сведений p, отметка в p не пишется), в печати — отдельной строкой с оговоркой.
+  // Оговорка — черновая до ✎ [Юриста 115-ФЗ] (п. 169).
+  var OTM_OGOVORKA = 'Отметка поставлена пользователем, Делоскоп её не проверял.';
+  var OTM_REZ = { net: 'сведений не найдено', est: 'есть сведения', ne_udalos: 'проверить не удалось' };
+  var OTM_TON = { net: 'info', est: 'warn', ne_udalos: 'off' };
+  var OTM_SVEZHEST_DNEJ = 30;
+  function dataIzRu(t) { // «ДД.ММ.ГГГГ» → Date (полдень МСК, чтобы не съезжать на сутки) или null
+    var m = /^\s*(\d{1,2})\.(\d{1,2})\.(\d{4})\s*$/.exec(String(t || ''));
+    if (!m) return null;
+    var d = new Date(Date.UTC(+m[3], +m[2] - 1, +m[1], 9));
+    return d.getUTCDate() === +m[1] && d.getUTCMonth() === +m[2] - 1 ? d : null;
+  }
+  // otmetka-v2 (Ночные 30.09 19:05, по глубине 18:05): чтобы отметка работала доводом по п. 55 Постановления
+  // Пленума ВС № 10 от 23.04.2019 (снимок — с адресом страницы и временем получения, за подписью того, кто его сделал) и пп. 14–16
+  // письма ФНС БВ-4-7/3060@ (проверка соразмерна сделке), у неё есть: время, полный адрес страницы, кто проверял
+  // (должность; ФИО — только от руки в печати, как в «Решении о сделке»), номер приложения-снимка; у ЕГРЮЛ — вариант «выписка ФНС с электронной подписью».
+  // Никогда не пишем, что суд или налоговая «примут» отметку — оценивает суд (✎ [Налоговый юрист], п. 171).
+  var OTM_SNIMOK = 'Снимок экрана: чтобы на нём были видны адрес страницы, ИНН, результат, дата и время. Так снимок оформляют как доказательство; оценивает его суд.';
+  var OTM_EP = 'Сильнее снимка — выписка ЕГРЮЛ в PDF с электронной подписью ФНС: бесплатно, на той же странице.';
+  var OTM_EP_HOST = 'egrul.nalog.ru';
+  function hostIz(u) { var m = /^https:\/\/([a-z0-9.-]+)(?::\d+)?(\/|$)/i.exec(String(u || '').trim()); return m ? m[1].toLowerCase() : ''; }
+  function tuZheSajt(adres, ssylka) { // адрес — https и тот же сайт (или его поддомен), что у ссылки раздела
+    var a = hostIz(adres), b = hostIz(ssylka).replace(/^www\./, '');
+    return !!a && !!b && (a === b || a === 'www.' + b || a.slice(-(b.length + 1)) === '.' + b);
+  }
+  function vremyaIz(t) { var m = /^\s*([01]?\d|2[0-3])[:.]([0-5]\d)\s*$/.exec(String(t || '')); return m ? [+m[1], +m[2]] : null; }
+  function dd(n) { return (n < 10 ? '0' : '') + n; }
+  function otmetka(x, vvod, segodnya) {
+    vvod = vvod || {};
+    if (!x || x.status !== 'not_checked' || !x.sam || !x.sam.length) return { ok: false, oshibka: 'Отметка ставится только у раздела, который мы не проверяли' };
+    if (!OTM_REZ[vvod.rez]) return { ok: false, oshibka: 'Выберите, что показал первоисточник' };
+    var i = +(vvod.ist || 0), ist = x.sam[i];
+    if (!ist) return { ok: false, oshibka: 'Выберите, где проверяли' };
+    var d = dataIzRu(vvod.data);
+    if (!d) return { ok: false, oshibka: 'Дата — в виде ДД.ММ.ГГГГ' };
+    var vr = vremyaIz(vvod.vremya);
+    if (!vr) return { ok: false, oshibka: 'Время — в виде ЧЧ:ММ' };
+    var seg = segodnya instanceof Date ? segodnya : new Date();
+    var segD = Date.UTC(seg.getFullYear(), seg.getMonth(), seg.getDate(), 9);
+    var dnej = Math.round((segD - d.getTime()) / 864e5);
+    if (dnej < 0) return { ok: false, oshibka: 'Дата проверки — не позже сегодняшней' };
+    if (dnej === 0 && vr[0] * 60 + vr[1] > seg.getHours() * 60 + seg.getMinutes()) return { ok: false, oshibka: 'Время проверки — не позже текущего' };
+    var adres = String(vvod.adres == null || vvod.adres === '' ? ist.url : vvod.adres).trim();
+    if (!tuZheSajt(adres, ist.url)) return { ok: false, oshibka: 'Адрес страницы — https и тот же сайт, что в ссылке раздела (' + hostIz(ist.url) + ')' };
+    var pril = String(vvod.pril || '').trim().replace(/^№\s*/, '');
+    if (pril && !/^\d{1,3}$/.test(pril)) return { ok: false, oshibka: 'Номер приложения — число' };
+    var ep = !!vvod.ep && hostIz(ist.url) === OTM_EP_HOST;
+    var tz = String(vvod.tz || 'МСК').slice(0, 12);
+    var dolzh = String(vvod.dolzhnost || '').trim().slice(0, 80);
+    var kogda = dataRu(d) + ' в ' + dd(vr[0]) + ':' + dd(vr[1]) + ' ' + tz;
+    var tekst = 'Проверено вами ' + kogda + ' — ' + ist.tekst + ': ' + OTM_REZ[vvod.rez] + '.';
+    var stroki = ['Адрес страницы: ' + adres];
+    if (ep) stroki.push('Приложена выписка ЕГРЮЛ в PDF с электронной подписью ФНС' + (pril ? ' — приложение № ' + pril : '') + '.');
+    else if (pril) stroki.push('Снимок экрана — приложение № ' + pril + '.');
+    var sovet = vvod.rez === 'est' ? (ep || pril ? '' : 'Сохраните снимок экрана первоисточника и приложите к досье сделки. ') + 'Запросите у контрагента объяснение и документы до оплаты.' :
+      vvod.rez === 'ne_udalos' ? 'Раздел остаётся непроверенным — вернитесь к нему до оплаты.' :
+      (!ep && !pril ? 'Сохраните снимок экрана и укажите номер приложения — так отметку можно подтвердить.' : '');
+    if (hostIz(ist.url) === OTM_EP_HOST && !ep && vvod.rez !== 'ne_udalos') sovet = (sovet + ' ' + OTM_EP).trim();
+    if (dnej > OTM_SVEZHEST_DNEJ) sovet = ('Проверке больше ' + OTM_SVEZHEST_DNEJ + ' дней — перед оплатой перепроверьте. ' + sovet).trim();
+    return { ok: true, razdel: x.n, id: x.id, rez: vvod.rez, ton: OTM_TON[vvod.rez], ist: i, url: ist.url, adres: adres,
+      data: dataRu(d), vremya: dd(vr[0]) + ':' + dd(vr[1]), tz: tz, kogda: kogda, dnej: dnej, pril: pril, ep: ep,
+      dolzhnost: dolzh, tekst: tekst, stroki: stroki, sovet: sovet, ogovorka: OTM_OGOVORKA };
+  }
+  // Сводка для «Решения о сделке»: какие разделы заказчик проверил сам. Порядок — по номеру раздела.
+  function otmetkiSvodka(spisok) {
+    var v = (spisok || []).filter(function (o) { return o && o.ok; }).sort(function (a, b) { return a.razdel - b.razdel; });
+    if (!v.length) return '';
+    return 'Самопроверка заказчика: ' + v.map(function (o) {
+      var pr = o.ep ? ', выписка с ЭП' + (o.pril ? ' — прил. № ' + o.pril : '') : o.pril ? ', снимок — прил. № ' + o.pril : '';
+      return 'раздел ' + o.razdel + ' — ' + OTM_REZ[o.rez] + ' (' + (o.kogda || o.data) + pr + ')';
+    }).join('; ') + '. ' + OTM_OGOVORKA;
+  }
+
   function podpisant(r, p, vvod) {
     r = r || {}; vvod = vvod || {};
     var c = r.company || {}, post = String(c.director_post || '').trim();
@@ -400,7 +530,10 @@
       if (x.status === 'not_checked' && !x.prichina) osh.push(x.n + ': «не проверяли» без причины');
       if (x.status === 'locked' && x.fakty.length) osh.push(x.n + ': закрытый раздел со сведениями');
       if (SLOVAR_222.test(x.title + ' ' + (x.vyvod || '') + ' ' + (x.prichina || ''))) osh.push(x.n + ': слово из словаря 222-ФЗ');
-      x.fakty.forEach(function (f) { if (ZAPRET.test(f.tekst + ' ' + f.znachenie)) osh.push(x.n + ': запрещённая формулировка'); });
+      x.fakty.forEach(function (f) {
+        if (ZAPRET.test(f.tekst + ' ' + f.znachenie)) osh.push(x.n + ': запрещённая формулировка');
+        if (x.id !== 'ne_znaem' && x.vid !== 'sluzhebnyj' && x.vid !== 'raschet' && netBezDaty(f.tekst, f.znachenie, f.ton, f.data, f.istochnik)) osh.push(x.n + ': «нет» без даты сведений — «' + f.tekst + '»');
+      });
     });
     var nz = p.razdely.filter(function (x) { return x.id === 'ne_znaem'; })[0];
     if (!nz || !nz.fakty.length) osh.push('16: раздел пуст');
@@ -411,5 +544,7 @@
   return { VERSIYA: VERSIYA, RAZDELY: RAZDELY, sobrat: sobrat, proverit: proverit, razdelDlya: razdelDlya,
     vypustit: vypustit, nomerIz: nomerIz, podpisant: podpisant, datuIz: datuIz, tuZheDolzhnost: tuZheDolzhnost, SSYLKI_PODPISANTA: SSYLKI_PODPISANTA, qrSsylka: qrSsylka, podval: podval, SLOVAR_222: SLOVAR_222,
     OPREDELENIE_INDEKSA: OPREDELENIE_INDEKSA, PODPIS_PREDELA: PODPIS_PREDELA,
+    otmetka: otmetka, otmetkiSvodka: otmetkiSvodka, dataIzRu: dataIzRu, tuZheSajt: tuZheSajt, OTM_SNIMOK: OTM_SNIMOK, OTM_EP: OTM_EP, OTM_EP_HOST: OTM_EP_HOST, OTM_OGOVORKA: OTM_OGOVORKA, OTM_REZ: OTM_REZ, OTM_SVEZHEST_DNEJ: OTM_SVEZHEST_DNEJ,
+    netBezDaty: netBezDaty, diskvalProveren: diskvalProveren, DISKVAL_SAM: DISKVAL_SAM,
     kanon: kanon, otpechatok: otpechatok, otpechatokKratko: otpechatokKratko, dataRu: dataRu, isIp: isIp, VSEGDA_NE_ZNAEM: VSEGDA_NE_ZNAEM };
 });

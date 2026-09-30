@@ -54,6 +54,9 @@
   // полоса под шапкой: не поверх контента и не липкая
   function polosa() {
     if (NA_LENTE || !neprochitano() || document.querySelector(".wn-bar")) return;
+    // под шапкой — одна полоса ([Арт-директор] 30.09 §4): пока видна «Открытая бета», «Новое» не показываем — точка у «Что нового» остаётся
+    var beta = document.querySelector("[data-beta-bar]");
+    if (beta && !beta.hidden) return;
     var u = list[0], h = document.querySelector("[data-shapka]");
     if (!h) return;
     var d = document.createElement("div");

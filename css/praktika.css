@@ -1,0 +1,82 @@
+/* Делоскоп — «Разбор дела» и хаб /praktika/ ([Арт-директор] 30.09.2026). Токены ds.css, область .pr — не конфликтует с inline-стилями статей. */
+body{margin:0;background:#F5F5F2;-webkit-font-smoothing:antialiased}
+.pr{--bg:#F5F5F2;--surface:#fff;--surface-2:#EEEEEA;--ink:#1D1D1F;--ink-2:#48484C;--muted:#6B6B70;--line:#E6E6E1;--accent:#0B63E5;--accent-hover:#084BB0;--accent-soft:#EAF1FD;--dark:#111113;--r-s:10px;--r-m:16px;--r-l:24px;--font:Onest,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  max-width:760px;margin:0 auto;padding:28px clamp(16px,5vw,48px) 64px;font:400 17px/1.6 var(--font);color:var(--ink);box-sizing:border-box}
+.pr *,.pr *::before,.pr *::after{box-sizing:inherit}
+.pr a{color:var(--accent);text-decoration:none}.pr a:hover{color:var(--accent-hover);text-decoration:underline}
+.pr :focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+.pr .crumbs{display:flex;flex-wrap:wrap;gap:6px;font-size:15px;color:var(--muted)}.pr .crumbs a{color:var(--muted)}
+.pr .rubr{margin:18px 0 0;font:600 13px/1 var(--font);letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.pr h1{margin:10px 0 12px;font:600 clamp(30px,5vw,44px)/1.1 var(--font);letter-spacing:-.03em;text-wrap:balance}
+.pr .meta{font-size:15px;color:var(--muted)}
+.pr .lid{margin:20px 0 0;font-size:20px;line-height:1.5;color:var(--ink-2)}
+/* карточка дела — «паспорт» акта: как у Паспорта, линии вместо плашек, итог словом, без зелёного/красного */
+.pr .delo{margin:28px 0 0;background:var(--surface);border-radius:var(--r-l);padding:22px 24px;box-shadow:0 1px 2px rgba(29,29,31,.04),0 12px 32px rgba(29,29,31,.06)}
+.pr .delo+.delo{margin-top:16px}
+.pr .delo__h{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;margin:0 0 12px}
+.pr .delo__t{margin:0;font:600 13px/1.2 var(--font);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.pr .itog{display:inline-flex;align-items:center;gap:8px;min-height:30px;padding:0 12px;border-radius:999px;box-shadow:inset 0 0 0 1.5px var(--ink);font:600 15px/1 var(--font);color:var(--ink)}
+.pr .itog::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.pr .itog--nov::before{background:none;box-shadow:inset 0 0 0 1.5px currentColor}  /* на новое рассмотрение — кольцо: дело не кончено */
+.pr .delo dl{display:grid;grid-template-columns:max-content 1fr;gap:10px 20px;margin:0;padding:14px 0 0;border-top:1px solid var(--line);font-size:16px}
+.pr .delo dt{color:var(--muted)}.pr .delo dd{margin:0;color:var(--ink);font-variant-numeric:tabular-nums}
+.pr .delo__src{margin:14px 0 0;padding:12px 0 0;border-top:1px solid var(--line);font-size:15px;color:var(--muted)}
+@media (max-width:480px){.pr .delo{padding:18px}.pr .delo dl{grid-template-columns:1fr;gap:2px}.pr .delo dd{margin-bottom:8px}}
+/* тело разбора */
+.pr h2{margin:44px 0 12px;font:600 clamp(24px,3vw,30px)/1.2 var(--font);letter-spacing:-.02em}
+.pr p{margin:0 0 14px;color:var(--ink-2)}.pr p b,.pr li b{color:var(--ink);font-weight:600}
+.pr ul,.pr ol{margin:0 0 16px;padding-left:22px;color:var(--ink-2)}.pr li{margin:6px 0}
+/* хронология фабулы */
+.pr .hron{list-style:none;margin:8px 0 18px;padding:0 0 0 20px;border-left:2px solid var(--line)}
+.pr .hron li{position:relative;margin:0 0 14px}.pr .hron li::before{content:"";position:absolute;left:-26px;top:9px;width:10px;height:10px;border-radius:50%;background:var(--surface);box-shadow:inset 0 0 0 2px var(--ink-2)}
+.pr .hron time,.pr .hron .t{display:block;font:600 15px/1.3 var(--font);color:var(--ink);font-variant-numeric:tabular-nums}
+/* цитата из акта — ёлочки, линия, источник */
+.pr .cit{margin:18px 0;padding:4px 0 4px 20px;border-left:3px solid var(--ink)}
+.pr .cit p{margin:0;font-size:19px;line-height:1.5;color:var(--ink)}
+.pr .cit cite{display:block;margin-top:8px;font-size:14px;font-style:normal;color:var(--muted)}
+/* «Где грань» — единственная цветная плашка страницы */
+.pr .gran{margin:20px 0;padding:18px 20px;border-radius:var(--r-m);background:var(--accent-soft)}
+.pr .gran>b:first-child{display:block;margin-bottom:4px;font:600 13px/1.2 var(--font);letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.pr .gran p{margin:0;color:var(--ink)}
+/* «Завтра утром» — шаги с крупными номерами */
+.pr .shagi{list-style:none;counter-reset:s;margin:12px 0 18px;padding:0}
+.pr .shagi li{counter-increment:s;position:relative;margin:0;padding:12px 0 12px 48px;border-top:1px solid var(--line)}
+.pr .shagi li:last-child{border-bottom:1px solid var(--line)}
+.pr .shagi li::before{content:counter(s);position:absolute;left:0;top:10px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--ink);color:#fff;font:600 15px/1 var(--font)}
+/* «Сколько на кону» */
+.pr .kon{margin:12px 0 16px;padding:22px 24px;border-radius:var(--r-l);background:var(--surface)}
+.pr .kon__n{display:block;font:600 clamp(36px,6vw,52px)/1 var(--font);letter-spacing:-.03em;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pr .kon__p{display:block;margin-top:8px;font-size:16px;color:var(--ink-2)}
+@media (max-width:480px){.pr .kon__n{white-space:normal}}
+.pr .primer{margin:12px 0 16px;padding:16px 20px;border-radius:var(--r-m);border:1px dashed #BDBDB8;background:transparent;color:var(--muted);font-size:16px}
+.pr .primer::before{content:"Пример (условный)";display:block;margin-bottom:6px;font:600 13px/1.2 var(--font);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.pr .primer p{color:var(--muted);margin:0 0 8px}.pr .primer p:last-child{margin:0}
+/* таблица дел: на телефоне строки превращаются в карточки, остаётся <table> для сниппета */
+.pr table{width:100%;margin:8px 0 18px;border-collapse:collapse;background:var(--surface);border-radius:var(--r-m);overflow:hidden;font-size:16px}
+.pr th,.pr td{padding:12px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+.pr th{font-weight:600;background:#FAFAF8}.pr tr:last-child td{border-bottom:0}
+@media (max-width:640px){.pr table,.pr tbody,.pr tr,.pr td{display:block}.pr thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+ .pr tr{padding:12px 16px;border-bottom:1px solid var(--line)}.pr td{padding:2px 0;border:0}.pr td::before{content:attr(data-l);display:block;font-size:13px;color:var(--muted)}}
+/* одно действие — тёмный блок, одна синяя кнопка */
+.pr .dl{margin:44px 0 0;padding:28px 26px;border-radius:var(--r-l);background:var(--dark);color:#fff}
+.pr .dl h2{margin:0 0 8px;color:#fff;font-size:26px}.pr .dl p{margin:0 0 18px;color:#B8B8BD}
+.pr .btn{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:0 22px;border-radius:14px;background:var(--accent);color:#fff!important;font:600 16px/1 var(--font);text-decoration:none!important}
+.pr .btn:hover{background:var(--accent-hover)}
+/* «Где в законе» */
+.pr .zakon{list-style:none;margin:8px 0 0;padding:0}.pr .zakon li{margin:0;padding:10px 0;border-top:1px solid var(--line);color:var(--ink-2);font-size:16px}
+.pr .red{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);font-size:13px;white-space:nowrap}
+.pr .nw{white-space:nowrap}
+.pr .sver{margin:28px 0 0;font-size:14px;color:var(--muted)}
+/* соседние разборы и хаб */
+.pr .sos{display:grid;gap:12px;margin:12px 0 0}
+.pr .pk{display:block;padding:18px 20px;border-radius:var(--r-m);background:var(--surface);color:var(--ink)!important;text-decoration:none!important;box-shadow:0 1px 2px rgba(29,29,31,.04);transition:box-shadow .16s}
+.pr .pk:hover{box-shadow:0 1px 2px rgba(29,29,31,.04),0 12px 32px rgba(29,29,31,.08)}
+.pr .pk__q{display:block;font:600 19px/1.3 var(--font);letter-spacing:-.01em}
+.pr .pk__m{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px;font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+.pr .pk__k{display:block;margin-top:6px;font-size:15px;color:var(--ink-2)}
+.pr .razd{display:flex;gap:8px;margin:24px 0 0;padding:4px;border-radius:999px;background:var(--surface-2);width:max-content;max-width:100%;overflow-x:auto}
+.pr .razd a{display:inline-flex;align-items:center;min-height:40px;padding:0 18px;border-radius:999px;color:var(--ink-2);font-weight:600;font-size:15px;text-decoration:none;white-space:nowrap}
+.pr .razd a[aria-current]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(29,29,31,.08)}
+@media (max-width:420px){.pr .razd a{padding:0 12px}}
+@media (prefers-reduced-motion:reduce){.pr .pk{transition:none}}
+@media print{.pr .dl,.pr .razd{display:none}.pr .delo,.pr .kon{box-shadow:none;border:1px solid #ccc}}

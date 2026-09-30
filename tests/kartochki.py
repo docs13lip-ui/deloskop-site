@@ -554,7 +554,28 @@ ZNAK = {"ok": ("ok", "хорошо"), "warn": ("warn", "обратите вни�
 STATUS_METKA = {"podtverzhdeno": "● подтверждено источником", "rasschitano": "◆ рассчитано Делоскопом", "ne_provereno": "○ не проверяли"}
 
 
-def _istochnik_stroka(ist, data, status="podtverzhdeno"):
+# karta-v2 (Ф7, глубина 30.09 02:05/04:05): поле DaData management.disqualified не заполняется, поэтому
+# «дисквалификации нет» из пустого поля — не проверка. «● подтверждено» у строки — только если:
+#  (а) источник назвал отметку (статус bad/warn — это найденный факт с источником), или
+#  (б) сведения из реестра дисквалифицированных лиц ФНС (nalog.gov.ru/opendata/7707329152-registerdisqualified) с датой.
+# karta-v2 (Ф6): что карточка НЕ обещает в «Полном отчёте» и «Паспорте», пока источник не подключён
+# (суды и приставы — «не проверяли», решение 29.09 23:15; связи — findAffiliated ждёт API). Подключили — убрать слово отсюда.
+NE_OBESHCHAEM = re.compile(r"суд|пристав|ФССП|связ|аффилир|банкрот|арбитраж|залог|блокиров", re.I)
+DISKVAL_ISTOCHNIK = "Реестр дисквалифицированных лиц ФНС"
+DISKVAL_REESTR = re.compile(r"реестр\S*\s+дисквалифицир", re.I)
+
+
+def diskval_proveren(f):
+    if not f.get("data"):
+        return False
+    if str(f.get("ton") or "") in ("bad", "warn"):
+        return True
+    return bool(DISKVAL_REESTR.search(str(f.get("istochnik") or "")))
+
+
+def _istochnik_stroka(ist, data, status="podtverzhdeno", podklyuchaem=False):
+    if podklyuchaem:  # источник ещё не подключён — даты сведений нет и быть не может
+        return '<span class="co-src">%s · %s</span>' % (e(ist), STATUS_METKA["ne_provereno"])
     return '<span class="co-src">%s · %s · %s</span>' % (
         e(ist), ("сведения на " + data_korotko(data)) if data else "дата сведений не указана",
         STATUS_METKA.get(status, status))
@@ -664,10 +685,14 @@ def html_kartochki(k, V, sosedi):
         elif kod == "shtat" and f.get("znachenie") is not None:
             n = int(f["znachenie"])
             znach = "%d%s%s" % (n, NB, plural(n, "человек", "человека", "человек")) + ((" за%s%d" % (NB, f["god"])) if f.get("god") else "")
+        ist, dat, zag, podkl = f["istochnik"], f.get("data"), f["zagolovok"], False
+        if kod == "diskval" and not diskval_proveren(f):
+            # karta-v2 (Ф7): отсутствие отметки в DaData — не проверка; до подключения реестра ФНС — «не проверяли»
+            st, ist, dat, zag, podkl = "ne_provereno", DISKVAL_ISTOCHNIK + " — подключаем", None, "Дисквалификация руководителя", True
         if st == "ne_provereno":
             znach = "не проверяли"
         stroki.append('<div class="fact"><span>%s</span><span class="fact__v">%s</span>%s</div>' % (
-            e(f["zagolovok"]), e(znach).replace("&nbsp;", NB), _istochnik_stroka(f["istochnik"], f.get("data"), st).replace("co-src", "fact__src co-src")))
+            e(zag), e(znach).replace("&nbsp;", NB), _istochnik_stroka(ist, dat, st, podkl).replace("co-src", "fact__src co-src")))
     ne_pr = [x for x in k["ne_provereno"] if x.get("nazvanie")]
     ne_blok = ""
     if ne_pr:
@@ -767,7 +792,7 @@ def html_kartochki(k, V, sosedi):
 <section class="co-sec co-ogov caption"><p>Сведения — из открытых государственных реестров на указанные даты; выводы — наш расчёт по этим сведениям, а не решение банка или налоговой. Сведения могли измениться после даты: полная проверка на сегодня — <a href="/?inn={inn}">в отчёте</a>.</p><p>Нашли ошибку или не согласны с выводом? Напишите на <a href="mailto:help@deloskop.ru?subject={tema}">help@deloskop.ru</a> — проверим по первоисточнику и исправим.</p><p>Страница собрана {sobrano}.</p></section>
 </div>
 <div class="co-aside">
-<aside class="co-side card"><h2 class="co-h3">Полный отчёт</h2><p class="small">Финансы за пять лет, суды, приставы, связи, разбор Индекса и Паспорт контрагента для печати.</p><a class="btn btn--secondary co-w100" href="/?inn={inn}">Открыть отчёт</a></aside>
+<aside class="co-side card"><h2 class="co-h3">Полный отчёт</h2><p class="small">Финансы за пять лет, налоги и долги, разбор Индекса и Паспорт контрагента для печати — и что проверить самим, со ссылками на первоисточники.</p><a class="btn btn--secondary co-w100" href="/?inn={inn}">Открыть отчёт</a></aside>
 {sos}
 <aside class="co-side card" aria-labelledby="pasport-h"><h2 id="pasport-h" class="co-h3">Паспорт контрагента</h2><p class="small">Документ для папки к сделке: 17 разделов, у каждого источник и дата сведений, «Чего мы не знаем и почему», PDF с номером и QR проверки подлинности.</p><a class="btn btn--secondary co-w100" href="/pasport/kontragent/?inn={inn}" rel="nofollow">Собрать Паспорт</a></aside>
 </div>

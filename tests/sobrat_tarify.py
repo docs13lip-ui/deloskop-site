@@ -82,13 +82,13 @@ for t in D['tarify']:
     ek = m12 - t['god']
     rows.append(f'<tr><td><b>{t["nazvanie"]}</b></td><td class="n">{rub(m12)}</td><td class="n">{rub(t["god"])}</td><td class="n ok">{rub(ek)}</td><td class="n">{round(ek / m12 * 100, 1):.1f}%</td></tr>'.replace('.0%', '%').replace('.', ','))
 
-pak = D['paket_otchetov']
+pak = D['paket_pasportov']  # владелец 30.09: «3 развёрнутые — 990 ₽» вместо «10 отчётов — 990 ₽»
 R = D['raschet']
 faq = [
     ("Можно платить помесячно?", "Да. Помесячно — без обязательств на год: отменили в кабинете — следующий месяц не спишется, доступ сохранится до конца оплаченного месяца. За год — на 20% дешевле, цена зафиксирована на весь год."),
     ("Почему за год дешевле на 20%?", "Оплата вперёд избавляет нас от двенадцати списаний и помогает планировать развитие. Этой экономией мы делимся с вами. Годовая цена округлена вниз до сотни рублей, поэтому скидка никогда не меньше 20%."),
-    ("Что такое полный отчёт и чем он отличается от базовой проверки?", "Базовая проверка — светофор рисков и главные факты о компании за секунды. Полный отчёт — досье: отчётность с графиками, Индекс Делоскопа с причинами и PDF с датой проверки. Такой PDF — часть доказательств должной осмотрительности, если налоговая спросит о сделке через два года."),
-    (f"Что делать, если отчётов не хватило?", f"Докупите пакет: {pak['tekst']} за {rub(pak['cena'])}. Пакет добавляется к любому платному тарифу. Калькулятор выше сам подскажет, когда выгоднее пакет, а когда — тариф выше."),
+    ("Чем быстрая проверка отличается от развёрнутой?", "Быстрая — светофор рисков и главные факты о компании за секунды: статус, возраст, долги по налогам, отметки ФНС. Развёрнутая — Паспорт контрагента: у каждого раздела источник и дата сведений, честное «не проверяли» там, где источника нет, Индекс Делоскопа с причинами и PDF с датой проверки. Такой PDF — часть доказательств должной осмотрительности, если налоговая спросит о сделке через два года."),
+    ("Что делать, если развёрнутых проверок не хватило?", f"Докупите пакет: {pak['tekst']} за {rub(pak['cena_rub'])} — {rub(pak['cena_rub'] // pak['shtuk'])} за проверку. Нужна одна компания без подписки — разовый Паспорт за {rub(D['pasport_razovyj']['cena_rub'])}. Калькулятор выше сам подскажет, когда выгоднее пакет, а когда — тариф выше."),
     ("Можно ли сменить тариф?", "Да, в любой момент. При переходе на тариф выше доплачиваете только разницу за оставшиеся дни."),
     ("Как оплатить компании или ИП?", "По счёту с расчётного счёта: нажмите кнопку тарифа, выберите месяц, квартал или год и впишите ИНН плательщика — реквизиты компании подставим из ЕГРЮЛ, счёт откроется сразу, его можно скачать в PDF. Доступ откроем в день поступления денег, акт пришлём для бухгалтерии. Кассовый чек при оплате с расчётного счёта не нужен. Оплата картой на сайте появится после подключения банка."),
     ("Цены с НДС?", "Нет. Исполнитель применяет УСН и освобождён от НДС (п. 1 ст. 145 НК РФ), поэтому в счёте и акте — «Без налога (НДС)». Сумма в счёте — ровно цена тарифа."),
@@ -142,6 +142,13 @@ main{max-width:1120px}
 .knopki{display:flex;flex-direction:column;gap:2px}
 .cta2{display:flex;align-items:center;justify-content:center;min-height:44px;font-size:15px;font-weight:500;color:var(--accent);border-radius:12px}.cta2:hover{background:#F2F6FD}
 .pod{font-size:15px;color:var(--muted);margin:6px 0 0}
+.razovye{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:0 0 6px}
+.raz{background:var(--card);border-radius:var(--r);padding:22px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.raz__n{font-size:18px;font-weight:600;letter-spacing:-.01em;line-height:1.3}
+.raz__c b{font-size:28px;letter-spacing:-.03em;font-variant-numeric:tabular-nums;white-space:nowrap}.raz__c>span{font-size:15px;color:var(--muted)}
+.raz__c .raz__v{display:block;color:var(--ok);font-weight:500;margin-top:2px}
+.raz__t{margin:0;font-size:15px;line-height:1.45;color:var(--ink2);flex:1}
+.skoro-spisok{margin:6px 0 0;padding-left:20px;font-size:15px;line-height:1.5;color:var(--ink2)}.skoro-spisok li{margin:4px 0}
 .knopki--beta{gap:6px}.knopki__pod{display:block;text-align:center;font-size:14px;color:var(--muted)}
 .beta-note{margin:14px 0 0;padding:14px 18px;border-radius:16px;background:#EAF1FD;color:var(--ink2);font-size:16px;line-height:1.5}.beta-note b{color:var(--ink);font-weight:600}
 h2.big{font-size:clamp(28px,4vw,40px);letter-spacing:-.03em;line-height:1.1;margin:72px 0 10px;font-weight:600}
@@ -183,10 +190,49 @@ h2.big{font-size:clamp(28px,4vw,40px);letter-spacing:-.03em;line-height:1.1;marg
 .pravila small{display:block;color:var(--muted);font-size:13px;margin-top:6px}
 .besp{background:#E8F5EE;color:#0E4D2A;border-radius:20px;padding:18px 22px;font-size:17px;margin:20px 0 0}
 .besp a{color:#0E4D2A;text-decoration:underline}
-@media (max-width:1000px){.plans{grid-template-columns:repeat(2,1fr)}.kalk{grid-template-columns:1fr}}
+@media (max-width:1000px){.razovye{grid-template-columns:1fr}.plans{grid-template-columns:repeat(2,1fr)}.kalk{grid-template-columns:1fr}}
 @media (max-width:620px){.plans{grid-template-columns:1fr}.pravila{grid-template-columns:1fr}.f{grid-template-columns:1fr 128px}.pol{padding:4px 16px 18px}.itog{padding:22px 18px}.tabl th,.tabl td{padding:11px 10px;font-size:15px}}
 @media print{.top,.kalk,.period,footer{display:none}body{background:#fff}}
 '''
+
+import re as _re_r
+_re_nb = _re_r.compile(r'(\d) ₽')
+
+
+def razovye_html(D):
+    """Разовые покупки и дополнения (прайс «после беты», владелец 30.09.2026). Цены — только из tarify.json.
+    В бете вместо кнопки — «В бете — бесплатно» (разметка oplata / v-bete, tests/beta.py).
+    Дополнения с gotovo: false — строкой «скоро», без кнопок в любом режиме; pokazyvat: false — не показываем."""
+    kart = []
+    for k, ssylka in (('pasport_razovyj', '/pasport/'), ('paket_pasportov', '/pasport/'), ('pasport_svoj', '/pasport/proverka/')):
+        p = D.get(k)
+        if not p or not p.get('cena_rub'):
+            continue
+        per = 'в год' if p.get('srok') == 'god' else 'разово'
+        v_tarife = f' <span class="raz__v">В «{html.escape(next(t["nazvanie"] for t in D["tarify"] if t["id"] == p["v_tarife"]))}» — бесплатно</span>' if p.get('v_tarife') else ''
+        kart.append(f'''<div class="raz" id="r-{k}">
+  <div class="raz__n">{html.escape(p['nazvanie'])}</div>
+  <div class="raz__c"><b><span data-cena="{k}">{f"{p['cena_rub']:,}".replace(',', NB)}</span>{NB}₽</b> <span>{per}</span>{v_tarife}</div>
+  <p class="raz__t">{_re_nb.sub(lambda m: m.group(1) + NB + '₽', html.escape(p.get('chto', '')))}</p>
+  <!--oplata--><a class="cta ghost" data-schet data-produkt="{k}" href="/schet/?produkt={k}">Купить за {rub(p['cena_rub'])}</a><!--/oplata--><!--v-bete--><div class="knopki knopki--beta"><a class="cta ghost" href="{ssylka}">В бете — бесплатно</a><span class="knopki__pod">Цена — после беты</span></div><!--/v-bete-->
+</div>''')
+    skoro = []
+    for k, x in (D.get('dopolneniya') or {}).items():
+        if not isinstance(x, dict) or not x.get('pokazyvat') or x.get('gotovo'):
+            continue
+        if x.get('urovni'):
+            ceny = ' / '.join(f"{u['mesyac']:,}".replace(',', NB) for u in x['urovni']) + NB + '₽ в месяц за ' + \
+                   ' / '.join(str(u['kompanij']) for u in x['urovni']) + NB + 'компаний'
+        else:
+            ceny = f"{x['mesyac']:,}".replace(',', NB) + NB + '₽ в месяц'
+        skoro.append(f'<li><b>{html.escape(x["nazvanie"])}</b> — {ceny}' + (f'. {html.escape(x["chto"])}' if x.get('chto') else '') + ' <span class="skoro">скоро</span></li>')
+    if not kart:
+        return ''
+    return ('<h2 class="big" id="razovo">Разовые покупки</h2>\n'
+            '<p class="lid">Когда подписка не нужна: одна компания перед крупной сделкой или Паспорт своей компании для банка и заказчиков.</p>\n'
+            '<div class="razovye">\n' + '\n'.join(kart) + '\n</div>\n'
+            + (f'<p class="pod">Скоро — подписки-дополнения:</p><ul class="skoro-spisok">{"".join(skoro)}</ul>\n' if skoro else ''))
+
 
 _T = {t['id']: t for t in D['tarify']}
 opis = (f"Тарифы Делоскопа: бесплатно, Старт — {rub(_T['start']['mesyac'])} в месяц, Про — {rub(_T['pro']['mesyac'])}, Бизнес — {rub(_T['biznes']['mesyac'])}. "
@@ -199,6 +245,8 @@ OSN_BAND = (f'''<aside class="osn-band" aria-labelledby="osn-band-h">
  <div class="osn-band__r"><span class="osn-band__p"><span data-cena="osnovatel">{f"{_osn['cena_rub']:,}".replace(',', NB)}</span>&nbsp;₽/год</span><a class="cta primary" href="/osnovatel/">Подробнее</a></div>
 </aside>
 ''' if _osn and _osn.get('cena_rub') else '')
+
+RAZOVYE_HTML = razovye_html(D)
 
 page = f'''<!doctype html>
 <html lang="ru">
@@ -242,14 +290,15 @@ page = f'''<!doctype html>
 <div class="plans">
 {chr(10).join(cards)}
 </div>
-<p class="pod">Нужно больше отчётов? {pak['tekst'].capitalize()} — {rub(pak['cena'])} к любому платному тарифу. Помесячно — отменить можно в любой момент, следующий месяц просто не спишется. <!--oplata-->Компаниям и ИП — <a href="/schet/">по счёту</a> на месяц, квартал или год, с закрывающими документами. <!--/oplata--><!--v-bete--><!--/v-bete-->Цены указаны без НДС: исполнитель применяет УСН и освобождён от НДС (п. 1 ст. 145 НК РФ).<!--oplata--> Оплата картой на сайте — скоро.<!--/oplata--><!--v-bete--><!--/v-bete--></p>
+<p class="pod">Не хватило развёрнутых проверок? {pak['tekst'].capitalize()} — {rub(pak['cena_rub'])} к любому платному тарифу. Помесячно — отменить можно в любой момент, следующий месяц просто не спишется. <!--oplata-->Компаниям и ИП — <a href="/schet/">по счёту</a> на месяц, квартал или год, с закрывающими документами. <!--/oplata--><!--v-bete--><!--/v-bete-->Цены указаны без НДС: исполнитель применяет УСН и освобождён от НДС (п. 1 ст. 145 НК РФ).<!--oplata--> Оплата картой на сайте — скоро.<!--/oplata--><!--v-bete--><!--/v-bete--></p>
 
+{RAZOVYE_HTML}
 <h2 class="big" id="podbor">Подбор без переплаты</h2>
 <p class="lid">Расскажите, как вы работаете, — покажем самый дешёвый тариф, которого хватит, и сколько денег он защищает.</p>
 <div class="kalk">
   <div class="pol">
     <fieldset><legend>Что вам нужно</legend>
-      <label class="f" for="p-otch"><span>Новых компаний в месяц, которые проверяете подробно<small>Полный отчёт с отчётностью и PDF</small></span><input id="p-otch" type="text" inputmode="numeric" value="5" autocomplete="off"></label>
+      <label class="f" for="p-otch"><span>Новых компаний в месяц, которые проверяете подробно<small>Развёрнутая проверка — Паспорт с источниками и PDF</small></span><input id="p-otch" type="text" inputmode="numeric" value="5" autocomplete="off"></label>
       <label class="f" for="p-slezh"><span>Постоянных партнёров, за которыми следить<small>Сообщим, если у них что-то изменится</small></span><input id="p-slezh" type="text" inputmode="numeric" value="5" autocomplete="off"></label>
       <label class="f" for="p-lyudi"><span>Сколько человек будут работать в Делоскопе</span><input id="p-lyudi" type="text" inputmode="numeric" value="1" autocomplete="off"></label>
       <label class="g"><input id="p-delopis" type="checkbox"><span>Нужны договоры с защитой под контрагента (Делопись)</span></label>
@@ -333,6 +382,25 @@ print('ok', len(page))
 import re as _re
 _mp = os.path.join(ROOT, 'index.html')
 _m = open(_mp, encoding='utf-8').read()
+
+
+def spisok_glavnoj(t):
+    """Что входит — тот же список, что на /tarify/ (tarify.json → chto); на главной метка «скоро» — .tagnew."""
+    out = []
+    for x in t['chto']:
+        if x.endswith(' (скоро)'):
+            out.append(f'<li>{CHECK}<span>{html.escape(x[:-8])} <span class="tagnew">скоро</span></span></li>')
+        elif x.startswith('Делопись'):
+            out.append(f'<li>{CHECK}<span>{html.escape(x)}</span></li>')
+        else:
+            out.append(f'<li>{CHECK}{html.escape(x)}</li>')
+    return ''.join(out)
+
+
+_i0 = _m.index('<div class="plan-name">Бесплатно ')
+_j0 = _m.index('</ul>', _i0)
+_m = _m[:_i0] + _re.sub(r'(<ul>\n\s*)<li>.*?</li>(\n\s*)$', lambda m: m.group(1) + spisok_glavnoj(D['tarify'][0]) + m.group(2), _m[_i0:_j0], count=1, flags=_re.S) + _m[_j0:]
+_m = _re.sub(r'Нужно больше отчётов\? Докупите [^<]*? или напишите нам', f"Не хватило развёрнутых проверок? Докупите {pak['tekst']} за {pak['cena_rub']:,} ₽".replace(',', ' ') + ' или напишите нам', _m)
 for t in D['tarify']:
     if t['mesyac'] == 0:
         continue
@@ -341,6 +409,7 @@ for t in D['tarify']:
     j = _m.index('\n        </div>', _m.index('</ul>', i))  # конец карточки
     card = _m[i:j]
     card = _re.sub(r'<div class="price">.*?</div><div class="per"[^>]*>.*?</div>', lambda _: price, card, count=1, flags=_re.S)
+    card = _re.sub(r'(<ul>\n\s*)<li>.*?</li>(\n\s*</ul>)', lambda m: m.group(1) + spisok_glavnoj(t) + m.group(2), card, count=1, flags=_re.S)
     card = _re.sub(r'(<!--oplata-->(?:<template data-oplata>)?<div class="knopki".*?<!--/v-bete-->|<a class="cta [^"]*"[^>]*>Подключить «[^»]+»</a>|<div class="knopki".*?</a></div>)', lambda _: cta, card, count=1, flags=_re.S)
     _m = _m[:i] + card + _m[j:]
 _m = _m.replace('<button type="button" data-period="m">Помесячно</button>\n          <button type="button" data-period="y" class="on">За год <em>−20%</em></button>',

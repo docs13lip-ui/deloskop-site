@@ -77,13 +77,29 @@
 
   var REAL = /числен|сотрудн|работник|уплач|налог|взнос|отч[её]т|бухгалт|доход|выручк|контракт|лиценз|МСП|малого/i;
 
+  // Ф8 (Ночные 30.09): «нет» — утверждение. В группу «Проверили — отметок не нашли» — только с датой сведений
+  // или из ЕГРЮЛ (отсутствие записи в выписке). Дисквалификация — только ответ реестра ФНС с датой:
+  // DaData management.disqualified не заполняется, «нет» оттуда — пустое поле, а не проверка.
+  var NET = /^\s*(нет|не\s+(найден|обнаружен|выявлен|значится|числится)\S*|отметок\s+нет|отсутству\S*|сведений\s+нет)(?=[\s.,;:!)]|$)/i;
+  var DISKVAL_SAM = { tekst: 'service.nalog.ru/disqualified.do', url: 'https://service.nalog.ru/disqualified.do' };
+  function neProvereno(x) {
+    if (x.status === 'bad' || x.status === 'warn') return false;
+    if (/дисквалиф/i.test(String(x.title || ''))) return !(x.as_of && /реестр\S*\s+дисквалифицир/i.test(String(x.source || '')));
+    return !x.as_of && !/^\s*ЕГРЮЛ\s*$/i.test(String(x.source || '')) && NET.test(String(x.detail || ''));
+  }
+
   // Раскладываем признаки по смыслу для партнёра, а не для аналитика.
   function classify(r) {
     var c = (r && r.company) || {}, sig = (r && r.signals) || [];
-    var out = { real: [], clean: [], info: [], ask: [], serious: [] };
+    var out = { real: [], clean: [], info: [], ask: [], serious: [], ne: [] };
     sig.forEach(function (x) {
       var item = { title: String(x.title || ''), detail: String(x.detail || ''), source: x.source || '', asOf: x.as_of || '' };
-      if (x.status === 'bad') out.serious.push(item);
+      if (neProvereno(x)) {
+        item.detail = /дисквалиф/i.test(item.title) ? 'реестр дисквалифицированных лиц ФНС мы пока не подключили' : 'источник ответил без даты сведений';
+        if (/дисквалиф/i.test(item.title)) item.sam = DISKVAL_SAM;
+        out.ne.push(item);
+      }
+      else if (x.status === 'bad') out.serious.push(item);
       else if (x.status === 'warn') out.ask.push(item);
       else if (x.status === 'ok') (REAL.test(item.title) ? out.real : out.clean).push(item);
       else out.info.push(item);
@@ -101,7 +117,7 @@
     var s = groups.serious.length, a = groups.ask.length;
     if (s) return { tone: 'bad', title: 'В реестрах есть серьёзные отметки', text: s + ' ' + plural(s, 'отметка', 'отметки', 'отметок') + (a ? ' и ещё ' + a + ' ' + plural(a, 'момент', 'момента', 'моментов') + ' для вопросов' : '') + '. Партнёр увидит это сам — лучше объяснить заранее.' };
     if (a) return { tone: 'warn', title: 'Есть ' + a + ' ' + plural(a, 'момент', 'момента', 'моментов') + ', о которых могут спросить', text: 'Серьёзных отметок нет. Ниже — что именно видно и что стоит подготовить для ответа.' };
-    return { tone: 'ok', title: 'Реестры не видят причин для беспокойства', text: 'По открытым данным ФНС на сегодня ни одной отметки, которая настораживает банк или налоговую.' };
+    return { tone: 'ok', title: 'Реестры не видят причин для беспокойства', text: 'В полученных сведениях реестров на сегодня ни одной отметки, которая настораживает банк или налоговую.' + ((groups.ne || []).length ? ' Что не проверяли — ниже.' : '') };
   }
 
   function passportUrl(origin, inn, code, date) {
@@ -131,7 +147,7 @@
       { title: 'Массовый адрес', status: 'warn', detail: 'по адресу зарегистрировано 11 компаний — бизнес-центр', source: 'ФНС', as_of: '2026-09-01' },
       { title: 'Налоговые правонарушения', status: 'info', detail: 'штраф 1 000 ₽ за 2024 год, уплачен', source: 'ФНС, открытые данные', as_of: '2026-07-25' }
     ],
-    zsk: { level: 'low', title: 'Низкая вероятность', cbr_url: 'https://cbr.ru/counteraction_m_ter/platform_zsk/' }
+    zsk: { level: 'low', title: 'Низкая вероятность', cbr_url: 'https://cbr.ru/counteraction_m_ter/platform_zsk/proverka-po-inn/' }
   };
 
   var api = {

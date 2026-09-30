@@ -65,6 +65,10 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
 .eyes{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px}
 .eyes .box h3{color:var(--ink)}
 .checklist{list-style:none;padding:0;margin:0}
+.cp h3{font-size:15px;margin:14px 0 4px}.cp-p{margin:0 0 4px;font-size:13px;color:var(--muted)}
+.cp ul{list-style:none;padding:0;margin:0}.cp li{display:grid;grid-template-columns:20px 1fr;gap:4px;padding:6px 0;border-top:1px solid var(--line);font-size:14px;line-height:1.4}
+.cp li small{display:block;font-size:12px;color:var(--muted)}.cp-ok .cp-i{color:var(--ok,#1F8A4C)}.cp-net .cp-i{color:var(--muted)}
+.cp a{color:inherit;text-decoration:underline;text-underline-offset:2px}@media print{.cp a::after{content:" (" attr(href) ")";font-size:11px;color:#555}}
 .checklist li{padding:7px 0 7px 28px;border-top:1px solid var(--line);position:relative}
 .checklist li::before{content:"";position:absolute;left:2px;top:10px;width:14px;height:14px;border:1.5px solid var(--ink2);border-radius:4px}
 .dates{font-size:12px;color:var(--muted);margin-top:6px}
@@ -237,6 +241,8 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
 </section>
 <article class="doc" id="doc" hidden></article>
 <script src="/js/indeks-vorota.js"></script>
+<script src="/js/pasport-kontragenta.js"></script>
+<script src="/js/chto-provereno.js"></script>
 <script src="/js/usloviya.js"></script>
 <script src="/js/nedavnie.js"></script>
 <script src="/js/inn.js"></script>
@@ -463,9 +469,9 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
       (D?dossierHtml(D):'<h2>Сведения о компании</h2><table>'+rows+'</table>')+
       '<h2>Светофор по признакам риска</h2><table class="sig">'+sig+'</table>'+
       (window.Usloviya?'<h2>Условия сделки</h2><div data-usl></div>':(D?'<h2>Что запросить у контрагента до оплаты</h2><ul class="checklist">'+D.documents.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>':''))+
-      '<h2>Что проверено</h2><div class="sub">Сведения ЕГРЮЛ/ЕГРИП, отметки ФНС о недостоверности, задолженность по налогам, налоговые правонарушения, среднесписочная численность, доходы и расходы, уплаченные налоги, спецрежимы, реестр дисквалифицированных лиц — по открытым данным ФНС России.</div>'+
+      '<h2>Что проверено</h2>'+(window.ChtoProvereno?ChtoProvereno.html(ChtoProvereno.sobrat(r,{razdely:window.PasportKontragenta&&PasportKontragenta.RAZDELY})):'<div class="sub">Опись проверки не загрузилась — обновите страницу.</div>')+
       '<div class="sign"><div>Проверку провёл (ФИО, должность)</div><div>Подпись, дата</div></div>'+
-      '<div class="foot">Досье подтверждает, что проверка контрагента проведена до заключения сделки (проявление должной осмотрительности). Это оценка риска по открытым данным, а не решение банка или налогового органа.<br>Подлинность досье: <span class="link">'+esc(link)+'</span></div>';
+      '<div class="foot">Досье фиксирует, какие сведения о контрагенте получены и на какую дату, — оно может стать частью доказательств должной осмотрительности. Это оценка риска по открытым данным, а не решение банка или налогового органа.<br>Подлинность досье: <span class="link">'+esc(link)+'</span></div>';
     msg.hidden=true; doc.hidden=false;
     if(window.Nedavnie)Nedavnie.add({inn:c.inn,name:c.name_short||name,level:lvl,id:id});
     var ub=doc.querySelector('[data-usl]');

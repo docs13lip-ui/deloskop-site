@@ -2,7 +2,7 @@
    Счётчик 113083788, Вебвизор выключен. Код Метрики не загружается, пока человек не нажал «Принять»
    в баннере cookies; «Только необходимые» — не загружается. Выбор хранится в браузере 12 месяцев.
    Цели: window.dlkGoal("check_started" | "report_opened" | "invoice_created" | "registration" |
-   "article_to_tool" | "whatsnew_open" | "pkg_view" | "pkg_cta", {параметры}) — без согласия ничего не отправляет. */
+   "article_to_tool" | "whatsnew_open" | "pkg_view" | "pkg_cta" | "praktika_cta", {параметры}) — без согласия ничего не отправляет. */
 (function () {
   "use strict";
   var ID = 113083788;
@@ -54,7 +54,7 @@
     d.className = "ck-bar";
     d.setAttribute("role", "region");
     d.setAttribute("aria-label", "Cookies");
-    d.innerHTML = '<div class="ck-bar__in"><p class="ck-bar__t">Мы используем необходимые cookies для работы сайта и, с вашего согласия, Яндекс Метрику, чтобы понимать, что улучшить. Подробнее — в <a href="/cookies/">Политике cookies</a>.</p>' +
+    d.innerHTML = '<div class="ck-bar__in"><p class="ck-bar__t"><span class="ck-bar__dl">Мы используем необходимые cookies для работы сайта и, с вашего согласия, Яндекс Метрику, чтобы понимать, что улучшить. Подробнее — в <a href="/cookies/">Политике cookies</a>.</span><span class="ck-bar__kr">Cookies — для работы сайта, Метрика — только с вашего согласия. <a href="/cookies/">Подробнее</a></span></p>' +
       '<div class="ck-bar__b"><button type="button" class="ck-bar__ok" data-ck="all">Принять</button>' +
       '<button type="button" class="ck-bar__no" data-ck="need">Только необходимые</button></div></div>';
     d.addEventListener("click", function (e) {
@@ -85,11 +85,19 @@
     }
   }
 
+  // «Разбор дела» → одно действие: клик по кнопке тёмного блока .dl на /praktika/<раздел>/<slug>/ (SEO-обвязка [Маркетинга] 30.09)
+  function izRazbora(e) {
+    var a = e.target.closest && e.target.closest(".pr .dl a[href]");
+    var m = /^\/praktika\/[^/]+\/([^/]+)\//.exec(location.pathname);
+    if (a && m) window.dlkGoal("praktika_cta", { slug: m[1], kuda: a.getAttribute("href") });
+  }
+
   function start() {
     var v = chitat();
     if (v === "all") zagruzit();
     else if (!v) banner();
     document.addEventListener("click", izStati, true);
+    document.addEventListener("click", izRazbora, true);
     document.querySelectorAll("[data-ck-set]").forEach(function (b) {
       b.addEventListener("click", function () {
         if (b.getAttribute("data-ck-set") === "all") window.dlkCookies.prinyat(); else window.dlkCookies.tolkoNuzhnye();

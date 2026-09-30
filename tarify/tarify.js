@@ -7,6 +7,9 @@
   // Пени за 2 года по ст. 75 НК: 1–30 дней — 1/300 ставки, 31–90 — 1/150, с 91-го — 1/300.
   function doliPenej(stavka) { return stavka * (30 / 300 + 60 / 150 + 640 / 300); }
 
+  /* Пакет развёрнутых проверок (владелец, 30.09.2026: «3 развёрнутые — 990 ₽» вместо «10 отчётов — 990 ₽»). */
+  function paket(D) { return D.paket_pasportov; }
+
   function cenaGoda(t, period) { return period === "god" ? t.god : t.mesyac * 12; }
 
   /* Подбор: самый дешёвый тариф, которого хватает. Отчёты сверх лимита — пакетами,
@@ -15,7 +18,7 @@
     var R = Math.max(0, Math.floor(nuzhno.otchetov || 0));
     var W = Math.max(0, Math.floor(nuzhno.slezhenie || 0));
     var U = Math.max(1, Math.floor(nuzhno.polzovatelej || 1));
-    var pak = D.paket_otchetov;
+    var pak = paket(D);
     var var_ = [];
     D.tarify.forEach(function (t, i) {
       if (t.slezhenie < W || t.polzovatelej < U) return;
@@ -24,7 +27,7 @@
       var dobor = Math.max(0, R - t.otchetov);
       if (dobor > 0 && t.mesyac === 0) return;          // пакеты — только к платному тарифу
       var pakety = Math.ceil(dobor / pak.shtuk);
-      var god = cenaGoda(t, period) + pakety * pak.cena * 12;
+      var god = cenaGoda(t, period) + pakety * pak.cena_rub * 12;
       var_.push({ id: t.id, nazvanie: t.nazvanie, i: i, pakety: pakety, god: god, mesyac: god / 12 });
     });
     var_.sort(function (a, b) { return a.god - b.god || b.i - a.i; });
@@ -75,7 +78,7 @@
     });
   }
 
-  var API = { podobrat: podobrat, okupaemost: okupaemost, doliPenej: doliPenej, knopki: knopki };
+  var API = { paket: paket, podobrat: podobrat, okupaemost: okupaemost, doliPenej: doliPenej, knopki: knopki };
   if (typeof module !== "undefined" && module.exports) { module.exports = API; return; }
   root.DeloskopTarify = API;
 
@@ -145,14 +148,14 @@
     }
     var L = p.luchshij, t = tarifPoId(L.id);
     box.dataset.ton = L.id;
-    $("i-nazv").textContent = L.pakety ? t.nazvanie + " + " + L.pakety + " " + (L.pakety === 1 ? "пакет" : L.pakety < 5 ? "пакета" : "пакетов") + " отчётов" : t.nazvanie;
+    $("i-nazv").textContent = L.pakety ? t.nazvanie + " + " + L.pakety + " " + (L.pakety === 1 ? "пакет" : L.pakety < 5 ? "пакета" : "пакетов") + " проверок" : t.nazvanie;
     $("i-cena").textContent = L.god === 0 ? "0 ₽" : rub(L.mesyac) + " в месяц";
     $("i-per").textContent = L.god === 0 ? "Платить не нужно — бесплатного хватит." :
       (period === "god" ? "При оплате за год — " + rub(L.god) + (L.pakety ? " вместе с пакетами" : "") : "При оплате помесячно — " + rub(L.god) + " за год");
     var pochemu = [];
-    if (t.id === "free") pochemu.push("Подробных отчётов и слежения вам не нужно — хватит трёх проверок в день.");
+    if (t.id === "free") pochemu.push("Развёрнутых проверок и слежения вам не нужно — хватит трёх быстрых проверок в день.");
     else {
-      pochemu.push("Отчётов в тарифе: " + t.otchetov + (L.pakety ? ", ещё " + L.pakety * D.paket_otchetov.shtuk + " — пакетами по " + rub(D.paket_otchetov.cena) : "") + ".");
+      pochemu.push("Развёрнутых проверок в тарифе: " + t.otchetov + " в месяц" + (L.pakety ? ", ещё " + L.pakety * paket(D).shtuk + " — пакетами по " + rub(paket(D).cena_rub) : "") + ".");
       pochemu.push("Слежение: до " + t.slezhenie + " компаний" + (t.polzovatelej > 1 ? ", до " + t.polzovatelej + " сотрудников" : "") + ".");
       if (nuzhno.delopis) pochemu.push("Делопись есть начиная с тарифа «Про».");
     }
@@ -164,7 +167,7 @@
       if (raz <= 0) $("i-alt").textContent = "«" + ta.nazvanie + "» стоит столько же, но даёт больше — берите его.";
       else if (bolsheDaet && raz <= L.god * 0.1)
         $("i-alt").textContent = "«" + ta.nazvanie + "» дороже всего на " + rub(raz) + " в год, но даёт больше: " +
-          ta.otchetov + " отчётов в месяц, слежение за " + ta.slezhenie + " компаниями" + (ta.delopis && !t.delopis ? ", Делопись" : "") + ". Решайте сами.";
+          ta.otchetov + " развёрнутых проверок в месяц, слежение за " + ta.slezhenie + " компаниями" + (ta.delopis && !t.delopis ? ", Делопись" : "") + ". Решайте сами.";
       else $("i-alt").textContent = "«" + ta.nazvanie + "»" + (A.pakety ? " с пакетами" : "") + " обошёлся бы на " + rub(raz) + " в год дороже — не переплачивайте.";
     } else $("i-alt").textContent = "";
     okup(t, L.god);

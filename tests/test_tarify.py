@@ -29,7 +29,7 @@ ok('главная: кнопок «Оплачивать помесячно» —
 ok('главная: старых «Подключить «…»» не осталось', 'Подключить «' not in main)
 ok('главная: калькулятор ошибки считает от года «Про»', f'tot?{T["pro"]["god"]}/tot' in main and f'<b>{r(T["pro"]["god"])}</b>' in main)
 ok('главная: ссылка на /tarify/', 'href="/tarify/' in main)
-ok('главная: пакет отчётов', f'10 полных отчётов за {r(D["paket_otchetov"]["cena"])}' in main)
+ok('главная: пакет развёрнутых проверок из tarify.json', f'Докупите {D["paket_pasportov"]["tekst"]} за {r(D["paket_pasportov"]["cena_rub"])}' in main)
 
 pg = rd('tarify/index.html')
 sys.path.insert(0, os.path.join(R, 'tests'))
@@ -85,5 +85,41 @@ _goda = {T[x]["god"] for x in ('start', 'pro', 'biznes')}
 _na_glavnoj = {int(re.sub(r'\D', '', m)) for m in re.findall(r'(\d[\d\u00a0\u202f ]*)[\u00a0 ]₽ за год', main)}
 ok('главная: все цены «за год» = tarify.json', _na_glavnoj <= _goda and len(_na_glavnoj) > 0)
 ok('главная и /tarify/: подпись «в месяц при оплате за год» у цены года', main.count('data-y="в месяц при оплате за год"') == 3 and pg.count('data-y="в месяц при оплате за год"') == 3)
+
+# ---------- tarify-v3: прайс «после беты» (владелец 30.09.2026) — ступени, разовые, дополнения ----------
+PK, PR, PS = D['paket_pasportov'], D['pasport_razovyj'], D['pasport_svoj']
+ok('v3: пакета «10 полных отчётов — 990 ₽» больше нет (99 ₽ за штуку против 490 ₽ разового)', 'paket_otchetov' not in D
+   and all('10 полных отчётов' not in rd(f) for f in ('index.html', 'tarify/index.html', 'osnovatel/index.html', 'tarify/tarify.js')))
+ok('v3: пакет — 3 развёрнутые проверки за 990 ₽', (PK['shtuk'], PK['cena_rub']) == (3, 990) and PK.get('razovo') is True)
+ok('v3: разовый Паспорт — 490 ₽, Паспорт своей компании — 990 ₽ в год, в «Про» бесплатно',
+   PR['cena_rub'] == 490 and PS['cena_rub'] == 990 and PS['srok'] == 'god' and PS['v_tarife'] == 'pro')
+_sht = PK['cena_rub'] / PK['shtuk']
+ok('v3: лестница цены — разовый дороже штуки в пакете, штука в пакете дороже Паспорта в любом тарифе',
+   PR['cena_rub'] > _sht and all(_sht > T[x]['mesyac'] / T[x]['otchetov'] for x in ('start', 'pro', 'biznes')))
+ok('v3: в тарифах развёрнутых проверок 3 / 20 / 80', [T[x]['otchetov'] for x in ('start', 'pro', 'biznes')] == [3, 20, 80]
+   and all(f'{T[x]["otchetov"]} развёрнут' in ' '.join(T[x]['chto']) for x in ('start', 'pro', 'biznes')))
+ok('v3: бесплатно — 3 быстрые проверки в день, в тарифах быстрые без лимита', '3 быстрые проверки в день' in T['free']['chto']
+   and all('Быстрые проверки без лимита' in T[x]['chto'] for x in ('start', 'pro')))
+ok('v3: «Паспорт своей компании» — в «Про»', 'Паспорт своей компании с проверкой подлинности' in T['pro']['chto'])
+_vse = main + pg + rd('osnovatel/index.html')
+ok('v3: слов «полный отчёт» и «базовые проверки» на страницах цен больше нет', not re.search(r'полн\w+ отч[её]т|Базов\w+ провер', _vse))
+ok('v3: цены не обещают DaMIA — «контроль блокировок у партнёров» снят', 'блокировок у 3 партнёров' not in _vse and 'DaMIA' not in pg)
+_DOP = D['dopolneniya']
+ok('v3: «Сторож» — 190 / 490 / 990 ₽ за 10 / 50 / 200 компаний', [(u['kompanij'], u['mesyac']) for u in _DOP['storozh']['urovni']] == [(10, 190), (50, 490), (200, 990)])
+ok('v3: +1 сотрудник в «Про» — 745 ₽ (половина месяца «Про»)', _DOP['sotrudnik_pro']['mesyac'] * 2 == T['pro']['mesyac'])
+ok('v3: «Исполнители» — только после уведомления РКН: на сайте не показываем', _DOP['ispolniteli']['pokazyvat'] is False and 'Исполнители' not in re.sub(r'<script type="application/json" id="tarify-data">.*?</script>', '', pg, flags=re.S))
+_vid = _B.vidimoe(pg)
+_pl = _platnyj(pg)
+for k, p in (('pasport_razovyj', PR), ('paket_pasportov', PK), ('pasport_svoj', PS)):
+    c = f'{p["cena_rub"]:,}'.replace(',', nb)
+    ok(f'v3: /tarify/ — карточка {k}, цена из tarify.json', f'id="r-{k}"' in pg and f'<span data-cena="{k}">{c}</span>' in pg)
+    ok(f'v3: /tarify/ — {k}: без беты кнопка «Купить» ведёт в форму счёта', f'data-schet data-produkt="{k}" href="/schet/?produkt={k}">Купить за {c}{nb}₽</a>' in _pl)
+    ok(f'v3: js/schet.js знает, что будет после оплаты {k}', f'    {k}: "' in rd('js/schet.js'))
+if D.get('beta') is True:
+    ok('v3: в бете у разовых — «В бете — бесплатно», кнопок «Купить» не видно', 'Купить за' not in _vid and _vid.count('В бете — бесплатно') >= 3 + 3)
+for x in _DOP.values():
+    if isinstance(x, dict) and x.get('pokazyvat') and not x.get('gotovo'):
+        ok(f'v3: «{x["nazvanie"]}» — в строке «скоро», без кнопки', f'<li><b>{x["nazvanie"]}</b>' in pg and 'data-produkt="' + [k for k, v in _DOP.items() if v is x][0] not in pg)
+ok('v3: во встроенных данных калькулятора — пакет развёрнутых проверок', '"paket_pasportov"' in pg)
 
 print(f'\n{n} проверок пройдено')

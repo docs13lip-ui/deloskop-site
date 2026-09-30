@@ -1,0 +1,351 @@
+#!/usr/bin/env python3
+"""Сборщик раздела «Практика» (/praktika/) — «Разбор дела» ([Ночные запуски] 30.09.2026, решение владельца 30.09 01:20).
+
+Данные — praktika/dela.json (карточки дел, кнопка, нормы, мета); текст автора-юриста — tests/praktika/<slug>.html
+(блоки «Что случилось» … «Сколько на кону» в классах css/praktika.css по макету [Арт-директора] 30.09).
+Сборщик пишет:
+  praktika/index.html, praktika/115-fz/index.html, praktika/nalogi/index.html — хабы (новые сверху);
+  praktika/<раздел>/<slug>/index.html — разборы: крошки → H1 → карточка дела → текст автора → одно действие →
+  «Где в законе» → «Сверено» → «Похожие разборы» → «Полезно?» (js/otzyv.js);
+  строки /praktika/… в sitemap.xml; ссылку «Практика судов» в хабах /115-fz/ и /nalogi/ (между метками).
+Шапку и подвал ставит sobrat_shapku.sobrat_stranicu — после этого сборщика sobrat_shapku.py ничего не меняет.
+Запуск: python3 tests/sobrat_praktika.py [--check]
+"""
+import html
+import json
+import os
+import re
+import sys
+
+KOREN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(KOREN, "tests"))
+import sobrat_shapku as SH  # noqa: E402
+
+SAJT = "https://deloskop.ru"
+MES = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"]
+NB = " "
+
+
+def put(*p):
+    return os.path.join(KOREN, *p)
+
+
+def e(s):
+    return html.escape(str(s), quote=True)
+
+
+def tipograf(txt):
+    """Неразрывные пробелы в тексте (не внутри тегов): «30 млн ₽», «ст. 845», «№ 12-П», «7 198 800»."""
+    def t(s):
+        s = re.sub(r"(\d) (?=\d{3}(?!\d))", "\\1" + NB, s)
+        s = re.sub(r"(\d) (?=\d{3}(?!\d))", "\\1" + NB, s)
+        s = re.sub(r"(\d) (?=(млн|млрд|тыс\.|₽|%|месяц|рабоч|раз\b|лет\b|год|минут|дн|инстанц))", "\\1" + NB, s)
+        s = re.sub(r"(^|[\s(«])(ст\.|п\.|пп\.|ч\.|подп\.|№) (?=[\dА-ЯA-Z])", "\\1\\2" + NB, s)
+        s = re.sub(r" (—)", NB + "\\1", s)
+        return s
+    return "".join(ch if ch.startswith("<") else t(ch) for ch in re.split(r"(<[^>]+>)", txt))
+
+
+def nerazryv(txt):
+    """«115-ФЗ» не рвётся по дефису на 390 px — только внутри <main> и только в тексте (не в атрибутах)."""
+    a, b = txt.find("<main"), txt.find("</main>")
+    if a < 0 or b < 0:
+        return txt
+    m = re.sub(r"(>[^<]*)", lambda x: x.group(1).replace("115-ФЗ", '\x00'), txt[a:b])
+    m = m.replace("\x00", '<span class="nw">115-ФЗ</span>')
+    return txt[:a] + m + txt[b:]
+
+
+def data_ru(iso):
+    g, m, d = iso.split("-")
+    return "%d %s %s" % (int(d), MES[int(m) - 1], g)
+
+
+def data_ch(iso):
+    g, m, d = iso.split("-")
+    return "%s.%s.%s" % (d, m, g)
+
+
+def dannye():
+    with open(put("praktika", "dela.json"), encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def url_razbora(r):
+    return "/praktika/%s/%s/" % (r["razdel"], r["slug"])
+
+
+def golova(title, description, url, jsonld, noindex=False):
+    return """<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>%(t)s</title>
+<meta name="description" content="%(d)s">
+<link rel="canonical" href="%(u)s">
+<meta property="og:type" content="article">
+<meta property="og:title" content="%(t)s">
+<meta property="og:description" content="%(d)s">
+<meta property="og:url" content="%(u)s">
+<meta property="og:image" content="https://deloskop.ru/ikonka-512.png">
+<meta name="theme-color" content="#F5F5F2">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<script type="application/ld+json">%(j)s</script>
+<link rel="stylesheet" href="/css/fonts.css">
+<link rel="stylesheet" href="/css/praktika.css">
+<link rel="stylesheet" href="/css/podval.css">
+<link rel="stylesheet" href="/css/shapka.css">
+<script src="/js/shapka.js" defer></script>
+<script src="/js/metrika.js" defer></script>
+</head>
+<body>
+<!--shapka--><!--/shapka-->
+""" % {"t": e(title), "d": e(description), "u": SAJT + url, "j": json.dumps(jsonld, ensure_ascii=False)}
+
+
+def kroshki_ld(items):
+    return {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+        {"@type": "ListItem", "position": i + 1, "name": n, "item": SAJT + u} for i, (n, u) in enumerate(items)]}
+
+
+def kroshki_html(items):
+    ch = []
+    for i, (n, u) in enumerate(items):
+        ch.append('<a href="%s">%s</a>' % (u, e(n)) if i < len(items) - 1 else '<span aria-current="page">%s</span>' % e(n))
+    return '<nav class="crumbs" aria-label="Навигация">' + '<span aria-hidden="true">›</span>'.join(ch) + "</nav>"
+
+
+def kartochka(d, n, vsego):
+    t = "Карточка дела" if vsego == 1 else "Дело %d из %d" % (n, vsego)
+    itog = '<span class="itog%s">%s</span>' % (" itog--nov" if d.get("itog_nov") else "", e(d["itog"]))
+    return """<section class="delo" aria-label="%(t)s">
+<div class="delo__h"><p class="delo__t">%(t)s</p>%(itog)s</div>
+<dl>
+<dt>Суд</dt><dd>%(sud)s</dd>
+<dt>Акт</dt><dd>%(akt)s %(nomer)s</dd>
+<dt>Дата</dt><dd><time datetime="%(data)s">%(data_ch)s</time></dd>
+<dt>Дело</dt><dd>%(delo)s</dd>
+<dt>На кону</dt><dd>%(na_konu)s</dd>
+</dl>
+<p class="delo__src">Первоисточник: <a href="%(ist)s" rel="noopener" target="_blank">%(ist_p)s</a> · сверено <time datetime="%(sv)s">%(sv_ch)s</time></p>
+</section>""" % {"t": t, "itog": itog, "sud": e(d["sud"]), "akt": e(d["akt"]), "nomer": e(d["nomer"]),
+                  "data": d["data"], "data_ch": data_ch(d["data"]), "delo": e(d["delo"]), "na_konu": e(d["na_konu"]),
+                  "ist": e(d["istochnik"]), "ist_p": e(d["istochnik_podpis"]), "sv": d["sverka"], "sv_ch": data_ch(d["sverka"])}
+
+
+CITATA = re.compile(r"^https://(www\.)?(vsrf\.ru/lk/practice/stor_pdf|ksrf\.ru/doc/|publication\.pravo\.gov\.ru/document/)")
+
+
+def citaty(r):
+    """`citation` в JSON-LD — только прямой адрес текста акта (vsrf, ksrf, pravo.gov.ru). Поиск kad.arbitr.ru или реестр
+    решений без номера — не первоисточник-документ: не ставим, пока нет прямого адреса ([Ночные] 12:05, п. 5)."""
+    return [d["istochnik"] for d in r["dela"] if CITATA.match(d["istochnik"])]
+
+
+def pk(r):
+    d = r["dela"][0]
+    meta = "%s · %s · %s · %s" % (d["sud_kratko"], data_ch(d["data"]), d["nomer"], d["itog"].lower() if not d["itog"].startswith("В ") else "в" + d["itog"][1:])
+    if len(r["dela"]) > 1:
+        meta = "%s · %d дела · %s" % (d["sud_kratko"], len(r["dela"]), " и ".join(x["nomer"] for x in r["dela"]))
+    kon = " и ".join(x.get("na_konu_kratko") or x["na_konu"] for x in r["dela"])
+    return """<a class="pk" href="%s"><span class="pk__q">%s</span><span class="pk__m">%s</span><span class="pk__k">На кону — %s</span></a>""" % (
+        url_razbora(r), e(r["h1"]), e(meta), e(kon))
+
+
+def razbor(r, D, po_slug):
+    rz = D["razdely"][r["razdel"]]
+    url = url_razbora(r)
+    kr = [("Делоскоп", "/"), ("Практика", "/praktika/"), (rz["kratko"], "/praktika/%s/" % r["razdel"]), (r["h1"], url)]
+    ld = [{"@context": "https://schema.org", "@type": "Article", "headline": r["h1"][:110], "description": r["description"],
+           "datePublished": r["data"], "dateModified": r["data"], "inLanguage": "ru",
+           "author": {"@type": "Organization", "name": "Редакция Делоскопа", "url": SAJT},
+           "publisher": {"@type": "Organization", "name": "Делоскоп", "url": SAJT + "/", "logo": {"@type": "ImageObject", "url": SAJT + "/ikonka-512.png"}},
+           "mainEntityOfPage": SAJT + url, "articleSection": rz["kratko"],
+           "about": "; ".join("%s %s от %s %s" % (d["akt"], d["sud"], data_ch(d["data"]), d["nomer"]) for d in r["dela"])},
+          kroshki_ld(kr[:-1] + [(r["h1"], url)])]
+    cit = citaty(r)
+    if cit:
+        ld[0]["citation"] = cit
+    with open(put("tests", "praktika", r["slug"] + ".html"), encoding="utf-8") as fh:
+        telo = fh.read().strip()
+    k = r["knopka"]
+    zakon = "\n".join("<li>%s%s</li>" % (e(n), ' <span class="red">%s</span>' % e(red) if red else "") for n, red in r["zakon"])
+    sverka = max(d["sverka"] for d in r["dela"])
+    sos = "\n".join(pk(po_slug[s]) for s in r["pohozhie"])
+    kartochki = "\n".join(kartochka(d, i + 1, len(r["dela"])) for i, d in enumerate(r["dela"]))
+    stranica = golova(r["title"], r["description"], url, ld) + """<main class="pr" id="main">
+%(kr)s
+<p class="rubr">Разбор дела</p>
+<h1>%(h1)s</h1>
+<p class="meta">Редакция Делоскопа · <time datetime="%(data)s">%(data_ru)s</time> · %(min)d минут чтения</p>
+<p class="lid">%(lid)s</p>
+%(kart)s
+<article>
+%(telo)s
+</article>
+<section class="dl" aria-label="Что сделать в Делоскопе">
+<h2>%(kz)s</h2>
+<p>%(kt)s</p>
+<a class="btn" href="%(ku)s">%(kk)s</a>
+</section>
+<h2>Где в законе</h2>
+<ul class="zakon">
+%(zakon)s
+</ul>
+<p class="sver">Сверено по первоисточникам <time datetime="%(sv)s">%(sv_ru)s</time>. Материал носит информационный характер, исход спора не гарантирует и не заменяет консультацию юриста. Нашли неточность — <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>.</p>
+<h2>Похожие разборы</h2>
+<div class="sos">
+%(sos)s
+</div>
+</main>
+<script src="/obnovleniya.js" defer></script>
+<script src="/js/otzyv.js" defer></script>
+<!--podval--><!--/podval-->
+</body>
+</html>
+""" % {"kr": kroshki_html(kr), "h1": e(r["h1"]), "data": r["data"], "data_ru": data_ru(r["data"]), "min": r["minut"],
+       "lid": e(r["lid"]), "kart": kartochki, "telo": telo, "kz": e(k["zagolovok"]), "kt": e(k["tekst"]), "ku": e(k["url"]),
+       "kk": e(k["knopka"]), "zakon": zakon, "sv": sverka, "sv_ru": data_ru(sverka), "sos": sos}
+    return url, stranica
+
+
+def hab(D, razdel=None):
+    if razdel:
+        rz = D["razdely"][razdel]
+        url, h1, title, desc, lid = "/praktika/%s/" % razdel, rz["h1"], rz["title"], rz["description"], rz["lid"]
+        kr = [("Делоскоп", "/"), ("Практика", "/praktika/"), (rz["kratko"], url)]
+        spisok = [r for r in D["razbory"] if r["razdel"] == razdel]
+    else:
+        url, h1 = "/praktika/", "Как решают суды"
+        title = "Судебная практика для бизнеса: разборы дел — Делоскоп"
+        desc = "Разборы решений ВС, КС и арбитражных судов о блокировках счетов, комиссиях банков и налогах: номер дела, первоисточник, что делать и сколько на кону."
+        lid = "Одно дело — одна страница: что случилось, что решил суд, где грань и что сделать завтра утром. У каждого разбора — номер дела и ссылка на текст акта."
+        kr = [("Делоскоп", "/"), ("Практика", url)]
+        spisok = list(D["razbory"])
+    ld = [{"@context": "https://schema.org", "@type": "CollectionPage", "name": h1, "description": desc, "url": SAJT + url, "inLanguage": "ru",
+           "hasPart": [{"@type": "Article", "headline": r["h1"][:110], "url": SAJT + url_razbora(r)} for r in spisok]}, kroshki_ld(kr)]
+    razd = [("Все", "/praktika/")] + [(v["nazvanie"], "/praktika/%s/" % k) for k, v in D["razdely"].items()]
+    razd_html = "".join('<a href="%s"%s>%s</a>' % (u, ' aria-current="page"' if u == url else "", e(n)) for n, u in razd)
+    stranica = golova(title, desc, url, ld) + """<main class="pr" id="main">
+%(kr)s
+<p class="rubr">Практика</p>
+<h1>%(h1)s</h1>
+<p class="lid">%(lid)s</p>
+<nav class="razd" aria-label="Разделы практики">%(razd)s</nav>
+<h2>%(n)s</h2>
+<div class="sos">
+%(sp)s
+</div>
+<p class="sver">Каждый разбор сверен с текстом судебного акта на дату, указанную в карточке дела. Материалы носят информационный характер и не заменяют консультацию юриста. Нашли неточность — <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>.</p>
+</main>
+<script src="/obnovleniya.js" defer></script>
+<!--podval--><!--/podval-->
+</body>
+</html>
+""" % {"kr": kroshki_html(kr), "h1": e(h1), "lid": e(lid), "razd": razd_html, "sp": "\n".join(pk(r) for r in spisok),
+       "n": "Разборы: %d" % len(spisok)}
+    return url, stranica
+
+
+def ssylka_v_hab(txt, razdel, n):
+    """Карточка «Практика судов» в хабах /115-fz/ и /nalogi/ — между метками <!--praktika-->…<!--/praktika-->."""
+    slova = "разбор" if n % 10 == 1 and n % 100 != 11 else ("разбора" if 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14 else "разборов")
+    blok = ('<!--praktika--><a class="card" href="/praktika/%s/"><small>Практика судов</small><b>Как решают суды: %d %s дел с номером акта и первоисточником</b>'
+            '<span>Что случилось, что решил суд, что делать завтра утром</span></a><!--/praktika-->') % (razdel, n, slova)
+    if "<!--praktika-->" in txt:
+        return re.sub(r"<!--praktika-->.*?<!--/praktika-->", lambda m: blok, txt, flags=re.S)
+    return txt.replace('<div class="cards" style="margin-top:28px">', '<div class="cards" style="margin-top:28px">' + blok, 1)
+
+
+def ssylki_s_sajta(txt, f, spisok, D, po_slug):
+    """Входящие ссылки на разборы с живых страниц (SEO-обвязка [Маркетинга] 30.09, п. 5): блок между метками
+    <!--praktika-ssylki-->…<!--/praktika-ssylki-->. Статья — строка «Как это решают суды: …» перед </article>;
+    /pasport/ — строка под «Как устроен Паспорт»; /skoraya-115-fz/ — карточки в «Разобраться подробнее»."""
+    def cel(x):
+        if x.startswith("hab:"):
+            k = x[4:]
+            n = sum(1 for r in D["razbory"] if r["razdel"] == k)
+            return "/praktika/%s/" % k, "%s — %d %s" % (D["razdely"][k]["h1"], n, "разбора" if 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14 else "разборов")
+        r = po_slug[x]
+        return url_razbora(r), r["h1"]
+    celi = [cel(x) for x in spisok]
+    if f.startswith("skoraya-115-fz/"):
+        blok = "".join('<a class="card" href="%s"><small>Практика судов</small><b>%s</b><span>%s</span></a>' % (
+            u, e(t), "Разборы дел с номером акта и первоисточником" if u.count("/") == 3 else "Разбор дела с номером акта") for u, t in celi)
+        yakor, kak = '<h2>Разобраться подробнее</h2>\n  <div class="cards">', "posle"
+    elif f.startswith("pasport/"):
+        blok = "".join('<p class="hint">Почему важна дата проверки — <a href="%s">разбор двух дел: 137&nbsp;млн&nbsp;₽ отменили, 57&nbsp;млн&nbsp;— нет&nbsp;→</a></p>' % u for u, t in celi)
+        yakor, kak = '  <h2>Как проверить подлинность</h2>', "pered"
+    else:
+        blok = "".join('<p><strong>Как это решают суды:</strong> <a href="%s">%s&nbsp;→</a></p>' % (u, e(t)) for u, t in celi)
+        yakor, kak = "</article>", "pered"
+    blok = "<!--praktika-ssylki-->" + blok.replace("115-ФЗ", "115&#8209;ФЗ") + "<!--/praktika-ssylki-->"  # не рвётся на 390
+    if "<!--praktika-ssylki-->" in txt:
+        return re.sub(r"<!--praktika-ssylki-->.*?<!--/praktika-ssylki-->", lambda m: blok, txt, flags=re.S)
+    if txt.count(yakor) != 1:
+        raise SystemExit("sobrat_praktika: в %s нет единственного места для ссылок на разборы (%s)" % (f, yakor))
+    otstup = yakor[:len(yakor) - len(yakor.lstrip())]
+    return txt.replace(yakor, (yakor + blok) if kak == "posle" else (otstup + blok + "\n" + yakor), 1)
+
+
+def sitemap(txt, D):
+    txt = re.sub(r"\s*<url><loc>https://deloskop\.ru/praktika/[^<]*</loc>.*?</url>", "", txt)
+    daty = {}
+    for r in D["razbory"]:
+        daty[url_razbora(r)] = r["data"]
+        for u in ("/praktika/", "/praktika/%s/" % r["razdel"]):
+            daty[u] = max(daty.get(u, ""), r["data"])
+    stroki = "".join("\n  <url><loc>%s%s</loc><lastmod>%s</lastmod></url>" % (SAJT, u, d) for u, d in daty.items())
+    return txt.replace("\n</urlset>", stroki + "\n</urlset>", 1)
+
+
+def sobrat():
+    """Словарь {путь файла: новое содержимое} — всё, что должен дать сборщик."""
+    D = dannye()
+    po_slug = {r["slug"]: r for r in D["razbory"]}
+    r_ = SH.rekv_sajta()
+    podval, shapka = SH.podval_html(r_), SH.shapka_html()
+    out = {}
+    stranicy = [hab(D)] + [hab(D, k) for k in D["razdely"]] + [razbor(r, D, po_slug) for r in D["razbory"]]
+    for url, txt in stranicy:
+        out[url.strip("/") + "/index.html"] = SH.sobrat_stranicu(nerazryv(tipograf(txt)), r_, podval, shapka)
+    for razdel, f in (("115-fz", "115-fz/index.html"), ("nalogi", "nalogi/index.html")):
+        n = sum(1 for r in D["razbory"] if r["razdel"] == razdel)
+        with open(put(f), encoding="utf-8") as fh:
+            out[f] = ssylka_v_hab(fh.read(), razdel, n)
+    for f, spisok in D.get("ssylki_s_sajta", {}).items():
+        if f.startswith("_"):
+            continue
+        with open(put(f), encoding="utf-8") as fh:
+            out[f] = ssylki_s_sajta(fh.read(), f, spisok, D, po_slug)
+    with open(put("sitemap.xml"), encoding="utf-8") as fh:
+        out["sitemap.xml"] = sitemap(fh.read(), D)
+    return out
+
+
+def main():
+    check = "--check" in sys.argv
+    izm = []
+    for f, txt in sobrat().items():
+        p = put(f)
+        stary = open(p, encoding="utf-8").read() if os.path.exists(p) else None
+        if stary != txt:
+            izm.append(f)
+            if not check:
+                os.makedirs(os.path.dirname(p), exist_ok=True)
+                with open(p, "w", encoding="utf-8") as fh:
+                    fh.write(txt)
+    if check:
+        if izm:
+            print("Нужна сборка практики: " + ", ".join(izm))
+            sys.exit(1)
+        print("Практика собрана")
+    else:
+        print("Собрано: %d файлов" % len(izm) + ("" if not izm else " — " + ", ".join(izm)))
+
+
+if __name__ == "__main__":
+    main()

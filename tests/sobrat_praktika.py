@@ -172,7 +172,7 @@ def razbor(r, D, po_slug):
     with open(put("tests", "praktika", r["slug"] + ".html"), encoding="utf-8") as fh:
         telo = fh.read().strip()
     k = r["knopka"]
-    zakon = "\n".join("<li>%s%s</li>" % (e(n), ' <span class="red">%s</span>' % e(red) if red else "") for n, red in r["zakon"])
+    zakon = "\n".join(norma(z) for z in r["zakon"])
     sverka = max(d["sverka"] for d in r["dela"])
     sos = "\n".join(pk(po_slug[s]) for s in r["pohozhie"])
     kartochki = "\n".join(kartochka(d, i + 1, len(r["dela"])) for i, d in enumerate(r["dela"]))
@@ -210,6 +210,17 @@ def razbor(r, D, po_slug):
        "lid": e(r["lid"]), "kart": kartochki, "telo": telo, "kz": e(k["zagolovok"]), "kt": e(k["tekst"]), "ku": e(k["url"]),
        "kk": e(k["knopka"]), "zakon": zakon, "sv": sverka, "sv_ru": data_ru(sverka), "sos": sos}
     return url, stranica
+
+
+def norma(z):
+    """Строка «Где в законе»: [норма, редакция, первоисточник]. Первоисточник — адрес полного текста (норма — ссылкой)
+    или список пар [подпись, адрес], когда статьи из двух документов (ГК ч. 1 и ч. 2) — тогда каждая ссылка — своей меткой после нормы (на 390 px метки переносятся целиком)."""
+    n, red, ist = z
+    red_html = ' <span class="red">%s</span>' % e(red) if red else ""
+    if isinstance(ist, str):
+        return '<li><a href="%s" rel="noopener" target="_blank">%s</a>%s</li>' % (e(ist), e(n), red_html)
+    ssylki = "".join(' <span class="red"><a href="%s" rel="noopener" target="_blank">%s</a></span>' % (e(u), e(podp)) for podp, u in ist)
+    return '<li>%s%s%s</li>' % (e(n), red_html, ssylki)
 
 
 def hab(D, razdel=None):

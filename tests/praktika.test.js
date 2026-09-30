@@ -133,3 +133,28 @@ test('цель praktika_cta — клик по кнопке .dl разбора; �
   assert.ok(m.includes('"praktika_cta"') && m.includes('.pr .dl a[href]'));
   assert.ok(/addEventListener\("click", izRazbora, true\)/.test(m));
 });
+
+test('«Где в законе»: у каждой нормы — адрес полного текста (правовая база или сайт госоргана), на странице — ссылкой', () => {
+  const BAZY = /^https:\/\/(www\.)?(consultant\.ru\/document\/cons_doc_LAW_\d+\/|garant\.ru\/products\/ipo\/prime\/doc\/\d+\/|base\.garant\.ru\/\d+\/|cbr\.ru\/|nalog\.gov\.ru\/|publication\.pravo\.gov\.ru\/|vsrf\.ru\/|ksrf\.ru\/)/;
+  for (const r of D.razbory) {
+    const t = chitat(`praktika/${r.razdel}/${r.slug}/index.html`);
+    const ul = t.match(/<ul class="zakon">([\s\S]*?)<\/ul>/)[1];
+    for (const z of r.zakon) {
+      assert.strictEqual(z.length, 3, r.slug + ': [норма, редакция, первоисточник] — ' + z[0]);
+      const adresa = typeof z[2] === 'string' ? [z[2]] : z[2].map((p) => { assert.ok(p[0] && p[1], r.slug + ': пара [подпись, адрес]'); return p[1]; });
+      assert.ok(adresa.length >= 1, r.slug + ': нет адреса — ' + z[0]);
+      for (const a of adresa) {
+        assert.match(a, BAZY, r.slug + ': адрес ' + a);
+        assert.ok(ul.includes(`href="${a}" rel="noopener" target="_blank"`), r.slug + ': на странице нет ссылки ' + a);
+      }
+    }
+    assert.strictEqual((ul.match(/<li>/g) || []).length, r.zakon.length, r.slug + ': число норм');
+  }
+});
+
+test('письмо ФНС № БВ-4-7/3060@ и Обзор ВС от 13.12.2023 — на полный текст, а не на пересказ', () => {
+  for (const r of D.razbory) for (const z of r.zakon) {
+    if (/БВ-4-7\/3060@/.test(z[0])) assert.strictEqual(z[2], 'https://www.consultant.ru/document/cons_doc_LAW_352052/');
+    if (/13\.12\.2023/.test(z[0])) assert.strictEqual(z[2], 'https://www.consultant.ru/document/cons_doc_LAW_464347/');
+  }
+});

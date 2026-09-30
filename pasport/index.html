@@ -131,7 +131,7 @@ details p{margin:10px 0 0;color:var(--ink2);font-size:17px}
 .bank{margin-top:34px;background:#111113;color:#fff;border-radius:var(--r);padding:26px 26px 24px}
 .bank h2{margin:0 0 8px;font-size:24px;color:#fff}
 .bank p{color:#B8B8BD;margin:0 0 12px;font-size:16px}
-.bank .z{display:flex;gap:12px;align-items:center;background:rgba(255,255,255,.06);border-radius:14px;padding:12px 14px;margin:12px 0 14px;font-size:16px}
+.bank .z{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:rgba(255,255,255,.06);border-radius:14px;padding:12px 14px;margin:12px 0 14px;font-size:16px}
 .bank .z i{width:12px;height:12px;border-radius:50%;flex:none}
 .bank a{color:#8AB8FF}
 .bank .z a{margin-left:auto;font-size:14px;white-space:nowrap}
@@ -311,6 +311,7 @@ footer a{color:var(--muted)}
     <tr><th>Если есть замечания</th><td>Показываем их и подсказываем, что подготовить</td></tr>
   </table></div>
 
+  <!--praktika-ssylki--><p class="hint">Почему важна дата проверки — <a href="/praktika/nalogi/proverka-kontragenta-na-datu-sdelki/">разбор двух дел: 137&nbsp;млн&nbsp;₽ отменили, 57&nbsp;млн&nbsp;— нет&nbsp;→</a></p><!--/praktika-ssylki-->
   <h2>Как проверить подлинность</h2>
   <ol class="steps">
     <li><b>Наведите камеру на QR-код.</b> Откроется страница на deloskop.ru — не картинка, а сверка с&nbsp;реестрами.</li>
@@ -397,7 +398,7 @@ footer a{color:var(--muted)}
     [/дисквал/i,'Проверьте, актуальны ли сведения о руководителе, и при необходимости смените его в ЕГРЮЛ.'],
     [/суд|арбитраж|(^|[^р])иск/i,'Держите наготове одно предложение по каждому делу: предмет спора и чем закончилось.'],
     [/исполнит|пристав/i,'Приложите платёжку о погашении — производство закрывается не сразу.'],
-    [/ЗСК|зон/i,'Проверьте официальную зону на сайте Банка России через свой банк и подготовьте пояснения по крупным операциям.'],
+    [/ЗСК|зон/i,'Проверьте на сайте Банка России, нет ли компании в красной группе, жёлтую зону уточните в своём банке и подготовьте пояснения по крупным операциям.'],
     [/массов.*руковод|руковод.*массов|учредител.*массов/i,'Объясните связь компаний (холдинг, семейный бизнес) и приложите схему владения.']
   ];
   function prep(t){for(var i=0;i<PREP.length;i++)if(PREP[i][0].test(t))return PREP[i][1];return ''}
@@ -474,12 +475,13 @@ footer a{color:var(--muted)}
     if(g.serious.length)html+='<section class="grp"><h2>Серьёзные отметки <small>'+g.serious.length+'</small></h2><div class="list">'+g.serious.map(function(x){return item('bad','!',x,true)}).join('')+'</div></section>';
     if(g.ask.length)html+='<section class="grp"><h2>О чём могут спросить <small>'+g.ask.length+'</small></h2><div class="list">'+g.ask.map(function(x){return item('warn','?',x,true)}).join('')+'</div></section>';
     if(g.clean.length)html+='<section class="grp"><h2>Проверили — отметок не нашли <small>'+g.clean.length+'</small></h2><div class="chips">'+g.clean.map(function(x){return '<span>'+esc(x.title)+(x.detail?': '+esc(x.detail):'')+'</span>'}).join('')+'</div></section>';
+    if(g.ne&&g.ne.length)html+='<section class="grp"><h2>Не проверяли <small>'+g.ne.length+'</small></h2><div class="list">'+g.ne.map(function(x){return '<div class="item info"><i aria-hidden="true">○</i><div><b>'+esc(x.title)+'</b> <span class="d">— '+esc(x.detail)+'</span>'+(x.sam?'<small>Проверьте сами, бесплатно: <a href="'+esc(x.sam.url)+'" target="_blank" rel="noopener">'+esc(x.sam.tekst)+'</a></small>':'')+'</div></div>'}).join('')+'</div></section>';
     if(g.info.length)html+='<section class="grp"><h2>Справочно <small>'+g.info.length+'</small></h2><div class="list">'+g.info.map(function(x){return item('info','i',x)}).join('')+'</div></section>';
 
     var z=r.zsk, zc=z?(z.level==='high'?'#F97066':z.level==='medium'?'#FDB022':'#32D583'):'';
     html+='<section class="bank"><h2>Что увидит банк</h2>'+
       '<p>Эти же реестры банк смотрит первыми. Но решение по 115-ФЗ он принимает ещё и по вашему счёту: обороты, снятие наличных, транзит, назначения платежей. Этого в паспорте нет — и быть не должно.</p>'+
-      (z?'<div class="z"><i style="background:'+zc+'"></i><span>Прогноз ЗСК — '+esc(String(z.title||'').toLowerCase())+' попасть в жёлтую или красную зону <span style="color:#8E8E93">(оценка Делоскопа, не статус Банка России)</span></span><a href="'+esc(z.cbr_url||'https://cbr.ru/counteraction_m_ter/platform_zsk')+'" target="_blank" rel="noopener">Официально — в ЦБ →</a></div>':'')+
+      (z?'<div class="z"><i style="background:'+zc+'"></i><span>Прогноз ЗСК — '+esc(String(z.title||'').toLowerCase())+' попасть в жёлтую или красную зону <span style="color:#8E8E93">(оценка Делоскопа, не статус Банка России)</span></span><a href="'+esc(z.cbr_url||'https://cbr.ru/counteraction_m_ter/platform_zsk/proverka-po-inn/')+'" target="_blank" rel="noopener">Красная группа в ЦБ →</a></div>':'')+
       '<p style="margin:0"><a href="/115-fz/snyatie-nalichnyh-s-raschetnogo-scheta/">Как банк смотрит на снятие наличных →</a></p></section>';
 
     var srcs={};(r.signals||[]).forEach(function(x){if(x.source&&!Object.keys(srcs).some(function(k){return k.indexOf(x.source)===0||x.source.indexOf(k)===0}))srcs[x.source]=1});if(!Object.keys(srcs).some(function(k){return /ЕГР/.test(k)}))srcs['ЕГРЮЛ/ЕГРИП']=1;

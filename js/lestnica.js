@@ -12,6 +12,8 @@
  *  • признаки поднимают ступень: 1–2 признака — на одну, 3 и больше — на две; выше 4 не бывает;
  *  • сумма больше 100 000 ₽ — красная строка «только безналично» (п. 6 Указания Банка России № 3073-У);
  *  • ни «гарантий», ни «суд примет»: это ориентир объёма проверки, а не обещание исхода.
+ *  • k — ключ для «Папки к договору» (js/papka.js): v_pasporte — пункт исполняется в самом Паспорте, отдельного приложения нет;
+ *    egrul_ep — выписка ЕГРЮЛ с ЭП: если она уже отмечена в самопроверке, опись берёт её номер и дату.
  */
 (function (root, factory) {
   var api = factory();
@@ -35,11 +37,11 @@
       sdelat: [
         { t: 'Статус в ЕГРЮЛ: компания действует, нет отметок о недостоверности, ликвидации и реорганизации', gde: [['egrul.nalog.ru', 'https://egrul.nalog.ru/']] },
         { t: 'Расчётный счёт в счёте на оплату совпадает с карточкой компании', gde: [['Проверь счёт', '/proverit-schet/']] },
-        { t: 'Отметка о самопроверке в Паспорте: дата, время и адрес страницы с результатом', gde: [] }
+        { t: 'Отметка о самопроверке в Паспорте: дата, время и адрес страницы с результатом', gde: [], k: 'v_pasporte' }
       ] },
     { n: 2, nazvanie: 'Заметная сделка', kogda: 'от 100 000 ₽ до 1 млн ₽ или 1–5 % закупок за год',
       sdelat: [
-        { t: 'Выписка ЕГРЮЛ в PDF с электронной подписью ФНС — на дату сделки', gde: [['egrul.nalog.ru', 'https://egrul.nalog.ru/']] },
+        { t: 'Выписка ЕГРЮЛ в PDF с электронной подписью ФНС — на дату сделки', gde: [['egrul.nalog.ru', 'https://egrul.nalog.ru/']], k: 'egrul_ep' },
         { t: 'Бухгалтерская отчётность за последний год: выручка, активы, есть ли движение', gde: [['bo.nalog.gov.ru', 'https://bo.nalog.gov.ru/']] },
         { t: 'Нет решений ФНС о приостановлении операций по счетам', gde: [['service.nalog.ru/bi.do', 'https://service.nalog.ru/bi.do']] },
         { t: 'Долги у приставов и арбитражные дела', gde: [['fssp.gov.ru', 'https://fssp.gov.ru/iss/ip'], ['kad.arbitr.ru', 'https://kad.arbitr.ru/']] },
@@ -57,7 +59,7 @@
         { t: 'Осмотр склада, производства или имущества — акт с датой, адресом и фотографиями', gde: [] },
         { t: 'Документы на имущество, которым будут исполнять договор: собственность или аренда', gde: [] },
         { t: 'Кто стоит за компанией: учредители, связанные компании, бенефициары', gde: [] },
-        { t: '«Решение о сделке» с подписью руководителя', gde: [] }
+        { t: '«Решение о сделке» с подписью руководителя', gde: [], k: 'v_pasporte' }
       ] }
   ];
 
@@ -102,7 +104,7 @@
       PRIZNAKI.filter(function (p) { return pr.indexOf(p[0]) >= 0; }).map(function (p) { return p[1].toLowerCase(); }).join(', ');
     pochemu += '.';
     var spisok = [];
-    for (var s = 1; s <= n; s++) STUPENI[s].sdelat.forEach(function (x) { spisok.push({ stupen: s, t: x.t, gde: x.gde.map(function (g) { return { t: g[0], u: g[1] }; }) }); });
+    for (var s = 1; s <= n; s++) STUPENI[s].sdelat.forEach(function (x) { spisok.push({ stupen: s, t: x.t, k: x.k || '', gde: x.gde.map(function (g) { return { t: g[0], u: g[1] }; }) }); });
     return { n: n, iz: 4, nazvanie: STUPENI[n].nazvanie, kogda: STUPENI[n].kogda, baza: baza, poSumme: poSumme, summa: summa, zakupki: zakupki,
       priznaki: pr, pochemu: pochemu, spisok: spisok, nalichnye: summa > LIMIT_NALICHNYH ? NALICHNYE : null, osnovanie: OSNOVANIE, ogovorka: OGOVORKA };
   }

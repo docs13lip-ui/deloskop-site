@@ -17,7 +17,7 @@
 })(typeof self !== 'undefined' ? self : this, function (root) {
   'use strict';
 
-  var VERSIYA = 'Паспорт v2.6';
+  var VERSIYA = 'Паспорт v2.7';
   // Определение Индекса и подпись предела аванса — дословно [Юриста 115-ФЗ] 29.09 (222-ФЗ), разд. 3 пп. 1 и 4.
   var OPREDELENIE_INDEKSA = 'Индекс Делоскопа — оценка признаков риска для сделки по открытым и лицензированным данным: регистрационных, налоговых, признаков по 115-ФЗ и нарушений. Это не кредитный рейтинг и не мнение о способности компании исполнять финансовые обязательства.';
   var PODPIS_PREDELA = 'Сколько разумно платить вперёд с учётом найденных признаков — расчёт Делоскопа по открытой формуле. Это не оценка способности компании вернуть деньги.';
@@ -289,6 +289,14 @@
       if (kk && kk.kak) fakt('predel', 'Как посчитали', kk.kak.replace(/^Как посчитали:\s*/, ''), { ton: 'info', istochnik: 'формула Делоскопа' });
       if (kk && kk.ne) fakt('predel', 'Оговорка', kk.ne, { ton: 'warn', istochnik: 'формула Делоскопа' });
       if (kk && kk.url) map.predel.ssylka = kk.url;
+      // Лестница по сумме (Ночные 30.09 21:05): ступень — из суммы и возраста компании по ЕГРЮЛ; закупки клиента и прочие признаки —
+      // в «Решении о сделке» (там же, в браузере, вне отпечатка). Здесь — только то, что следует из сведений и суммы.
+      var L = opts.lestnica || (root && root.Lestnica) || null;
+      if (L && u.amount) {
+        var ls = L.stupen({ summa: u.amount, priznaki: u.facts && u.facts.ageMonths != null && u.facts.ageMonths < 12 ? ['molodaya'] : [] });
+        fakt('zaprosit', 'Объём проверки', 'ступень ' + ls.n + ' из 4 — ' + ls.nazvanie.toLowerCase() + '. ' + ls.pochemu + ' ' + L.OGOVORKA, { ton: 'info', istochnik: 'ориентир Делоскопа по п. 16 письма ФНС № БВ-4-7/3060@' });
+        if (ls.nalichnye) fakt('zaprosit', 'Оплата', ls.nalichnye, { ton: 'warn', istochnik: 'Указание Банка России № 3073-У, п. 6' });
+      }
       (u.docs || []).forEach(function (d, i) { fakt('zaprosit', (i + 1) + '. ' + d.title, d.why || '', { ton: 'info', istochnik: 'письмо ФНС № БВ-4-7/3060@' }); });
       var st = u.stake;
       if (st && u.amount) {

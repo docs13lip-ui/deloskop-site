@@ -116,7 +116,21 @@ td b{font-weight:600}
 .pd li .m{flex:none;margin-top:6px}
 .pd li.warn{color:var(--warn)}.pd li.bad{color:var(--bad)}.pd li.off{color:var(--ink2)}
 .pd a{color:var(--accent)}
-@media (max-width:600px){.rs{padding:16px 14px}.rs-g{grid-template-columns:1fr}}
+.ls{margin-top:14px}
+.ls-sh{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:0 0 10px}
+.ls-sh i{height:6px;border-radius:3px;background:var(--line)}.ls-sh i.on{background:var(--accent)}
+.ls-t{font-size:17px;font-weight:600;letter-spacing:-.01em}
+.ls-t small{font-size:13px;font-weight:400;color:var(--muted);margin-left:6px}
+.ls-p{margin:4px 0 0;font-size:14px;color:var(--ink2);line-height:1.5}
+.ls-kr{margin:10px 0 0;padding:9px 12px;border-radius:10px;font-size:14px;line-height:1.45;color:var(--bad);background:var(--bad-bg)}
+.ls-l{margin:12px 0 0;padding:0 0 0 22px;font-size:14px;line-height:1.5}
+.ls-l li{padding:5px 0;border-top:1px solid var(--line)}
+.ls-l li:first-child{border-top:0}
+.ls-s{display:inline-block;margin-right:6px;font-size:11.5px;color:var(--muted);white-space:nowrap}
+.ls-l a{color:var(--accent)}
+.ls-l .pril{display:none}
+.rs-c label{font-size:14.5px}
+@media (max-width:600px){.rs{padding:16px 14px}.rs-g{grid-template-columns:1fr}.rs-c{flex-direction:column;gap:10px}}
 .podpis{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:40px;font-size:12.5px;color:var(--muted)}
 .podpis div{border-top:1px solid var(--rule);padding-top:6px}
 .foot{margin-top:28px;font-size:12px;color:var(--muted);line-height:1.55}
@@ -133,6 +147,7 @@ td b{font-weight:600}
   .otm-l{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .rs input::placeholder{color:transparent}
   .pechat{display:inline!important}.podpis.pechat{display:grid!important}
+  .ls-l .pril{display:inline!important;margin-left:8px;color:var(--ink2);white-space:nowrap}.ls-pr{display:none}.ls-l a[href^="http"]::after{content:" (" attr(href) ")";font-size:10.5px;color:var(--muted)}
   .rs{border:0;padding:0;border-top:1px solid var(--rule);border-radius:0;padding-top:14px}
   a{color:var(--ink)}
 }
@@ -225,6 +240,7 @@ td b{font-weight:600}
 <p class="msg" id="msg">Собираем Паспорт…</p>
 <article class="pk" id="pk" hidden></article>
 <script src="/js/usloviya.js"></script>
+<script src="/js/lestnica.js"></script>
 <script src="/js/indeks-vorota.js"></script>
 <script src="/pasport/engine.js"></script>
 <script src="/pasport/qr.js"></script>
@@ -352,7 +368,7 @@ td b{font-weight:600}
   var RS={};
   var RS_RESH=[['platit','Платить'],['po_faktu','Платить после поставки или акта'],['ne_platit','Не платить']];
   function segodnya(){var d=new Date();function z(n){return (n<10?'0':'')+n}return z(d.getDate())+'.'+z(d.getMonth()+1)+'.'+d.getFullYear();}
-  function rsZapomnit(){var f=document.getElementById('rs');if(!f)return;['dok','summa','dokumenty','dolzhnost','data','pdolzh','pdata'].forEach(function(k){RS[k]=f[k].value});var c=f.querySelector('input[name=resh]:checked');RS.resh=c?c.value:'';var o=f.querySelector('input[name=posn]:checked');RS.posn=o?o.value:'';}
+  function rsZapomnit(){var f=document.getElementById('rs');if(!f)return;['dok','summa','zakupki','dokumenty','dolzhnost','data','pdolzh','pdata'].forEach(function(k){if(f[k])RS[k]=f[k].value});if(f.querySelector('input[name=pr]'))RS.pr=[].map.call(f.querySelectorAll('input[name=pr]:checked'),function(x){return x.value});var c=f.querySelector('input[name=resh]:checked');RS.resh=c?c.value:'';var o=f.querySelector('input[name=posn]:checked');RS.posn=o?o.value:'';}
   // «Подписант на дату подписи» (Ночные 29.09 23:05): должность, основание и дата — от заказчика; сверка — P.podpisant, без сети.
   var RS_OSN=[['ustav','Руководитель, без доверенности'],['bumaga','Бумажная доверенность'],['mchd','Электронная доверенность (МЧД)']];
   function podpisantHtml(r,p){
@@ -363,6 +379,29 @@ td b{font-weight:600}
     var f=document.getElementById('rs'),ul=document.getElementById('pd');if(!f||!ul)return;
     f.addEventListener('input',function(e){if(!/^(pdolzh|pdata|posn)$/.test(e.target.name||''))return;rsZapomnit();ul.innerHTML=podpisantHtml(r,p);});
     f.addEventListener('change',function(e){if((e.target.name||'')!=='posn')return;rsZapomnit();ul.innerHTML=podpisantHtml(r,p);});
+  }
+  // «Лестница по сумме» (Ночные 30.09 21:05, п. 173): объём проверки по сумме, доле в закупках и признакам — js/lestnica.js, без сети.
+  // «Компании меньше 12 месяцев» отмечаем сами по ЕГРЮЛ, пока заказчик не тронул галочки.
+  var L=window.Lestnica||null;
+  function molodaya(r){var f=U&&U.facts?U.facts(r):null;return !!(f&&f.ageMonths!=null&&f.ageMonths<12);}
+  function lsPriznaki(r){return RS.pr?RS.pr:(molodaya(r)?['molodaya']:[]);}
+  function lestnicaHtml(summa,r){
+    if(!L)return '';
+    var v=L.stupen({summa:RS.summa!=null&&RS.summa!==''?RS.summa:summa,zakupki:RS.zakupki,priznaki:lsPriznaki(r)});
+    if(!v.n)return '<p class="ls-p">'+esc(v.pochemu)+'</p>';
+    return '<div class="ls-sh" aria-hidden="true">'+[1,2,3,4].map(function(k){return '<i'+(k<=v.n?' class="on"':'')+'></i>'}).join('')+'</div>'+
+      '<div class="ls-t">Ступень '+v.n+' из 4 — '+esc(v.nazvanie.toLowerCase())+'<small>'+esc(v.kogda)+'</small></div>'+
+      '<p class="ls-p">'+nbsp(v.pochemu)+'</p>'+
+      (v.nalichnye?'<p class="ls-kr">'+nbsp(v.nalichnye)+'</p>':'')+
+      '<ol class="ls-l">'+v.spisok.map(function(x){return '<li><span class="ls-s">ступень '+x.stupen+'</span>'+esc(x.t)+
+        (x.gde.length?' · '+x.gde.map(function(g){return '<a href="'+esc(g.u)+'"'+(/^https:/.test(g.u)?' target="_blank" rel="noopener nofollow"':'')+'>'+esc(g.t)+'</a>'}).join(', '):'')+
+        '<span class="pril">прил. № ____</span></li>'}).join('')+'</ol>'+
+      '<div class="stroka">'+esc(v.osnovanie)+' '+esc(v.ogovorka)+'</div>';
+  }
+  function lestnicaSvyazat(summa,r){
+    var f=document.getElementById('rs'),box=document.getElementById('ls');if(!f||!box)return;
+    function obnovit(e){if(!/^(summa|zakupki|pr)$/.test(e.target.name||''))return;rsZapomnit();box.innerHTML=lestnicaHtml(summa,r);}
+    f.addEventListener('input',obnovit);f.addEventListener('change',obnovit);
   }
   function reshenieHtml(sovet,summa,r,p){
     function pole(k,podpis,ph,cls,def){var v=RS[k]!=null&&RS[k]!==''?RS[k]:(def||'');return '<label'+(cls?' class="'+cls+'"':'')+'>'+podpis+'<input type="text" name="'+k+'" autocomplete="off" placeholder="'+esc(ph)+'" value="'+esc(v)+'"></label>';}
@@ -376,6 +415,10 @@ td b{font-weight:600}
         pole('dolzhnost','Решение принял (должность)','Финансовый директор')+
         pole('data','Дата решения','',null,segodnya())+
       '</div>'+
+      (L?'<h3 class="rs-h3">Объём проверки по сумме</h3>'+
+      '<div class="rs-g ls-pr">'+pole('zakupki','Ваши закупки за год, ₽ — если знаете','12 000 000')+'</div>'+
+      '<fieldset class="ls-pr" style="margin-top:12px"><legend>Что поднимает ступень</legend><div class="rs-r rs-c">'+L.PRIZNAKI.map(function(x){var on=lsPriznaki(r).indexOf(x[0])>=0;return '<label><input type="checkbox" name="pr" value="'+x[0]+'"'+(on?' checked':'')+'>'+esc(x[1])+(x[0]==='molodaya'&&molodaya(r)?' <span class="ls-s">по ЕГРЮЛ</span>':'')+'</label>'}).join('')+'</div></fieldset>'+
+      '<div class="ls" id="ls" aria-live="polite">'+lestnicaHtml(summa,r)+'</div>':'')+
       '<h3 class="rs-h3">Подписант контрагента на дату подписи</h3>'+
       '<div class="rs-g">'+
         pole('pdolzh','Подписал со стороны контрагента (должность)','Генеральный директор')+
@@ -429,6 +472,7 @@ td b{font-weight:600}
         function ok(){b.textContent='ИНН скопирован — вставьте в поиск';}
         try{navigator.clipboard.writeText(v).then(ok,function(){window.prompt('ИНН компании',v)});}catch(_){window.prompt('ИНН компании',v);}};
       podpisantSvyazat(r,p);
+      lestnicaSvyazat(it.na_konu&&it.na_konu.summa,r);
       var f=document.getElementById('summa');
       if(f)f.onsubmit=function(e){e.preventDefault();var v=U.parseAmount(f.summa.value);rsZapomnit();RS.summa='';render(r,{usloviya:U,indeksVorota:window.IndeksVorota,nomer:opts.nomer,dostup:opts.dostup,summa:v||null,rezhim:f.rezhim.value});};
       var pdf=document.getElementById('pdf'), share=document.getElementById('share');

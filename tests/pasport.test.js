@@ -84,7 +84,9 @@ t('Раскладка признаков для партнёра', () => {
   assert.strictEqual(g.real[0].title, 'Работает');
   assert.ok(g.real.some(x => /численность/.test(x.title)));
   assert.ok(g.real.some(x => /налоги/i.test(x.title)));
-  assert.ok(g.clean.some(x => /Дисквалифицированные/.test(x.title)));
+  // Ф8 (30.09): «дисквалифицированных нет» без реестра ФНС и даты — не «проверили», а «не проверяли»
+  assert.ok(!g.clean.some(x => /Дисквалифицированные/.test(x.title)));
+  assert.ok(g.ne.some(x => /Дисквалифицированные/.test(x.title) && x.sam && /disqualified\.do/.test(x.sam.url)));
   assert.strictEqual(g.ask.length, 1);
   assert.strictEqual(g.serious.length, 0);
   assert.strictEqual(g.info.length, 1);

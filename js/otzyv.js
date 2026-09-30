@@ -94,7 +94,7 @@
     var id = novyjId();
     var pervyj = otpravit(telo(location.pathname, ocenka, "", beta, id));
     var vopros = ocenka === "polezno" ? "Что было самым полезным? Чего не хватило?" : "Что было непонятно?";
-    d.querySelector(".otz__in").innerHTML = '<p class="otz__q">Спасибо!<span>' + vopros + " — одной строкой, если хотите.</span></p>" +
+    d.querySelector(".otz__in").innerHTML = '<p class="otz__q">Спасибо!<span>' + vopros + " Одной строкой, если хотите.</span></p>" +
       '<div class="otz__f"><label class="vh" for="otz-t">' + vopros + '</label><textarea id="otz-t" maxlength="' + MAX + '" placeholder="Необязательно"></textarea>' +
       '<p class="otz__m">Без имён, телефонов и почты — ответ анонимный.</p>' +
       '<div class="otz__r"><button type="button" class="otz__b" data-go>Отправить</button><button type="button" class="otz__b otz__b--tiho" data-net>Не сейчас</button></div></div>';

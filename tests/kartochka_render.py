@@ -94,11 +94,13 @@ def data_korotko(d):
 
 
 def dengi(v):
-    """48 300 000 → «48,3 млн ₽»; 412 000 → «412 тыс. ₽»; с неразрывными пробелами."""
+    """48 300 000 → «48,3 млн ₽»; 412 000 → «412 тыс. ₽»; 5 846 млрд → «5,8 трлн ₽»; с неразрывными пробелами."""
     v = float(v)
     znak = "−" if v < 0 else ""
     a = abs(v)
-    if a >= 1e9:
+    if a >= 1e12:
+        t, ed = a / 1e12, "трлн"
+    elif a >= 1e9:
         t, ed = a / 1e9, "млрд"
     elif a >= 1e6:
         t, ed = a / 1e6, "млн"
@@ -239,6 +241,36 @@ ISTOCHNIK_PO_KODU = {
 }
 
 
+GIRBO_KPI = re.compile(r"^Выручка", re.I)
+# имя набора в dossier.data_dates → код факта карточки
+DATY_NABOROV = [
+    ("egrul", re.compile(r"ЕГРЮЛ", re.I)),
+    ("nedoimka", re.compile(r"задолженн", re.I)),
+    ("dohod", re.compile(r"доходы и расходы", re.I)),
+    ("rezultat", re.compile(r"доходы и расходы", re.I)),
+    ("shtat", re.compile(r"численност", re.I)),
+    ("shtrafy", re.compile(r"штраф", re.I)),
+    ("fssp", re.compile(r"ФССП|пристав", re.I)),
+]
+
+
+def daty_naborov(s):
+    """'ЕГРЮЛ/ЕГРИП — на 21.09.2026; задолженность — на 01.09.2026' → {'egrul': date, 'nedoimka': date}.
+    Неразобранное и битые даты пропускаем: нет даты — факт остаётся «не проверяли»."""
+    out = {}
+    for kusok in str(s or "").split(";"):
+        m = re.search(r"^\s*(.+?)\s+—\s+на\s+(\d{2}\.\d{2}\.\d{4})\s*$", kusok)
+        if not m:
+            continue
+        d = data_iz(m.group(2))
+        if not d:
+            continue
+        for kod, rx in DATY_NABOROV:
+            if rx.search(m.group(1)) and kod not in out:
+                out[kod] = d
+    return out
+
+
 def _god(s):
     m = re.search(r"\b(20\d\d)\b", str(s or ""))
     return int(m.group(1)) if m else None
@@ -250,6 +282,16 @@ def _pervoe_chislo(s):
         return None
     v = float(re.sub(r"[\s ]", "", m.group(1)).replace(",", "."))
     return v * {"млрд": 1e9, "млн": 1e6, "тыс": 1e3}.get(m.group(2) or "", 1)
+
+
+def _rukovodit_s(D):
+    """Досье, раздел «Руководство»: строка «Руководит с» → «12.04.2007 (19 лет 5 месяцев)» → дата."""
+    for sec in D.get("sections") or []:
+        for row in sec.get("rows") or []:
+            if isinstance(row, (list, tuple)) and len(row) >= 2 and re.match(r"^\s*Руководит с", str(row[0])):
+                m = re.search(r"\d{2}\.\d{2}\.\d{4}", str(row[1]))
+                return data_iz(m.group(0)) if m else None
+    return None
 
 
 def iz_check(r):
@@ -278,34 +320,59 @@ def iz_check(r):
     # сигналы: источник и дата — от сервера
     for s in r.get("signals") or []:
         t = str(s.get("title") or "")
+        # kartochki-v2: живой API шлёт сигнал «Адрес» с деталью «Отметок о недостоверности нет» — признак в детали,
+        # не в заголовке; без этого V16 не выходил ни у одной компании. По детали ищем только недостоверность.
+        po_detali = not any(rx.search(t) for _, rx in SIGNALY) and SIGNALY[4][1].search(str(s.get("detail") or ""))
+        if po_detali:
+            t = "Отметки о недостоверности"
         for kod, rx in SIGNALY:
             if rx.search(t):
-                if kod in k["fakty"]:
+                # недостоверность: отметка хоть по одному сигналу (адрес, руководитель, учредитель) главнее «нет отметок»
+                if kod in k["fakty"] and not (kod == "nedostovernost" and s.get("status") in ("warn", "bad")
+                                              and k["fakty"][kod].get("ton") not in ("warn", "bad")):
                     break
                 k["fakty"][kod] = {
                     "kod": kod, "zagolovok": t, "detal": str(s.get("detail") or ""), "ton": s.get("status") or "info",
                     "istochnik": s.get("source") or ISTOCHNIK_PO_KODU.get(kod, ""), "data": data_iz(s.get("as_of")),
                     "znachenie": _pervoe_chislo(s.get("detail")), "god": _god(s.get("detail")),
                 }
+                # сведения ЕГРЮЛ без as_of — получены в день проверки (как egrul_data, daty-v1)
+                if po_detali and not k["fakty"][kod]["data"] and re.match(r"ЕГРЮЛ", k["fakty"][kod]["istochnik"]):
+                    k["fakty"][kod]["data"] = k["egrul_data"]
                 break
     # числа из досье (kpi) — дополняют сигналы; дата — у одноимённого сигнала или общая дата наборов ФНС
     D = r.get("dossier") or {}
     fns_data = data_iz(r.get("fns_data")) or data_iz(((r.get("daty") or {}).get("dannye") or {}).get("ФНС")
                                                      if isinstance((r.get("daty") or {}).get("dannye"), dict) else None)
+    # daty-v1: даты наборов из досье («ЕГРЮЛ/ЕГРИП — на 21.09.2026; задолженность — на 01.09.2026; …») — сервер их
+    # уже отдаёт строкой; без них факт ФНС оставался «без даты» и не шёл в выводы (пилот 02.10: 9 из 17 — «выводов 2 из 3»).
+    # «ЕГРЮЛ/ЕГРИП — на …» в досье — state.actuality_date DaData, то есть дата последних изменений записи, а не дата
+    # сведений: для ЕГРЮЛ остаётся дата проверки (сведения получены в этот день).
+    dd = daty_naborov(D.get("data_dates"))
     for x in D.get("kpi") or []:
         lab = str(x.get("label") or "")
         for kod, rx in KPI:
             if rx.search(lab):
                 v = chislo(x.get("value"))
+                girbo = kod == "dohod" and GIRBO_KPI.search(lab)
+                god = _god(lab) or _god(x.get("text"))
+                # «Выручка за 2025» — строка 2110 бухотчётности из ГИР БО, не набор «доходы и расходы»:
+                # источник — ГИР БО, дата сведений — конец отчётного года (как state_date у наборов ФНС).
+                ist = "ГИР БО, бухгалтерская отчётность" if girbo else ISTOCHNIK_PO_KODU.get(kod, "")
+                data0 = (dt.date(god, 12, 31) if girbo and god else None) or fns_data or dd.get(kod)
                 f = k["fakty"].get(kod) or {"kod": kod, "zagolovok": lab, "detal": x.get("text") or "", "ton": "info",
-                                             "istochnik": ISTOCHNIK_PO_KODU.get(kod, ""), "data": fns_data,
-                                             "znachenie": None, "god": _god(lab) or _god(x.get("text"))}
+                                             "istochnik": ist, "data": data0,
+                                             "znachenie": None, "god": god}
                 if v is not None:
                     f["znachenie"] = v
                 if x.get("delta") is not None:
                     f["delta"] = chislo(x.get("delta"))
                 k["fakty"][kod] = f
                 break
+    # сигнал без as_of (например, «Численность» у старых ответов) — дата того же набора из досье
+    for kod, f in k["fakty"].items():
+        if not f.get("data") and dd.get(kod) and not GIRBO_KPI.search(str(f.get("zagolovok") or "")):
+            f["data"] = dd[kod]
     # финансы по годам: досье (бухотчётность) или явное поле выгрузки
     ch = D.get("charts") or {}
     for p in (r.get("finansy") or ch.get("revenue") or []):
@@ -314,6 +381,23 @@ def iz_check(r):
             k["finansy"].append({"god": int(g), "dohod": v})
     k["finansy"].sort(key=lambda x: x["god"])
     k["finansy_istochnik"] = r.get("finansy_istochnik") or ("ГИР БО, бухгалтерская отчётность" if ch.get("revenue") else "")
+    # kartochki-v2: в kpi нет «Выручка за …», а ряд по годам из ГИР БО в досье есть (charts.revenue) — тот же факт,
+    # строка 2110 последнего года; дата сведений — 31.12 этого года, изменение — к предыдущему году ряда.
+    d0 = k["fakty"].get("dohod") or {}
+    if not (d0.get("data") and (d0.get("znachenie") or 0) > 0) and k["finansy"] and k["finansy_istochnik"].startswith("ГИР БО"):
+        p1 = k["finansy"][-1]
+        if p1["dohod"] > 0:
+            f = {"kod": "dohod", "zagolovok": "Выручка за %d" % p1["god"], "detal": "", "ton": "info",
+                 "istochnik": "ГИР БО, бухгалтерская отчётность", "data": dt.date(p1["god"], 12, 31),
+                 "znachenie": p1["dohod"], "god": p1["god"]}
+            p0 = k["finansy"][-2] if len(k["finansy"]) > 1 else None
+            if p0 and p0["god"] == p1["god"] - 1 and p0["dohod"] > 0:
+                f["delta"] = (p1["dohod"] / p0["dohod"] - 1) * 100
+            k["fakty"]["dohod"] = f
+    # kartochki-v2: с какой даты руководитель тот же (ЕГРЮЛ) — только дата, без ФИО (люди — при PERSONS_PUBLIC)
+    k["rukovodit_s"] = data_iz(c.get("director_date")) or _rukovodit_s(D)
+    if k["rukovodit_s"] and ((k["reg_date"] and k["rukovodit_s"] < k["reg_date"]) or (proverka and k["rukovodit_s"] > proverka)):
+        k["rukovodit_s"] = None
     k["finansy_data"] = data_iz(r.get("finansy_data")) or data_iz(r.get("girbo_data"))
     # полнота и Индекс — как в js/indeks-vorota.js
     ind = r.get("indeks")
@@ -371,12 +455,13 @@ def vyvody(k):
         g = d.get("god") or (k["finansy"][-1]["god"] if k["finansy"] else None)
         za = (" за%s%d" % (NB, g)) if g else " за год"
         dl = d.get("delta")
+        sl = "Выручка" if str(d.get("istochnik") or "").startswith("ГИР БО") else "Доход"
         if dl is not None and dl >= 10:
-            out.append(_v("V03", "ok", "Доход%s — %s, на%s%d%s%% больше, чем годом раньше" % (za, dengi(d["znachenie"]), NB, round(dl), NB), d["istochnik"], d["data"]))
+            out.append(_v("V03", "ok", "%s%s — %s, на%s%d%s%% больше, чем годом раньше" % (sl, za, dengi(d["znachenie"]), NB, round(dl), NB), d["istochnik"], d["data"]))
         elif dl is not None and dl <= -30:
-            out.append(_v("V04", "warn", "Доход%s — %s, на%s%d%s%% меньше, чем годом раньше" % (za, dengi(d["znachenie"]), NB, round(-dl), NB), d["istochnik"], d["data"]))
+            out.append(_v("V04", "warn", "%s%s — %s, на%s%d%s%% меньше, чем годом раньше" % (sl, za, dengi(d["znachenie"]), NB, round(-dl), NB), d["istochnik"], d["data"]))
         elif d["znachenie"] > 0:
-            out.append(_v("V03a", "info", "Доход%s — %s" % (za, dengi(d["znachenie"])), d["istochnik"], d["data"]))
+            out.append(_v("V03a", "info", "%s%s — %s" % (sl, za, dengi(d["znachenie"])), d["istochnik"], d["data"]))
     s = F.get("shtat")
     if s and s.get("znachenie") is not None and s.get("data"):
         n = int(s["znachenie"])
@@ -413,6 +498,15 @@ def vyvody(k):
     sn = F.get("snr")
     if sn and sn.get("data") and re.search(r"УСН|упрощ", sn.get("detal", "") + sn.get("zagolovok", ""), re.I):
         out.append(_v("V13", "info", "Применяет упрощённую систему налогообложения", sn["istochnik"], sn["data"], s_chislom=False))
+    # V18 / V19 — после V16: при пределе «2 из одного источника» отметка о недостоверности главнее стажа руководителя
+    # V18 / V19 (каталог Данных 26.09): смена руководителя ≤ 6 мес. — 🟡; один руководитель ≥ 3 лет — 🟢. ЕГРЮЛ, без ФИО.
+    rs = vozrast_mes({"reg_date": k.get("rukovodit_s")}, na) if k.get("rukovodit_s") and k.get("egrul_data") else None
+    if rs is not None and mes is not None and mes >= 12:
+        if rs <= 6:
+            out.append(_v("V18", "warn", "Руководитель сменился %s" % ("в этом месяце" if rs < 1 else "%d%s%s назад" % (rs, NB, plural(rs, "месяц", "месяца", "месяцев"))), "ЕГРЮЛ", k["egrul_data"]))
+        elif rs >= 36:
+            let = rs // 12
+            out.append(_v("V19", "ok", "Руководитель тот же %d%s%s — с%s%d года" % (let, NB, plural(let, "год", "года", "лет"), NB, k["rukovodit_s"].year), "ЕГРЮЛ", k["egrul_data"]))
     # порядок: 🟡 → 🟢 → ⚪; не больше 2 из одного источника; не больше 6
     por = {"warn": 0, "ok": 1, "info": 2}
     out.sort(key=lambda x: por.get(x["ton"], 3))

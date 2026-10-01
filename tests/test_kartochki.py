@@ -273,10 +273,69 @@ class TestMelochi(unittest.TestCase):
     def test_dengi(self):
         self.assertEqual(K.dengi(48_300_000), "48,3" + NB + "млн" + NB + "₽")
         self.assertEqual(K.dengi(412_000), "412" + NB + "тыс." + NB + "₽")
+        self.assertEqual(K.dengi(5_846_000_000_000), "5,8" + NB + "трлн" + NB + "₽")
 
     def test_region(self):
         self.assertEqual(K.region_gorod("398000, Липецкая обл, г Липецк, ул Ленина, д 1"), ("Липецкая область", "Липецк"))
         self.assertEqual(K.region_gorod("г Москва, ул Тверская, д 1"), ("Москва", "Москва"))
+
+
+def _zhivoj_otvet(data_dates, kpi, signals=None):
+    """Ответ /api/check в том виде, какой отдаёт живой API 01.10: даты наборов — строкой в dossier.data_dates."""
+    return {
+        "company": {"inn": "7707083893", "ogrn": "1027700132195", "kind": "LEGAL", "status": "ACTIVE",
+                    "name_short": "ПАО \"ОБРАЗЕЦ\"", "reg_date": "2003-05-10", "address": "г Москва, ул Тверская, д 1",
+                    "okved": "47.11"},
+        "checked_at": "2026-10-01",
+        "signals": signals or [
+            {"title": "Возраст компании", "status": "ok", "source": "ЕГРЮЛ", "as_of": None, "detail": "С 10.05.2003"},
+            {"title": "Задолженность по налогам", "status": "ok", "source": "ФНС, открытые данные", "as_of": "01.09.2026", "detail": "Нет"},
+        ],
+        "dossier": {"data_dates": data_dates, "kpi": kpi, "charts": {}},
+    }
+
+
+class TestDatyV1(unittest.TestCase):
+    """daty-v1 (02.10): даты наборов из dossier.data_dates и выручка ГИР БО — иначе живые ответы не проходили ворота."""
+
+    def test_razbor_strok(self):
+        d = K.daty_naborov("ЕГРЮЛ/ЕГРИП — на 30.06.2026; задолженность — на 01.09.2026; "
+                           "доходы и расходы — на 31.12.2025; численность — на 31.12.2025; мусор; штрафы — на 99.99.2026")
+        self.assertEqual(d["nedoimka"], K.dt.date(2026, 9, 1))
+        self.assertEqual(d["dohod"], K.dt.date(2025, 12, 31))
+        self.assertEqual(d["shtat"], K.dt.date(2025, 12, 31))
+        self.assertNotIn("shtrafy", d)          # битая дата — «не проверяли», не «сегодня»
+        self.assertEqual(K.daty_naborov(None), {})
+
+    def test_vyruchka_girbo_i_shtat(self):
+        r = _zhivoj_otvet("ЕГРЮЛ/ЕГРИП — на 30.06.2026; задолженность — на 01.09.2026; численность — на 31.12.2025",
+                          [{"label": "Выручка за 2025", "value": 412062000, "delta": 14.2},
+                           {"label": "Сотрудники", "value": None, "text": "36 чел."},
+                           {"label": "Долг перед бюджетом", "value": None, "text": "Нет"}])
+        k = K.iz_check(r)
+        V = K.vyvody(k)
+        d = k["fakty"]["dohod"]
+        self.assertEqual(d["istochnik"], "ГИР БО, бухгалтерская отчётность")
+        self.assertEqual(d["data"], K.dt.date(2025, 12, 31))
+        self.assertEqual(k["fakty"]["shtat"]["data"], K.dt.date(2025, 12, 31))
+        teksty = [x["tekst"] for x in V]
+        self.assertIn("Выручка за" + NB + "2025 — 412" + NB + "млн" + NB + "₽, на" + NB + "14" + NB + "% больше, чем годом раньше", teksty)
+        self.assertEqual(K.vorota(k, V), (True, "ок"))
+        # ЕГРЮЛ — дата проверки: «на 30.06.2026» в досье — дата последних изменений записи, не дата сведений
+        self.assertEqual(k["egrul_data"], K.dt.date(2026, 10, 1))
+
+    def test_bez_dat_naborov_ne_vydumyvaem(self):
+        # нет строки дат — численность без даты не становится выводом, ворота честно не проходят
+        r = _zhivoj_otvet("", [{"label": "Сотрудники", "value": None, "text": "36 чел."}])
+        k = K.iz_check(r)
+        self.assertIsNone(k["fakty"]["shtat"]["data"])
+        self.assertFalse(K.vorota(k)[0])
+
+    def test_skrytaya_otchetnost(self):
+        # компании, раскрытие отчётности которых ограничено: в ГИР БО и наборах ФНС чисел нет → карточки нет
+        r = _zhivoj_otvet("ЕГРЮЛ/ЕГРИП — на 21.09.2026; задолженность — на 01.09.2026",
+                          [{"label": "Долг перед бюджетом", "value": None, "text": "Нет"}])
+        self.assertEqual(K.vorota(K.iz_check(r)), (False, "нет финансов (доход > 0 по ФНС / ГИР БО)"))
 
 
 class TestObshchijRender(unittest.TestCase):
@@ -385,6 +444,133 @@ class TestObolochka(unittest.TestCase):
         ob = {"head": "", "shapka": "", "podval": ""}
         self.assertIsNone(R.nadet_obolochku(None, ob))
         self.assertIsNone(R.nadet_obolochku("<html><head></head><body></body></html>", ob))
+
+
+def _gazprom_kak_v_api(**dop):
+    """Живой ответ /api/check 02.10 (форма полей сохранена; ФИО убраны): сигнал «Адрес» с деталью о недостоверности,
+    kpi без «Выручки» у части компаний, ряд выручки в charts.revenue, «Руководит с» в разделе досье."""
+    r = _zhivoj_otvet("ЕГРЮЛ/ЕГРИП — на 29.09.2026; задолженность — на 01.09.2026", [{"label": "Долг перед бюджетом", "value": None, "text": "Нет"}],
+                      signals=[{"id": "status", "title": "Статус", "status": "ok", "detail": "Действующая", "source": "ЕГРЮЛ/ЕГРИП", "as_of": None},
+                               {"id": "address", "title": "Адрес", "status": "ok", "detail": "Отметок о недостоверности нет", "source": "ЕГРЮЛ", "as_of": None},
+                               {"id": "age", "title": "Возраст компании", "status": "ok", "detail": "С 25.02.1993", "source": "ЕГРЮЛ", "as_of": None},
+                               {"id": "tax_debt", "title": "Задолженность по налогам", "status": "ok", "detail": "Нет", "source": "ФНС, открытые данные", "as_of": "01.09.2026"}])
+    r["dossier"]["charts"] = {"revenue": [{"year": 2024, "value": 6256625972000}, {"year": 2025, "value": 5846351786000}]}
+    r["dossier"]["sections"] = [{"id": "management", "title": "Руководство и собственники",
+                                 "rows": [["Председатель правления", "Иванов Иван Иванович"], ["Руководит с", "12.04.2007 (19 лет 5 месяцев)"]]}]
+    r.update(dop)
+    return r
+
+
+class TestKartochkiV2(unittest.TestCase):
+    """kartochki-v2 (Ночные-2, 02.10): факты живого ответа, которые не становились выводами; ворота не ослаблены."""
+
+    def test_nedostovernost_iz_detali(self):
+        k = K.iz_check(_gazprom_kak_v_api())
+        nd = k["fakty"]["nedostovernost"]
+        self.assertEqual((nd["ton"], nd["zagolovok"], nd["data"]), ("ok", "Отметки о недостоверности", K.dt.date(2026, 10, 1)))
+        self.assertIn("V16", [x["kod"] for x in K.vyvody(k)])
+
+    def test_otmetka_zakryvaet_vorota(self):
+        # раньше сигнал «Адрес» с отметкой не распознавался — карточка прошла бы ворота; теперь — стоп до формулировки V17
+        r = _gazprom_kak_v_api()
+        r["signals"].append({"id": "director", "title": "Руководитель", "status": "warn", "detail": "Есть отметка о недостоверности сведений", "source": "ЕГРЮЛ", "as_of": None})
+        k = K.iz_check(r)
+        self.assertEqual(k["fakty"]["nedostovernost"]["ton"], "warn")
+        self.assertEqual(K.vorota(k), (False, "отметка о недостоверности — ждёт формулировки Юриста (V17)"))
+
+    def test_vyruchka_iz_ryada_girbo(self):
+        k = K.iz_check(_gazprom_kak_v_api())
+        d = k["fakty"]["dohod"]
+        self.assertEqual((d["istochnik"], d["data"], d["god"]), ("ГИР БО, бухгалтерская отчётность", K.dt.date(2025, 12, 31), 2025))
+        self.assertAlmostEqual(d["delta"], -6.56, places=1)
+        V = K.vyvody(k)
+        self.assertIn("Выручка за" + NB + "2025 — 5,8" + NB + "трлн" + NB + "₽", [x["tekst"] for x in V])
+        self.assertEqual(K.vorota(k, V), (True, "ок"))
+
+    def test_bez_ryada_net_vyruchki(self):
+        r = _gazprom_kak_v_api()
+        r["dossier"]["charts"] = {}
+        k = K.iz_check(r)
+        self.assertNotIn("dohod", k["fakty"])
+        self.assertEqual(K.vorota(k)[1], "нет финансов (доход > 0 по ФНС / ГИР БО)")
+
+    def test_rukovoditel_tot_zhe_bez_fio(self):
+        r = _gazprom_kak_v_api()
+        r["signals"] = [x for x in r["signals"] if x["id"] != "address"]   # освобождаем место ЕГРЮЛ (предел 2)
+        k = K.iz_check(r)
+        self.assertEqual(k["rukovodit_s"], K.dt.date(2007, 4, 12))
+        V = K.vyvody(k)
+        t = [x["tekst"] for x in V if x["kod"] == "V19"]
+        self.assertEqual(t, ["Руководитель тот же 19" + NB + "лет — с" + NB + "2007 года"])
+        self.assertNotIn("Иванов", json.dumps(V, ensure_ascii=False, default=str))
+
+    def test_v16_glavnee_v19(self):
+        V = K.vyvody(K.iz_check(_gazprom_kak_v_api()))
+        kody = [x["kod"] for x in V]
+        self.assertIn("V16", kody)
+        self.assertNotIn("V19", kody)        # ЕГРЮЛ: V01 + V16, третий из того же источника не идёт
+
+    def test_smena_rukovoditelya(self):
+        r = _gazprom_kak_v_api()
+        r["dossier"]["sections"][0]["rows"][1] = ["Руководит с", "01.07.2026 (3 месяца)"]
+        V = K.vyvody(K.iz_check(r))
+        self.assertIn(("V18", "warn", "Руководитель сменился 3" + NB + "месяца назад"), [(x["kod"], x["ton"], x["tekst"]) for x in V])
+
+    def test_rukovodit_s_ranshe_registracii_ne_berem(self):
+        r = _gazprom_kak_v_api()
+        r["dossier"]["sections"][0]["rows"][1] = ["Руководит с", "01.01.1990"]
+        self.assertIsNone(K.iz_check(r)["rukovodit_s"])
+
+    def test_diagnoz(self):
+        k = K.iz_check(_gazprom_kak_v_api())
+        dg = K.diagnoz(k, K.vyvody(k))
+        self.assertIn("dohod: есть", dg)
+        self.assertIn("shtat: нет в ответе", dg)
+        self.assertIn("финансы: 2024–2025", dg)
+
+
+class TestIzApiLimit(unittest.TestCase):
+    """kartochki-v2: на HTTP 429 — стоп (лимит не обходим), не больше maks запросов за запуск, пауза не меньше 6 с."""
+
+    def _progon(self, otvety, maks=300):
+        import io
+        import urllib.error
+        zvali = []
+
+        def urlopen(req, timeout=0):
+            zvali.append(req.full_url)
+            kod = otvety[len(zvali) - 1]
+            if kod != 200:
+                raise urllib.error.HTTPError(req.full_url, kod, "x", {}, None)
+            return io.BytesIO(json.dumps({"company": {"inn": req.full_url[-10:]}}).encode())
+
+        d = tempfile.mkdtemp()
+        try:
+            sp = os.path.join(d, "s.txt")
+            open(sp, "w").write("7736050003\n7707083893\n7708004767\n")
+            st_u, st_s = K.urllib.request.urlopen, K.time.sleep
+            K.urllib.request.urlopen, K.time.sleep = urlopen, lambda x: None
+            try:
+                K.iz_api(sp, os.path.join(d, "o.jsonl"), maks=maks)
+            finally:
+                K.urllib.request.urlopen, K.time.sleep = st_u, st_s
+            return zvali, len(K.chitat_jsonl(os.path.join(d, "o.jsonl")))
+        finally:
+            shutil.rmtree(d)
+
+    def test_429_stop(self):
+        zvali, n = self._progon([200, 429, 200])
+        self.assertEqual((len(zvali), n), (2, 1))
+
+    def test_maks(self):
+        zvali, n = self._progon([200, 200, 200], maks=2)
+        self.assertEqual((len(zvali), n), (2, 2))
+
+    def test_pauza_ne_menshe_6(self):
+        import inspect
+        self.assertEqual(inspect.signature(K.iz_api).parameters["pauza"].default, 6.0)
+        self.assertIn('max(6.0, float(_arg(argv, "--pauza", "6")))', inspect.getsource(K.main))
+        self.assertEqual(K.MAKS_ZAPROSOV, 300)
 
 
 if __name__ == "__main__":

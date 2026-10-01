@@ -15,21 +15,19 @@ def r(x):  # как на главной: обычный пробел
     return f'{x:,}'.replace(',', ' ') + ' ₽'
 
 main = rd('index.html')
-ok('главная: переключатель «−20%»', 'За год <em>−20%</em>' in main)
-ok('главная: по умолчанию «Помесячно»', '<button type="button" data-period="m" class="on" aria-pressed="true">Помесячно</button>' in main)
+# glavnaya-v2 (01.10): на главной — не карточки тарифов, а строка «Сколько стоит» с ценами из tarify.json;
+# калькулятор ошибки — на своей странице /nalogi/kalkulyator-tehnicheskij-postavshchik/
+nbr = lambda x: f'{x:,}'.replace(',', '\u00a0')
 for tid in ('start', 'pro', 'biznes'):
-    t = T[tid]
-    ek = t["mesyac"] * 12 - t["god"]
-    ok(f'главная: {tid} крупно цена месяца {t["mesyac"]}', f'data-m="{r(t["mesyac"])}" data-y="{r(math.ceil(t["god"] / 12))}">{r(t["mesyac"])}</b>' in main)
-    rn = lambda x: f'{x:,}'.replace(',', '\u00a0') + '\u00a0₽'
-    ok(f'главная: {tid} под ценой — год и экономия (неразрывные пробелы)', f'>или {rn(t["god"])} за год — экономия {rn(ek)}</div>' in main)
-    ok(f'главная: {tid} две кнопки', f'data-tarif="{tid}" data-srok="mes"' in main and f'data-tarif="{tid}" data-srok="god"' in main
-       and f'>Оплатить год — {r(t["god"])}</a>' in main)
-ok('главная: кнопок «Оплачивать помесячно» — три', main.count('>Оплачивать помесячно</a>') == 3)
-ok('главная: старых «Подключить «…»» не осталось', 'Подключить «' not in main)
-ok('главная: калькулятор ошибки считает от года «Про»', f'tot?{T["pro"]["god"]}/tot' in main and f'<b>{r(T["pro"]["god"])}</b>' in main)
-ok('главная: ссылка на /tarify/', 'href="/tarify/' in main)
-ok('главная: пакет развёрнутых проверок из tarify.json', f'Докупите {D["paket_pasportov"]["tekst"]} за {r(D["paket_pasportov"]["cena_rub"])}' in main)
+    ok(f'главная: {tid} — цена месяца из tarify.json', f'<span data-cena="{tid}.mesyac">{nbr(T[tid]["mesyac"])}</span>' in main)
+ok('главная: строка «Сколько стоит» — скидка за год из tarify.json (20%)',
+   all(round((1 - T[x]['god'] / (T[x]['mesyac'] * 12)) * 100) in (20, 21) for x in ('start', 'pro', 'biznes')) and 'на&nbsp;20% дешевле' in main)
+ok('главная: кнопок оплаты нет — они на /tarify/', 'data-tarif=' not in main and 'Оплачивать помесячно' not in main)
+ok('главная: ссылка на /tarify/', 'href="/tarify/"' in main)
+ok('главная: ссылка на калькулятор', 'href="/nalogi/kalkulyator-tehnicheskij-postavshchik/"' in main)
+KALK = rd('nalogi/kalkulyator-tehnicheskij-postavshchik/index.html')
+ok('калькулятор: год «Про» из tarify.json', f'<span data-cena="pro.god">{nbr(T["pro"]["god"])}</span>' in KALK)
+ok('калькулятор: считает от года «Про» со страницы, а не от зашитой цифры', "data-cena=\"pro.god\"" in KALK and 'GOD/tot' in KALK)
 
 pg = rd('tarify/index.html')
 sys.path.insert(0, os.path.join(R, 'tests'))
@@ -67,7 +65,7 @@ for f in ('115-fz/zablokirovali-schet-chto-delat/index.html', '115-fz/zsk-zony-r
     ok(f'{f}: МВК — до 20 рабочих дней', not re.search(r'(комиссия рассматривает её|рассмотрение —) 15', rd(f)) and re.search(r'до 20(\u00a0|&nbsp;| )рабочих', rd(f)))
 # ---------- п. 23: кнопки тарифов ведут на форму «Получить счёт», а не в mailto ----------
 import re as _re2
-for _nm, _html in (('страница', _platnyj(pg)), ('главная', _platnyj(open(os.path.join(R, 'index.html'), encoding='utf-8').read()))):
+for _nm, _html in (('страница', _platnyj(pg)),):  # glavnaya-v2: на главной кнопок тарифов больше нет
     _kn = _re2.findall(r'<a class="cta[^"]*" data-tarif="([a-z]+)" data-srok="([a-z]+)" href="([^"]+)"', _html)
     ok(f'{_nm}: 6 кнопок тарифов с data-tarif/data-srok', len(_kn) == 6)
     ok(f'{_nm}: кнопки ведут на /schet/ с тем же тарифом и сроком',
@@ -82,9 +80,9 @@ ok('/schet/dokument/: noindex', 'content="noindex"' in open(os.path.join(R, 'sch
 
 # п. 72 (а): на главной нет годовых цен, которых нет в tarify.json (на живом 26.09 были 4 900 / 14 900 / 49 900 против 4 700 / 14 300 / 47 900)
 _goda = {T[x]["god"] for x in ('start', 'pro', 'biznes')}
-_na_glavnoj = {int(re.sub(r'\D', '', m)) for m in re.findall(r'(\d[\d\u00a0\u202f ]*)[\u00a0 ]₽ за год', main)}
-ok('главная: все цены «за год» = tarify.json', _na_glavnoj <= _goda and len(_na_glavnoj) > 0)
-ok('главная и /tarify/: подпись «в месяц при оплате за год» у цены года', main.count('data-y="в месяц при оплате за год"') == 3 and pg.count('data-y="в месяц при оплате за год"') == 3)
+_na_glavnoj = {int(re.sub(r'\D', '', m)) for m in re.findall(r'(\d[\d\u00a0\u202f ]*)(?:&nbsp;|[\u00a0 ])₽ за год', main)}
+ok('главная: годовых цен руками нет (glavnaya-v2 — только строка с месяцем)', _na_glavnoj <= _goda)
+ok('/tarify/: подпись «в месяц при оплате за год» у цены года', pg.count('data-y="в месяц при оплате за год"') == 3)
 
 # ---------- tarify-v3: прайс «после беты» (владелец 30.09.2026) — ступени, разовые, дополнения ----------
 PK, PR, PS = D['paket_pasportov'], D['pasport_razovyj'], D['pasport_svoj']

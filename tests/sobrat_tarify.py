@@ -378,48 +378,31 @@ page = BETA.primenit(page, D.get('beta') is True, polosa='')  # полосу с�
 open(os.path.join(ROOT, 'tarify/index.html'), 'w', encoding='utf-8').write(page)
 print('ok', len(page))
 
-# ---------- главная: блок тарифов из того же tarify.json ----------
+# ---------- главная: режим беты (цены — строкой, см. ниже) ----------
 import re as _re
 _mp = os.path.join(ROOT, 'index.html')
 _m = open(_mp, encoding='utf-8').read()
 
 
-def spisok_glavnoj(t):
-    """Что входит — тот же список, что на /tarify/ (tarify.json → chto); на главной метка «скоро» — .tagnew."""
-    out = []
-    for x in t['chto']:
-        if x.endswith(' (скоро)'):
-            out.append(f'<li>{CHECK}<span>{html.escape(x[:-8])} <span class="tagnew">скоро</span></span></li>')
-        elif x.startswith('Делопись'):
-            out.append(f'<li>{CHECK}<span>{html.escape(x)}</span></li>')
-        else:
-            out.append(f'<li>{CHECK}{html.escape(x)}</li>')
-    return ''.join(out)
-
-
-_i0 = _m.index('<div class="plan-name">Бесплатно ')
-_j0 = _m.index('</ul>', _i0)
-_m = _m[:_i0] + _re.sub(r'(<ul>\n\s*)<li>.*?</li>(\n\s*)$', lambda m: m.group(1) + spisok_glavnoj(D['tarify'][0]) + m.group(2), _m[_i0:_j0], count=1, flags=_re.S) + _m[_j0:]
-_m = _re.sub(r'Нужно больше отчётов\? Докупите [^<]*? или напишите нам', f"Не хватило развёрнутых проверок? Докупите {pak['tekst']} за {pak['cena_rub']:,} ₽".replace(',', ' ') + ' или напишите нам', _m)
-for t in D['tarify']:
-    if t['mesyac'] == 0:
-        continue
-    price, cta = cena_i_knopki(t, nb=' ')  # на главной — обычный пробел, как в остальном блоке
-    i = _m.index(f'<div class="plan-name">{t["nazvanie"]} ')
-    j = _m.index('\n        </div>', _m.index('</ul>', i))  # конец карточки
-    card = _m[i:j]
-    card = _re.sub(r'<div class="price">.*?</div><div class="per"[^>]*>.*?</div>', lambda _: price, card, count=1, flags=_re.S)
-    card = _re.sub(r'(<ul>\n\s*)<li>.*?</li>(\n\s*</ul>)', lambda m: m.group(1) + spisok_glavnoj(t) + m.group(2), card, count=1, flags=_re.S)
-    card = _re.sub(r'(<!--oplata-->(?:<template data-oplata>)?<div class="knopki".*?<!--/v-bete-->|<a class="cta [^"]*"[^>]*>Подключить «[^»]+»</a>|<div class="knopki".*?</a></div>)', lambda _: cta, card, count=1, flags=_re.S)
-    _m = _m[:i] + card + _m[j:]
-_m = _m.replace('<button type="button" data-period="m">Помесячно</button>\n          <button type="button" data-period="y" class="on">За год <em>−20%</em></button>',
-                '<button type="button" data-period="m" class="on" aria-pressed="true">Помесячно</button>\n          <button type="button" data-period="y" aria-pressed="false">За год <em>−20%</em></button>')
-_kak_old = '<details><summary>Как оплатить?</summary><p>Пока тарифы подключаем по заявке: напишите на <a href="mailto:help@deloskop.ru">help@deloskop.ru</a> — пришлём счёт для компании или ИП и закрывающие документы. Оплата картой на сайте появится скоро.</p></details>'
-_kak_new = '<details><summary>Как оплатить?</summary><p>Компании и ИП — по счёту с расчётного счёта: нажмите кнопку тарифа, выберите срок и впишите ИНН плательщика — счёт откроется сразу, без НДС. Доступ — в день поступления денег, акт — для бухгалтерии. Оплата картой на сайте появится после подключения банка.</p></details>'
-_m = _m.replace(_kak_old, _kak_new)
-if '/js/schet.js' not in _m:
-    _m = _m.replace('</body>', '<script src="/js/schet.js" defer></script>\n</body>', 1)
+# glavnaya-v2 (01.10): на главной больше нет карточек тарифов — только строка «Сколько стоит» с ценами
+# в узлах <span data-cena="<тариф>.mesyac|god"> (их заполняет цикл ниже, как на /osnovatel/). Кнопок оплаты на главной нет.
 _m = BETA.primenit(_m, D.get('beta') is True)
+# glavnaya-v2: JSON-LD главной (Organization + FAQPage) — по видимым вопросам в текущем режиме (бета / оплата)
+def _ld_glavnoj(txt):
+    vid = BETA.vidimoe(txt)
+    faq_html = vid[vid.index('<section class="sect faq" id="faq">'):]
+    faq_html = faq_html[:faq_html.index('</section>')]
+    qa = []
+    for q, a in _re.findall(r'<details[^>]*><summary>(.*?)</summary><p>(.*?)</p></details>', faq_html, _re.S):
+        txt_a = html.unescape(_re.sub(r'<[^>]+>', '', a)).replace('\u00a0', ' ')
+        qa.append({"@type": "Question", "name": html.unescape(q), "acceptedAnswer": {"@type": "Answer", "text": txt_a}})
+    ld = [{"@context": "https://schema.org", "@type": "Organization", "name": "Делоскоп", "url": "https://deloskop.ru/",
+           "logo": "https://deloskop.ru/ikonka-512.png", "email": "help@deloskop.ru"},
+          {"@context": "https://schema.org", "@type": "WebSite", "name": "Делоскоп", "url": "https://deloskop.ru/", "inLanguage": "ru"},
+          {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": qa}]
+    return '<!--ld-glavnaya--><script type="application/ld+json">' + json.dumps(ld, ensure_ascii=False) + '</script><!--/ld-glavnaya-->'
+if '<!--ld-glavnaya-->' in _m:
+    _m = _re.sub(r'<!--ld-glavnaya-->.*?<!--/ld-glavnaya-->', lambda _: _ld_glavnoj(_m), _m, count=1, flags=_re.S)
 open(_mp, 'w', encoding='utf-8').write(_m)
 print('главная ok')
 
@@ -442,7 +425,7 @@ for _f in ('skoraya-115-fz/index.html', 'oferta/index.html', 'osnovatel/index.ht
 
 # Цены тарифов в тексте других страниц: <span data-cena="pro.god"> / "pro.mesyac" (например, «Обычный год «Про»» на /osnovatel/)
 _TAR = {x['id']: x for x in D['tarify']}
-for _f in ('osnovatel/index.html',):
+for _f in ('osnovatel/index.html', 'index.html', 'nalogi/kalkulyator-tehnicheskij-postavshchik/index.html'):
     _sk = os.path.join(ROOT, _f)
     if not os.path.exists(_sk):
         continue

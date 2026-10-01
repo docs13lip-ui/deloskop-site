@@ -302,6 +302,36 @@ def ssylki_s_sajta(txt, f, spisok, D, po_slug):
     return txt.replace(yakor, (yakor + blok) if kak == "posle" else (otstup + blok + "\n" + yakor), 1)
 
 
+def tri_dlya_glavnoj(D):
+    """Три разбора для главной (glavnaya-v2, ТЗ [Продукт] 01.10, разд. 2.5): последние по дате; при равных датах —
+    сначала по одному из каждого раздела, затем по порядку в dela.json (новые — первыми)."""
+    po_date = sorted(D["razbory"], key=lambda r: r["data"], reverse=True)  # sorted устойчив: порядок json сохраняется
+    top = [r for r in po_date if r["data"] == po_date[0]["data"]]
+    if len(top) >= 3:
+        vybor, est = [], set()
+        for r in top:
+            if r["razdel"] not in est:
+                vybor.append(r); est.add(r["razdel"])
+        vybor += [r for r in top if r not in vybor]
+        return vybor[:3]
+    return po_date[:3]
+
+
+def glavnaya(txt, D):
+    """Блок «Как решают суды» на главной — между метками <!--praktika-glavnaya-->…<!--/praktika-glavnaya-->."""
+    if "<!--praktika-glavnaya-->" not in txt:
+        return txt
+    kart = []
+    for r in tri_dlya_glavnoj(D):
+        d = r["dela"][0]
+        stroka = "%s · %s %s · %s" % (d["sud"], d["akt"].lower(), d["nomer"], data_ru(d["data"]))
+        kart.append('<a href="%s"><small>%s</small><b>%s</b><span>%s</span></a>' % (
+            url_razbora(r), e(D["razdely"][r["razdel"]]["kratko"]), e(r["h1"]), e(stroka)))
+    blok = '<!--praktika-glavnaya--><div class="pr-gl">%s</div><!--/praktika-glavnaya-->' % "".join(kart)
+    blok = nerazryv(tipograf(blok)).replace("115-ФЗ", "115&#8209;ФЗ")
+    return re.sub(r"<!--praktika-glavnaya-->.*?<!--/praktika-glavnaya-->", lambda m: blok, txt, flags=re.S)
+
+
 def sitemap(txt, D):
     txt = re.sub(r"\s*<url><loc>https://deloskop\.ru/praktika/[^<]*</loc>.*?</url>", "", txt)
     daty = {}
@@ -332,6 +362,8 @@ def sobrat():
             continue
         with open(put(f), encoding="utf-8") as fh:
             out[f] = ssylki_s_sajta(fh.read(), f, spisok, D, po_slug)
+    with open(put("index.html"), encoding="utf-8") as fh:
+        out["index.html"] = glavnaya(fh.read(), D)
     with open(put("sitemap.xml"), encoding="utf-8") as fh:
         out["sitemap.xml"] = sitemap(fh.read(), D)
     return out

@@ -89,13 +89,17 @@ test('живой режим: страницы собраны по флагу и�
   const v = vidimoe(glav);
   if (BETA) {
     assert.ok(!v.includes('href="/schet/'), 'на главной нет ссылок на счёт');
-    assert.strictEqual((v.match(/>В бете — бесплатно<\/a>/g) || []).length, 3);
+    // glavnaya-v2: карточек тарифов на главной нет — строка «Сколько стоит» с пометкой о бете
+    assert.strictEqual((v.match(/>В бете — бесплатно<\/a>/g) || []).length, 0);
+    assert.ok(v.includes('Сейчас открытая бета: все возможности бесплатно'));
+    assert.ok(v.includes('Открытая бета · всё бесплатно'), 'метка над H1 в бете');
     assert.ok(v.includes('<summary>Сколько это стоит сейчас?</summary>'));
     assert.ok(!v.includes('<summary>Как оплатить?</summary>'));
   }
-  // оплата не потеряна: в «платном» виде все три тарифа снова с двумя кнопками
+  // glavnaya-v2: в «платном» виде на главной — строка цен со ссылкой на /tarify/ (кнопки оплаты — там) и «Как оплатить?»
   const p = vidimoe(platnyj(glav));
-  assert.strictEqual((p.match(/data-tarif="[a-z]+" data-srok="mes" href="\/schet\//g) || []).length, 3);
+  assert.ok(p.includes('href="/tarify/"') && !p.includes('Сейчас открытая бета'));
+  assert.ok(p.includes('Проверка контрагентов для бизнеса и частных лиц'), 'метка над H1 без беты');
   assert.ok(p.includes('<summary>Как оплатить?</summary>'));
 });
 

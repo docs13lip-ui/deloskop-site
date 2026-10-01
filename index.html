@@ -4,12 +4,13 @@
 <meta charset="utf-8">
 <script>/* Мягкая 404 (п. 32): сервер отдаёт главную на любой адрес — уводим на настоящую страницу «нет такой страницы», чтобы поисковики не видели дубли главной. */(function(){var p=location.pathname,a={'/cabinet':'/cabinet.html','/report':'/report.html','/admin':'/admin.html'},k=p.replace(/\/+$/,'');if(p==='/'||p==='/index.html')return;var m=document.createElement('meta');m.name='robots';m.content='noindex';document.head.appendChild(m);var ci=/^\/company\/(\d{10})(?:[-\/]|$)/.exec(p);if(ci){location.replace('/?inn='+ci[1]);return;}location.replace(a[k]?a[k]+location.search+location.hash:'/404.html?s='+encodeURIComponent(p));})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Делоскоп — проверка контрагентов по ИНН</title>
-<meta name="description" content="Проверяем компанию по открытым реестрам и простыми словами говорим, чем она опасна: блокировкой счёта по 115-ФЗ или налоговыми доначислениями.">
+<title>Делоскоп — проверка контрагента по ИНН перед оплатой и ответ банку</title>
+<meta name="description" content="Проверьте поставщика по ИНН перед оплатой: что видят банк и налоговая, с источником и датой. Банк спросил по 115-ФЗ — план ответа по дням.">
 <link rel="canonical" href="https://deloskop.ru/">
+<!--ld-glavnaya--><script type="application/ld+json">[{"@context": "https://schema.org", "@type": "Organization", "name": "Делоскоп", "url": "https://deloskop.ru/", "logo": "https://deloskop.ru/ikonka-512.png", "email": "help@deloskop.ru"}, {"@context": "https://schema.org", "@type": "WebSite", "name": "Делоскоп", "url": "https://deloskop.ru/", "inLanguage": "ru"}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Зачем платить, если данные ФНС и так бесплатные?", "acceptedAnswer": {"@type": "Answer", "text": "Данные бесплатные, но разбросаны по семи сайтам, а вывода там нет. Делоскоп за секунды сводит их и говорит, что делать: платить, только по факту или не работать. Следит за изменениями, пока вы работаете с контрагентом, и хранит досье с датой проверки — часть доказательств должной осмотрительности, если налоговая придёт через два года. Одна снятая сделка на 3 млн ₽ обходится в сотни тысяч рублей — посчитайте."}}, {"@type": "Question", "name": "Чем Делоскоп отличается от больших сервисов проверки?", "acceptedAnswer": {"@type": "Answer", "text": "Мы не пересказываем реестры, а даём вывод: можно работать или нет, и что сделать, чтобы обезопасить себя."}}, {"@type": "Question", "name": "Откуда вы знаете, как меня видит банк?", "acceptedAnswer": {"@type": "Answer", "text": "Мы анализируем те же открытые данные, что доступны банкам, и применяем признаки из рекомендаций Банка России. Это наша оценка, а не решение банка. На сайте Банка России по ИНН видно только одно — отнесена ли компания к красной группе; жёлтую зону знает лишь ваш банк."}}, {"@type": "Question", "name": "Гарантирует ли проверка, что банк не заблокирует счёт?", "acceptedAnswer": {"@type": "Answer", "text": "Нет. Решение принимает банк. Делоскоп помогает заметить риски заранее и правильно подготовить документы."}}, {"@type": "Question", "name": "Сколько это стоит сейчас?", "acceptedAnswer": {"@type": "Answer", "text": "Ничего. Идёт открытая бета: всё открыто бесплатно, счета не выставляем. Нашли ошибку или что-то непонятно — напишите на help@deloskop.ru, это сейчас самое ценное."}}, {"@type": "Question", "name": "Где хранятся мои данные?", "acceptedAnswer": {"@type": "Answer", "text": "На серверах в России, в соответствии с 152-ФЗ."}}]}]</script><!--/ld-glavnaya-->
 <meta property="og:type" content="website">
-<meta property="og:title" content="Делоскоп — знайте, с кем работаете. До оплаты.">
-<meta property="og:description" content="Проверка контрагентов по ИНН: риски блокировки по 115-ФЗ и налоговых доначислений — простыми словами.">
+<meta property="og:title" content="Делоскоп — перед оплатой проверить. Если банк спросил — ответить.">
+<meta property="og:description" content="Проверьте поставщика по ИНН перед оплатой: что видят банк и налоговая, с источником и датой. Банк спросил по 115-ФЗ — план ответа по дням.">
 <meta property="og:url" content="https://deloskop.ru/">
 <meta property="og:image" content="https://deloskop.ru/ikonka-512.png">
 <meta name="theme-color" content="#F5F5F2">
@@ -108,12 +109,7 @@ p{margin:0}
 .sect-head{display:flex;flex-direction:column;gap:16px;max-width:760px;margin-bottom:56px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
 @media (max-width:860px){.grid2{grid-template-columns:1fr}}
-.pain{background:var(--bg);border-radius:var(--r-lg);padding:clamp(28px,3.5vw,44px);display:flex;flex-direction:column;gap:18px}
-.pain h3{font-size:clamp(24px,2.4vw,30px);letter-spacing:-0.02em}
-.pain p{font-size:18px;line-height:1.55;color:var(--ink2)}
 
-.sources .wrap{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:start}
-.sources .sect-head{margin-bottom:0}
 .chips{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .soon{margin-top:14px;font-size:14px;color:var(--muted)}
 .report{scroll-margin-top:120px}
@@ -121,41 +117,16 @@ p{margin:0}
 .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
 @media (max-width:980px){.grid3{grid-template-columns:1fr}}
 .shield .sect-head{max-width:760px}
-.shield .card3{background:var(--card);box-shadow:0 1px 2px rgba(0,0,0,.04),0 12px 32px rgba(0,0,0,.05);border-radius:var(--r-lg);padding:clamp(24px,3vw,34px);display:flex;flex-direction:column;gap:12px}
-.shield .card3 h3{font-size:clamp(20px,2vw,24px);letter-spacing:-0.02em}
-.shield .card3 p{color:var(--ink2)}
 .shield .num{font-size:14px;font-weight:600;color:var(--accent)}
 .shield .check{margin-top:28px}
-.why .manifest{max-width:760px;display:flex;flex-direction:column;gap:18px;font-size:clamp(17px,1.6vw,20px);color:var(--ink2);line-height:1.55}
-.why .manifest b{color:var(--ink)}
-.why .principles{margin-top:36px}
-.why .principles article{border-top:2px solid var(--ink);padding-top:18px;display:flex;flex-direction:column;gap:10px}
-.why .principles h3{font-size:20px;letter-spacing:-0.01em}
-.why .principles p{color:var(--ink2)}
-.why .mission{margin-top:40px;font-size:clamp(22px,2.6vw,30px);font-weight:600;letter-spacing:-0.02em;line-height:1.25;max-width:820px}
-.why .fn{margin-top:20px;font-size:13px;color:var(--muted)}
-.why .fn a{color:var(--muted);text-decoration:underline}
+.doverie .principles{margin-top:36px}
+.doverie .principles article{border-top:2px solid var(--ink);padding-top:18px;display:flex;flex-direction:column;gap:10px}
+.doverie .principles h3{font-size:20px;letter-spacing:-0.01em}
+.doverie .principles p{color:var(--ink2)}
 .chip{background:var(--card);border-radius:18px;padding:20px 22px;font-size:17px;font-weight:500}
-@media (max-width:980px){.sources .wrap{grid-template-columns:1fr;gap:40px}}
 @media (max-width:520px){.chips{gap:8px}.chip{padding:14px 14px;font-size:15px;border-radius:14px}}
 
-.ai{background:var(--dark);color:#F5F5F7}
-.ai .wrap{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center}
-.ai .eyebrow{color:#6FA8FF}
-.ai .lead{color:#B8B8BD}
-.chat{background:var(--dark2);border-radius:var(--r-lg);padding:28px;display:flex;flex-direction:column;gap:14px}
-.bubble{max-width:84%;padding:14px 18px;font-size:16px;line-height:1.55}
-.bubble.me{align-self:flex-end;background:var(--accent);color:#fff;border-radius:20px 20px 6px 20px}
-.bubble.bot{align-self:flex-start;background:#2A2A2E;color:#EDEDF0;border-radius:20px 20px 20px 6px}
-.suggest{display:flex;gap:8px;flex-wrap:wrap}
-.suggest span{border:1px solid #3A3A3F;border-radius:999px;padding:8px 14px;font-size:14px;color:#C9C9CE}
-@media (max-width:980px){.ai .wrap{grid-template-columns:1fr;gap:40px}}
 
-.feature{background:var(--card);border-radius:var(--r-lg);padding:clamp(28px,3.5vw,44px);display:flex;flex-direction:column;gap:16px}
-.feature h3{font-size:clamp(26px,2.6vw,34px);letter-spacing:-0.02em}
-.feature p{font-size:18px;line-height:1.55;color:var(--ink2)}
-.doclist{display:flex;flex-direction:column;gap:10px;margin-top:12px}
-.doclist div{display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:14px;padding:14px 16px;font-size:16px}
 .card-rq{margin-top:12px;border:1px solid var(--line);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:14px}
 .card-rq .t{display:flex;justify-content:space-between;align-items:center;font-size:20px;font-weight:600}
 .kv{display:grid;grid-template-columns:1fr 1fr;gap:12px 20px;font-size:14px}
@@ -235,29 +206,9 @@ footer a{color:var(--ink2)}
 .fb-toast button{border:0;background:#fff;color:var(--ink);font:inherit;font-weight:600;border-radius:10px;padding:8px 12px;cursor:pointer;white-space:nowrap}
 :focus-visible{outline:3px solid rgba(11,99,229,.45);outline-offset:2px;border-radius:6px}
 
-.save .calc{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:24px;margin-top:40px}
-.save .box{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:28px}
-.save label{display:block;font-weight:600;margin-bottom:8px}
-.save input[type=text]{width:100%;font:inherit;font-size:22px;font-weight:600;padding:12px 16px;border:1px solid var(--line);border-radius:14px;background:var(--bg)}
-.save .chk{display:flex;gap:10px;align-items:flex-start;font-weight:400;margin-top:16px;font-size:16px;color:var(--ink2)}
-.save .chk input{margin-top:5px;width:18px;height:18px}
-.save .row{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid var(--line);font-size:17px}
-.save .row b{white-space:nowrap}
-.save .tot{display:flex;justify-content:space-between;gap:16px;padding-top:16px;font-size:22px;font-weight:600}
-.save .tot b{color:#B42318;white-space:nowrap}
-.save .vs{margin-top:20px;background:var(--ok-bg);color:var(--ok);border-radius:var(--r-md);padding:16px 18px;font-size:17px}
-.save .vs b{font-size:20px}
-.save .note{font-size:14px;color:var(--muted);margin-top:14px}
-.save .srv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-top:48px}
-.save .srv article{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:24px}
-.save .srv h3{font-size:20px;margin:0 0 8px}
-.save .srv .risk{font-size:15px;color:#B42318;font-weight:600;margin:0 0 8px}
-.save .srv p{margin:0;color:var(--ink2);font-size:16px}
-.save .srv .tagnew{margin-left:6px}
 @media (max-width:900px){.save .calc,.save .srv{grid-template-columns:1fr}}
 
 /* site-v3: с Onest со своего сервера на 390 «Откуда данные» вылезал на 6 px — дорожки сетки не сжимались */
-.sources .wrap>*,.chips>*{min-width:0}.chip{overflow-wrap:break-word;hyphens:auto}
 
 /* Три входа (Стратег 27.09 §1.2, приёмка 13.10 стр. 6): одна дверь — одна задача */
 .vhody{padding-block:0 var(--sect)}
@@ -280,6 +231,38 @@ footer a{color:var(--ink2)}
 .vhod__dop a{color:var(--ink2);text-decoration:underline;text-decoration-color:#CFCFC9;text-underline-offset:3px}
 .vhod__dop a:hover{color:var(--accent);text-decoration-color:currentColor}
 @media (prefers-reduced-motion:reduce){.vhod,.vhod__go span{transition:none}.vhod:hover{transform:none}}
+/* glavnaya-v2: новая главная (ТЗ [Продукт] 01.10) */
+.doverie-str{font-size:14px;color:var(--ink2);margin-top:-14px}
+.doverie-str a{white-space:nowrap}
+@media (max-width:640px){.report .row--m{display:none}}
+.shield .tri{list-style:none;margin:0 0 28px;padding:0;display:flex;flex-wrap:wrap;gap:10px 28px;font-size:18px;font-weight:600}
+.shield .tri li{display:flex;align-items:center;gap:10px}
+.shield .tri li::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.praktika-gl .sect-head{margin-bottom:36px}
+.pr-gl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.pr-gl a{display:flex;flex-direction:column;gap:12px;background:var(--bg);border-radius:var(--r-lg);padding:clamp(22px,2.4vw,30px);color:var(--ink);transition:box-shadow .2s,transform .2s}
+.pr-gl a:hover{color:var(--ink);box-shadow:0 12px 32px rgba(0,0,0,.08);transform:translateY(-2px)}
+.pr-gl small{font-size:13px;font-weight:600;color:var(--accent);letter-spacing:.02em}
+.pr-gl b{font-size:clamp(19px,1.6vw,22px);font-weight:600;line-height:1.25;letter-spacing:-.015em;flex:1}
+.pr-gl span{font-size:14px;color:var(--ink2)}
+.praktika-gl .vse{margin-top:24px;font-weight:600}
+@media (max-width:860px){.pr-gl{grid-template-columns:1fr}}
+.oshibka{padding-block:0}
+.oshibka__in{display:flex;align-items:center;justify-content:space-between;gap:20px 40px;flex-wrap:wrap;background:var(--dark);color:#F5F5F7;border-radius:var(--r-lg);padding:clamp(24px,3vw,36px) clamp(24px,3.5vw,44px);margin-block:var(--sect)}
+.oshibka__in p{font-size:clamp(18px,1.7vw,21px);line-height:1.45;max-width:760px}
+.oshibka__go{display:inline-flex;align-items:center;min-height:48px;padding:0 22px;border-radius:14px;border:1px solid rgba(255,255,255,.28);color:#fff!important;font-weight:600;white-space:nowrap}
+.oshibka__go:hover{border-color:#fff}
+.doverie{padding-top:0}
+.shield{padding-top:0}
+.ceny,.faq{padding-block:clamp(56px,7vw,88px)}
+.doverie .h2{margin-bottom:8px}
+.doverie .chips-h{margin:44px 0 14px;font-size:15px;font-weight:600;color:var(--ink2)}
+.doverie .chips{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media (max-width:1100px){.doverie .chips{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.chip{padding:16px 18px;font-size:15px}
+.ceny .lead{max-width:820px;margin-top:16px}
+.ceny p a{display:inline-block;margin-top:18px;font-weight:600}
+.yakor{position:absolute}
 </style>
 <link rel="stylesheet" href="/css/fonts.css">
 <link rel="stylesheet" href="/css/podval.css">
@@ -367,15 +350,16 @@ footer a{color:var(--ink2)}
   <section class="hero">
     <div class="wrap">
       <div class="hero-text">
-        <div class="eyebrow">Проверка контрагентов для бизнеса и частных лиц</div>
-        <h1>Знайте, с кем работаете. До&nbsp;оплаты.</h1>
-        <p class="lead">Делоскоп проверяет компанию по открытым реестрам и простыми словами говорит, чем она опасна: блокировкой счёта по 115-ФЗ или налоговыми доначислениями.</p>
+        <div class="eyebrow"><!--oplata--><template data-oplata>Проверка контрагентов для бизнеса и частных лиц</template><!--/oplata--><!--v-bete-->Открытая бета · всё бесплатно по&nbsp;13&nbsp;октября<!--/v-bete--></div>
+        <h1>Перед оплатой&nbsp;— проверить. Если банк спросил&nbsp;— ответить.</h1>
+        <p class="lead">Делоскоп проверяет компанию по&nbsp;открытым госреестрам и&nbsp;простыми словами говорит, что может пойти не&nbsp;так&nbsp;— блокировка счёта по&nbsp;115-ФЗ или доначисление налогов&nbsp;— и&nbsp;что сделать заранее.</p>
         <form class="check" id="check" novalidate>
           <label for="inn" class="sr-only">ИНН или название компании</label>
           <input id="inn" name="inn" type="text" inputmode="search" autocomplete="off" placeholder="ИНН или название компании">
           <button type="submit">Проверить</button>
         </form>
         <p class="note" id="note" role="status" aria-live="polite">3 проверки в день — бесплатно, без регистрации.</p>
+        <p class="doverie-str">У&nbsp;каждого факта&nbsp;— источник и&nbsp;дата. Чего не&nbsp;проверили, так и&nbsp;пишем. <a href="#doverie">Откуда данные&nbsp;→</a></p>
       </div>
 
       <div class="report" aria-label="Пример отчёта">
@@ -390,9 +374,9 @@ footer a{color:var(--ink2)}
         <div class="rows">
           <div class="row"><span>Недостоверные сведения в ЕГРЮЛ</span><b class="ok">Нет</b></div>
           <div class="row"><span>Прогноз зоны ЗСК · наша оценка</span><b class="ok">Зелёная</b></div>
-          <div class="row"><span>Задолженность по налогам</span><b class="ok">Нет</b></div>
+          <div class="row row--m"><span>Задолженность по налогам</span><b class="ok">Нет</b></div>
           <div class="row"><span>Руководитель сменился недавно</span><b class="warn">Внимание</b></div>
-          <div class="row"><span>Налоговая нагрузка</span><b class="neutral">На уровне отрасли</b></div>
+          <div class="row row--m"><span>Налоговая нагрузка</span><b class="neutral">На уровне отрасли</b></div>
         </div>
         <div class="verdict" data-usl-demo>Можно, предоплата — до 1 500 000 ₽. Руководитель сменился недавно: перед оплатой запросите решение о его назначении.</div>
       </div>
@@ -431,67 +415,66 @@ footer a{color:var(--ink2)}
     </div>
   </section>
 
-  <section class="sect white" id="pains">
-    <div class="wrap">
-      <div class="sect-head">
-        <h2 class="h2">Две вещи, которые стоят бизнесу дороже всего</h2>
-        <p class="lead">Мы не показываем сотни пунктов ради объёма. Каждая проверка в Делоскопе отвечает на один из двух вопросов.</p>
-      </div>
-      <div class="grid2">
-        <article class="pain">
-          <svg width="44" height="44" viewBox="0 0 44 44" fill="none" aria-hidden="true"><rect x="8" y="19" width="28" height="19" rx="4" stroke="#1D1D1F" stroke-width="2.5"/><path d="M14 19V14A8 8 0 0 1 30 14V19" stroke="#1D1D1F" stroke-width="2.5"/><circle cx="22" cy="28.5" r="2.5" fill="#0B63E5"/></svg>
-          <h3>Не заблокирует ли банк счёт</h3>
-          <p>Платёж сомнительной компании — частая причина запроса по 115-ФЗ. Делоскоп заранее покажет признаки, на которые смотрят банки: недостоверные сведения в реестре, недавнюю смену директора, налоговые долги и слишком низкие налоги для такой выручки.</p>
-        </article>
-        <article class="pain">
-          <svg width="44" height="44" viewBox="0 0 44 44" fill="none" aria-hidden="true"><rect x="10" y="6" width="24" height="32" rx="3" stroke="#1D1D1F" stroke-width="2.5"/><path d="M16 15H28M16 21H28M16 27H22" stroke="#1D1D1F" stroke-width="2.5" stroke-linecap="round"/><circle cx="31" cy="31" r="6" fill="#0B63E5"/></svg>
-          <h3>Не придёт ли доначисление от налоговой</h3>
-          <p>Если поставщик окажется «технической» компанией, налоговая может снять вычеты по НДС и расходы. Делоскоп подскажет, как проявить должную осмотрительность и что сохранить в деле.</p>
-        </article>
-      </div>
-    </div>
-  </section>
-
   <section class="sect shield" id="shield">
     <div class="wrap">
       <div class="sect-head">
-        <div class="eyebrow">Новое · Щит</div>
+        <div class="eyebrow">Щит · бесплатно</div>
         <h2 class="h2">Посмотрите на свою компанию глазами банка и&nbsp;налоговой</h2>
-        <p class="lead">Все сервисы проверяют чужие компании. Делоскоп начинает с вашей: показывает, что видят банк и налоговая, и что сделать заранее — до запроса по 115-ФЗ или требования из налоговой.</p>
+        <p class="lead">Введите свой ИНН&nbsp;— покажем признаки, на&nbsp;которые смотрят банк и&nbsp;налоговая, почему они важны и&nbsp;что сделать до&nbsp;запроса по&nbsp;115-ФЗ или требования из&nbsp;инспекции. Работает для компании в&nbsp;любом банке.</p>
       </div>
-      <div class="grid3">
-        <article class="card3">
-          <div class="num">01</div>
-          <h3>Как вас видит банк</h3>
-          <p>Признаки, на которые смотрят банки по 115-ФЗ, и наш прогноз вашей зоны на платформе Банка России «Знай своего клиента».</p>
-        </article>
-        <article class="card3">
-          <div class="num">02</div>
-          <h3>Как вас видит налоговая</h3>
-          <p>Налоговая нагрузка, штат, долги и отчётность — то, по чему инспекция выбирает компании для вопросов.</p>
-        </article>
-        <article class="card3">
-          <div class="num">03</div>
-          <h3>Что сделать сейчас</h3>
-          <p>Не баллы, а конкретные шаги: что поправить, какие документы подготовить, что сохранить в деле.</p>
-        </article>
-      </div>
+      <ul class="tri">
+        <li>Как вас видит банк</li>
+        <li>Как вас видит налоговая</li>
+        <li>Что сделать сейчас</li>
+      </ul>
       <form class="check" id="shieldForm" novalidate>
         <label for="myinn" class="sr-only">ИНН вашей компании</label>
         <input id="myinn" type="text" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="ИНН вашей компании">
         <button type="submit">Посмотреть на себя</button>
       </form>
-      <p class="soon">Бесплатно. Новое: <a href="/nalichnye/">«Наличные глазами банка»</a> — загрузите выписку в формате 1С и посмотрите, как банк видит ваши снятия, взносы и переводы себе. Выписка не покидает ваш компьютер. По той же выписке — <a href="/kontragenty-iz-vypiski/">«Кому вы платите»</a>: все поставщики и деньги на кону, если налоговая снимет вычеты.</p>
+      <p class="soon">По&nbsp;выписке из&nbsp;1С&nbsp;— <a href="/nalichnye/">«Наличные глазами банка»</a> и&nbsp;<a href="/kontragenty-iz-vypiski/">«Кому вы платите»</a>. Выписка не&nbsp;уходит с&nbsp;вашего компьютера.</p>
     </div>
   </section>
 
-  <section class="sect sources">
+  <section class="sect white praktika-gl" id="praktika" aria-labelledby="praktika-h">
     <div class="wrap">
       <div class="sect-head">
-        <h2 class="h2">Откуда данные</h2>
-        <p class="lead">Только официальные открытые источники. Рядом с каждым фактом — откуда он взят и на какую дату.</p>
-        <p class="soon">Арбитражные дела, приставов и&nbsp;госзакупки мы пока не&nbsp;проверяем. В&nbsp;отчёте так и&nbsp;пишем&nbsp;— «не&nbsp;проверено», а&nbsp;не «не&nbsp;обнаружено»,&nbsp;— и&nbsp;даём ссылку, где проверить самим за&nbsp;минуту.</p>
+        <h2 class="h2" id="praktika-h">Как решают суды: разборы дел</h2>
+        <p class="lead">Настоящие дела с&nbsp;номером и&nbsp;датой: о&nbsp;чём спорили, чем кончилось и&nbsp;что из&nbsp;этого следует для вас.</p>
       </div>
+      <!--praktika-glavnaya--><div class="pr-gl"><a href="/praktika/nalogi/ks-12-p-svidetel-po-svoej-proverke/"><small>Налоги</small><b>Налоговая вызывает «свидетелем» по проверке вашей же деятельности. Надо идти?</b><span>Конституционный суд РФ · постановление № 12-П · 5 марта 2026</span></a><a href="/praktika/115-fz/krasnaya-zona-zsk-sud/"><small>115&#8209;ФЗ</small><b>Компанию отнесли к «красной» зоне ЗСК. Суд поможет?</b><span>Конституционный суд РФ · определение № 3476-О · 24 декабря 2024</span></a><a href="/praktika/nalogi/proverka-kontragenta-na-datu-sdelki/"><small>Налоги</small><b>Два похожих спора о подрядчиках: 137 млн ₽ отменили, 57 млн ₽ оставили. В чём разница?</b><span>АС Московского округа · постановление № Ф05-27741/24 · 8 июня 2026</span></a></div><!--/praktika-glavnaya-->
+      <p class="vse"><a href="/praktika/" data-praktika-gl>Все разборы&nbsp;→</a></p>
+    </div>
+  </section>
+
+  <section class="oshibka" id="oshibka" aria-label="Сколько стоит ошибка">
+    <div class="wrap">
+      <div class="oshibka__in">
+        <p>Поставщик оказался «технической» компанией? Посчитайте, во&nbsp;что это обойдётся: снятый вычет НДС, налог, штраф и&nbsp;пени.</p>
+        <a class="oshibka__go" href="/nalogi/kalkulyator-tehnicheskij-postavshchik/">Открыть калькулятор&nbsp;→</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="sect doverie" id="doverie" aria-labelledby="doverie-h">
+    <span id="why" class="yakor" aria-hidden="true"></span>
+    <div class="wrap">
+      <h2 class="h2" id="doverie-h">Почему нам можно верить</h2>
+      <div class="grid3 principles">
+        <article>
+          <h3>Вывод, а&nbsp;не&nbsp;справка</h3>
+          <p>Каждая проверка заканчивается ответом: можно работать или нет, и&nbsp;на&nbsp;каких условиях.</p>
+        </article>
+        <article>
+          <h3>Только проверяемые факты</h3>
+          <p>Официальные открытые данные. У&nbsp;каждого факта&nbsp;— источник и&nbsp;дата. Наши оценки так и&nbsp;называем&nbsp;— оценками.</p>
+        </article>
+        <article>
+          <h3>«Не&nbsp;проверено»&nbsp;— не&nbsp;«не&nbsp;найдено»</h3>
+          <p data-ne-proveryaem>Арбитражные дела, приставов и&nbsp;госзакупки мы пока не&nbsp;проверяем&nbsp;— так и&nbsp;пишем и&nbsp;даём ссылку, где проверить самим.</p>
+        </article>
+      </div>
+      <p class="chips-h">Источники, которые уже сводим:</p>
       <div class="chips">
         <div class="chip">ЕГРЮЛ и ЕГРИП</div>
         <div class="chip">Отметки ФНС о недостоверности</div>
@@ -503,182 +486,16 @@ footer a{color:var(--ink2)}
         <div class="chip">Специальные налоговые режимы</div>
         <div class="chip">Дисквалифицированные лица</div>
         <div class="chip">Бухгалтерская отчётность (ГИР БО)</div>
-      </div></div>
+      </div>
     </div>
   </section>
 
-  <section class="sect ai" id="ai">
+  <section class="sect white ceny" id="price" aria-labelledby="ceny-h">
     <div class="wrap">
-      <div style="display:flex;flex-direction:column;gap:20px">
-        <div class="eyebrow">Персональный разбор · скоро</div>
-        <h2 class="h2">Банк прислал запрос по 115-ФЗ? Разложим всё по полкам.</h2>
-        <p class="lead">Опишите ситуацию своими словами. За пару минут вы получите разбор именно вашего случая: чего на самом деле хочет банк, какие документы собрать и два-три варианта, как выйти из ситуации. Черновик пояснения в банк подготовим сразу.</p>
-        <p style="font-size:14px;line-height:1.5;color:#8E8E93">Разбор готовит система Делоскопа по нормам 115-ФЗ и рекомендациям Банка России. Это подсказка, а не юридическая консультация.</p>
-      </div>
-      <div class="chat" aria-label="Пример персонального разбора">
-        <div class="bubble me">Банк просит пояснить платёж поставщику за материалы и дал 5 рабочих дней. Что отправить?</div>
-        <div class="bubble bot">Подготовьте договор поставки, счёт, накладные и подтверждение, что материалы использованы в работе. Я составлю пояснительное письмо — ответьте на три вопроса о сделке.</div>
-        <div class="suggest"><span>Составить письмо</span><span>Список документов</span></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="sect" id="schet">
-    <div class="wrap grid2">
-      <div style="display:flex;flex-direction:column;gap:18px;justify-content:center">
-        <div class="eyebrow">Новое · бесплатно</div>
-        <h2 class="h2">Проверь счёт перед оплатой</h2>
-        <p class="lead">Загрузите счёт в PDF или вставьте реквизиты. За минуту скажем, можно ли платить, и подскажем назначение платежа. Файл не уходит с вашего компьютера.</p>
-        <div><a class="btn" href="/proverit-schet/">Проверить счёт</a></div>
-      </div>
-      <article class="feature">
-        <h3>Что проверяем</h3>
-        <div class="doclist">
-          <div><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>ИНН поставщика настоящий</div>
-          <div><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Расчётный счёт сходится с БИК — ловит подмену реквизитов</div>
-          <div><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Деньги уйдут компании, а не на личную карту</div>
-          <div><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>НДС по верной ставке 22%</div>
-          <div><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Поставщик без признаков технической компании</div>
-        </div>
-      </article>
-    </div>
-  </section>
-
-  <section class="sect white why" id="why">
-    <div class="wrap">
-      <div class="eyebrow">Почему мы делаем Делоскоп</div>
-      <h2 class="h2" style="margin-top:12px;max-width:820px">Честному бизнесу не должно быть страшно открывать банковское приложение</h2>
-      <div class="manifest" style="margin-top:24px">
-        <p>Банк России через платформу «Знай своего клиента» относит каждую из 7,5&nbsp;млн компаний и&nbsp;ИП к&nbsp;зелёной, жёлтой или красной группе риска<sup>1</sup>. Под проверку попадают и&nbsp;обычные компании — из-за одного платежа сомнительному поставщику или размытого назначения платежа.</p>
-        <p>С налоговой похожая история. Если поставщик окажется «технической» компанией, отвечать придётся покупателю: налоговая вправе снять вычеты по НДС и расходы по статье 54.1 Налогового кодекса.</p>
-        <p><b>Банк и налоговая видят ваш бизнес через десятки признаков. Вы их не видите.</b> Делоскоп убирает эту разницу: показывает то же, что видят они, и простыми словами объясняет, что делать.</p>
-      </div>
-      <div class="grid3 principles">
-        <article>
-          <h3>Вывод, а не справка</h3>
-          <p>Мы не пересказываем реестры. Каждая проверка заканчивается ответом: можно работать или нет, и на каких условиях.</p>
-        </article>
-        <article>
-          <h3>Только проверяемые факты</h3>
-          <p>Официальные открытые данные ФНС. Рядом с каждым фактом — источник и дата. Наши оценки мы так и называем оценками.</p>
-        </article>
-        <article>
-          <h3>Спокойствие, а не страх</h3>
-          <p>Признак — повод проверить, а не приговор. Вместо тревоги — план: что запросить, что поправить, что сохранить в деле.</p>
-        </article>
-      </div>
-      <p class="mission">Наша миссия — чтобы добросовестный бизнес тратил время на работу, а не на объяснения с банком и налоговой.</p>
-      <p class="fn"><sup>1</sup> <a href="https://cbr.ru/counteraction_m_ter/platform_zsk/" rel="noopener" target="_blank">Банк России, платформа «Знай своего клиента»</a>. Информация платформы для банков вспомогательная: окончательный уровень риска клиента каждый банк определяет сам.</p>
-    </div>
-  </section>
-
-  <section class="sect save" id="save">
-    <div class="wrap">
-      <div class="sect-head">
-        <div class="eyebrow">Сколько стоит одна ошибка</div>
-        <h2 class="h2">Подписка стоит меньше, чем одна неудачная сделка</h2>
-        <p class="lead">Посчитайте сами: что будет, если поставщик окажется «технической» компанией и налоговая снимет вычет по НДС.</p>
-      </div>
-      <div class="calc">
-        <div class="box">
-          <label for="sv-sum">Сумма договора с поставщиком, ₽ с НДС</label>
-          <input id="sv-sum" type="text" inputmode="numeric" value="3 000 000" autocomplete="off">
-          <label class="chk"><input id="sv-exp" type="checkbox"> Налоговая сняла ещё и расходы по налогу на прибыль — худший случай</label>
-          <label class="chk"><input id="sv-int" type="checkbox"> Налоговая сочла нарушение умышленным — штраф 40% вместо 20%</label>
-          <p class="note">Пени считаем за 2 года: выездная проверка обычно приходит позже сделки. Пени — оценка по нынешней ключевой ставке 14% (действует с 27.07.2026, Банк России сохранил её 11.09.2026). В 2024–2025 годах ставка доходила до 21%, поэтому по давним сделкам пени выше. Пени посчитаны по правилам 2025–2026 годов (п.&nbsp;5.1 ст.&nbsp;75 НК РФ, действует до 31.12.2026). Если их не продлят, с 2027 года пени с 31-го дня просрочки — 1/150 ставки ЦБ, и сумма будет выше.</p>
-        </div>
-        <div class="box" aria-live="polite">
-          <div class="row"><span>Снятый вычет НДС (22%)</span><b id="sv-vat">—</b></div>
-          <div class="row" id="sv-exp-row" hidden><span>Налог на прибыль со снятых расходов (25%)</span><b id="sv-pr">—</b></div>
-          <div class="row"><span>Штраф, ст. 122 НК (<span id="sv-fp">20</span>%)</span><b id="sv-fine">—</b></div>
-          <div class="row"><span>Пени за 2 года, ст. 75 НК</span><b id="sv-pen">—</b></div>
-          <div class="tot"><span>Итого заплатите вы</span><b id="sv-tot">—</b></div>
-          <div class="vs">Год тарифа «Про» — <b>14 300 ₽</b>. Это <b id="sv-x">—</b> от суммы, которую вы рискуете потерять на одной сделке.</div>
-          <p class="note">Это пример расчёта по нормам Налогового кодекса, а не прогноз по вашей компании. Сколько налоговая доначислит в вашем случае, зависит от проверки.</p>
-        </div>
-      </div>
-
-      <h3 class="h2" style="font-size:clamp(26px,3vw,34px);margin-top:72px">Зачем каждый сервис и от чего он защищает</h3>
-      <div class="srv">
-        <article>
-          <h3>Проверка контрагента</h3>
-          <p class="risk">Риск: снятый вычет НДС и потерянный аванс</p>
-          <p>За секунды сводим открытые данные ФНС и признаки из рекомендаций Банка России. Говорим прямо: платить можно, только по факту или лучше не работать. Досье с датой проверки — часть доказательств должной осмотрительности перед налоговой (письмо ФНС № БВ-4-7/3060@).</p>
-        </article>
-        <article>
-          <h3>Щит</h3>
-          <p class="risk">Риск: заблокированный счёт</p>
-          <p>Пока счёт заблокирован, нельзя платить зарплату, налоги и поставщикам, а разблокировка идёт неделями. Щит заранее показывает, как вашу компанию видят банк и налоговая, и что поправить до запроса по 115-ФЗ.</p>
-        </article>
-        <article>
-          <h3>Проверь счёт</h3>
-          <p class="risk">Риск: деньги ушли не туда</p>
-          <p>Ошибка в реквизитах или подменённый мошенниками счёт — и деньги уходят чужим. Сверяем ИНН, БИК, контрольный ключ счёта и самого поставщика до того, как вы нажмёте «Оплатить».</p>
-        </article>
-        <article>
-          <h3>Слежение</h3>
-          <p class="risk">Риск: контрагент испортился после договора</p>
-          <p>Проверили год назад — сегодня у поставщика налоговый долг или новый директор. Сообщаем об изменениях до следующей оплаты, а не после.</p>
-        </article>
-        <article>
-          <h3><a href="/delopis/">Делопись</a> <span class="tagnew">бета</span></h3>
-          <p class="risk">Риск: договор, который не защищает</p>
-          <p>Договор заполняется по ИНН и сам добавляет защитные пункты под риски контрагента: заверения об обстоятельствах, оплату по факту, поручительство директора.</p>
-        </article>
-        <article>
-          <h3>Время бухгалтера</h3>
-          <p class="risk">Риск: часы ручной работы</p>
-          <p>Вместо семи сайтов и сверки вручную — одна проверка и готовый вывод за секунды. Бухгалтер занимается учётом, а не поиском по реестрам.</p>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <section class="sect white pricing" id="price">
-    <div class="wrap">
-      <div class="sect-head">
-        <h2 class="h2">Попробуйте бесплатно. Растите вместе с нами.</h2>
-        <!--oplata--><template data-oplata><p class="lead">Помесячно — без обязательств на год, отменить можно в любой момент. Компаниям и ИП — по счёту на месяц, квартал или год, с закрывающими документами. Оплата картой на сайте — скоро.</p></template><!--/oplata--><!--v-bete--><p class="lead">Сейчас идёт открытая бета: все возможности открыты бесплатно, счета не выставляем. Цены ниже — какими они станут после беты.</p><!--/v-bete-->
-        <div class="period" role="group" aria-label="Период оплаты">
-          <button type="button" data-period="m" class="on" aria-pressed="true">Помесячно</button>
-          <button type="button" data-period="y" aria-pressed="false">За год <em>−20%</em></button>
-        </div>
-      </div>
-      <div class="plans">
-        <div class="plan ">
-          <div><div class="plan-name">Бесплатно </div><div class="plan-for">Чтобы разово проверить компанию</div></div>
-          <div class="price"><b>0 ₽</b></div><div class="per">навсегда</div>
-          <ul>
-            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>3 быстрые проверки в день</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Светофор рисков и главные факты</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Проверь счёт перед оплатой</li>
-          </ul>
-          <a class="cta ghost" href="#top" data-focus-inn>Проверить бесплатно</a>
-        </div>
-        <div class="plan ">
-          <div><div class="plan-name">Старт </div><div class="plan-for">ИП, самозанятым и частным лицам</div></div>
-          <div class="price"><b data-m="490 ₽" data-y="392 ₽">490 ₽</b><span data-m="в месяц" data-y="в месяц при оплате за год">в месяц</span></div><div class="per" data-m="или 4 700 ₽ за год — экономия 1 180 ₽" data-y="4 700 ₽ одним платежом — экономия 1 180 ₽">или 4 700 ₽ за год — экономия 1 180 ₽</div>
-          <ul>
-            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Быстрые проверки без лимита</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>3 развёрнутые проверки (Паспорт) в месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>10 персональных разборов в месяц <span class="tagnew">скоро</span></span></li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Слежение за 3 компаниями</li>
-          </ul>
-          <!--oplata--><template data-oplata><div class="knopki" data-cena-m="490 ₽" data-cena-g="4 700 ₽"><a class="cta ghost" data-tarif="start" data-srok="mes" data-oplata-href="/schet/?tarif=start&amp;srok=mes">Оплачивать помесячно</a><a class="cta2" data-tarif="start" data-srok="god" data-oplata-href="/schet/?tarif=start&amp;srok=god">Оплатить год — 4 700 ₽</a></div></template><!--/oplata--><!--v-bete--><div class="knopki knopki--beta"><a class="cta ghost" href="/#inn">В бете — бесплатно</a><span class="knopki__pod">Цена — после беты</span></div><!--/v-bete-->
-        </div>
-        <div class="plan pro">
-          <div><div class="plan-name">Про <span class="badge">Рекомендуем</span></div><div class="plan-for">Малому бизнесу и бухгалтерам</div></div>
-          <div class="price"><b data-m="1 490 ₽" data-y="1 192 ₽">1 490 ₽</b><span data-m="в месяц" data-y="в месяц при оплате за год">в месяц</span></div><div class="per" data-m="или 14 300 ₽ за год — экономия 3 580 ₽" data-y="14 300 ₽ одним платежом — экономия 3 580 ₽">или 14 300 ₽ за год — экономия 3 580 ₽</div>
-          <ul>
-            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Быстрые проверки без лимита</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>20 развёрнутых проверок (Паспорт) в месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Паспорт своей компании с проверкой подлинности</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Персональные разборы 115-ФЗ без лимита <span class="tagnew">скоро</span></span></li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Делопись: договоры с защитой под контрагента</span></li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Слежение за 10 компаниями</li>
-          </ul>
-          <!--oplata--><template data-oplata><div class="knopki" data-cena-m="1 490 ₽" data-cena-g="14 300 ₽"><a class="cta primary" data-tarif="pro" data-srok="mes" data-oplata-href="/schet/?tarif=pro&amp;srok=mes">Оплачивать помесячно</a><a class="cta2" data-tarif="pro" data-srok="god" data-oplata-href="/schet/?tarif=pro&amp;srok=god">Оплатить год — 14 300 ₽</a></div></template><!--/oplata--><!--v-bete--><div class="knopki knopki--beta"><a class="cta primary" href="/#inn">В бете — бесплатно</a><span class="knopki__pod">Цена — после беты</span></div><!--/v-bete-->
-        </div>
-        <div class="plan ">
-          <div><div class="plan-name">Бизнес </div><div class="plan-for">Отделам закупок и продаж</div></div>
-          <div class="price"><b data-m="4 990 ₽" data-y="3 992 ₽">4 990 ₽</b><span data-m="в месяц" data-y="в месяц при оплате за год">в месяц</span></div><div class="per" data-m="или 47 900 ₽ за год — экономия 11 980 ₽" data-y="47 900 ₽ одним платежом — экономия 11 980 ₽">или 47 900 ₽ за год — экономия 11 980 ₽</div>
-          <ul>
-            <li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>До 5 сотрудников</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Щит: разбор выписки из 1С каждый месяц <span class="tagnew">скоро</span></span></li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>80 развёрнутых проверок (Паспорт) в месяц</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Слежение за 50 компаниями</li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Финцентр: кто из покупателей платит с опозданием <span class="tagnew">скоро</span></span></li><li><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Выгрузка в Excel и 1С <span class="tagnew">скоро</span></span></li>
-          </ul>
-          <!--oplata--><template data-oplata><div class="knopki" data-cena-m="4 990 ₽" data-cena-g="47 900 ₽"><a class="cta ghost" data-tarif="biznes" data-srok="mes" data-oplata-href="/schet/?tarif=biznes&amp;srok=mes">Оплачивать помесячно</a><a class="cta2" data-tarif="biznes" data-srok="god" data-oplata-href="/schet/?tarif=biznes&amp;srok=god">Оплатить год — 47 900 ₽</a></div></template><!--/oplata--><!--v-bete--><div class="knopki knopki--beta"><a class="cta ghost" href="/#inn">В бете — бесплатно</a><span class="knopki__pod">Цена — после беты</span></div><!--/v-bete-->
-        </div>
-      </div>
-      <p class="plans-note">Не хватило развёрнутых проверок? Докупите 3 развёрнутые проверки за 990 ₽ или напишите нам — рассчитаем тариф для вашей компании. <a href="/tarify/#podbor">Подобрать тариф без переплаты и посчитать окупаемость →</a></p>
+      <h2 class="h2" id="ceny-h">Сколько стоит</h2>
+      <!--oplata--><!--/oplata--><!--v-bete--><p class="lead">Сейчас открытая бета: все возможности бесплатно по&nbsp;13&nbsp;октября включительно, счета не&nbsp;выставляем.</p><!--/v-bete-->
+      <p class="lead" data-ceny-stroka>Бесплатно&nbsp;— 3&nbsp;быстрые проверки в&nbsp;день. Старт&nbsp;— <span data-cena="start.mesyac">490</span>&nbsp;₽ в&nbsp;месяц, Про&nbsp;— <span data-cena="pro.mesyac">1 490</span>&nbsp;₽, Бизнес&nbsp;— <span data-cena="biznes.mesyac">4 990</span>&nbsp;₽. При оплате за&nbsp;год&nbsp;— на&nbsp;20% дешевле.</p>
+      <p><a href="/tarify/">Что входит в&nbsp;тарифы&nbsp;→</a></p>
     </div>
   </section>
 
@@ -686,14 +503,10 @@ footer a{color:var(--ink2)}
     <div class="wrap">
       <h2 class="h2">Вопросы</h2>
       <div>
-        <details><summary>Зачем платить, если данные ФНС и так бесплатные?</summary><p>Данные бесплатные, но разбросаны по семи сайтам, а вывода там нет. Делоскоп за секунды сводит их и говорит, что делать: платить, только по факту или не работать. Следит за изменениями, пока вы работаете с контрагентом, и хранит досье с датой проверки — часть доказательств должной осмотрительности, если налоговая придёт через два года. Одна снятая сделка на 3 млн ₽ обходится в сотни тысяч рублей — <a href="#save">посчитайте</a>.</p></details>
+        <details><summary>Зачем платить, если данные ФНС и так бесплатные?</summary><p>Данные бесплатные, но разбросаны по семи сайтам, а вывода там нет. Делоскоп за секунды сводит их и говорит, что делать: платить, только по факту или не работать. Следит за изменениями, пока вы работаете с контрагентом, и хранит досье с датой проверки — часть доказательств должной осмотрительности, если налоговая придёт через два года. Одна снятая сделка на 3 млн ₽ обходится в сотни тысяч рублей — <a href="/nalogi/kalkulyator-tehnicheskij-postavshchik/">посчитайте</a>.</p></details>
         <details open><summary>Чем Делоскоп отличается от больших сервисов проверки?</summary><p>Мы не пересказываем реестры, а даём вывод: можно работать или нет, и что сделать, чтобы обезопасить себя.</p></details>
-        <details><summary>Что такое Щит?</summary><p>Проверка вашей собственной компании глазами банка и налоговой. Введите свой ИНН — увидите признаки, на которые они смотрят, и что сделать заранее.</p></details>
         <details><summary>Откуда вы знаете, как меня видит банк?</summary><p>Мы анализируем те же открытые данные, что доступны банкам, и применяем признаки из рекомендаций Банка России. Это наша оценка, а не решение банка. На <a href="https://cbr.ru/counteraction_m_ter/platform_zsk/proverka-po-inn/" rel="noopener" target="_blank">сайте Банка России</a> по ИНН видно только одно — отнесена ли компания к красной группе; жёлтую зону знает лишь ваш банк.</p></details>
-        <details><summary>Кто пишет пояснения и статьи?</summary><p>Редакция Делоскопа. Каждый факт сверяем с первоисточником: законом, письмом ФНС или Банка России.</p></details>
-        <details><summary>Подойдёт ли Делоскоп частному лицу?</summary><p>Да. Проверьте подрядчика, арендодателя или будущего работодателя, прежде чем подписывать договор и платить.</p></details>
         <details><summary>Гарантирует ли проверка, что банк не заблокирует счёт?</summary><p>Нет. Решение принимает банк. Делоскоп помогает заметить риски заранее и правильно подготовить документы.</p></details>
-        <details><summary>Можно ли сменить тариф?</summary><p>Да, в любой момент. При переходе на тариф выше доплачиваете только разницу за оставшиеся дни.</p></details>
         <!--oplata--><template data-oplata><details><summary>Как оплатить?</summary><p>Компании и ИП — по счёту с расчётного счёта: нажмите кнопку тарифа, выберите срок и впишите ИНН плательщика — счёт откроется сразу, без НДС. Доступ — в день поступления денег, акт — для бухгалтерии. Оплата картой на сайте появится после подключения банка.</p></details></template><!--/oplata--><!--v-bete--><details><summary>Сколько это стоит сейчас?</summary><p>Ничего. Идёт открытая бета: всё открыто бесплатно, счета не выставляем. Нашли ошибку или что-то непонятно — напишите на <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>, это сейчас самое ценное.</p></details><!--/v-bete-->
         <details><summary>Где хранятся мои данные?</summary><p>На серверах в России, в соответствии с 152-ФЗ.</p></details>
       </div>
@@ -735,20 +548,6 @@ footer a{color:var(--ink2)}
   var form=document.getElementById('check'), input=document.getElementById('inn'), note=document.getElementById('note');
   var def=note.textContent;
   function focusInn(e){e.preventDefault();window.scrollTo({top:0,behavior:'smooth'});setTimeout(function(){input.focus({preventScroll:true})},350);}
-  document.querySelectorAll('[data-period]').forEach(function(b){b.addEventListener('click',function(){
-    var p=b.getAttribute('data-period');
-    document.querySelectorAll('[data-period]').forEach(function(x){x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',x===b?'true':'false')});
-    document.querySelectorAll('.plans [data-m]').forEach(function(el){el.textContent=el.getAttribute('data-'+p)});
-    var srok=p==='y'?'god':'mes';
-    document.querySelectorAll('.knopki').forEach(function(k){  /* главная кнопка — под выбранный период, вторая — тихая ссылка */
-      var a=k.querySelector('.cta'),c=k.querySelector('.cta2');
-      if(!a||!c||a.getAttribute('data-srok')===srok)return;
-      var h=a.getAttribute('href');a.setAttribute('href',c.getAttribute('href'));c.setAttribute('href',h);
-      a.setAttribute('data-srok',srok);c.setAttribute('data-srok',srok==='god'?'mes':'god');
-      a.textContent=srok==='god'?'Оплатить год':'Оплачивать помесячно';
-      c.textContent=srok==='god'?'Оплачивать помесячно — '+k.getAttribute('data-cena-m'):'Оплатить год — '+k.getAttribute('data-cena-g');
-    });
-  })});
   document.querySelectorAll('[data-focus-inn]').forEach(function(a){a.addEventListener('click',focusInn)});
   input.addEventListener('input',function(){note.className='note';note.textContent=def;});
   form.addEventListener('submit',function(e){
@@ -910,28 +709,8 @@ footer a{color:var(--ink2)}
     if(j&&j.user){try{localStorage.setItem('dlk_voshel','1')}catch(e){}document.querySelectorAll('[data-auth-out]').forEach(function(x){x.hidden=true});document.querySelectorAll('[data-auth-in]').forEach(function(x){x.hidden=false});}}).catch(function(){});
 })();
 
-(function(){
-  var $=function(i){return document.getElementById(i)};
-  var sum=$('sv-sum'); if(!sum) return;
-  var KEY=0.14, PEN=KEY*(30/300+60/150+640/300);   // 2 года: 1–30 дн. 1/300, 31–90 — 1/150, с 91-го — 1/300
-  function rub(x){return Math.round(x).toLocaleString('ru-RU').replace(/,/g,' ')+' ₽'}
-  function calc(){
-    var raw=sum.value.replace(/\D/g,''); var S=+raw||0;
-    if(raw) sum.value=S.toLocaleString('ru-RU');
-    var vat=S*22/122, pr=$('sv-exp').checked?(S-vat)*0.25:0, fp=$('sv-int').checked?0.4:0.2;
-    var tax=vat+pr, fine=tax*fp, pen=tax*PEN, tot=tax+fine+pen;
-    $('sv-exp-row').hidden=!pr; $('sv-vat').textContent=rub(vat); $('sv-pr').textContent=rub(pr);
-    $('sv-fp').textContent=fp*100; $('sv-fine').textContent=rub(fine); $('sv-pen').textContent=rub(pen);
-    $('sv-tot').textContent=rub(tot);
-    var pct=tot?14300/tot*100:0;
-    $('sv-x').textContent=tot?(pct<1?'меньше 1%':Math.round(pct)+'%'):'—';
-  }
-  sum.addEventListener('input',calc); $('sv-exp').addEventListener('change',calc); $('sv-int').addEventListener('change',calc);
-  calc();
-})();
 </script>
 <script src="/obnovleniya.js" defer></script>
-<script src="/js/schet.js" defer></script>
 <!--podval--><div class="podval" role="contentinfo"><div class="podval__in"><div class="podval__cols"><nav class="podval__col" aria-label="Продукты"><p class="podval__h">Продукты</p><ul><li><a href="/">Проверка по ИНН</a></li><li><a href="/indeks/">Индекс Делоскопа</a></li><li><a href="/#shield">Щит</a></li><li><a href="/nalichnye/">Наличные глазами банка</a></li><li><a href="/kontragenty-iz-vypiski/">Кому вы платите</a></li><li><a href="/proverit-schet/">Проверь счёт</a></li><li><a href="/skoraya-115-fz/">Скорая 115-ФЗ</a></li><li><a href="/pasport/">Паспорт</a></li><li><a href="/delopis/">Делопись</a></li><li><a href="/tarify/">Тарифы</a></li></ul></nav><nav class="podval__col" aria-label="Знания"><p class="podval__h">Знания</p><ul><li><a href="/115-fz/">115-ФЗ простыми словами</a></li><li><a href="/nalogi/">Налоги</a></li><li><a href="/obnovleniya/">Что нового</a></li></ul></nav><nav class="podval__col" aria-label="Компания"><p class="podval__h">Компания</p><ul><li><a href="/indeks/#metodika">Методика Индекса</a></li><li><a href="/cabinet.html">Кабинет</a></li><li><a href="/rekvizity/">Реквизиты и контакты</a></li><li><a href="mailto:help@deloskop.ru">help@deloskop.ru</a></li></ul></nav><nav class="podval__col" aria-label="Документы"><p class="podval__h">Документы</p><ul><li><a href="/oferta/">Публичная оферта</a></li><li><a href="/politika/">Политика обработки ПДн</a></li><li><a href="/soglasie/">Согласие на обработку ПДн</a></li><li><a href="/rassylki/">Согласие на рассылки</a></li><li><a href="/cookies/">Cookies и Метрика</a></li><li><a href="/vozvrat/">Возврат денег</a></li><li><a href="/partneram/usloviya/">Условия для партнёров</a></li><li><a href="/rekvizity/">Реквизиты</a></li></ul></nav></div><div class="podval__niz"><p>© 2026 Делоскоп</p><p>Сотрудничество, отзывы и предложения — <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>. Принимаем 24/7</p><p>Материалы носят информационный характер и не заменяют консультацию юриста</p></div></div></div><!--/podval-->
 </body>
 </html>

@@ -121,9 +121,9 @@ for f in ("osnovatel/index.html", "tarify/index.html"):
        v.count("<details><summary>") == json.loads(m.group(1) if m.lastindex else m.group(0))["mainEntity"].__len__())
 
 platn = sobrat(False)
-ok("без беты: кнопки оплаты вернулись (6 на /tarify/, 6 на главной)",
+ok("без беты: кнопки оплаты вернулись (6 на /tarify/; на главной с glavnaya-v2 — строка цен и «Как оплатить?»)",
    len(re.findall(r'<a class="cta[^"]*" data-tarif="[a-z]+" data-srok="[a-z]+" href="/schet/', B.vidimoe(platn["tarify/index.html"]))) == 6 and
-   len(re.findall(r'<a class="cta[^"]*" data-tarif="[a-z]+" data-srok="[a-z]+" href="/schet/', B.vidimoe(platn["index.html"]))) == 6)
+   "<summary>Как оплатить?</summary>" in B.vidimoe(platn["index.html"]) and "Сейчас открытая бета" not in B.vidimoe(platn["index.html"]))
 ok("без беты: «Забронировать место» и «Получить пакет» вернулись",
    ">Забронировать место</a>" in B.vidimoe(platn["osnovatel/index.html"]) and
    B.vidimoe(platn["skoraya-115-fz/index.html"]).count(">Получить пакет</a>") == 2)

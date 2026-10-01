@@ -251,6 +251,8 @@ DATY_NABOROV = [
     ("shtat", re.compile(r"численност", re.I)),
     ("shtrafy", re.compile(r"штраф", re.I)),
     ("fssp", re.compile(r"ФССП|пристав", re.I)),
+    # daty-v2: API (daty-api-v1, коммит 3) отдаёт дату набора ФНС «уплаченные налоги» — без неё V23 не выходил
+    ("nalogi", re.compile(r"уплаченн\w* налог", re.I)),
 ]
 
 
@@ -373,6 +375,10 @@ def iz_check(r):
     for kod, f in k["fakty"].items():
         if not f.get("data") and dd.get(kod) and not GIRBO_KPI.search(str(f.get("zagolovok") or "")):
             f["data"] = dd[kod]
+    # daty-v2: «Налоги и взносы за год» — без года в подписи; набор ФНС «уплаченные налоги» датирован 31.12 года уплаты
+    t = k["fakty"].get("nalogi")
+    if t and not t.get("god") and dd.get("nalogi") and (dd["nalogi"].month, dd["nalogi"].day) == (12, 31):
+        t["god"] = dd["nalogi"].year
     # финансы по годам: досье (бухотчётность) или явное поле выгрузки
     ch = D.get("charts") or {}
     for p in (r.get("finansy") or ch.get("revenue") or []):

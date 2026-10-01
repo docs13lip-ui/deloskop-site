@@ -304,6 +304,32 @@ def sobrat_stranicu(txt, r, podval, shapka=None):
     return txt
 
 
+OBOLOCHKA_JSON = ("partials", "obolochka.json")
+PROBA = ('<!doctype html>\n<html lang="ru">\n<head>\n</head>\n<body>\n<!--shapka--><!--/shapka-->\n'
+         '<main id="main"></main>\n</body>\n</html>\n')
+
+
+def obolochka(r, podval, shapka):
+    """obolochka-v1: шапка, подвал и режим беты для карточек из API (/company/ со ступени 2).
+
+    Собираем пустую страницу той же sobrat_stranicu и вырезаем три вставки: что добавилось перед </head>,
+    что встало на место метки шапки, что добавилось перед </body>. API надевает их на карточку
+    (kartochka_render.nadet_obolochku) — без копии сборщика и partials. render — отпечаток модуля
+    отрисовки: API с другой версией tests/kartochka_render.py карточки не отдаёт (503), а не рисует по-старому."""
+    import hashlib
+    s = sobrat_stranicu(PROBA, r, podval, shapka)
+    a = s.index("<head>\n") + len("<head>\n")
+    head = s[a:s.index("</head>")]
+    b = s.index("<body>\n") + len("<body>\n")
+    shap = s[b:s.index("\n<main")]
+    c = s.index("</main>\n") + len("</main>\n")
+    podv = s[c:s.rindex("</body>")]
+    with open(put("tests", "kartochka_render.py"), "rb") as fh:
+        otp = hashlib.sha256(fh.read().replace(b"\r\n", b"\n")).hexdigest()[:16]
+    ob = {"versiya": 1, "beta": bool(r.get("_beta")), "render": otp, "head": head, "shapka": shap, "podval": podv}
+    return json.dumps(ob, ensure_ascii=False, indent=1, sort_keys=True) + "\n"
+
+
 def main():
     check = "--check" in sys.argv
     r = rekv_sajta()
@@ -318,6 +344,14 @@ def main():
             if not check:
                 with open(cp, "w", encoding="utf-8") as fh:
                     fh.write(css)
+    op = put(*OBOLOCHKA_JSON)
+    ob = obolochka(r, podval, shapka)
+    stary = open(op, encoding="utf-8").read() if os.path.exists(op) else ""
+    if stary != ob:
+        izmeneno.append("/".join(OBOLOCHKA_JSON))
+        if not check:
+            with open(op, "w", encoding="utf-8") as fh:
+                fh.write(ob)
     for f in stranicy():
         with open(put(f), encoding="utf-8") as fh:
             txt = fh.read()

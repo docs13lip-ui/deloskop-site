@@ -9,7 +9,9 @@
 модулей сайта (это проверяет tests/test_kartochka_render.py). Шапку, подвал и режим беты ставит сайт
 (tests/sobrat_shapku.py → sobrat_stranicu); на их место в разметке — метки <!--shapka--><!--/shapka-->.
 
-Для API — одна точка входа: kartochka_iz_check(ответ /api/check, соседи) → (годится, причина, адрес, html).
+Для API — одна точка входа: kartochka_iz_check(ответ /api/check, соседи) → (годится, причина, адрес, html),
+и оболочка: nadet_obolochku(html, оболочка) — оболочку собирает сайт (tests/sobrat_shapku.py → partials/obolochka.json),
+результат байт в байт равен статичной карточке волны (obolochka-v1).
 Правила карточек — в шапке tests/kartochki.py.
 """
 import datetime as dt
@@ -845,3 +847,21 @@ def kartochka_iz_check(zapis, sosedi=()):
     if not ok:
         return False, pr, None, None
     return True, pr, adres_str(k), html_kartochki(k, V, pohozhie(k, list(sosedi)))
+
+
+# ---------------------------------------------------------------- оболочка для API (obolochka-v1)
+OBOLOCHKA_METKA = "<!--shapka--><!--/shapka-->"
+
+
+def nadet_obolochku(telo, ob):
+    """HTML карточки (kartochka_iz_check) + оболочка сайта (partials/obolochka.json) → готовая страница.
+
+    Три вставки — те же, что делает tests/sobrat_shapku.py → sobrat_stranicu: ссылки и метка режима — перед </head>,
+    шапка (и полоса беты) — на место метки, подвал — перед последним </body>. Совпадение байт в байт со статичной
+    карточкой проверяет tests/test_kartochki.py. Нет метки или </head> — None (API отвечает 503, а не кривой страницей)."""
+    if not telo or OBOLOCHKA_METKA not in telo or "</head>" not in telo or "</body>" not in telo:
+        return None
+    t = telo.replace("</head>", ob["head"] + "</head>", 1)
+    t = t.replace(OBOLOCHKA_METKA, ob["shapka"], 1)
+    i = t.rfind("</body>")
+    return t[:i] + ob["podval"] + t[i:]

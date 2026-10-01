@@ -3,7 +3,7 @@
    в баннере cookies; «Только необходимые» — не загружается. Выбор хранится в браузере 12 месяцев.
    Цели: window.dlkGoal("check_started" | "report_opened" | "invoice_created" | "registration" |
    "article_to_tool" | "whatsnew_open" | "pkg_view" | "pkg_cta" | "praktika_cta" |
-   "entry_pay" | "entry_watch" | "entry_bank", {параметры}) — без согласия ничего не отправляет. */
+   "entry_pay" | "entry_watch" | "entry_bank" | "shchit_start" | "shchit_sled", {параметры}) — без согласия ничего не отправляет. */
 (function () {
   "use strict";
   var ID = 113083788;

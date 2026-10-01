@@ -6,8 +6,8 @@
 Только стандартная библиотека Python.
 
     python3 tests/kartochki.py sobrat  --vhod kartochki.jsonl [--stupen 0] [--spros 800 --kontrol 200]
-    python3 tests/kartochki.py proverka --vhod kartochki.jsonl      # только отчёт «сколько проходит ворота», файлы не трогает
-    python3 tests/kartochki.py iz-api  --inn spisok.txt --vyhod kartochki.jsonl   # сведения из живого /api/check
+    python3 tests/kartochki.py proverka --vhod kartochki.jsonl [--podrobno]  # только отчёт «сколько проходит ворота», файлы не трогает
+    python3 tests/kartochki.py iz-api  --inn spisok.txt --vyhod kartochki.jsonl [--pauza 6] [--maks 300]  # живой /api/check; 429 — стоп
 
 Правила (кто решил — в скобках):
   * только юрлица: ИНН из 10 цифр с верной контрольной суммой; ИП — карточки нет вовсе (владелец 26.09 16:50);
@@ -30,6 +30,7 @@ import re
 import shutil
 import sys
 import time
+import urllib.error
 import urllib.request
 
 KOREN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -70,6 +71,7 @@ def otobrat(zapisi, limit, spros=None, kontrol=None):
         k = iz_check(r)
         V = vyvody(k)
         ok, pr = vorota(k, V)
+        otchet.setdefault("po_inn", []).append((inn, pr, diagnoz(k, V)))
         if not ok:
             otchet["prichiny"][pr] = otchet["prichiny"].get(pr, 0) + 1
             continue
@@ -91,11 +93,27 @@ def otobrat(zapisi, limit, spros=None, kontrol=None):
     return itog, otchet
 
 
-def pechat_otcheta(o):
+def diagnoz(k, V):
+    """kartochki-v2: почему факт не стал выводом — по каждому коду: «вывод» / «без даты» / «нет числа» / «нет в ответе».
+    Для `proverka --podrobno`: видно, чего не хватает воротам, без ослабления самих ворот."""
+    est = {x["kod"] for x in V}
+    out = ["выводы: " + (", ".join(sorted(est)) or "нет")]
+    for kod in ("dohod", "shtat", "nalogi", "nedoimka", "nedostovernost", "fssp"):
+        f = k["fakty"].get(kod)
+        out.append("%s: %s" % (kod, "нет в ответе" if not f else "без даты" if not f.get("data")
+                               else "нет числа" if f.get("znachenie") is None and kod in ("dohod", "shtat", "nalogi") else "есть"))
+    out.append("финансы: %s" % (("%d–%d" % (k["finansy"][0]["god"], k["finansy"][-1]["god"])) if k["finansy"] else "нет"))
+    return "; ".join(out)
+
+
+def pechat_otcheta(o, podrobno=False):
     print("Записей на входе: %d · ИП отброшено до обработки: %d" % (o["vsego"], o["ip_otbrosheno"]))
     print("Прошли ворота индексации: %d · в волне: %d (со спросом %d, контроль %d)" % (o["proshli"], o.get("v_volne", 0), o["spros"], o["kontrol"]))
     for pr, n in sorted(o["prichiny"].items(), key=lambda x: -x[1]):
         print("  не прошли — %s: %d" % (pr, n))
+    if podrobno:
+        for inn, pr, dg in o.get("po_inn", []):
+            print("  %s — %s · %s" % (inn, pr, dg))
 
 
 def zapisat(put, txt):
@@ -155,10 +173,15 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None):
 
 
 # ---------------------------------------------------------------- сведения из живого /api/check
-def iz_api(spisok, vyhod, api="https://api.deloskop.ru", pauza=2.0):
+MAKS_ZAPROSOV = 300  # за один запуск (правило «Штаба» 02.10: не больше 300 запросов к API за запуск)
+
+
+def iz_api(spisok, vyhod, api="https://api.deloskop.ru", pauza=6.0, maks=MAKS_ZAPROSOV):
     """Берёт ИНН из файла (по одному в строке), спрашивает /api/check и дописывает ответы в vyhod (.jsonl).
     Возобновляется с места обрыва. ИНН из 12 цифр не запрашиваются вовсе. Каждый запрос — это одна
-    живая проверка (DaData findById + базы) — не больше 1 000 за ночь (Данные §1.4, бюджет DaData)."""
+    живая проверка (DaData findById + базы) — не больше 1 000 за ночь (Данные §1.4, бюджет DaData).
+    kartochki-v2: пауза по умолчанию 6 с, не больше maks запросов за запуск, на HTTP 429 — сразу стоп
+    (лимит не обходим: продолжить — та же команда позже, готовые ИНН пропускаются)."""
     gotovo = set()
     if os.path.exists(vyhod):
         for r in chitat_jsonl(vyhod):
@@ -168,6 +191,7 @@ def iz_api(spisok, vyhod, api="https://api.deloskop.ru", pauza=2.0):
         s = re.sub(r"\D", "", s)
         if len(s) == 10 and inn_ok(s) and s not in gotovo and s not in inns:
             inns.append(s)
+    inns = inns[:max(0, int(maks))]
     zag = {"Accept": "application/json", "User-Agent": "Deloskop-kartochki/1"}
     if os.environ.get("DELOSKOP_COOKIE"):
         zag["Cookie"] = os.environ["DELOSKOP_COOKIE"]  # сессия сотрудника — без лимита анонимных проверок; в файлы не пишем
@@ -187,6 +211,15 @@ def iz_api(spisok, vyhod, api="https://api.deloskop.ru", pauza=2.0):
                 fh.write(json.dumps(r, ensure_ascii=False) + "\n")
                 fh.flush()
                 ok += 1
+            except urllib.error.HTTPError as ex:
+                if ex.code == 429:
+                    print("  %s: HTTP 429 — лимит API. Остановились (лимит не обходим); продолжить — та же команда позже." % inn)
+                    break
+                oshibki += 1
+                print("  %s: HTTP %s" % (inn, ex.code))
+                if oshibki >= 20 and oshibki > ok:
+                    print("Слишком много ошибок подряд — остановились. Продолжить: та же команда.")
+                    break
             except Exception as ex:  # noqa: BLE001 — один сбой не останавливает всю ночь
                 oshibki += 1
                 print("  %s: %s" % (inn, str(ex)[:120]))
@@ -209,7 +242,8 @@ def main(argv):
         return 2
     if argv[0] == "iz-api":
         iz_api(_arg(argv, "--inn"), _arg(argv, "--vyhod", "tests/kartochki_dannye/kartochki.jsonl"),
-               _arg(argv, "--api", "https://api.deloskop.ru"), float(_arg(argv, "--pauza", "2")))
+               _arg(argv, "--api", "https://api.deloskop.ru"), max(6.0, float(_arg(argv, "--pauza", "6"))),
+               int(_arg(argv, "--maks", str(MAKS_ZAPROSOV))))
         return 0
     vhod = _arg(argv, "--vhod", "tests/kartochki_dannye/kartochki.jsonl")
     zapisi = chitat_jsonl(vhod)
@@ -221,7 +255,7 @@ def main(argv):
     kontrol = int(kontrol) if kontrol else None
     if argv[0] == "proverka":
         _, o = otobrat(zapisi, limit, spros, kontrol)
-        pechat_otcheta(o)
+        pechat_otcheta(o, "--podrobno" in argv)
         return 0
     _, o = sobrat(zapisi, KOREN, limit, spros, kontrol)
     # хаб появился/исчез → ссылка «Компании» в подвале всех страниц; пересобираем общий подвал сразу

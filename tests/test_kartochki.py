@@ -279,5 +279,66 @@ class TestMelochi(unittest.TestCase):
         self.assertEqual(K.region_gorod("г Москва, ул Тверская, д 1"), ("Москва", "Москва"))
 
 
+class TestObshchijRender(unittest.TestCase):
+    """render-v1: одна отрисовка для сайта (статичные файлы) и API (/company/ через nginx со ступени 2)."""
+
+    def test_modul_chistyj(self):
+        # только стандартная библиотека, без файлов, сети и модулей сайта — API подключает его как есть
+        import ast
+        src = (KOREN / "tests" / "kartochka_render.py").read_text(encoding="utf-8")
+        t = ast.parse(src)
+        imp = set()
+        for n in ast.walk(t):
+            if isinstance(n, ast.Import):
+                imp |= {a.name for a in n.names}
+            elif isinstance(n, ast.ImportFrom):
+                imp.add(n.module)
+        self.assertLessEqual(imp, {"datetime", "html", "json", "math", "os", "re", "urllib.parse"}, imp)
+        vyzovy = {n.func.id if isinstance(n.func, ast.Name) else n.func.attr for n in ast.walk(t) if isinstance(n, ast.Call)}
+        for zapret in ("open", "urlopen", "remove", "rmtree", "makedirs", "system", "run"):
+            self.assertNotIn(zapret, vyzovy, zapret)
+        self.assertNotRegex(src, r"fonts\.(googleapis|gstatic)")
+
+    def test_odin_render(self):
+        import kartochka_render as R
+        for imya_ in ("html_kartochki", "html_haba", "vorota", "vyvody", "iz_check", "adres_str", "persons_public"):
+            self.assertIs(getattr(K, imya_), getattr(R, imya_), imya_)
+
+    def test_api_ravno_fajlu_sajta(self):
+        # страница из API после той же оболочки (шапка, подвал, бета) = файл статичной волны, байт в байт
+        import kartochka_render as R
+        import sobrat_shapku as ss
+        os.environ.pop("PERSONS_PUBLIC", None)
+        zap = O.nabor(12)
+        d, kart, _ = sobrat(zap)
+        r = ss.rekv_sajta()
+        podval, shapka = ss.podval_html(r), ss.shapka_html()
+        pervye = {}
+        for z in zap:
+            ok, pr, adres, telo = R.kartochka_iz_check(z, kart)
+            self.assertTrue(ok, pr)
+            pervye[adres] = ss.sobrat_stranicu(telo, r, podval, shapka)
+        self.assertEqual(len(pervye), len(kart))
+        for adres, txt in pervye.items():
+            fajl = pathlib.Path(d, adres.strip("/"), "index.html").read_text(encoding="utf-8")
+            self.assertEqual(txt, fajl, adres)
+
+    def test_api_ip_i_vorota(self):
+        import kartochka_render as R
+        ip = O.zapis(1, inn="500100732259", kind="INDIVIDUAL", name="ИП Примеров Иван Петрович")
+        self.assertEqual(R.kartochka_iz_check(ip)[0::2], (False, None))
+        self.assertIsNone(R.kartochka_iz_check(ip)[3])
+        ok, pr, adres, telo = R.kartochka_iz_check(O.zapis(2, status="LIQUIDATED"))
+        self.assertEqual((ok, adres, telo), (False, None, None))
+        self.assertIn("действующая", pr)
+
+    def test_api_bez_lyudej_po_umolchaniyu(self):
+        import kartochka_render as R
+        os.environ.pop("PERSONS_PUBLIC", None)
+        telo = R.kartochka_iz_check(O.zapis(3))[3]
+        self.assertIn("<!--shapka--><!--/shapka-->", telo)
+        self.assertNotIn("Примеров", telo)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

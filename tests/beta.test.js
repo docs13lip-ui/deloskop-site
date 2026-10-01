@@ -67,7 +67,7 @@ test('otzyv.js: тело запроса — без e-mail и имени; оце�
 });
 
 test('отзыв подключён на отчёте, Паспорте контрагента и в шаблоне карточки компании', () => {
-  for (const f of ['report.html', 'pasport/kontragent/index.html', 'tests/kartochki.py'])
+  for (const f of ['report.html', 'pasport/kontragent/index.html', 'tests/kartochka_render.py'])
     assert.ok(chitat(f).includes('<script src="/js/otzyv.js" defer></script>'), f);
 });
 

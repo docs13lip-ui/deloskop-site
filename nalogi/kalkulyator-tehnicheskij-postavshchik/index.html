@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Калькулятор: во что обойдётся «технический» поставщик — Делоскоп</title>
+<meta name="description" content="Поставщик оказался «технической» компанией? Посчитайте снятый вычет НДС, налог на прибыль, штраф и пени по НК РФ. Бесплатно, без регистрации.">
+<link rel="canonical" href="https://deloskop.ru/nalogi/kalkulyator-tehnicheskij-postavshchik/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Калькулятор: во что обойдётся «технический» поставщик — Делоскоп">
+<meta property="og:description" content="Поставщик оказался «технической» компанией? Посчитайте снятый вычет НДС, налог на прибыль, штраф и пени по НК РФ. Бесплатно, без регистрации.">
+<meta property="og:url" content="https://deloskop.ru/nalogi/kalkulyator-tehnicheskij-postavshchik/">
+<meta property="og:image" content="https://deloskop.ru/ikonka-512.png">
+<meta name="theme-color" content="#F5F5F2">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+:root{--bg:#F5F5F2;--card:#fff;--ink:#1D1D1F;--ink2:#48484C;--muted:#6B6B70;--line:#E6E6E1;--accent:#0B63E5;--accent-hover:#084BB0;--r:24px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}a:hover{color:var(--accent-hover)}
+.top{position:sticky;top:0;z-index:5;background:rgba(245,245,242,.86);backdrop-filter:saturate(180%) blur(16px);-webkit-backdrop-filter:saturate(180%) blur(16px);border-bottom:1px solid rgba(0,0,0,.05)}
+.top .in{max-width:1120px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:22px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:19px;color:var(--ink);letter-spacing:-.02em;margin-right:auto}
+.top nav{display:flex;gap:22px;font-size:15px}.top nav a{color:var(--ink2)}.top nav a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:12px;background:var(--accent);color:#fff!important;font-weight:600;font-size:15px}
+@media (max-width:760px){.top .in{flex-wrap:wrap;row-gap:4px;padding-bottom:8px}.top nav{order:3;width:100%;overflow-x:auto;gap:20px;scrollbar-width:none}.top nav::-webkit-scrollbar{display:none}.top nav a{white-space:nowrap}}
+main{max-width:760px;margin:0 auto;padding:28px 20px 64px}
+.crumbs{font-size:14px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap}.crumbs a{color:var(--muted)}
+h1{font-size:clamp(30px,5vw,44px);line-height:1.1;letter-spacing:-.03em;margin:14px 0 12px;font-weight:600}
+.meta{font-size:15px;color:var(--muted)}
+.lead{margin:26px 0 8px;background:var(--card);border-radius:var(--r);padding:24px 26px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 16px 40px rgba(0,0,0,.05)}
+.lead b{display:block;font-size:14px;color:var(--accent);margin-bottom:6px;letter-spacing:.01em}
+article h2{font-size:clamp(24px,3vw,30px);letter-spacing:-.02em;line-height:1.2;margin:40px 0 12px;font-weight:600}
+article p{margin:0 0 14px;color:var(--ink2)}article p strong,article li strong{color:var(--ink)}
+article ul,article ol{margin:0 0 16px;padding-left:22px;color:var(--ink2)}article li{margin:6px 0}
+article table{width:100%;border-collapse:collapse;margin:8px 0 18px;font-size:16px;background:var(--card);border-radius:16px;overflow:hidden}
+article th,article td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+article th{font-weight:600;background:#FAFAF8}article tr:last-child td{border-bottom:0}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.check{margin:44px 0 0;background:#111113;color:#fff;border-radius:var(--r);padding:28px 26px}
+.check h2{margin:0 0 8px;font-size:26px;letter-spacing:-.02em;font-weight:600}.check p{color:#B8B8BD;margin:0 0 16px}
+.check form{display:flex;gap:10px;flex-wrap:wrap}
+.check input{flex:1 1 220px;min-height:50px;border:0;border-radius:12px;padding:0 14px;font:inherit;font-size:17px}
+.check button{min-height:50px;border:0;border-radius:12px;background:var(--accent);color:#fff;font:inherit;font-weight:600;padding:0 22px;cursor:pointer}
+.src{margin-top:36px;font-size:15px;color:var(--muted)}.src h2{font-size:18px;margin:0 0 8px;color:var(--ink);letter-spacing:0}
+.src ol{padding-left:20px;margin:0}.src li{margin:4px 0}.src a{color:var(--ink2);text-decoration:underline;text-decoration-color:var(--line)}
+.disc{margin-top:18px;font-size:14px;color:var(--muted)}
+.more{margin-top:44px}.more h2{font-size:22px;margin:0 0 12px}
+.cards{display:grid;gap:14px}
+.card{display:block;background:var(--card);border-radius:20px;padding:20px 22px;color:var(--ink)}
+.card:hover{box-shadow:0 12px 32px rgba(0,0,0,.07);color:var(--ink)}
+.card small{color:var(--accent);font-weight:600;font-size:13px}.card b{display:block;font-size:19px;line-height:1.3;margin:4px 0 6px;font-weight:600;letter-spacing:-.01em}.card span{color:var(--muted);font-size:15px}
+footer{max-width:1120px;margin:0 auto;padding:28px 20px 40px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:14px;color:var(--muted);border-top:1px solid var(--line)}
+footer a{color:var(--muted)}
+.faq{margin-top:40px}.faq h2{margin:0 0 12px}
+.faq details{background:var(--card);border-radius:16px;padding:14px 18px;margin:0 0 10px}
+.faq summary{cursor:pointer;font-weight:600;color:var(--ink)}
+.faq details p{margin:10px 0 0}
+.primer{background:var(--card);border-radius:20px;padding:18px 22px;margin:0 0 16px}
+.primer ul{margin:8px 0 0}
+.calc-st .calc{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:24px;margin-top:40px}
+.calc-st .box{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:28px}
+.calc-st label{display:block;font-weight:600;margin-bottom:8px}
+.calc-st input[type=text]{width:100%;font:inherit;font-size:22px;font-weight:600;padding:12px 16px;border:1px solid var(--line);border-radius:14px;background:var(--bg)}
+.calc-st .chk{display:flex;gap:10px;align-items:flex-start;font-weight:400;margin-top:16px;font-size:16px;color:var(--ink2)}
+.calc-st .chk input{margin-top:5px;width:18px;height:18px}
+.calc-st .row{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid var(--line);font-size:17px}
+.calc-st .row b{white-space:nowrap}
+.calc-st .tot{display:flex;justify-content:space-between;gap:16px;padding-top:16px;font-size:22px;font-weight:600}
+.calc-st .tot b{color:#B42318;white-space:nowrap}
+.calc-st .vs{margin-top:20px;background:var(--ok-bg);color:var(--ok);border-radius:var(--r-md);padding:16px 18px;font-size:17px}
+.calc-st .vs b{font-size:20px}
+.calc-st .note{font-size:14px;color:var(--muted);margin-top:14px}
+.calc-st .calc{margin-top:28px}
+@media (max-width:860px){.calc-st .calc{grid-template-columns:1fr}}
+.calc-st input[type=text]{box-sizing:border-box}
+main.shire{max-width:1040px}
+main.shire article,main.shire .faq,main.shire .check,main.shire .src,main.shire .more{max-width:760px}
+
+</style>
+<script type="application/ld+json">[{"@context": "https://schema.org", "@type": "WebPage", "name": "Во что обойдётся «технический» поставщик", "description": "Поставщик оказался «технической» компанией? Посчитайте снятый вычет НДС, налог на прибыль, штраф и пени по НК РФ. Бесплатно, без регистрации.", "url": "https://deloskop.ru/nalogi/kalkulyator-tehnicheskij-postavshchik/", "inLanguage": "ru", "dateModified": "2026-10-01", "publisher": {"@type": "Organization", "name": "Делоскоп", "url": "https://deloskop.ru/"}}, {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Делоскоп", "item": "https://deloskop.ru/"}, {"@type": "ListItem", "position": 2, "name": "Налоги", "item": "https://deloskop.ru/nalogi/"}, {"@type": "ListItem", "position": 3, "name": "Калькулятор «технического» поставщика", "item": "https://deloskop.ru/nalogi/kalkulyator-tehnicheskij-postavshchik/"}]}]</script>
+<link rel="stylesheet" href="/css/fonts.css">
+<link rel="stylesheet" href="/css/podval.css">
+<link rel="stylesheet" href="/css/shapka.css">
+<script src="/js/shapka.js" defer></script>
+<script src="/js/metrika.js" defer></script>
+<meta name="deloskop-rezhim" content="beta">
+</head>
+<body>
+<!--shapka-->
+<a class="skip" href="#main">Перейти к содержанию</a>
+<header class="shapka" data-shapka>
+ <div class="shapka__in">
+  <a class="shapka__logo" href="/" aria-label="Делоскоп — на главную"><svg width="36" height="32" viewBox="0 0 72 64" fill="none" aria-hidden="true"><path d="M36 18.1A16 16 0 0 1 36 45.9A16 16 0 0 1 36 18.1Z" fill="#0B63E5"/><circle cx="28" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/><circle cx="44" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/></svg><span class="shapka__word">делоскоп</span></a>
+  <nav class="shapka__nav" aria-label="Основное меню">
+   <ul class="shapka__list">
+    <li><a class="shapka__link" href="/" data-match="^/(index\.html|report\.html)?$">Проверка</a></li>
+    <li class="shapka__dd">
+     <button class="shapka__link" type="button" aria-expanded="false" aria-controls="dd-vypiska" data-match="^/(nalichnye|kontragenty-iz-vypiski|proverit-schet)/">Выписка<svg class="shapka__chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+     <ul class="shapka__menu" id="dd-vypiska">
+      <li><a href="/nalichnye/"><b>Наличные глазами банка</b><span>Как банк видит ваши операции с наличными</span></a></li>
+      <li><a href="/kontragenty-iz-vypiski/"><b>Кому вы платите</b><span>Проверка контрагентов из вашей выписки</span></a></li>
+      <li><a href="/proverit-schet/"><b>Проверь счёт</b><span>Проверить получателя до оплаты</span></a></li>
+     </ul>
+    </li>
+    <li class="shapka__dd">
+     <button class="shapka__link" type="button" aria-expanded="false" aria-controls="dd-115" data-match="^/(skoraya-115-fz|pasport|115-fz)/">115-ФЗ<svg class="shapka__chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+     <ul class="shapka__menu" id="dd-115">
+      <li><a href="/skoraya-115-fz/"><b>Скорая 115-ФЗ</b><span>Банк ограничил счёт: что делать сейчас</span></a></li>
+      <li><a href="/pasport/"><b>Паспорт компании</b><span>Страница о вашей компании для банка и партнёров</span></a></li>
+      <li><a href="/115-fz/"><b>Разборы 115-ФЗ</b><span>Простыми словами, с нормами и практикой</span></a></li>
+     </ul>
+    </li>
+    <li><a class="shapka__link" href="/indeks/" data-match="^/indeks/">Индекс</a></li>
+    <li><a class="shapka__link" href="/tarify/" data-match="^/tarify/">Тарифы</a></li>
+   </ul>
+  </nav>
+  <div class="shapka__right">
+   <button class="shapka__link shapka__new" type="button" data-whatsnew aria-haspopup="dialog"><span class="shapka__new-l">Что нового</span><span class="shapka__new-s" aria-hidden="true">Новое</span><span class="shapka__dot" data-whatsnew-dot hidden><span class="vh">есть непрочитанное</span></span><span class="shapka__cnt num" data-whatsnew-count hidden></span></button>
+   <a class="shapka__link shapka__login" href="/cabinet.html" data-auth-out>Войти</a>
+   <a class="shapka__link shapka__login" href="/cabinet.html" data-auth-in hidden>Кабинет</a>
+   <a class="shapka__btn" href="/#inn" data-check>Проверить</a>
+   <button class="shapka__burger" type="button" aria-expanded="false" aria-controls="mnav" aria-label="Открыть меню"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16M4 16h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+  </div>
+ </div>
+</header>
+<dialog class="mnav" id="mnav" aria-label="Меню">
+ <div class="mnav__top">
+  <a class="shapka__logo" href="/" aria-label="Делоскоп — на главную"><svg width="36" height="32" viewBox="0 0 72 64" fill="none" aria-hidden="true"><path d="M36 18.1A16 16 0 0 1 36 45.9A16 16 0 0 1 36 18.1Z" fill="#0B63E5"/><circle cx="28" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/><circle cx="44" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/></svg><span class="shapka__word">делоскоп</span></a>
+  <button class="shapka__burger" type="button" data-close aria-label="Закрыть меню"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+ </div>
+ <nav class="mnav__body" aria-label="Основное меню">
+  <ul class="mnav__list">
+   <li><a class="mnav__link" href="/" data-match="^/(index\.html|report\.html)?$">Проверка</a></li>
+   <li><span class="mnav__link mnav__group" data-match="^/(nalichnye|kontragenty-iz-vypiski|proverit-schet)/">Выписка</span>
+    <ul class="mnav__sub">
+     <li><a href="/nalichnye/">Наличные глазами банка</a></li>
+     <li><a href="/kontragenty-iz-vypiski/">Кому вы платите</a></li>
+     <li><a href="/proverit-schet/">Проверь счёт</a></li>
+    </ul></li>
+   <li><span class="mnav__link mnav__group" data-match="^/(skoraya-115-fz|pasport|115-fz)/">115-ФЗ</span>
+    <ul class="mnav__sub">
+     <li><a href="/skoraya-115-fz/">Скорая 115-ФЗ</a></li>
+     <li><a href="/pasport/">Паспорт компании</a></li>
+     <li><a href="/115-fz/">Разборы 115-ФЗ</a></li>
+    </ul></li>
+   <li><a class="mnav__link" href="/indeks/" data-match="^/indeks/">Индекс</a></li>
+   <li><a class="mnav__link" href="/tarify/" data-match="^/tarify/">Тарифы</a></li>
+  </ul>
+  <div class="mnav__extra">
+   <button class="mnav__row" type="button" data-whatsnew aria-haspopup="dialog">Что нового<span class="shapka__dot" data-whatsnew-dot hidden><span class="vh">есть непрочитанное</span></span></button>
+   <a class="mnav__row" href="/cabinet.html" data-auth-out>Войти</a>
+   <a class="mnav__row" href="/cabinet.html" data-auth-in hidden>Кабинет</a>
+  </div>
+  <a class="shapka__btn shapka__btn--lg mnav__cta" href="/#inn" data-check>Проверить компанию</a>
+ </nav>
+</dialog>
+<!--/shapka-->
+<!--beta-polosa--><div class="beta-bar" role="region" aria-label="Открытая бета" data-beta-bar><div class="beta-bar__in"><span class="beta-bar__metka">бета</span><p class="beta-bar__t"><b>Открытая бета до&nbsp;13&nbsp;октября: всё бесплатно.</b> <span class="beta-bar__dop">Оплата и&nbsp;реквизиты появятся позже. </span><a href="mailto:help@deloskop.ru?subject=%D0%91%D0%B5%D1%82%D0%B0%20%D0%94%D0%B5%D0%BB%D0%BE%D1%81%D0%BA%D0%BE%D0%BF%D0%B0">Нашли ошибку&nbsp;— напишите</a></p><button class="beta-bar__x" type="button" aria-label="Скрыть на неделю" data-beta-x><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div></div><script>try{if(+localStorage.getItem("dlk_beta_skryt")>Date.now())document.querySelector("[data-beta-bar]").hidden=true}catch(e){}</script><!--/beta-polosa-->
+<main id="main" class="shire">
+<nav class="crumbs" aria-label="Навигация"><a href="/">Делоскоп</a><span>›</span><a href="/nalogi/">Налоги</a></nav>
+<section class="calc-st" id="save" aria-labelledby="calc-h">
+<h1 id="calc-h">Во что обойдётся «технический» поставщик</h1>
+<div class="meta">Калькулятор Делоскопа · бесплатно, без регистрации · считается в вашем браузере</div>
+<p style="margin-top:18px;color:var(--ink2)">Посчитайте сами: что будет, если поставщик окажется «технической» компанией и налоговая снимет вычет по НДС.</p>
+      <div class="calc">
+        <div class="box">
+          <label for="sv-sum">Сумма договора с поставщиком, ₽ с НДС</label>
+          <input id="sv-sum" type="text" inputmode="numeric" value="3 000 000" autocomplete="off">
+          <label class="chk"><input id="sv-exp" type="checkbox"> Налоговая сняла ещё и расходы по налогу на прибыль — худший случай</label>
+          <label class="chk"><input id="sv-int" type="checkbox"> Налоговая сочла нарушение умышленным — штраф 40% вместо 20%</label>
+          <p class="note">Пени считаем за 2 года: выездная проверка обычно приходит позже сделки. Пени — оценка по нынешней ключевой ставке 14% (действует с 27.07.2026, Банк России сохранил её 11.09.2026). В 2024–2025 годах ставка доходила до 21%, поэтому по давним сделкам пени выше. Пени посчитаны по правилам 2025–2026 годов (п.&nbsp;5.1 ст.&nbsp;75 НК РФ, действует до 31.12.2026). Если их не продлят, с 2027 года пени с 31-го дня просрочки — 1/150 ставки ЦБ, и сумма будет выше.</p>
+        </div>
+        <div class="box" aria-live="polite">
+          <div class="row"><span>Снятый вычет НДС (22%)</span><b id="sv-vat">—</b></div>
+          <div class="row" id="sv-exp-row" hidden><span>Налог на прибыль со снятых расходов (25%)</span><b id="sv-pr">—</b></div>
+          <div class="row"><span>Штраф, ст. 122 НК (<span id="sv-fp">20</span>%)</span><b id="sv-fine">—</b></div>
+          <div class="row"><span>Пени за 2 года, ст. 75 НК</span><b id="sv-pen">—</b></div>
+          <div class="tot"><span>Итого заплатите вы</span><b id="sv-tot">—</b></div>
+          <div class="vs">Год тарифа «Про» — <b><span data-cena="pro.god">14 300</span> ₽</b>. Это <b id="sv-x">—</b> от суммы, которую вы рискуете потерять на одной сделке.</div>
+          <p class="note">Это пример расчёта по нормам Налогового кодекса, а не прогноз по вашей компании. Сколько налоговая доначислит в вашем случае, зависит от проверки.</p>
+        </div>
+      </div>
+</section>
+<section class="check" aria-label="Проверка компании">
+  <h2>Проверьте поставщика до оплаты</h2>
+  <p>Введите ИНН — покажем, что известно о компании, с источником и датой, и что запросить у поставщика перед оплатой. Бесплатно.</p>
+  <form action="/" method="get" data-goal="article_to_tool" data-otkuda="kalkulyator"><input name="inn" inputmode="numeric" maxlength="12" pattern="\d{10}|\d{12}" required placeholder="ИНН компании"><button type="submit">Проверить</button></form>
+</section>
+<section class="more"><h2>Читайте также</h2><div class="cards"><a class="card" href="/nalogi/statya-54-1-nk-prostymi-slovami/"><small>Налоги</small><b>Статья 54.1 НК простыми словами: когда налоговая снимет вычет</b><span>5 минут чтения</span></a><a class="card" href="/praktika/nalogi/vokfors-rekonstrukciya/"><small>Практика судов</small><b>Подрядчик оказался «прокладкой». Налоговая учтёт хотя бы реальные затраты?</b><span>Разбор дела «Вокфорс»</span></a><a class="card" href="/nalogi/skolko-platit-vpered-neznakomoj-kompanii/"><small>Налоги</small><b>Сколько платить вперёд незнакомой компании: формула</b><span>6 минут чтения</span></a></div></section>
+</main>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  var sum=$('sv-sum'); if(!sum) return;
+  var KEY=0.14, PEN=KEY*(30/300+60/150+640/300);   // 2 года: 1–30 дн. 1/300, 31–90 — 1/150, с 91-го — 1/300
+  function rub(x){return Math.round(x).toLocaleString('ru-RU').replace(/,/g,' ')+' ₽'}
+  function calc(){
+    var raw=sum.value.replace(/\D/g,''); var S=+raw||0;
+    if(raw) sum.value=S.toLocaleString('ru-RU');
+    var vat=S*22/122, pr=$('sv-exp').checked?(S-vat)*0.25:0, fp=$('sv-int').checked?0.4:0.2;
+    var tax=vat+pr, fine=tax*fp, pen=tax*PEN, tot=tax+fine+pen;
+    $('sv-exp-row').hidden=!pr; $('sv-vat').textContent=rub(vat); $('sv-pr').textContent=rub(pr);
+    $('sv-fp').textContent=fp*100; $('sv-fine').textContent=rub(fine); $('sv-pen').textContent=rub(pen);
+    $('sv-tot').textContent=rub(tot);
+    var pg=document.querySelector('[data-cena="pro.god"]'), GOD=pg?+pg.textContent.replace(/\D/g,''):14300;
+    var pct=tot?GOD/tot*100:0;
+    $('sv-x').textContent=tot?(pct<1?'меньше 1%':Math.round(pct)+'%'):'—';
+  }
+  sum.addEventListener('input',calc); $('sv-exp').addEventListener('change',calc); $('sv-int').addEventListener('change',calc);
+  calc();
+})();
+</script>
+<script src="/obnovleniya.js" defer></script>
+<!--podval--><div class="podval" role="contentinfo"><div class="podval__in"><div class="podval__cols"><nav class="podval__col" aria-label="Продукты"><p class="podval__h">Продукты</p><ul><li><a href="/">Проверка по ИНН</a></li><li><a href="/indeks/">Индекс Делоскопа</a></li><li><a href="/#shield">Щит</a></li><li><a href="/nalichnye/">Наличные глазами банка</a></li><li><a href="/kontragenty-iz-vypiski/">Кому вы платите</a></li><li><a href="/proverit-schet/">Проверь счёт</a></li><li><a href="/skoraya-115-fz/">Скорая 115-ФЗ</a></li><li><a href="/pasport/">Паспорт</a></li><li><a href="/delopis/">Делопись</a></li><li><a href="/tarify/">Тарифы</a></li></ul></nav><nav class="podval__col" aria-label="Знания"><p class="podval__h">Знания</p><ul><li><a href="/115-fz/">115-ФЗ простыми словами</a></li><li><a href="/nalogi/">Налоги</a></li><li><a href="/obnovleniya/">Что нового</a></li></ul></nav><nav class="podval__col" aria-label="Компания"><p class="podval__h">Компания</p><ul><li><a href="/indeks/#metodika">Методика Индекса</a></li><li><a href="/cabinet.html">Кабинет</a></li><li><a href="/rekvizity/">Реквизиты и контакты</a></li><li><a href="mailto:help@deloskop.ru">help@deloskop.ru</a></li></ul></nav><nav class="podval__col" aria-label="Документы"><p class="podval__h">Документы</p><ul><li><a href="/oferta/">Публичная оферта</a></li><li><a href="/politika/">Политика обработки ПДн</a></li><li><a href="/soglasie/">Согласие на обработку ПДн</a></li><li><a href="/rassylki/">Согласие на рассылки</a></li><li><a href="/cookies/">Cookies и Метрика</a></li><li><a href="/vozvrat/">Возврат денег</a></li><li><a href="/partneram/usloviya/">Условия для партнёров</a></li><li><a href="/rekvizity/">Реквизиты</a></li></ul></nav></div><div class="podval__niz"><p>© 2026 Делоскоп</p><p>Сотрудничество, отзывы и предложения — <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>. Принимаем 24/7</p><p>Материалы носят информационный характер и не заменяют консультацию юриста</p></div></div></div><!--/podval-->
+</body>
+</html>

@@ -20,8 +20,9 @@ test('отметка: «Проверено вами» с датой и мест�
     assert.ok(o.ok, rez);
     assert.match(o.tekst, /^Проверено вами 30\.09\.2026 в 10:00 МСК — /);
     assert.ok(o.tekst.includes(x.sam[0].tekst));
-    assert.strictEqual(o.ogovorka, 'Отметка поставлена пользователем, Делоскоп её не проверял.');
-    const vse = o.tekst + ' ' + o.sovet + ' ' + o.ogovorka;
+    assert.strictEqual(o.ogovorka, 'Это отметка заказчика о его собственной проверке. Делоскоп её не проверял и не подтверждает.');
+    // «подтвержд» — только в отрицании нашей оговорки (Юрист 115-ФЗ 01.10, п. 169); утверждения «подтверждено» — нет
+    const vse = (o.tekst + ' ' + o.sovet + ' ' + o.ogovorka).replace(/не проверял и не подтверждает/g, '');
     assert.ok(!/подтвержд/i.test(vse), vse);
     assert.ok(!P.SLOVAR_222.test(vse), vse);
     assert.ok(!/(^|\s)(чисто|рисков\s+нет|долгов\s+нет)/i.test(vse), vse);
@@ -146,7 +147,7 @@ test('v2: ни одного обещания исхода — «суд прим�
     const o = P.otmetka(r, { rez, data: '15.08.2026', vremya: '10:00', pril: '3' }, SEG);
     vse.push(o.tekst, o.sovet, o.stroki.join(' '), P.otmetkiSvodka([o]));
   }));
-  const t = vse.join(' ');
+  const t = vse.join(' ').replace(/не проверял и не подтверждает/g, '');
   assert.ok(!/суд прим|налогов\S* прим|гарант|доказан|подтвержд|безопасн/i.test(t), t);
   assert.ok(!P.SLOVAR_222.test(t));
   assert.match(P.OTM_SNIMOK, /оценивает его суд/);

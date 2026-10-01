@@ -68,3 +68,37 @@ test('robots.txt: кабинет, админка и страницы счето�
     assert.ok(r.includes(d), 'нет строки ' + d);
   assert.ok(!/Disallow: \/\s*$/m.test(r), 'сайт целиком закрыт');
 });
+
+// nastoyashij-404-v1 (01.10.2026): с выключенным SPA Fallback в Timeweb сервер отдаёт 404.html с кодом 404
+// по запрошенному адресу — 404.html сама ведёт короткие адреса и /company/{ИНН юрлица}, как главная.
+const vm = require('vm');
+function marshrut(fayl, put) {
+  const t = chitat(fayl);
+  const m = /<script>\/\* (?:Мягкая|Настоящая) 404[\s\S]*?\*\/([\s\S]*?)<\/script>/.exec(t);
+  assert.ok(m, fayl + ': нет скрипта маршрутов 404');
+  let kuda = null;
+  const [p, q] = put.split('?');
+  const sandbox = {
+    location: { pathname: p, search: q ? '?' + q : '', hash: '', replace: u => { kuda = u; } },
+    document: { createElement: () => ({}), head: { appendChild() {} } },
+    encodeURIComponent,
+  };
+  vm.runInNewContext(m[1], sandbox);
+  return kuda;
+}
+test('404.html: короткие адреса и карточки ведёт так же, как главная', () => {
+  const sluchai = [
+    ['/cabinet', '/cabinet.html'], ['/cabinet/', '/cabinet.html'], ['/report?id=7', '/report.html?id=7'],
+    ['/admin', '/admin.html'], ['/company/7707083893/', '/?inn=7707083893'], ['/company/7707083893-sberbank/', '/?inn=7707083893'],
+  ];
+  for (const [put, zhdem] of sluchai) {
+    assert.strictEqual(marshrut('404.html', put), zhdem, '404.html ' + put);
+    assert.strictEqual(marshrut('index.html', put), zhdem, 'index.html ' + put);
+  }
+});
+test('404.html: сама на себя не уводит, ИП (12 цифр) и чужие адреса остаются на «нет такой страницы»', () => {
+  for (const put of ['/404.html', '/404.html?s=%2Fx', '/company/770708389312/', '/nalogi/net-takoj/', '/company/']) {
+    assert.strictEqual(marshrut('404.html', put), null, put);
+  }
+  assert.ok(chitat('404.html').indexOf('Настоящая 404') < chitat('404.html').indexOf('<title>'));
+});

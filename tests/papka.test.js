@@ -80,7 +80,7 @@ test('отметка закрывает пункт лестницы с тем ж
 test('пункт с двумя первоисточниками закрывается, только когда отмечены оба', () => {
   const v = L.stupen({ summa: 500000 });
   const o = K.opis({ lestnica: v.spisok, otmetki: [otm(9, Object.assign({}, FSSP))] });
-  const ost = o.stroki.find((x) => /^Долги у приставов и арбитражные дела/.test(x.chto));
+  const ost = o.stroki.find((x) => /^Долги у приставов \(для организаций\) и арбитражные дела/.test(x.chto));
   assert.ok(ost, 'строка осталась');
   assert.match(ost.chto, /ещё не отмечено: kad\.arbitr\.ru$/);
   assert.strictEqual(ost.otkuda, 'kad.arbitr.ru');
@@ -159,10 +159,12 @@ test('v1.1: ЗСК-дневник — не сверяли / не найдено 
   assert.strictEqual(n.est, false);
   assert.match(n.tekst, /у Банка России не сверяли/);
   const ok = K.opis({ pasport: PAS, otmetki: [zskOtm()] });
-  assert.match(ok.zsk.tekst, /^ЗСК: по сервису Банка России на 30\.09\.2026 в 22:20 МСК высокий уровень риска не найден \(отметка заказчика\)\./);
+  // п. 180 в редакции Юриста 115-ФЗ 01.10: сервис показывает только высокий риск; «ежедневно» не обещаем
+  assert.match(ok.zsk.tekst, /^ЗСК: по сервису Банка России «Проверка по ИНН» на 30\.09\.2026 в 22:20 МСК сведений об отнесении к группе высокого риска нет \(отметка заказчика\)\. Средний и низкий уровни сервис не показывает\./);
+  assert.ok(!/ежедневно/.test(ok.zsk.tekst));
   assert.match(ok.zsk.tekst, /в день оплаты проверьте ещё раз/);
   assert.ok(!/Сверка была/.test(ok.zsk.tekst));
-  assert.ok(!/жёлт|низк/i.test(ok.zsk.tekst), 'о жёлтом и низком уровне не утверждаем — публично их не узнать');
+  assert.ok(!/жёлт|низк/i.test(ok.zsk.tekst.replace('Средний и низкий уровни сервис не показывает.', '')), 'о жёлтом и низком уровне не утверждаем — публично их не узнать');
   assert.match(ok.stroki[0].primechanie, /ЗСК — сверьте ещё раз в день оплаты/);
   assert.match(K.opis({ otmetki: [zskOtm({ rez: 'est', pril: '1' })] }).zsk.tekst, /есть сведения о высоком уровне риска/);
   assert.match(K.opis({ otmetki: [zskOtm({ dnej: 3 })] }).zsk.tekst, /Сверка была 3 дня назад\./);

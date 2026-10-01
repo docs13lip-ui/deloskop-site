@@ -62,10 +62,24 @@ test('список — по нарастанию: каждая ступень в
   assert.ok(!L.stupen({ summa: 500000 }).spisok.some((x) => /КНД 1120101/.test(x.t)));
 });
 
-test('наличные: больше 100 000 ₽ — красная строка по 3073-У; ровно 100 000 — без неё', () => {
+test('наличные: больше 100 000 ₽ — красная строка по 5348-У (п. 4); ровно 100 000 — без неё', () => {
   assert.strictEqual(L.stupen({ summa: 100000 }).nalichnye, null);
   assert.match(L.stupen({ summa: 100001 }).nalichnye, /только безналично/);
-  assert.match(L.NALICHNYE, /п\. 6 Указания Банка России № 3073‑У/);
+  assert.match(L.NALICHNYE, /п\. 4 Указания Банка России от 09\.12\.2019 № 5348‑У/);
+});
+
+test('отменённое Указание 3073-У нигде на сайте не упоминается (Юрист 115-ФЗ 01.10: заменено 5348-У)', () => {
+  const fs = require('fs'), path = require('path');
+  const koren = path.join(__dirname, '..'), plohie = [];
+  (function obhod(d) {
+    for (const f of fs.readdirSync(d, { withFileTypes: true })) {
+      if (/^(\.git|node_modules|tests)$/.test(f.name)) continue;
+      const p = path.join(d, f.name);
+      if (f.isDirectory()) obhod(p);
+      else if (/\.(html|js|json|mjs)$/.test(f.name) && f.name !== 'obnovleniya.json' && /3073/.test(fs.readFileSync(p, 'utf8'))) plohie.push(path.relative(koren, p));
+    }
+  })(koren);
+  assert.deepStrictEqual(plohie, [], 'ссылка на отменённое 3073-У');
 });
 
 test('честность: «ориентир Делоскопа», основание с номерами, без обещаний исхода и без паспорта подписанта', () => {

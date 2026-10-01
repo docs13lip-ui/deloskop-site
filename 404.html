@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
+<script>/* Настоящая 404 (nastoyashij-404-v1): когда в Timeweb выключен SPA Fallback, сервер отдаёт эту страницу с кодом 404 прямо по запрошенному адресу. Те же короткие адреса, что ловила главная, ведём по назначению. */(function(){var p=location.pathname,a={'/cabinet':'/cabinet.html','/report':'/report.html','/admin':'/admin.html'},k=p.replace(/\/+$/,'');if(k==='/404.html'||k==='/404')return;var ci=/^\/company\/(\d{10})(?:[-\/]|$)/.exec(p);if(ci){location.replace('/?inn='+ci[1]);return;}if(a[k])location.replace(a[k]+location.search+location.hash);})();</script>
 <title>Страница не найдена — Делоскоп</title><link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <style>body{margin:0;min-height:100vh;display:flex;flex-direction:column;background:#F5F5F2;color:#1D1D1F;font-family:'Onest','Helvetica Neue',Helvetica,Arial,sans-serif;text-align:center;padding:0}
 body>.nf{margin:auto;padding:48px 24px}

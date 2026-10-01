@@ -295,7 +295,7 @@
       if (L && u.amount) {
         var ls = L.stupen({ summa: u.amount, priznaki: u.facts && u.facts.ageMonths != null && u.facts.ageMonths < 12 ? ['molodaya'] : [] });
         fakt('zaprosit', 'Объём проверки', 'ступень ' + ls.n + ' из 4 — ' + ls.nazvanie.toLowerCase() + '. ' + ls.pochemu + ' ' + L.OGOVORKA, { ton: 'info', istochnik: 'ориентир Делоскопа по п. 16 письма ФНС № БВ-4-7/3060@' });
-        if (ls.nalichnye) fakt('zaprosit', 'Оплата', ls.nalichnye, { ton: 'warn', istochnik: 'Указание Банка России № 3073-У, п. 6' });
+        if (ls.nalichnye) fakt('zaprosit', 'Оплата', ls.nalichnye, { ton: 'warn', istochnik: 'Указание Банка России от 09.12.2019 № 5348-У, п. 4' });
       }
       (u.docs || []).forEach(function (d, i) { fakt('zaprosit', (i + 1) + '. ' + d.title, d.why || '', { ton: 'info', istochnik: 'письмо ФНС № БВ-4-7/3060@' }); });
       var st = u.stake;
@@ -395,7 +395,7 @@
   // Правила: отметка — слово пользователя, не наше: статус раздела остаётся «не проверяли», в отпечаток SHA-256
   // не входит (P.vypustit считает из сведений p, отметка в p не пишется), в печати — отдельной строкой с оговоркой.
   // Оговорка — черновая до ✎ [Юриста 115-ФЗ] (п. 169).
-  var OTM_OGOVORKA = 'Отметка поставлена пользователем, Делоскоп её не проверял.';
+  var OTM_OGOVORKA = 'Это отметка заказчика о его собственной проверке. Делоскоп её не проверял и не подтверждает.';
   var OTM_REZ = { net: 'сведений не найдено', est: 'есть сведения', ne_udalos: 'проверить не удалось' };
   var OTM_TON = { net: 'info', est: 'warn', ne_udalos: 'off' };
   var OTM_SVEZHEST_DNEJ = 30;

@@ -332,7 +332,7 @@
     var ac = s.accounts || { list: [], switched: null, personal: [] };
     if (s.kind === 'org' && ac.personal.length) out.push({ level: 'bad', code: 'acc_person', href: '/proverit-schet/#smena',
       text: 'В платёжке ИНН организации, а деньги ушли на личный счёт физлица (' + ac.personal.map(function (a) { return tail(a.account); }).join(', ') +
-        ', ' + money(ac.personal.reduce(function (x, a) { return x + a.sum; }, 0)) + ' ₽). У организации так не бывает: узнайте, чей это счёт, и не платите на него снова, пока поставщик не подтвердит реквизиты.' });
+        ', ' + money(ac.personal.reduce(function (x, a) { return x + a.sum; }, 0)) + ' ₽). Счёт 40817 открывают только физическим лицам — у организации такого счёта быть не может: узнайте, чей это счёт, и не платите на него снова, пока поставщик не подтвердит реквизиты.' });
     if (ac.switched) {
       var w = ac.switched;
       out.push({ level: 'warn', code: 'acc_change', href: '/proverit-schet/#smena',
@@ -384,7 +384,7 @@
     var FLOW_TODO = {
       persons: 'Проверить переводы физлицам: у каждого должно быть основание в назначении.',
       lowtax: 'Сверить долю налогов с оборотом и подготовить пояснение для банка.',
-      cash: 'Закрыть подотчёт по снятым наличным авансовыми отчётами и чеками — они ответят на запрос банка за вас.'
+      cash: 'Закрыть подотчёт по снятым наличным авансовыми отчётами и чеками — банк попросит их первыми.'
     };
     r.flows.forEach(function (f) { if (t.length < 3 && f.level === 'warn' && FLOW_TODO[f.code]) t.push(FLOW_TODO[f.code]); });
     if (t.length < 3) t.push('Раз в месяц повторять разбор — новые поставщики появляются незаметно.');

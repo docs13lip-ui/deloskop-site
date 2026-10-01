@@ -258,12 +258,35 @@ footer a{color:var(--ink2)}
 
 /* site-v3: с Onest со своего сервера на 390 «Откуда данные» вылезал на 6 px — дорожки сетки не сжимались */
 .sources .wrap>*,.chips>*{min-width:0}.chip{overflow-wrap:break-word;hyphens:auto}
+
+/* Три входа (Стратег 27.09 §1.2, приёмка 13.10 стр. 6): одна дверь — одна задача */
+.vhody{padding-block:0 var(--sect)}
+.vhody__head{display:flex;align-items:baseline;justify-content:space-between;gap:24px;margin-bottom:24px;flex-wrap:wrap}
+.vhody__head h2{font-size:clamp(26px,3vw,34px);letter-spacing:-0.025em}
+.vhody__head p{font-size:15px;color:var(--ink2)}
+.vhod{position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:clamp(24px,2.6vw,32px);display:flex;flex-direction:column;gap:14px;transition:border-color .2s,box-shadow .2s,transform .2s}
+.vhod:hover{border-color:#CFCFC9;box-shadow:0 12px 32px rgba(0,0,0,.06);transform:translateY(-2px)}
+.vhod:focus-within{border-color:var(--accent)}
+.vhod__n{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-variant-numeric:tabular-nums}
+.vhod h3{font-size:clamp(22px,2.2vw,28px);letter-spacing:-0.025em}
+.vhod h3 a{color:var(--ink)}
+.vhod h3 a::after{content:"";position:absolute;inset:0;border-radius:inherit}
+.vhod h3 a:focus-visible{outline:none}
+.vhod__t{color:var(--ink2);font-size:16px;line-height:1.5}
+.vhod__go{margin-top:auto;padding-top:6px;font-weight:600;font-size:15px;color:var(--accent)}
+.vhod__go span{display:inline-block;transition:transform .2s}
+.vhod:hover .vhod__go span{transform:translateX(3px)}
+.vhod__dop{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:6px 16px;padding-top:14px;border-top:1px solid var(--line);font-size:14px}
+.vhod__dop a{color:var(--ink2);text-decoration:underline;text-decoration-color:#CFCFC9;text-underline-offset:3px}
+.vhod__dop a:hover{color:var(--accent);text-decoration-color:currentColor}
+@media (prefers-reduced-motion:reduce){.vhod,.vhod__go span{transition:none}.vhod:hover{transform:none}}
 </style>
 <link rel="stylesheet" href="/css/fonts.css">
 <link rel="stylesheet" href="/css/podval.css">
 <link rel="stylesheet" href="/css/shapka.css">
 <script src="/js/shapka.js" defer></script>
 <script src="/js/metrika.js" defer></script>
+<script src="/js/vhody.js" defer></script>
 <meta name="deloskop-rezhim" content="beta">
 </head>
 <body>
@@ -372,6 +395,38 @@ footer a{color:var(--ink2)}
           <div class="row"><span>Налоговая нагрузка</span><b class="neutral">На уровне отрасли</b></div>
         </div>
         <div class="verdict" data-usl-demo>Можно, предоплата — до 1 500 000 ₽. Руководитель сменился недавно: перед оплатой запросите решение о его назначении.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="vhody" id="vhody" aria-labelledby="vhody-h">
+    <div class="wrap">
+      <div class="vhody__head">
+        <h2 id="vhody-h">С&nbsp;чего начнём?</h2>
+        <p>Три частые задачи&nbsp;— три входа. Всё работает в&nbsp;бете бесплатно.</p>
+      </div>
+      <div class="grid3">
+        <article class="vhod" data-vhod="entry_pay">
+          <div class="vhod__n">01 · Перед оплатой</div>
+          <h3><a href="/#inn" data-vhod-inn>Проверить поставщика</a></h3>
+          <p class="vhod__t">Введите ИНН&nbsp;— за&nbsp;минуту увидите, что известно о&nbsp;компании, с&nbsp;источником и&nbsp;датой, и&nbsp;что запросить у&nbsp;поставщика перед оплатой.</p>
+          <div class="vhod__go" aria-hidden="true">Ввести ИНН <span>→</span></div>
+          <nav class="vhod__dop" aria-label="Ещё перед оплатой"><a href="/proverit-schet/">Проверить счёт</a><a href="/pasport/kontragent/">Паспорт контрагента</a></nav>
+        </article>
+        <article class="vhod" data-vhod="entry_watch">
+          <div class="vhod__n">02 · Поставщики</div>
+          <h3><a href="/kontragenty-iz-vypiski/">Проверить всех, кому вы платите</a></h3>
+          <p class="vhod__t">Загрузите выписку из&nbsp;1С&nbsp;— покажем всех поставщиков разом и&nbsp;сколько денег на&nbsp;кону. Выписка не&nbsp;уходит с&nbsp;вашего компьютера.</p>
+          <div class="vhod__go" aria-hidden="true">Загрузить выписку <span>→</span></div>
+          <nav class="vhod__dop" aria-label="Ещё о поставщиках"><a href="/cabinet.html">Слежение в&nbsp;кабинете</a><a href="/nalogi/proverka-kontragenta-pered-dogovorom/">Что хранить по&nbsp;поставщику</a></nav>
+        </article>
+        <article class="vhod" data-vhod="entry_bank">
+          <div class="vhod__n">03 · Банк спросил</div>
+          <h3><a href="/skoraya-115-fz/">Ответить банку по&nbsp;115-ФЗ</a></h3>
+          <p class="vhod__t">Запрос документов, отказ в&nbsp;платеже или ограничили счёт&nbsp;— план по&nbsp;дням, сроки и&nbsp;черновик заявления. Считается в&nbsp;вашем браузере.</p>
+          <div class="vhod__go" aria-hidden="true">Собрать план <span>→</span></div>
+          <nav class="vhod__dop" aria-label="Ещё о 115-ФЗ"><a href="/115-fz/zapros-banka-po-115-fz-kak-otvetit/">Как ответить на&nbsp;запрос</a><a href="/nalichnye/">Наличные глазами банка</a></nav>
+        </article>
       </div>
     </div>
   </section>

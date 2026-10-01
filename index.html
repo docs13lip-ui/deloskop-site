@@ -542,6 +542,7 @@ footer a{color:var(--ink2)}
 </div>
 
 <script src="/js/usloviya.js" defer></script>
+<script src="/js/shchit.js" defer></script>
 <script src="/js/nedavnie.js" defer></script>
 <script src="/js/inn.js"></script>
 <script>
@@ -580,7 +581,8 @@ footer a{color:var(--ink2)}
   var ST={ACTIVE:'действующая',LIQUIDATING:'ликвидируется или исключается из ЕГРЮЛ',LIQUIDATED:'ликвидирована',BANKRUPT:'банкротство',REORGANIZING:'реорганизация'};
   var ICON='<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5L6.5 11.5L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var WARNI='<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 4.5V9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="8" cy="11.8" r="1.1" fill="currentColor"/></svg>';
-  function render(r){
+  function render(r,o){
+    o=o||{};var svoj=!!(o.svoj&&window.Shchit);
     var c=r.company||{}, lvl=r.risk_level||'low';
     var name=c.name_short||c.name_full||('ИНН '+c.inn);
     var sub='ИНН '+esc(c.inn)+(c.status?' · '+esc(ST[c.status]||c.status):'');
@@ -592,33 +594,36 @@ footer a{color:var(--ink2)}
       rows+='<div class="row"><span>Прогноз ЗСК · наша оценка, не статус Банка России <a href="'+esc(r.zsk.cbr_url)+'" target="_blank" rel="noopener" style="font-size:13px">проверить в ЦБ</a></span><b class="d '+zc+'">'+esc(r.zsk.title)+'</b></div>';}
     var d=new Date(r.checked_at||Date.now());
     report.setAttribute('aria-label','Отчёт о проверке');
-    report.innerHTML='<div class="report-head"><div><div class="tag">Проверка на '+d.toLocaleDateString('ru-RU')+'</div>'+
+    report.innerHTML='<div class="report-head"><div><div class="tag">'+(svoj?(String(c.inn||'').length===12?'Ваш бизнес':'Ваша компания')+' глазами банка и налоговой · на ':'Проверка на ')+d.toLocaleDateString('ru-RU')+'</div>'+
       '<div class="company">'+esc(name)+'</div><div class="sub">'+sub+'</div></div>'+
-      '<div class="pill '+lvl+'">'+(lvl==='low'?ICON:WARNI)+esc(r.risk_title||'')+'</div></div>'+
+      (svoj?'':'<div class="pill '+lvl+'">'+(lvl==='low'?ICON:WARNI)+esc(r.risk_title||'')+'</div>')+'</div>'+
       '<div class="rows">'+rows+'</div><div class="verdict" data-usl>'+esc(r.verdict||'')+'</div>'+
-      '<div class="report-actions">'+(r.report_id?'<a class="btn-doc" href="/report.html?id='+encodeURIComponent(r.report_id)+'" target="_blank" rel="noopener">PDF-досье</a><button type="button" data-act="link">Ссылка на отчёт</button>':'<button type="button" data-act="copy">Скопировать вывод</button>')+'<button type="button" data-act="again">Проверить другую</button></div>'+
+      '<div class="report-actions">'+(r.report_id?'<a class="btn-doc" href="/report.html?id='+encodeURIComponent(r.report_id)+'" target="_blank" rel="noopener">PDF-досье</a><button type="button" data-act="link">Ссылка на отчёт</button>':'<button type="button" data-act="copy">'+(svoj?'Скопировать разбор':'Скопировать вывод')+'</button>')+'<button type="button" data-act="again">Проверить другую</button></div>'+
       '<div class="src">Источники: ЕГРЮЛ/ЕГРИП и открытые данные ФНС. Это оценка риска, а не решение банка.</div>';
     if(window.Nedavnie)Nedavnie.add({inn:c.inn,name:name,level:lvl,id:r.report_id});
     var ub=report.querySelector('[data-usl]');
-    if(window.Usloviya&&ub){ub.className='';ub.removeAttribute('data-usl');try{Usloviya.mount(ub,r)}catch(e){ub.className='verdict';ub.textContent=r.verdict||''}}
+    var shR=null;
+    if(svoj&&ub){ub.className='';ub.removeAttribute('data-usl');try{shR=Shchit.mount(ub,r)}catch(e){ub.className='verdict';ub.textContent=r.verdict||''}}
+    else if(window.Usloviya&&ub){ub.className='';ub.removeAttribute('data-usl');try{Usloviya.mount(ub,r)}catch(e){ub.className='verdict';ub.textContent=r.verdict||''}}
     report.querySelector('[data-act="again"]').onclick=function(){input.value='';focusInn({preventDefault:function(){}})};
     var lb=report.querySelector('[data-act="link"]');
     if(lb)lb.onclick=function(){var u=location.origin+'/report.html?id='+encodeURIComponent(r.report_id);
       try{navigator.clipboard.writeText(u).then(function(){lb.textContent='Ссылка скопирована'})}catch(_){}};
     var cb=report.querySelector('[data-act="copy"]');
     if(cb)cb.onclick=function(e){
+      if(shR){try{navigator.clipboard.writeText(Shchit.kratko(shR)+' — deloskop.ru');e.target.textContent='Скопировано'}catch(_){}return;}
       var u=window.Usloviya?Usloviya.decide(r):null;
       var t=name+' (ИНН '+c.inn+'): '+(r.risk_title||'')+'. '+(u?u.headline+'. '+u.advice:(r.verdict||''))+' — проверено на deloskop.ru';
       try{navigator.clipboard.writeText(t);e.target.textContent='Скопировано'}catch(_){}};
   }
-  function runCheck(v){
+  function runCheck(v,o){
     if(!CAPI){note.className='note ok';note.textContent='Проверка работает на deloskop.ru.';return;}
     note.className='note';note.textContent='Проверяем по реестрам…';report.classList.add('loading');if(window.dlkGoal)dlkGoal('check_started');
     fetch(CAPI+'/api/check?q='+encodeURIComponent(v),{credentials:'include'})
       .then(function(res){return res.json().then(function(j){return {ok:res.ok,j:j}})})
       .then(function(x){report.classList.remove('loading');
         if(!x.ok){note.className='note err';note.textContent=(x.j&&x.j.detail)||'Не получилось проверить. Попробуйте ещё раз.';return;}
-        render(x.j);note.className='note ok';note.textContent='Готово. Отчёт — рядом.';
+        render(x.j,o);note.className='note ok';note.textContent='Готово. Отчёт — рядом.';
         if(window.innerWidth<980)report.scrollIntoView({behavior:'smooth',block:'start'});})
       .catch(function(){report.classList.remove('loading');note.className='note err';
         note.textContent='Сервис не ответил. Проверьте интернет и попробуйте ещё раз.';});
@@ -697,14 +702,14 @@ footer a{color:var(--ink2)}
   var qi=new URLSearchParams(location.search).get('inn');
   if(qi&&/^\d{10}(\d{2})?$/.test(qi)){input.value=qi;
     if(window.DlkInn&&!DlkInn.ok(qi)){note.className='note err';note.textContent=DlkInn.OPECHATKA;}else runCheck(qi);}
-  // Щит: проверка своей компании — тот же отчёт с двумя линзами, наверху страницы
+  // Щит: своя компания глазами банка и налоговой (js/shchit.js) — в том же окне отчёта, наверху страницы
   var sf=document.getElementById('shieldForm');
   if(sf)sf.addEventListener('submit',function(e){e.preventDefault();
     var mi=document.getElementById('myinn'), d=mi.value.replace(/\D/g,'');
     var sn=sf.nextElementSibling; if(!sn.dataset.t)sn.dataset.t=sn.textContent;
     var so=window.DlkInn?DlkInn.oshibka(d):((d.length!==10&&d.length!==12)?'ИНН компании — 10 цифр, ИНН ИП — 12.':'');
     if(so){sn.textContent=so;sn.style.color='#B3261E';mi.focus();return;}
-    sn.style.color='';sn.textContent=sn.dataset.t;input.value=d;window.scrollTo({top:0,behavior:'smooth'});runCheck(d);});
+    sn.style.color='';sn.textContent=sn.dataset.t;input.value=d;window.scrollTo({top:0,behavior:'smooth'});if(window.dlkGoal)dlkGoal('shchit_start');runCheck(d,{svoj:true});});
   // вошёл — вместо «Войти» показываем «Кабинет»
   if(CAPI)fetch(CAPI+'/api/me',{credentials:'include'}).then(function(r){return r.json()}).then(function(j){
     if(j&&j.user){try{localStorage.setItem('dlk_voshel','1')}catch(e){}document.querySelectorAll('[data-auth-out]').forEach(function(x){x.hidden=true});document.querySelectorAll('[data-auth-in]').forEach(function(x){x.hidden=false});}}).catch(function(){});

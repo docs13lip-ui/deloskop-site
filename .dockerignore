@@ -1,0 +1,12 @@
+# Что НЕ попадает в образ сайта (nastoyashij-404-v2): служебное, тесты, данные карточек.
+.git
+.github
+.gitignore
+.dockerignore
+tests
+**/__pycache__
+**/*.py
+**/*.pyc
+**/*.jsonl
+**/*.md
+**/*.patch

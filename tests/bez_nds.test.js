@@ -73,3 +73,57 @@ test("страница «Проверь счёт» подключает моду
   assert.ok(!/innerHTML|fetch\(|XMLHttpRequest/.test(js), "модуль — чистые функции");
   assert.ok(!/\bИИ\b|нейросет/i.test(js));
 });
+
+// ---------- «Кому вы платите»: та же строка по ответу /api/shield/counterparties (bez-nds-vypiska-v1) ----------
+const E = require("../kontragenty-iz-vypiski/engine.js");
+const OOO = "7707083893";
+function post(noVatGod, inn = OOO) { return { inn, kind: inn.length === 12 ? "ip" : "org", noVatGod }; }
+function rm(dohod, rezhim = "usn", na = "2025-12-31") { return { inn: OOO, rezhim, dohod, dohod_na: na }; }
+
+test("выписка: УСН, доход 2025 — 48,2 млн, платили «без НДС» в 2026-м — строка с суммой, порогом и вопросом", () => {
+  const x = B.strokaVypiski(post({ 2026: 1250000 }), rm(48_210_000));
+  assert.strictEqual(x.level, "info");
+  assert.strictEqual(x.code, "bez_nds");
+  assert.match(x.text, /^Платежи «без НДС» в 2026 году — 1 250 000 ₽\. Поставщик на упрощёнке, доход за 2025 год по бухотчётности — 48,2 млн ₽ \(открытые данные ФНС\)\. Освобождение от НДС в 2026 году/);
+  assert.match(x.text, /п\. 1 ст\. 145 НК РФ/);
+  assert.match(x.text, /ст\. 149 НК РФ\) — поэтому это вопрос, а не нарушение\./);
+  assert.match(x.text, /на каком основании платежи без НДС/);
+  assert.ok(!/  /.test(x.text), "без двойных пробелов");
+});
+
+test("выписка: режим неизвестен (нет в наборе СНР) — условно; спецрежимы — молчим", () => {
+  const x = B.strokaVypiski(post({ 2026: 5e5 }), rm(30e6, null));
+  assert.match(x.text, /Поставщик: доход за 2025 год .* Если он на упрощёнке, освобождение от НДС/);
+  for (const r of ["ausn", "eshn", "srp"]) assert.strictEqual(B.strokaVypiski(post({ 2026: 5e5 }), rm(30e6, r)), null, r);
+});
+
+test("выписка: молчим — доход до порога, другой год платежей, нет дохода, ИП, нет ответа", () => {
+  assert.strictEqual(B.strokaVypiski(post({ 2026: 5e5 }), rm(20e6)), null);
+  assert.strictEqual(B.strokaVypiski(post({ 2025: 5e5 }), rm(48e6)), null);              // платили в 2025-м — решает доход 2024-го
+  assert.strictEqual(B.strokaVypiski(post({ 2026: 5e5 }), rm(48e6, "usn", "2024-12-31")), null); // старый доход — не судим
+  assert.strictEqual(B.strokaVypiski(post({ 2026: 5e5 }), { rezhim: "usn", dohod: null, dohod_na: null }), null);
+  assert.strictEqual(B.strokaVypiski(post({ 2026: 5e5 }, "500100732259"), rm(48e6)), null);
+  assert.strictEqual(B.strokaVypiski(post({ 2026: 5e5 }), null), null);
+  assert.strictEqual(B.strokaVypiski(post({}), rm(48e6)), null);
+});
+
+test("движок выписки раскладывает платежи «без НДС» по годам", () => {
+  const ln = (n, d, s, p) => `СекцияДокумент=Платежное поручение\nНомер=${n}\nДата=${d}\nСумма=${s}\nПлательщикСчет=40702810000000000001\nПлательщикИНН=7700000001\nПолучатель1=ООО "Поставщик"\nПолучательИНН=${OOO}\nПолучательСчет=40702810900000000002\nДатаСписано=${d}\nНазначениеПлатежа=${p}\nКонецДокумента`;
+  const t = ["1CClientBankExchange", "РасчСчет=40702810000000000001",
+    ln(1, "20.12.2025", "100000.00", "Оплата по счёту 1, без НДС"),
+    ln(2, "15.01.2026", "250000.00", "Оплата по счёту 2. НДС не облагается"),
+    ln(3, "16.02.2026", "300000.00", "Оплата по счёту 3, без налога (НДС)"),
+    ln(4, "17.02.2026", "120000.00", "Оплата по счёту 4, в т.ч. НДС 22% 21639.34"), "КонецФайла"].join("\n");
+  const r = E.analyze([E.parse(t)], { regime: "osn" });
+  const s = r.suppliers.find((x) => x.inn === OOO);
+  assert.deepStrictEqual(s.noVatGod, { 2025: 100000, 2026: 550000 });
+  const x = B.strokaVypiski(s, rm(48e6));
+  assert.match(x.text, /в 2026 году — 550 000 ₽/);
+});
+
+test("страница «Кому вы платите» подключает модуль до движка и выводит строку рядом с причинами из реестров", () => {
+  const h = fs.readFileSync(path.join(__dirname, "..", "kontragenty-iz-vypiski", "index.html"), "utf8");
+  const a = h.indexOf('<script src="/js/bez-nds.js"></script>'), b = h.indexOf('<script src="/kontragenty-iz-vypiski/engine.js"></script>');
+  assert.ok(a > 0 && a < b);
+  assert.match(h, /DlkBezNds\.strokaVypiski\(s,rm\)/);
+});

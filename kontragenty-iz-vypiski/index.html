@@ -116,6 +116,7 @@ footer a{color:var(--muted)}
 <link rel="stylesheet" href="/css/shapka.css">
 <script src="/js/shapka.js" defer></script>
 <script src="/js/metrika.js" defer></script>
+<script src="/js/kopiya.js" defer></script>
 <meta name="deloskop-rezhim" content="beta">
 </head>
 <body>
@@ -283,10 +284,14 @@ function render(){
   var head;
   if(!reg.base&&!reg.vat){
     head='<div class="k">УСН 6%: налоговых денег на кону нет</div><div class="v">'+rub(t.supplier)+'</div><p>столько ушло '+n+' '+plural(n,'поставщику','поставщикам','поставщикам')+'. Налог на УСН 6% от расходов не зависит, но переводы сомнительным компаниям видит банк — проверка по реестрам всё равно полезна.</p>';
+  }else if(checked&&!ex.risk.checked){
+    head='<div class="k">Проверка по реестрам</div><div class="v">нет сведений</div><p>Ваших поставщиков пока нет в&nbsp;нашей базе ЕГРЮЛ, а без статуса и&nbsp;адреса компании оценку мы не&nbsp;ставим. Откройте досье поставщика по&nbsp;ссылке в&nbsp;карточке&nbsp;— проверим по&nbsp;реестрам на&nbsp;сегодня.</p>';
   }else if(checked){
+    var nb=E.remoteNotInBase(state.remote);
     head='<div class="k">Деньги на кону по статье 54.1 НК</div><div class="v">'+(ex.risk.n?rub(ex.risk.soft)+' <small>— '+rub(ex.risk.hard)+'</small>':'0 ₽')+'</div><p>'+
       (ex.risk.n?ex.risk.n+' '+plural(ex.risk.n,'поставщик','поставщика','поставщиков')+' с высоким риском. Первая сумма — если докажете реальность работ, вторая — если нет.':'Среди проверенных поставщиков нет высокого риска.')+
-      (ex.watch.n?' Ещё '+ex.watch.n+' — под наблюдением: до '+rub(ex.watch.hard)+'.':'')+'</p>';
+      (ex.watch.n?' Ещё '+ex.watch.n+' — под наблюдением: до '+rub(ex.watch.hard)+'.':'')+
+      (nb?' Ещё '+nb+' '+plural(nb,'поставщик','поставщика','поставщиков')+' — нет в&nbsp;нашей базе: откройте досье, проверим на&nbsp;сегодня.':'')+'</p>';
   }else{
     var top=r.suppliers[0];
     head='<div class="k">Поставщикам ушло</div><div class="v">'+rub(t.supplier)+'</div><p>'+n+' '+plural(n,'поставщик','поставщика','поставщиков')+
@@ -324,7 +329,7 @@ function supCard(s){
   var badge=lvl&&LVL[lvl]?'<span class="badge '+LVL[lvl][0]+'">'+LVL[lvl][1]+'</span>':(state.risk&&s.inn&&s.innValid&&state.locked?'<span class="badge lock">в подписке</span>':'');
   var name=(rm&&rm.name)||s.name||'Без названия';
   var sig=s.signals.map(function(x){return '<div class="sig '+x.level+'">'+esc(x.text)+(x.href?' <a href="'+esc(x.href)+'">Сверить реквизиты&nbsp;→</a>':'')+'</div>'}).join('');
-  if(rm&&rm.reasons&&rm.reasons.length)sig=rm.reasons.slice(0,3).map(function(x){return '<div class="sig '+(lvl==='high'?'bad':'warn')+'">'+esc(x)+'</div>'}).join('')+sig;
+  var rr=E.remoteReasons(rm,lvl);if(rr.length)sig=rr.map(function(x){return '<div class="sig '+x.level+'">'+esc(x.text)+'</div>'}).join('')+sig;
   var reg=E.REGIMES[state.regime];
   var st=!(reg.base||reg.vat)||!s.stake.hard?'':'<div class="st">Если окажется «технической»: '+(s.stake.soft?'<b>'+rub(s.stake.soft)+'</b> — <b>'+rub(s.stake.hard)+'</b>':'до <b>'+rub(s.stake.hard)+'</b>, вычета НДС по нему нет — риск только в расходах')+'</div>';
   var link=s.inn&&s.innValid&&!state.demo?' · <a href="/?inn='+s.inn+'" target="_blank" rel="noopener">досье</a>':'';

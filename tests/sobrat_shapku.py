@@ -17,6 +17,8 @@
      /partials/shapka.css + токены ds.css (в области шапки — старые страницы ещё не на ds.css);
      в <head> — /css/shapka.css, /js/shapka.js и /obnovleniya.js (defer); у <main> — id="main"
      (ссылка «Перейти к содержанию»).
+     kopiya-v1 (01.10): в <head> ещё /js/kopiya.js (defer) — подпись «Источник: … deloskop.ru · делоскоп.рф»
+     при копировании длинного текста.
 
   6. ОТКРЫТАЯ БЕТА (beta-v1, решение владельца 29.09.2026) — флаг tarify/tarify.json → "beta". В бете:
      блоки <!--oplata-->…<!--/oplata--> уходят в <template>, показываются <!--v-bete-->…<!--/v-bete-->;
@@ -48,6 +50,7 @@ SHAPKA_LINK = '<link rel="stylesheet" href="/css/shapka.css">'
 SHAPKA_JS = '<script src="/js/shapka.js" defer></script>'
 OBNOV_JS = '<script src="/obnovleniya.js" defer></script>'
 METRIKA_JS = '<script src="/js/metrika.js" defer></script>'
+KOPIYA_JS = '<script src="/js/kopiya.js" defer></script>'  # kopiya-v1: подпись-источник при копировании
 STARAYA_SHAPKA = re.compile(r'<header(?: class="(?:top|hdr)")?>.*?</header>\n?', re.S)
 
 
@@ -193,6 +196,8 @@ def vstavit_shapku(txt, shapka):
         txt = txt.replace("</head>", OBNOV_JS + "\n</head>", 1)
     if METRIKA_JS not in txt:
         txt = txt.replace("</head>", METRIKA_JS + "\n</head>", 1)
+    if KOPIYA_JS not in txt:
+        txt = txt.replace("</head>", KOPIYA_JS + "\n</head>", 1)
     # цель ссылки «Перейти к содержанию»
     if 'id="main"' not in txt:
         mm = re.search(r"<main(?=[\s>])([^>]*)>", txt)

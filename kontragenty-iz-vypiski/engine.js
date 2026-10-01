@@ -406,6 +406,23 @@
     return { risk: roundAll(sum), watch: roundAll(watch) };
   }
 
+  /* ---------- ответ /api/shield/counterparties (kogo-platite-api-v1) ---------- */
+  // Причины одного поставщика → [{level, text}], не больше трёх. «Нет в нашей базе» — серая строка:
+  // это не плохой признак, а честное «не проверяли» (без ЕГРЮЛ «надёжен» не ставим).
+  function remoteReasons(rm, lvl) {
+    if (!rm || !rm.reasons || !rm.reasons.length) return [];
+    return rm.reasons.slice(0, 3).map(function (t, i, a) {
+      var info = rm.v_baze === false && i === a.length - 1 && /нет в нашей базе/i.test(t);
+      return { level: info ? 'info' : (lvl === 'high' ? 'bad' : 'warn'), text: String(t) };
+    });
+  }
+  // Сколько поставщиков ответ не оценил из-за того, что их нет в нашей базе.
+  function remoteNotInBase(remote) {
+    var net = 0;
+    for (var k in remote || {}) if (remote[k] && remote[k].v_baze === false && !remote[k].risk_level) net++;
+    return net;
+  }
+
   /* ---------- формат ---------- */
   function money(n) { return Math.round(n).toLocaleString('ru-RU').replace(/ | /g, ' '); }
   // «Ководство»: знак процента пишется слитно с числом — «30%».
@@ -414,6 +431,6 @@
   return {
     NORMS: NORMS, REGIMES: REGIMES, innOk: innOk, decode: decode, parse: parse, detectSelf: detectSelf,
     category: category, isCashOut: isCashOut, isCashIn: isCashIn, vatOf: vatOf, vaguePurpose: vaguePurpose, analyze: analyze, stake: stake,
-    exposure: exposure, money: money, pct: pct, toIso: toIso
+    exposure: exposure, remoteReasons: remoteReasons, remoteNotInBase: remoteNotInBase, money: money, pct: pct, toIso: toIso
   };
 });

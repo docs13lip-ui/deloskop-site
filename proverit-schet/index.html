@@ -104,6 +104,7 @@ footer a{color:var(--muted)}
 <link rel="stylesheet" href="/css/acc.css">
 <script src="/js/acc.js" defer></script>
 <script src="/js/smena.js" defer></script>
+<script src="/js/bez-nds.js" defer></script>
 <script src="/js/shapka.js" defer></script>
 <script src="/js/metrika.js" defer></script>
 <meta name="deloskop-rezhim" content="beta">
@@ -346,6 +347,7 @@ function render(r,sel,local,remote,remoteErr){
       detail:(co.name_short||co.name_full||'')+': '+(remote.risk_title||'')+'. '+(remote.verdict||'')});
     if(co.status&&co.status!=='ACTIVE')all.push({st:'bad',title:'Статус в ЕГРЮЛ',detail:'Компания не действует: '+({LIQUIDATING:'ликвидируется или ФНС готовит исключение из ЕГРЮЛ',LIQUIDATED:'ликвидирована',BANKRUPT:'дело о банкротстве',REORGANIZING:'реорганизация'}[co.status]||co.status)+'.'});
     if(r.kpp&&co.kpp&&r.kpp!==co.kpp)all.push({st:'warn',title:'КПП',detail:'В счёте '+r.kpp+', в ЕГРЮЛ '+co.kpp+'. Так бывает у филиалов, но стоит уточнить.'});
+    var bn=window.DlkBezNds&&DlkBezNds.stroka(r.noVat,remote,new Date());if(bn)all.push(bn);
   }
   var worst=(accBad||all.some(function(x){return x.st==='bad'}))?'bad':(accHigh||all.some(function(x){return x.st==='warn'}))?'warn':'ok';
   var head={bad:['Стоп: не платите, пока не выясните','В счёте есть серьёзная проблема — посмотрите красные пункты.'],

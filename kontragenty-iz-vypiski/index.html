@@ -218,10 +218,12 @@ footer a{color:var(--muted)}
 <h2 style="margin-top:32px">Что видно из одной выписки</h2>
 <ul>
 <li><strong>Ошибка в ИНН получателя</strong> — такого ИНН не существует: деньги ушли не туда или реквизиты подменили.</li>
+<li><strong>Смена реквизитов</strong> — поставщик тот же, а счёт или банк новый; и платёж организации на&nbsp;личный счёт физлица. Так выглядит подмена реквизитов в&nbsp;письме — подтвердите звонком до&nbsp;следующей оплаты.</li>
 <li><strong>Ключевые поставщики</strong> — на ком держится больше 30% расходов. Их налоговая смотрит первыми.</li>
 <li><strong>Разовые крупные платежи</strong> — сделки «один раз и много» проверяют чаще.</li>
 <li><strong>Размытое назначение</strong> — «оплата по счёту» без предмета. И банк, и налоговая начинают с назначения.</li>
 <li><strong>Переводы физлицам и доля налогов</strong> — то, на что банк смотрит по 115-ФЗ.</li>
+<li><strong>Наличные</strong> — снятие по чеку и с корпоративной карты, взносы и инкассация: доля в расходах и операции от 1&nbsp;млн&nbsp;₽. Снятие больше не путается с переводами на свои счета. Разбор по неделям — в <a href="/nalichnye/">«Наличных глазами банка»</a>.</li>
 </ul>
 </section>
 
@@ -275,7 +277,7 @@ function recalc(){state.res=E.analyze(state.parsed,{regime:state.regime});render
 
 function render(){
   var r=state.res,t=r.totals;
-  if(!r.suppliers.length){out.hidden=false;out.innerHTML='<div class="flow warn">В выписке нет платежей поставщикам — только налоги, зарплата или переводы между своими счетами.</div>';return}
+  if(!r.suppliers.length){out.hidden=false;out.innerHTML='<div class="flow warn">В выписке нет платежей поставщикам — только налоги, зарплата, наличные или переводы между своими счетами.</div>';return}
   var ex=E.exposure(r,state.risk),reg=E.REGIMES[state.regime];
   var checked=!!state.risk, n=r.suppliers.length;
   var head;
@@ -298,10 +300,11 @@ function render(){
 
   var facts='<div class="facts">'+
     fact(rub(t.out),'всего списано')+fact(rub(t.budget),'налоги и взносы · '+(t.out?E.pct(t.budget/t.out):'0%'))+
-    fact(rub(t.salary+t.person),'зарплата и физлица')+fact(r.docs+'','платежей в выписке')+'</div>';
+    fact(rub(t.salary+t.person),'зарплата и физлица')+
+    (t.cash?fact(rub(t.cash),'наличными · '+E.pct(t.cash/t.out)):fact(r.docs+'','платежей в выписке'))+'</div>';
 
   var todo='<div class="block"><h2>Три дела на неделю</h2><ol class="todo">'+r.todo.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ol></div>';
-  var flows=r.flows.length?'<div class="block"><h2>Что видит банк</h2>'+r.flows.map(function(f){return '<div class="flow '+f.level+'">'+esc(f.text)+'</div>'}).join('')+'</div>':'';
+  var flows=r.flows.length?'<div class="block"><h2>Что видит банк</h2>'+r.flows.map(function(f){return '<div class="flow '+f.level+'">'+esc(f.text)+(f.href?' <a href="'+f.href+'">'+esc(f.more||'Подробнее')+'&nbsp;→</a>':'')+'</div>'}).join('')+'</div>':'';
 
   var list=state.showAll?r.suppliers:r.suppliers.slice(0,10);
   var sup='<div class="block"><h2>Поставщики</h2>'+list.map(supCard).join('')+
@@ -320,7 +323,7 @@ function supCard(s){
   var rm=state.remote&&s.inn?state.remote[s.inn]:null, lvl=state.risk&&s.inn?state.risk[s.inn]:null;
   var badge=lvl&&LVL[lvl]?'<span class="badge '+LVL[lvl][0]+'">'+LVL[lvl][1]+'</span>':(state.risk&&s.inn&&s.innValid&&state.locked?'<span class="badge lock">в подписке</span>':'');
   var name=(rm&&rm.name)||s.name||'Без названия';
-  var sig=s.signals.map(function(x){return '<div class="sig '+x.level+'">'+esc(x.text)+'</div>'}).join('');
+  var sig=s.signals.map(function(x){return '<div class="sig '+x.level+'">'+esc(x.text)+(x.href?' <a href="'+esc(x.href)+'">Сверить реквизиты&nbsp;→</a>':'')+'</div>'}).join('');
   if(rm&&rm.reasons&&rm.reasons.length)sig=rm.reasons.slice(0,3).map(function(x){return '<div class="sig '+(lvl==='high'?'bad':'warn')+'">'+esc(x)+'</div>'}).join('')+sig;
   var reg=E.REGIMES[state.regime];
   var st=!(reg.base||reg.vat)||!s.stake.hard?'':'<div class="st">Если окажется «технической»: '+(s.stake.soft?'<b>'+rub(s.stake.soft)+'</b> — <b>'+rub(s.stake.hard)+'</b>':'до <b>'+rub(s.stake.hard)+'</b>, вычета НДС по нему нет — риск только в расходах')+'</div>';
@@ -378,14 +381,17 @@ $('demo').onclick=function(){
   var me='40702810900000000001';
   function d(n,date,sum,acc,inn,name,p){return 'СекцияДокумент=Платежное поручение\nНомер='+n+'\nДата='+date+'\nСумма='+sum+'\nПлательщикСчет='+me+'\nПлательщикИНН=7700000016\nПолучательСчет='+acc+'\nПолучательИНН='+inn+'\nПолучатель1='+name+'\nДатаСписано='+date+'\nНазначениеПлатежа='+p+'\nКонецДокумента'}
   var t=['1CClientBankExchange','РасчСчет='+me,
-    d(1,'03.07.2026','2440000.00','40702810100000000011','5001000010','ООО «Пример-Бетон»','Оплата за поставку бетона М300 по договору № 12. В т.ч. НДС 22% - 440000.00'),
-    d(2,'04.08.2026','1220000.00','40702810100000000011','5001000010','ООО «Пример-Бетон»','Оплата за поставку бетона по счету 88. В т.ч. НДС 22% - 220000.00'),
+    d(1,'03.07.2026','2440000.00','40702810100000000011','5001000010','ООО «Пример-Бетон»','Оплата за поставку бетона М300 по договору № 12. В т.ч. НДС 22% - 440000.00').replace('КонецДокумента','ПолучательБИК=044525001\nПолучательБанк1=ПАО «Банк-Образец»\nКонецДокумента'),
+    d(2,'04.08.2026','1220000.00','40702810100000000011','5001000010','ООО «Пример-Бетон»','Оплата за поставку бетона по счету 88. В т.ч. НДС 22% - 220000.00').replace('КонецДокумента','ПолучательБИК=044525001\nПолучательБанк1=ПАО «Банк-Образец»\nКонецДокумента'),
+    d(9,'02.09.2026','1220000.00','40702810500000000077','5001000010','ООО «Пример-Бетон»','Оплата за поставку бетона по счету 104. В т.ч. НДС 22% - 220000.00').replace('КонецДокумента','ПолучательБИК=044525002\nПолучательБанк1=АО «Банк-Новый»\nКонецДокумента'),
     d(3,'10.07.2026','1830000.00','40702810100000000022','5001000027','ООО «Пример-Снаб»','Оплата по счету № 7 от 09.07.2026. В т.ч. НДС 22% - 330000.00'),
     d(4,'12.07.2026','366000.00','40702810100000000033','5001000034','ООО «Пример-Логистик»','Оплата за перевозку грузов за июль. В т.ч. НДС 22% - 66000.00'),
     d(5,'20.07.2026','150000.00','40802810100000000044','500100000400','ИП Примеров П. П.','Оплата за ремонт техники. НДС не облагается'),
     d(6,'25.07.2026','95000.00','40702810100000000055','5001000059','ООО «Пример-Офис»','Оплата по договору'),
     d(7,'28.07.2026','60000.00','03100643000000017300','7727406020','Казначейство России (ФНС России)','Единый налоговый платеж').replace('КонецДокумента','ПоказательКБК=18201061201010000510\nКонецДокумента'),
     d(8,'30.07.2026','420000.00','40817810100000000066','','Сотрудники','Заработная плата за июль 2026'),
+    d(10,'14.08.2026','1200000.00',me,'7700000016','ООО «Пример»','Выдача наличных по чеку на хозяйственные нужды').replace('Платежное поручение','Денежный чек'),
+    d(11,'28.08.2026','300000.00','30232810000000000001','','','Снятие наличных в банкомате по корпоративной карте'),
     'КонецФайла'].join('\n');
   state.parsed=[E.parse(t)];state.risk=null;state.remote=null;state.locked=0;state.showAll=false;state.demo=true;msg.textContent='';recalc();
   out.scrollIntoView({behavior:'smooth',block:'start'});

@@ -18,9 +18,9 @@ test('на главной ровно три входа с целями Метр�
   for (const c of celi) assert.match(metrika, new RegExp('"' + c + '"'), `цель ${c} не описана в metrika.js`);
 });
 
-test('блок стоит сразу после первого экрана, до «Двух вещей»', () => {
+test('блок стоит сразу после первого экрана, до «Щита»', () => {
   const i = glavnaya.indexOf('class="vhody"');
-  assert.ok(i > glavnaya.indexOf('class="hero"') && i < glavnaya.indexOf('id="pains"'));
+  assert.ok(i > glavnaya.indexOf('class="hero"') && i < glavnaya.indexOf('id="shield"'));
 });
 
 test('каждая ссылка входа ведёт на существующую страницу', () => {

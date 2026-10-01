@@ -53,7 +53,7 @@ test('Г: Индекс не обещает вероятностей до отч�
 });
 
 test('Д: «не проверено» ≠ «не обнаружено» — объяснено на главной и в методике', () => {
-  assert.match(chitat('index.html'), /не&nbsp;проверено/);
+  assert.match(chitat('index.html'), /[Нн]е&nbsp;проверено/);
   assert.match(chitat('indeks/index.html'), /Нет данных — не нарушение/);
 });
 

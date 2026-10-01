@@ -32,7 +32,9 @@ test('1-МР Банка России: обе ветки порога и ссыл
   assert.ok(t.includes('от 30 млн ₽ за 30 дней'));
   assert.ok(t.includes('3 предыдущих месяца'), 'ветка 1: больше обычных оборотов');
   assert.ok(t.includes('в основном безналично'), 'ветка 2: раньше работала безналично');
-  assert.ok(t.includes('документы о финансовом положении'), 'исключение из 1-МР');
+  // Оговорка о документах про финансовое положение в 1-МР — только для физлиц (cbr.ru/Crosscut/LawActs/File/12196, сверено 01.10.2026)
+  assert.ok(!t.includes('Исключение — когда у банка есть документы'), 'оговорка для физлиц выдана за исключение для компаний');
+  assert.ok(/только для физлиц — для компаний и ИП её в этих рекомендациях нет/.test(t), 'нет уточнения: оговорка — только для физлиц');
   for (const f of ['115-fz/snyatie-nalichnyh-s-raschetnogo-scheta/index.html', 'nalichnye/index.html']) {
     const s = fs.readFileSync(path.join(KOREN, f), 'utf8');
     assert.ok(s.includes('https://www.cbr.ru/Crosscut/LawActs/File/12196'), f + ': нет ссылки на 1-МР на cbr.ru');

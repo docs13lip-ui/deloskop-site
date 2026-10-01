@@ -88,6 +88,9 @@
 
   // «Разбор дела» → одно действие: клик по кнопке тёмного блока .dl на /praktika/<раздел>/<slug>/ (SEO-обвязка [Маркетинга] 30.09)
   function izRazbora(e) {
+    // главная → блок «Как решают суды» (glavnaya-v2): карточка разбора или «Все разборы»
+    var g = location.pathname === "/" && e.target.closest && e.target.closest("#praktika a[href]");
+    if (g) { window.dlkGoal("praktika_cta", { otkuda: "glavnaya", kuda: g.getAttribute("href") }); return; }
     var a = e.target.closest && e.target.closest(".pr .dl a[href]");
     var m = /^\/praktika\/[^/]+\/([^/]+)\//.exec(location.pathname);
     if (a && m) window.dlkGoal("praktika_cta", { slug: m[1], kuda: a.getAttribute("href") });
@@ -99,6 +102,11 @@
     else if (!v) banner();
     document.addEventListener("click", izStati, true);
     document.addEventListener("click", izRazbora, true);
+    // форма с data-goal (например, проверка по ИНН под калькулятором) — цель с параметром otkuda
+    document.addEventListener("submit", function (e) {
+      var f = e.target && e.target.closest && e.target.closest("form[data-goal]");
+      if (f) window.dlkGoal(f.getAttribute("data-goal"), { otkuda: f.getAttribute("data-otkuda") || "", statya: location.pathname, kuda: "/" });
+    }, true);
     document.querySelectorAll("[data-ck-set]").forEach(function (b) {
       b.addEventListener("click", function () {
         if (b.getAttribute("data-ck-set") === "all") window.dlkCookies.prinyat(); else window.dlkCookies.tolkoNuzhnye();

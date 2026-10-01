@@ -280,4 +280,23 @@ test('наличные: малая доля — тишина; взносы и и
   assert.ok(ci && /60%/.test(ci.text), ci && ci.text);
 });
 
+test('ответ API пакета: «нет в нашей базе» — серая строка, не больше трёх причин, счётчик', () => {
+  const rm = { inn: A, risk_level: 'medium', v_baze: false,
+    reasons: ['Долги у судебных приставов: 1 — ФССП', 'Сотрудники: 0', 'Нет в нашей базе ЕГРЮЛ — откройте досье: проверим по реестрам на сегодня'] };
+  const r = E.remoteReasons(rm, 'medium');
+  assert.deepStrictEqual(r.map(x => x.level), ['warn', 'warn', 'info']);
+  assert.deepStrictEqual(E.remoteReasons({ reasons: ['Задолженность'], v_baze: true }, 'high').map(x => x.level), ['bad']);
+  assert.deepStrictEqual(E.remoteReasons(null, 'high'), []);
+  assert.strictEqual(E.remoteReasons({ reasons: ['1', '2', '3', '4'] }, 'low').length, 3);
+  const remote = {};
+  remote[A] = { v_baze: false, risk_level: null };
+  remote[B] = { v_baze: false, risk_level: 'medium' };   // открытые данные дали вопрос — оценён
+  remote[C] = { v_baze: true, risk_level: 'low' };
+  assert.strictEqual(E.remoteNotInBase(remote), 1);
+  assert.strictEqual(E.remoteNotInBase(null), 0);
+  // без оценки (risk_level null) поставщик не считается «проверенным» и не попадает в «нет высокого риска»
+  const ex = E.exposure({ suppliers: [{ inn: A, innValid: true, stake: { soft: 1, hard: 2 } }] }, { [A]: null });
+  assert.strictEqual(ex.risk.checked, 0);
+});
+
 console.log('\nПройдено: ' + passed);

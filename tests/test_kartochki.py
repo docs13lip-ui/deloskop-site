@@ -340,5 +340,52 @@ class TestObshchijRender(unittest.TestCase):
         self.assertNotIn("Примеров", telo)
 
 
+class TestObolochka(unittest.TestCase):
+    """obolochka-v1: API надевает на карточку шапку, подвал и бету из partials/obolochka.json — байт в байт как сайт."""
+
+    def _ss(self):
+        import sobrat_shapku as ss
+        return ss
+
+    def test_ravno_sobrat_stranicu_beta_i_bez(self):
+        import kartochka_render as R
+        ss = self._ss()
+        os.environ.pop("PERSONS_PUBLIC", None)
+        zap = O.nabor(8)
+        kart = [K.iz_check(z) for z in zap]
+        for beta in (True, False):
+            r = ss.rekv_sajta()
+            r["_beta"] = beta
+            if not beta:
+                r["_est"] = False  # реквизиты ИП в карточку не идут ни в каком режиме — проверяем только оболочку
+            podval, shapka = ss.podval_html(r), ss.shapka_html()
+            ob = json.loads(ss.obolochka(r, podval, shapka))
+            self.assertEqual(ob["beta"], beta)
+            for z in zap:
+                ok, pr, adres, telo = R.kartochka_iz_check(z, kart)
+                if not ok:
+                    continue
+                self.assertEqual(R.nadet_obolochku(telo, ob), ss.sobrat_stranicu(telo, r, podval, shapka), (beta, adres))
+
+    def test_fajl_svezhij(self):
+        # partials/obolochka.json собран из текущих шапки, подвала, беты и модуля отрисовки (иначе — sobrat_shapku.py)
+        ss = self._ss()
+        r = ss.rekv_sajta()
+        fajl = (KOREN / "partials" / "obolochka.json").read_text(encoding="utf-8")
+        self.assertEqual(fajl, ss.obolochka(r, ss.podval_html(r), ss.shapka_html()))
+        ob = json.loads(fajl)
+        self.assertEqual(set(ob), {"versiya", "beta", "render", "head", "shapka", "podval"})
+        self.assertRegex(ob["render"], r"^[0-9a-f]{16}$")
+        self.assertNotRegex(fajl, r"fonts\.(googleapis|gstatic)")
+        self.assertIn('<a class="skip" href="#main">', ob["shapka"])
+        self.assertTrue(ob["podval"].startswith("<!--podval-->"))
+
+    def test_bez_metki_none(self):
+        import kartochka_render as R
+        ob = {"head": "", "shapka": "", "podval": ""}
+        self.assertIsNone(R.nadet_obolochku(None, ob))
+        self.assertIsNone(R.nadet_obolochku("<html><head></head><body></body></html>", ob))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

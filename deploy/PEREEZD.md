@@ -29,3 +29,25 @@
 
 ## Проверка в CI
 `tests/nginx.test.js`: всегда — статические проверки конфига; если на машине есть nginx (на ubuntu-latest в GitHub он обычно предустановлен; нет — тест пропускается), поднимает его на репозитории и проверяет 404/301/302/200, заголовки и закрытые папки.
+
+## Ступень 2 волны: /company/ из API (obolochka-v1 + kartochki-iz-api-v1) — не раньше 5 000 карточек и «да» [Продукт · Данные]
+Сайт держит ступени 0–1 файлами. Дальше nginx отдаёт карточку, если файл есть, иначе спрашивает API; рендер один (`tests/kartochka_render.py`, его копия — в deloskop-api), оболочку API берёт с сайта: `/partials/obolochka.json` (собирает `tests/sobrat_shapku.py`; в нём отпечаток модуля отрисовки — у API другая версия → 503, nginx отдаёт прежнюю копию из кэша).
+```nginx
+# в http {} (вне server): кэш карточек
+proxy_cache_path /var/cache/nginx/company levels=1:2 keys_zone=company:20m max_size=2g inactive=7d use_temp_path=off;
+
+# вместо location @company:
+location @company {
+    if ($uri !~ "^/company/\d{10}(?:-[a-z0-9-]+)?/?$") { return 404; }
+    proxy_pass https://<домен API>;            # тот же, что у api.deloskop.ru
+    proxy_set_header Host deloskop.ru;         # иначе прослойка one_host в API ответит 301 на deloskop.ru (петля)
+    proxy_ssl_server_name on;
+    proxy_cache company;
+    proxy_cache_valid 200 301 1d;
+    proxy_cache_valid 404 10m;
+    proxy_cache_use_stale error timeout updating http_500 http_502 http_503 http_504;
+    proxy_cache_lock on;
+    proxy_intercept_errors on;                 # 404 из API → наша /404.html
+}
+```
+В API: `KARTOCHKI_API=1` (без него ручки нет). Проверка: `curl -sI https://deloskop.ru/company/<ИНН из базы>/` → 301 на адрес с названием → 200; ИП, ликвидированная, без отчётности → 404.

@@ -31,11 +31,12 @@ const A = inn10('500100001'), B = inn10('500100002'), C = inn12('5001000003');
 const BAD = '7700000000'; // контрольная цифра неверная
 
 function doc(o) {
-  return ['СекцияДокумент=Платежное поручение',
+  return ['СекцияДокумент=' + (o.kind || 'Платежное поручение'),
     'Номер=' + (o.n || 1), 'Дата=' + o.date, 'Сумма=' + o.sum,
     'ПлательщикСчет=' + (o.pa || SELF_ACC), 'ПлательщикИНН=' + (o.pi || SELF), 'Плательщик1=ООО «Мы»',
     'ПолучательСчет=' + o.ra, 'ПолучательИНН=' + (o.ri || ''), 'Получатель1=' + (o.rn || ''),
     o.kbk ? 'ПоказательКБК=' + o.kbk : '',
+    o.bik ? 'ПолучательБИК=' + o.bik : '', o.bank ? 'ПолучательБанк1=' + o.bank : '',
     'ДатаСписано=' + o.date, 'НазначениеПлатежа=' + o.p, 'КонецДокумента'].filter(Boolean).join('\r\n');
 }
 function file(docs) {
@@ -191,6 +192,92 @@ test('формат: проценты слитно по «Ководству», �
   assert.strictEqual(E.pct(0.3), '30%');
   assert.strictEqual(E.pct(0.021), '2,1%');
   assert.strictEqual(E.money(1234567.4), '1 234 567');
+});
+
+test('смена реквизитов: старый счёт бросили, новый — в другом банке → сигнал и дело на неделю', () => {
+  const f = file([
+    { n:1, date:'01.07.2026', sum:'300000.00', ra:'40702810100000000011', ri:A, rn:'ООО «Альфа»', bik:'044525225', bank:'ПАО Сбербанк', p:'Оплата за поставку бетона по договору № 5' },
+    { n:2, date:'01.08.2026', sum:'300000.00', ra:'40702810100000000011', ri:A, rn:'ООО «Альфа»', bik:'044525225', bank:'ПАО Сбербанк', p:'Оплата за поставку бетона по договору № 5' },
+    { n:3, date:'02.09.2026', sum:'300000.00', ra:'40702810500000007777', ri:A, rn:'ООО «Альфа»', bik:'044525999', bank:'АО Новый банк', p:'Оплата за поставку бетона по договору № 5' }
+  ]);
+  const x = E.analyze(E.parse(f));
+  const a = x.suppliers[0];
+  assert.strictEqual(a.accounts.list.length, 2);
+  assert.ok(a.accounts.switched && a.accounts.switched.otherBank);
+  const sg = a.signals.find(z => z.code === 'acc_change');
+  assert.ok(sg && sg.level === 'warn' && sg.href === '/proverit-schet/#smena');
+  assert.ok(/до 01\.08\.2026 платили на …0011 \(ПАО Сбербанк\), с 02\.09\.2026 — на …7777/.test(sg.text), sg.text);
+  assert.ok(/и банк/.test(sg.text));
+  assert.ok(/Подтвердить новые реквизиты у ООО «Альфа»/.test(x.todo[0]));
+});
+
+test('несколько счетов вперемешку — не «смена», а спокойная подсказка', () => {
+  const f = file([
+    { n:1, date:'01.07.2026', sum:'100000.00', ra:'40702810100000000011', ri:A, rn:'ООО «Альфа»', p:'Оплата за поставку бетона' },
+    { n:2, date:'01.08.2026', sum:'100000.00', ra:'40702810100000000012', ri:A, rn:'ООО «Альфа»', p:'Оплата за поставку бетона' },
+    { n:3, date:'02.09.2026', sum:'100000.00', ra:'40702810100000000011', ri:A, rn:'ООО «Альфа»', p:'Оплата за поставку бетона' }
+  ]);
+  const codes = E.analyze(E.parse(f)).suppliers[0].signals.map(z => z.code);
+  assert.ok(!codes.includes('acc_change') && codes.includes('acc_many'));
+});
+
+test('ИНН организации, а счёт — личный 40817: платёж остаётся у поставщика и горит красным', () => {
+  const f = file([
+    { n:1, date:'01.07.2026', sum:'250000.00', ra:'40817810100000000099', ri:B, rn:'ООО «Бета»', p:'Оплата по счёту 12 за кабель' },
+    { n:2, date:'02.07.2026', sum:'50000.00', ra:'40817810100000000098', rn:'Петров', p:'Заработная плата за июнь' }
+  ]);
+  const x = E.analyze(E.parse(f));
+  assert.strictEqual(x.totals.supplier, 250000);
+  assert.strictEqual(x.totals.salary, 50000);
+  const sg = x.suppliers[0].signals.find(z => z.code === 'acc_person');
+  assert.ok(sg && sg.level === 'bad' && /…0099, 250\s000\s₽/u.test(sg.text), sg && sg.text);
+});
+
+test('наличные: денежный чек на себя и банкомат по карте — не «свои счета» и не «банк»', () => {
+  const f = file([
+    { n:1, date:'01.07.2026', sum:'1200000.00', kind:'Денежный чек', ra:SELF_ACC, ri:SELF, rn:'ООО «Мы»', p:'Выдача на хозяйственные нужды' },
+    { n:2, date:'02.07.2026', sum:'300000.00', ra:'30232810000000000001', p:'Снятие наличных в банкомате по корпоративной карте' },
+    { n:3, date:'03.07.2026', sum:'2000.00', ra:'70601810000000000001', ri:'7707083893', rn:'ПАО Банк', p:'Комиссия банка за выдачу наличных' },
+    { n:4, date:'04.07.2026', sum:'100000.00', ra:'40702810900000000999', ri:SELF, rn:'ООО «Мы»', p:'Перевод собственных средств' },
+    { n:5, date:'05.07.2026', sum:'200000.00', ra:'40817810100000000055', rn:'Иванов Иван', p:'Заработная плата за июнь, наличные не выдавались' },
+    { n:6, date:'06.07.2026', sum:'400000.00', ra:'40702810100000000011', ri:A, rn:'ООО «Альфа»', p:'Оплата за поставку бетона' }
+  ]);
+  const x = E.analyze(E.parse(f));
+  assert.strictEqual(x.totals.cash, 1500000);
+  assert.strictEqual(x.counts.cash, 2);
+  assert.strictEqual(x.totals.self, 100000);
+  assert.strictEqual(x.totals.bank, 2000);
+  assert.strictEqual(x.totals.salary, 200000);
+  assert.strictEqual(x.totals.supplier, 400000);
+});
+
+test('наличные: доля в расходах, операции от 1 млн ₽ и дело на неделю', () => {
+  const f = file([
+    { n:1, date:'01.07.2026', sum:'1200000.00', kind:'Денежный чек', ra:SELF_ACC, ri:SELF, rn:'ООО «Мы»', p:'Выдача на хозяйственные нужды' },
+    { n:2, date:'06.07.2026', sum:'1800000.00', ra:'40702810100000000011', ri:A, rn:'ООО «Альфа»', p:'Оплата за поставку бетона' },
+    { n:3, date:'07.07.2026', sum:'30000.00', ra:'03100643000000017300', ri:'7727406020', kbk:'182', p:'ЕНП' }
+  ]);
+  const x = E.analyze(E.parse(f));
+  const cash = x.flows.find(z => z.code === 'cash'), big = x.flows.find(z => z.code === 'bigcash');
+  assert.ok(cash && cash.level === 'warn' && cash.href === '/nalichnye/' && /39,5%|40%/.test(cash.text), cash && cash.text);
+  assert.ok(big && /— 1, на 1\s200\s000\s₽/u.test(big.text) && /ст\. 6 115-ФЗ/.test(big.text), big && big.text);
+  assert.ok(!x.flows.some(z => z.code === 'self'), 'чек на себя — не «переводы на свои счета»');
+  assert.ok(x.todo.some(t => /подотч[её]т/.test(t)), x.todo.join(' | '));
+});
+
+test('наличные: малая доля — тишина; взносы и инкассация — доля в поступлениях', () => {
+  const f = file([
+    { n:1, date:'01.07.2026', sum:'50000.00', ra:'30232810000000000001', p:'Снятие наличных в банкомате' },
+    { n:2, date:'02.07.2026', sum:'950000.00', ra:'40702810100000000011', ri:A, rn:'ООО «Альфа»', p:'Оплата за поставку бетона' },
+    { n:3, date:'03.07.2026', sum:'600000.00', pa:'20202810000000000001', pi:'', ra:SELF_ACC, ri:SELF, rn:'ООО «Мы»', p:'Взнос наличных. Торговая выручка' },
+    { n:4, date:'04.07.2026', sum:'400000.00', pa:'40702810100000000011', pi:A, ra:SELF_ACC, ri:SELF, rn:'ООО «Мы»', p:'Оплата по договору' }
+  ]);
+  const x = E.analyze(E.parse(f));
+  assert.strictEqual(x.totals.cash, 50000);
+  assert.ok(!x.flows.some(z => z.code === 'cash' || z.code === 'bigcash'));
+  assert.strictEqual(x.totals.cashIn, 600000);
+  const ci = x.flows.find(z => z.code === 'cashin');
+  assert.ok(ci && /60%/.test(ci.text), ci && ci.text);
 });
 
 console.log('\nПройдено: ' + passed);

@@ -17,8 +17,33 @@
     fineCareless: 20,     // п. 1 ст. 122 НК — неосторожность
     fineIntent: 40,       // п. 3 ст. 122 НК — умысел
     shareKey: 0.30,       // доля в расходах, с которой поставщик «ключевой»
-    shareOneShot: 0.10    // разовый платёж крупнее этой доли — «разовый крупный»
+    shareOneShot: 0.10,   // разовый платёж крупнее этой доли — «разовый крупный»
+    // Наличные — те же пороги, что в «Наличных глазами банка» (nalichnye/shchit-engine.js, CONFIG):
+    bigCashOp: 1000000,   // ст. 6 115-ФЗ: операции юрлица с наличными от 1 млн ₽ — обязательный контроль
+    cashShare: 0.15,      // доля наличных в расходах — ориентир Делоскопа (как cashShareAttention в «Наличных»)
+    depositShare: 0.30    // доля взносов наличных в поступлениях — ориентир Делоскопа (как в «Наличных»)
   };
+
+  /* ---------- наличные: снятие и взнос (правила — как в «Наличных глазами банка») ---------- */
+  var CASH = {
+    outDoc: /(денежн\S*\s+чек|расходн\S*\s+кассов|выдач\S*\s+наличн)/i,
+    inDoc: /(взнос\S*\s+наличн|приходн\S*\s+кассов|объявлени)/i,
+    outWords: /(наличн|банкомат|\batm\b|снятие\s+д\/с|снятие\s+денеж|выдача\s+д\/с|по\s+чеку|денежн\S*\s+чек)/i,
+    inWords: /(взнос\S*\s+налич|инкасс|сдач\S*\s+выручк|выручк\S*\s+налич|внесени\S*\s+налич|через\s+банкомат|взнос\s+д\/с)/i,
+    salary: /(заработн|зарплат|з\/п|аванс\s+(по|за)|отпускн|больничн|пособи|премия)/i,
+    desk: /^(20202|20207|20208|20209)/,
+    card: /^(30232|30233|30302|47422)/
+  };
+  // Снятие наличных: денежный чек, счёт кассы банка или «наличные» в назначении — себе, без получателя или через карточный счёт банка.
+  function isCashOut(d, self) {
+    var acc = d.ПолучательСчет || '', inn = d.ПолучательИНН || '', pur = d.НазначениеПлатежа || '';
+    if (CASH.outDoc.test(d.kind || '') || CASH.desk.test(acc)) return true;
+    return CASH.outWords.test(pur) && (!inn || inn === self.inn || CASH.card.test(acc)) && !CASH.salary.test(pur);
+  }
+  // Взнос наличных и инкассация выручки на счёт.
+  function isCashIn(d) {
+    return CASH.inDoc.test(d.kind || '') || CASH.desk.test(d.ПлательщикСчет || '') || CASH.inWords.test(d.НазначениеПлатежа || '');
+  }
 
   /* ---------- режимы налогообложения клиента ---------- */
   // vat: теряется ли вычет НДС; base: ставка налога на расходы (снимаются при «технической» компании)
@@ -110,11 +135,17 @@
   /* ---------- куда ушли деньги: категория исходящего платежа ---------- */
   function category(d, self) {
     var acc = d.ПолучательСчет || '', inn = d.ПолучательИНН || '', pur = (d.НазначениеПлатежа || '').toLowerCase();
+    // наличные — раньше «своих счетов» и «банка»: денежный чек на себя или снятие через карточный счёт банка
+    // это не перевод себе и не комиссия
+    if (isCashOut(d, self)) return 'cash';
     if (self.inn && inn === self.inn) return 'self';
     if (/^(03100|03212|03221|40101|40102)/.test(acc) || d.ПоказательКБК || d.СтатусСоставителя) return 'budget';
     if (/^(706|47422|47423|30102|30232|61301)/.test(acc) || /комисси[яи] банка|банковск[а-я]+ комисси|за обслуживание сч[её]та|за ведение сч[её]та/.test(pur)) return 'bank';
     if (/^(40817|40820|423\d\d|40803|40813)/.test(acc)) {
       if (/заработн|зарплат|аванс по з|отпускн|премия|больничн|пособи|под отч[её]т|подотч[её]т/.test(pur)) return 'salary';
+      // ИНН организации (10 цифр), а счёт — личный счёт физлица: это платёж «поставщику» на чужой счёт,
+      // а не перевод человеку. Оставляем его у поставщика и подсвечиваем (сигнал acc_person).
+      if (/^\d{10}$/.test(inn)) return 'supplier';
       return 'person';
     }
     if (/заработн[а-я]* плат|зарплат[а-я]* |реестр[у]? .*зарплат|зачислени[ея] на карты сотрудник/.test(pur)) return 'salary';
@@ -175,8 +206,8 @@
       if (!seen[k]) { seen[k] = 1; docs.push(d); }
     });
 
-    var totals = { out: 0, in: 0, supplier: 0, budget: 0, salary: 0, person: 0, bank: 0, self: 0, loan: 0 };
-    var counts = { out: 0, supplier: 0, person: 0 };
+    var totals = { out: 0, in: 0, supplier: 0, budget: 0, salary: 0, person: 0, bank: 0, self: 0, loan: 0, cash: 0, cashIn: 0, bigCash: 0 };
+    var counts = { out: 0, supplier: 0, person: 0, cash: 0, cashIn: 0, bigCash: 0 };
     var map = {}, dates = [];
     docs.forEach(function (d) {
       var sum = num(d.Сумма);
@@ -184,11 +215,16 @@
       var date = d.ДатаСписано || d.ДатаПоступило || d.Дата || '';
       if (date) dates.push(toIso(date));
       var outgoing = accSet[d.ПлательщикСчет] || (!accSet[d.ПолучательСчет] && self.inn && d.ПлательщикИНН === self.inn);
-      if (!outgoing) { totals.in += sum; return; }
+      if (!outgoing) {
+        totals.in += sum;
+        if (isCashIn(d)) { totals.cashIn += sum; counts.cashIn++; if (sum >= NORMS.bigCashOp) { totals.bigCash += sum; counts.bigCash++; } }
+        return;
+      }
       totals.out += sum; counts.out++;
       var cat = category(d, self);
       totals[cat] = (totals[cat] || 0) + sum;
       if (cat === 'person') counts.person++;
+      if (cat === 'cash') { counts.cash++; if (sum >= NORMS.bigCashOp) { totals.bigCash += sum; counts.bigCash++; } }
       if (cat !== 'supplier') return;
       counts.supplier++;
       var inn = (d.ПолучательИНН || '').replace(/\D/g, '');
@@ -196,8 +232,11 @@
       var s = map[key] || (map[key] = {
         inn: inn || null, name: cleanName(d.Получатель1 || d.Получатель || ''), account: d.ПолучательСчет || '',
         sum: 0, vat: 0, vatKnown: 0, noVat: 0, count: 0, first: null, last: null, max: 0,
-        purposes: [], vague: 0, round: 0
+        purposes: [], vague: 0, round: 0, accounts: {}
       });
+      var ra = d.ПолучательСчет || '?';
+      var acc = s.accounts[ra] || (s.accounts[ra] = { account: ra, bik: d.ПолучательБИК || '', bank: cleanBank(d.ПолучательБанк1 || ''), first: null, last: null, sum: 0, count: 0 });
+      acc.sum += sum; acc.count++;
       s.sum += sum; s.count++; s.max = Math.max(s.max, sum);
       var v = vatOf(sum, d.НазначениеПлатежа);
       if (v.kind === 'stated' || v.kind === 'rate') { s.vat += v.amount; s.vatKnown += sum; }
@@ -205,7 +244,10 @@
       if (vaguePurpose(d.НазначениеПлатежа)) s.vague++;
       if (sum >= 10000 && sum % 1000 === 0) s.round++;
       var iso = toIso(date);
-      if (iso) { if (!s.first || iso < s.first) s.first = iso; if (!s.last || iso > s.last) s.last = iso; }
+      if (iso) {
+        if (!s.first || iso < s.first) s.first = iso; if (!s.last || iso > s.last) s.last = iso;
+        if (!acc.first || iso < acc.first) acc.first = iso; if (!acc.last || iso > acc.last) acc.last = iso;
+      }
       if (s.purposes.length < 3 && d.НазначениеПлатежа && s.purposes.indexOf(d.НазначениеПлатежа) < 0) s.purposes.push(d.НазначениеПлатежа);
     });
 
@@ -215,6 +257,7 @@
       s.share = totals.supplier ? s.sum / totals.supplier : 0;
       s.innValid = s.inn ? innOk(s.inn) : false;
       s.kind = s.inn && s.inn.length === 12 ? 'ip' : 'org';
+      s.accounts = accountsOf(s);
       s.stake = stake(s, regime);
       s.signals = signals(s, regime);
     });
@@ -238,6 +281,28 @@
          .replace(/^Акционерное общество\s*/i, 'АО ');
     return n;
   }
+  function cleanBank(n) { return String(n || '').replace(/\s+/g, ' ').trim(); }
+
+  /* ---------- счета поставщика: был ли переход со старого счёта на новый ---------- */
+  // Счета по порядку первого платежа. switched — новый счёт появился, а старый после этого
+  // больше не использовали: так выглядит «поставщик сменил реквизиты» (или их подменили).
+  // Если платите на несколько счетов вперемешку — это обычно крупная компания с несколькими банками.
+  function accountsOf(s) {
+    var list = Object.keys(s.accounts).map(function (k) { var a = s.accounts[k]; a.sum = round2(a.sum); return a; });
+    list.sort(function (a, b) { return String(a.first || '9').localeCompare(String(b.first || '9')); });
+    var switched = null;
+    for (var i = 1; i < list.length; i++) {
+      var prev = list[i - 1], cur = list[i];
+      if (prev.last && cur.first && prev.last <= cur.first) {
+        switched = { from: prev, to: cur, otherBank: !!(prev.bik && cur.bik && prev.bik !== cur.bik) };
+      }
+    }
+    var personal = list.filter(function (a) { return /^(40817|40820|423\d\d|40803|40813)/.test(a.account); });
+    return { list: list, switched: switched, personal: personal };
+  }
+  function tail(acc) { acc = String(acc || ''); return acc.length > 4 ? '…' + acc.slice(-4) : acc; }
+  function ru(iso) { var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? m[3] + '.' + m[2] + '.' + m[1] : ''; }
+
   function toIso(d) {
     var m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(d || '').trim());
     return m ? m[3] + '-' + m[2] + '-' + m[1] : null;
@@ -264,6 +329,17 @@
     var out = [];
     function add(level, code, text) { out.push({ level: level, code: code, text: text }); }
     if (s.inn && !s.innValid) add('bad', 'inn_invalid', 'ИНН ' + s.inn + ' с ошибкой в контрольной цифре — такого ИНН не бывает. Проверьте, кому ушли деньги.');
+    var ac = s.accounts || { list: [], switched: null, personal: [] };
+    if (s.kind === 'org' && ac.personal.length) out.push({ level: 'bad', code: 'acc_person', href: '/proverit-schet/#smena',
+      text: 'В платёжке ИНН организации, а деньги ушли на личный счёт физлица (' + ac.personal.map(function (a) { return tail(a.account); }).join(', ') +
+        ', ' + money(ac.personal.reduce(function (x, a) { return x + a.sum; }, 0)) + ' ₽). У организации так не бывает: узнайте, чей это счёт, и не платите на него снова, пока поставщик не подтвердит реквизиты.' });
+    if (ac.switched) {
+      var w = ac.switched;
+      out.push({ level: 'warn', code: 'acc_change', href: '/proverit-schet/#smena',
+        text: 'Сменился счёт' + (w.otherBank ? ' и банк' : '') + ': до ' + ru(w.from.last) + ' платили на ' + tail(w.from.account) +
+          (w.from.bank ? ' (' + w.from.bank + ')' : '') + ', с ' + ru(w.to.first) + ' — на ' + tail(w.to.account) + (w.to.bank ? ' (' + w.to.bank + ')' : '') +
+          '. Если реквизиты меняли по письму — проверьте, что оно подписано руководителем, и подтвердите по телефону, который знали раньше.' });
+    } else if (ac.list.length >= 2) add('info', 'acc_many', 'Платите на ' + ac.list.length + ' ' + (ac.list.length < 5 ? 'разных счёта' : 'разных счетов') + ' поставщика. Так бывает у крупных компаний; держите в договоре или письме все их реквизиты.');
     if (!s.inn) add('warn', 'inn_missing', 'В платёжке нет ИНН получателя. Для банка и налоговой это слепое пятно.');
     if (s.share >= NORMS.shareKey) add('warn', 'key', 'Ключевой поставщик: ' + pct(s.share) + ' всех расходов. Проверять в первую очередь и держать папку документов — договор, акты, переписку.');
     if (s.count === 1 && s.share >= NORMS.shareOneShot) add('warn', 'oneshot', 'Разовый крупный платёж. Такие сделки налоговая проверяет чаще — сохраните договор, акт и доказательства, что работа сделана.');
@@ -279,6 +355,13 @@
     if (!t.out) return out;
     var personShare = t.person / t.out;
     if (personShare >= 0.3) out.push({ level: 'warn', code: 'persons', text: 'На счета физлиц ушло ' + pct(personShare) + ' расходов (не зарплата). Банки смотрят на такие переводы по 115-ФЗ: укажите основание в назначении и держите договоры.' });
+    var cashShare = t.cash / t.out;
+    if (cashShare >= NORMS.cashShare) out.push({ level: 'warn', code: 'cash', href: '/nalichnye/', more: 'Разобрать наличные по неделям',
+      text: 'Наличными ушло ' + pct(cashShare) + ' всех списаний — ' + money(t.cash) + ' ₽. Чем выше доля, тем чаще банк спрашивает, на что пошли деньги: зарплата, закупки, подотчёт.' });
+    if (r.counts.bigCash) out.push({ level: 'info', code: 'bigcash', href: '/nalichnye/', more: 'Что делать с наличными',
+      text: 'Операций с наличными от 1 млн ₽ — ' + r.counts.bigCash + ', на ' + money(t.bigCash) + ' ₽. По ст. 6 115-ФЗ банк сообщает о них в Росфинмониторинг. Это не блокировка, но их изучают внимательнее.' });
+    if (t.in && t.cashIn / t.in >= NORMS.depositShare) out.push({ level: 'info', code: 'cashin', href: '/nalichnye/', more: 'Что спросит банк',
+      text: 'Наличными внесено ' + pct(t.cashIn / t.in) + ' всех поступлений — ' + money(t.cashIn) + ' ₽. Если ваш бизнес не работает с наличными покупателями, банк спросит, откуда они.' });
     var taxShare = t.budget / t.out;
     if (t.out >= 1000000 && taxShare < 0.009) out.push({ level: 'warn', code: 'lowtax', text: 'Налоги и взносы — ' + pct(taxShare) + ' от всех списаний. Банк сравнивает эту долю с 0,9% (методические рекомендации ЦБ № 18-МР): ниже — повод для вопросов.' });
     if (t.self / t.out >= 0.5) out.push({ level: 'info', code: 'self', text: 'Половина и больше расходов — переводы на ваши же счета. Банку понятнее, если основная выручка и платежи идут через один счёт.' });
@@ -290,13 +373,20 @@
     var t = [];
     var bad = r.suppliers.filter(function (s) { return s.signals.some(function (x) { return x.level === 'bad'; }); });
     if (bad.length) t.push('Выяснить, кому ушли платежи с неверным ИНН: ' + bad.slice(0, 3).map(label).join(', ') + '.');
+    var moved = r.suppliers.filter(function (s) { return s.signals.some(function (x) { return x.code === 'acc_person' || x.code === 'acc_change'; }); });
+    if (moved.length) t.push('Подтвердить новые реквизиты у ' + moved.slice(0, 3).map(label).join(', ') + ' — звонком по известному номеру, до следующей оплаты.');
     var top = r.suppliers.filter(function (s) { return s.innValid; }).slice(0, 3);
     if (top.length) t.push('Проверить по реестрам трёх главных поставщиков — на них ' + pct(top.reduce(function (a, s) { return a + s.share; }, 0)) + ' расходов: ' + top.map(label).join(', ') + '.');
     var vague = r.suppliers.filter(function (s) { return s.signals.some(function (x) { return x.code === 'vague'; }); });
     if (vague.length) t.push('Дописать предмет в назначение платежей ' + (vague.length === 1 ? 'поставщику ' + label(vague[0]) : vague.length + ' поставщикам') + ' — с этого начинают банк и налоговая.');
     var key = r.suppliers.filter(function (s) { return s.signals.some(function (x) { return x.code === 'key' || x.code === 'oneshot'; }); });
     if (key.length && t.length < 3) t.push('Собрать папку по ' + label(key[0]) + ': договор, акты, переписка, фото или отчёт о результате.');
-    r.flows.forEach(function (f) { if (t.length < 3 && f.level === 'warn') t.push(f.code === 'persons' ? 'Проверить переводы физлицам: у каждого должно быть основание в назначении.' : 'Сверить долю налогов с оборотом и подготовить пояснение для банка.'); });
+    var FLOW_TODO = {
+      persons: 'Проверить переводы физлицам: у каждого должно быть основание в назначении.',
+      lowtax: 'Сверить долю налогов с оборотом и подготовить пояснение для банка.',
+      cash: 'Закрыть подотчёт по снятым наличным авансовыми отчётами и чеками — они ответят на запрос банка за вас.'
+    };
+    r.flows.forEach(function (f) { if (t.length < 3 && f.level === 'warn' && FLOW_TODO[f.code]) t.push(FLOW_TODO[f.code]); });
     if (t.length < 3) t.push('Раз в месяц повторять разбор — новые поставщики появляются незаметно.');
     return t.slice(0, 3);
   }
@@ -323,7 +413,7 @@
 
   return {
     NORMS: NORMS, REGIMES: REGIMES, innOk: innOk, decode: decode, parse: parse, detectSelf: detectSelf,
-    category: category, vatOf: vatOf, vaguePurpose: vaguePurpose, analyze: analyze, stake: stake,
+    category: category, isCashOut: isCashOut, isCashIn: isCashIn, vatOf: vatOf, vaguePurpose: vaguePurpose, analyze: analyze, stake: stake,
     exposure: exposure, money: money, pct: pct, toIso: toIso
   };
 });

@@ -231,7 +231,7 @@
       var key = inn || ('acc:' + (d.ПолучательСчет || '?'));
       var s = map[key] || (map[key] = {
         inn: inn || null, name: cleanName(d.Получатель1 || d.Получатель || ''), account: d.ПолучательСчет || '',
-        sum: 0, vat: 0, vatKnown: 0, noVat: 0, count: 0, first: null, last: null, max: 0,
+        sum: 0, vat: 0, vatKnown: 0, noVat: 0, noVatGod: {}, count: 0, first: null, last: null, max: 0,
         purposes: [], vague: 0, round: 0, accounts: {}
       });
       var ra = d.ПолучательСчет || '?';
@@ -240,7 +240,11 @@
       s.sum += sum; s.count++; s.max = Math.max(s.max, sum);
       var v = vatOf(sum, d.НазначениеПлатежа);
       if (v.kind === 'stated' || v.kind === 'rate') { s.vat += v.amount; s.vatKnown += sum; }
-      if (v.kind === 'none') s.noVat += sum;
+      if (v.kind === 'none') {
+        s.noVat += sum;
+        var g = (toIso(date) || '').slice(0, 4);   // по годам — для «Без НДС» (js/bez-nds.js, п. 1 ст. 145 НК)
+        if (g) s.noVatGod[g] = round2((s.noVatGod[g] || 0) + sum);
+      }
       if (vaguePurpose(d.НазначениеПлатежа)) s.vague++;
       if (sum >= 10000 && sum % 1000 === 0) s.round++;
       var iso = toIso(date);

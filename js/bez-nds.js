@@ -1,4 +1,4 @@
-/* Делоскоп — «Без НДС» при большой выручке, /proverit-schet/.
+/* Делоскоп — «Без НДС» при большой выручке: /proverit-schet/ и «Кому вы платите» (/kontragenty-iz-vypiski/).
  * Счёт «без НДС» от поставщика на упрощёнке законен, пока его доход за прошлый год не больше порога
  * п. 1 ст. 145 НК РФ (ред. 228-ФЗ от 04.07.2026): 20 млн ₽ за 2025–2028 годы, 15 млн ₽ за 2029-й,
  * 10 млн ₽ за 2030-й и дальше. Сверено [Налоговым юристом] — sroki.json, id usn_nds_porog.
@@ -66,13 +66,57 @@
     return {
       st: "info",
       title: "Без НДС",
-      detail: nachalo + " от НДС в " + (god + 1) + " году — только при доходе за " + god + " год до " + mln(p) +
-        " (п. 1 ст. 145 НК РФ), выше — счёт выставляют с НДС: по общей ставке или по ставке 5 или 7%. " +
-        "Доход для порога считают по правилам упрощёнки, не по бухотчётности, а «без НДС» законно и при льготной " +
-        "операции (ст. 149 НК РФ) — поэтому это вопрос, а не нарушение. Спросите поставщика, на каком основании " +
+      detail: nachalo + osvobozhdenie(god, p) + " Спросите поставщика, на каком основании " +
         "счёт без НДС. Что будет с ценой, если НДС появится, — заранее в договоре: пункт 2.2 Делописи."
     };
   }
 
-  return { porog: porog, rezhim: rezhim, stroka: stroka, mln: mln };
+  // Общая середина строки — одна для «Проверь счёт» и «Кому вы платите» (текст сверяет [Налоговый юрист]).
+  function osvobozhdenie(god, p) {
+    return " от НДС в " + (god + 1) + " году — только при доходе за " + god + " год до " + mln(p) +
+      " (п. 1 ст. 145 НК РФ), выше — счёт выставляют с НДС: по общей ставке или по ставке 5 или 7%. " +
+      "Доход для порога считают по правилам упрощёнки, не по бухотчётности, а «без НДС» законно и при льготной " +
+      "операции (ст. 149 НК РФ) — поэтому это вопрос, а не нарушение.";
+  }
+
+  function rub(n) {
+    return Math.round(n).toLocaleString("ru-RU").replace(/[\s\u202f]/g, "\u00a0") + "\u00a0₽";
+  }
+
+  // Режим из ответа /api/shield/counterparties (открытые данные ФНС «СНР»): "usn" | "ausn" | "eshn" | "srp" | null.
+  // null — компании нет в наборе спецрежимов: общая система или набор отстаёт → говорим условно.
+  function rezhimKoda(k) {
+    if (k === "usn") return "usn";
+    if (k === "ausn" || k === "eshn" || k === "srp") return "drugoj";
+    return null;
+  }
+
+  /* «Кому вы платите» (/kontragenty-iz-vypiski/): s — поставщик из DeloVypiska.analyze (inn, kind, noVatGod —
+   * {год: сумма платежей с «без НДС» в назначении}); rm — элемент ответа /api/shield/counterparties
+   * (rezhim, dohod — «СумДоход» набора ФНС revexp, dohod_na — 31.12 отчётного года).
+   * Судим только платежи года, следующего за годом дохода: платили в 2026-м — решает доход за 2025-й.
+   * → {level:'info', code:'bez_nds', text} или null. */
+  function strokaVypiski(s, rm) {
+    if (!s || !rm || s.kind !== "org" || !s.inn || String(s.inn).length !== 10) return null;
+    var rz = rezhimKoda(rm.rezhim);
+    if (rz === "drugoj") return null;
+    if (typeof rm.dohod !== "number" || !/^\d{4}-/.test(String(rm.dohod_na || ""))) return null;
+    var god = parseInt(String(rm.dohod_na).slice(0, 4), 10);
+    var p = porog(god);
+    if (!p || rm.dohod <= p) return null;
+    var summa = (s.noVatGod || {})[god + 1];
+    if (!(summa > 0)) return null;
+    var dohod = "доход за " + god + " год по бухотчётности — " + mln(rm.dohod) + " (открытые данные ФНС).";
+    var nachalo = "Платежи «без НДС» в " + (god + 1) + " году — " + rub(summa) + ". " + (rz === "usn"
+      ? "Поставщик на упрощёнке, " + dohod + " Освобождение"
+      : "Поставщик: " + dohod + " Если он на упрощёнке, освобождение");
+    return {
+      level: "info",
+      code: "bez_nds",
+      text: nachalo + osvobozhdenie(god, p) + " Спросите поставщика, на каком основании платежи без НДС. " +
+        "Что будет с ценой, если НДС появится, — заранее в договоре: пункт 2.2 Делописи."
+    };
+  }
+
+  return { porog: porog, rezhim: rezhim, stroka: stroka, mln: mln, rezhimKoda: rezhimKoda, strokaVypiski: strokaVypiski };
 });

@@ -249,6 +249,7 @@ footer a{color:var(--muted)}
 </div></section>
 </main>
 
+<script src="/js/bez-nds.js"></script>
 <script src="/kontragenty-iz-vypiski/engine.js"></script>
 <script>(function(){
 'use strict';
@@ -329,7 +330,8 @@ function supCard(s){
   var badge=lvl&&LVL[lvl]?'<span class="badge '+LVL[lvl][0]+'">'+LVL[lvl][1]+'</span>':(state.risk&&s.inn&&s.innValid&&state.locked?'<span class="badge lock">в подписке</span>':'');
   var name=(rm&&rm.name)||s.name||'Без названия';
   var sig=s.signals.map(function(x){return '<div class="sig '+x.level+'">'+esc(x.text)+(x.href?' <a href="'+esc(x.href)+'">Сверить реквизиты&nbsp;→</a>':'')+'</div>'}).join('');
-  var rr=E.remoteReasons(rm,lvl);if(rr.length)sig=rr.map(function(x){return '<div class="sig '+x.level+'">'+esc(x.text)+'</div>'}).join('')+sig;
+  var rr=E.remoteReasons(rm,lvl),bn=rm&&window.DlkBezNds?DlkBezNds.strokaVypiski(s,rm):null;if(bn)rr.push(bn);
+  if(rr.length)sig=rr.map(function(x){return '<div class="sig '+x.level+'">'+esc(x.text)+'</div>'}).join('')+sig;
   var reg=E.REGIMES[state.regime];
   var st=!(reg.base||reg.vat)||!s.stake.hard?'':'<div class="st">Если окажется «технической»: '+(s.stake.soft?'<b>'+rub(s.stake.soft)+'</b> — <b>'+rub(s.stake.hard)+'</b>':'до <b>'+rub(s.stake.hard)+'</b>, вычета НДС по нему нет — риск только в расходах')+'</div>';
   var link=s.inn&&s.innValid&&!state.demo?' · <a href="/?inn='+s.inn+'" target="_blank" rel="noopener">досье</a>':'';

@@ -85,12 +85,25 @@ footer a{color:var(--muted)}
 .small{font-size:14px;color:var(--muted);margin-top:14px}
 .how{margin-top:40px}.how h2{font-size:26px;letter-spacing:-.02em;margin:0 0 12px}
 .how ol{padding-left:22px;color:var(--ink2)}.how li{margin:6px 0}
+.smena{margin-top:48px}.smena h2{font-size:26px;letter-spacing:-.02em;margin:0 0 10px}.smena h3{font-size:19px;margin:28px 0 8px}
+.smena__lid{color:var(--ink2);font-size:17px;margin:0 0 18px}
+.smena__forma{display:grid;grid-template-columns:1fr 1fr;gap:14px}.smena__forma .go{grid-column:1/-1;margin-top:0;min-height:52px;width:100%;border:0;border-radius:14px;background:var(--accent);color:#fff;font:inherit;font-weight:600;font-size:17px;cursor:pointer}.smena__forma .go:hover{background:var(--accent-hover)}
+.smena__pole-v{display:flex;flex-direction:column;gap:2px}.smena__pole-v b{font-size:16px}.smena__pole-v span{font-size:14px;color:var(--muted);margin-bottom:6px}
+.smena__pole-v textarea{width:100%;min-height:120px;border:1px solid var(--line);border-radius:14px;padding:12px 14px;font:inherit;font-size:15px;resize:vertical}
+#smena-out{margin-top:20px}
+.smena__r{display:grid;grid-template-columns:150px 1fr 1fr;gap:4px 14px;padding:12px 0;border-bottom:1px solid var(--line);font-size:15px}
+.smena__h{font-size:14px;color:var(--muted);padding:6px 0}.smena__pole{color:var(--muted)}.smena__z{font-variant-numeric:tabular-nums;word-break:break-all}
+.smena__novoe{font-weight:600}.smena__t{grid-column:2/-1;margin:2px 0 0;color:var(--ink2)}
+.smena__r.is-bad .smena__t{color:#B42318}.smena__r.is-warn .smena__t{color:#8A5A00}.smena__r.is-ok .smena__t{color:#137A3E}
+.smena__shagi{padding-left:22px;color:var(--ink2)}.smena__shagi li{margin:8px 0}
+@media (max-width:560px){.smena__forma{grid-template-columns:1fr}.smena__r{grid-template-columns:1fr 1fr}.smena__h .smena__pole,.smena__h span:first-child{display:none}.smena__pole{grid-column:1/-1}.smena__t{grid-column:1/-1}}
 </style><script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
 <link rel="stylesheet" href="/css/fonts.css">
 <link rel="stylesheet" href="/css/podval.css">
 <link rel="stylesheet" href="/css/shapka.css">
 <link rel="stylesheet" href="/css/acc.css">
 <script src="/js/acc.js" defer></script>
+<script src="/js/smena.js" defer></script>
 <script src="/js/shapka.js" defer></script>
 <script src="/js/metrika.js" defer></script>
 <meta name="deloskop-rezhim" content="beta">
@@ -186,6 +199,24 @@ footer a{color:var(--muted)}
 <li><b>НДС</b> — ставка и сумма. С 2026 года основная ставка — 22%.</li>
 <li><b>Поставщик</b> — статус в ЕГРЮЛ, долги, отметки о недостоверности, риск для вычета НДС и блокировки счёта. 3 проверки в день бесплатно.</li>
 </ol></section>
+<section class="smena" id="smena" aria-labelledby="smena-h"><h2 id="smena-h">Поставщик прислал новые реквизиты?</h2>
+<p class="smena__lid">Подменить реквизиты в&nbsp;письме&nbsp;— простой способ увести оплату: письмо как будто от&nbsp;поставщика, а&nbsp;счёт в&nbsp;нём чужой. Контрольный ключ этого не&nbsp;поймает&nbsp;— чужой счёт тоже «правильный». Сравните прежние реквизиты с&nbsp;новыми: покажем, что именно поменялось.</p>
+<form class="smena__forma" id="smena-forma" novalidate>
+<label class="smena__pole-v"><b>Было</b><span>из договора или счёта, по&nbsp;которому вы уже платили</span><textarea id="smena-bylo" rows="5" placeholder="ИНН 7707083893, р/с 40702810…, БИК 044525225"></textarea></label>
+<label class="smena__pole-v"><b>Стало</b><span>из письма или нового счёта</span><textarea id="smena-stalo" rows="5" placeholder="Вставьте реквизиты из письма"></textarea></label>
+<button type="submit" class="go">Сравнить реквизиты</button>
+</form>
+<p class="priv">Реквизиты сравниваются прямо в&nbsp;браузере и&nbsp;никуда не&nbsp;отправляются.</p>
+<div id="smena-out" role="status" aria-live="polite" hidden></div>
+<h3>Что сделать до&nbsp;оплаты по&nbsp;новым реквизитам</h3>
+<ol class="smena__shagi">
+<li><b>Позвоните поставщику</b> по&nbsp;номеру из&nbsp;договора или с&nbsp;его сайта&nbsp;— не&nbsp;по&nbsp;номеру из&nbsp;письма. Продиктуйте новый счёт и&nbsp;БИК, пусть подтвердит.</li>
+<li><b>Посмотрите на&nbsp;адрес отправителя.</b> Подделку выдаёт одна буква или чужой домен: <i>romashka-ooo.ru</i> вместо <i>ooo-romashka.ru</i>, почта на&nbsp;бесплатном сервисе вместо корпоративной.</li>
+<li><b>Получатель тот&nbsp;же?</b> ИНН в&nbsp;новых реквизитах должен совпадать с&nbsp;прежним. Другой ИНН&nbsp;— другой получатель.</li>
+<li><b>Счёт не&nbsp;личный.</b> Счёт организации начинается с&nbsp;40702, предпринимателя&nbsp;— с&nbsp;40802; 40817 и&nbsp;423&nbsp;— личные счета людей.</li>
+<li><b>Проверьте, почему сменился банк.</b> Иногда поставщик уходит из&nbsp;банка, потому что старый счёт заблокировали. Есть&nbsp;ли решения налоговой о&nbsp;приостановке операций&nbsp;— <a href="https://service.nalog.ru/bi.do" target="_blank" rel="noopener">в&nbsp;сервисе ФНС</a> по&nbsp;ИНН и&nbsp;БИК; как поставщик выглядит для банка&nbsp;— <a href="/#inn">проверка по&nbsp;ИНН</a>.</li>
+</ol>
+</section>
 <section class="more"><h2>Читайте также</h2><div class="cards"><a class="card" href="/nalogi/statya-54-1-nk-prostymi-slovami/"><small>Налоги</small><b>Статья 54.1 НК простыми словами: когда налоговая снимет вычет</b><span>5 минут чтения</span></a><a class="card" href="/nalogi/kak-proverit-schet-pered-oplatoj/"><small>Налоги</small><b>Как проверить счёт перед оплатой: 6 пунктов за 2 минуты</b><span>4 минуты чтения</span></a><a class="card" href="/nalogi/proverka-kontragenta-pered-dogovorom/"><small>Налоги</small><b>Проверка контрагента перед договором: чек-лист и бесплатные сервисы</b><span>5 минут чтения</span></a></div></section>
 </main>
 <script>(function(){
@@ -330,7 +361,7 @@ function render(r,sel,local,remote,remoteErr){
     (r.bank||r.total?'<p class="meta2">'+(r.bank?'Банк: '+esc(r.bank)+'. ':'')+(r.total?'Сумма к оплате: '+money(r.total)+' ₽.':'')+'</p>':'')+
     '<div class="pur"><b>Назначение платежа</b><div id="purText">'+esc(pur)+'</div><button type="button" id="copyPur">Скопировать</button></div>'+
     (remote&&remote.report_id?'<p class="meta2"><a href="/report.html?id='+encodeURIComponent(remote.report_id)+'" target="_blank" rel="noopener">Полное досье поставщика (PDF)</a></p>':'')+
-    '<p class="small">Это автоматическая проверка реквизитов и открытых данных ФНС, а не гарантия. Если поставщик прислал новые реквизиты письмом — перезвоните ему по известному номеру.</p>';
+    '<p class="small">Это автоматическая проверка реквизитов и открытых данных ФНС, а не гарантия. Если поставщик прислал новые реквизиты письмом — перезвоните ему по известному номеру и <a href="#smena">сравните реквизиты</a>.</p>';
   out.hidden=false;
   if(window.DlkAcc)DlkAcc.render(document,$('accHost'),AD);
   $('copyPur').onclick=function(e){try{navigator.clipboard.writeText(pur);e.target.textContent='Скопировано'}catch(_){}};

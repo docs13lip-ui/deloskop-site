@@ -295,6 +295,29 @@ def _zhivoj_otvet(data_dates, kpi, signals=None):
     }
 
 
+class TestDatyV2(unittest.TestCase):
+    """daty-v2 (02.10): дата набора ФНС «уплаченные налоги» из досье (daty-api-v1, коммит 3) → вывод V23 с годом."""
+
+    def test_nalogi_s_datoj(self):
+        r = _zhivoj_otvet("ЕГРЮЛ/ЕГРИП — на 01.10.2026; последнее изменение записи ЕГРЮЛ/ЕГРИП — 30.06.2026; "
+                          "задолженность — на 01.09.2026; уплаченные налоги — на 31.12.2025",
+                          [{"label": "Налоги и взносы за год", "value": 2350000000},
+                           {"label": "Долг перед бюджетом", "value": None, "text": "Нет"}])
+        d = K.daty_naborov(r["dossier"]["data_dates"])
+        self.assertEqual(d["nalogi"], K.dt.date(2025, 12, 31))
+        self.assertEqual(d["egrul"], K.dt.date(2026, 10, 1))   # «последнее изменение записи» — без «на», не дата сведений
+        k = K.iz_check(r)
+        t = k["fakty"]["nalogi"]
+        self.assertEqual(t["data"], K.dt.date(2025, 12, 31))
+        self.assertEqual(t["god"], 2025)
+        teksty = [x["tekst"] for x in K.vyvody(k)]
+        self.assertTrue(any(x.startswith("Уплатила налогов и взносов — 2,4" + NB + "млрд" + NB + "₽ за" + NB + "2025") for x in teksty), teksty)
+
+    def test_nalogi_bez_daty_molchit(self):
+        k = K.iz_check(_zhivoj_otvet("задолженность — на 01.09.2026", [{"label": "Налоги и взносы за год", "value": 2350000000}]))
+        self.assertFalse(any(x["tekst"].startswith("Уплатила") for x in K.vyvody(k)))
+
+
 class TestDatyV1(unittest.TestCase):
     """daty-v1 (02.10): даты наборов из dossier.data_dates и выручка ГИР БО — иначе живые ответы не проходили ворота."""
 

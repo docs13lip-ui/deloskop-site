@@ -1,0 +1,38 @@
+# Deloskop: auto-merge team PRs when checks pass (owner OK 01.10.2026). Disable: Actions -> this workflow -> Disable.
+name: Avtosliyanie PR
+on:
+  workflow_run:
+    workflows: ["Проверка и выкладка"]
+    types: [completed]
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+concurrency: avtosliyanie
+jobs:
+  merge:
+    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_repository.full_name == github.repository && github.event.workflow_run.head_branch != 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      R: ${{ github.repository }}
+      SHA: ${{ github.event.workflow_run.head_sha }}
+      BR: ${{ github.event.workflow_run.head_branch }}
+    steps:
+      - name: Check and merge
+        run: |
+          PR=$(gh pr list -R "$R" --head "$BR" --base main --state open --json number,headRefOid,isDraft,author --jq '.[0] // empty')
+          [ -z "$PR" ] && { echo "no PR"; exit 0; }
+          N=$(echo "$PR" | jq -r .number)
+          [ "$(echo "$PR" | jq -r .headRefOid)" != "$SHA" ] && { echo "new commits"; exit 0; }
+          [ "$(echo "$PR" | jq -r .isDraft)" = "true" ] && exit 0
+          [ "$(echo "$PR" | jq -r .author.login)" != "${{ github.repository_owner }}" ] && exit 0
+          gh pr diff "$N" -R "$R" --name-only | grep -q '^\.github/' && { echo "touches .github"; exit 0; }
+          BASE=$(gh api "repos/$R/git/ref/heads/main" --jq .object.sha)
+          gh pr merge "$N" -R "$R" --merge --match-head-commit "$SHA"
+          gh workflow run proverka-i-vykladka.yml -R "$R" --ref main
+          sleep 15
+          RUN=$(gh run list -R "$R" --workflow proverka-i-vykladka.yml --branch main --event workflow_dispatch -L 1 --json databaseId --jq '.[0].databaseId')
+          gh run watch "$RUN" -R "$R" --exit-status --interval 20
+          gh workflow run indexnow.yml -R "$R" --ref main -f ot="$BASE"

@@ -103,7 +103,8 @@ test("утверждённый тон: тон по статусу строки, 
   assert.deepStrictEqual([k.id, k.ton, k.data, k.norma], ["fssp", "zhel", "04.10.2026", "229-ФЗ"]);
   const h = K.html(k);
   assert.match(h, /Комментарий команды Делоскопа/);
-  assert.match(h, /Команда Делоскопа · 115-ФЗ и налоги · 229-ФЗ · проверено 04\.10\.2026/);
+  assert.match(h, /Команда Делоскопа · 115-ФЗ и налоги · 229-ФЗ · нормы сверены 04\.10\.2026/);
+  assert.ok(!/проверено/.test(h), "[Право] 02.10: «проверено» читается как «мы проверили компанию»");
   assert.match(h, /&lt;b&gt;видит&lt;\/b&gt;/);
   assert.ok(!/Налоговая:/.test(h), "пустая фраза не выводится");
   assert.strictEqual(K.html(null), "");
@@ -254,4 +255,128 @@ test("Паспорт: vstavitFakty — строка после tr[data-f], по�
   assert.strictEqual(sozdano[0].className, "kom-tr");
   assert.ok(sozdano[0].innerHTML.includes("Комментарий команды Делоскопа"));
   assert.strictEqual(K.vstavitFakty(koren, sp), 0);
+});
+
+// ---- v3: экран проверки (существенные факты) + оговорка [Право] 02.10 11:15 ----
+const SU = require("../js/sushchestvennoe.js");
+
+test("оговорка [Право] 02.10 — дословно, без запрещённых слов", () => {
+  assert.strictEqual(K.OGOVORKA, "Комментарий команды — общий: он объясняет, как банки и налоговая смотрят на такой признак. Это не оценка этой компании или сделки и не юридическая консультация.");
+  assert.ok(!ZAPRET.test(K.OGOVORKA));
+  assert.ok(!/\u00a0/.test(fs.readFileSync(path.join(KOREN, "js/kommentarii.js"), "utf8")), "без NBSP в исходнике");
+});
+
+test("экран проверки: dlyaSut — комментарии к существенным фактам образца, только при совпадении тона", () => {
+  const r = obrazec(), f = SU.fakty(r, { segodnya: new Date("2026-10-02T09:00:00Z") });
+  const sp = K.dlyaSut(f.spisok, r.signals, SPRAV);
+  assert.ok(sp.length >= 1, "хотя бы один комментарий на образце");
+  for (const v of sp) {
+    const fakt = f.spisok.find((x) => x.k === v.k);
+    assert.ok(fakt, "комментарий только к показанному факту: " + v.k);
+    assert.ok(["ok", "warn", "bad"].includes(fakt.ton));
+    assert.strictEqual(K.TON[r.signals.find((s, j) => (s.id || "sig" + j) === v.k).status], v.kom.ton);
+  }
+  assert.deepStrictEqual(K.dlyaSut(f.spisok, r.signals, null), []);
+  assert.ok(!sp.some((v) => v.k === "otchetnost"), "у выручки из ГИР БО (не строка светофора) комментария нет");
+});
+
+test("экран проверки: налоги «не проверяли» (нейтральный тон) — без зелёного комментария", () => {
+  const sig = [{ id: "tax_debt", title: "Долги по налогам", status: "ok", detail: "Нет" }];
+  assert.strictEqual(K.dlyaSut([{ k: "tax_debt", ton: "neutral" }], sig, SPRAV).length, 0);
+  const s2 = K.dlyaSut([{ k: "tax_debt", ton: "ok" }], sig, SPRAV);
+  assert.deepStrictEqual(s2.map((v) => v.kom.id + ":" + v.kom.ton), ["nedoimka:zel"]);
+});
+
+function dom() {
+  // мини-DOM: контейнер со строками .sut__r[data-fakt]
+  function uzel(cls, attrs) { return { className: cls || "", attrs: attrs || {}, nextSibling: null, parentNode: null, textContent: "" }; }
+  const deti = [];
+  const doc = {
+    _sozdano: [], head: { appendChild(x) { doc._stil = x; } }, getElementById: (id) => (id === "kom-css" && doc._stil ? doc._stil : null),
+    createElement(teg) {
+      const e = uzel(); e.tagName = teg.toUpperCase();
+      Object.defineProperty(e, "innerHTML", { set(h) { const m = /^<div class="([^"]+)"/.exec(h); e.firstChild = m ? Object.assign(uzel(m[1]), { html: h, ownerDocument: doc }) : null; } });
+      doc._sozdano.push(e); return e;
+    },
+  };
+  const koren = {
+    ownerDocument: doc,
+    insertBefore(n, ref) { const i = ref ? deti.indexOf(ref) : deti.length; deti.splice(i, 0, n); n.parentNode = koren; perelink(); },
+    querySelectorAll: (sel) => (sel === ".sut__r" ? deti.filter((d) => d.className === "row sut__r") : []),
+    querySelector(sel) {
+      if (sel === ".kom-og") return deti.find((d) => d.className === "kom-og") || null;
+      const m = /data-fakt="([^"]+)"/.exec(sel);
+      return m ? deti.find((d) => d.attrs.fakt === m[1]) || null : null;
+    },
+  };
+  function perelink() { deti.forEach((d, i) => { d.nextSibling = deti[i + 1] || null; d.parentNode = koren; d.ownerDocument = doc; }); }
+  ["status", "address", "tax_debt", "diskv"].forEach((k) => deti.push(uzel("row sut__r", { fakt: k })));
+  perelink();
+  return { koren, deti, doc };
+}
+
+test("экран проверки: vstavitSut — комментарий под фактом, оговорка один раз под списком фактов, повторно не вставляет", () => {
+  const { koren, deti, doc } = dom();
+  const k1 = K.najti(SPRAV, { title: "Массовый адрес", status: "warn", detail: "" });
+  const k2 = K.najti(SPRAV, { title: "Долги по налогам", status: "ok", detail: "Нет" });
+  const sp = [{ k: "address", kom: k1 }, { k: "tax_debt", kom: k2 }, { k: "net_takogo", kom: k2 }];
+  assert.strictEqual(K.vstavitSut(koren, sp), 2);
+  const kl = deti.map((d) => d.className);
+  assert.deepStrictEqual(kl, ["row sut__r", "row sut__r", "kom kom--zhel", "row sut__r", "kom kom--zel", "row sut__r", "kom-og"],
+    "оговорка — под всем списком фактов, а не посреди него");
+  assert.strictEqual(deti[6].textContent, K.OGOVORKA);
+  assert.ok(doc._stil && doc._stil.textContent.includes(".sut .kom"), "стили экрана добавлены");
+  assert.strictEqual(K.vstavitSut(koren, sp), 0, "повторно не вставляет");
+  assert.strictEqual(deti.filter((d) => d.className === "kom-og").length, 1, "оговорка одна");
+  assert.strictEqual(K.vstavitSut(koren, []), 0);
+  assert.strictEqual(K.vstavitSut(null, sp), 0);
+});
+
+test("Паспорт: оговорка один раз — под таблицей с последним комментарием", () => {
+  const og = [];
+  const doc = { createElement: (t) => ({ tagName: t.toUpperCase(), className: "", nextSibling: null }) };
+  const tbody = { tagName: "TBODY" };
+  const table = { tagName: "TABLE", nextSibling: null, ownerDocument: doc, parentNode: { insertBefore(n) { og.push(n); } } };
+  tbody.parentNode = table;
+  const tr = { className: "warn", nextSibling: null, parentNode: tbody, ownerDocument: doc, tagName: "TR" };
+  tbody.insertBefore = (n) => { tr.nextSibling = n; };
+  const koren = { querySelector: (sel) => (sel === 'tr[data-f="svyazi:0"]' ? tr : sel === ".kom-og" ? og[0] || null : null) };
+  const k = K.najti(SPRAV, { title: "Массовый адрес", status: "warn", detail: "" });
+  assert.strictEqual(K.vstavitFakty(koren, [{ f: "svyazi:0", k }]), 1);
+  assert.strictEqual(og.length, 1);
+  assert.strictEqual(og[0].className, "kom-og");
+  assert.strictEqual(og[0].textContent, K.OGOVORKA);
+  K.vstavitFakty(koren, [{ f: "svyazi:0", k }]);
+  assert.strictEqual(og.length, 1, "повторно — не добавляет");
+  const h = fs.readFileSync(path.join(KOREN, "pasport/kontragent/index.html"), "utf8");
+  assert.ok(h.includes(".kom-og{"), "у оговорки есть стиль в Паспорте (видна и в печати)");
+});
+
+test("главная: модуль подключён после существенных фактов, только вне Щита, после отрисовки фактов", () => {
+  const h = fs.readFileSync(path.join(KOREN, "index.html"), "utf8");
+  const a = h.indexOf('<script src="/js/sushchestvennoe.js" defer></script>'), b = h.indexOf('<script src="/js/kommentarii.js" defer></script>');
+  assert.ok(a > 0 && b > a, "kommentarii.js подключён после sushchestvennoe.js");
+  const m = h.indexOf("Sushchestvennoe.mount(report.querySelector('.rows'),r)"), v = h.indexOf("Kommentarii.vstavitSut(");
+  assert.ok(m > 0 && v > m, "вставка — после существенных фактов");
+  assert.ok(/if\(!svoj&&window\.Sushchestvennoe&&window\.Kommentarii\)/.test(h), "в Щите комментариев к фактам нет — там свой разбор");
+});
+
+test("досье (report.html): оговорка один раз под таблицей признаков, стиль есть", () => {
+  const og = [];
+  const doc = { createElement: (t) => ({ tagName: t.toUpperCase(), className: "", nextSibling: null }) };
+  const tr = { ownerDocument: doc, nextSibling: null, parentNode: { insertBefore: (n) => { tr.nextSibling = n; } } };
+  const obertka = { querySelector: (sel) => (sel === ".kom-og" ? og[0] || null : null), insertBefore: (n) => og.push(n) };
+  const tab = { ownerDocument: doc, parentNode: obertka, nextSibling: null,
+    querySelector: (q) => (q === 'tr[data-sig="0"]' ? tr : q === ".kom-tr" ? (tr.nextSibling || null) : null) };
+  const k = [{ title: "Массовый адрес", status: "warn", detail: "" }];
+  assert.strictEqual(K.vstavit(tab, k, SPRAV), 1);
+  assert.strictEqual(og.length, 1);
+  assert.strictEqual(og[0].textContent, K.OGOVORKA);
+  K.vstavit(tab, k, SPRAV);
+  assert.strictEqual(og.length, 1, "повторно — не добавляет");
+  const pust = { ownerDocument: doc, parentNode: obertka, querySelector: () => null };
+  og.length = 0;
+  K.vstavit(pust, k, SPRAV);
+  assert.strictEqual(og.length, 0, "без комментариев — без оговорки");
+  assert.ok(fs.readFileSync(path.join(KOREN, "report.html"), "utf8").includes(".kom-og{"));
 });

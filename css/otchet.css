@@ -91,8 +91,81 @@
  .ot-main>*{order:1}.ot-side>.ot-sc{order:2;padding-top:20px;margin-bottom:0}.ot-side>.otk{order:3;padding-top:12px}.ot-main>.ot-gl{order:4;border-top:1px solid var(--line,#E6E6E1)}
 }
 
+/* главная до проверки — карточка-пример тем же листом (ТЗ [Арт-директора] 02.10, разд. 2.5 п. 8):
+   шапка-документ → полоса вывода (B) в уменьшенном виде → 3 существенных факта с источником и датой */
+.report.ex{padding:0;gap:0;overflow:hidden;border-radius:var(--r-doc)}
+.ex-hd{padding:24px 28px 18px;border-bottom:1px solid var(--line,#E6E6E1)}
+.ex-hd .company{font-size:24px;margin-top:4px}
+.ex-hd .sub{font-size:14px}
+.ex-vd{display:grid;grid-template-columns:minmax(0,9fr) minmax(0,16fr);gap:18px;padding:20px 28px;background:var(--warn-bg,#FFF4E0)}
+.ex-vd--ok{background:var(--ok-bg,#E8F5EE)}
+.ex-ix{display:flex;flex-direction:column;gap:6px;min-width:0;border-right:1px solid rgba(0,0,0,.08);padding-right:16px}
+.ex-ix__lab{font-size:13px;color:var(--ink2,#48484C)}
+.ex-ix .pill{align-self:flex-start;background:rgba(255,255,255,.7);font-size:14px;padding:6px 12px}
+.ex-ix__pod{font-size:12px;color:var(--ink2,#48484C)}
+.ex-vt{min-width:0}
+.ex-vt .usl{background:transparent;padding:0;gap:8px}
+.ex-vt .usl-t{font-size:19px;line-height:1.25}
+.ex-vt .usl-r,.ex-vt .usl-a{font-size:14px}
+.ex-vt .usl-kak{display:none}
+.ex-vt .usl details{border-top-color:rgba(0,0,0,.08)}
+.ex-vt .verdict{background:transparent;padding:0}
+.ex-f{padding:16px 28px 4px}
+.ex-f__h{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px;padding-bottom:8px}
+.ex-f__h b{font-size:15px;font-weight:600}.ex-f__h span{font-size:13px;color:var(--muted,#6B6B70)}
+.ex-r{padding:12px 0;font-size:15px}
+.ex-r>span{display:block}.ex-r small{display:block;margin-top:2px;font-size:12px;color:var(--muted,#6B6B70);font-weight:400}
+.ex-pod{margin:0;padding:12px 28px 22px;font-size:13px;color:var(--muted,#6B6B70)}
+@media (max-width:520px){
+ .ex-hd,.ex-vd,.ex-f{padding-left:20px;padding-right:20px}.ex-pod{padding:12px 20px 20px}
+ .ex-vd{grid-template-columns:minmax(0,1fr);gap:12px}
+ .ex-ix{border-right:0;padding-right:0;flex-direction:row;flex-wrap:wrap;align-items:center;gap:4px 10px}
+ .ex-ix__lab{flex-basis:100%}
+ .ex-r{flex-direction:column;gap:4px}.ex-r b.d{text-align:left;max-width:none}
+}
+
+/* «Ваши контрагенты» — прошлые проверки из этого браузера на месте примера (ТЗ [Продукт] 02.10 19:37, разд. 1; js/portfel.js) */
+.hero.pf-on .report.ex{display:none}
+.pf{background:var(--card,#fff);border-radius:var(--r-doc,20px);box-shadow:0 1px 2px rgba(29,29,31,.04),0 12px 32px rgba(29,29,31,.06);padding:24px 28px 18px;min-width:0}
+.pf[hidden]{display:none}
+.pf__h{margin:0;font-size:24px;line-height:1.2;letter-spacing:-.01em}
+.pf__pod{margin:6px 0 0;font-size:14px;color:var(--ink2,#48484C)}
+.pf__sv{margin:14px 0 0;font-size:15px;line-height:1.5}
+.pf__s{white-space:nowrap}.pf__s b{font-weight:600}.pf__s--mnogo b{color:#B3261E}.pf__s--ser b{color:#C2410C}.pf__s--vopr b{color:#9A5B00}.pf__s--bez b{color:#16723F}
+.pf__nb{margin:2px 0 0;font-size:12.5px;color:var(--muted,#6B6B70)}
+.pf__list{list-style:none;margin:14px 0 0;padding:0}
+.pf__r{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"a c" "b c";gap:2px 12px;align-items:center;padding:12px 0;border-top:1px solid var(--line,#E6E6E1);font-size:14px}
+.pf__a{grid-area:a;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;min-width:0}
+.pf__nm{font-weight:600;font-size:15px;overflow-wrap:anywhere}
+.pf__b{grid-area:b;display:flex;flex-wrap:wrap;gap:2px 12px;font-size:13px;color:var(--muted,#6B6B70)}
+.pf__inn{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}
+.pf__d--star{color:#9A5B00}
+.pf__c{grid-area:c;display:flex;align-items:center;gap:2px}
+.pf__pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12.5px;font-weight:600;white-space:nowrap;background:#F0F0EC;color:var(--ink2,#48484C)}
+.pf__pill--bez{background:#E8F5EE;color:#16723F}.pf__pill--vopr{background:#FFF4E0;color:#9A5B00}.pf__pill--ser{background:#FDEEE4;color:#C2410C}.pf__pill--mnogo{background:#FDECEA;color:#B3261E}
+.pf button{font:inherit;cursor:pointer;border:0;background:none;color:var(--accent,#0B63E5)}
+.pf__go{min-height:44px;padding:0 10px;font-size:14px;font-weight:600;border-radius:10px}
+.pf__go:hover{background:#EEF4FD}
+.pf__x{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;color:var(--muted,#6B6B70)!important}
+.pf__x:hover{background:#F0F0EC;color:var(--ink,#1D1D1F)!important}
+.pf button:focus-visible{outline:2px solid var(--accent,#0B63E5);outline-offset:2px}
+.pf__vse{display:block;width:100%;min-height:44px;margin-top:2px;border-top:1px solid var(--line,#E6E6E1)!important;font-size:14px;font-weight:600}
+.pf__niz{border-top:1px solid var(--line,#E6E6E1);padding-top:6px;margin-top:2px;font-size:12.5px}
+.pf__clr{min-height:32px;padding:0;font-size:12.5px!important;color:var(--muted,#6B6B70)!important;text-decoration:underline;text-underline-offset:2px}
+.pf__conf{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:8px 0;font-size:13px;color:var(--ink,#1D1D1F)}
+.pf__conf[hidden]{display:none}
+.pf__da{min-height:36px;padding:0 12px;border-radius:10px;background:#FDECEA!important;color:#B3261E!important;font-weight:600}
+.pf__net{min-height:36px;padding:0 12px;border-radius:10px;font-weight:600}
+@media (max-width:520px){
+ .pf{padding:20px 20px 14px}.pf__h{font-size:22px}
+ .pf__r{grid-template-areas:"a a" "i c" "d d";row-gap:0}
+ .pf__b{display:contents}.pf__inn{grid-area:i;color:var(--muted,#6B6B70)}.pf__d{grid-area:d;font-size:13px;color:var(--muted,#6B6B70)}.pf__d--star{color:#9A5B00}
+ .pf__go{padding:0 8px}
+}
+
 /* печать: лист без тени, справка — под основным, кнопки не печатаем */
 @media print{
+ .pf{display:none!important}
  .report.ot{box-shadow:none!important;border-radius:0!important}
  .ot-hd,.ot-vd,.ot-body{display:block;padding:12px 0}
  .ot-ix{border-right:0;padding:0 0 8px}
@@ -100,3 +173,33 @@
  .ot-disc{padding:8px 0 0}
  .ot-side{padding-top:8px}
 }
+
+/* «Паспорт 490 ₽ в один шаг» — лист оплаты (js/pasport-oplata.js; ТЗ [Продукт] 02.10, разд. 1.2):
+   справа поверх отчёта, на телефоне — снизу; цена крупно, одна главная кнопка */
+dialog.po{position:fixed;inset:0 0 0 auto;width:min(440px,100vw);max-width:none;height:100dvh;max-height:none;margin:0;padding:28px 28px calc(24px + env(safe-area-inset-bottom));border:0;border-radius:var(--r-doc,14px) 0 0 var(--r-doc,14px);background:var(--surface,#fff);color:var(--ink,#1D1D1F);font:400 15px/1.5 var(--font,Onest,-apple-system,"Segoe UI",Roboto,Arial,sans-serif);box-shadow:var(--shadow);overflow-y:auto;overscroll-behavior:contain}
+dialog.po::backdrop{background:rgba(17,17,19,.4)}
+.po-x{position:absolute;top:12px;right:12px;width:40px;height:40px;border:0;border-radius:999px;background:transparent;font-size:24px;line-height:1;color:var(--ink2,#48484C);cursor:pointer}
+.po-x:hover{background:var(--surface-2,#EEEEEA)}
+.po-hd{padding-right:40px;border-bottom:1px solid var(--line,#E6E6E1);padding-bottom:16px}
+.po-zag{margin:0;font-size:22px;line-height:1.25;font-weight:600;outline:none}
+.po-naz{margin:6px 0 0;font-size:15px;color:var(--ink2,#48484C)}
+.po-vn{list-style:none;margin:16px 0 0;padding:0}
+.po-vn li{position:relative;padding:6px 0 6px 20px;font-size:15px}
+.po-vn li::before{content:"";position:absolute;left:2px;top:14px;width:8px;height:8px;border-radius:50%;background:var(--ok,#16723F)}
+.po-cena{display:flex;align-items:baseline;gap:10px;margin:20px 0 16px;padding-top:16px;border-top:1px solid var(--line,#E6E6E1)}
+.po-cena b{font-size:36px;line-height:1;font-weight:600;letter-spacing:-.01em}
+.po-cena span{font-size:13px;color:var(--muted,#6B6B70)}
+.po-sp{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.po-sp .btn{justify-content:center;width:100%}
+.po-schet{display:block;width:100%;padding:12px 16px;border:1px solid var(--line-2,#D9D9D4);border-radius:var(--r-pill,999px);background:transparent;color:var(--accent,#0B63E5);font-family:inherit;font-weight:600;font-size:15px;line-height:1.3;cursor:pointer}
+.po-schet--gl{background:var(--accent,#0B63E5);border-color:var(--accent,#0B63E5);color:var(--on-accent,#fff)}
+.po-schet:hover{filter:brightness(.95)}
+.po-forma{margin-top:4px}
+.po--schet .po-cena,.po-forma .sf>h3{display:none}
+.po--schet .po-forma{margin-top:20px;padding-top:4px;border-top:1px solid var(--line,#E6E6E1)}
+.po-og{margin:16px 0 0;font-size:12.5px;line-height:1.45;color:var(--muted,#6B6B70)}
+@media (max-width:520px){
+ dialog.po{inset:auto 0 0 0;width:100vw;height:auto;max-height:92dvh;padding:24px 20px calc(20px + env(safe-area-inset-bottom));border-radius:var(--r-doc,14px) var(--r-doc,14px) 0 0}
+ .po-cena b{font-size:32px}
+}
+@media print{dialog.po{display:none!important}}

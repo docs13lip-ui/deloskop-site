@@ -93,6 +93,7 @@ a:hover{color:var(--accent-hover)}
 .doc ol,.doc ul{margin:0 0 var(--s-4);padding-left:1.4em;color:var(--ink-2)}
 .doc li{margin:0 0 var(--s-2)}
 .doc li>ol,.doc li>ul{margin-top:var(--s-2)}
+.doc ol.bukvy{list-style:none;padding-left:0}
 .doc strong{color:var(--ink)}
 .doc .card{margin:var(--s-5) 0}
 .doc .card p:last-child{margin-bottom:0}

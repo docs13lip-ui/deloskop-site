@@ -178,7 +178,7 @@ test("v2: живые строки → свой текст [Право]; неяс
   }
 });
 
-test("v2: 22 тона утверждены — роль, дата, без ФИО и NBSP", () => {
+test("v2+v4: 27 тонов утверждены (22 + 5 зелёных [Право] 08:20) — роль, дата, без ФИО и NBSP", () => {
   let n = 0;
   for (const x of SPRAV.signaly) for (const t of Object.values(x.tony || {})) if (t.status === "utverzhdeno") {
     n++;
@@ -186,7 +186,7 @@ test("v2: 22 тона утверждены — роль, дата, без ФИО
     assert.strictEqual(t.data_proverki, "2026-10-02");
     assert.ok(!/\u00a0/.test(t.bank + t.nalog + t.sdelat));
   }
-  assert.strictEqual(n, 22);
+  assert.strictEqual(n, 27);
 });
 
 // ── Паспорт контрагента (kommentarii-pasport-v1): комментарий под строкой признака, вне отпечатка SHA-256 ──
@@ -379,4 +379,48 @@ test("досье (report.html): оговорка один раз под табл
   K.vstavit(pust, k, SPRAV);
   assert.strictEqual(og.length, 0, "без комментариев — без оговорки");
   assert.ok(fs.readFileSync(path.join(KOREN, "report.html"), "utf8").includes(".kom-og{"));
+});
+
+// ── kommentarii-v4: зелёные тоны [Право] 02.10 08:20 (claude/Право_ответы_✎_kommentarii-v2_dvojnik_02.10.md) ──
+test("v4: зелёные тоны — дословно [Право], только у ok и только если источник ответил", () => {
+  const ZEL = [
+    [["ФССП", "нет производств", "ok"], "fssp", ""],
+    [["Банкротство", "нет сообщений", "ok"], "bankrotstvo", "п. 1 ст. 61.2 127-ФЗ"],
+    [["Приостановление операций по счетам", "нет решений", "ok"], "blokirovka", "ст. 76 НК РФ"],
+    [["Дисквалификация руководителя", "нет", "ok"], "diskval", "ст. 3.11 КоАП РФ"],
+    [["Реестр недобросовестных поставщиков", "нет", "ok"], "rnp", "ст. 104 44-ФЗ"],
+  ];
+  for (const [[title, detail, status], id, norma] of ZEL) {
+    const k = K.najti(SPRAV, { title, detail, status });
+    assert.ok(k, "нет комментария: " + title);
+    assert.deepStrictEqual([k.id, k.ton, k.norma], [id, "zel", norma], title);
+    assert.ok(/на дату проверки/.test(k.bank), "«на дату проверки» — " + title);
+    assert.ok(K.dlina(k) <= 300, title);
+    // «не проверяли ≠ не нашли»: источник не ответил — зелёного текста нет
+    for (const d of ["не проверяли — источник временно недоступен", "нет данных", "Не проверяли", "ошибка источника"])
+      assert.strictEqual(K.najti(SPRAV, { title, detail: d, status }), null, title + " · " + d);
+    // info/неизвестный статус — тоже без зелёного текста
+    assert.strictEqual(K.najti(SPRAV, { title, detail, status: "info" }), null, title + " · info");
+  }
+  const f = K.najti(SPRAV, { title: "ФССП", detail: "нет", status: "ok" });
+  assert.strictEqual(f.bank, "В банке данных приставов нет открытых производств против компании — на дату проверки.");
+  assert.ok(!K.html(f).includes(" · 229-ФЗ"), "у fssp·zel [Право] нормы не дали — подписи нормы нет");
+  assert.ok(K.html(K.najti(SPRAV, { title: "ФССП", detail: "3 производства", status: "warn" })).includes(" · 229-ФЗ"), "у fssp·zhel норма записи осталась");
+});
+
+test("v4: подписи норм — правки [Право] 08:20 (массовые — только ст. 54.1 НК; нет отчётности — ст. 18 402-ФЗ; убыток — полностью; недостоверность·kras — пп. «б» п. 5)", () => {
+  const n = (title, detail, status) => K.najti(SPRAV, { title, detail, status }).norma;
+  assert.strictEqual(n("Адрес", "массовый адрес: 54 компании", "warn"), "ст. 54.1 НК РФ");
+  assert.strictEqual(n("Массовый руководитель", "12 компаний", "warn"), "ст. 54.1 НК РФ");
+  assert.strictEqual(n("Доходы и расходы", "отчётность за 2025 год не сдана", "warn"), "п. 1 ст. 21.1 129-ФЗ; ст. 18 402-ФЗ");
+  assert.strictEqual(n("Доходы и расходы", "убыток 3,1 млн ₽ за 2025 год", "warn"), "приказ ФНС от 30.05.2007 № ММ-3-06/333@ (критерий рентабельности)");
+  assert.strictEqual(n("Недостоверность адреса или руководителя", "есть отметка о недостоверности адреса", "bad"), "пп. «б» п. 5 ст. 21.1 129-ФЗ");
+  assert.strictEqual(n("Недостоверность адреса или руководителя", "отметок нет", "ok"), "п. 4.2 ст. 9, ст. 21.1 129-ФЗ");
+  for (const x of SPRAV.signaly) assert.ok(!/ЗСК/.test(x.norma || ""), "«ЗСК» — не норма: " + x.id);
+});
+
+test("v4: комментарий проходит через общую обёртку неразрывных номеров (js/shapka.js), если она есть", () => {
+  const src = require("fs").readFileSync(require("path").join(__dirname, "..", "js", "kommentarii.js"), "utf8");
+  assert.strictEqual((src.match(/nerazryv\((nov|el)\);/g) || []).length, 3, "вызов после каждой из трёх вставок");
+  assert.ok(src.includes("w.dlkNerazryv.obernut(uzel)"));
 });

@@ -52,15 +52,26 @@
     return null;
   }
 
+  // [Право] 02.10 08:20: зелёный текст — только если источник ответил («не проверяли ≠ не нашли»):
+  // строка со статусом ok, и ни в заголовке, ни в детали нет признаков неответа источника.
+  var NE_OTVETIL = /не\s*провер|недоступ|не\s*ответ|нет\s*ответа|нет\s*данных|нет\s*сведений|не\s*получ|ошибк|временно|не\s*удалось/i;
+  function istochnikOtvetil(signal) {
+    if (!signal || signal.status !== "ok") return false;
+    return !NE_OTVETIL.test(String(signal.title || "") + " · " + String(signal.detail || ""));
+  }
+
   // Готовый комментарий к строке светофора или null.
   function najti(sprav, signal) {
     var z = zapis(sprav, signal);
     var ton = TON[signal && signal.status];
     if (!z || !ton || !z.tony) return null;
+    if (ton === "zel" && !istochnikOtvetil(signal)) return null;
     var t = z.tony[ton];
     if (!gotov(t)) return null;
+    // norma у тона (если задана, хоть пустой строкой) важнее нормы записи
+    var norma = t.norma != null ? t.norma : z.norma;
     return { id: z.id, ton: ton, bank: t.bank || "", nalog: t.nalog || "", sdelat: t.sdelat,
-      norma: z.norma || "", podpis: (sprav && sprav.podpis) || "Команда Делоскопа", data: dataRu(t.data_proverki) };
+      norma: norma || "", podpis: (sprav && sprav.podpis) || "Команда Делоскопа", data: dataRu(t.data_proverki) };
   }
 
   function html(k) {
@@ -70,6 +81,11 @@
       '<div class="kom__h">Комментарий команды Делоскопа</div>' +
       str("Банк:", k.bank) + str("Налоговая:", k.nalog) + str("Что сделать:", k.sdelat) +
       '<div class="kom__p">' + esc(k.podpis) + (k.norma ? " · " + esc(k.norma) : "") + (k.data ? " · нормы сверены " + esc(k.data) : "") + "</div></div>";
+  }
+
+  // Номера норм («ст. 76 НК», «№ ММ-3-06/333@») не рвутся на переносе — общая обёртка шапки (js/shapka.js), если она есть.
+  function nerazryv(uzel) {
+    try { var w = typeof window !== "undefined" ? window : null; if (uzel && w && w.dlkNerazryv) w.dlkNerazryv.obernut(uzel); } catch (e) {}
   }
 
   // Браузер: библиотека загружается один раз; при ошибке — пусто (отчёт работает как раньше).
@@ -95,6 +111,7 @@
       nov.className = "kom-tr";
       nov.innerHTML = '<td colspan="2">' + html(k) + "</td>";
       tr.parentNode.insertBefore(nov, tr.nextSibling);
+      nerazryv(nov);
       n++;
     });
     // оговорка [Право] — один раз под таблицей, если в ней есть комментарий
@@ -140,6 +157,7 @@
       nov.className = "kom-tr";
       nov.innerHTML = '<td colspan="2">' + html(v.k) + "</td>";
       tr.parentNode.insertBefore(nov, tr.nextSibling);
+      nerazryv(nov);
       posl = tr; n++;
     });
     // оговорка [Право] — один раз, под таблицей раздела с последним комментарием
@@ -210,6 +228,7 @@
       var el = w.firstChild;
       if (!el) return;
       row.parentNode.insertBefore(el, row.nextSibling);
+      nerazryv(el);
       posl = el; n++;
     });
     if (posl) {
@@ -224,6 +243,6 @@
   }
 
   return { TON: TON, MAKS: MAKS, OGOVORKA: OGOVORKA, ogovorkaHtml: ogovorkaHtml, postavitOgovorku: postavitOgovorku,
-    dlyaSut: dlyaSut, vstavitSut: vstavitSut, CSS_EKRANA: CSS_EKRANA, gotov: gotov, zapis: zapis, najti: najti, html: html, zagruzit: zagruzit, vstavit: vstavit, dlina: dlina,
+    dlyaSut: dlyaSut, vstavitSut: vstavitSut, CSS_EKRANA: CSS_EKRANA, gotov: gotov, istochnikOtvetil: istochnikOtvetil, NE_OTVETIL: NE_OTVETIL, zapis: zapis, najti: najti, html: html, zagruzit: zagruzit, vstavit: vstavit, dlina: dlina,
     dlyaFaktov: dlyaFaktov, vstavitFakty: vstavitFakty };
 });

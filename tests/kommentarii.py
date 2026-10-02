@@ -60,15 +60,28 @@ def zapis(sprav, signal):
     return None
 
 
+# [Право] 02.10 08:20: зелёный текст — только если источник ответил («не проверяли ≠ не нашли»). То же, что NE_OTVETIL в JS.
+NE_OTVETIL = re.compile(r"не\s*провер|недоступ|не\s*ответ|нет\s*ответа|нет\s*данных|нет\s*сведений|не\s*получ|ошибк|временно|не\s*удалось", re.I)
+
+
+def istochnik_otvetil(signal):
+    signal = signal or {}
+    if signal.get("status") != "ok":
+        return False
+    return not NE_OTVETIL.search(str(signal.get("title") or "") + " · " + str(signal.get("detail") or ""))
+
+
 def najti(sprav, signal):
     z = zapis(sprav, signal)
     ton = TON.get((signal or {}).get("status"))
     if not z or not ton:
+        return None
+    if ton == "zel" and not istochnik_otvetil(signal):
         return None
     t = (z.get("tony") or {}).get(ton)
     if not gotov(t):
         return None
     g, m, d = str(t["data_proverki"])[:10].split("-")
     return {"id": z["id"], "ton": ton, "bank": t.get("bank") or "", "nalog": t.get("nalog") or "",
-            "sdelat": t["sdelat"], "norma": z.get("norma") or "",
+            "sdelat": t["sdelat"], "norma": (t["norma"] if t.get("norma") is not None else z.get("norma")) or "",
             "podpis": (sprav or {}).get("podpis") or "Команда Делоскопа", "data": f"{d}.{m}.{g}"}

@@ -102,6 +102,11 @@
     else if (!v) banner();
     document.addEventListener("click", izStati, true);
     document.addEventListener("click", izRazbora, true);
+    // ссылка-кнопка с data-goal (например, главная кнопка статьи «ЗСК контрагента» → Паспорт): своя цель
+    document.addEventListener("click", function (e) {
+      var a = e.target && e.target.closest && e.target.closest("a[data-goal]");
+      if (a) window.dlkGoal(a.getAttribute("data-goal"), { statya: location.pathname, kuda: a.getAttribute("href") || "" });
+    }, true);
     // форма с data-goal (например, проверка по ИНН под калькулятором) — цель с параметром otkuda
     document.addEventListener("submit", function (e) {
       var f = e.target && e.target.closest && e.target.closest("form[data-goal]");

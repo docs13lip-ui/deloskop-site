@@ -60,6 +60,27 @@ class T(unittest.TestCase):
         self.assertEqual((k["id"], k["ton"], k["data"]), ("fssp", "zhel", "04.10.2026"))
         self.assertIsNone(K.najti(s, {"title": "ФССП", "status": "bad"}))
 
+    def test_v4_zelenye_i_normy_sovpadayut_s_js(self):
+        sig = [{"title": "ФССП", "detail": "нет", "status": "ok"},
+               {"title": "ФССП", "detail": "не проверяли — источник временно недоступен", "status": "ok"},
+               {"title": "ФССП", "detail": "нет", "status": "info"},
+               {"title": "Банкротство", "detail": "нет сообщений", "status": "ok"},
+               {"title": "Приостановление операций по счетам", "detail": "нет решений", "status": "ok"},
+               {"title": "Дисквалификация руководителя", "detail": "нет", "status": "ok"},
+               {"title": "Реестр недобросовестных поставщиков", "detail": "нет данных", "status": "ok"},
+               {"title": "Недостоверность адреса или руководителя", "detail": "есть отметка", "status": "bad"},
+               {"title": "Доходы и расходы", "detail": "убыток 3 млн ₽", "status": "warn"}]
+        js = ("const K=require('./js/kommentarii.js');const S=require('./data/kommentarii.json');"
+              "console.log(JSON.stringify(%s.map(s=>{const k=K.najti(S,s);return k?[k.id,k.ton,k.norma]:null})))" % json.dumps(sig, ensure_ascii=False))
+        out = subprocess.run(["node", "-e", js], cwd=KOREN, capture_output=True, text=True, check=True).stdout
+        sprav = K.zagruzit()
+        py = [(lambda k: [k["id"], k["ton"], k["norma"]] if k else None)(K.najti(sprav, s)) for s in sig]
+        self.assertEqual(py, json.loads(out))
+        self.assertEqual(py, [["fssp", "zel", ""], None, None, ["bankrotstvo", "zel", "п. 1 ст. 61.2 127-ФЗ"],
+                              ["blokirovka", "zel", "ст. 76 НК РФ"], ["diskval", "zel", "ст. 3.11 КоАП РФ"], None,
+                              ["nedostovernost", "kras", "пп. «б» п. 5 ст. 21.1 129-ФЗ"],
+                              ["ubytok", "zhel", "приказ ФНС от 30.05.2007 № ММ-3-06/333@ (критерий рентабельности)"]])
+
 
 if __name__ == "__main__":
     unittest.main()

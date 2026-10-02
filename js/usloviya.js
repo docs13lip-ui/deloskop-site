@@ -31,6 +31,16 @@
     var n = Math.round(Math.max(0, x || 0));
     return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' ₽';
   }
+  // Крупные суммы в «Как посчитали» — словами, как читают люди: от 1 млрд ₽ — «8,6\u00a0трлн\u00a0₽», «330,8\u00a0млрд\u00a0₽»
+  // (до 10 единиц — два знака после запятой, дальше — один, нули в хвосте убираем). 15-значное число на 390 px не читается.
+  // Сам предел аванса (итог) по-прежнему — точной суммой, округлённой вниз.
+  function moneyKrupno(x) {
+    var n = Math.max(0, x || 0);
+    if (n < 1e9) return money(n);
+    var ed = n >= 1e12 ? [1e12, 'трлн'] : [1e9, 'млрд'], v = n / ed[0], zn = v < 10 ? 2 : 1;
+    var t = v.toFixed(zn).replace(/0+$/, '').replace(/\.$/, '').replace('.', ',');
+    return t + '\u00a0' + ed[1] + '\u00a0₽';
+  }
   // Круглые ориентиры, вниз: 87 400 → 80 000; 1 237 000 → 1 200 000.
   function niceFloor(x) {
     if (!(x > 0)) return 0;
@@ -228,9 +238,9 @@
     } else {
       var polovina = R.half ? ' · ' + (R.half === 'ostorozhno' ? 'долги не проверены' : zamechaniya(reasonsList)) + ' → половина: ' + money(R.itog) : '';
       if (R.base === 'revenue' && R.ageCapped) {
-        kak = 'Как посчитали: две недели выручки — ' + money(R.dveNedeli) + ', но компании ' + mesText(R.ageMonths) + ' — не больше потолка для возраста до года: ' + money(R.byAge) + polovina + '.';
+        kak = 'Как посчитали: две недели выручки — ' + moneyKrupno(R.dveNedeli) + ', но компании ' + mesText(R.ageMonths) + ' — не больше потолка для возраста до года: ' + money(R.byAge) + polovina + '.';
       } else if (R.base === 'revenue') {
-        kak = 'Как посчитали: выручка' + (R.revenueYear ? ' за ' + R.revenueYear : '') + ' — ' + money(R.revenue) + ' ÷ ' + DELITEL + ' = ' + money(R.dveNedeli) + ' (две недели выручки)' + polovina + ', округлили вниз.';
+        kak = 'Как посчитали: выручка' + (R.revenueYear ? ' за ' + R.revenueYear : '') + ' — ' + moneyKrupno(R.revenue) + ' ÷ ' + DELITEL + ' = ' + moneyKrupno(R.dveNedeli) + ' (две недели выручки)' + polovina + ', округлили вниз.';
       } else if (R.base === 'age') {
         kak = 'Как посчитали: выручки в отчётности нет — берём потолок по возрасту (' + ageText(R.ageMonths) + '): ' + money(R.byAge) + polovina + '.';
       } else {
@@ -493,7 +503,7 @@
 
   return {
     decide: decide, mount: mount, facts: facts, tone: tone, prepayCap: prepayCap, atStake: atStake,
-    docs: docs, letter: letter, parseAmount: parseAmount, money: money, niceFloor: niceFloor, kindOf: kindOf,
+    docs: docs, letter: letter, parseAmount: parseAmount, money: money, moneyKrupno: moneyKrupno, niceFloor: niceFloor, kindOf: kindOf,
     neProvereno: neProvereno, kakPoschitali: kakPoschitali, STATYA: STATYA,
     METODIKA: { DELITEL: DELITEL, POTOLKI: POTOLKI, OSTOROZHNO: OSTOROZHNO },
     RATES: { VAT: VAT, PROFIT: PROFIT, USN_DR: USN_DR }

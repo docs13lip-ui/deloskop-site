@@ -187,3 +187,71 @@ test("v2: 22 тона утверждены — роль, дата, без ФИО
   }
   assert.strictEqual(n, 22);
 });
+
+// ── Паспорт контрагента (kommentarii-pasport-v1): комментарий под строкой признака, вне отпечатка SHA-256 ──
+const P = require("../js/pasport-kontragenta.js");
+const E = require("../pasport/engine.js");
+const U = require("../js/usloviya.js");
+function obrazec() { const r = JSON.parse(JSON.stringify(E.DEMO)); r.checked_at = "2026-10-02T08:00:00Z"; return r; }
+
+test("Паспорт: образец — комментарии под массовым адресом, недостоверностью и долгами по налогам", () => {
+  const r = obrazec(), p = P.sobrat(r, { usloviya: U });
+  const sp = K.dlyaFaktov(p.razdely, r.signals, SPRAV);
+  const po = Object.fromEntries(sp.map((v) => [v.f, v.k.id + ":" + v.k.ton]));
+  const gde = (id, t) => id + ":" + p.razdely.find((x) => x.id === id).fakty.findIndex((f) => f.tekst === t);
+  assert.strictEqual(po[gde("svyazi", "Массовый адрес")], "massovyj_adres:zhel");
+  assert.strictEqual(po[gde("rekvizity", "Недостоверность адреса или руководителя")], "nedostovernost:zel");
+  assert.strictEqual(po[gde("nalogi", "Долги по налогам")], "nedoimka:zel");
+  assert.strictEqual(sp.length, 3);
+});
+
+test("Паспорт: без библиотеки, в служебных и расчётных разделах и у строк ЕГРЮЛ — комментариев нет", () => {
+  const r = obrazec(), p = P.sobrat(r, { usloviya: U, summa: 500000 });
+  assert.deepStrictEqual(K.dlyaFaktov(p.razdely, r.signals, null), []);
+  for (const v of K.dlyaFaktov(p.razdely, r.signals, SPRAV)) {
+    assert.ok(!/^(predel|zaprosit|ne_znaem|podlinnost|indeks):/.test(v.f), v.f);
+    const [id, i] = v.f.split(":");
+    const f = p.razdely.find((x) => x.id === id).fakty[+i];
+    assert.ok(r.signals.some((s) => s.title === f.tekst), "строка не из признаков: " + f.tekst);
+  }
+});
+
+test("Паспорт: признак берётся один раз — две строки с одним заголовком не получают чужой тон", () => {
+  const razdely = [{ id: "svyazi", vid: "istochnik", fakty: [
+    { tekst: "Массовый адрес", ton: "warn" }, { tekst: "Массовый адрес", ton: "warn" }] }];
+  const sp = K.dlyaFaktov(razdely, [{ title: "Массовый адрес", status: "warn", detail: "11 компаний" }], SPRAV);
+  assert.deepStrictEqual(sp.map((v) => v.f), ["svyazi:0"]);
+  const tonRazny = K.dlyaFaktov(razdely, [{ title: "Массовый адрес", status: "ok", detail: "" }], SPRAV);
+  assert.deepStrictEqual(tonRazny, []);
+});
+
+test("Паспорт: отпечаток SHA-256 не зависит от комментариев (вставка — в страницу, не в сведения)", async () => {
+  const r = obrazec(), p1 = P.sobrat(r, { usloviya: U }), p2 = P.sobrat(obrazec(), { usloviya: U });
+  K.dlyaFaktov(p1.razdely, r.signals, SPRAV);
+  if (!(globalThis.crypto && crypto.subtle)) return;
+  assert.strictEqual(await P.otpechatok(p1), await P.otpechatok(p2));
+});
+
+test("Паспорт: страница подключает библиотеку, помечает строки data-f и вставляет блок после выпуска", () => {
+  const h = fs.readFileSync(path.join(KOREN, "pasport/kontragent/index.html"), "utf8");
+  assert.ok(h.includes('<script src="/js/kommentarii.js"></script>'));
+  assert.ok(h.includes(`data-f="'+esc(x.id)+':'+i+'"`));
+  assert.ok(/Kommentarii\.vstavitFakty\(pk,Kommentarii\.dlyaFaktov\(p\.razdely,r\.signals,K\)\)/.test(h));
+  assert.ok(/\.kom--zhel\{border-left-color:var\(--warn\)\}/.test(h));
+  assert.ok(/@media print\{\n\s+\.kom\{background:none;break-inside:avoid\}/.test(h));
+});
+
+test("Паспорт: vstavitFakty — строка после tr[data-f], повторно не вставляет", () => {
+  const sozdano = [];
+  function uzel(cls) { return { className: cls || "", nextSibling: null }; }
+  const tr = uzel("warn");
+  const tbody = { insertBefore(n, ref) { sozdano.push(n); tr.nextSibling = n; } };
+  tr.parentNode = tbody; tr.ownerDocument = { createElement: () => uzel() };
+  const koren = { querySelector: (sel) => (sel === 'tr[data-f="svyazi:0"]' ? tr : null) };
+  const k = K.najti(SPRAV, { title: "Массовый адрес", status: "warn", detail: "" });
+  const sp = [{ f: "svyazi:0", k }, { f: "nalogi:9", k }];
+  assert.strictEqual(K.vstavitFakty(koren, sp), 1);
+  assert.strictEqual(sozdano[0].className, "kom-tr");
+  assert.ok(sozdano[0].innerHTML.includes("Комментарий команды Делоскопа"));
+  assert.strictEqual(K.vstavitFakty(koren, sp), 0);
+});

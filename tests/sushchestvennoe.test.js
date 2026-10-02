@@ -139,3 +139,37 @@ test('главная: модуль подключён, вызывается по
   assert.match(ind, /if\(!svoj&&window\.Sushchestvennoe\)\{try\{Sushchestvennoe\.mount\(report\.querySelector\('\.rows'\),r\)\}catch\(e\)\{\}\}/);
   assert.match(ind, /Прогноз ЗСК · наша оценка/, 'запасная строка без модуля осталась');
 });
+
+test('Щит: строки проверки свёрнуты в «Все данные из реестров» — у каждой источник и дата, без повторов', () => {
+  const r = otvet();
+  r.signals.push({ id: 'mass', title: 'Массовый адрес', status: 'warn', detail: 'Зарегистрировано 54 компании', source: 'ФНС, открытые данные', as_of: '01.09.2026' });
+  const h = S.htmlSvoj(r);
+  assert.ok(h.startsWith('<details class="sut__g"><summary>'), 'свёрнуто, без open');
+  assert.ok(!/<details[^>]*open/.test(h));
+  assert.ok(!/Существенные факты/.test(h), 'в Щите нет второго списка фактов');
+  const f = S.fakty(r), n = f.spisok.length + f.eshche.length;
+  assert.match(h, new RegExp('<small>' + n + '\u00a0признак(а|ов)? · \\d+\u00a0раздел'));
+  assert.match(h, /<h4>Признаки из проверки<\/h4>/);
+  assert.strictEqual((h.match(/<h4>/g) || []).length, 1 + S.glubina(r).razdely.filter((s) => s.zag !== 'Ещё признаки').length);
+  assert.ok(!/Ещё признаки/.test(h), 'признаки — одним разделом');
+  assert.match(h, /Массовый адрес<small>ФНС, открытые данные · на\u00a001\.09\.2026<\/small>/);
+  assert.match(h, /Не проверяли в этот раз: /);
+  assert.match(h, /проверьте сами/, 'ссылка на сервис ЦБ у прогноза ЗСК');
+  assert.ok(!/однодневк|NaN|undefined|\[object/.test(h));
+});
+
+test('Щит, ИП: в свёрнутых данных нет ФИО и адреса', () => {
+  const r = otvet({ company: { inn: '500100732259', kind: 'INDIVIDUAL', status: 'ACTIVE', reg_date: '2020-01-15', director_name: 'Петров Пётр Петрович', address: 'г Химки, ул Лесная, д 5' } });
+  const h = S.htmlSvoj(r);
+  assert.ok(h.length > 0);
+  assert.ok(!/Петров|Химки|Лесная|Примерная|Иванов/.test(h));
+  assert.strictEqual(S.htmlSvoj({}), '');
+  assert.strictEqual(S.mountSvoj(null, otvet()), false);
+});
+
+test('главная: в режиме «Щит» строки сворачиваются после разбора, только если разбор построен', () => {
+  const ind = fs.readFileSync(path.join(KOREN, 'index.html'), 'utf8');
+  const i1 = ind.indexOf('shR=Shchit.mount(ub,r)'), i2 = ind.indexOf("Sushchestvennoe.mountSvoj(report.querySelector('.rows'),r,ub)");
+  assert.ok(i1 > 0 && i2 > i1, 'после Shchit.mount');
+  assert.match(ind, /if\(svoj&&shR&&window\.Sushchestvennoe\)\{try\{Sushchestvennoe\.mountSvoj/);
+});

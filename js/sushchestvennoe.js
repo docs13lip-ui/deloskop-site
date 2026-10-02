@@ -222,10 +222,10 @@
       '<small>' + esc(meta) + (x.ssylka ? ' · <a href="' + esc(x.ssylka) + '" target="_blank" rel="noopener">проверить в' + NB + 'ЦБ</a>' : '') + '</small></span>' +
       '<b class="d ' + x.ton + '">' + esc(x.znach) + '</b></div>';
   }
-  function glubinaHtml(g) {
+  function glubinaHtml(g, podpis, dop) {
     if (!g.razdely.length) return '';
     var n = g.razdely.length;
-    return '<details class="sut__g"><summary><span>Все данные из реестров</span><small>' + n + NB + skl(n, 'раздел', 'раздела', 'разделов') + '</small></summary>' +
+    return '<details class="sut__g"><summary><span>Все данные из реестров</span><small>' + (podpis || n + NB + skl(n, 'раздел', 'раздела', 'разделов')) + '</small></summary>' + (dop || '') +
       g.razdely.map(function (s) {
         return '<section class="sut__s"><h4>' + esc(s.zag) + '</h4><dl>' + s.stroki.map(function (row) {
           var dop = row[4] ? '<small>' + esc(row[4]) + '</small>' : '';
@@ -247,6 +247,27 @@
       f.spisok.map(rowHtml).join('') + ne + glubinaHtml(glubina(r, f));
   }
 
+  // ---- Щит (своя компания): разбор «глазами банка и налоговой» — главное, строки проверки — свёрнуто ----
+  // Те же признаки, что в разборе, не повторяем открытыми строками: всё — в одном свёрнутом разделе,
+  // первым — «Признаки из проверки» (у каждого источник и дата), дальше — разделы досье и внешние реестры.
+  function htmlSvoj(r) {
+    var f = fakty(r);
+    var vse = f.spisok.concat(f.eshche);
+    if (!vse.length) return '';
+    var g = glubina(r, f);
+    var prizn = { zag: 'Признаки из проверки', ist: '',
+      stroki: vse.map(function (x) {
+        return [x.nazv, x.znach, x.ton, x.ssylka || '', [x.ist, x.data ? 'на' + NB + x.data : ''].filter(Boolean).join(' · ')];
+      }) };
+    var razdely = [prizn].concat(g.razdely.filter(function (s) { return s.zag !== 'Ещё признаки'; }));
+    var n = vse.length, m = razdely.length;
+    var ne = f.neProvereno.length ? '<p class="sut__ne">Не проверяли в этот раз: ' +
+      esc(f.neProvereno.map(function (x) { return x.kratko; }).join(', ')) +
+      '. Не проверено — не значит «не обнаружено»; ссылки, где проверить самим, — в разделе «Внешние реестры».</p>' : '';
+    return glubinaHtml({ razdely: razdely, daty: g.daty },
+      n + NB + skl(n, 'признак', 'признака', 'признаков') + ' · ' + m + NB + skl(m, 'раздел', 'раздела', 'разделов'), ne);
+  }
+
   var CSS = '.sut__h{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px;padding-bottom:10px}' +
     '.sut__h b{font-size:15px;font-weight:600}.sut__h span{font-size:13px;color:var(--muted,#6B6B70)}' +
     '.sut__r>span{display:grid;gap:2px}.sut__r small{font-size:12px;color:var(--muted,#6B6B70);font-weight:400}' +
@@ -262,6 +283,7 @@
     '.sut__s dl{margin:0;display:grid}.sut__s dl div{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:12px;padding:6px 0;font-size:14px}' +
     '.sut__s dt{color:var(--ink2,#48484C);display:grid}.sut__s dt small{font-size:12px;color:var(--muted,#6B6B70)}.sut__s dd{margin:0;overflow-wrap:anywhere}' +
     '.sut__s dd.ok{color:var(--ok,#16723F)}.sut__s dd.warn{color:var(--warn,#8A5A00)}.sut__s dd.bad{color:#B3261E}' +
+    '.sut--svoj .sut__g{margin-top:0}.sut--svoj .sut__ne{border-top:1px solid #EFEFEA;padding:12px 0}' +
     '.sut__s p,.sut__d{margin:6px 0 0;font-size:12px;color:var(--muted,#6B6B70)}.sut__d{padding-bottom:14px}' +
     '@media (max-width:520px){.sut__s dl div{grid-template-columns:1fr;gap:2px}.sut__r{flex-direction:column;gap:4px}.sut__r b.d{text-align:left;max-width:none}}' +
     '@media print{.sut__g{border:0}.sut__g:not([open])>*:not(summary){display:block}}';
@@ -289,5 +311,26 @@
     return true;
   }
 
-  return { fakty: fakty, glubina: glubina, otchetnost: otchetnost, html: html, mount: mount, dengi: dengi, srok: srok, MAKS: MAKS, CSS: CSS };
+  // Браузер, режим «Щит»: строки светофора сворачиваются в «Все данные из реестров» и встают после разбора (el = .rows).
+  // Порядок: разбор Щита → «Что изменилось» и «Динамика» (js/dinamika.js) → свёрнутые данные. Ошибка или пустой ответ — строки остаются как были.
+  function mountSvoj(el, r, posle) {
+    if (!el) return false;
+    var h = '';
+    try { h = htmlSvoj(r); } catch (e) { h = ''; }
+    if (!h) return false;
+    try { stil(el.ownerDocument || document); } catch (e) {}
+    el.innerHTML = h;
+    el.classList.add('sut', 'sut--svoj');
+    try {
+      if (posle && posle.parentNode) {
+        var par = el.parentNode, izm = par && par.querySelector(':scope > .izm'), din = par && par.querySelector('.din');
+        posle.parentNode.insertBefore(el, posle.nextSibling);
+        if (izm) posle.parentNode.insertBefore(izm, el);
+        if (din) posle.parentNode.insertBefore(din, el);
+      }
+    } catch (e) {}
+    return true;
+  }
+
+  return { fakty: fakty, glubina: glubina, otchetnost: otchetnost, html: html, mount: mount, htmlSvoj: htmlSvoj, mountSvoj: mountSvoj, dengi: dengi, srok: srok, MAKS: MAKS, CSS: CSS };
 });

@@ -796,5 +796,34 @@ class TestKartochkiV4Kod(unittest.TestCase):
         self.assertFalse(K.vorota(K.iz_check(r))[0])
 
 
+class TestKartochkiShtrafyV1(unittest.TestCase):
+    """shtrafy-v1: V15 — без утверждения «не уплачен» в настоящем времени; с датой сведений и оговоркой, как V10."""
+
+    def _v15(self, as_of="2025-12-01", status="warn"):
+        r = O.zapis(5)
+        s = {"title": "Налоговые правонарушения", "status": status, "detail": "Штрафы: 25 000 ₽", "source": "ФНС"}
+        if as_of:
+            s["as_of"] = as_of
+        r["signals"].append(s)
+        return [x for x in K.vyvody(K.iz_check(r)) if x["kod"] == "V15"]
+
+    def test_tekst_s_datoj_i_ogovorkoj(self):
+        v = self._v15()
+        self.assertEqual(len(v), 1)
+        t = v[0]["tekst"]
+        self.assertTrue(t.startswith("Налоговый штраф не был уплачен в срок — "), t)
+        self.assertIn("(данные ФНС на" + NB + "1" + NB + "декабря 2025)", t)
+        self.assertTrue(t.endswith("Мог быть уплачен после этой даты"), t)
+        self.assertNotIn("Не уплачен", t)
+
+    def test_bez_daty_i_bez_signala_net_vyvoda(self):
+        self.assertEqual(self._v15(as_of=None), [])
+        self.assertEqual(self._v15(status="ok"), [])
+
+    def test_staroj_frazy_net_v_generatore(self):
+        src = (KOREN / "tests" / "kartochka_render.py").read_text(encoding="utf-8")
+        self.assertNotIn('"Не уплачен налоговый штраф', src)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

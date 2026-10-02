@@ -337,6 +337,8 @@ def iz_check(r):
                     "kod": kod, "zagolovok": t, "detal": str(s.get("detail") or ""), "ton": s.get("status") or "info",
                     "istochnik": s.get("source") or ISTOCHNIK_PO_KODU.get(kod, ""), "data": data_iz(s.get("as_of")),
                     "znachenie": _pervoe_chislo(s.get("detail")), "god": _god(s.get("detail")),
+                    # строка светофора как есть — для «Комментария команды» (заголовок до замены по детали)
+                    "signal": {"title": str(s.get("title") or ""), "detail": str(s.get("detail") or ""), "status": s.get("status") or ""},
                 }
                 # сведения ЕГРЮЛ без as_of — получены в день проверки (как egrul_data, daty-v1)
                 if po_detali and not k["fakty"][kod]["data"] and re.match(r"ЕГРЮЛ", k["fakty"][kod]["istochnik"]):
@@ -700,7 +702,8 @@ def pohozhie(k, vse):
     return out
 
 
-def html_kartochki(k, V, sosedi):
+def html_kartochki(k, V, sosedi, kom=None):
+    """kom — библиотека data/kommentarii.json (сайт читает файл сам, API передаёт её же); None — без комментариев."""
     nm = k["name"]
     iv = indeks_vid(k)
     url = SAJT + adres_str(k)
@@ -776,6 +779,12 @@ def html_kartochki(k, V, sosedi):
             znach = "не проверяли"
         stroki.append('<div class="fact"><span>%s</span><span class="fact__v">%s</span>%s</div>' % (
             e(zag), e(znach).replace("&nbsp;", NB), _istochnik_stroka(ist, dat, st, podkl).replace("co-src", "fact__src co-src")))
+        # «Комментарий команды Делоскопа» — только под проверенным фактом («не проверяли» — без текста) и только утверждённый [Право]
+        km = kom_najti(kom, f.get("signal")) if (kom and st == "podtverzhdeno") else None
+        if km:
+            stroki.append(kom_html(km))
+    if any(s.startswith('<div class="kom ') for s in stroki):
+        stroki.append(kom_ogovorka_html())  # оговорка [Право] 02.10 11:15 — один раз, под последней строкой реестров
     ne_pr = [x for x in k["ne_provereno"] if x.get("nazvanie")]
     ne_blok = ""
     if ne_pr:
@@ -932,13 +941,115 @@ def html_haba(kart, index):
 """.format(t=e(t), robots=robots, d=e(d), sajt=SAJT, papka=PAPKA, bloki="".join(bloki))
 
 
+# ---------------------------------------------------------------- «Комментарий команды Делоскопа» (kommentarii-kartochki-v1)
+# То же правило, что js/kommentarii.js (решения владельца 02.10; тексты — [Право], data/kommentarii.json). Функции чистые:
+# библиотеку передаёт вызывающий (сайт — tests/kommentarii.py → zagruzit, API — тот же файл сайта). tests/kommentarii.py
+# берёт их отсюда — одна Python-копия правила. Комментарий — пояснение практика, а не вывод: в ворота он не засчитывается.
+KOM_TON = {"ok": "zel", "info": "zel", "warn": "zhel", "bad": "kras"}
+KOM_MAKS = 300
+# [Право] 02.10 08:20: зелёный текст — только если источник ответил («не проверяли ≠ не нашли»). То же, что NE_OTVETIL в JS.
+KOM_NE_OTVETIL = re.compile(r"не\s*провер|недоступ|не\s*ответ|нет\s*ответа|нет\s*данных|нет\s*сведений|не\s*получ|ошибк|временно|не\s*удалось", re.I)
+# [Право] 02.10 11:15 — общая оговорка (ст. 152 ГК РФ, ч. 3 ст. 5 38-ФЗ); дословно как OGOVORKA в js/kommentarii.js.
+KOM_OGOVORKA = ("Комментарий команды — общий: он объясняет, как банки и налоговая смотрят на такой признак. "
+                "Это не оценка этой компании или сделки и не юридическая консультация.")
+
+
+def kom_dlina(t):
+    return sum(len(str(t.get(x) or "")) for x in ("bank", "nalog", "sdelat"))
+
+
+def kom_gotov(t):
+    return bool(t and t.get("status") == "utverzhdeno" and t.get("proveril")
+                and re.match(r"^\d{4}-\d{2}-\d{2}", str(t.get("data_proverki") or ""))
+                and t.get("sdelat") and (t.get("bank") or t.get("nalog")) and kom_dlina(t) <= KOM_MAKS)
+
+
+def _kom_rx(s):
+    try:
+        return re.compile(s, re.I)
+    except re.error:
+        return None
+
+
+def kom_zapis(sprav, signal):
+    """Первое совпадение сверху: re — по заголовку; uslovie — по «заголовок · деталь»; kak — тексты другой записи."""
+    signal = signal or {}
+    title = str(signal.get("title") or "")
+    if not title:
+        return None
+    vse = title + " · " + str(signal.get("detail") or "")
+    spisok = (sprav or {}).get("signaly") or []
+    for z in spisok:
+        r = _kom_rx(z.get("re") or "")
+        if not r or not r.search(title):
+            continue
+        if z.get("uslovie"):
+            u = _kom_rx(z["uslovie"])
+            if not u or not u.search(vse):
+                continue
+        if not z.get("kak"):
+            return z
+        for c in spisok:
+            if c.get("id") == z["kak"] and not c.get("kak"):
+                return c
+        return None
+    return None
+
+
+def kom_istochnik_otvetil(signal):
+    signal = signal or {}
+    if signal.get("status") != "ok":
+        return False
+    return not KOM_NE_OTVETIL.search(str(signal.get("title") or "") + " · " + str(signal.get("detail") or ""))
+
+
+def kom_najti(sprav, signal):
+    """Готовый комментарий к строке светофора или None (нет утверждённого текста — блока нет, без заглушек)."""
+    z = kom_zapis(sprav, signal)
+    ton = KOM_TON.get((signal or {}).get("status"))
+    if not z or not ton:
+        return None
+    if ton == "zel" and not kom_istochnik_otvetil(signal):
+        return None
+    t = (z.get("tony") or {}).get(ton)
+    if not kom_gotov(t):
+        return None
+    g, m, d = str(t["data_proverki"])[:10].split("-")
+    return {"id": z["id"], "ton": ton, "bank": t.get("bank") or "", "nalog": t.get("nalog") or "",
+            "sdelat": t["sdelat"], "norma": (t["norma"] if t.get("norma") is not None else z.get("norma")) or "",
+            "podpis": (sprav or {}).get("podpis") or "Команда Делоскопа", "data": f"{d}.{m}.{g}"}
+
+
+def _kom_esc(s):
+    # как esc() в js/kommentarii.js: & < > " (апостроф не трогаем) — разметка байт в байт как в отчёте
+    return re.sub(r'[&<>"]', lambda x: {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[x.group(0)], str(s if s is not None else ""))
+
+
+def kom_html(k):
+    """Та же разметка, что html() в js/kommentarii.js (проверяет tests/test_kartochki.py через node)."""
+    if not k:
+        return ""
+    def stroka(l, t):
+        return ('<p><span class="kom__l">%s</span> %s</p>' % (l, _kom_esc(t))) if t else ""
+    return ('<div class="kom kom--%s" data-kom="%s"><div class="kom__h">Комментарий команды Делоскопа</div>%s%s%s'
+            '<div class="kom__p">%s%s%s</div></div>') % (
+        _kom_esc(k["ton"]), _kom_esc(k["id"]), stroka("Банк:", k.get("bank")), stroka("Налоговая:", k.get("nalog")),
+        stroka("Что сделать:", k.get("sdelat")), _kom_esc(k.get("podpis")),
+        (" · " + _kom_esc(k["norma"])) if k.get("norma") else "", (" · нормы сверены " + _kom_esc(k["data"])) if k.get("data") else "")
+
+
+def kom_ogovorka_html():
+    return '<p class="kom-og">%s</p>' % _kom_esc(KOM_OGOVORKA)
+
+
 # ---------------------------------------------------------------- точка входа для API (render-v1)
-def kartochka_iz_check(zapis, sosedi=()):
+def kartochka_iz_check(zapis, sosedi=(), kom=None):
     """Ответ /api/check → (годится, причина, адрес, html без оболочки).
 
     Те же ворота, что у статичной волны (vorota): не прошла — (False, причина, None, None), и API отвечает 404.
     ИП (ИНН из 12 цифр) отбрасывается до всякой обработки, как в otobrat. sosedi — уже разобранные
-    карточки (iz_check) для блока «Похожие»; пусто — блока нет."""
+    карточки (iz_check) для блока «Похожие»; пусто — блока нет. kom — библиотека data/kommentarii.json сайта
+    (как partials/obolochka.json): без неё карточка API выйдет без «Комментария команды» и не совпадёт с файлом волны."""
     inn = re.sub(r"\D", "", str(((zapis.get("company") or {}).get("inn")) or zapis.get("inn") or ""))
     if len(inn) == 12:
         return False, "не юрлицо или неверный ИНН", None, None
@@ -947,7 +1058,7 @@ def kartochka_iz_check(zapis, sosedi=()):
     ok, pr = vorota(k, V)
     if not ok:
         return False, pr, None, None
-    return True, pr, adres_str(k), html_kartochki(k, V, pohozhie(k, list(sosedi)))
+    return True, pr, adres_str(k), html_kartochki(k, V, pohozhie(k, list(sosedi)), kom)
 
 
 # ---------------------------------------------------------------- оболочка для API (obolochka-v1)

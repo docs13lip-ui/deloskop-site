@@ -36,6 +36,7 @@ import urllib.request
 KOREN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(KOREN, "tests"))
 import sobrat_shapku as ss  # noqa: E402
+import kommentarii  # noqa: E402
 # render-v1: отрисовка («сведения → HTML») — общий модуль сайта и API; здесь — отбор волны, файлы, sitemap, iz-api.
 # Имена — прежние (K.vyvody, K.html_kartochki, K.STUPENI …).
 from kartochka_render import *  # noqa: E402,F401,F403
@@ -142,9 +143,10 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None):
         zapisat(os.path.join(papka, "index.html"), "")  # чтобы подвал уже знал о хабе
     podval = ss.podval_html(r)
     shapka = ss.shapka_html()
+    kom = kommentarii.zagruzit()  # «Комментарий команды» — data/kommentarii.json (только утверждённые [Право] тексты)
     izm = 0
     for k in kart:
-        txt = ss.sobrat_stranicu(html_kartochki(k, k["_V"], pohozhie(k, kart)), r, podval, shapka)
+        txt = ss.sobrat_stranicu(html_kartochki(k, k["_V"], pohozhie(k, kart), kom), r, podval, shapka)
         izm += zapisat(os.path.join(koren, adres_str(k).strip("/"), "index.html"), txt)
     if kart:
         zapisat(os.path.join(papka, "index.html"), ss.sobrat_stranicu(html_haba(kart, hub_index), r, podval, shapka))

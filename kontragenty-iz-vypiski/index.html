@@ -270,7 +270,8 @@ var state={parsed:null,regime:'osn',res:null,risk:null,remote:null,locked:0,show
 /* «Комментарий команды»: только утверждённые [Право] тексты; нет текстов или файла — страница как раньше */
 var K=window.Kommentarii;
 if(K)K.zagruzit().then(function(s){state.kom=s;if(state.res&&K.estVypiska(s))render()});
-function kom(code){return K&&state.kom&&code?K.vypiskaHtml(state.kom,code):''}
+function klient(){var i=state.res&&state.res.self&&state.res.self.inn||'';return i.length===10?'org':i.length===12?'ip':''}
+function kom(code){return K&&state.kom&&code?K.vypiskaHtml(state.kom,code,klient()):''}
 try{var saved=localStorage.getItem('deloskop.regime');if(saved&&E.REGIMES[saved])state.regime=saved}catch(e){}
 
 function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}

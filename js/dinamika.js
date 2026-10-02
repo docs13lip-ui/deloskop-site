@@ -263,15 +263,86 @@
     return { s: a, izm: sravnit(a, b) };
   }
 
+  // rez.id — сравнение с досье проверки из кабинета (любое устройство); иначе — со снимком в этом браузере.
   function htmlIzmeneniya(rez) {
     if (!rez) return '';
     if (rez.pervyj) return '<p class="izm izm--0">Запомнили эту проверку на вашем устройстве. Проверите компанию снова — покажем, что изменилось.</p>';
     var kogda = dataRu(rez.s.t);
-    if (!rez.izm.length) return '<div class="izm"><b>С вашей проверки ' + kogda + ' существенных изменений нет</b>' +
-      '<span>Статус, руководитель, долги, оценка риска и признаки светофора — прежние.</span></div>';
-    return '<div class="izm izm--da"><b>Что изменилось с вашей проверки ' + kogda + '</b><ul>' +
+    var dosje = rez.id ? '<a href="/report.html?id=' + encodeURIComponent(rez.id) + '" target="_blank" rel="noopener">досье от' + NB + dmyT(rez.s.t) + '</a>' : '';
+    if (!rez.izm.length) return '<div class="izm"' + (rez.id ? ' data-izm="kabinet"' : '') + '><b>С вашей проверки ' + kogda + ' существенных изменений нет</b>' +
+      '<span>Статус, руководитель, долги, оценка риска и признаки светофора — прежние.' + (rez.id ? ' Сравнили с ' + dosje + ' в вашем кабинете.' : '') + '</span></div>';
+    return '<div class="izm izm--da"' + (rez.id ? ' data-izm="kabinet"' : '') + '><b>Что изменилось с вашей проверки ' + kogda + '</b><ul>' +
       rez.izm.map(function (x) { return '<li class="izm--' + x.ton + '">' + esc(x.t) + '</li>'; }).join('') +
-      '</ul><span>Сравниваем с проверкой на этом устройстве; снимок хранится только в вашем браузере.</span></div>';
+      '</ul><span>' + (rez.id ? 'Сравниваем с ' + dosje + ' из вашего кабинета — проверка с любого устройства.'
+        : 'Сравниваем с проверкой на этом устройстве; снимок хранится только в вашем браузере.') + '</span></div>';
+  }
+  // ДД.ММ.ГГГГ по Москве (UTC+3)
+  function dmyT(t) {
+    var d = new Date(t + 3 * CHAS);
+    return ('0' + d.getUTCDate()).slice(-2) + '.' + ('0' + (d.getUTCMonth() + 1)).slice(-2) + '.' + d.getUTCFullYear();
+  }
+
+  // ---- «Что изменилось» по кабинету: прошлая проверка с другого устройства (ответы /api/me/checks и /api/report/{id}) ----
+  // rows — ответ /api/me/checks ({inn, created_at, risk_level, report_id}); t — время текущей проверки; tekId — её report_id.
+  // → самая поздняя проверка той же компании раньше текущей больше чем на час, у которой есть досье: {id, t} | null.
+  function predydushchaya(rows, inn, t, tekId) {
+    var best = null;
+    (Array.isArray(rows) ? rows : []).forEach(function (x) {
+      if (!x || String(x.inn || '').trim() !== inn || !x.report_id) return;
+      var tx = Date.parse(String(x.created_at || ''));
+      if (!isFinite(tx) || tx > t - CHAS || String(x.report_id) === String(tekId || '')) return;
+      if (!best || tx > best.t) best = { id: String(x.report_id), t: tx };
+    });
+    return best;
+  }
+  // Кабинет нужен, только если там проверка новее снимка этого браузера (больше чем на час) или снимка нет.
+  function nuzhenKabinet(lokal, server) {
+    if (!server) return false;
+    var tl = lokal && lokal.s && isFinite(lokal.s.t) ? lokal.s.t : -Infinity;
+    return server.t > tl + CHAS;
+  }
+
+  var poslednij = null; // последний результат zapomnit() на этой странице: {inn, t, rez}
+
+  // Браузер: после отрисовки отчёта. Только для вошедших (dlk_voshel = 1); любые ошибки — молча, остаётся блок браузера.
+  // opt: { api, fetch, voshel } — для тестов. Возвращает Promise<rez|null>.
+  function dogruzit(report, r, opt) {
+    opt = opt || {};
+    var f = opt.fetch || (typeof fetch === 'function' ? fetch : null);
+    var b = snimok(r), voshel = opt.voshel;
+    if (voshel == null) { try { voshel = window.localStorage.getItem('dlk_voshel') === '1'; } catch (e) { voshel = false; } }
+    if (!report || !b || !f || !voshel || opt.api == null) return Promise.resolve(null);
+    var lokal = poslednij && poslednij.inn === b.inn && poslednij.t === b.t ? poslednij.rez : null;
+    var api = String(opt.api), kl = b.inn + ':' + b.t;
+    // пока ждём ответа, на странице могли проверить другую компанию — тогда ничего не вставляем
+    try { report.setAttribute('data-izm-k', kl); } catch (e) { return Promise.resolve(null); }
+    function json(u, cr) {
+      return f(api + u, cr ? { credentials: 'include' } : {}).then(function (x) { if (!x || !x.ok) throw 0; return x.json(); });
+    }
+    return json('/api/me/checks', true).then(function (j) {
+      var srv = predydushchaya(j && (j.checks || j), b.inn, b.t, r.report_id);
+      if (!nuzhenKabinet(lokal, srv)) return null;
+      return json('/api/report/' + encodeURIComponent(srv.id)).then(function (pr) {
+        var a = snimok(pr);
+        if (!a || a.inn !== b.inn || !(a.t <= b.t - CHAS) || report.getAttribute('data-izm-k') !== kl) return null;
+        var rez = { s: a, izm: sravnit(a, b), id: srv.id };
+        vstavit(report, htmlIzmeneniya(rez));
+        try { if (typeof window !== 'undefined' && window.dlkGoal) window.dlkGoal('izm_kabinet'); } catch (e) {}
+        return rez;
+      });
+    }).catch(function () { return null; });
+  }
+  // Заменяет блок «что изменилось» в отчёте; если его нет — ставит перед «Динамикой» или после фактов.
+  function vstavit(report, h) {
+    var doc = report.ownerDocument, t = doc.createElement('div');
+    t.innerHTML = h;
+    var nov = t.firstChild, star = report.querySelector('.izm');
+    if (!nov) return;
+    if (star) { star.parentNode.replaceChild(nov, star); return; }
+    var din = report.querySelector('.din');
+    if (din) { din.parentNode.insertBefore(nov, din); return; }
+    var rows = report.querySelector('.rows');
+    if (rows && rows.parentNode) rows.parentNode.insertBefore(nov, rows.nextSibling);
   }
 
   var CSS = '.din{display:grid;gap:10px;padding:16px 18px;border-radius:16px;background:var(--bg,#F5F5F2)}' +
@@ -289,7 +360,7 @@
     '.din__sv .din__0{stroke:#C9C9C4;stroke-width:1;stroke-dasharray:2 2}' +
     '.din__tr{margin:0;font-size:14px;color:var(--ink2,#48484C)}.din__src{margin:0;font-size:12px;color:var(--muted,#6B6B70)}' +
     '.izm{display:grid;gap:4px;padding:14px 18px;border-radius:16px;border:1px solid var(--line,#E6E6E1);font-size:14px}' +
-    '.izm b{font-size:15px;font-weight:600}.izm span{font-size:12px;color:var(--muted,#6B6B70)}' +
+    '.izm b{font-size:15px;font-weight:600}.izm span{font-size:12px;color:var(--muted,#6B6B70)}.izm span a{color:inherit;text-decoration:underline;text-underline-offset:2px}' +
     '.izm ul{margin:4px 0;padding:0;list-style:none;display:grid;gap:4px}.izm li{padding-left:18px;position:relative}' +
     '.izm li::before{content:"";position:absolute;left:2px;top:.55em;width:8px;height:8px;border-radius:50%;background:var(--muted,#6B6B70)}' +
     '.izm li.izm--huzhe::before{background:#E5484D}.izm li.izm--luchshe::before{background:#2FA36B}' +
@@ -311,12 +382,17 @@
     try { ls = opt.ls || (typeof window !== 'undefined' && window.localStorage) || null; } catch (e) { ls = null; }
     try { if (typeof document !== 'undefined') stil(document); } catch (e) {}
     var izm = '';
-    try { izm = htmlIzmeneniya(zapomnit(r, ls)); } catch (e) { izm = ''; }
+    try {
+      var rez = zapomnit(r, ls), b = snimok(r);
+      poslednij = b ? { inn: b.inn, t: b.t, rez: rez } : null;
+      izm = htmlIzmeneniya(rez);
+    } catch (e) { izm = ''; }
     var din = '';
     try { din = htmlDinamika(r); } catch (e) { din = ''; }
     return izm + din;
   }
 
   return { ryad: ryad, ryady: ryady, stroka: stroka, trendy: trendy, dengi: dengi, htmlDinamika: htmlDinamika,
-    snimok: snimok, sravnit: sravnit, zapomnit: zapomnit, htmlIzmeneniya: htmlIzmeneniya, html: html, KEY: KEY, CSS: CSS };
+    snimok: snimok, sravnit: sravnit, zapomnit: zapomnit, htmlIzmeneniya: htmlIzmeneniya, html: html, KEY: KEY, CSS: CSS,
+    predydushchaya: predydushchaya, nuzhenKabinet: nuzhenKabinet, dogruzit: dogruzit };
 });

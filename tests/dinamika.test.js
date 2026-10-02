@@ -191,3 +191,41 @@ test('таблица динамики: года нет в ряду — «нет 
   assert.match(h, /<td class="din__v din__p n"><span class="din__na">нет данных<\/span><\/td>/);
   assert.match(h, /<td class="din__v din__k n">—<\/td>/);
 });
+
+// kapital-izm-v1 (Ночные-3, 03.10): собственный капитал (dossier.charts.balance, строка 1300) — в снимке и в «что изменилось»
+function sKap(t, god, eq) {
+  const ch = Object.assign({}, otvet().dossier.charts, { balance: { year: god, equity: eq, long_liab: 1, short_liab: 2 } });
+  return D.snimok(otvet({ checked_at: t, dossier: { charts: ch } }));
+}
+
+test('капитал: в снимке — год и сумма; у ИП и без баланса — нет; мусор не берём', () => {
+  assert.deepStrictEqual(sKap('2026-10-02T03:30:00Z', 2025, -12.4e6).kap, [2025, -12.4e6]);
+  assert.ok(!('kap' in D.snimok(otvet())), 'нет balance — нет капитала');
+  for (const eq of [null, '', true, 'x']) assert.ok(!('kap' in sKap('2026-10-02T03:30:00Z', 2025, eq)), 'equity = ' + eq);
+  const ip = D.snimok(otvet({ company: { inn: '500100732259', kind: 'INDIVIDUAL', status: 'ACTIVE' },
+    dossier: { charts: { balance: { year: 2025, equity: -5 } } } }));
+  assert.ok(!('kap' in ip));
+});
+
+test('капитал: ушёл в минус — «хуже» первым; вышел из минуса — «лучше»; без смены знака и со старым снимком — молчим', () => {
+  const plus = sKap('2026-09-12T10:00:00Z', 2024, 3e6), minus = sKap('2026-10-02T03:30:00Z', 2025, -12.4e6);
+  const v = D.sravnit(plus, minus);
+  assert.strictEqual(v[0].ton, 'huzhe');
+  assert.strictEqual(v[0].t, 'Собственный капитал ушёл в минус: на' + NB + '31.12.2025 — минус 12,4' + NB + 'млн' + NB + '₽, обязательства больше активов (ГИР' + NB + 'БО)');
+  const l = D.sravnit(sKap('2026-09-12T10:00:00Z', 2024, -1e6), sKap('2026-10-02T03:30:00Z', 2025, 0));
+  assert.deepStrictEqual(l.filter((x) => /капитал/.test(x.t)), [{ ton: 'luchshe', t: 'Собственный капитал больше не отрицательный: на' + NB + '31.12.2025 — 0' + NB + '₽ (ГИР' + NB + 'БО)' }]);
+  assert.deepStrictEqual(D.sravnit(sKap('2026-09-12T10:00:00Z', 2025, -1e6), sKap('2026-10-02T03:30:00Z', 2025, -2e6)).filter((x) => /капитал/.test(x.t)), [], 'минус → минус');
+  assert.deepStrictEqual(D.sravnit(D.snimok(otvet({ checked_at: '2026-09-12T10:00:00Z' })), minus).filter((x) => /капитал/.test(x.t)), [], 'старый снимок без капитала');
+  assert.deepStrictEqual(D.sravnit(sKap('2026-09-12T10:00:00Z', 2025, -1e6), sKap('2026-10-02T03:30:00Z', 2024, 5e6)).filter((x) => /капитал/.test(x.t)), [], 'баланс старше прошлого — не сравниваем');
+});
+
+test('капитал: строка проходит в html «что изменилось» с экранированием и без NaN', () => {
+  const ls = hran();
+  D.zapomnit(otvet({ checked_at: '2026-09-12T10:00:00Z', dossier: { charts: Object.assign({}, otvet().dossier.charts, { balance: { year: 2024, equity: 1e6 } }) } }), ls);
+  const r = otvet({ checked_at: '2026-10-02T03:30:00Z', dossier: { charts: Object.assign({}, otvet().dossier.charts, { balance: { year: 2025, equity: -7e5 } }) } });
+  const rez = D.zapomnit(r, ls);
+  const h = D.htmlIzmeneniya(rez);
+  assert.match(h, /<li class="izm--huzhe">Собственный капитал ушёл в минус/);
+  assert.match(h, new RegExp('минус 700' + NB + 'тыс\\.' + NB + '₽'));
+  assert.ok(!/NaN|undefined|Infinity/.test(h));
+});

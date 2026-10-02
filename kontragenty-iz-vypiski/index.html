@@ -78,6 +78,14 @@ h1{font-size:clamp(30px,5vw,44px);line-height:1.1;letter-spacing:-.03em;margin:1
 .sig{font-size:15px;margin:6px 0 0;padding-left:18px;position:relative;color:var(--ink2)}
 .sig:before{content:'';position:absolute;left:2px;top:.62em;width:7px;height:7px;border-radius:50%;background:#B8B8BD}
 .sig.bad:before{background:var(--bad)}.sig.warn:before{background:#E0A100}
+/* «Комментарий команды Делоскопа» под сигналом — свёрнут (js/kommentarii.js, data/kommentarii.json → vypiska) */
+.kom{margin:6px 0 2px 18px;padding:8px 12px;border-left:3px solid var(--line);background:#FAFAF8;border-radius:0 10px 10px 0;font-size:14px;line-height:1.5;color:var(--ink)}
+.flow .kom{margin:8px 0 0;background:rgba(255,255,255,.65)}.kom--kras{border-left-color:var(--bad)}.kom--zhel{border-left-color:#E0A100}
+.kom summary{cursor:pointer;font-weight:600;font-size:12.5px;color:var(--ink2);list-style:none}.kom summary::-webkit-details-marker{display:none}
+.kom summary::before{content:"\203A";display:inline-block;width:12px;transition:transform .15s}.kom[open] summary::before{transform:rotate(90deg)}
+.kom p{margin:4px 0 0}.kom__l{font-weight:600}.kom__p{color:var(--muted);font-size:12px;margin-top:6px}
+.kom-og{font-size:12.5px;line-height:1.45;color:var(--muted);margin:12px 0 0}
+@media print{.kom{background:none;break-inside:avoid}}
 .badge{display:inline-block;font-size:12px;font-weight:600;border-radius:999px;padding:2px 9px;vertical-align:2px;margin-left:6px;white-space:nowrap}
 .badge.high{background:var(--badbg);color:var(--bad)}.badge.medium{background:var(--warnbg);color:var(--warn)}.badge.low{background:var(--okbg);color:var(--ok)}.badge.lock{background:#EFEFEA;color:var(--muted)}
 .sup .st{font-size:14px;color:var(--muted);margin-top:8px}.sup .st b{color:var(--ink);font-weight:600}
@@ -250,6 +258,7 @@ footer a{color:var(--muted)}
 </main>
 
 <script src="/js/bez-nds.js"></script>
+<script src="/js/kommentarii.js"></script>
 <script src="/kontragenty-iz-vypiski/engine.js"></script>
 <script>(function(){
 'use strict';
@@ -257,7 +266,11 @@ var E=window.DeloVypiska;
 var API=(location.hostname.endsWith('deloskop.ru')?'https://api.deloskop.ru':'');
 var $=function(id){return document.getElementById(id)};
 var drop=$('drop'),file=$('file'),out=$('out'),msg=$('msg'),seg=$('regime');
-var state={parsed:null,regime:'osn',res:null,risk:null,remote:null,locked:0,showAll:false,demo:false};
+var state={parsed:null,regime:'osn',res:null,risk:null,remote:null,locked:0,showAll:false,demo:false,kom:null};
+/* «Комментарий команды»: только утверждённые [Право] тексты; нет текстов или файла — страница как раньше */
+var K=window.Kommentarii;
+if(K)K.zagruzit().then(function(s){state.kom=s;if(state.res&&K.estVypiska(s))render()});
+function kom(code){return K&&state.kom&&code?K.vypiskaHtml(state.kom,code):''}
 try{var saved=localStorage.getItem('deloskop.regime');if(saved&&E.REGIMES[saved])state.regime=saved}catch(e){}
 
 function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
@@ -310,13 +323,14 @@ function render(){
     (t.cash?fact(rub(t.cash),'наличными · '+E.pct(t.cash/t.out)):fact(r.docs+'','платежей в выписке'))+'</div>';
 
   var todo='<div class="block"><h2>Три дела на неделю</h2><ol class="todo">'+r.todo.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ol></div>';
-  var flows=r.flows.length?'<div class="block"><h2>Что видит банк</h2>'+r.flows.map(function(f){return '<div class="flow '+f.level+'">'+esc(f.text)+(f.href?' <a href="'+f.href+'">'+esc(f.more||'Подробнее')+'&nbsp;→</a>':'')+'</div>'}).join('')+'</div>':'';
+  var flows=r.flows.length?'<div class="block"><h2>Что видит банк</h2>'+r.flows.map(function(f){return '<div class="flow '+f.level+'">'+esc(f.text)+(f.href?' <a href="'+f.href+'">'+esc(f.more||'Подробнее')+'&nbsp;→</a>':'')+kom(f.code)+'</div>'}).join('')+'</div>':'';
 
   var list=state.showAll?r.suppliers:r.suppliers.slice(0,10);
   var sup='<div class="block"><h2>Поставщики</h2>'+list.map(supCard).join('')+
     (r.suppliers.length>10&&!state.showAll?'<button type="button" class="more-btn" id="all">Показать всех — '+r.suppliers.length+'</button>':'')+'</div>';
 
-  out.innerHTML='<div class="stake">'+head+cta+'</div>'+facts+todo+flows+sup+
+  var og=K&&/class="kom /.test(flows+sup)?K.ogovorkaHtml():'';
+  out.innerHTML='<div class="stake">'+head+cta+'</div>'+facts+todo+flows+sup+og+
     '<p class="note">Суммы НДС взяты из назначений платежей; где НДС не указан, вычет не считаем. Пени в сумму на кону не входят. Это автоматический разбор, а не заключение налогового консультанта.</p>';
   out.hidden=false;
   var c=$('check');if(c)c.onclick=checkRegistry;
@@ -329,7 +343,7 @@ function supCard(s){
   var rm=state.remote&&s.inn?state.remote[s.inn]:null, lvl=state.risk&&s.inn?state.risk[s.inn]:null;
   var badge=lvl&&LVL[lvl]?'<span class="badge '+LVL[lvl][0]+'">'+LVL[lvl][1]+'</span>':(state.risk&&s.inn&&s.innValid&&state.locked?'<span class="badge lock">в подписке</span>':'');
   var name=(rm&&rm.name)||s.name||'Без названия';
-  var sig=s.signals.map(function(x){return '<div class="sig '+x.level+'">'+esc(x.text)+(x.href?' <a href="'+esc(x.href)+'">Сверить реквизиты&nbsp;→</a>':'')+'</div>'}).join('');
+  var sig=s.signals.map(function(x){return '<div class="sig '+x.level+'">'+esc(x.text)+(x.href?' <a href="'+esc(x.href)+'">Сверить реквизиты&nbsp;→</a>':'')+'</div>'+kom(x.code)}).join('');
   var rr=E.remoteReasons(rm,lvl),bn=rm&&window.DlkBezNds?DlkBezNds.strokaVypiski(s,rm):null;if(bn)rr.push(bn);
   if(rr.length)sig=rr.map(function(x){return '<div class="sig '+x.level+'">'+esc(x.text)+'</div>'}).join('')+sig;
   var reg=E.REGIMES[state.regime];

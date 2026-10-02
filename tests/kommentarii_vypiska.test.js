@@ -56,9 +56,21 @@ function bezIsklyucheniya(x, k) {
   return fr ? x.ton[k].split(fr).join("") : x.ton[k];
 }
 
-test("vypiska v2: 6 текстов [Право] 21:25 утверждены дословно — роль, дата, норма; остальные 10 кодов молчат", () => {
+test("vypiska v3: 6 текстов [Право] 21:25 + 9 текстов 22:30 утверждены дословно — роль, дата, норма; bigcash молчит", () => {
+  // bigcash не утверждён намеренно: в движке это операции с наличными от 1 млн ₽ — и снятие, и взнос,
+  // а текст [Право] 22:30 — только о снятии (правило [Право]: смысл кода другой — запись не ставить, ✎).
   const utv6 = { acc_person: "ст. 54.1 НК РФ", acc_change: "ст. 312 ГК РФ", key: "ст. 54.1 НК РФ",
-    oneshot: "письмо ФНС от 10.03.2021 № БВ-4-7/3060@", cash: "", lowtax: "приказ ФНС от 30.05.2007 № ММ-3-06/333@" };
+    oneshot: "письмо ФНС от 10.03.2021 № БВ-4-7/3060@", cash: "", lowtax: "приказ ФНС от 30.05.2007 № ММ-3-06/333@",
+    inn_invalid: "", inn_missing: "", acc_many: "ст. 312 ГК РФ", vague: "", round: "", novat: "п. 2 ст. 171 НК РФ",
+    persons: "п. 1 ст. 226 НК РФ", cashin: "", self: "" };
+  assert.strictEqual(SPRAV.vypiska.zapisi.find((x) => x.kod === "bigcash").ton.status, "zhdet_prava");
+  assert.strictEqual(K.vypiska(SPRAV, "inn_invalid").ton, "kras", "уровень bad — красный");
+  assert.strictEqual(K.vypiska(SPRAV, "vague").ton, "sery", "уровень info — серый, как в движке");
+  // ◐ [Право] 22:30: нормы по наличным, ровным суммам и переводам себе намеренно не ставим (18-МР не сверен)
+  for (const kod of ["cashin", "round", "self", "vague"]) {
+    const t = SPRAV.vypiska.zapisi.find((x) => x.kod === kod).ton;
+    assert.ok(!/18-МР|Банк России|ст\. 6 115/.test(t.bank + t.nalog + t.sdelat), kod);
+  }
   const est = SPRAV.vypiska.zapisi.filter((x) => x.ton.status === "utverzhdeno").map((x) => x.kod).sort();
   assert.deepStrictEqual(est, Object.keys(utv6).sort());
   for (const [kod, norma] of Object.entries(utv6)) {

@@ -33,6 +33,12 @@
 .co-bar-t{font:500 13px var(--font);fill:var(--muted);text-anchor:middle}
 .co-sec .table th{text-align:left}.co-sec .table td.num,.co-sec .table th:last-child{text-align:right}
 .co-ogov p+p{margin-top:var(--s-2)}
+/* kommentarii-kartochki-v1: «Комментарий команды Делоскопа» под строкой реестра — как на экране проверки (js/kommentarii.js, CSS_EKRANA) */
+.co .kom{margin:0 0 var(--s-3);padding:10px 14px;border-left:3px solid var(--line);background:#FAFAF8;border-radius:0 10px 10px 0;font-size:14px;line-height:1.5;color:var(--ink)}
+.co .kom--zel{border-left-color:var(--ok)}.co .kom--zhel{border-left-color:var(--warn)}.co .kom--kras{border-left-color:var(--bad)}
+.co .kom__h{font-weight:600;font-size:12.5px;letter-spacing:.02em;color:var(--ink-2);margin-bottom:4px}
+.co .kom p{margin:2px 0}.co .kom__l{font-weight:600}.co .kom__p{color:var(--muted);font-size:12px;margin-top:6px}
+.co .kom-og{margin:var(--s-2) 0 0;font-size:12.5px;line-height:1.45;color:var(--muted)}
 .co-side .small{color:var(--ink-2);margin-bottom:var(--s-4)}
 .co-w100{width:100%}
 .co-sos{list-style:none;margin:0;padding:0}

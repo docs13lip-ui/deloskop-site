@@ -550,6 +550,7 @@ footer a{color:var(--ink2)}
 <script src="/js/shchit.js" defer></script>
 <script src="/js/dinamika.js" defer></script>
 <script src="/js/terminy.js" defer></script>
+<script src="/js/pasport-cta.js" defer></script>
 <script src="/js/otchet.js" defer></script>
 <script src="/js/nedavnie.js" defer></script>
 <script src="/js/inn.js"></script>
@@ -636,7 +637,7 @@ footer a{color:var(--ink2)}
       var t=name+' (ИНН '+c.inn+'): '+({low:'Сигналов мало',medium:'Есть вопросы',high:'Серьёзные сигналы'}[r.risk_level]||'')+'. '+(u?u.headline+'. '+u.advice:(r.verdict||''))+' — проверено на deloskop.ru';
       try{navigator.clipboard.writeText(t);e.target.textContent='Скопировано'}catch(_){}};
     // лист «Отчёт о проверке» на всю ширину: шапка → вывод → факты, динамика, все данные; справа — как посчитали и откуда данные (js/otchet.js)
-    if(window.Otchet){try{Otchet.razlozhit(report,r,{svoj:!!shR,shR:shR,usl:ub})}catch(e){}}
+    if(window.Otchet){try{Otchet.razlozhit(report,r,{svoj:!!shR,shR:shR,usl:ub,api:CAPI})}catch(e){}}
   }
   function runCheck(v,o){
     if(!CAPI){note.className='note ok';note.textContent='Проверка работает на deloskop.ru.';return;}

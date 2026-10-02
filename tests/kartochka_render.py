@@ -125,6 +125,10 @@ def chislo(v):
 
 
 # ---------------------------------------------------------------- имя, адрес, slug
+# kartochki-v4-kod: короткие обычные слова — не аббревиатуры («Торговый дом», а не «Торговый ДОМ»); ТД, НК, ГК, ПК — как есть.
+KOROTKIE_SLOVA = {"ДОМ", "МИР", "САД", "ЛЕС"}
+
+
 def imya(short, full=""):
     """'ООО "ТД "ЧЕРНОЗЕМЬЕ"' → 'ООО «ТД Черноземье»'. Кавычки всегда парные (Маркетинг §2.2, п. 4)."""
     s = re.sub(r"\s+", " ", str(short or full or "").strip())
@@ -134,14 +138,20 @@ def imya(short, full=""):
     if not m:
         return s
     opf, vnutri = m.group(1).strip(), re.sub(r'["«»“”„]', "", m.group(2)).strip()
+    # kartochki-v4-kod: слово сразу после внутренней кавычки — тоже имя собственное, с прописной:
+    # АО "АВИАКОМПАНИЯ "СИБИРЬ" → «Авиакомпания Сибирь» (было «…сибирь»), ООО "ТОРГОВЫЙ ДОМ "ЛЕНТА" → «Торговый дом Лента».
+    posle_kavychki = set()
+    for i, w in enumerate([x for x in m.group(2).strip().split(" ") if re.sub(r'["«»“”„]', "", x)]):
+        if i > 0 and re.match(r'^["«»“”„]', w):
+            posle_kavychki.add(i)
     if vnutri == vnutri.upper() and re.search(r"[А-ЯЁA-Z]", vnutri):
         slova = vnutri.split(" ")
         out = []
         for i, w in enumerate(slova):
             bukv = len(re.sub(r"[^А-Яа-яЁёA-Za-z]", "", w))
-            if bukv <= 3:
+            if bukv <= 3 and w not in KOROTKIE_SLOVA:
                 out.append(w)
-            elif i == 0 or (i == 1 and len(re.sub(r"[^А-Яа-яЁёA-Za-z]", "", slova[0])) <= 3):
+            elif i == 0 or i in posle_kavychki or (i == 1 and slova[0] not in KOROTKIE_SLOVA and len(re.sub(r"[^А-Яа-яЁёA-Za-z]", "", slova[0])) <= 3):
                 out.append("-".join(p[:1] + p[1:].lower() for p in w.split("-")))
             else:
                 out.append(w.lower())
@@ -446,6 +456,20 @@ def vozrast_mes(k, na):
     return (na.year - r.year) * 12 + (na.month - r.month) - (1 if na.day < r.day else 0)
 
 
+def msp_kategoriya(t):
+    """'Малое предприятие (с 10.08.2016)' → 'малое предприятие'; без слова «предприятие» — '' (категорию не угадываем)."""
+    t = str(t or "")
+    if re.search(r"не\s+(входит|состоит|являет)|исключен", t, re.I):
+        return ""
+    if re.search(r"микропредприят", t, re.I):
+        return "микропредприятие"
+    if re.search(r"(^|[^а-яё])мал\w*\s+предприят", t, re.I):
+        return "малое предприятие"
+    if re.search(r"(^|[^а-яё])средн\w*\s+предприят", t, re.I):
+        return "среднее предприятие"
+    return ""
+
+
 def vyvody(k):
     out = []
     F = k["fakty"]
@@ -507,6 +531,14 @@ def vyvody(k):
     sn = F.get("snr")
     if sn and sn.get("data") and re.search(r"УСН|упрощ", sn.get("detal", "") + sn.get("zagolovok", ""), re.I):
         out.append(_v("V13", "info", "Применяет упрощённую систему налогообложения", sn["istochnik"], sn["data"], s_chislom=False))
+    # V21 (каталог Данных 26.09): «В реестре МСП: {малое} предприятие» — ⚪, без числа. Только категория, прямо названная
+    # в строке реестра МСП («Микропредприятие / Малое / Среднее предприятие»), и только с датой сведений: заголовок вида
+    # «субъект малого и среднего предпринимательства» категорию не называет — вывода нет (ничего не додумываем).
+    ms = F.get("msp")
+    if ms and ms.get("data") and ms.get("ton") not in ("warn", "bad"):
+        kat = msp_kategoriya(ms.get("detal"))
+        if kat:
+            out.append(_v("V21", "info", "В реестре МСП: %s" % kat, ms["istochnik"] or ISTOCHNIK_PO_KODU["msp"], ms["data"], s_chislom=False))
     # V18 / V19 — после V16: при пределе «2 из одного источника» отметка о недостоверности главнее стажа руководителя
     # V18 / V19 (каталог Данных 26.09): смена руководителя ≤ 6 мес. — 🟡; один руководитель ≥ 3 лет — 🟢. ЕГРЮЛ, без ФИО.
     rs = vozrast_mes({"reg_date": k.get("rukovodit_s")}, na) if k.get("rukovodit_s") and k.get("egrul_data") else None

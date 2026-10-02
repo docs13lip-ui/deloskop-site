@@ -52,6 +52,8 @@
 .ot-btn{display:inline-flex;justify-content:center;align-items:center;text-align:center;font-weight:600;font-size:15px;padding:12px 16px;border-radius:12px;text-decoration:none;min-height:44px}
 .ot-btn.p{background:var(--accent,#0B63E5);color:#fff}.ot-btn.p:hover{background:var(--accent-hover,#084BB0);color:#fff}
 .ot-btn.s{background:rgba(255,255,255,.6);box-shadow:inset 0 0 0 1px var(--line-2);color:var(--ink,#1D1D1F)}.ot-btn.s:hover{box-shadow:inset 0 0 0 1px var(--accent,#0B63E5);color:var(--accent,#0B63E5)}
+/* «Паспорт в один шаг» (js/pasport-cta.js): строка под кнопкой — 13 px серым (ТЗ [Продукт] 02.10, разд. 1.1) */
+.pcta{margin:-2px 0 0;font-size:13px;line-height:1.4;color:var(--ink2,#48484C);text-align:center}.pcta a{color:var(--accent,#0B63E5);white-space:nowrap}
 
 /* тело: основное 8 + справка 4 */
 .ot-body{gap:0 40px;padding:8px 40px 32px}

@@ -203,7 +203,9 @@ ul.list .nm span{color:var(--muted);font-size:13px}
     </section>
 
     <section class="card">
-      <h2>Мои проверки</h2>
+      <h2>Папка проверок</h2>
+      <p class="sub" style="margin:0">Все ваши проверки по компаниям: когда проверяли, какой был итог и досье на ту дату.</p>
+      <div id="papka"></div>
       <ul class="list" id="checks"></ul>
       <p class="empty" id="checksEmpty" hidden>Проверок пока нет. <a href="/">Проверить первую компанию →</a></p>
     </section>
@@ -211,10 +213,12 @@ ul.list .nm span{color:var(--muted);font-size:13px}
 </main>
 
 <script src="/js/nedavnie.js"></script>
+<script src="/js/papka-proverok.js"></script>
 <script>
 (function(){
   var API=(location.hostname.endsWith('deloskop.ru')?'https://api.deloskop.ru':'');
-  var PLANS={free:'Бесплатный',start:'Старт',pro:'Профи',business:'Бизнес',team:'Команда — без лимитов'};
+  // названия — как в tarify/tarify.json (tests/papka_proverok.test.js); business — прежний код тарифа в API
+  var PLANS={free:'Бесплатно',start:'Старт',pro:'Про',biznes:'Бизнес',business:'Бизнес',team:'Команда — без лимитов'};
   var LEVELS={low:'Без серьёзных сигналов',medium:'Есть вопросы',high:'Серьёзные сигналы'};
   var $=function(id){return document.getElementById(id)};
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -258,6 +262,8 @@ ul.list .nm span{color:var(--muted);font-size:13px}
 
   // ---- кабинет ----
   function renderChecks(rows){
+    // «Папка проверок» (js/papka-proverok.js): одна строка на компанию, под ней — все проверки по датам; нет модуля — прежний список
+    if(window.PapkaProverok){try{var g=PapkaProverok.mount($('papka'),rows);$('sChecks').textContent=g.length;$('checksEmpty').hidden=!!g.length;$('checks').innerHTML='';return}catch(e){}}
     $('sChecks').textContent=rows.length;
     $('checksEmpty').hidden=!!rows.length;
     $('checks').innerHTML=rows.map(function(r){

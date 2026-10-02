@@ -198,6 +198,11 @@
     Array.prototype.forEach.call(vd.querySelectorAll('[data-cel]'), function (a) {
       a.addEventListener('click', function () { try { if (window.dlkGoal) dlkGoal(a.getAttribute('data-cel')); } catch (e) {} });
     });
+    // «Паспорт 490 ₽ в один шаг»: кнопка Паспорта по состояниям из tarify.json (js/pasport-cta.js); нет модуля — как было
+    var pa = vd.querySelector('[data-cel="otchet_pasport"]');
+    if (pa && doc.defaultView && doc.defaultView.PasportCta) {
+      try { doc.defaultView.PasportCta.mount(pa, { inn: r.company.inn, mesto: 'list', api: o.api || '' }); } catch (e) { /* кнопка остаётся как была */ }
+    }
     if (doc.body) doc.body.classList.add('rezhim-otcheta');
     return true;
   }

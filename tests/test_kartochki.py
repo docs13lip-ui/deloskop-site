@@ -683,6 +683,51 @@ class TestIzApiLimit(unittest.TestCase):
         self.assertEqual(K.MAKS_ZAPROSOV, 300)
 
 
+class TestSluzhebnyjDostup(unittest.TestCase):
+    """kartochki-servis-v1: DELOSKOP_SERVICE_TOKEN → заголовок X-Deloskop-Service (решение владельца 02.10, п. 4);
+    токен не печатается и не попадает в файл ответов; лимиты (429 — стоп, 300 за запуск) те же."""
+
+    TOKEN = "s" * 40
+
+    def test_zagolovki(self):
+        self.assertEqual(K.zagolovki_dostupa({}), {})
+        self.assertEqual(K.zagolovki_dostupa({"DELOSKOP_SERVICE_TOKEN": "  "}), {})
+        self.assertEqual(K.zagolovki_dostupa({"DELOSKOP_SERVICE_TOKEN": " %s\n" % self.TOKEN}), {"X-Deloskop-Service": self.TOKEN})
+        self.assertEqual(K.zagolovki_dostupa({"DELOSKOP_COOKIE": "deloskop_service=x"}), {"Cookie": "deloskop_service=x"})
+
+    def test_zapros_s_tokenom_bez_utechki(self):
+        import contextlib
+        import io
+        videl = []
+
+        def urlopen(req, timeout=0):
+            videl.append(req.get_header("X-deloskop-service"))
+            return io.BytesIO(json.dumps({"company": {"inn": req.full_url[-10:]}}).encode())
+
+        d = tempfile.mkdtemp()
+        st_u, st_s = K.urllib.request.urlopen, K.time.sleep
+        st_env = os.environ.get("DELOSKOP_SERVICE_TOKEN")
+        try:
+            sp, vy = os.path.join(d, "s.txt"), os.path.join(d, "o.jsonl")
+            open(sp, "w").write("7736050003\n7707083893\n")
+            os.environ["DELOSKOP_SERVICE_TOKEN"] = self.TOKEN
+            K.urllib.request.urlopen, K.time.sleep = urlopen, lambda x: None
+            vyvod = io.StringIO()
+            with contextlib.redirect_stdout(vyvod):
+                K.iz_api(sp, vy)
+            self.assertEqual(videl, [self.TOKEN, self.TOKEN])
+            self.assertIn("Служебный доступ: да", vyvod.getvalue())
+            self.assertNotIn(self.TOKEN, vyvod.getvalue())
+            self.assertNotIn(self.TOKEN, open(vy, encoding="utf-8").read())
+        finally:
+            K.urllib.request.urlopen, K.time.sleep = st_u, st_s
+            if st_env is None:
+                os.environ.pop("DELOSKOP_SERVICE_TOKEN", None)
+            else:
+                os.environ["DELOSKOP_SERVICE_TOKEN"] = st_env
+            shutil.rmtree(d)
+
+
 class TestKartochkiV4Kod(unittest.TestCase):
     """kartochki-v4-kod: имя после внутренней кавычки и V21 «В реестре МСП» из строки ответа API (ворота не тронуты)."""
 

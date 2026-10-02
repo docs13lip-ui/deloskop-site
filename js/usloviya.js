@@ -308,7 +308,7 @@
     if (t === 'post') return 'Платите после поставки или акта. Нужна предоплата — через аккредитив или под гарантию возврата аванса.';
     if (malo) return 'Нужна предоплата — через аккредитив или под гарантию возврата аванса.';
     if (t === 'cap') return 'Больше предела — частями по этапам, аккредитивом или под гарантию возврата аванса.';
-    return 'Сохраните досье: это ваше доказательство должной осмотрительности.';
+    return 'Сохраните досье с датой проверки — оно может стать частью доказательств должной осмотрительности.';
   }
 
   // ---------- деньги на кону (ст. 54.1 НК) ----------
@@ -447,6 +447,14 @@
   }
   function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (_) { return null; } }
 
+  // Пояснение под выводом из r.verdict — без повтора самого вывода: «Работать можно. Серьёзных…» под «Работать можно» → «Серьёзных…».
+  function bezPovtora(verdict, zag) {
+    var t = String(verdict == null ? '' : verdict).replace(/^Вывод:\s*/i, '').trim();
+    var h = String(zag || '').trim();
+    if (h && t.toLowerCase().indexOf(h.toLowerCase()) === 0) t = t.slice(h.length).replace(/^[\s.,:;!—–-]+/, '');
+    return t.replace(/[.\s]+$/, '');
+  }
+
   // mount(el, r, {compact, open}) — рисует карточку в el, возвращает объект с методом update().
   function mount(el, r, o) {
     o = o || {};
@@ -461,7 +469,7 @@
     function draw(keepFocus) {
       var v = decide(r, st), f = v.facts;
       box.className = 'usl ' + v.tone;
-      var why = v.reasons.length ? v.reasons.join(', ') : (r && r.verdict ? String(r.verdict).replace(/^Вывод:\s*/i, '').replace(/[.\s]+$/, '') : ''); // точку ставит строка ниже — без «найдено..»
+      var why = v.reasons.length ? v.reasons.join(', ') : bezPovtora(r && r.verdict, v.headline); // точку ставит строка ниже — без «найдено..»
       var stake = '';
       if (v.stake) {
         stake = v.stake.zero
@@ -516,7 +524,7 @@
   return {
     decide: decide, mount: mount, facts: facts, tone: tone, prepayCap: prepayCap, atStake: atStake,
     docs: docs, letter: letter, parseAmount: parseAmount, money: money, moneyKrupno: moneyKrupno, niceFloor: niceFloor, kindOf: kindOf,
-    neProvereno: neProvereno, kakPoschitali: kakPoschitali, STATYA: STATYA, FORMULA: FORMULA,
+    neProvereno: neProvereno, kakPoschitali: kakPoschitali, bezPovtora: bezPovtora, STATYA: STATYA, FORMULA: FORMULA,
     METODIKA: { DELITEL: DELITEL, POTOLKI: POTOLKI, OSTOROZHNO: OSTOROZHNO, MINIMUM: MINIMUM },
     RATES: { VAT: VAT, PROFIT: PROFIT, USN_DR: USN_DR }
   };

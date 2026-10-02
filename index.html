@@ -364,23 +364,28 @@ footer a{color:var(--ink2)}
         <p class="doverie-str">У&nbsp;каждого факта&nbsp;— источник и&nbsp;дата. Чего не&nbsp;проверили, так и&nbsp;пишем. <a href="#doverie">Откуда данные&nbsp;→</a></p>
       </div>
 
-      <div class="report" aria-label="Пример отчёта">
-        <div class="report-head">
-          <div>
-            <div class="tag">Пример отчёта</div>
-            <div class="company">ООО «Пример»</div>
-            <div class="sub">ИНН 0000000000 · действующая</div>
+      <div class="pf" id="portfel" role="region" aria-labelledby="pf-h" hidden></div>
+      <div class="report ex" aria-label="Пример отчёта о проверке">
+        <header class="ex-hd">
+          <div class="tag">Пример отчёта · компания вымышленная</div>
+          <div class="company">ООО «Пример»</div>
+          <div class="sub n">ИНН 0000000000 · действующая</div>
+        </header>
+        <div class="ex-vd ex-vd--ok" role="group" aria-label="Вывод">
+          <div class="ex-ix">
+            <div class="ex-ix__lab">Уровень риска</div>
+            <div class="pill"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5L6.5 11.5L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Без серьёзных сигналов</div>
+            <div class="ex-ix__pod">по признакам из реестров</div>
           </div>
-          <div class="pill"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5L6.5 11.5L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Низкий риск</div>
+          <div class="ex-vt"><div class="verdict" data-usl-demo>Можно, предоплата — до&nbsp;1&nbsp;500&nbsp;000&nbsp;₽. Руководитель сменился недавно: перед оплатой запросите решение о&nbsp;его назначении.</div></div>
         </div>
-        <div class="rows">
-          <div class="row"><span>Недостоверные сведения в ЕГРЮЛ</span><b class="ok">Нет</b></div>
-          <div class="row"><span>Прогноз зоны ЗСК · наша оценка</span><b class="ok">Зелёная</b></div>
-          <div class="row row--m"><span>Задолженность по налогам</span><b class="ok">Нет</b></div>
-          <div class="row"><span>Руководитель сменился недавно</span><b class="warn">Внимание</b></div>
-          <div class="row row--m"><span>Налоговая нагрузка</span><b class="neutral">На уровне отрасли</b></div>
+        <div class="ex-f">
+          <div class="ex-f__h"><b>Существенные факты</b><span>у&nbsp;каждого&nbsp;— источник и&nbsp;дата</span></div>
+          <div class="row ex-r"><span>Руководитель<small>ЕГРЮЛ · на&nbsp;дату проверки</small></span><b class="d warn">Сменился 4&nbsp;месяца назад</b></div>
+          <div class="row ex-r"><span>Отметки о&nbsp;недостоверности<small>ЕГРЮЛ · на&nbsp;дату проверки</small></span><b class="d ok">Нет</b></div>
+          <div class="row ex-r"><span>Долги по&nbsp;налогам<small>ФНС, открытые данные · на&nbsp;дату набора</small></span><b class="d ok">Нет в&nbsp;списке ФНС</b></div>
         </div>
-        <div class="verdict" data-usl-demo>Можно, предоплата — до 1 500 000 ₽. Руководитель сменился недавно: перед оплатой запросите решение о его назначении.</div>
+        <p class="ex-pod">В&nbsp;отчёте ещё: до&nbsp;7 существенных фактов, динамика за&nbsp;3–5&nbsp;лет, что изменилось с&nbsp;прошлой проверки и&nbsp;откуда данные.</p>
       </div>
     </div>
   </section>
@@ -551,8 +556,10 @@ footer a{color:var(--ink2)}
 <script src="/js/dinamika.js" defer></script>
 <script src="/js/terminy.js" defer></script>
 <script src="/js/pasport-cta.js" defer></script>
+<script src="/js/pasport-oplata.js" defer></script>
 <script src="/js/otchet.js" defer></script>
 <script src="/js/nedavnie.js" defer></script>
+<script src="/js/portfel.js" defer></script>
 <script src="/js/inn.js"></script>
 <script>
 (function(){
@@ -575,6 +582,10 @@ footer a{color:var(--ink2)}
   });
 
   // ---- пример «Условий сделки» на вымышленной компании ----
+  // «Ваши контрагенты» — прошлые проверки из этого браузера на месте примера (js/portfel.js); снимков нет — остаётся пример
+  document.addEventListener('DOMContentLoaded',function(){
+    if(window.Portfel){try{Portfel.mount(document.getElementById('portfel'),{form:form,input:input})}catch(e){}}
+  });
   document.addEventListener('DOMContentLoaded',function(){
     var ex=document.querySelector('[data-usl-demo]');
     if(!ex||!window.Usloviya)return;
@@ -602,6 +613,8 @@ footer a{color:var(--ink2)}
     if(r.zsk){var zc=r.zsk.level==='high'?'bad':r.zsk.level==='medium'?'warn':'ok';
       rows+='<div class="row"><span>Прогноз ЗСК · наша оценка, не статус Банка России <a href="'+esc(r.zsk.cbr_url)+'" target="_blank" rel="noopener" style="font-size:13px">проверить в ЦБ</a></span><b class="d '+zc+'">'+esc(r.zsk.title)+'</b></div>';}
     var d=new Date(r.checked_at||Date.now());
+    report.classList.remove('ex');
+    if(window.Portfel)Portfel.skryt();
     report.setAttribute('aria-label','Отчёт о проверке');
     report.innerHTML='<div class="report-head"><div><div class="tag">'+(svoj?(String(c.inn||'').length===12?'Ваш бизнес':'Ваша компания')+' глазами банка и налоговой · на ':'Проверка на ')+d.toLocaleDateString('ru-RU')+'</div>'+
       '<div class="company">'+esc(name)+'</div><div class="sub">'+sub+'</div></div>'+

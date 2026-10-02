@@ -209,6 +209,8 @@ def razovye_html(D):
         if not p or not p.get('cena_rub'):
             continue
         per = 'в год' if p.get('srok') == 'god' else 'разово'
+        if p.get('srok_mes'):
+            per += f', действуют {p["srok_mes"]}{NB}месяцев'
         v_tarife = f' <span class="raz__v">В «{html.escape(next(t["nazvanie"] for t in D["tarify"] if t["id"] == p["v_tarife"]))}» — бесплатно</span>' if p.get('v_tarife') else ''
         kart.append(f'''<div class="raz" id="r-{k}">
   <div class="raz__n">{html.escape(p['nazvanie'])}</div>
@@ -231,6 +233,7 @@ def razovye_html(D):
     return ('<h2 class="big" id="razovo">Разовые покупки</h2>\n'
             '<p class="lid">Когда подписка не нужна: одна компания перед крупной сделкой или Паспорт своей компании для банка и заказчиков.</p>\n'
             '<div class="razovye">\n' + '\n'.join(kart) + '\n</div>\n'
+            + f'<p class="pod">Условия разовых покупок — <a href="/oferta/#razovye">оферта, п.{NB}3.7</a>; возврат — <a href="/vozvrat/#razovye">«Возврат денег»</a>.</p>\n'
             + (f'<p class="pod">Скоро — подписки-дополнения:</p><ul class="skoro-spisok">{"".join(skoro)}</ul>\n' if skoro else ''))
 
 
@@ -422,6 +425,18 @@ for _f in ('skoraya-115-fz/index.html', 'oferta/index.html', 'osnovatel/index.ht
         _t2 = _re3.sub(r'(<span[^>]* data-cena="' + _k + r'">)[^<]*(</span>)', lambda m, _c=_c: m.group(1) + f'{_c:,}'.replace(',', NB) + m.group(2), _t2)
     if _t2 != _t:
         open(_sk, 'w', encoding='utf-8').write(_t2)
+
+# Цена одной проверки пакета на /vozvrat/ (<span data-cena-shtuka="<ключ>">): cena_rub / shtuk, вниз до рубля (oferta-razovye-v1, 02.10.2026).
+_vz = os.path.join(ROOT, 'vozvrat/index.html')
+if os.path.exists(_vz):
+    _t = open(_vz, encoding='utf-8').read()
+    _t2 = _t
+    for _k, _v in _RAZOVYE.items():
+        if _v.get('shtuk'):
+            _c = _v['cena_rub'] // _v['shtuk']
+            _t2 = _re3.sub(r'(<span data-cena-shtuka="' + _k + r'">)[^<]*(</span>)', lambda m, _c=_c: m.group(1) + f'{_c:,}'.replace(',', NB) + m.group(2), _t2)
+    if _t2 != _t:
+        open(_vz, 'w', encoding='utf-8').write(_t2)
 
 # Цены тарифов в тексте других страниц: <span data-cena="pro.god"> / "pro.mesyac" (например, «Обычный год «Про»» на /osnovatel/)
 _TAR = {x['id']: x for x in D['tarify']}

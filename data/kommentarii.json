@@ -1,0 +1,799 @@
+{
+ "_kak": "Библиотека «Комментарий команды Делоскопа» (решения владельца 02.10). Хозяин текстов — [Право]; хозяин списка и порядка — [Продукт · Данные]. Один сигнал — одна запись. id — постоянный. re — регулярное выражение по заголовку строки светофора /api/check (без учёта регистра, первое совпадение сверху; одинаково работает в JS и Python — без \\b). Тон: zel — строка «Норма», zhel — «Внимание», kras — «Риск». В тоне три фразы: bank — что видит банк (115-ФЗ, ЗСК), nalog — что видит налоговая (ст. 54.1 НК, критерии ММ-3-06/333@), sdelat — что сделать до оплаты; вместе не больше 300 знаков. На сайте показываются ТОЛЬКО тоны со status «utverzhdeno» и заполненными proveril (роль, без ФИО) и data_proverki (ГГГГ-ММ-ДД). Остальное — черновик, на сайте не видно. Запрещённые слова (стаж числом, превосходная степень, оценочные ярлыки, упоминание ИИ) — список ZAPRET в tests/kommentarii.test.js и словарь tests/slovar_222.test.js. Тест: node --test tests/kommentarii.test.js.",
+ "podpis": "Команда Делоскопа · 115-ФЗ и налоги",
+ "versiya": "2026-10-02",
+ "signaly": [
+  {
+   "id": "stoplisty",
+   "poryadok": 1,
+   "nazv": "Стоп-листы: перечни Росфинмониторинга, список Банка России, санкции",
+   "re": "перечн|росфинмониторинг|экстремист|террор|санкц|стоп-лист|нелегальн",
+   "norma": "115-ФЗ",
+   "tony": {
+    "zel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "zhel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "kras": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   }
+  },
+  {
+   "id": "blokirovka",
+   "poryadok": 2,
+   "nazv": "Приостановление операций по счетам",
+   "re": "приостановл|блокировк",
+   "norma": "ст. 76 НК РФ",
+   "tony": {
+    "zel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "zhel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "kras": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   }
+  },
+  {
+   "id": "nedostovernost",
+   "poryadok": 3,
+   "nazv": "Отметка о недостоверности в ЕГРЮЛ",
+   "re": "недостоверн",
+   "norma": "п. 4.2 ст. 9, ст. 21.1 129-ФЗ",
+   "tony": {
+    "zel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "zhel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "kras": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   }
+  },
+  {
+   "id": "massovyj",
+   "poryadok": 4,
+   "nazv": "Массовый адрес или массовый руководитель",
+   "re": "массов",
+   "norma": "ст. 54.1 НК РФ; ЗСК",
+   "tony": {
+    "zel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "zhel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "kras": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   }
+  },
+  {
+   "id": "adres",
+   "poryadok": 5,
+   "nazv": "Адрес регистрации",
+   "re": "^адрес",
+   "norma": "ст. 54 ГК РФ; 129-ФЗ",
+   "tony": {
+    "zel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "zhel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "kras": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   }
+  },
+  {
+   "id": "diskval",
+   "poryadok": 6,
+   "nazv": "Дисквалификация руководителя",
+   "re": "дисквалиф",
+   "norma": "ст. 3.11 КоАП РФ",
+   "tony": {
+    "zel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "zhel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "kras": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   }
+  },
+  {
+   "id": "bankrotstvo",
+   "poryadok": 7,
+   "nazv": "Банкротство",
+   "re": "банкрот",
+   "norma": "127-ФЗ",
+   "tony": {
+    "zel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "zhel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "kras": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   }
+  },
+  {
+   "id": "likvidaciya",
+   "poryadok": 8,
+   "nazv": "Ликвидация, реорганизация, исключение из ЕГРЮЛ",
+   "re": "ликвидац|реорганиз|исключен|^статус",
+   "norma": "ст. 21.1 129-ФЗ",
+   "tony": {
+    "zel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "zhel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "kras": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   }
+  },
+  {
+   "id": "rnp",
+   "poryadok": 9,
+   "nazv": "Реестр недобросовестных поставщиков",
+   "re": "недобросовестн|(^|[^а-яё])рнп([^а-яё]|$)",
+   "norma": "44-ФЗ, 223-ФЗ",
+   "tony": {
+    "zel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "zhel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "kras": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   }
+  },
+  {
+   "id": "fssp",
+   "poryadok": 10,
+   "nazv": "Исполнительные производства (ФССП)",
+   "re": "пристав|фссп|исполнительн",
+   "norma": "229-ФЗ",
+   "tony": {
+    "zel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "zhel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "kras": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   }
+  },
+  {
+   "id": "nedoimka",
+   "poryadok": 11,
+   "nazv": "Долг по налогам и взносам",
+   "re": "недоимк|задолженн|долг.{0,20}(налог|бюджет|взнос)",
+   "norma": "ст. 46–47, 76 НК РФ",
+   "tony": {
+    "zel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "zhel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "kras": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   }
+  },
+  {
+   "id": "shtrafy",
+   "poryadok": 12,
+   "nazv": "Налоговые правонарушения и штрафы",
+   "re": "правонаруш|штраф",
+   "norma": "НК РФ",
+   "tony": {
+    "zel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "zhel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "kras": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   }
+  },
+  {
+   "id": "arbitrazh",
+   "poryadok": 13,
+   "nazv": "Арбитражные суды",
+   "re": "арбитраж|судебн|(^|[^а-яё])суд([^а-яё]|$)|(^|[^а-яё])иск(и|ов|ам)?([^а-яё]|$)",
+   "norma": "АПК РФ",
+   "tony": {
+    "zel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "zhel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "kras": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   }
+  },
+  {
+   "id": "smena_rukovoditelya",
+   "poryadok": 14,
+   "nazv": "Смена руководителя или учредителя",
+   "re": "смен.{0,20}(руковод|директор|учредит)",
+   "norma": "5348-У; 115-ФЗ",
+   "tony": {
+    "zel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "zhel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "kras": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   }
+  },
+  {
+   "id": "rukovodstvo",
+   "poryadok": 15,
+   "nazv": "Руководитель и собственники",
+   "re": "руковод|директор|учредит|собственник",
+   "norma": "5348-У; 115-ФЗ",
+   "tony": {
+    "zel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "zhel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "kras": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   }
+  },
+  {
+   "id": "vozrast",
+   "poryadok": 16,
+   "nazv": "Возраст компании",
+   "re": "возраст|зарегистрир",
+   "norma": "5348-У",
+   "tony": {
+    "zel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "zhel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "kras": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   }
+  },
+  {
+   "id": "nagruzka",
+   "poryadok": 17,
+   "nazv": "Налоговая нагрузка против отрасли",
+   "re": "нагрузк",
+   "norma": "приказ ФНС № ММ-3-06/333@",
+   "tony": {
+    "zel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "zhel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "kras": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   }
+  },
+  {
+   "id": "nalogi",
+   "poryadok": 18,
+   "nazv": "Уплаченные налоги и взносы",
+   "re": "уплач|налоги и взносы",
+   "norma": "ст. 54.1 НК РФ",
+   "tony": {
+    "zel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "zhel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "kras": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   }
+  },
+  {
+   "id": "shtat",
+   "poryadok": 19,
+   "nazv": "Численность сотрудников",
+   "re": "численност|сотрудник|штат",
+   "norma": "ст. 54.1 НК РФ",
+   "tony": {
+    "zel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "zhel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "kras": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   }
+  },
+  {
+   "id": "otchetnost",
+   "poryadok": 20,
+   "nazv": "Бухгалтерская отчётность, доходы и расходы",
+   "re": "отч[её]тност|бухгалтер|доходы и расходы|выручк",
+   "norma": "402-ФЗ",
+   "tony": {
+    "zel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "zhel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "kras": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   }
+  },
+  {
+   "id": "okved",
+   "poryadok": 21,
+   "nazv": "Виды деятельности (ОКВЭД)",
+   "re": "окв[эе]д|вид.{0,10}деятельност",
+   "norma": "5348-У",
+   "tony": {
+    "zel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "zhel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "kras": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   }
+  },
+  {
+   "id": "licenzii",
+   "poryadok": 22,
+   "nazv": "Лицензии и допуски",
+   "re": "лиценз|(^|[^а-яё])сро([^а-яё]|$)",
+   "norma": "99-ФЗ",
+   "tony": {
+    "zel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "zhel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "kras": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   }
+  },
+  {
+   "id": "rezhim",
+   "poryadok": 23,
+   "nazv": "Налоговый режим",
+   "re": "спецрежим|упрощ|усн|есхн|налоговый режим",
+   "norma": "гл. 26.2 НК РФ",
+   "tony": {
+    "zel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "zhel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "kras": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   }
+  },
+  {
+   "id": "msp",
+   "poryadok": 24,
+   "nazv": "Реестр МСП",
+   "re": "(^|[^а-яё])мсп([^а-яё]|$)|малого и среднего",
+   "norma": "209-ФЗ",
+   "tony": {
+    "zel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "zhel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "kras": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   }
+  }
+ ]
+}

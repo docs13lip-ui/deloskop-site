@@ -139,6 +139,14 @@ class TestStranica(unittest.TestCase):
             k = K.iz_check(O.zapis(1, indeks=plohoe))
             self.assertEqual(K.indeks_vid(k)["rezhim"], "schitaem", plohoe)
 
+    def test_zony_indeksa_222(self):
+        # [Право] 02.10 12:30 разд. 4: зоны карточки = уровни методики; без «надёжн/опасн/высокий риск» (222-ФЗ)
+        m = json.loads((KOREN / "indeks" / "metodika-v1.json").read_text(encoding="utf-8"))
+        zony = [K.indeks_vid(K.iz_check(O.zapis(1, indeks={"ball": b, "polnota": 90})))["zona"] for b in (80, 60, 40, 10)]
+        self.assertEqual(zony, [u["nazvanie"] for u in m["urovni"]])
+        for z in zony:
+            self.assertNotRegex(z, r"(?i)над[её]жн|опасн|высокий риск")
+
     def test_istochnik_i_data_u_kazhdogo_vyvoda(self):
         for k in self.kart:
             self.assertGreaterEqual(len(k["_V"]), 3)

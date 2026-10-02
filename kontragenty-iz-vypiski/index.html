@@ -324,7 +324,7 @@ function render(){
 }
 function fact(v,k){return '<div class="fact"><b>'+v+'</b><span>'+k+'</span></div>'}
 
-var LVL={high:['high','высокий риск'],medium:['medium','есть вопросы'],low:['low','надёжен']};
+var LVL={high:['high','серьёзные сигналы'],medium:['medium','есть вопросы'],low:['low','сигналов мало']};
 function supCard(s){
   var rm=state.remote&&s.inn?state.remote[s.inn]:null, lvl=state.risk&&s.inn?state.risk[s.inn]:null;
   var badge=lvl&&LVL[lvl]?'<span class="badge '+LVL[lvl][0]+'">'+LVL[lvl][1]+'</span>':(state.risk&&s.inn&&s.innValid&&state.locked?'<span class="badge lock">в подписке</span>':'');

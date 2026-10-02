@@ -160,6 +160,35 @@ test("страница: модуль подключён до движка, ко�
 
 test("страница: удалённые причины API (без кода) комментария не получают — тон у них не известен", () => {
   assert.strictEqual(K.vypiskaHtml(spravS("key", "warn", utv({ bank: "a", sdelat: "b" })), undefined), "");
-  assert.ok(/function kom\(code\)\{return K&&state\.kom&&code\?K\.vypiskaHtml\(state\.kom,code\):''\}/.test(STR));
+  assert.ok(/function kom\(code\)\{return K&&state\.kom&&code\?K\.vypiskaHtml\(state\.kom,code,klient\(\)\):''\}/.test(STR));
   assert.ok(/rr\.map\(function\(x\)\{return '<div class="sig '\+x\.level\+'">'\+esc\(x\.text\)\+'<\/div>'\}\)/.test(STR), "причины API — без kom()");
+});
+
+test("vypiska persons: строка о чеке самозанятого — только клиенту-организации ([Право · Налоговый юрист] 02.10 23:20)", () => {
+  const z = SPRAV.vypiska.zapisi.find((x) => x.kod === "persons");
+  const o = z.ton.dlya_organizacii;
+  assert.strictEqual(o.tekst, "Платите самозанятому — берите чек из «Мой налог» на каждую оплату. Без чека компания не учтёт расход по налогу на прибыль (ч. 8 ст. 15 422-ФЗ).");
+  assert.strictEqual(o.norma, "ч. 8 ст. 15 422-ФЗ");
+  assert.ok(o.tekst.length <= K.MAKS && !ZAPRET.test(o.tekst) && !/ /.test(o.tekst));
+  const org = K.vypiska(SPRAV, "persons", "org");
+  assert.strictEqual(org.org, o.tekst);
+  assert.strictEqual(org.norma, "п. 1 ст. 226 НК РФ; ч. 8 ст. 15 422-ФЗ");
+  const h = K.vypiskaHtml(SPRAV, "persons", "org");
+  assert.ok(/Компании:<\/span> Платите самозанятому/.test(h));
+  assert.ok(/226 НК РФ; ч\. 8 ст\. 15 422-ФЗ · нормы сверены 02\.10\.2026/.test(h));
+  // ◐ для ИП норма не сверена — ни строки, ни ссылки; неизвестный ИНН — тоже молчим
+  for (const kl of ["ip", "", undefined]) {
+    const k = K.vypiska(SPRAV, "persons", kl);
+    assert.strictEqual(k.org, "", String(kl));
+    assert.strictEqual(k.norma, "п. 1 ст. 226 НК РФ", String(kl));
+    assert.ok(!/422-ФЗ|Компании:/.test(K.vypiskaHtml(SPRAV, "persons", kl)), String(kl));
+  }
+  // у других кодов строки нет и для организации
+  assert.strictEqual(K.vypiska(SPRAV, "self", "org").org, "");
+  // без роли или даты строка не выходит
+  const S = spravS("persons", "warn", utv({ bank: "a", sdelat: "b", dlya_organizacii: { tekst: "x", norma: "n" } }));
+  assert.strictEqual(K.vypiska(S, "persons", "org").org, "");
+  // страница передаёт тип клиента по ИНН выписки
+  assert.ok(/i\.length===10\?'org':i\.length===12\?'ip':''/.test(STR));
+  assert.ok(/K\.vypiskaHtml\(state\.kom,code,klient\(\)\)/.test(STR));
 });

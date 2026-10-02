@@ -615,6 +615,8 @@ footer a{color:var(--ink2)}
     // «Только существенные факты» (≤ 7, источник и дата) + свёрнутая «Все данные из реестров» — js/sushchestvennoe.js; нет модуля — строки светофора как были
     if(!svoj&&window.Sushchestvennoe){try{Sushchestvennoe.mount(report.querySelector('.rows'),r)}catch(e){}}
     if(svoj&&ub){ub.className='';ub.removeAttribute('data-usl');try{shR=Shchit.mount(ub,r)}catch(e){ub.className='verdict';ub.textContent=r.verdict||''}}
+    // Щит: строки светофора не повторяют разбор — свёрнуты в «Все данные из реестров» после него (js/sushchestvennoe.js)
+    if(svoj&&shR&&window.Sushchestvennoe){try{Sushchestvennoe.mountSvoj(report.querySelector('.rows'),r,ub)}catch(e){}}
     else if(window.Usloviya&&ub){ub.className='';ub.removeAttribute('data-usl');try{Usloviya.mount(ub,r)}catch(e){ub.className='verdict';ub.textContent=r.verdict||''}}
     // подсказки к терминам (ЗСК, 54.1 НК, недостоверность…) — определения дословно из статей сайта, js/terminy.js
     if(window.Terminy)Terminy.mount(report);

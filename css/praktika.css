@@ -80,3 +80,12 @@ body{margin:0;background:#F5F5F2;-webkit-font-smoothing:antialiased}
 @media (max-width:420px){.pr .razd a{padding:0 12px}}
 @media (prefers-reduced-motion:reduce){.pr .pk{transition:none}}
 @media print{.pr .dl,.pr .razd{display:none}.pr .delo,.pr .kon{box-shadow:none;border:1px solid #ccc}}
+/* «Частые вопросы» разбора ([Ночные запуски] 02.10, faq-praktika-v1): линии, как «Где в законе», без плашек; плюс поворачивается в крестик */
+.pr .faq details{border-top:1px solid var(--line);padding:0}
+.pr .faq details:last-child{border-bottom:1px solid var(--line)}
+.pr .faq summary{list-style:none;display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:14px 0;cursor:pointer;font-weight:600;color:var(--ink)}
+.pr .faq summary::-webkit-details-marker{display:none}
+.pr .faq summary::after{content:"+";flex:none;color:var(--muted);font-weight:400;font-size:24px;line-height:1;transition:transform .2s}
+.pr .faq details[open] summary::after{transform:rotate(45deg)}
+.pr .faq details p{margin:0 0 16px;color:var(--ink-2);font-size:16px}
+@media (prefers-reduced-motion:reduce){.pr .faq summary::after{transition:none}}

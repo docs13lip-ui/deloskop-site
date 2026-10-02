@@ -16,7 +16,11 @@
   var POKAZATELI = [
     { k: 'revenue', nazv: 'Выручка', dengi: true },
     { k: 'profit', nazv: 'Чистая прибыль', dengi: true, znak: true },
-    { k: 'income_tax', nazv: 'Налог на прибыль', dengi: true }
+    { k: 'income_tax', nazv: 'Налог на прибыль', dengi: true },
+    // ряды наборов ФНС по годам (ответ [Продукт · Данные] 02.10: charts.staff — sshr, charts.taxes_paid — paytax, со взносами);
+    // пока API их не отдаёт или лет меньше трёх — строки нет
+    { k: 'taxes_paid', nazv: 'Уплачено налогов и взносов', dengi: true, fns: true },
+    { k: 'staff', nazv: 'Численность', chel: true, fns: true }
   ];
   var LVL = { low: 'низкий', medium: 'средний', high: 'высокий' };
   var STX = { ok: 'норма', info: 'справочно', warn: 'внимание', bad: 'риск' };
@@ -37,6 +41,11 @@
     if (a >= 1e6) return s + chislo(a / 1e6, 1) + NB + 'млн' + NB + '₽';
     if (a >= 1e3) return s + Math.round(a / 1e3) + NB + 'тыс.' + NB + '₽';
     return s + Math.round(a) + NB + '₽';
+  }
+  function chel(v) {
+    if (v == null || !isFinite(v)) return '—';
+    var n = Math.round(v), t = String(Math.abs(n)).replace(/\B(?=(\d{3})+(?!\d))/g, NB);
+    return (n < 0 ? '−' : '') + t + NB + 'чел.';
   }
   function procent(p) {
     var r = Math.round(p);
@@ -59,16 +68,17 @@
   function ryady(r) {
     var ch = (r && r.dossier && r.dossier.charts) || {};
     return POKAZATELI.map(function (p) {
-      return { k: p.k, nazv: p.nazv, znak: !!p.znak, ryad: ryad(ch[p.k]) };
+      return { k: p.k, nazv: p.nazv, znak: !!p.znak, chel: !!p.chel, fns: !!p.fns, ryad: ryad(ch[p.k]) };
     }).filter(function (p) { return p.ryad.length >= 3; });
   }
 
   // Одна строка: значение последнего года, изменение к прошлому году и за период — простыми словами.
   function stroka(p) {
     var a = p.ryad, n = a.length, posl = a[n - 1], pred = a[n - 2], perv = a[0];
-    var o = { k: p.k, nazv: p.nazv, god: posl.year, znach: posl.value, ryad: a, kGodu: '', zaPeriod: '', ton: 'ro' };
+    var o = { k: p.k, nazv: p.nazv, god: posl.year, znach: posl.value, ryad: a, kGodu: '', zaPeriod: '', ton: 'ro', fns: !!p.fns };
+    o.fmt = p.chel ? chel : dengi;
     if (p.znak && posl.value < 0) o.znachTekst = 'убыток ' + dengi(-posl.value);
-    else o.znachTekst = dengi(posl.value);
+    else o.znachTekst = o.fmt(posl.value);
     if (p.znak && (pred.value < 0) !== (posl.value < 0)) {
       o.kGodu = posl.value < 0 ? 'в ' + pred.year + NB + '— прибыль' : 'в ' + pred.year + NB + '— убыток';
       o.ton = posl.value < 0 ? 'vniz' : 'vverh';
@@ -110,38 +120,56 @@
     return out.slice(0, 2);
   }
 
-  // Маленькие столбики (визуальная подсказка; числа — в тексте рядом).
-  function stolbiki(a) {
-    var W = 64, H = 24, mx = 0, mn = 0;
+  // Спарклайн (макет [Арт-директора] 02.10, токены v1.1): линия 96 × 20, 1,5 px, без осей и точек.
+  // Только визуальная подсказка — числа стоят рядом в таблице. Ряд с убытком — нулевая черта пунктиром.
+  function sparklajn(a) {
+    var W = 96, H = 20, P = 2, mx = -Infinity, mn = Infinity;
     a.forEach(function (x) { mx = Math.max(mx, x.value); mn = Math.min(mn, x.value); });
-    var span = (mx - mn) || 1, nol = H * mx / span, bw = W / a.length;
-    var g = a.map(function (x, i) {
-      var h = Math.max(1, Math.abs(x.value) / span * H), y = x.value >= 0 ? nol - h : nol;
-      return '<rect x="' + (i * bw + 1.5).toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + (bw - 3).toFixed(1) + '" height="' + h.toFixed(1) + '" rx="1.5"' +
-        (x.value < 0 ? ' class="din__neg"' : i === a.length - 1 ? ' class="din__last"' : '') + '/>';
-    }).join('');
-    return '<svg class="din__sv" viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" aria-hidden="true">' + g + '</svg>';
+    var span = (mx - mn) || 1, n = a.length;
+    function y(v) { return mx === mn ? H / 2 : P + (mx - v) / span * (H - 2 * P); }
+    var pts = a.map(function (x, i) { return (n > 1 ? i * W / (n - 1) : W / 2).toFixed(1) + ',' + y(x.value).toFixed(1); }).join(' ');
+    var nol = mn < 0 && mx > 0 ? '<line x1="0" x2="' + W + '" y1="' + y(0).toFixed(1) + '" y2="' + y(0).toFixed(1) + '" class="din__0"/>' : '';
+    return '<svg class="din__sv" viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" aria-hidden="true" focusable="false">' + nol +
+      '<polyline points="' + pts + '"/></svg>';
+  }
+
+  // Значение строки за год (для колонок таблицы); убыток — словом, чтобы не путать минус с тире.
+  function zaGod(s, g) {
+    var x = s.ryad.filter(function (q) { return q.year === g; })[0];
+    if (!x) return '<span class="din__na">нет данных</span>';
+    if (s.k === 'profit' && x.value < 0) return 'убыток ' + dengi(-x.value);
+    return s.fmt(x.value);
   }
 
   var STRELKA = { vverh: '▲', vniz: '▼', ro: '' };
 
+  // Таблица «Показатель · спарклайн · прошлый год · последний год · Изм.» (блок E макета).
   function htmlDinamika(r) {
     var rs = ryady(r);
     if (!rs.length) return '';
     var st = rs.map(stroka), g0 = st[0].ryad[0].year, g1 = st[0].god;
     st.forEach(function (s) { g0 = Math.min(g0, s.ryad[0].year); g1 = Math.max(g1, s.god); });
-    var tr = trendy(r);
+    var gp = g1 - 1, tr = trendy(r), fns = st.some(function (s) { return s.fns; });
+    var rows = st.map(function (s) {
+      // «Изм.» — только если у строки есть оба последних года таблицы; иначе честное «—»
+      var izm = s.god === g1 && s.ryad.length > 1 && s.ryad[s.ryad.length - 2].year === gp && s.kGodu
+        ? (STRELKA[s.ton] ? STRELKA[s.ton] + NB : '') + (/^в\s/.test(s.kGodu) ? (s.ton === 'vverh' ? 'из убытка' : 'в убыток') : s.kGodu.replace(/\sк\s\d{4}$/, '')) : '—';
+      return '<tr class="din__r din__r--' + s.ton + '">' +
+        '<th scope="row" class="din__n">' + esc(s.nazv) + (s.zaPeriod ? '<small>' + s.zaPeriod + '</small>' : '') + '</th>' +
+        '<td class="din__g">' + sparklajn(s.ryad) + '</td>' +
+        '<td class="din__v din__p n">' + zaGod(s, gp) + '</td>' +
+        '<td class="din__v n"><b>' + zaGod(s, g1) + '</b></td>' +
+        '<td class="din__v din__k n">' + izm + '</td></tr>';
+    }).join('');
     return '<section class="din" aria-label="Динамика по годам">' +
-      '<div class="din__h"><b>Динамика за ' + g0 + '–' + g1 + '</b><span>по годовой бухотчётности</span></div>' +
-      '<ul class="din__l">' + st.map(function (s) {
-        return '<li class="din__r din__r--' + s.ton + '"><span class="din__n">' + esc(s.nazv) + '<small>за ' + s.god + '</small></span>' +
-          stolbiki(s.ryad) +
-          '<span class="din__v"><b>' + s.znachTekst + '</b>' +
-          (s.kGodu ? '<small class="din__k">' + (STRELKA[s.ton] ? STRELKA[s.ton] + NB : '') + s.kGodu + '</small>' : '') +
-          (s.zaPeriod ? '<small>' + s.zaPeriod + '</small>' : '') + '</span></li>';
-      }).join('') + '</ul>' +
-      (tr.length ? '<p class="din__t">' + tr.map(esc).join(' ') + '</p>' : '') +
-      '<p class="din__src">Источник: ГИР БО ФНС, годовая бухгалтерская отчётность; последний год — ' + g1 + ' (на' + NB + '31.12.' + g1 + ').</p>' +
+      '<div class="din__h"><b>Динамика за ' + g0 + '–' + g1 + '</b><span>' + (fns ? 'ГИР БО и наборы ФНС' : 'ГИР БО ФНС') + ' · ' + g0 + '–' + g1 + '</span></div>' +
+      '<div class="din__w"><table class="din__t"><caption class="din__cap">Показатели по годам, ' + g0 + '–' + g1 + '</caption>' +
+      '<thead><tr><th scope="col">Показатель</th><th scope="col" class="din__g"><span class="din__cap">График </span>' + g0 + '–' + g1 + '</th>' +
+      '<th scope="col" class="din__v din__p n">' + gp + '</th><th scope="col" class="din__v n">' + g1 + '</th><th scope="col" class="din__v">Изм.</th></tr></thead>' +
+      '<tbody>' + rows + '</tbody></table></div>' +
+      (tr.length ? '<p class="din__tr">' + tr.map(esc).join(' ') + '</p>' : '') +
+      '<p class="din__src">Источник: ГИР БО ФНС, годовая бухгалтерская отчётность; последний год — ' + g1 + ' (на' + NB + '31.12.' + g1 + ').' +
+      (fns ? ' Численность и уплаченные налоги — открытые наборы ФНС за год.' : '') + '</p>' +
       '</section>';
   }
 
@@ -244,15 +272,19 @@
   }
 
   var CSS = '.din{display:grid;gap:10px;padding:16px 18px;border-radius:16px;background:var(--bg,#F5F5F2)}' +
-    '.din__h{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}.din__h b{font-size:15px;font-weight:600}.din__h span{font-size:13px;color:var(--muted,#6B6B70)}' +
-    '.din__l{list-style:none;margin:0;padding:0;display:grid}' +
-    '.din__r{display:grid;grid-template-columns:minmax(0,1fr) 64px minmax(0,1.3fr);gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line,#E6E6E1)}' +
-    '.din__r:first-child{border-top:0;padding-top:4px}' +
-    '.din__n{font-size:15px;display:grid}.din__n small,.din__v small{font-size:12px;color:var(--muted,#6B6B70)}' +
-    '.din__v{display:grid;justify-items:end;text-align:right}.din__v b{font-size:15px;font-weight:600;white-space:nowrap}' +
-    '.din__r--vverh .din__k{color:var(--ok,#16723F)}.din__r--vniz .din__k{color:#B3261E}' +
-    '.din__sv rect{fill:#B9C7DD}.din__sv .din__last{fill:var(--accent,#0B63E5)}.din__sv .din__neg{fill:#E5484D}' +
-    '.din__t{margin:0;font-size:14px;color:var(--ink2,#48484C)}.din__src{margin:0;font-size:12px;color:var(--muted,#6B6B70)}' +
+    '.din__h{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 10px}.din__h b{font-size:15px;font-weight:600}.din__h span{font-size:13px;color:var(--muted,#6B6B70)}' +
+    '.din__w{overflow-x:auto}.din__t{width:100%;border-collapse:collapse;font-size:15px}' +
+    '.din__cap{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}' +
+    '.din__t th,.din__t td{padding:10px 0 10px 16px;border-top:1px solid var(--line,#E6E6E1);vertical-align:middle;text-align:left;font-weight:400}' +
+    '.din__t th:first-child{padding-left:0}' +
+    '.din__t thead th{border-top:0;padding-top:2px;padding-bottom:6px;font-size:12px;color:var(--muted,#6B6B70)}' +
+    '.din__n small{display:block;font-size:12px;color:var(--muted,#6B6B70)}' +
+    '.din__v{text-align:right!important;white-space:nowrap}.din__v b{font-weight:600}' +
+    '.n{font-variant-numeric:tabular-nums}.din__p{color:var(--ink2,#48484C)}.din__na{font-size:12px;color:var(--muted,#6B6B70)}' +
+    '.din__k{font-size:13px;color:var(--muted,#6B6B70)}.din__r--vverh .din__k{color:var(--ok,#16723F)}.din__r--vniz .din__k{color:#B3261E}' +
+    '.din__g{width:96px}.din__sv{display:block}.din__sv polyline{fill:none;stroke:var(--accent,#0B63E5);stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}' +
+    '.din__sv .din__0{stroke:#C9C9C4;stroke-width:1;stroke-dasharray:2 2}' +
+    '.din__tr{margin:0;font-size:14px;color:var(--ink2,#48484C)}.din__src{margin:0;font-size:12px;color:var(--muted,#6B6B70)}' +
     '.izm{display:grid;gap:4px;padding:14px 18px;border-radius:16px;border:1px solid var(--line,#E6E6E1);font-size:14px}' +
     '.izm b{font-size:15px;font-weight:600}.izm span{font-size:12px;color:var(--muted,#6B6B70)}' +
     '.izm ul{margin:4px 0;padding:0;list-style:none;display:grid;gap:4px}.izm li{padding-left:18px;position:relative}' +
@@ -260,7 +292,8 @@
     '.izm li.izm--huzhe::before{background:#E5484D}.izm li.izm--luchshe::before{background:#2FA36B}' +
     '.izm--0{margin:0;padding:0;border:0;font-size:13px;color:var(--muted,#6B6B70)}' +
     '#doc .izm,#doc .din{margin-top:14px}' +
-    '@media (max-width:520px){.din{padding:14px}.din__r{grid-template-columns:minmax(0,1fr) auto}.din__sv{display:none}}' +
+    '@media (max-width:640px){.din__t .din__g{display:none}}' +
+    '@media (max-width:520px){.din{padding:14px}.din__t{font-size:14px}.din__t th,.din__t td{padding-left:10px}.din__t .din__p{display:none}}' +
     '@media print{.din,.izm{break-inside:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact}.izm--0{display:none}}';
 
   function stil(doc) {

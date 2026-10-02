@@ -97,6 +97,31 @@
       '<p class="ot-cap">Ориентир Делоскопа, не норма закона.' + (statya ? ' Методика — в разборе <a href="' + esc(statya) + '">«Сколько платить вперёд незнакомой компании»</a>.' : '') + '</p></section>';
   }
 
+  var POD_PILL = 'по признакам из реестров';
+
+  // Отступ сверху под липкие полосы (шапка сайта, строка проверки) — чтобы начало листа не пряталось под ними.
+  function otstup(doc) {
+    var w = doc.defaultView, m = 0;
+    if (!w || !w.getComputedStyle) return 0;
+    Array.prototype.forEach.call(doc.querySelectorAll('.shapka, .rezhim-otcheta .hero-text'), function (x) {
+      var cs = w.getComputedStyle(x);
+      if (cs.position !== 'sticky' && cs.position !== 'fixed') return;
+      var b = (parseFloat(cs.top) || 0) + x.offsetHeight;
+      if (b > m) m = b;
+    });
+    return m;
+  }
+  // Правка [Арт-директора] 02.10 13:35: при новом ответе — к началу листа (на любой ширине, а не только < 980 px).
+  function prokrutit(report) {
+    if (!report || !report.ownerDocument) return false;
+    var doc = report.ownerDocument, w = doc.defaultView;
+    if (!w || !w.scrollTo) return false;
+    var y = report.getBoundingClientRect().top + (w.pageYOffset || 0) - otstup(doc) - 12;
+    var plavno = !(w.matchMedia && w.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    w.scrollTo({ top: Math.max(0, Math.round(y)), behavior: plavno ? 'smooth' : 'auto' });
+    return true;
+  }
+
   var OGOVORKA = 'Оценка по открытым данным на дату проверки, а не решение банка или налоговой.';
 
   // ---------- браузер: раскладка готового отчёта по листу ----------
@@ -123,7 +148,11 @@
     var vd = el(doc, 'section', 'ot-vd ot-vd--' + tonPolosy(r));
     vd.setAttribute('aria-label', 'Вывод');
     var ix = el(doc, 'div', 'ot-ix', htmlIndeks(r));
-    if (pill && indeks(r) == null) { pill.classList.add('ot-pill'); ix.insertBefore(pill, ix.lastChild); }
+    if (pill && indeks(r) == null) {
+      pill.classList.add('ot-pill'); ix.insertBefore(pill, ix.lastChild);
+      // правка [Арт-директора] 02.10 13:35: уровень риска — не Индекс, подписываем, откуда он
+      ix.insertBefore(el(doc, 'div', 'ot-ix__pod', POD_PILL), ix.lastChild);
+    }
     var vt = el(doc, 'div', 'ot-vt');
     if (svoj) {
       var kr = '';
@@ -174,5 +203,5 @@
   }
 
   return { razlozhit: razlozhit, indeks: indeks, polnota: polnota, uroven: uroven, tonPolosy: tonPolosy, dejstviya: dejstviya,
-    htmlIndeks: htmlIndeks, htmlKak: htmlKak, UROVNI: UROVNI, OGOVORKA: OGOVORKA };
+    htmlIndeks: htmlIndeks, htmlKak: htmlKak, prokrutit: prokrutit, UROVNI: UROVNI, OGOVORKA: OGOVORKA, POD_PILL: POD_PILL };
 });

@@ -15,9 +15,61 @@
       if (window.dlkGoal) window.dlkGoal("beta_bar_close");
     });
   }
+  // 8. Типографика: номера дел, законов и писем не рвутся на переносе строки
+  //    («А67-1408/2022», «304-ЭС23-9987», «115-ФЗ», «ММ-3-06/333@»). Текст не меняется —
+  //    только обёртка <span class="nw"> (white-space:nowrap): копирование и поиск по номеру работают.
+  //    Слова через дефис без цифр («из-за», «Северо-Запад») не трогаем. Модули, которые рисуют
+  //    текст позже (отчёт, Паспорт), могут вызвать window.dlkNerazryv.obernut(узел).
+  var NW_RE = /[0-9A-Za-z\u0410-\u044f\u0401\u0451]+(?:-[0-9A-Za-z\u0410-\u044f\u0401\u0451]+)+(?:\/[0-9A-Za-z\u0410-\u044f\u0401\u0451]+)*@?/g;
+  var NW_SKIP = /^(SCRIPT|STYLE|TEXTAREA|INPUT|SELECT|OPTION|CODE|PRE|KBD|SAMP|NOSCRIPT|TEMPLATE|SVG|TITLE)$/i;
+  function kuski(t) {
+    // → [{t: текст, nw: bool}] или null, если оборачивать нечего
+    var out = [], last = 0, m, est = false;
+    NW_RE.lastIndex = 0;
+    while ((m = NW_RE.exec(t))) {
+      var w = m[0];
+      if (!/[0-9]/.test(w) || w.length > 32) continue;
+      if (m.index > last) out.push({ t: t.slice(last, m.index), nw: false });
+      out.push({ t: w, nw: true }); est = true;
+      last = m.index + w.length;
+    }
+    if (!est) return null;
+    if (last < t.length) out.push({ t: t.slice(last), nw: false });
+    return out;
+  }
+  function propusk(el) {
+    for (; el && el.nodeType === 1; el = el.parentNode) {
+      if (NW_SKIP.test(el.nodeName) || el.isContentEditable) return true;
+      if (el.classList && (el.classList.contains("nw") || el.hasAttribute("data-nw-net"))) return true;
+    }
+    return false;
+  }
+  function obernut(root) {
+    root = root || document.body;
+    if (!root || !document.createTreeWalker) return 0;
+    var tw = document.createTreeWalker(root, 4, null), uzly = [], n;
+    while ((n = tw.nextNode())) if (n.nodeValue.indexOf("-") >= 0 && /[0-9]/.test(n.nodeValue)) uzly.push(n);
+    var k = 0;
+    uzly.forEach(function (u) {
+      if (propusk(u.parentNode)) return;
+      var ch = kuski(u.nodeValue);
+      if (!ch) return;
+      var fr = document.createDocumentFragment();
+      ch.forEach(function (c) {
+        if (!c.nw) { fr.appendChild(document.createTextNode(c.t)); return; }
+        var sp = document.createElement("span"); sp.className = "nw"; sp.textContent = c.t;
+        fr.appendChild(sp); k++;
+      });
+      u.parentNode.replaceChild(fr, u);
+    });
+    return k;
+  }
+  window.dlkNerazryv = { kuski: kuski, obernut: obernut };
+
   function init() {
     var h = document.querySelector("[data-shapka]");
     betaPolosa();
+    try { obernut(document.querySelector("main") || document.body); } catch (e) {}
     if (!h) return;
     var path = location.pathname;
     var m = document.getElementById("mnav");

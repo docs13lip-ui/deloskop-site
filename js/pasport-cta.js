@@ -8,8 +8,8 @@
  *   paket   — есть пакет: «Сформировать Паспорт» + «Осталось N из 3 · до ДД.ММ.ГГГГ».
  *   tarif   — «Старт» и выше: «Сформировать Паспорт» + «Входит в ваш тариф».
  *   gotov   — Паспорт на эту дату уже есть: «Открыть Паспорт № …» + «Сформирован ДД.ММ.ГГГГ в ЧЧ:ММ».
- * Лист оплаты (разд. 1.2) — следующим комплектом, когда в tarify.json появятся способы оплаты (`sposoby`);
- * до него кнопка гостя и ссылка пакета ведут в прежнюю форму счёта (/schet/?produkt=pasport_razovyj | paket_pasportov).
+ * Лист оплаты (разд. 1.2) — js/pasport-oplata.js: кнопка гостя открывает его поверх отчёта (счёт — прямо в листе);
+ * без модуля или <dialog> — прежний переход в форму счёта (/schet/?produkt=pasport_razovyj); ссылка пакета — /schet/?produkt=paket_pasportov.
  * Метрика (разд. 1.4): pasport_cta_view{mesto, sost} при показе, pasport_cta_click{mesto, sost} по нажатию.
  * ИНН и e-mail в параметры не передаём (ИНН ИП — персональные данные, 152-ФЗ).
  */
@@ -102,8 +102,9 @@
   function cel(w, imya, p) { try { if (w && w.dlkGoal) w.dlkGoal(imya, p); } catch (e) { /* Метрика не мешает */ } }
 
   // Нарисовать состояние на уже стоящей кнопке a (полоса вывода листа или карточка /company/).
-  function primenit(a, s, mesto) {
+  function primenit(a, s, mesto, nazvanie) {
     var doc = a.ownerDocument, w = doc.defaultView;
+    if (nazvanie) a.setAttribute('data-naz', String(nazvanie).slice(0, 200));
     a.textContent = s.knopka;
     a.setAttribute('href', s.href);
     a.setAttribute('data-sost', s.sost);
@@ -125,12 +126,20 @@
     cel(w, 'pasport_cta_view', { mesto: mesto, sost: s.sost });
     if (!a.getAttribute('data-pcta')) {
       a.setAttribute('data-pcta', '1');
-      a.addEventListener('click', function () { cel(w, 'pasport_cta_click', { mesto: mesto, sost: a.getAttribute('data-sost') || '' }); });
+      a.addEventListener('click', function (e) {
+        var sost = a.getAttribute('data-sost') || '';
+        cel(w, 'pasport_cta_click', { mesto: mesto, sost: sost });
+        // гость: лист оплаты поверх отчёта (js/pasport-oplata.js); не открылся — обычный переход по ссылке
+        if (sost !== 'gost' || !w.PasportOplata || e.ctrlKey || e.metaKey || e.shiftKey || e.button > 0) return;
+        e.preventDefault();
+        var href = a.getAttribute('href');
+        w.PasportOplata.otkryt({ nazvanie: a.getAttribute('data-naz') || '', doc: doc }).then(function (ok) { if (!ok) w.location.href = href; });
+      });
     }
     return s;
   }
 
-  /* mount(a, {inn, mesto, user?, gotov?}) → Promise<состояние>. Сразу — бета или «Паспорт контрагента»,
+  /* mount(a, {inn, mesto, nazvanie?, user?, gotov?}) → Promise<состояние>. Сразу — бета или «Паспорт контрагента»,
    * после загрузки tarify.json и /api/me — точное состояние. Ошибка сети — кнопка остаётся как была. */
   function mount(a, o) {
     o = o || {};
@@ -139,7 +148,7 @@
     var user = o.user ? Promise.resolve(o.user) : (beta || !o.api ? Promise.resolve(null)
       : doc.defaultView.fetch(o.api + '/api/me', { credentials: 'include' }).then(function (r) { return r.json(); }).then(function (j) { return j && j.user || null; }).catch(function () { return null; }));
     return Promise.all([zagruzit(doc), user]).then(function (x) {
-      return primenit(a, sostoyanie({ tarify: iz(x[0]), beta: beta, user: x[1], gotov: o.gotov, inn: o.inn }), mesto);
+      return primenit(a, sostoyanie({ tarify: iz(x[0]), beta: beta, user: x[1], gotov: o.gotov, inn: o.inn }), mesto, o.nazvanie);
     }).catch(function () { return null; });
   }
 

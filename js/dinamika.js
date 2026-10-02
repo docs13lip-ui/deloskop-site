@@ -186,6 +186,9 @@
     });
     if (r.zsk && LVL[r.zsk.level]) s.zsk = r.zsk.level;
     if (inn.length === 10) {
+      // название — только у организаций (для «Ваших контрагентов» на главной, js/portfel.js); у ИП имя = ФИО — не храним
+      var nm = String(c.name_short || c.name_full || '').trim();
+      if (nm) s.nm = nm.slice(0, 120);
       if (c.director_since) s.dir = String(c.director_since).slice(0, 10);
       s.nedost = !!(c.invalid || c.address_invalid);
       var ch = (r.dossier && r.dossier.charts) || {}, v = ryad(ch.revenue), p = ryad(ch.profit);

@@ -94,7 +94,7 @@
     if (!kak || !kak.kak) return '';
     return '<section class="ot-sc" id="ot-kak" aria-labelledby="ot-kak-h"><h3 id="ot-kak-h">Как посчитали предел</h3>' +
       '<p class="n">' + esc(kak.kak) + '</p>' + (kak.ne ? '<p class="ot-ne n">' + esc(kak.ne) + '</p>' : '') +
-      '<p class="ot-cap">Ориентир Делоскопа, не норма закона.' + (statya ? ' Методика — в разборе <a href="' + esc(statya) + '">«Сколько платить вперёд незнакомой компании»</a>.' : '') + '</p></section>';
+      '<p class="ot-cap">Ориентир Делоскопа, не норма закона. <a href="/indeks/#predoplata">Открытая формула предела</a>' + (statya ? '; пример — в разборе <a href="' + esc(statya) + '">«Сколько платить вперёд незнакомой компании»</a>' : '') + '.</p></section>';
   }
 
   var POD_PILL = 'по признакам из реестров';
@@ -201,7 +201,7 @@
     // «Паспорт 490 ₽ в один шаг»: кнопка Паспорта по состояниям из tarify.json (js/pasport-cta.js); нет модуля — как было
     var pa = vd.querySelector('[data-cel="otchet_pasport"]');
     if (pa && doc.defaultView && doc.defaultView.PasportCta) {
-      try { doc.defaultView.PasportCta.mount(pa, { inn: r.company.inn, mesto: 'list', api: o.api || '' }); } catch (e) { /* кнопка остаётся как была */ }
+      try { doc.defaultView.PasportCta.mount(pa, { inn: r.company.inn, mesto: 'list', api: o.api || '', nazvanie: r.company.name_short || r.company.name_full || '' }); } catch (e) { /* кнопка остаётся как была */ }
     }
     if (doc.body) doc.body.classList.add('rezhim-otcheta');
     return true;

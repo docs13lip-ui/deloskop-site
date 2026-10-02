@@ -4,7 +4,7 @@
 (function (w) {
   'use strict';
   var KEY = 'dlk_nedavnie', MAX = 5;
-  var LVL = { low: 'Сигналов мало', medium: 'Есть вопросы', high: 'Серьёзные сигналы' };
+  var LVL = { low: 'Без серьёзных сигналов', medium: 'Есть вопросы', high: 'Есть серьёзные сигналы' };
 
   function read() {
     try {

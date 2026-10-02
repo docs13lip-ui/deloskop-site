@@ -41,11 +41,12 @@
     var t = v.toFixed(zn).replace(/0+$/, '').replace(/\.$/, '').replace('.', ',');
     return t + '\u00a0' + ed[1] + '\u00a0₽';
   }
-  // Круглые ориентиры, вниз: 87 400 → 80 000; 1 237 000 → 1 200 000.
+  // Круглые ориентиры, вниз: 87 400 → 80 000; 1 237 000 → 1 200 000. Меньше 10 000 ₽ — 0: вверх не округляем
+  // ([Продукт · Данные] 02.10 19:37 — ориентир не должен обещать больше двух недель выручки).
   function niceFloor(x) {
     if (!(x > 0)) return 0;
     var step = x < 100000 ? 10000 : x < 1000000 ? 50000 : x < 10000000 ? 100000 : 1000000;
-    return Math.max(10000, Math.floor(x / step) * step);
+    return Math.floor(x / step) * step;
   }
   function plural(n, one, few, many) {
     var a = Math.abs(n) % 100, b = a % 10;
@@ -154,6 +155,7 @@
   // Пока false: методика не меняется, а честность держит строка «Не проверяли» под пределом.
   var OSTOROZHNO = false;
   var DELITEL = 26;                                        // две недели выручки: 52 недели / 2
+  var MINIMUM = 10000;                                     // предел меньше — числа нет, «советуем платить по факту» (malo)
   var POTOLKI = [[6, 100000], [12, 300000], [36, 1000000], [Infinity, 3000000]]; // [младше N мес, потолок]
   function potolok(m) { if (m == null) return 1000000; for (var i = 0; i < POTOLKI.length; i++) if (m < POTOLKI[i][0]) return POTOLKI[i][1]; return 3000000; }
 
@@ -168,6 +170,7 @@
     R.doPolovinu = cap;
     var ostor = OSTOROZHNO && np && np.dolgiVse && t === 'go';
     if (t === 'cap' || ostor) { cap = cap / 2; rule += ostor ? ', вдвое меньше: долги не проверены' : ', вдвое меньше из-за замечаний'; R.half = ostor ? 'ostorozhno' : 'zamechaniya'; }
+    if (cap < MINIMUM) { R.malo = true; R.itog = 0; return { cap: 0, malo: true, rule: rule + ' — меньше ' + money(MINIMUM) + ': советуем платить по факту', raschet: R }; }
     R.itog = niceFloor(cap);
     return { cap: R.itog, rule: rule, raschet: R };
   }
@@ -237,7 +240,9 @@
       kak = 'Вперёд — 0\u00a0₽: ' + pr + ' — ' + (t === 'stop' ? 'не платите вперёд.' : 'платите после поставки или акта.');
     } else {
       var polovina = R.half ? ' · ' + (R.half === 'ostorozhno' ? 'долги не проверены' : zamechaniya(reasonsList)) + ' → половина: ' + money(R.itog) : '';
-      if (R.base === 'revenue' && R.ageCapped) {
+      if (R.malo) {
+        kak = 'Как посчитали: выручка' + (R.revenueYear ? ' за ' + R.revenueYear : '') + ' — ' + moneyKrupno(R.revenue) + ' ÷ ' + DELITEL + ' = ' + money(R.dveNedeli) + (R.half ? ', половина — ' + money(R.doPolovinu / 2) : '') + '. ' + MALO_TEKST(R.half);
+      } else if (R.base === 'revenue' && R.ageCapped) {
         kak = 'Как посчитали: две недели выручки — ' + moneyKrupno(R.dveNedeli) + ', но компании ' + mesText(R.ageMonths) + ' — не больше потолка для возраста до года: ' + money(R.byAge) + polovina + '.';
       } else if (R.base === 'revenue') {
         kak = 'Как посчитали: выручка' + (R.revenueYear ? ' за ' + R.revenueYear : '') + ' — ' + moneyKrupno(R.revenue) + ' ÷ ' + DELITEL + ' = ' + moneyKrupno(R.dveNedeli) + ' (две недели выручки)' + polovina + ', округлили вниз.';
@@ -255,6 +260,10 @@
     }
     return { kak: kak, ne: ne,
       podpis: 'Ориентир Делоскопа, не норма закона. Методика — в разборе «Сколько платить вперёд незнакомой компании».', url: STATYA };
+  }
+  // Текст [Продукт · Данные] 02.10 19:37 (разд. 0) — когда предел меньше 10 000 ₽.
+  function MALO_TEKST(half) {
+    return 'Вперёд — не больше ' + (half ? 'половины двух недель' : 'двух недель') + ' выручки компании, а это меньше ' + money(MINIMUM) + '. Советуем платить по факту поставки.';
   }
   var STATYA = '/nalogi/skolko-platit-vpered-neznakomoj-kompanii/';
   var FORMULA = '/indeks/#predoplata';                     // та же формула словами и мини-расчёт этим кодом
@@ -283,19 +292,21 @@
     return out.slice(0, 3);
   }
 
-  function headline(f, t, cap) {
+  function headline(f, t, cap, malo) {
     if (f.status === 'LIQUIDATED') return 'Сделку не заключать';
     if (t === 'stop') return 'Не платите вперёд';
     if (t === 'post') return 'Только оплата по факту';
+    if (t === 'cap' && malo) return 'Можно, оплата — по факту поставки';
     if (t === 'cap') return 'Можно, предоплата — до ' + money(cap);
     return 'Работать можно';
   }
-  function advice(f, t) {
+  function advice(f, t, malo) {
     if (f.status === 'LIQUIDATED') return 'Компания прекратила существование — в ЕГРЮЛ есть запись о прекращении. Новый договор с ней заключить нельзя, платить по такому счёту некому: счёт не оплачивайте.';
     if (f.status === 'BANKRUPT') return 'Платежи по новым сделкам — только по согласованию с арбитражным управляющим и после поставки.';
     if (f.status === 'LIQUIDATING') return 'Вперёд не платите: новые обязательства компания может не исполнить. Если она вам должна — не ждите: при ликвидации заявите требование ликвидатору, при исключении из ЕГРЮЛ — подайте заявление в налоговую, пока не истёк срок: три месяца со дня публикации решения в «Вестнике государственной регистрации», а если основание — 115-ФЗ, шесть (п. 3, 4, 7 ст. 21.1, ст. 21.3 129-ФЗ). Заявление останавливает исключение.';
     if (t === 'stop') return 'Если сделка нужна — платите после поставки или через аккредитив и сохраните это досье.';
     if (t === 'post') return 'Платите после поставки или акта. Нужна предоплата — через аккредитив или под гарантию возврата аванса.';
+    if (malo) return 'Нужна предоплата — через аккредитив или под гарантию возврата аванса.';
     if (t === 'cap') return 'Больше предела — частями по этапам, аккредитивом или под гарантию возврата аванса.';
     return 'Сохраните досье: это ваше доказательство должной осмотрительности.';
   }
@@ -380,9 +391,9 @@
     var f = facts(r), t = tone(f), np = neProvereno(r, f), pc = prepayCap(f, t, np), amount = parseAmount(opts.amount), regime = opts.regime || 'osno';
     var list = docs(f, t, amount, regime);
     return {
-      facts: f, tone: t, cap: pc.cap, capRule: pc.rule, raschet: pc.raschet, neProvereno: np,
+      facts: f, tone: t, cap: pc.cap, malo: !!pc.malo, capRule: pc.rule, raschet: pc.raschet, neProvereno: np,
       kak: kakPoschitali(f, t, pc, reasons(f), np),
-      headline: headline(f, t, pc.cap), reasons: reasons(f), advice: advice(f, t),
+      headline: headline(f, t, pc.cap, pc.malo), reasons: reasons(f), advice: advice(f, t, pc.malo),
       amount: amount, regime: regime, stake: atStake(amount, regime), prepay: prepayAdvice(amount, pc.cap, t),
       docs: list, letter: letter(f, list, amount)
     };
@@ -506,7 +517,7 @@
     decide: decide, mount: mount, facts: facts, tone: tone, prepayCap: prepayCap, atStake: atStake,
     docs: docs, letter: letter, parseAmount: parseAmount, money: money, moneyKrupno: moneyKrupno, niceFloor: niceFloor, kindOf: kindOf,
     neProvereno: neProvereno, kakPoschitali: kakPoschitali, STATYA: STATYA, FORMULA: FORMULA,
-    METODIKA: { DELITEL: DELITEL, POTOLKI: POTOLKI, OSTOROZHNO: OSTOROZHNO },
+    METODIKA: { DELITEL: DELITEL, POTOLKI: POTOLKI, OSTOROZHNO: OSTOROZHNO, MINIMUM: MINIMUM },
     RATES: { VAT: VAT, PROFIT: PROFIT, USN_DR: USN_DR }
   };
 });

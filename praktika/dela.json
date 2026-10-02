@@ -6,7 +6,7 @@
   },
   "ssylki_s_sajta": {
     "_kak": "Входящие ссылки на разборы с живых страниц (SEO-обвязка [Маркетинга] 30.09): файл страницы → slug разборов или «hab:<раздел>». Сборщик ставит блок между метками <!--praktika-ssylki-->…<!--/praktika-ssylki--> (в статье — перед </article>). Тест: у каждого разбора ≥ 2 входящие ссылки вне /praktika/.",
-    "115-fz/zablokirovali-schet-chto-delat/index.html": ["otklyuchili-internet-bank", "zagraditelnye-komissii", "ostatok-pri-zakrytii-scheta"],
+    "115-fz/zablokirovali-schet-chto-delat/index.html": ["otklyuchili-internet-bank", "zagraditelnye-komissii", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"],
     "115-fz/zapros-banka-po-115-fz-kak-otvetit/index.html": ["otklyuchili-internet-bank"],
     "115-fz/zsk-zony-riska/index.html": ["krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "zagraditelnye-komissii"],
     "nalogi/statya-54-1-nk-prostymi-slovami/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke", "droblenie-uplachennaya-usn-zachityvaetsya"],
@@ -16,9 +16,32 @@
     "pasport/index.html": ["proverka-kontragenta-na-datu-sdelki"],
     "nalogi/pismo-o-smene-rekvizitov-kak-proverit/index.html": ["dvojnik-postavshchika-bank-poluchatelya"],
     "nalogi/kak-proverit-schet-pered-oplatoj/index.html": ["dvojnik-postavshchika-bank-poluchatelya"],
-    "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta"]
+    "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"]
   },
   "razbory": [
+    {
+      "razdel": "nalogi",
+      "slug": "blokirovka-lichnogo-scheta-ip",
+      "h1": "Налоговая заблокировала личную карту ИП. Законно?",
+      "title": "Налоговая заблокировала личную карту ИП. Законно? — разбор дела ВС",
+      "description": "ВС отменил штраф банку на 100 тыс. ₽: личный счёт ИП, открытый не для бизнеса, — не для налоговой блокировки. Что изменил ЕНС и что делать.",
+      "zapros": "налоговая заблокировала личную карту ип",
+      "data": "2026-10-03",
+      "minut": 5,
+      "lid": "«Я ИП. Налоговая приостановила операции — и банк заморозил не только расчётный счёт, но и личную карту, на которую приходит зарплата жены. Так можно?» Для налоговой блокировки по бизнес-долгам граница проходит по назначению счёта. Границу провёл Верховный суд толкованием, поэтому банки нередко блокируют всё подряд — спорить придётся вам.",
+      "dela": [
+        {"sud": "Верховный суд РФ, СКЭС", "sud_kratko": "ВС", "akt": "Определение", "nomer": "№ 305-ЭС21-6579", "data": "2021-08-23", "delo": "А41-19216/2020 (Банк ВТБ против ИФНС по г. Сергиеву Посаду)", "na_konu": "штраф банку по ст. 134 НК — 100 392,29 ₽ за то, что не заблокировал личный счёт ИП", "na_konu_kratko": "личный счёт ИП", "itog": "В пользу банка", "itog_nov": false, "istochnik": "https://kad.arbitr.ru/", "istochnik_podpis": "kad.arbitr.ru — поиск по номеру дела А41-19216/2020; текст сверен по garant.ru и PDF на storage.consultant.ru", "sverka": "2026-10-02"}
+      ],
+      "knopka": {"zagolovok": "Видно ли приостановку у вас", "tekst": "Проверка по ИНН — компании или ИП: строка «Приостановление операций по счетам» по открытым данным ФНС на дату проверки.", "knopka": "Проверить свою компанию по ИНН", "url": "/", "cel": "razbor8_check"},
+      "zakon": [
+        ["ст. 46 НК РФ — взыскание налога со счетов организации и ИП", "ред. на 02.10.2026", "https://www.consultant.ru/document/cons_doc_LAW_19671/"],
+        ["п. 1–2 ст. 76 НК РФ — приостановление операций в размере отрицательного сальдо ЕНС", "ред. на 02.10.2026", "https://www.consultant.ru/document/cons_doc_LAW_19671/"],
+        ["ст. 48 НК РФ — взыскание налога с гражданина", "ред. на 02.10.2026", "https://www.consultant.ru/document/cons_doc_LAW_19671/"],
+        ["ст. 138–139 НК РФ — жалоба в вышестоящий налоговый орган", "ред. на 02.10.2026", "https://www.consultant.ru/document/cons_doc_LAW_19671/"],
+        ["Определение ВС РФ от 23.08.2021 № 305-ЭС21-6579", "", "https://www.garant.ru/products/ipo/prime/doc/402552974/"]
+      ],
+      "pohozhie": ["otklyuchili-internet-bank", "ostatok-pri-zakrytii-scheta"]
+    },
     {
       "razdel": "115-fz",
       "slug": "ostatok-pri-zakrytii-scheta",

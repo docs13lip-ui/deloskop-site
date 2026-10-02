@@ -12,7 +12,8 @@
   'use strict';
 
   var BUKVA = /[0-9A-Za-zА-Яа-яЁё]/;
-  var NE_TROGAT = { A: 1, BUTTON: 1, SUMMARY: 1, H1: 1, SCRIPT: 1, STYLE: 1, TEXTAREA: 1, INPUT: 1, SELECT: 1, OPTION: 1, LABEL: 1 };
+  // заголовки разделов не трогаем: кнопка в строке заголовка Паспорта не переносится и выталкивает значок вбок на 390 px
+  var NE_TROGAT = { A: 1, BUTTON: 1, SUMMARY: 1, H1: 1, H2: 1, H3: 1, H4: 1, H5: 1, H6: 1, SCRIPT: 1, STYLE: 1, TEXTAREA: 1, INPUT: 1, SELECT: 1, OPTION: 1, LABEL: 1 };
   var CSS =
     '.termin{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:help;text-align:inherit;' +
     'text-decoration:underline dotted;text-decoration-thickness:1px;text-underline-offset:.22em;text-decoration-color:currentColor}' +
@@ -169,7 +170,8 @@
     while ((u = w.nextNode())) if (u.nodeValue && u.nodeValue.trim() && mozhno(u, kont)) uzly.push(u);
     uzly.forEach(function (uz) {
       var kuski = razmetit(uz.nodeValue, terminy, uzhe);
-      if (kuski.length < 2) return;
+      // термин может занимать весь текстовый узел («ГИР БО» в <small>) — размечаем и его
+      if (!kuski.some(function (k) { return k.id; })) return;
       var fr = doc.createDocumentFragment();
       kuski.forEach(function (k) {
         if (!k.id) { fr.appendChild(doc.createTextNode(k.tekst)); return; }

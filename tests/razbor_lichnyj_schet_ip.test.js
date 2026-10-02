@@ -1,0 +1,62 @@
+// Разбор налоговый № 8 «Налоговая заблокировала личную карту ИП» ([Ночные запуски] 03.10.2026 01:05;
+// текст — [Право · Налоговый юрист] 02.10 16:20, разд. 2; SEO — [Продукт · Маркетинг] 02.10 22:40, разд. 1).
+// Держит: цитаты ВС и нормы из текста [Право], без имени ИП, без обещания исхода, пример — только условный,
+// кнопка — проверка по ИНН с целью Метрики, FAQ дословно, входящие ссылки с «Заблокировали счёт» и «Скорой».
+'use strict';
+const test = require('node:test');
+const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
+const KOREN = path.join(__dirname, '..');
+const chitat = (f) => fs.readFileSync(path.join(KOREN, f), 'utf8');
+const un = (s) => s.replace(/ /g, ' ').replace(/&nbsp;/g, ' ').replace(/&#8209;/g, '-').replace(/<[^>]+>/g, '');
+const SLUG = 'blokirovka-lichnogo-scheta-ip';
+const URL = '/praktika/nalogi/' + SLUG + '/';
+const F = 'praktika/nalogi/' + SLUG + '/index.html';
+
+test('разбор № 8: позиция ВС дословно, нормы ЕНС и граница для гражданина', () => {
+  const t = un(chitat(F));
+  for (const f of ['«в ограниченном объеме»', '«применительно к счетам в банке, открытым гражданином для ее ведения»',
+    '«не подлежало исполнению кредитной организацией»', '№ 305-ЭС21-6579', 'А41-19216/2020', '100 392,29 ₽',
+    '«в размере отрицательного сальдо» ЕНС (п. 2 ст. 76 НК)', '(ст. 48 НК)', '(ст. 138–139 НК)',
+    'Практики Верховного суда после перехода на ЕНС по личным счетам ИП мы в первоисточниках не нашли']) {
+    assert.ok(t.includes(f), 'нет: ' + f);
+  }
+  assert.ok(!/гарантир\S* (разблок|возврат|победу|исход)|точно разблокируют|обязательно снимут/i.test(t), 'обещание исхода');
+});
+
+test('разбор № 8: данные ИП не публикуем — в деле только банк и инспекция', () => {
+  const r = JSON.parse(chitat('praktika/dela.json')).razbory.find((x) => x.slug === SLUG);
+  assert.ok(r, 'нет записи в dela.json');
+  assert.strictEqual(r.dela[0].delo, 'А41-19216/2020 (Банк ВТБ против ИФНС по г. Сергиеву Посаду)');
+  const t = un(chitat(F));
+  assert.ok(!/ИП [А-ЯЁ][а-яё]+ [А-ЯЁ]\.|индивидуальн\S+ предпринимател\S+ [А-ЯЁ][а-яё]+ [А-ЯЁ][а-яё]+/.test(t), 'похоже на ФИО');
+  assert.ok(!/\b\d{12}\b/.test(t), 'ИНН из 12 цифр');
+});
+
+test('разбор № 8: 86 000 ₽ — только условный пример; штраф банку — только в «Что случилось»', () => {
+  const s = chitat('tests/praktika/' + SLUG + '.html');
+  const primer = s.slice(s.indexOf('<div class="primer">'));
+  assert.ok(/отрицательное сальдо ЕНС 86 000 ₽/.test(primer));
+  assert.ok(s.includes('<span class="kon__n">86 000 ₽</span>'));
+  const doKon = s.slice(0, s.indexOf('<h2>Что решил суд</h2>'));
+  assert.ok(doKon.includes('100 392,29 ₽') && !s.slice(s.indexOf('<h2>Что решил суд</h2>')).includes('100 392'));
+});
+
+test('разбор № 8: кнопка — проверка по ИНН с целью razbor8_check; строка на экране проверки есть', () => {
+  const s = chitat(F);
+  assert.ok(s.includes('<a class="btn" href="/" data-goal="razbor8_check">'));
+  // правило [Право]: кнопку ставим, только если на экране проверки есть строка о приостановлении
+  assert.ok(chitat('data/kommentarii.json').includes('"nazv": "Приостановление операций по счетам"'));
+  assert.ok(chitat('js/metrika.js').includes('a[data-goal]'));
+});
+
+test('разбор № 8: FAQ — три вопроса [Право], ответы дословно; входящие ссылки', () => {
+  const v = JSON.parse(chitat('praktika/faq.json')).razbory[SLUG];
+  assert.deepStrictEqual(v.map((x) => x.v), ['Может ли налоговая заблокировать личную карту ИП?',
+    'Изменил ли что-то единый налоговый счёт?', 'Как разблокировать личный счёт ИП?']);
+  for (const f of ['115-fz/zablokirovali-schet-chto-delat/index.html', 'skoraya-115-fz/index.html', 'praktika/nalogi/index.html']) {
+    assert.ok(chitat(f).includes(`href="${URL}"`), f);
+  }
+  assert.ok(chitat('sitemap.xml').includes('https://deloskop.ru' + URL));
+});

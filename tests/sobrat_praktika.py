@@ -218,7 +218,7 @@ def razbor(r, D, po_slug, F=None):
 <section class="dl" aria-label="Что сделать в Делоскопе">
 <h2>%(kz)s</h2>
 <p>%(kt)s</p>
-<a class="btn" href="%(ku)s">%(kk)s</a>
+<a class="btn" href="%(ku)s"%(cel)s>%(kk)s</a>
 </section>
 <h2>Где в законе</h2>
 <ul class="zakon">
@@ -238,7 +238,8 @@ def razbor(r, D, po_slug, F=None):
 </html>
 """ % {"kr": kroshki_html(kr), "h1": e(r["h1"]), "data": r["data"], "data_ru": data_ru(r["data"]), "min": r["minut"],
        "lid": e(r["lid"]), "kart": kartochki, "telo": telo, "kz": e(k["zagolovok"]), "kt": e(k["tekst"]), "ku": e(k["url"]),
-       "kk": e(k["knopka"]), "zakon": zakon, "faq": faq, "sv": sverka, "sv_ru": data_ru(sverka), "sos": sos}
+       "kk": e(k["knopka"]),
+       "cel": (' data-goal="%s"' % e(k["cel"])) if k.get("cel") else "", "zakon": zakon, "faq": faq, "sv": sverka, "sv_ru": data_ru(sverka), "sos": sos}
     return url, stranica
 
 

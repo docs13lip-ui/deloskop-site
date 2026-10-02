@@ -30,10 +30,10 @@ test('ответ по договорённости с [Данными]: indeks n
 });
 
 test('ворота открыты — число, зона по /indeks/', () => {
-  assert.deepStrictEqual(pick(V.vid(s({ indeks: 74, polnota: 67 }))), ['chislo', 74, 'Надёжная']);
+  assert.deepStrictEqual(pick(V.vid(s({ indeks: 74, polnota: 67 }))), ['chislo', 74, 'Без серьёзных сигналов']);
   assert.deepStrictEqual(pick(V.vid(s({ indeks: { ball: 50, polnota: 60 } }))), ['chislo', 50, 'Есть вопросы']);
-  assert.deepStrictEqual(pick(V.vid(s({ indeks: 49, polnota: 90 }))), ['chislo', 49, 'Высокий риск']);
-  assert.deepStrictEqual(pick(V.vid(s({ indeks: 12, polnota: 90 }))), ['chislo', 12, 'Опасно']);
+  assert.deepStrictEqual(pick(V.vid(s({ indeks: 49, polnota: 90 }))), ['chislo', 49, 'Есть серьёзные сигналы']);
+  assert.deepStrictEqual(pick(V.vid(s({ indeks: 12, polnota: 90 }))), ['chislo', 12, 'Много признаков риска']);
 });
 function pick(v) { return [v.rezhim, v.ball, v.zona]; }
 

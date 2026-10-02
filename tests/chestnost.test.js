@@ -93,7 +93,7 @@ test('Г: шкала на /indeks/ — зоны и отметки 1…99, без
   const t = chitat('indeks/index.html');
   const svg = t.match(/<svg class="lineyka"[\s\S]*?<\/svg>/)[0];
   assert.ok(!/class="x2"/.test(t), 'остался класс .x2');
-  for (const z of ['Опасно', 'Высокий риск', 'Есть вопросы', 'Надёжная']) assert.ok(svg.includes(z), z);
+  for (const z of ['Много признаков риска', 'Есть серьёзные', 'Есть вопросы', 'Без серьёзных сигналов']) assert.ok(svg.includes(z), z);
   assert.match(svg, /class="tk">1</);
   assert.match(svg, /class="tk">99</);
   assert.ok(!/компания закроет текущие долги вдвое/.test(t));

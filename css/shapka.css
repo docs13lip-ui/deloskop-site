@@ -151,3 +151,5 @@ dialog.dlo::backdrop{background:rgba(17,17,19,.55)}
 @media (max-width:640px){.ck-bar .ck-bar__in{flex-direction:column;align-items:stretch;gap:var(--s-2);padding-top:10px}.ck-bar .ck-bar__t{font-size:var(--t-caption)}.ck-bar .ck-bar__dl{display:none}.ck-bar .ck-bar__kr{display:inline}.ck-bar .ck-bar__b button{flex:1;min-height:40px;padding:0 12px}}
 @media print{.ck-bar{display:none!important}}
 @media (min-width:1025px){.ck-bar{left:auto;right:24px;bottom:24px;width:440px;border:0;border-radius:var(--r-l);box-shadow:0 12px 40px rgba(29,29,31,.16)}.ck-bar .ck-bar__in{flex-direction:column;align-items:stretch;padding:var(--s-5);gap:var(--s-4)}.ck-bar .ck-bar__b button{flex:1}}
+/* Номера дел, законов и писем не рвутся на переносе (js/shapka.js, п. 8) */
+.nw{white-space:nowrap}

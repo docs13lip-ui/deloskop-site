@@ -69,7 +69,7 @@
     return '<div class="kom kom--' + esc(k.ton) + '" data-kom="' + esc(k.id) + '">' +
       '<div class="kom__h">Комментарий команды Делоскопа</div>' +
       str("Банк:", k.bank) + str("Налоговая:", k.nalog) + str("Что сделать:", k.sdelat) +
-      '<div class="kom__p">' + esc(k.podpis) + (k.norma ? " · " + esc(k.norma) : "") + (k.data ? " · проверено " + esc(k.data) : "") + "</div></div>";
+      '<div class="kom__p">' + esc(k.podpis) + (k.norma ? " · " + esc(k.norma) : "") + (k.data ? " · нормы сверены " + esc(k.data) : "") + "</div></div>";
   }
 
   // Браузер: библиотека загружается один раз; при ошибке — пусто (отчёт работает как раньше).
@@ -97,6 +97,8 @@
       tr.parentNode.insertBefore(nov, tr.nextSibling);
       n++;
     });
+    // оговорка [Право] — один раз под таблицей, если в ней есть комментарий
+    if (tablica.querySelector(".kom-tr") && tablica.parentNode && tablica.parentNode.querySelector) postavitOgovorku(tablica.parentNode, tablica, "p");
     return n;
   }
 
@@ -129,19 +131,99 @@
   // Браузер: под строкой tr[data-f] Паспорта — строка с комментарием (повторно не вставляет).
   function vstavitFakty(koren, spisok) {
     if (!koren || !spisok) return 0;
-    var n = 0;
+    var n = 0, posl = null;
     spisok.forEach(function (v) {
       var tr = koren.querySelector('tr[data-f="' + v.f + '"]');
-      if (!tr || (tr.nextSibling && tr.nextSibling.className === "kom-tr")) return;
+      if (!tr) return;
+      if (tr.nextSibling && tr.nextSibling.className === "kom-tr") { posl = tr; return; }
       var nov = tr.ownerDocument.createElement("tr");
       nov.className = "kom-tr";
       nov.innerHTML = '<td colspan="2">' + html(v.k) + "</td>";
       tr.parentNode.insertBefore(nov, tr.nextSibling);
-      n++;
+      posl = tr; n++;
     });
+    // оговорка [Право] — один раз, под таблицей раздела с последним комментарием
+    var t = posl;
+    while (t && t.tagName !== "TABLE") t = t.parentNode;
+    if (t) postavitOgovorku(koren, t, "p");
     return n;
   }
 
-  return { TON: TON, MAKS: MAKS, gotov: gotov, zapis: zapis, najti: najti, html: html, zagruzit: zagruzit, vstavit: vstavit, dlina: dlina,
+  // [Право] 02.10 11:15: один раз под блоком комментариев (и в печати) — общая оговорка (ст. 152 ГК РФ, ч. 3 ст. 5 38-ФЗ).
+  var OGOVORKA = "Комментарий команды — общий: он объясняет, как банки и налоговая смотрят на такой признак. Это не оценка этой компании или сделки и не юридическая консультация.";
+  function ogovorkaHtml() { return '<p class="kom-og">' + esc(OGOVORKA) + "</p>"; }
+  // Оговорка после узла posle (последний комментарий), если её ещё нет в koren.
+  function postavitOgovorku(koren, posle, teg) {
+    if (!koren || !posle || !posle.parentNode || koren.querySelector(".kom-og")) return false;
+    var el = posle.ownerDocument.createElement(teg || "p");
+    el.className = "kom-og";
+    el.textContent = OGOVORKA;
+    posle.parentNode.insertBefore(el, posle.nextSibling);
+    return true;
+  }
+
+  // Экран проверки: «Существенные факты» (js/sushchestvennoe.js, строки .sut__r[data-fakt=k]; k = id строки светофора или «sigN»).
+  // Чистая функция: [{ k, kom }] — только для фактов из строк светофора, у которых тон на экране совпадает со статусом строки
+  // (налоги «не проверяли — набор старше 3 месяцев» — нейтральные, зелёный текст к ним не подходит).
+  var TON_EKRANA = { ok: "ok", info: "ok", warn: "warn", bad: "bad" };
+  function dlyaSut(spisok, signals, sprav) {
+    if (!sprav) return [];
+    var out = [];
+    (spisok || []).forEach(function (f) {
+      if (!f || !f.k) return;
+      for (var j = 0; j < (signals || []).length; j++) {
+        var s = signals[j];
+        if (!s || !s.title || (s.id || "sig" + j) !== f.k) continue;
+        if (TON_EKRANA[s.status] !== f.ton) return;
+        var k = najti(sprav, s);
+        if (k) out.push({ k: f.k, kom: k });
+        return;
+      }
+    });
+    return out;
+  }
+
+  var CSS_EKRANA = ".sut .kom{margin:-4px 0 12px;padding:10px 14px;border-left:3px solid var(--line,#E5E5E0);background:#FAFAF8;" +
+    "border-radius:0 10px 10px 0;font-size:14px;line-height:1.5;color:var(--ink,#1D1D1F)}" +
+    ".sut .kom--zel{border-left-color:var(--ok,#1E7F4F)}.sut .kom--zhel{border-left-color:var(--warn,#B26B00)}.sut .kom--kras{border-left-color:var(--bad,#C0362C)}" +
+    ".sut .kom__h{font-weight:600;font-size:12.5px;letter-spacing:.02em;color:var(--ink2,#48484C);margin-bottom:4px}" +
+    ".sut .kom p{margin:2px 0}.sut .kom__l{font-weight:600}.sut .kom__p{color:var(--muted,#6B6B70);font-size:12px;margin-top:6px}" +
+    ".kom-og{margin:4px 0 12px;font-size:12.5px;line-height:1.45;color:var(--muted,#6B6B70)}" +
+    "@media print{.sut .kom{background:none;break-inside:avoid}}";
+  function stil(doc) {
+    if (!doc || !doc.createElement || doc.getElementById("kom-css")) return;
+    var s = doc.createElement("style"); s.id = "kom-css"; s.textContent = CSS_EKRANA;
+    (doc.head || doc.documentElement).appendChild(s);
+  }
+
+  // Браузер: под строкой .sut__r[data-fakt] — комментарий (повторно не вставляет), после последнего — оговорка.
+  function vstavitSut(koren, spisok) {
+    if (!koren || !spisok || !spisok.length) return 0;
+    var n = 0, posl = null;
+    spisok.forEach(function (v) {
+      var row = koren.querySelector('.sut__r[data-fakt="' + String(v.k).replace(/["\\]/g, "") + '"]');
+      if (!row) return;
+      var sl = row.nextSibling;
+      if (sl && /(^| )kom( |$)/.test(sl.className || "")) { posl = sl; return; }
+      var w = row.ownerDocument.createElement("div");
+      w.innerHTML = html(v.kom);
+      var el = w.firstChild;
+      if (!el) return;
+      row.parentNode.insertBefore(el, row.nextSibling);
+      posl = el; n++;
+    });
+    if (posl) {
+      try { stil(koren.ownerDocument); } catch (e) {}
+      // оговорка — под всем списком фактов (после последней строки или её комментария), а не посреди него
+      var vse = koren.querySelectorAll ? koren.querySelectorAll(".sut__r") : [];
+      var kon = vse.length ? vse[vse.length - 1] : posl;
+      if (kon.nextSibling && /(^| )kom( |$)/.test(kon.nextSibling.className || "")) kon = kon.nextSibling;
+      postavitOgovorku(koren, kon, "p");
+    }
+    return n;
+  }
+
+  return { TON: TON, MAKS: MAKS, OGOVORKA: OGOVORKA, ogovorkaHtml: ogovorkaHtml, postavitOgovorku: postavitOgovorku,
+    dlyaSut: dlyaSut, vstavitSut: vstavitSut, CSS_EKRANA: CSS_EKRANA, gotov: gotov, zapis: zapis, najti: najti, html: html, zagruzit: zagruzit, vstavit: vstavit, dlina: dlina,
     dlyaFaktov: dlyaFaktov, vstavitFakty: vstavitFakty };
 });

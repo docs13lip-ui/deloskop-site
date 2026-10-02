@@ -118,7 +118,32 @@ def pechat_otcheta(o, podrobno=False):
             print("  %s — %s · %s" % (inn, pr, dg))
 
 
+# kartochki-ascii-v1: невидимые знаки в файлах карточек — сущностями, а не «сырыми» байтами.
+# Так серию карточек можно перенести перепечаткой текста патча (проект → папка → GitHub) без потери
+# неразрывных пробелов: перепечатка теряет U+00A0 (у kartochki-v3.1…v3.3 так и не сошлась), а «&nbsp;» — нет.
+# Внутри <script> (JSON-LD) сущности не раскрываются — там JSON-экранирование «\u00a0». Браузер и поиск видят то же самое.
+NEVIDIMYE = {"\u00a0": ("&nbsp;", "\\u00a0"), "\u202f": ("&#8239;", "\\u202f"), "\u2009": ("&#8201;", "\\u2009"),
+             "\u2060": ("&#8288;", "\\u2060"), "\u00ad": ("&shy;", "\\u00ad"), "\u200b": ("&#8203;", "\\u200b")}
+_NEV = re.compile("[" + "".join(NEVIDIMYE) + "]")
+_SKRIPT = re.compile(r"(<script\b[^>]*>)(.*?)(</script>)", re.S | re.I)
+
+
+def bez_nevidimyh(txt):
+    """Заменяет невидимые знаки: в разметке и тексте — HTML-сущностью, внутри <script> — JSON-экранированием."""
+    if not _NEV.search(txt):
+        return txt
+    chasti, poz = [], 0
+    for m in _SKRIPT.finditer(txt):
+        chasti.append(_NEV.sub(lambda z: NEVIDIMYE[z.group()][0], txt[poz:m.start()]))
+        chasti.append(m.group(1) + _NEV.sub(lambda z: NEVIDIMYE[z.group()][1], m.group(2)) + m.group(3))
+        poz = m.end()
+    chasti.append(_NEV.sub(lambda z: NEVIDIMYE[z.group()][0], txt[poz:]))
+    return "".join(chasti)
+
+
 def zapisat(put, txt):
+    if put.endswith(".html"):
+        txt = bez_nevidimyh(txt)
     os.makedirs(os.path.dirname(put), exist_ok=True)
     stary = open(put, encoding="utf-8").read() if os.path.exists(put) else None
     if stary != txt:

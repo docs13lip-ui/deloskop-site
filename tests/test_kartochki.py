@@ -27,6 +27,14 @@ def sobrat(zapisi, **kw):
     return d, kart, o
 
 
+def chitat(p):
+    """Страница карточки как её видит браузер: сущности невидимых знаков (kartochki-ascii-v1) — обратно в знаки."""
+    t = pathlib.Path(p).read_text(encoding="utf-8")
+    for z, (sush, _) in K.NEVIDIMYE.items():
+        t = t.replace(sush, z)
+    return t
+
+
 def stranicy(d):
     return sorted(pathlib.Path(d, "company").glob("*/index.html"))
 
@@ -89,7 +97,8 @@ class TestStranica(unittest.TestCase):
     def setUpClass(cls):
         os.environ.pop("PERSONS_PUBLIC", None)
         cls.d, cls.kart, cls.o = sobrat(O.nabor(30))
-        cls.html = {p: p.read_text(encoding="utf-8") for p in stranicy(cls.d)}
+        cls.html = {p: chitat(p) for p in stranicy(cls.d)}
+        cls.syrye = {p: p.read_text(encoding="utf-8") for p in stranicy(cls.d)}
 
     def test_seo_meta(self):
         for p, t in self.html.items():
@@ -120,10 +129,31 @@ class TestStranica(unittest.TestCase):
         os.environ["PERSONS_PUBLIC"] = "1"
         try:
             d, _, _ = sobrat(O.nabor(3))
-            t = stranicy(d)[0].read_text(encoding="utf-8")
+            t = chitat(stranicy(d)[0])
             self.assertIn("Руководство и владельцы", t)
         finally:
             os.environ.pop("PERSONS_PUBLIC", None)
+
+    def test_ascii_nevidimye(self):
+        """kartochki-ascii-v1: в файлах карточек и хаба нет «сырых» невидимых знаков — патч переносится перепечаткой."""
+        hub = pathlib.Path(self.d, "company", "index.html")
+        for p in list(self.syrye) + [hub]:
+            t = p.read_text(encoding="utf-8")
+            self.assertIsNone(K._NEV.search(t), p)
+        t = next(iter(self.syrye.values()))
+        self.assertIn("&nbsp;", t)  # неразрывные пробелы на месте — только записаны сущностью
+        ld = json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', t, re.S).group(1))
+        self.assertNotIn("&nbsp;", json.dumps(ld, ensure_ascii=False))  # в JSON-LD сущность не раскрылась бы
+
+    def test_bez_nevidimyh_obratimo(self):
+        import html as H
+        iskh = '<p>48,3\u00a0млн\u00a0₽ и\u202f5</p><script type="application/ld+json">{"name":"А\u00a0Б"}</script><b>в\u00a0г</b>'
+        t = K.bez_nevidimyh(iskh)
+        self.assertIsNone(K._NEV.search(t))
+        self.assertEqual(H.unescape(t.split("<script")[0]), iskh.split("<script")[0])
+        self.assertEqual(json.loads(re.search(r"<script[^>]*>(.*?)</script>", t).group(1))["name"], "А\u00a0Б")
+        self.assertEqual(K.bez_nevidimyh(t), t)  # повторная запись ничего не меняет
+        self.assertEqual(K.bez_nevidimyh("abc"), "abc")
 
     def test_net_telefonov_i_pochty_kompanii(self):
         for t in self.html.values():
@@ -183,7 +213,7 @@ class TestStranica(unittest.TestCase):
 
     def test_hab_noindex_malo_kartochek(self):
         d, kart, _ = sobrat(O.nabor(5))
-        hub = pathlib.Path(d, "company", "index.html").read_text(encoding="utf-8")
+        hub = chitat(pathlib.Path(d, "company", "index.html"))
         self.assertIn('content="noindex, follow"', hub)
         self.assertNotIn("<loc>https://deloskop.ru/company/</loc>", pathlib.Path(d, "sitemap-companies.xml").read_text(encoding="utf-8"))
 
@@ -413,7 +443,7 @@ class TestObshchijRender(unittest.TestCase):
         self.assertEqual(len(pervye), len(kart))
         for adres, txt in pervye.items():
             fajl = pathlib.Path(d, adres.strip("/"), "index.html").read_text(encoding="utf-8")
-            self.assertEqual(txt, fajl, adres)
+            self.assertEqual(K.bez_nevidimyh(txt), fajl, adres)  # API отдаёт знаки, сайт хранит сущности — браузер видит одно и то же
 
     def test_api_ip_i_vorota(self):
         import kartochka_render as R

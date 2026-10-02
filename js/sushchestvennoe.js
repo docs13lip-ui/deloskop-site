@@ -74,6 +74,9 @@
     a.sort(function (p, q) { return p.year - q.year; });
     return a.length ? { year: +a[a.length - 1].year, value: Number(a[a.length - 1].value) } : null;
   }
+  // Кредитная организация — по основному ОКВЭД 64.1 (денежное посредничество): банки и НКО.
+  var CBR_BANK = 'https://www.cbr.ru/finorg/foinfo/';
+  function bank(c) { return /^64\.1(\.|\d|$)/.test(String((c || {}).okved || '')); }
   function ip(r) { return String(((r || {}).company || {}).inn || '').length === 12; }
 
   // ---- отчётность: последний год выручки и прибыли (ГИР БО), без запроса к сети ----
@@ -130,6 +133,10 @@
       if (o) {
         var pr = o.pribyl == null ? '' : o.pribyl < 0 ? ' · убыток ' + dengi(-o.pribyl) : ' · прибыль ' + dengi(o.pribyl);
         add({ k: 'otchetnost', nazv: 'Выручка за ' + o.god, znach: dengi(o.vyruchka) + pr, ton: 'neutral', ist: 'ГИР БО ФНС', data: '31.12.' + o.god });
+      } else if (bank(c)) {
+        // банк сдаёт отчётность в Банк России, в ГИР БО ФНС её нет — «нет в ответе» здесь вводит в заблуждение
+        add({ k: 'otchetnost', nazv: 'Бухотчётность', znach: 'Банк сдаёт её в' + NB + 'Банк России, а не в' + NB + 'ГИР' + NB + 'БО', ton: 'neutral',
+          ist: reestr + ', ОКВЭД ' + c.okved, data: dataPr, ssylka: CBR_BANK + (/^\d{13}$/.test(String(c.ogrn || '')) ? '?ogrn=' + c.ogrn : '') });
       } else {
         add({ k: 'otchetnost', nazv: 'Бухотчётность', znach: 'Нет в ответе ГИР БО', ton: 'neutral', ist: 'ГИР БО ФНС', data: dataPr });
       }
@@ -332,5 +339,5 @@
     return true;
   }
 
-  return { fakty: fakty, glubina: glubina, otchetnost: otchetnost, html: html, mount: mount, htmlSvoj: htmlSvoj, mountSvoj: mountSvoj, dengi: dengi, srok: srok, MAKS: MAKS, CSS: CSS };
+  return { fakty: fakty, bank: bank, glubina: glubina, otchetnost: otchetnost, html: html, mount: mount, htmlSvoj: htmlSvoj, mountSvoj: mountSvoj, dengi: dengi, srok: srok, MAKS: MAKS, CSS: CSS };
 });

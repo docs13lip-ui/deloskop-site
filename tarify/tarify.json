@@ -17,6 +17,7 @@
   },
   "skoraya_pod_klyuch": {"nazvanie": "Скорая под ключ", "cena_rub": 4990, "razovo": true, "podarok": "месяц «Про»", "soglasovano": "владелец, 26.09.2026"},
   "osnovatel": {"nazvanie": "Тариф основателя", "cena_rub": 7150, "razovo": true, "dostup": "pro", "mesyacev": 12, "mest": 300, "soglasovano": "владелец, 26.09.2026"},
+  "partner_stavka": {"_kak": "Ставки партнёрской программы (/partneram/usloviya/). Оплата продукта с razovo: true — ставка razovo, остальные (тарифы, подписки-дополнения) — podpiska. Страница сверяется с этим ключом тестом tests/partnery_stavka.test.js.", "podpiska": 25, "razovo": 15, "mesyacev": 12, "vyplata_ot_rub": 1000, "soglasovano": "владелец, 30.09.2026 (п. 5); тексты — [Право] 02.10.2026 11:15"},
   "tarify": [
     {
       "id": "free", "nazvanie": "Бесплатно", "dlya": "Чтобы разово проверить компанию",

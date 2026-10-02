@@ -79,6 +79,7 @@ td b{font-weight:600}
 .sam .sam-t{color:var(--ink2)}.sam a{font-weight:500}.sam small{color:var(--muted);font-size:12.5px}
 .sam .kinn{font:inherit;font-size:13px;border:1px solid var(--line);background:#fff;border-radius:9px;padding:4px 10px;cursor:pointer;color:var(--ink2)}
 .sam .kinn:hover{border-color:var(--ink2)}
+.sam .sam-zsk{font-size:14px;font-weight:500}
 .otm-b{font:inherit;font-size:13px;border:0;background:none;color:var(--accent);cursor:pointer;padding:4px 0;font-weight:500}
 .otm-f{flex-basis:100%;display:grid;gap:10px;margin-top:6px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:#FAFAF8}
 .otm-f fieldset{border:0;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px 16px}
@@ -344,6 +345,7 @@ td b{font-weight:600}
     var mozhno=x.status==='not_checked';
     return '<div class="sam" data-sam="'+x.n+'"><span class="sam-t">Проверьте сами, бесплатно:</span>'+x.sam.map(function(a){return '<span><a href="'+esc(a.url)+'" target="_blank" rel="noopener">'+esc(a.tekst)+'</a>'+(a.chto?' <small>— '+esc(a.chto)+'</small>':'')+'</span>'}).join('')+
       (INN?'<button type="button" class="kinn noprint" data-inn="'+esc(INN)+'">Скопировать ИНН '+esc(INN)+'</button>':'')+
+      (x.id==='stoplisty'?'<a class="sam-zsk noprint" href="/115-fz/proverit-kontragenta-zsk-po-inn/#platit-li">Что делать, если поставщик в красной зоне&nbsp;→</a>':'')+
       (mozhno?(OTM[x.n]?otmStroka(OTM[x.n]):'<button type="button" class="otm-b noprint" data-otm-open="'+x.n+'">Я проверил — отметить результат</button>')+otmForma(x):'')+'</div>';
   }
   function otmSvodka(){var e=document.getElementById('otm-sv');if(!e)return;var t=P.otmetkiSvodka(Object.keys(OTM).map(function(k){return OTM[k]}));e.textContent=t;e.hidden=!t;}

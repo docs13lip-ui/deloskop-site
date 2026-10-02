@@ -4,8 +4,9 @@
     python3 tests/sobrat_faq.py          # собрать (страницы перезаписываются)
     python3 tests/sobrat_faq.py --check  # проверить: собрано и ответы дословно из статьи
 
-Правило качества: каждый ответ — только дословные предложения из этой же статьи (текст до </article>,
-без самого блока). Так в вопросах не появляется ни одного нового утверждения: юридические и налоговые
+Правило качества: каждый ответ — только дословные предложения из этой же статьи (текст от <h1 до </article>,
+без самого блока). У страниц-калькуляторов без <article> границу текста и место блока задаёт метка
+<!--faq-mesto--> (ровно одна на странице): блок встаёт сразу после неё. Так в вопросах не появляется ни одного нового утверждения: юридические и налоговые
 тексты сначала проходят [Право] в статье, а уже потом попадают в вопросы. Разметка FAQPage строится из
 тех же строк, что видит читатель, — расхождений между видимым текстом и JSON-LD не бывает.
 """
@@ -63,9 +64,17 @@ def faqpage(voprosy):
         for x in voprosy]}
 
 
+METKA = "<!--faq-mesto-->"
+
+
+def konec(s):
+    """Граница текста статьи: </article>, а у калькуляторов без <article> — метка <!--faq-mesto-->."""
+    return "</article>" if "</article>" in s else METKA
+
+
 def tekst_stati(s):
     s = re.sub(r"<!--faq-->.*?<!--/faq-->", "", s, flags=re.S)
-    a = s[s.index("<h1"):s.index("</article>")]
+    a = s[s.index("<h1"):s.index(konec(s))]
     return norm(a)
 
 
@@ -80,15 +89,16 @@ def sobrat(s, voprosy, rel):
         for p in x["o"]:
             if norm(p) not in t:
                 oshibki.append(f"{rel}: предложения нет в статье дословно: {p}")
-    if s.count("</article>") != 1 or s.count("</head>") != 1:
-        oshibki.append(f"{rel}: нужен ровно один </article> и </head>")
+    k = konec(s)
+    if s.count(k) != 1 or s.count("</head>") != 1:
+        oshibki.append(f"{rel}: нужен ровно один </article> (или метка {METKA}) и </head>")
         return s, oshibki
-    # блок — сразу после </article>
+    # блок — сразу после </article> (или после метки)
     b = blok(voprosy)
     if "<!--faq-->" in s:
         s = re.sub(r"<!--faq-->.*?<!--/faq-->", lambda m: b, s, flags=re.S)
     else:
-        s = s.replace("</article>", "</article>\n" + b, 1)
+        s = s.replace(k, k + "\n" + b, 1)
     # стили — в <head>
     if "<!--faq-css-->" in s:
         s = re.sub(r"<!--faq-css-->.*?<!--/faq-css-->", lambda m: CSS, s, flags=re.S)

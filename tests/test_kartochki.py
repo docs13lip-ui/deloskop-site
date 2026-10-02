@@ -683,5 +683,43 @@ class TestIzApiLimit(unittest.TestCase):
         self.assertEqual(K.MAKS_ZAPROSOV, 300)
 
 
+class TestKartochkiV4Kod(unittest.TestCase):
+    """kartochki-v4-kod: имя после внутренней кавычки и V21 «В реестре МСП» из строки ответа API (ворота не тронуты)."""
+
+    def test_imya_posle_vnutrennej_kavychki(self):
+        self.assertEqual(K.imya('АО "АВИАКОМПАНИЯ "СИБИРЬ"'), "АО «Авиакомпания Сибирь»")
+        self.assertEqual(K.imya('ООО "ТОРГОВЫЙ ДОМ "ЛЕНТА"'), "ООО «Торговый дом Лента»")
+        self.assertEqual(K.imya('ПАО "НК "РОСНЕФТЬ"'), "ПАО «НК Роснефть»")
+        self.assertEqual(K.imya('ООО "МИР ТЕХНИКИ"'), "ООО «Мир техники»")
+        self.assertEqual(K.imya('ПАО "МТС"'), "ПАО «МТС»")
+
+    def _msp(self, detail, status="ok", as_of="2026-09-10"):
+        r = O.zapis(3, shtat=1, dohod=None)  # меньше выводов — V21 (⚪, последний по порядку) не срезается пределом 6
+        s = {"title": "Реестр МСП", "status": status, "detail": detail, "source": "ФНС, реестр МСП"}
+        if as_of:
+            s["as_of"] = as_of
+        r["signals"].append(s)
+        k = K.iz_check(r)
+        return k, [x for x in K.vyvody(k) if x["kod"] == "V21"]
+
+    def test_v21_kategoriya_s_datoj(self):
+        k, v = self._msp("Малое предприятие")
+        self.assertEqual(len(v), 1)
+        self.assertEqual(v[0]["tekst"], "В реестре МСП: малое предприятие")
+        self.assertEqual((v[0]["ton"], v[0]["s_chislom"], v[0]["istochnik"]), ("info", False, "ФНС, реестр МСП"))
+        self.assertEqual(self._msp("Микропредприятие")[1][0]["tekst"], "В реестре МСП: микропредприятие")
+
+    def test_v21_ne_dodumyvaem(self):
+        self.assertEqual(self._msp("субъект малого и среднего предпринимательства")[1], [])  # категория не названа
+        self.assertEqual(self._msp("Малое предприятие", as_of=None)[1], [])  # без даты сведений — не проверка
+        self.assertEqual(self._msp("исключено из реестра: малое предприятие", status="warn")[1], [])
+
+    def test_v21_ne_oslablyaet_vorota(self):
+        # V21 — без числа: компания с одним выводом-числом ворота не проходит, сколько бы ⚪ ни было
+        r = O.zapis(4, shtat=1, dohod=None)
+        r["signals"].append({"title": "Реестр МСП", "status": "ok", "detail": "Микропредприятие", "source": "ФНС, реестр МСП", "as_of": "2026-09-10"})
+        self.assertFalse(K.vorota(K.iz_check(r))[0])
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

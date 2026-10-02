@@ -9,7 +9,8 @@
     "115-fz/zablokirovali-schet-chto-delat/index.html": ["otklyuchili-internet-bank", "zagraditelnye-komissii"],
     "115-fz/zapros-banka-po-115-fz-kak-otvetit/index.html": ["otklyuchili-internet-bank"],
     "115-fz/zsk-zony-riska/index.html": ["krasnaya-zona-zsk-sud", "zagraditelnye-komissii"],
-    "nalogi/statya-54-1-nk-prostymi-slovami/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke"],
+    "nalogi/statya-54-1-nk-prostymi-slovami/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke", "droblenie-uplachennaya-usn-zachityvaetsya"],
+    "nalogi/nagruzka/index.html": ["droblenie-uplachennaya-usn-zachityvaetsya"],
     "nalogi/priznaki-tehnicheskoj-kompanii/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke"],
     "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["proverka-kontragenta-na-datu-sdelki"],
     "pasport/index.html": ["proverka-kontragenta-na-datu-sdelki"],
@@ -18,6 +19,32 @@
     "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud"]
   },
   "razbory": [
+    {
+      "razdel": "nalogi",
+      "slug": "droblenie-uplachennaya-usn-zachityvaetsya",
+      "h1": "Налоговая признала дробление бизнеса. Уплаченная УСН пропадёт?",
+      "title": "Дробление бизнеса: уплаченную УСН вычтут из доначислений — Делоскоп",
+      "description": "Верховный суд в деле «Сормово»: налоги, которые участники группы уже заплатили по упрощёнке, уменьшают доначисления, а пени на них не начисляют.",
+      "zapros": "дробление бизнеса зачет уплаченного усн верховный суд",
+      "data": "2026-10-02",
+      "minut": 6,
+      "lid": "«Налоговая говорит, что наши компании — один бизнес, и пересчитывает налоги как для одной. Но мы же платили УСН каждый год — эти деньги пропадут?» Не пропадут: в деле «Сормово» Верховный суд решил, что уплаченная участниками группы УСН уменьшает доначисление, а на деньги, которые бюджет получил вовремя, пени не начисляют. Разбираем, как работает зачёт и сколько он стоит.",
+      "dela": [
+        {"sud": "Верховный суд РФ, СКЭС", "sud_kratko": "ВС", "akt": "Определение", "nomer": "№ 301-ЭС22-11144", "data": "2022-10-17", "delo": "А43-21183/2020 («Сормово»), первый круг", "na_konu": "343,9 млн ₽ доначислений с пенями и штрафами; уплачено по УСН — больше 131 млн ₽", "na_konu_kratko": "343,9 млн ₽", "itog": "На новое рассмотрение", "itog_nov": true,
+         "istochnik": "https://kad.arbitr.ru/", "istochnik_podpis": "kad.arbitr.ru — поиск по номеру дела А43-21183/2020; текст сверен по garant.ru", "sverka": "2026-10-02"},
+        {"sud": "Верховный суд РФ, СКЭС", "sud_kratko": "ВС", "akt": "Определение", "nomer": "№ 301-ЭС22-11144 (второй круг)", "data": "2024-05-27", "delo": "А43-21183/2020 («Сормово»), второй круг", "na_konu": "пени и штраф по НДС", "na_konu_kratko": "пени и штраф", "itog": "На новое рассмотрение", "itog_nov": true,
+         "istochnik": "https://kad.arbitr.ru/", "istochnik_podpis": "kad.arbitr.ru — поиск по номеру дела А43-21183/2020; текст сверен по публикации на v2b.ru", "sverka": "2026-10-02"}
+      ],
+      "knopka": {"zagolovok": "Как вашу группу видит налоговая", "tekst": "«Кому вы платите»: загрузите выписку — покажем поставщиков и покупателей по открытым данным ФНС: статус, сотрудники, налоги.", "knopka": "Проверить, кому вы платите", "url": "/kontragenty-iz-vypiski/"},
+      "zakon": [
+        ["п. 1 ст. 54.1 НК РФ — пределы прав на уменьшение налога", "ред. на 02.10.2026", "https://www.consultant.ru/document/cons_doc_LAW_19671/"],
+        ["п. 7 ст. 3 НК РФ — неустранимые сомнения толкуются в пользу налогоплательщика", "ред. на 02.10.2026", "https://www.consultant.ru/document/cons_doc_LAW_19671/"],
+        ["п. 4 ст. 164 НК РФ — расчётная ставка НДС", "ред. на 02.10.2026", "https://www.consultant.ru/document/cons_doc_LAW_28165/"],
+        ["Обзор практики применения арбитражными судами положений законодательства о налогах и сборах, связанных с оценкой обоснованности налоговой выгоды (утв. Президиумом ВС РФ 13.12.2023), пп. 13–14", "", "https://www.consultant.ru/document/cons_doc_LAW_464347/"],
+        ["ст. 6 Федерального закона от 12.07.2024 № 176-ФЗ — налоговая амнистия при дроблении бизнеса (на условиях закона)", "", "https://www.nalog.gov.ru/rn77/promo/na/"]
+      ],
+      "pohozhie": ["vokfors-rekonstrukciya", "proverka-kontragenta-na-datu-sdelki"]
+    },
     {
       "razdel": "115-fz",
       "slug": "dvojnik-postavshchika-bank-poluchatelya",
@@ -35,7 +62,7 @@
       "knopka": {"zagolovok": "Сверьте ИНН до оплаты", "tekst": "«Проверь счёт»: поставщик прислал новые реквизиты — сравните старые и новые и сверьте ИНН получателя с ЕГРЮЛ до платежа.", "knopka": "Проверить счёт", "url": "/proverit-schet/#smena"},
       "zakon": [
         ["п. 1 ст. 312 ГК РФ — плательщик вправе потребовать доказательств, что деньги принимает сам кредитор, и несёт риск, если не потребовал", "ред. 08.03.2015 № 42-ФЗ", "https://www.consultant.ru/document/cons_doc_LAW_5142/"],
-        ["ст. 865, 866 ГК РФ — исполнение платёжного поручения и ответственность банка за ненадлежащее исполнение", "", "https://www.consultant.ru/document/cons_doc_LAW_9027/"],
+        ["п. 2 ст. 866 ГК РФ — если платёж исполнен ненадлежаще из-за нарушения банком получателя правил перевода, суд может возложить ответственность перед плательщиком на банк получателя", "ред. 24.06.2025, изм. 09.06.2026", "https://www.consultant.ru/document/cons_doc_LAW_9027/"],
         ["ч. 7 ст. 5 Федерального закона от 27.06.2011 № 161-ФЗ — перевод безотзывный с момента списания денег со счёта плательщика", "ред. 04.08.2026", "https://www.consultant.ru/document/cons_doc_LAW_115625/"]
       ],
       "pohozhie": ["zagraditelnye-komissii", "otklyuchili-internet-bank"]

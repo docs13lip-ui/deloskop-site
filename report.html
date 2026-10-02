@@ -479,7 +479,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
     doc.innerHTML=
       '<div class="dhead"><div class="brand">'+LOGO+'делоскоп</div><div class="dtitle"><b>Досье контрагента</b>№ '+esc(id)+'<br>Сформировано '+at.toLocaleDateString('ru-RU',{timeZone:'Europe/Moscow'})+' в '+at.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Moscow'})+' (МСК)</div></div>'+
       '<h1>'+esc(c.name_short||name)+'</h1><div class="sub">ИНН '+esc(c.inn)+(c.status?' · '+esc((ST[c.status]||c.status).toLowerCase()):'')+'</div>'+
-      '<div class="risk '+lvl+'"><b>'+esc({low:'Сигналов мало',medium:'Есть вопросы',high:'Серьёзные сигналы'}[r.risk_level]||'')+'</b><span>'+esc(r.verdict||'')+'</span></div>'+
+      '<div class="risk '+lvl+'"><b>'+esc({low:'Без серьёзных сигналов',medium:'Есть вопросы',high:'Есть серьёзные сигналы'}[r.risk_level]||'')+'</b><span>'+esc(r.verdict||'')+'</span></div>'+
       (D?dossierHtml(D):'<h2>Сведения о компании</h2><table>'+rows+'</table>')+
       '<h2>Светофор по признакам риска</h2><table class="sig">'+sig+'</table>'+
       (window.Usloviya?'<h2>Условия сделки</h2><div data-usl></div>':(D?'<h2>Что запросить у контрагента до оплаты</h2><ul class="checklist">'+D.documents.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>':''))+

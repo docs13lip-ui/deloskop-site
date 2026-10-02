@@ -215,7 +215,7 @@ ul.list .nm span{color:var(--muted);font-size:13px}
 (function(){
   var API=(location.hostname.endsWith('deloskop.ru')?'https://api.deloskop.ru':'');
   var PLANS={free:'Бесплатный',start:'Старт',pro:'Профи',business:'Бизнес',team:'Команда — без лимитов'};
-  var LEVELS={low:'Сигналов мало',medium:'Есть вопросы',high:'Серьёзные сигналы'};
+  var LEVELS={low:'Без серьёзных сигналов',medium:'Есть вопросы',high:'Серьёзные сигналы'};
   var $=function(id){return document.getElementById(id)};
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
   function call(path,opt){opt=opt||{};opt.credentials='include';

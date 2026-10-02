@@ -100,5 +100,48 @@
     return n;
   }
 
-  return { TON: TON, MAKS: MAKS, gotov: gotov, zapis: zapis, najti: najti, html: html, zagruzit: zagruzit, vstavit: vstavit, dlina: dlina };
+  // Паспорт контрагента: строки разделов (fakty) собраны из тех же строк светофора — заголовок строки = заголовок признака.
+  // Чистая функция: [{ f: "razdel:i", k: комментарий }] для строк, к которым есть утверждённый текст.
+  // Служебные и расчётные разделы (Итог, предел, что запросить, чего не знаем) — без комментариев.
+  var BEZ = { predel: 1, zaprosit: 1, ne_znaem: 1, podlinnost: 1, indeks: 1 };
+  var TON_FAKTA = { ok: "ok", warn: "warn", bad: "bad" };
+  function dlyaFaktov(razdely, signals, sprav) {
+    if (!sprav) return [];
+    var vzyat = {}, out = [];
+    (razdely || []).forEach(function (x) {
+      if (!x || BEZ[x.id] || x.vid === "sluzhebnyj") return;
+      (x.fakty || []).forEach(function (f, i) {
+        var t = String((f && f.tekst) || "");
+        if (!t) return;
+        for (var j = 0; j < (signals || []).length; j++) {
+          var s = signals[j];
+          if (vzyat[j] || String((s && s.title) || "") !== t || TON_FAKTA[s.status] !== f.ton) continue;
+          vzyat[j] = 1;
+          var k = najti(sprav, s);
+          if (k) out.push({ f: x.id + ":" + i, k: k });
+          return;
+        }
+      });
+    });
+    return out;
+  }
+
+  // Браузер: под строкой tr[data-f] Паспорта — строка с комментарием (повторно не вставляет).
+  function vstavitFakty(koren, spisok) {
+    if (!koren || !spisok) return 0;
+    var n = 0;
+    spisok.forEach(function (v) {
+      var tr = koren.querySelector('tr[data-f="' + v.f + '"]');
+      if (!tr || (tr.nextSibling && tr.nextSibling.className === "kom-tr")) return;
+      var nov = tr.ownerDocument.createElement("tr");
+      nov.className = "kom-tr";
+      nov.innerHTML = '<td colspan="2">' + html(v.k) + "</td>";
+      tr.parentNode.insertBefore(nov, tr.nextSibling);
+      n++;
+    });
+    return n;
+  }
+
+  return { TON: TON, MAKS: MAKS, gotov: gotov, zapis: zapis, najti: najti, html: html, zagruzit: zagruzit, vstavit: vstavit, dlina: dlina,
+    dlyaFaktov: dlyaFaktov, vstavitFakty: vstavitFakty };
 });

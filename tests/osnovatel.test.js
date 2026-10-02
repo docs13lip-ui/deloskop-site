@@ -34,9 +34,13 @@ test('/osnovatel/: цены — только из tarify.json, SEO и FAQ по �
   // FAQPage — только с видимыми вопросами
   const faq = JSON.parse(t.match(/<script type="application\/ld\+json">(\{"@context": "https:\/\/schema.org", "@type": "FAQPage"[\s\S]*?)<\/script>/)[1]);
   assert.strictEqual(faq.mainEntity.length, (t.match(/<details><summary>/g) || []).length);
-  // счётчик скрыт, пока API не сказал «занято ≥ 10»; кнопка — бронь; окно счёта — js/schet.js
+  // счётчик скрыт, пока API не сказал «занято ≥ 10»; кнопка — счёт (не бронь: п. 3.8 (а)); окно счёта — js/schet.js
   assert.ok(/data-osn-seats hidden/.test(t));
-  assert.ok(/<a [^>]*href="\/schet\/\?produkt=osnovatel" data-schet data-produkt="osnovatel"[^>]*>Забронировать место<\/a>/.test(t));
+  assert.ok(/<a [^>]*href="\/schet\/\?produkt=osnovatel" data-schet data-produkt="osnovatel"[^>]*>Получить счёт на(&nbsp;| )тариф основателя<\/a>/.test(t));
+  const tt = t.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ');
+  assert.ok(tt.includes('Место закрепляется в день, когда оплата поступит на наш счёт. Номер основателя — по дате зачисления (п. 3.8 оферты).'));
+  assert.ok(t.includes('Да: счёт и акт на каждый оплаченный год — на дату открытия доступа (п. 6.2 оферты).'), 'FAQ «закрывающие документы» → п. 6.2');
+  assert.ok(!/Условия — в(&nbsp;| )<a href="\/oferta\/#osnovatel">оферте, п/.test(t));
   assert.ok(t.includes('<script src="/js/schet.js" defer></script>') && t.includes('<script src="/js/osnovatel.js" defer></script>'));
   assert.ok(!/зачёркн|<s>|<del>|таймер|осталось \d+ (час|мин)/i.test(t), 'без зачёркнутых цен и таймеров');
   assert.ok(!/без НДС навсегда/.test(t));
@@ -60,4 +64,23 @@ test('/tarify/: полоса «Тариф основателя» над карт
 test('окно счёта: у «Основателя» своя первая строка (не про анкету и выписку «Скорой»)', () => {
   const j = chitat('js/schet.js');
   assert.ok(/osnovatel: "Тариф «Про» на 12 месяцев/.test(j));
+});
+
+test('без «брони»: /osnovatel/ (оба вида), /tarify/ и js/osnovatel.js не обещают бронь места (п. 3.8 (а) оферты)', () => {
+  const zapret = /забронир|брон[ьиеяю]|зарезерв|резерв мест/i;
+  const html = chitat('osnovatel/index.html');
+  for (const [imya, t] of [['/osnovatel/ платный', vidimoe(platnyj(html))], ['/osnovatel/ бета', html], ['/tarify/', chitat('tarify/index.html')]]) {
+    const vid = t.replace(/<script[\s\S]*?<\/script>/g, (m) => m.includes('FAQPage') ? m : '').replace(/<!--[\s\S]*?-->/g, '');
+    assert.ok(!zapret.test(vid), imya + ': ' + (vid.match(zapret) || [])[0]);
+  }
+  const j = chitat('js/osnovatel.js').split('\n').filter(l => !l.trim().startsWith('//')).join('\n');
+  assert.ok(!zapret.test(j), 'js/osnovatel.js');
+});
+
+test('оферта п. 3.8 (з): счёт 5 рабочих дней, мест нет — возврат или зачёт за 10 рабочих дней; окно счёта — «при наличии свободного места»', () => {
+  const o = chitat('oferta/index.html').replace(/&nbsp;/g, ' ');
+  const blok = o.slice(o.indexOf('<li id="osnovatel">'), o.indexOf('<h2 id="o4">'));
+  assert.ok(blok.includes('(з) Счёт на Тариф основателя действует 5 рабочих дней с даты выставления.'));
+  assert.ok(blok.includes('все 300 мест уже заняты') && blok.includes('10 рабочих дней'));
+  assert.ok(/osnovatel: "[^"]*Место основателя — при наличии свободного места на дату зачисления \(п\. 3\.8 оферты\)/.test(chitat('js/schet.js')));
 });

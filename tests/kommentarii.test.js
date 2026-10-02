@@ -13,7 +13,7 @@ const STATUSY = new Set(["zhdet_prava", "chernovik", "utverzhdeno"]);
 
 // Заголовки строк светофора, которые отдаёт живой /api/check (из ответов 01–02.10 и фикстур тестов) → ожидаемый id
 const ZHIVYE = {
-  "Статус": "likvidaciya",
+  "Статус": "status",
   "Возраст компании": "vozrast",
   "Адрес": "adres",
   "Недостоверность адреса или руководителя": "nedostovernost",
@@ -49,15 +49,21 @@ test("библиотека: id уникальны, порядок 1…N, рег�
     assert.strictEqual(x.poryadok, i + 1, x.id);
     assert.match(x.id, /^[a-z_]+$/);
     assert.ok(x.nazv && x.norma, x.id);
-    assert.doesNotThrow(() => new RegExp(x.re, "i"), x.id);
-    assert.ok(!/\\b/.test(x.re), "без \\b — в JS не работает с кириллицей: " + x.id);
-    assert.deepStrictEqual(Object.keys(x.tony).sort(), ["kras", "zel", "zhel"]);
+    for (const r of [x.re, x.uslovie].filter(Boolean)) {
+      assert.doesNotThrow(() => new RegExp(r, "i"), x.id);
+      assert.ok(!/\\b/.test(r), "без \\b — в JS не работает с кириллицей: " + x.id);
+    }
+    if (x.kak) {
+      const c = s.find((y) => y.id === x.kak);
+      assert.ok(c && !c.kak && c.tony, x.id + ": kak ведёт на запись с текстами");
+      assert.ok(!x.tony, x.id + ": у записи kak своих текстов нет");
+    } else assert.deepStrictEqual(Object.keys(x.tony).sort(), ["kras", "zel", "zhel"]);
   });
   assert.ok(SPRAV.podpis && !/\d+\s*(лет|год)/i.test(SPRAV.podpis), "подпись без стажа числом");
 });
 
 test("библиотека: тексты — без запрещённых слов, ≤ 300 знаков; утверждённый — с ролью и датой", () => {
-  for (const x of SPRAV.signaly) for (const [ton, t] of Object.entries(x.tony)) {
+  for (const x of SPRAV.signaly) for (const [ton, t] of Object.entries(x.tony || {})) {
     const gde = x.id + "/" + ton;
     assert.ok(STATUSY.has(t.status), gde);
     for (const k of ["bank", "nalog", "sdelat"]) if (t[k]) assert.ok(!ZAPRET.test(t[k]), gde + ": запрещённое слово — " + t[k]);
@@ -80,7 +86,7 @@ test("живые заголовки светофора находят свою �
 
 test("без утверждённых текстов — ничего не показываем", () => {
   for (const title of Object.keys(ZHIVYE)) for (const status of ["ok", "warn", "bad"])
-    if (SPRAV.signaly.every((x) => Object.values(x.tony).every((t) => t.status !== "utverzhdeno")))
+    if (SPRAV.signaly.every((x) => Object.values(x.tony || {}).every((t) => t.status !== "utverzhdeno")))
       assert.strictEqual(K.najti(SPRAV, { title, status }), null);
   const S = spravS({ zel: { status: "chernovik", sdelat: "x", bank: "y" }, zhel: utv({ bank: "б", sdelat: "с" }), kras: utv({ bank: "б" }) });
   assert.strictEqual(K.najti(S, { title: "ФССП", status: "ok" }), null, "черновик");
@@ -123,4 +129,61 @@ test("report.html: модуль подключён, строки светофо�
   assert.match(h, /<tr data-sig="'\+i\+'">/);
   assert.match(h, /Kommentarii\.zagruzit\(\)\.then/);
   assert.ok(!/15 лет|лучший/i.test(h));
+});
+
+// kommentarii-v2 (02.10): первые 22 текста [Право] (claude/Право_ответы_✎_02.10_комментарии_команды.md, разд. 3)
+// + деталь строки (uslovie) и общие тексты (kak). Неясная строка — без комментария.
+const NA_ZHIVOM = [
+  // [заголовок, деталь, статус] → [id записи с текстами, тон] или null
+  [["Недостоверность адреса или руководителя", "отметок нет", "ok"], ["nedostovernost", "zel"]],
+  [["Недостоверность адреса или руководителя", "есть отметка о недостоверности адреса", "bad"], ["nedostovernost", "kras"]],
+  [["Адрес", "сведения недостоверны (отметка ФНС)", "bad"], ["nedostovernost", "kras"]],
+  [["Адрес", "массовый адрес: 54 компании", "warn"], ["massovyj_adres", "zhel"]],
+  [["Адрес", "Москва", "ok"], null],
+  [["Массовый руководитель", "12 компаний", "warn"], ["massovyj_rukovoditel", "zhel"]],
+  [["Массовый адрес или руководитель", "да", "warn"], null],
+  [["Долги по налогам", "нет", "ok"], ["nedoimka", "zel"]],
+  [["Задолженность по налогам", "1,2 млн ₽", "bad"], ["nedoimka", "kras"]],
+  [["Приостановление операций по счетам", "2 решения", "bad"], ["blokirovka", "kras"]],
+  [["ФССП", "3 производства на 410 000 ₽", "warn"], ["fssp", "zhel"]],
+  [["Статус", "Банкротство", "bad"], ["bankrotstvo", "kras"]],
+  [["Статус", "Ликвидирована", "bad"], ["likvidaciya", "kras"]],
+  [["Статус", "Исключение из ЕГРЮЛ (недействующая)", "bad"], ["isklyuchenie", "kras"]],
+  [["Статус", "Компания ликвидируется или ФНС готовит её исключение из ЕГРЮЛ", "bad"], null],
+  [["Статус", "Действует", "ok"], null],
+  [["Возраст компании", "8 месяцев", "warn"], ["molodaya", "zhel"]],
+  [["Возраст компании", "1 год 8 месяцев", "warn"], null],
+  [["Среднесписочная численность", "0 человек за 2025 год", "warn"], ["net_sotrudnikov", "zhel"]],
+  [["Среднесписочная численность", "14 человек за 2025 год", "warn"], null],
+  [["Доходы и расходы", "убыток 3,1 млн ₽ за 2025 год", "warn"], ["ubytok", "zhel"]],
+  [["Доходы и расходы", "отчётность за 2025 год не сдана", "warn"], ["net_otchetnosti", "zhel"]],
+  [["Доходы и расходы", "отчётность не раскрыта", "warn"], null],
+  [["Низкая налоговая нагрузка", "0,4 % при норме 2,1 %", "warn"], ["nagruzka", "zhel"]],
+  [["Прогноз ЗСК (наша оценка): высокий уровень риска", "", "bad"], null],
+  [["Красная группа ЗСК Банка России", "", "bad"], ["zsk", "kras"]],
+  [["Дисквалификация руководителя", "да", "bad"], ["diskval", "kras"]],
+];
+
+test("v2: живые строки → свой текст [Право]; неясные — без комментария", () => {
+  for (const [[title, detail, status], ozh] of NA_ZHIVOM) {
+    const k = K.najti(SPRAV, { title, detail, status });
+    const gde = title + " · " + detail + " · " + status;
+    if (!ozh) { assert.strictEqual(k, null, gde); continue; }
+    const id = ozh[0];
+    assert.ok(k, "нет комментария: " + gde);
+    assert.deepStrictEqual([k.id, k.ton], [id, ozh[1]], gde);
+    assert.strictEqual(k.data, "02.10.2026");
+    assert.ok(k.bank && k.nalog && k.sdelat, gde);
+  }
+});
+
+test("v2: 22 тона утверждены — роль, дата, без ФИО и NBSP", () => {
+  let n = 0;
+  for (const x of SPRAV.signaly) for (const t of Object.values(x.tony || {})) if (t.status === "utverzhdeno") {
+    n++;
+    assert.strictEqual(t.proveril, "Право · Юрист 115-ФЗ и Налоговый юрист");
+    assert.strictEqual(t.data_proverki, "2026-10-02");
+    assert.ok(!/\u00a0/.test(t.bank + t.nalog + t.sdelat));
+  }
+  assert.strictEqual(n, 22);
 });

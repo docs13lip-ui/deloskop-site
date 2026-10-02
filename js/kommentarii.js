@@ -31,15 +31,23 @@
       t.sdelat && (t.bank || t.nalog) && dlina(t) <= MAKS);
   }
 
-  // Запись библиотеки для строки светофора: первое совпадение по заголовку сверху вниз.
+  // Запись библиотеки для строки светофора: первое совпадение сверху вниз.
+  // re — по заголовку строки; uslovie (необязательно) — ещё и по «заголовок · деталь»: так «Адрес» с
+  // недостоверностью в детали получает текст о недостоверности, а неясный «Статус» — ничего.
+  // kak — запись берёт тексты другой записи (один текст [Право] — несколько заголовков API).
+  function rx(s) { try { return new RegExp(s, "i"); } catch (e) { return null; } }
   function zapis(sprav, signal) {
     var list = (sprav && sprav.signaly) || [];
     var title = String((signal && signal.title) || "");
     if (!title) return null;
+    var vse = title + " · " + String((signal && signal.detail) || "");
     for (var i = 0; i < list.length; i++) {
-      var re;
-      try { re = new RegExp(list[i].re, "i"); } catch (e) { continue; }
-      if (re.test(title)) return list[i];
+      var re = rx(list[i].re);
+      if (!re || !re.test(title)) continue;
+      if (list[i].uslovie) { var u = rx(list[i].uslovie); if (!u || !u.test(vse)) continue; }
+      if (!list[i].kak) return list[i];
+      for (var j = 0; j < list.length; j++) if (list[j].id === list[i].kak && !list[j].kak) return list[j];
+      return null;
     }
     return null;
   }

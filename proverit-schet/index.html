@@ -348,7 +348,7 @@ function render(r,sel,local,remote,remoteErr){
     var co=remote.company||{};
     var lvl=remote.risk_level;
     all.push({st:lvl==='high'?'bad':lvl==='medium'?'warn':'ok',title:'Признаки риска поставщика',
-      detail:(co.name_short||co.name_full||'')+': '+({low:'Сигналов мало',medium:'Есть вопросы',high:'Серьёзные сигналы'}[remote.risk_level]||'')+'. '+(remote.verdict||'')});
+      detail:(co.name_short||co.name_full||'')+': '+({low:'Без серьёзных сигналов',medium:'Есть вопросы',high:'Есть серьёзные сигналы'}[remote.risk_level]||'')+'. '+(remote.verdict||'')});
     if(co.status&&co.status!=='ACTIVE')all.push({st:'bad',title:'Статус в ЕГРЮЛ',detail:'Компания не действует: '+({LIQUIDATING:'ликвидируется или ФНС готовит исключение из ЕГРЮЛ',LIQUIDATED:'ликвидирована',BANKRUPT:'дело о банкротстве',REORGANIZING:'реорганизация'}[co.status]||co.status)+'.'});
     if(r.kpp&&co.kpp&&r.kpp!==co.kpp)all.push({st:'warn',title:'КПП',detail:'В счёте '+r.kpp+', в ЕГРЮЛ '+co.kpp+'. Так бывает у филиалов, но стоит уточнить.'});
     var bn=window.DlkBezNds&&DlkBezNds.stroka(r.noVat,remote,new Date());if(bn)all.push(bn);

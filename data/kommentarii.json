@@ -1181,5 +1181,282 @@
     }
    }
   }
- ]
+ ],
+ "vypiska": {
+  "_kak": "«Кому вы платите» (/kontragenty-iz-vypiski/): комментарий к сигналам разбора выписки — они считаются в браузере из самой выписки, без реестров (kontragenty-iz-vypiski/engine.js: signals — по поставщику, flowSignals — по потокам «Что видит банк»). kod — код сигнала в движке, uroven — его уровень там же (bad / warn / info); тон у записи один, потому что уровень сигнала постоянный. Правила показа те же, что у signaly: только status «utverzhdeno», роль и дата проверки, «что сделать» и ≤ 300 знаков на три фразы. Тексты пишет [Право]; norma — тоже [Право] (пустая — без подписи нормы). Новый код в движке без записи здесь роняет тест kommentarii_vypiska.test.js.",
+  "zapisi": [
+   {
+    "id": "vyp_inn_invalid",
+    "kod": "inn_invalid",
+    "gde": "postavshchik",
+    "uroven": "bad",
+    "poryadok": 1,
+    "nazv": "ИНН получателя с ошибкой в контрольной цифре",
+    "norma": "",
+    "ton": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   },
+   {
+    "id": "vyp_acc_person",
+    "kod": "acc_person",
+    "gde": "postavshchik",
+    "uroven": "bad",
+    "poryadok": 2,
+    "nazv": "ИНН организации в платёжке, а деньги ушли на личный счёт 40817",
+    "norma": "",
+    "ton": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   },
+   {
+    "id": "vyp_acc_change",
+    "kod": "acc_change",
+    "gde": "postavshchik",
+    "uroven": "warn",
+    "poryadok": 3,
+    "nazv": "Поставщик сменил счёт или банк",
+    "norma": "",
+    "ton": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   },
+   {
+    "id": "vyp_acc_many",
+    "kod": "acc_many",
+    "gde": "postavshchik",
+    "uroven": "info",
+    "poryadok": 4,
+    "nazv": "Платежи одному поставщику на несколько счетов",
+    "norma": "",
+    "ton": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   },
+   {
+    "id": "vyp_inn_missing",
+    "kod": "inn_missing",
+    "gde": "postavshchik",
+    "uroven": "warn",
+    "poryadok": 5,
+    "nazv": "В платёжке нет ИНН получателя",
+    "norma": "",
+    "ton": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   },
+   {
+    "id": "vyp_key",
+    "kod": "key",
+    "gde": "postavshchik",
+    "uroven": "warn",
+    "poryadok": 6,
+    "nazv": "Ключевой поставщик: 30% расходов и больше",
+    "norma": "",
+    "ton": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   },
+   {
+    "id": "vyp_oneshot",
+    "kod": "oneshot",
+    "gde": "postavshchik",
+    "uroven": "warn",
+    "poryadok": 7,
+    "nazv": "Разовый крупный платёж: 10% расходов и больше",
+    "norma": "",
+    "ton": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   },
+   {
+    "id": "vyp_vague",
+    "kod": "vague",
+    "gde": "postavshchik",
+    "uroven": "info",
+    "poryadok": 8,
+    "nazv": "В назначении платежа не видно, за что платите",
+    "norma": "",
+    "ton": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   },
+   {
+    "id": "vyp_novat",
+    "kod": "novat",
+    "gde": "postavshchik",
+    "uroven": "info",
+    "poryadok": 9,
+    "nazv": "Поставщик без НДС — для плательщика на ОСН",
+    "norma": "",
+    "ton": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   },
+   {
+    "id": "vyp_round",
+    "kod": "round",
+    "gde": "postavshchik",
+    "uroven": "info",
+    "poryadok": 10,
+    "nazv": "Все платежи поставщику — круглые суммы",
+    "norma": "",
+    "ton": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   },
+   {
+    "id": "vyp_persons",
+    "kod": "persons",
+    "gde": "potok",
+    "uroven": "warn",
+    "poryadok": 11,
+    "nazv": "На счета физлиц — 30% расходов и больше (не зарплата)",
+    "norma": "",
+    "ton": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   },
+   {
+    "id": "vyp_cash",
+    "kod": "cash",
+    "gde": "potok",
+    "uroven": "warn",
+    "poryadok": 12,
+    "nazv": "Доля наличных в списаниях — 15% и больше",
+    "norma": "",
+    "ton": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   },
+   {
+    "id": "vyp_bigcash",
+    "kod": "bigcash",
+    "gde": "potok",
+    "uroven": "info",
+    "poryadok": 13,
+    "nazv": "Операции с наличными от 1 млн ₽",
+    "norma": "",
+    "ton": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   },
+   {
+    "id": "vyp_cashin",
+    "kod": "cashin",
+    "gde": "potok",
+    "uroven": "info",
+    "poryadok": 14,
+    "nazv": "Внесённые наличные — 30% поступлений и больше",
+    "norma": "",
+    "ton": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   },
+   {
+    "id": "vyp_lowtax",
+    "kod": "lowtax",
+    "gde": "potok",
+    "uroven": "warn",
+    "poryadok": 15,
+    "nazv": "Налоги и взносы — меньше 0,9% всех списаний",
+    "norma": "",
+    "ton": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   },
+   {
+    "id": "vyp_self",
+    "kod": "self",
+    "gde": "potok",
+    "uroven": "info",
+    "poryadok": 16,
+    "nazv": "Половина расходов и больше — переводы на свои счета",
+    "norma": "",
+    "ton": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   }
+  ]
+ }
 }

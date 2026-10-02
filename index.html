@@ -545,6 +545,7 @@ footer a{color:var(--ink2)}
 <script src="/js/usloviya.js" defer></script>
 <script src="/js/shchit.js" defer></script>
 <script src="/js/dinamika.js" defer></script>
+<script src="/js/terminy.js" defer></script>
 <script src="/js/nedavnie.js" defer></script>
 <script src="/js/inn.js"></script>
 <script>
@@ -609,6 +610,8 @@ footer a{color:var(--ink2)}
     if(!svoj&&window.Sushchestvennoe){try{Sushchestvennoe.mount(report.querySelector('.rows'),r)}catch(e){}}
     if(svoj&&ub){ub.className='';ub.removeAttribute('data-usl');try{shR=Shchit.mount(ub,r)}catch(e){ub.className='verdict';ub.textContent=r.verdict||''}}
     else if(window.Usloviya&&ub){ub.className='';ub.removeAttribute('data-usl');try{Usloviya.mount(ub,r)}catch(e){ub.className='verdict';ub.textContent=r.verdict||''}}
+    // подсказки к терминам (ЗСК, 54.1 НК, недостоверность…) — определения дословно из статей сайта, js/terminy.js
+    if(window.Terminy)Terminy.mount(report);
     report.querySelector('[data-act="again"]').onclick=function(){input.value='';focusInn({preventDefault:function(){}})};
     var lb=report.querySelector('[data-act="link"]');
     if(lb)lb.onclick=function(){var u=location.origin+'/report.html?id='+encodeURIComponent(r.report_id);

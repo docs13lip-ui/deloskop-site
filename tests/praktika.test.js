@@ -158,3 +158,19 @@ test('письмо ФНС № БВ-4-7/3060@ и Обзор ВС от 13.12.2023 
     if (/13\.12\.2023/.test(z[0])) assert.strictEqual(z[2], 'https://www.consultant.ru/document/cons_doc_LAW_464347/');
   }
 });
+
+// faq-praktika-v1 ([Ночные запуски] 02.10 05:05; стратегия «Штаба» 02.10, п. 2 — FAQ-разметка до 06.10)
+test('«Частые вопросы» в каждом разборе: ≥ 3 вопроса, FAQPage в JSON-LD, блок после «Где в законе» и до «Сверено»', () => {
+  const F = JSON.parse(chitat('praktika/faq.json')).razbory;
+  for (const r of D.razbory) {
+    const v = F[r.slug] || [];
+    assert.ok(v.length >= 3, r.slug + ': меньше 3 вопросов в praktika/faq.json');
+    const t = chitat(`praktika/${r.razdel}/${r.slug}/index.html`);
+    const ld = JSON.parse(t.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
+    const fp = ld.find((o) => o['@type'] === 'FAQPage');
+    assert.ok(fp && fp.mainEntity.length === v.length, r.slug + ': FAQPage');
+    const a = t.indexOf('<ul class="zakon">'), b = t.indexOf('<section class="faq"'), c = t.indexOf('<p class="sver">');
+    assert.ok(a > 0 && a < b && b < c, r.slug + ': порядок «Где в законе» → «Частые вопросы» → «Сверено»');
+    assert.strictEqual(t.split('<section class="faq"').length, 2, r.slug + ': блок вопросов — один');
+  }
+});

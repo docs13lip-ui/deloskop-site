@@ -6,7 +6,7 @@
 Сборщик пишет:
   praktika/index.html, praktika/115-fz/index.html, praktika/nalogi/index.html — хабы (новые сверху);
   praktika/<раздел>/<slug>/index.html — разборы: крошки → H1 → карточка дела → текст автора → одно действие →
-  «Где в законе» → «Сверено» → «Похожие разборы» → «Полезно?» (js/otzyv.js);
+  «Где в законе» → «Частые вопросы» (praktika/faq.json, ответы дословно из текста автора) → «Сверено» → «Похожие разборы» → «Полезно?» (js/otzyv.js);
   строки /praktika/… в sitemap.xml; ссылку «Практика судов» в хабах /115-fz/ и /nalogi/ (между метками).
 Шапку и подвал ставит sobrat_shapku.sobrat_stranicu — после этого сборщика sobrat_shapku.py ничего не меняет.
 Запуск: python3 tests/sobrat_praktika.py [--check]
@@ -20,6 +20,7 @@ import sys
 KOREN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(KOREN, "tests"))
 import sobrat_shapku as SH  # noqa: E402
+import sobrat_faq as FAQ  # noqa: E402
 
 SAJT = "https://deloskop.ru"
 MES = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"]
@@ -69,6 +70,31 @@ def data_ch(iso):
 def dannye():
     with open(put("praktika", "dela.json"), encoding="utf-8") as fh:
         return json.load(fh)
+
+
+def voprosy():
+    """praktika/faq.json — «Частые вопросы» разборов ({slug: [{v, o}]}); файла нет — разборы без FAQ."""
+    p = put("praktika", "faq.json")
+    if not os.path.exists(p):
+        return {}
+    with open(p, encoding="utf-8") as fh:
+        return json.load(fh)["razbory"]
+
+
+def faq_razbora(r, telo, F):
+    """Блок «Частые вопросы» и FAQPage разбора. Ответ — только дословные предложения из текста автора: новых
+    правовых утверждений в вопросах нет (то же правило, что у статей, tests/sobrat_faq.py). Нарушение — сборка стоит."""
+    v = F.get(r["slug"]) or []
+    if not v:
+        return "", None
+    t = FAQ.norm(telo)
+    for x in v:
+        if not x["v"].rstrip().endswith("?") or not 1 <= len(x["o"]) <= 3:
+            raise SystemExit("sobrat_praktika: %s — вопрос с «?» и 1–3 предложения в ответе: %s" % (r["slug"], x["v"]))
+        for p in x["o"]:
+            if FAQ.norm(p) not in t:
+                raise SystemExit("sobrat_praktika: %s — предложения нет в тексте разбора дословно: %s" % (r["slug"], p))
+    return FAQ.blok(v), FAQ.faqpage(v)
 
 
 def url_razbora(r):
@@ -155,7 +181,7 @@ def pk(r):
         url_razbora(r), e(r["h1"]), e(meta), e(kon))
 
 
-def razbor(r, D, po_slug):
+def razbor(r, D, po_slug, F=None):
     rz = D["razdely"][r["razdel"]]
     url = url_razbora(r)
     kr = [("Делоскоп", "/"), ("Практика", "/praktika/"), (rz["kratko"], "/praktika/%s/" % r["razdel"]), (r["h1"], url)]
@@ -171,6 +197,9 @@ def razbor(r, D, po_slug):
         ld[0]["citation"] = cit
     with open(put("tests", "praktika", r["slug"] + ".html"), encoding="utf-8") as fh:
         telo = fh.read().strip()
+    faq, faq_ld = faq_razbora(r, telo, F or {})
+    if faq_ld:
+        ld.append(faq_ld)
     k = r["knopka"]
     zakon = "\n".join(norma(z) for z in r["zakon"])
     sverka = max(d["sverka"] for d in r["dela"])
@@ -195,6 +224,7 @@ def razbor(r, D, po_slug):
 <ul class="zakon">
 %(zakon)s
 </ul>
+%(faq)s
 <p class="sver">Сверено по первоисточникам <time datetime="%(sv)s">%(sv_ru)s</time>. Материал носит информационный характер, исход спора не гарантирует и не заменяет консультацию юриста. Нашли неточность — <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>.</p>
 <h2>Похожие разборы</h2>
 <div class="sos">
@@ -208,7 +238,7 @@ def razbor(r, D, po_slug):
 </html>
 """ % {"kr": kroshki_html(kr), "h1": e(r["h1"]), "data": r["data"], "data_ru": data_ru(r["data"]), "min": r["minut"],
        "lid": e(r["lid"]), "kart": kartochki, "telo": telo, "kz": e(k["zagolovok"]), "kt": e(k["tekst"]), "ku": e(k["url"]),
-       "kk": e(k["knopka"]), "zakon": zakon, "sv": sverka, "sv_ru": data_ru(sverka), "sos": sos}
+       "kk": e(k["knopka"]), "zakon": zakon, "faq": faq, "sv": sverka, "sv_ru": data_ru(sverka), "sos": sos}
     return url, stranica
 
 
@@ -347,10 +377,14 @@ def sobrat():
     """Словарь {путь файла: новое содержимое} — всё, что должен дать сборщик."""
     D = dannye()
     po_slug = {r["slug"]: r for r in D["razbory"]}
+    F = voprosy()
+    lishnie = set(F) - set(po_slug)
+    if lishnie:
+        raise SystemExit("sobrat_praktika: в praktika/faq.json вопросы к несуществующим разборам: " + ", ".join(sorted(lishnie)))
     r_ = SH.rekv_sajta()
     podval, shapka = SH.podval_html(r_), SH.shapka_html()
     out = {}
-    stranicy = [hab(D)] + [hab(D, k) for k in D["razdely"]] + [razbor(r, D, po_slug) for r in D["razbory"]]
+    stranicy = [hab(D)] + [hab(D, k) for k in D["razdely"]] + [razbor(r, D, po_slug, F) for r in D["razbory"]]
     for url, txt in stranicy:
         out[url.strip("/") + "/index.html"] = SH.sobrat_stranicu(nerazryv(tipograf(txt)), r_, podval, shapka)
     for razdel, f in (("115-fz", "115-fz/index.html"), ("nalogi", "nalogi/index.html")):

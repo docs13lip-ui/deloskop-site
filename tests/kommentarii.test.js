@@ -178,7 +178,7 @@ test("v2: живые строки → свой текст [Право]; неяс
   }
 });
 
-test("v2+v4: 27 тонов утверждены (22 + 5 зелёных [Право] 08:20) — роль, дата, без ФИО и NBSP", () => {
+test("v2+v4+v5: 28 тонов утверждены (22 + 5 зелёных [Право] 08:20 + дисквалификация «Внимание» 21:25) — роль, дата, без ФИО и NBSP", () => {
   let n = 0;
   for (const x of SPRAV.signaly) for (const t of Object.values(x.tony || {})) if (t.status === "utverzhdeno") {
     n++;
@@ -186,7 +186,25 @@ test("v2+v4: 27 тонов утверждены (22 + 5 зелёных [Прав
     assert.strictEqual(t.data_proverki, "2026-10-02");
     assert.ok(!/\u00a0/.test(t.bank + t.nalog + t.sdelat));
   }
-  assert.strictEqual(n, 27);
+  assert.strictEqual(n, 28);
+});
+
+test("v5: uslovie у тона — «Внимание» у дисквалификации только при совпадении по ФИО без ИНН ([Право] 21:25)", () => {
+  const fio = K.najti(SPRAV, { title: "Дисквалификация руководителя", detail: "совпадение по ФИО, без ИНН", status: "warn" });
+  assert.ok(fio, "совпадение по ФИО — комментарий есть");
+  assert.deepStrictEqual([fio.id, fio.ton], ["diskval", "zhel"]);
+  assert.match(fio.bank, /только по ФИО/);
+  assert.strictEqual(fio.norma, "ст. 3.11 КоАП РФ");
+  assert.strictEqual(K.najti(SPRAV, { title: "Дисквалификация руководителя", detail: "проверка не завершена", status: "warn" }), null,
+    "«Внимание» по другой причине — молчим: текст о ФИО к ней не подходит");
+  assert.strictEqual(K.najti(SPRAV, { title: "Дисквалификация руководителя", detail: "", status: "warn" }), null);
+  assert.strictEqual(K.najti(SPRAV, { title: "Дисквалификация руководителя", detail: "однофамилец в реестре", status: "warn" }).ton, "zhel");
+  // красный и зелёный тоны uslovie не задевает
+  assert.strictEqual(K.najti(SPRAV, { title: "Дисквалификация руководителя", detail: "в реестре", status: "bad" }).ton, "kras");
+  // битое выражение — тон не показываем
+  const S = JSON.parse(JSON.stringify(SPRAV));
+  S.signaly.find((x) => x.id === "diskval").tony.zhel.uslovie = "(";
+  assert.strictEqual(K.najti(S, { title: "Дисквалификация руководителя", detail: "ФИО", status: "warn" }), null);
 });
 
 // ── Паспорт контрагента (kommentarii-pasport-v1): комментарий под строкой признака, вне отпечатка SHA-256 ──

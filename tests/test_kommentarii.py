@@ -46,6 +46,18 @@ class T(unittest.TestCase):
         self.assertEqual([x and x[0] for x in py], ["massovyj_adres", "nedostovernost", "bankrotstvo", None, "molodaya",
                                                      None, "net_sotrudnikov", "ubytok", "zsk", None, "nedoimka"])
 
+    def test_uslovie_tona_sovpadaet_s_js(self):
+        sig = [{"title": "Дисквалификация руководителя", "detail": d, "status": st}
+               for d, st in [("совпадение по ФИО, без ИНН", "warn"), ("однофамилец", "warn"), ("проверка не завершена", "warn"),
+                             ("", "warn"), ("в реестре", "bad"), ("нет в реестре", "ok")]]
+        js = ("const K=require('./js/kommentarii.js');const S=require('./data/kommentarii.json');"
+              "console.log(JSON.stringify(%s.map(s=>{const k=K.najti(S,s);return k?[k.id,k.ton]:null})))" % json.dumps(sig, ensure_ascii=False))
+        out = subprocess.run(["node", "-e", js], cwd=KOREN, capture_output=True, text=True, check=True).stdout
+        sprav = K.zagruzit()
+        py = [(lambda k: [k["id"], k["ton"]] if k else None)(K.najti(sprav, s)) for s in sig]
+        self.assertEqual(py, json.loads(out))
+        self.assertEqual(py, [["diskval", "zhel"], ["diskval", "zhel"], None, None, ["diskval", "kras"], ["diskval", "zel"]])
+
     def test_tolko_utverzhdennye(self):
         sprav = K.zagruzit()
         for t in TITLES:

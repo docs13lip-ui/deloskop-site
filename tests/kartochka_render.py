@@ -1046,6 +1046,10 @@ def kom_najti(sprav, signal):
     t = (z.get("tony") or {}).get(ton)
     if not kom_gotov(t):
         return None
+    if t.get("uslovie"):  # тон только для своей детали — как в js/kommentarii.js
+        u = _kom_rx(t["uslovie"])
+        if not u or not u.search(str(signal.get("title") or "") + " · " + str(signal.get("detail") or "")):
+            return None
     g, m, d = str(t["data_proverki"])[:10].split("-")
     return {"id": z["id"], "ton": ton, "bank": t.get("bank") or "", "nalog": t.get("nalog") or "",
             "sdelat": t["sdelat"], "norma": (t["norma"] if t.get("norma") is not None else z.get("norma")) or "",

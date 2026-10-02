@@ -43,3 +43,20 @@ for (const p of pages(ROOT)) {
     }
   });
 }
+
+// Калькуляторы без <article>: блок встаёт сразу после единственной метки <!--faq-mesto-->, до «Читайте также» и формы ИНН.
+test('метка <!--faq-mesto-->: одна на странице, блок сразу после неё', () => {
+  const data = JSON.parse(fs.readFileSync(path.join(ROOT, 'partials', 'faq.json'), 'utf8')).stranicy;
+  let n = 0;
+  for (const rel of Object.keys(data)) {
+    const s = fs.readFileSync(path.join(ROOT, rel), 'utf8');
+    if (s.includes('</article>')) continue;
+    n++;
+    assert.strictEqual(s.split('<!--faq-mesto-->').length, 2, `${rel}: меток должно быть ровно одна`);
+    assert.ok(/<!--faq-mesto-->\s*<!--faq-->/.test(s), `${rel}: блок не сразу после метки`);
+    const faq = s.indexOf('<!--faq-->');
+    const dalee = [s.indexOf('Читайте также'), s.indexOf('aria-label="Проверка компании"')].filter(i => i > -1);
+    assert.ok(dalee.every(i => i > faq), `${rel}: «Частые вопросы» должны стоять до «Читайте также» и формы ИНН`);
+  }
+  assert.ok(n >= 2, 'ожидались калькуляторы без <article>');
+});

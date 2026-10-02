@@ -542,6 +542,7 @@ footer a{color:var(--ink2)}
 </div>
 
 <script src="/js/sushchestvennoe.js" defer></script>
+<script src="/js/otkuda.js" defer></script>
 <script src="/js/usloviya.js" defer></script>
 <script src="/js/shchit.js" defer></script>
 <script src="/js/dinamika.js" defer></script>
@@ -605,6 +606,8 @@ footer a{color:var(--ink2)}
       '<div class="src">Источники: ЕГРЮЛ/ЕГРИП и открытые данные ФНС. Это оценка риска, а не решение банка.</div>';
     if(window.Nedavnie)Nedavnie.add({inn:c.inn,name:name,level:lvl,id:r.report_id});
     var ub=report.querySelector('[data-usl]');
+    // «Откуда данные» вместо строки «Источники: …» — опись: какой реестр ответил, на какую дату, кто не ответил (js/otkuda.js)
+    if(window.Otkuda){try{Otkuda.mount(report.querySelector('.src'),r)}catch(e){}}
     var shR=null;
     // «Только существенные факты» (≤ 7, источник и дата) + свёрнутая «Все данные из реестров» — js/sushchestvennoe.js; нет модуля — строки светофора как были
     if(!svoj&&window.Sushchestvennoe){try{Sushchestvennoe.mount(report.querySelector('.rows'),r)}catch(e){}}

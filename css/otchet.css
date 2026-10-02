@@ -1,0 +1,98 @@
+/* Делоскоп — лист «Отчёт о проверке» на всю ширину (js/otchet.js; макет claude/Продукт_макет_экрана_проверки_02.10.md, разд. 2.1–2.3).
+   Токены v1.1 — дополнение к ds.css; названия совпадают с макетом. */
+:root{--r-doc:14px;--line-2:#D9D9D4;--ok-dot:#16723F;--warn-dot:#B86E00;--bad-dot:#B3261E;--na:#A1A1A6}
+.n{font-variant-numeric:tabular-nums}
+
+/* режим отчёта: герой схлопывается в строку с полем, отчёт — лист 1 200 px */
+.rezhim-otcheta .hero{padding-block:16px clamp(40px,6vw,72px)}
+.rezhim-otcheta .hero .wrap{grid-template-columns:minmax(0,1fr);gap:16px;max-width:calc(1200px + 2*var(--pad))}
+.rezhim-otcheta .hero-text{flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 16px}
+.rezhim-otcheta .hero-text>.eyebrow,.rezhim-otcheta .hero-text>h1,.rezhim-otcheta .hero-text>.lead,.rezhim-otcheta .hero-text>.doverie-str{display:none}
+.rezhim-otcheta .hero-text .check{flex:1 1 360px;max-width:560px;padding:6px}
+.rezhim-otcheta .hero-text .check input,.rezhim-otcheta .hero-text .check button{min-height:44px;font-size:16px}
+.rezhim-otcheta .hero-text .note{flex:1 1 200px;min-height:0;font-size:14px}
+@media (min-width:901px){.rezhim-otcheta .hero-text{position:sticky;top:68px;z-index:9;padding:10px 0;background:rgba(245,245,242,.92);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}}
+
+/* лист */
+.report.ot{display:block;padding:0;gap:0;border-radius:var(--r-doc);background:var(--card,#fff);box-shadow:0 1px 2px rgba(29,29,31,.04),0 12px 32px rgba(29,29,31,.06)}
+.ot-hd,.ot-vd,.ot-body{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:24px;padding:32px 40px 24px}
+.ot-hd{border-bottom:1px solid var(--line,#E6E6E1)}
+.ot-who{grid-column:1/8;min-width:0}.ot-rq{grid-column:8/13;min-width:0}
+.ot-who .tag{font-size:13px}
+.ot-who .company{font-size:32px;line-height:1.15;letter-spacing:-.02em;margin-top:6px}
+.ot-who .sub{font-size:15px;color:var(--ink2,#48484C);font-variant-numeric:tabular-nums}
+.ot-rq .rkv{margin:0}
+
+/* B — полоса вывода */
+.ot-vd{padding:28px 40px;background:var(--warn-bg,#FFF4E0);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.ot-vd--ok{background:var(--ok-bg,#E8F5EE)}.ot-vd--bad{background:var(--bad-bg,#FDECEA)}
+.ot-ix{grid-column:1/4;border-right:1px solid rgba(0,0,0,.08);padding-right:24px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.ot-ix__lab{font-size:13px;color:var(--ink2,#48484C)}
+.ot-ix__big{font-size:64px;line-height:1;font-weight:600;letter-spacing:-.03em}
+.ot-ix__big small{font-size:20px;color:var(--muted,#6B6B70);font-weight:500}
+.ot-ix__sh{position:relative;height:6px;border-radius:3px;margin:4px 0;background:linear-gradient(90deg,var(--bad-dot) 0 29%,var(--warn-dot) 29% 49%,#C9A227 49% 69%,var(--ok-dot) 69%)}
+.ot-ix__sh i{position:absolute;top:-5px;width:2px;height:16px;margin-left:-1px;background:var(--ink,#1D1D1F)}
+.ot-ix__ne{font-size:22px;line-height:1.2;font-weight:600;letter-spacing:-.01em}
+.ot-ix__pl{font-size:14px;color:var(--ink2,#48484C)}
+.ot-ix__lv{font-size:14px;font-weight:600}
+.ot-ix .pill{align-self:flex-start;background:rgba(255,255,255,.7)}
+.ot-vt{grid-column:4/10;min-width:0;display:flex;flex-direction:column;gap:8px}
+.ot-vt .usl{background:transparent;padding:0;gap:10px}
+.ot-vt .usl-t{font-size:26px;line-height:1.2}
+.ot-vt .usl-mark{margin-top:11px}
+.ot-vt .usl-r,.ot-vt .usl-a{font-size:16px}
+.ot-vt .usl-kak{display:none}
+.ot-vt .usl-sum,.ot-vt .usl details{border-top-color:rgba(0,0,0,.08)}
+.ot-vt__h{font-size:28px;line-height:1.2;letter-spacing:-.01em;margin:0}
+.ot-vt__p{margin:0;color:var(--ink2,#48484C);font-size:16px}
+.ot-vt__kak{font-size:15px;align-self:flex-start}
+.ot-act{grid-column:10/13;display:flex;flex-direction:column;gap:8px;justify-content:center}
+.ot-btn{display:inline-flex;justify-content:center;align-items:center;text-align:center;font-weight:600;font-size:15px;padding:12px 16px;border-radius:12px;text-decoration:none;min-height:44px}
+.ot-btn.p{background:var(--accent,#0B63E5);color:#fff}.ot-btn.p:hover{background:var(--accent-hover,#084BB0);color:#fff}
+.ot-btn.s{background:rgba(255,255,255,.6);box-shadow:inset 0 0 0 1px var(--line-2);color:var(--ink,#1D1D1F)}.ot-btn.s:hover{box-shadow:inset 0 0 0 1px var(--accent,#0B63E5);color:var(--accent,#0B63E5)}
+
+/* тело: основное 8 + справка 4 */
+.ot-body{gap:0 40px;padding:8px 40px 32px}
+.ot-main{grid-column:1/9;min-width:0;display:flex;flex-direction:column}
+.ot-main>*{padding:24px 0;margin:0;border-bottom:1px solid var(--line,#E6E6E1)}
+.ot-main>:last-child{border-bottom:0}
+.ot-main>.izm{padding:12px 14px;margin:16px 0 0;border-bottom:0}
+.ot-side{grid-column:9/13;min-width:0;padding-top:24px}
+.ot-sc{padding:0 0 20px;border-bottom:1px solid var(--line,#E6E6E1);margin-bottom:20px}
+.ot-sc h3{font-size:15px;font-weight:600;margin:0 0 10px;letter-spacing:0}
+.ot-sc p{margin:0 0 8px;font-size:14px;color:var(--ink2,#48484C);overflow-wrap:anywhere}
+.ot-sc .ot-ne{color:#8A5A00;background:#FFF6E0;border-radius:10px;padding:8px 10px}
+.ot-sc .ot-cap{font-size:12.5px;color:var(--muted,#6B6B70)}
+.ot-side .otk{margin:0;border-top:0}
+.report.ot .shch-k{display:none}
+#ot-kak{scroll-margin-top:140px}
+
+/* J — подвал и оговорка */
+.ot-foot{padding:16px 40px 20px;border-top:1px solid var(--line,#E6E6E1)}
+.ot-foot .report-actions{gap:8px}
+.ot-disc{margin:0;padding:0 40px 28px;font-size:13px;color:var(--muted,#6B6B70)}
+
+/* 390: одна колонка; порядок — факты → изменения → динамика → как посчитали → откуда → все данные */
+@media (max-width:860px){
+ .ot-hd,.ot-vd,.ot-body{grid-template-columns:minmax(0,1fr);padding-left:20px;padding-right:20px}
+ .ot-foot,.ot-disc{padding-left:20px;padding-right:20px}
+ .ot-who,.ot-rq,.ot-ix,.ot-vt,.ot-act,.ot-main,.ot-side{grid-column:1/-1}
+ .ot-who .company{font-size:24px}
+ .ot-vd{gap:16px}
+ .ot-ix{border-right:0;padding-right:0;flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:6px 12px}
+ .ot-ix__lab{flex-basis:100%}.ot-ix__big{font-size:52px}.ot-ix__sh{flex-basis:100%}
+ .ot-vt .usl-t,.ot-vt__h{font-size:22px}
+ .ot-body{display:flex;flex-direction:column;padding-top:0}
+ .ot-main,.ot-side{display:contents}
+ .ot-main>*{order:1}.ot-side>.ot-sc{order:2;padding-top:20px;margin-bottom:0}.ot-side>.otk{order:3;padding-top:12px}.ot-main>.ot-gl{order:4;border-top:1px solid var(--line,#E6E6E1)}
+}
+
+/* печать: лист без тени, справка — под основным, кнопки не печатаем */
+@media print{
+ .report.ot{box-shadow:none!important;border-radius:0!important}
+ .ot-hd,.ot-vd,.ot-body{display:block;padding:12px 0}
+ .ot-ix{border-right:0;padding:0 0 8px}
+ .ot-act,.ot-foot,.ot-vt__kak{display:none!important}
+ .ot-disc{padding:8px 0 0}
+ .ot-side{padding-top:8px}
+}

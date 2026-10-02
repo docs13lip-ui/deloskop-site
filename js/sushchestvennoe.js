@@ -270,7 +270,7 @@
 
   var CSS = '.sut__h{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px;padding-bottom:10px}' +
     '.sut__h b{font-size:15px;font-weight:600}.sut__h span{font-size:13px;color:var(--muted,#6B6B70)}' +
-    '.sut__r>span{display:grid;gap:2px}.sut__r small{font-size:12px;color:var(--muted,#6B6B70);font-weight:400}' +
+    '.sut__r>span{display:block}.sut__r small{display:block;margin-top:2px;font-size:12px;color:var(--muted,#6B6B70);font-weight:400}' +
     '.sut__r small a{color:inherit;text-decoration:underline}' +
     '.sut__ne{margin:0;padding:12px 0 0;border-top:1px solid #EFEFEA;font-size:13px;color:var(--ink2,#48484C)}' +
     '.sut__g{margin-top:12px;border:1px solid var(--line,#E6E6E1);border-radius:14px;padding:0 16px}' +

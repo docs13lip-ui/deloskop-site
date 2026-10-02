@@ -267,6 +267,7 @@ footer a{color:var(--ink2)}
 <link rel="stylesheet" href="/css/fonts.css">
 <link rel="stylesheet" href="/css/podval.css">
 <link rel="stylesheet" href="/css/shapka.css">
+<link rel="stylesheet" href="/css/otchet.css">
 <script src="/js/shapka.js" defer></script>
 <script src="/js/metrika.js" defer></script>
 <script src="/js/vhody.js" defer></script>
@@ -542,12 +543,14 @@ footer a{color:var(--ink2)}
 </div>
 
 <script src="/js/sushchestvennoe.js" defer></script>
+<script src="/js/kommentarii.js" defer></script>
 <script src="/js/otkuda.js" defer></script>
 <script src="/js/rekvizity-proverki.js" defer></script>
 <script src="/js/usloviya.js" defer></script>
 <script src="/js/shchit.js" defer></script>
 <script src="/js/dinamika.js" defer></script>
 <script src="/js/terminy.js" defer></script>
+<script src="/js/otchet.js" defer></script>
 <script src="/js/nedavnie.js" defer></script>
 <script src="/js/inn.js"></script>
 <script>
@@ -614,6 +617,8 @@ footer a{color:var(--ink2)}
     var shR=null;
     // «Только существенные факты» (≤ 7, источник и дата) + свёрнутая «Все данные из реестров» — js/sushchestvennoe.js; нет модуля — строки светофора как были
     if(!svoj&&window.Sushchestvennoe){try{Sushchestvennoe.mount(report.querySelector('.rows'),r)}catch(e){}}
+    // «Комментарий команды Делоскопа» под существенными фактами — только утверждённые [Право] тексты (/data/kommentarii.json) + оговорка один раз; js/kommentarii.js
+    if(!svoj&&window.Sushchestvennoe&&window.Kommentarii){var sutEl=report.querySelector('.rows.sut');if(sutEl)Kommentarii.zagruzit().then(function(K){try{Kommentarii.vstavitSut(sutEl,Kommentarii.dlyaSut(Sushchestvennoe.fakty(r).spisok,r.signals,K))}catch(e){}})}
     if(svoj&&ub){ub.className='';ub.removeAttribute('data-usl');try{shR=Shchit.mount(ub,r)}catch(e){ub.className='verdict';ub.textContent=r.verdict||''}}
     // Щит: строки светофора не повторяют разбор — свёрнуты в «Все данные из реестров» после него (js/sushchestvennoe.js)
     if(svoj&&shR&&window.Sushchestvennoe){try{Sushchestvennoe.mountSvoj(report.querySelector('.rows'),r,ub)}catch(e){}}
@@ -630,6 +635,8 @@ footer a{color:var(--ink2)}
       var u=window.Usloviya?Usloviya.decide(r):null;
       var t=name+' (ИНН '+c.inn+'): '+(r.risk_title||'')+'. '+(u?u.headline+'. '+u.advice:(r.verdict||''))+' — проверено на deloskop.ru';
       try{navigator.clipboard.writeText(t);e.target.textContent='Скопировано'}catch(_){}};
+    // лист «Отчёт о проверке» на всю ширину: шапка → вывод → факты, динамика, все данные; справа — как посчитали и откуда данные (js/otchet.js)
+    if(window.Otchet){try{Otchet.razlozhit(report,r,{svoj:!!shR,shR:shR,usl:ub})}catch(e){}}
   }
   function runCheck(v,o){
     if(!CAPI){note.className='note ok';note.textContent='Проверка работает на deloskop.ru.';return;}

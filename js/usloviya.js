@@ -177,16 +177,43 @@
     }
     return null;
   }
+  // Строка светофора «Задолженность по налогам» (id tax_debt, открытые данные ФНС) — тоже ответ источника
+  // ([Право] 02.10 07:15/08:20): ok/warn/bad = налоги проверены, но только на дату набора ФНС и только если набор
+  // не старше 3 месяцев на день проверки; без даты или старее — «не проверяли». Текст — «нет в списке ФНС на [дата]», не «нет».
+  var SVEZHEST_MES = 3;
+  function dataIzStroki(v) {
+    var m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(v || '');
+    if (m) return new Date(Date.UTC(+m[3], +m[2] - 1, +m[1]));
+    m = /^(\d{4})-(\d{2})-(\d{2})/.exec(v || '');
+    return m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])) : null;
+  }
+  function dvaZnaka(n) { return (n < 10 ? '0' : '') + n; }
+  function nalogovyjNabor(r) {
+    var sig = (r && r.signals || []).filter(function (s) {
+      return s && (s.id === 'tax_debt' || (!s.id && /задолженн\S*\s+по\s+налог/i.test(s.title || '')));
+    })[0];
+    if (!sig || ['ok', 'warn', 'bad'].indexOf(sig.status) < 0) return null;
+    var d = dataIzStroki(sig.as_of);
+    if (!d) return { status: sig.status, data: null, svezhij: false };
+    var t = Date.parse(r.checked_at || ''), na = isFinite(t) ? new Date(t) : new Date();
+    var granica = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + SVEZHEST_MES, d.getUTCDate()));
+    return { status: sig.status, data: dvaZnaka(d.getUTCDate()) + '.' + dvaZnaka(d.getUTCMonth() + 1) + '.' + d.getUTCFullYear(), svezhij: na.getTime() < granica.getTime() + 24 * 3600 * 1000 };
+  }
   function neProvereno(r, f) {
-    var net = [];
+    var net = [], nn = nalogovyjNabor(r), nalogiNa = null;
     DOLGI.forEach(function (d) {
       if (f.bad[d.kind] || f.warn[d.kind]) return;               // долг найден — источник точно видели
       var s = statusIstochnika(r, d.klyuchi);
       if (s === 'found' || s === 'not_found' || s === 'not_applicable') return;
+      if (d.id === 'nalogi' && nn) {
+        if (nn.svezhij) { if (nn.status === 'ok') nalogiNa = nn.data; return; }
+        net.push(d.title + (nn.data ? ' (набор ФНС на\u00a0' + nn.data + ' старше ' + SVEZHEST_MES + '\u00a0месяцев)' : ''));
+        return;
+      }
       net.push(d.title);
     });
     var p = r && r.damia && r.damia.polnota;
-    return { spisok: net, dolgiVse: net.length === DOLGI.length, provereno: p && p.provereno != null ? p.provereno : null, iz: p && p.iz != null ? p.iz : null, data: r && (r.damia && r.damia.data_svedeniy || r.checked_at) || null };
+    return { spisok: net, dolgiVse: net.length === DOLGI.length, nalogiNa: nalogiNa, provereno: p && p.provereno != null ? p.provereno : null, iz: p && p.iz != null ? p.iz : null, data: r && (r.damia && r.damia.data_svedeniy || r.checked_at) || null };
   }
 
   function dataRu(s) { var d = new Date(s); if (isNaN(d)) return ''; function z(n) { return (n < 10 ? '0' : '') + n; } return z(d.getDate()) + '.' + z(d.getMonth() + 1) + '.' + d.getFullYear(); }
@@ -213,6 +240,7 @@
     var ne = '';
     if (np && np.spisok.length && (t === 'go' || t === 'cap')) {
       ne = 'Не проверяли: ' + np.spisok.join(', ') + '. Если они есть — вперёд лучше не платить.' +
+        (np.nalogiNa ? ' Долги по налогам — нет в списке ФНС на\u00a0' + np.nalogiNa + '.' : '') +
         (np.provereno != null && np.iz ? ' Проверено ' + np.provereno + ' из ' + np.iz + ' источников' + (np.data ? ' на ' + dataRu(np.data) : '') + '.' : '');
     }
     return { kak: kak, ne: ne,

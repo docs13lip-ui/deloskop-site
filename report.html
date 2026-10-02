@@ -39,6 +39,13 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
 .sig .st{font-weight:600}
 .sig .ok{color:var(--ok)} .sig .warn{color:var(--warn)} .sig .bad{color:var(--bad)} .sig .info{color:var(--ink2)}
 .sig small{display:block;color:var(--muted);font-size:12px;font-weight:400}
+.kom-tr td{padding-top:0}
+.kom{margin:2px 0 10px;padding:10px 14px;border-left:3px solid var(--line);background:rgba(127,127,127,.06);border-radius:0 8px 8px 0;font-size:14px;line-height:1.5}
+.kom--zhel{border-left-color:var(--warn)} .kom--kras{border-left-color:var(--bad)} .kom--zel{border-left-color:var(--ok)}
+.kom__h{font-weight:600;font-size:13px;margin-bottom:4px}
+.kom p{margin:2px 0}.kom__l{font-weight:600}
+.kom__p{color:var(--muted);font-size:12px;margin-top:6px}
+@media print{.kom{break-inside:avoid;background:none}}
 .sign{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:36px}
 .sign div{border-top:1px solid var(--ink);padding-top:6px;font-size:12px;color:var(--muted)}
 .foot{margin-top:28px;font-size:12px;color:var(--muted);line-height:1.55}
@@ -149,6 +156,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
 <script src="/js/metrika.js" defer></script>
 <script src="/js/otzyv.js" defer></script>
 <script src="/js/kopiya.js" defer></script>
+<script src="/js/dinamika.js"></script>
 <meta name="deloskop-rezhim" content="beta">
 </head>
 <body>
@@ -245,6 +253,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
 <script src="/js/pasport-kontragenta.js"></script>
 <script src="/js/chto-provereno.js"></script>
 <script src="/js/usloviya.js"></script>
+<script src="/js/kommentarii.js"></script>
 <script src="/js/nedavnie.js"></script>
 <script src="/js/inn.js"></script>
 <script>
@@ -433,6 +442,8 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
       h+='<div class="two">'+(D.strengths.length?'<div class="box plus"><h3>Сильные стороны</h3>'+lst(D.strengths)+'</div>':'')+
          (D.concerns.length?'<div class="box minus"><h3>На что обратить внимание</h3>'+lst(D.concerns)+'</div>':'<div class="box minus"><h3>На что обратить внимание</h3><ul><li>Существенных замечаний нет</li></ul></div>')+'</div>';
     if(ZSK)h+=zskHtml(ZSK);
+    // «Что изменилось с вашей проверки» + «Динамика за 3–5 лет» (js/dinamika.js; нет модуля — блоков нет)
+    if(window.Dinamika)h+=Dinamika.html(R);
     if(D.kpi&&D.kpi.length)h+=kpiHtml(D.kpi);
     if(D.charts)h+=chartsHtml(D.charts);
     D.sections.forEach(function(sct){
@@ -458,9 +469,9 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
       [c.kind==='INDIVIDUAL'?'Предприниматель':(c.director_post||'Руководитель'),c.director_name],
       ['Основной вид деятельности',c.okved?(c.okved+(c.okved_name?' — '+c.okved_name:'')):'']]
       .filter(function(x){return x[1]}).map(function(x){return '<tr><th>'+esc(x[0])+'</th><td>'+esc(x[1])+'</td></tr>'}).join('');
-    var sig=(r.signals||[]).map(function(x){
+    var sig=(r.signals||[]).map(function(x,i){
       var src=[x.source,x.as_of?('на '+d(x.as_of)):''].filter(Boolean).join(', ');
-      return '<tr><td>'+esc(x.title)+(src?'<small>'+esc(src)+'</small>':'')+'</td><td><span class="st '+esc(x.status)+'">'+STX[x.status]+'</span>'+(x.detail?' — '+esc(x.detail):'')+'</td></tr>';
+      return '<tr data-sig="'+i+'"><td>'+esc(x.title)+(src?'<small>'+esc(src)+'</small>':'')+'</td><td><span class="st '+esc(x.status)+'">'+STX[x.status]+'</span>'+(x.detail?' — '+esc(x.detail):'')+'</td></tr>';
     }).join('');
     var D=r.dossier; ZSK=r.zsk; R=r;
     doc.innerHTML=
@@ -478,6 +489,8 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
     var ub=doc.querySelector('[data-usl]');
     if(ub)try{Usloviya.mount(ub,r,{open:true})}catch(e){ub.textContent=r.verdict||''}
     bindTips(doc);bindQ(doc);
+    // «Комментарий команды Делоскопа» — только утверждённые [Право] тексты (/data/kommentarii.json); нет — ничего не меняется
+    if(window.Kommentarii)Kommentarii.zagruzit().then(function(K){try{Kommentarii.vstavit(doc.querySelector('table.sig'),r.signals,K)}catch(e){}});
     var pdf=document.getElementById('pdf'), share=document.getElementById('share');
     pdf.hidden=share.hidden=false;
     var pk=document.getElementById('pasportK');if(pk&&!(c.kind==='INDIVIDUAL'||String(c.inn||'').length===12)){pk.href='/pasport/kontragent/?id='+encodeURIComponent(id);pk.hidden=false;}

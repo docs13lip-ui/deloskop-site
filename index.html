@@ -541,8 +541,10 @@ footer a{color:var(--ink2)}
   <p class="fb-note" id="fbNote">Сообщение увидит только команда Делоскопа.</p>
 </div>
 
+<script src="/js/sushchestvennoe.js" defer></script>
 <script src="/js/usloviya.js" defer></script>
 <script src="/js/shchit.js" defer></script>
+<script src="/js/dinamika.js" defer></script>
 <script src="/js/nedavnie.js" defer></script>
 <script src="/js/inn.js"></script>
 <script>
@@ -597,12 +599,14 @@ footer a{color:var(--ink2)}
     report.innerHTML='<div class="report-head"><div><div class="tag">'+(svoj?(String(c.inn||'').length===12?'Ваш бизнес':'Ваша компания')+' глазами банка и налоговой · на ':'Проверка на ')+d.toLocaleDateString('ru-RU')+'</div>'+
       '<div class="company">'+esc(name)+'</div><div class="sub">'+sub+'</div></div>'+
       (svoj?'':'<div class="pill '+lvl+'">'+(lvl==='low'?ICON:WARNI)+esc(r.risk_title||'')+'</div>')+'</div>'+
-      '<div class="rows">'+rows+'</div><div class="verdict" data-usl>'+esc(r.verdict||'')+'</div>'+
+      '<div class="rows">'+rows+'</div>'+(window.Dinamika?Dinamika.html(r):'')+'<div class="verdict" data-usl>'+esc(r.verdict||'')+'</div>'+
       '<div class="report-actions">'+(r.report_id?'<a class="btn-doc" href="/report.html?id='+encodeURIComponent(r.report_id)+'" target="_blank" rel="noopener">PDF-досье</a><button type="button" data-act="link">Ссылка на отчёт</button>':'<button type="button" data-act="copy">'+(svoj?'Скопировать разбор':'Скопировать вывод')+'</button>')+'<button type="button" data-act="again">Проверить другую</button></div>'+
       '<div class="src">Источники: ЕГРЮЛ/ЕГРИП и открытые данные ФНС. Это оценка риска, а не решение банка.</div>';
     if(window.Nedavnie)Nedavnie.add({inn:c.inn,name:name,level:lvl,id:r.report_id});
     var ub=report.querySelector('[data-usl]');
     var shR=null;
+    // «Только существенные факты» (≤ 7, источник и дата) + свёрнутая «Все данные из реестров» — js/sushchestvennoe.js; нет модуля — строки светофора как были
+    if(!svoj&&window.Sushchestvennoe){try{Sushchestvennoe.mount(report.querySelector('.rows'),r)}catch(e){}}
     if(svoj&&ub){ub.className='';ub.removeAttribute('data-usl');try{shR=Shchit.mount(ub,r)}catch(e){ub.className='verdict';ub.textContent=r.verdict||''}}
     else if(window.Usloviya&&ub){ub.className='';ub.removeAttribute('data-usl');try{Usloviya.mount(ub,r)}catch(e){ub.className='verdict';ub.textContent=r.verdict||''}}
     report.querySelector('[data-act="again"]').onclick=function(){input.value='';focusInn({preventDefault:function(){}})};

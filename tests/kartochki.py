@@ -7,7 +7,8 @@
 
     python3 tests/kartochki.py sobrat  --vhod kartochki.jsonl [--stupen 0] [--spros 800 --kontrol 200]
     python3 tests/kartochki.py proverka --vhod kartochki.jsonl [--podrobno]  # только отчёт «сколько проходит ворота», файлы не трогает
-    python3 tests/kartochki.py iz-api  --inn spisok.txt --vyhod kartochki.jsonl [--pauza 6] [--maks 300]  # живой /api/check; 429 — стоп
+    python3 tests/kartochki.py iz-api  --inn spisok.txt --vyhod kartochki.jsonl [--pauza 6] [--maks 300]  # живой /api/check; 429 — стоп;
+        # служебный доступ — DELOSKOP_SERVICE_TOKEN в окружении запуска (заголовок X-Deloskop-Service; не в файлы)
 
 Правила (кто решил — в скобках):
   * только юрлица: ИНН из 10 цифр с верной контрольной суммой; ИП — карточки нет вовсе (владелец 26.09 16:50);
@@ -178,6 +179,21 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None):
 MAKS_ZAPROSOV = 300  # за один запуск (правило «Штаба» 02.10: не больше 300 запросов к API за запуск)
 
 
+def zagolovki_dostupa(env=None):
+    """Служебный доступ к /api/check (решение владельца 02.10, п. 4; API — servis-dostup-v1).
+    DELOSKOP_SERVICE_TOKEN → заголовок X-Deloskop-Service: без анонимного лимита, потолок 1 000/сутки на стороне API.
+    DELOSKOP_COOKIE (прежний способ: сессия сотрудника или deloskop_service=<токен>) — тоже работает.
+    Значения берутся только из окружения запуска: в файлы, вывод и журнал не попадают."""
+    env = os.environ if env is None else env
+    zag = {}
+    t = (env.get("DELOSKOP_SERVICE_TOKEN") or "").strip()
+    if t:
+        zag["X-Deloskop-Service"] = t
+    if (env.get("DELOSKOP_COOKIE") or "").strip():
+        zag["Cookie"] = env["DELOSKOP_COOKIE"].strip()
+    return zag
+
+
 def iz_api(spisok, vyhod, api="https://api.deloskop.ru", pauza=6.0, maks=MAKS_ZAPROSOV):
     """Берёт ИНН из файла (по одному в строке), спрашивает /api/check и дописывает ответы в vyhod (.jsonl).
     Возобновляется с места обрыва. ИНН из 12 цифр не запрашиваются вовсе. Каждый запрос — это одна
@@ -195,8 +211,9 @@ def iz_api(spisok, vyhod, api="https://api.deloskop.ru", pauza=6.0, maks=MAKS_ZA
             inns.append(s)
     inns = inns[:max(0, int(maks))]
     zag = {"Accept": "application/json", "User-Agent": "Deloskop-kartochki/1"}
-    if os.environ.get("DELOSKOP_COOKIE"):
-        zag["Cookie"] = os.environ["DELOSKOP_COOKIE"]  # сессия сотрудника — без лимита анонимных проверок; в файлы не пишем
+    zag.update(zagolovki_dostupa())
+    sluzhebnyj = "X-Deloskop-Service" in zag or "Cookie" in zag
+    print("Служебный доступ: %s · к запросу: %d ИНН (не больше %d за запуск)" % ("да" if sluzhebnyj else "нет — анонимно, 3 проверки в день", len(inns), maks))
     ok = oshibki = 0
     with open(vyhod, "a", encoding="utf-8") as fh:
         for i, inn in enumerate(inns, 1):
@@ -215,7 +232,8 @@ def iz_api(spisok, vyhod, api="https://api.deloskop.ru", pauza=6.0, maks=MAKS_ZA
                 ok += 1
             except urllib.error.HTTPError as ex:
                 if ex.code == 429:
-                    print("  %s: HTTP 429 — лимит API. Остановились (лимит не обходим); продолжить — та же команда позже." % inn)
+                    print("  %s: HTTP 429 — %s. Остановились (лимит не обходим); продолжить — та же команда позже." % (
+                        inn, "суточный потолок служебного доступа" if sluzhebnyj else "анонимный лимит API"))
                     break
                 oshibki += 1
                 print("  %s: HTTP %s" % (inn, ex.code))

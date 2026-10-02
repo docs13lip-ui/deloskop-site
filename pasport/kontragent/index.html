@@ -271,6 +271,7 @@ td b{font-weight:600}
 <script src="/pasport/engine.js"></script>
 <script src="/pasport/qr.js"></script>
 <script src="/js/pasport-kontragenta.js"></script>
+<script src="/js/terminy.js"></script>
 <script>
 (function(){
   var API=(location.hostname.endsWith('deloskop.ru')?'https://api.deloskop.ru':'');
@@ -531,6 +532,8 @@ td b{font-weight:600}
         (K?'<section class="pp" id="papka-r" aria-labelledby="pp-h"></section>':'');
       PP={nomer:m.nomer,data:vremya(m.sformirovan),nazvanie:m.nazvanie,inn:m.inn,otpechatok:P.otpechatokKratko(hash)};
       pk.innerHTML=h; msg.hidden=true; pk.hidden=false;
+      // подсказки к терминам (ЗСК, ГИР БО, РНП, приставы…) — определения дословно из статей сайта, js/terminy.js
+      if(window.Terminy)Terminy.mount(pk);
       pk.onchange=function(e){var t=e.target;if(!t.matches||!t.matches('[data-otm-ist]'))return;var op=t.options[t.selectedIndex];if(t.form&&op)t.form.adres.value=op.getAttribute('data-url');};
       pk.onclick=function(e){if(otmKlik(e,p))return;var b=e.target.closest&&e.target.closest('.kinn');if(!b)return;var v=b.getAttribute('data-inn');
         function ok(){b.textContent='ИНН скопирован — вставьте в поиск';}

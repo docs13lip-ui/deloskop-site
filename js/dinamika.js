@@ -2,7 +2,7 @@
  * (решение владельца 02.10, эталон экрана — п. 5 «Динамика и тренды»).
  * Данные — только из ответа /api/check: dossier.charts (ГИР БО ФНС, годовая бухотчётность), signals, company, zsk.
  * Снимки для «что изменилось» хранятся ТОЛЬКО в браузере (localStorage, ключ dlk_snimki): без ФИО, адресов и сумм,
- * кроме выручки и прибыли из открытой отчётности. Нет доступа к хранилищу — блока «что изменилось» нет.
+ * кроме выручки, прибыли и собственного капитала из открытой отчётности (ГИР БО). Нет доступа к хранилищу — блока «что изменилось» нет.
  * Чистые функции (ryady, trendy, snimok, sravnit, html) — без DOM и сети, их проверяет tests/dinamika.test.js. */
 (function (root, factory) {
   var api = factory();
@@ -194,6 +194,9 @@
       var ch = (r.dossier && r.dossier.charts) || {}, v = ryad(ch.revenue), p = ryad(ch.profit);
       if (v.length) s.vyr = [v[v.length - 1].year, v[v.length - 1].value];
       if (p.length) s.prib = [p[p.length - 1].year, p[p.length - 1].value];
+      // собственный капитал (строка 1300 баланса, dossier.charts.balance) — для «ушёл в минус / вышел из минуса»
+      var bl = ch.balance, kg = bl && typeof bl === 'object' ? parseInt(bl.year, 10) : NaN, ke = bl ? bl.equity : null;
+      if (isFinite(kg) && ke !== null && ke !== '' && typeof ke !== 'boolean' && isFinite(Number(ke))) s.kap = [kg, Number(ke)];
     }
     return s;
   }
@@ -226,6 +229,13 @@
       if (!x) { if (VES[y[0]] > 0) add('huzhe', y[1] + ': ' + STX[y[0]]); return; }
       if (x[0] !== y[0]) add(VES[y[0]] > VES[x[0]] ? 'huzhe' : VES[y[0]] < VES[x[0]] ? 'luchshe' : 'info', y[1] + ': ' + STX[x[0]] + ' → ' + STX[y[0]]);
     });
+    // капитал: только смена знака и только между двумя снимками, где он есть (старый снимок без капитала — «не сравнивали»)
+    if (a.kap && b.kap && b.kap[0] >= a.kap[0]) {
+      if (a.kap[1] >= 0 && b.kap[1] < 0) add('huzhe', 'Собственный капитал ушёл в минус: на' + NB + '31.12.' + b.kap[0] +
+        ' — минус ' + dengi(-b.kap[1]) + ', обязательства больше активов (ГИР' + NB + 'БО)');
+      else if (a.kap[1] < 0 && b.kap[1] >= 0) add('luchshe', 'Собственный капитал больше не отрицательный: на' + NB + '31.12.' + b.kap[0] +
+        ' — ' + (b.kap[1] > 0 ? dengi(b.kap[1]) : '0' + NB + '₽') + ' (ГИР' + NB + 'БО)');
+    }
     if (b.vyr && (!a.vyr || b.vyr[0] > a.vyr[0])) add('info', 'Появилась отчётность за ' + b.vyr[0] + ': выручка ' + dengi(b.vyr[1]) +
       (b.prib && b.prib[0] === b.vyr[0] ? ', ' + (b.prib[1] < 0 ? 'убыток ' + dengi(-b.prib[1]) : 'прибыль ' + dengi(b.prib[1])) : ''));
     var poryadok = { huzhe: 0, info: 1, luchshe: 2 };

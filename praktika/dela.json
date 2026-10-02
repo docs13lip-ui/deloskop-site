@@ -6,9 +6,9 @@
   },
   "ssylki_s_sajta": {
     "_kak": "Входящие ссылки на разборы с живых страниц (SEO-обвязка [Маркетинга] 30.09): файл страницы → slug разборов или «hab:<раздел>». Сборщик ставит блок между метками <!--praktika-ssylki-->…<!--/praktika-ssylki--> (в статье — перед </article>). Тест: у каждого разбора ≥ 2 входящие ссылки вне /praktika/.",
-    "115-fz/zablokirovali-schet-chto-delat/index.html": ["otklyuchili-internet-bank", "zagraditelnye-komissii"],
+    "115-fz/zablokirovali-schet-chto-delat/index.html": ["otklyuchili-internet-bank", "zagraditelnye-komissii", "ostatok-pri-zakrytii-scheta"],
     "115-fz/zapros-banka-po-115-fz-kak-otvetit/index.html": ["otklyuchili-internet-bank"],
-    "115-fz/zsk-zony-riska/index.html": ["krasnaya-zona-zsk-sud", "zagraditelnye-komissii"],
+    "115-fz/zsk-zony-riska/index.html": ["krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "zagraditelnye-komissii"],
     "nalogi/statya-54-1-nk-prostymi-slovami/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke", "droblenie-uplachennaya-usn-zachityvaetsya"],
     "nalogi/nagruzka/index.html": ["droblenie-uplachennaya-usn-zachityvaetsya"],
     "nalogi/priznaki-tehnicheskoj-kompanii/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke"],
@@ -16,9 +16,30 @@
     "pasport/index.html": ["proverka-kontragenta-na-datu-sdelki"],
     "nalogi/pismo-o-smene-rekvizitov-kak-proverit/index.html": ["dvojnik-postavshchika-bank-poluchatelya"],
     "nalogi/kak-proverit-schet-pered-oplatoj/index.html": ["dvojnik-postavshchika-bank-poluchatelya"],
-    "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud"]
+    "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta"]
   },
   "razbory": [
+    {
+      "razdel": "115-fz",
+      "slug": "ostatok-pri-zakrytii-scheta",
+      "h1": "Банк закрывает счёт по 115-ФЗ. Когда отдадут остаток?",
+      "title": "Банк закрывает счёт по 115-ФЗ: как забрать остаток и успеть до ЗСК",
+      "description": "Остаток — за 7 дней после заявления. Опоздал банк — «красная» зона потом его не спасает: так решил суд. Что делать, если зона уже красная.",
+      "zapros": "банк закрывает счет по 115-фз как забрать остаток",
+      "data": "2026-10-02",
+      "minut": 4,
+      "lid": "«Банк прислал уведомление о расторжении договора по 115-ФЗ. Деньги на счёте — мои. Когда я их получу и может ли банк их не отдать?» Не позднее 7 дней после письменного заявления — и если банк опоздал, поздняя «красная» зона его уже не оправдывает: так решил Арбитражный суд Московского округа. Разбираем, где грань и что делать, если зона стала красной раньше.",
+      "dela": [
+        {"sud": "Арбитражный суд Московского округа", "sud_kratko": "АС МО", "akt": "Постановление", "nomer": "№ Ф05-300/2024", "data": "2024-03-15", "delo": "А40-42087/2023 (ИП против банка)", "na_konu": "остаток на счёте ИП после расторжения договора", "na_konu_kratko": "остаток счёта", "itog": "В пользу клиента", "itog_nov": false,
+         "istochnik": "https://kad.arbitr.ru/", "istochnik_podpis": "kad.arbitr.ru — поиск по номеру дела А40-42087/2023; тезис сверен по подборке consultant.ru", "sverka": "2026-10-02"}
+      ],
+      "knopka": {"zagolovok": "Заявление и календарь 7 дней", "tekst": "Бесплатный план «Скорой 115-ФЗ», сценарий «Расторгает договор счёта»: заявление о перечислении остатка и сроки по дням.", "knopka": "Открыть план «Скорой»", "url": "/skoraya-115-fz/?s=rastorzhenie"},
+      "zakon": [
+        ["ст. 859 ГК РФ — расторжение договора банковского счёта, срок выдачи остатка", "ред. 26.07.2017 № 212-ФЗ", "https://www.consultant.ru/document/cons_doc_LAW_9027/"],
+        ["п. 5, 6 ст. 7.7 и ст. 7.8 Федерального закона № 115-ФЗ — меры к клиентам высокого риска, разрешённые выплаты, МВК", "ред. 04.08.2026 № 283-ФЗ", "https://www.consultant.ru/document/cons_doc_LAW_32834/"]
+      ],
+      "pohozhie": ["zagraditelnye-komissii", "krasnaya-zona-zsk-sud"]
+    },
     {
       "razdel": "nalogi",
       "slug": "droblenie-uplachennaya-usn-zachityvaetsya",

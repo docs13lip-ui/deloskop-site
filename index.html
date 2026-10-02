@@ -444,7 +444,7 @@ footer a{color:var(--ink2)}
         <h2 class="h2" id="praktika-h">Как решают суды: разборы дел</h2>
         <p class="lead">Настоящие дела с&nbsp;номером и&nbsp;датой: о&nbsp;чём спорили, чем кончилось и&nbsp;что из&nbsp;этого следует для вас.</p>
       </div>
-      <!--praktika-glavnaya--><div class="pr-gl"><a href="/praktika/nalogi/droblenie-uplachennaya-usn-zachityvaetsya/"><small>Налоги</small><b>Налоговая признала дробление бизнеса. Уплаченная УСН пропадёт?</b><span>Верховный суд РФ, СКЭС · определение № 301-ЭС22-11144 · 17 октября 2022</span></a><a href="/praktika/115-fz/dvojnik-postavshchika-bank-poluchatelya/"><small>115&#8209;ФЗ</small><b>Заплатили «двойнику» поставщика. Кто вернёт деньги — банк или никто?</b><span>Верховный суд РФ, СКЭС · определение № 304-ЭС23-9987 · 20 октября 2023</span></a><a href="/praktika/nalogi/ks-12-p-svidetel-po-svoej-proverke/"><small>Налоги</small><b>Налоговая вызывает «свидетелем» по проверке вашей же деятельности. Надо идти?</b><span>Конституционный суд РФ · постановление № 12-П · 5 марта 2026</span></a></div><!--/praktika-glavnaya-->
+      <!--praktika-glavnaya--><div class="pr-gl"><a href="/praktika/115-fz/ostatok-pri-zakrytii-scheta/"><small>115&#8209;ФЗ</small><b>Банк закрывает счёт по 115&#8209;ФЗ. Когда отдадут остаток?</b><span>Арбитражный суд Московского округа · постановление № Ф05-300/2024 · 15 марта 2024</span></a><a href="/praktika/nalogi/droblenie-uplachennaya-usn-zachityvaetsya/"><small>Налоги</small><b>Налоговая признала дробление бизнеса. Уплаченная УСН пропадёт?</b><span>Верховный суд РФ, СКЭС · определение № 301-ЭС22-11144 · 17 октября 2022</span></a><a href="/praktika/115-fz/dvojnik-postavshchika-bank-poluchatelya/"><small>115&#8209;ФЗ</small><b>Заплатили «двойнику» поставщика. Кто вернёт деньги — банк или никто?</b><span>Верховный суд РФ, СКЭС · определение № 304-ЭС23-9987 · 20 октября 2023</span></a></div><!--/praktika-glavnaya-->
       <p class="vse"><a href="/praktika/" data-praktika-gl>Все разборы&nbsp;→</a></p>
     </div>
   </section>
@@ -604,7 +604,7 @@ footer a{color:var(--ink2)}
     report.setAttribute('aria-label','Отчёт о проверке');
     report.innerHTML='<div class="report-head"><div><div class="tag">'+(svoj?(String(c.inn||'').length===12?'Ваш бизнес':'Ваша компания')+' глазами банка и налоговой · на ':'Проверка на ')+d.toLocaleDateString('ru-RU')+'</div>'+
       '<div class="company">'+esc(name)+'</div><div class="sub">'+sub+'</div></div>'+
-      (svoj?'':'<div class="pill '+lvl+'">'+(lvl==='low'?ICON:WARNI)+esc(r.risk_title||'')+'</div>')+'</div>'+
+      (svoj?'':'<div class="pill '+lvl+'">'+(lvl==='low'?ICON:WARNI)+esc({low:'Сигналов мало',medium:'Есть вопросы',high:'Серьёзные сигналы'}[r.risk_level]||'')+'</div>')+'</div>'+
       '<div class="rows">'+rows+'</div>'+(window.Dinamika?Dinamika.html(r):'')+'<div class="verdict" data-usl>'+esc(r.verdict||'')+'</div>'+
       '<div class="report-actions">'+(r.report_id?'<a class="btn-doc" href="/report.html?id='+encodeURIComponent(r.report_id)+'" target="_blank" rel="noopener">PDF-досье</a><button type="button" data-act="link">Ссылка на отчёт</button>':'<button type="button" data-act="copy">'+(svoj?'Скопировать разбор':'Скопировать вывод')+'</button>')+'<button type="button" data-act="again">Проверить другую</button></div>'+
       '<div class="src">Источники: ЕГРЮЛ/ЕГРИП и открытые данные ФНС. Это оценка риска, а не решение банка.</div>';
@@ -633,7 +633,7 @@ footer a{color:var(--ink2)}
     if(cb)cb.onclick=function(e){
       if(shR){try{navigator.clipboard.writeText(Shchit.kratko(shR)+' — deloskop.ru');e.target.textContent='Скопировано'}catch(_){}return;}
       var u=window.Usloviya?Usloviya.decide(r):null;
-      var t=name+' (ИНН '+c.inn+'): '+(r.risk_title||'')+'. '+(u?u.headline+'. '+u.advice:(r.verdict||''))+' — проверено на deloskop.ru';
+      var t=name+' (ИНН '+c.inn+'): '+({low:'Сигналов мало',medium:'Есть вопросы',high:'Серьёзные сигналы'}[r.risk_level]||'')+'. '+(u?u.headline+'. '+u.advice:(r.verdict||''))+' — проверено на deloskop.ru';
       try{navigator.clipboard.writeText(t);e.target.textContent='Скопировано'}catch(_){}};
     // лист «Отчёт о проверке» на всю ширину: шапка → вывод → факты, динамика, все данные; справа — как посчитали и откуда данные (js/otchet.js)
     if(window.Otchet){try{Otchet.razlozhit(report,r,{svoj:!!shR,shR:shR,usl:ub})}catch(e){}}

@@ -7,6 +7,7 @@ import os
 import pathlib
 import re
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -404,8 +405,9 @@ class TestObshchijRender(unittest.TestCase):
         r = ss.rekv_sajta()
         podval, shapka = ss.podval_html(r), ss.shapka_html()
         pervye = {}
+        kom = json.loads((KOREN / "data" / "kommentarii.json").read_text(encoding="utf-8"))  # API передаёт тот же файл сайта
         for z in zap:
-            ok, pr, adres, telo = R.kartochka_iz_check(z, kart)
+            ok, pr, adres, telo = R.kartochka_iz_check(z, kart, kom)
             self.assertTrue(ok, pr)
             pervye[adres] = ss.sobrat_stranicu(telo, r, podval, shapka)
         self.assertEqual(len(pervye), len(kart))
@@ -428,6 +430,83 @@ class TestObshchijRender(unittest.TestCase):
         telo = R.kartochka_iz_check(O.zapis(3))[3]
         self.assertIn("<!--shapka--><!--/shapka-->", telo)
         self.assertNotIn("Примеров", telo)
+
+
+class TestKommentariiKartochki(unittest.TestCase):
+    """kommentarii-kartochki-v1: «Комментарий команды Делоскопа» под строками «Проверки по реестрам» — то же правило, что в отчёте."""
+
+    def setUp(self):
+        self.kom = json.loads((KOREN / "data" / "kommentarii.json").read_text(encoding="utf-8"))
+
+    def _html(self, z, kom=True):
+        k = K.iz_check(z)
+        return K.html_kartochki(k, K.vyvody(k), [], self.kom if kom else None)
+
+    def test_pod_proverennym_faktom_i_ogovorka_odin_raz(self):
+        t = self._html(O.zapis(3))
+        i = t.index("<span>Долги по налогам</span>")
+        j = t.index('data-kom="nedoimka"')
+        self.assertLess(i, j)
+        self.assertNotIn('class="fact"', t[i + 30:j])  # сразу под своей строкой
+        self.assertIn('data-kom="nedostovernost"', t)
+        self.assertEqual(t.count('class="kom-og"'), 1)
+        self.assertIn(K.KOM_OGOVORKA, t)
+        self.assertGreater(t.index('class="kom-og"'), t.rindex('class="kom '))
+        self.assertIn("нормы сверены", t)
+
+    def test_bez_biblioteki_net(self):
+        t = self._html(O.zapis(3), kom=False)
+        self.assertNotIn("kom", re.sub(r"kommentar", "", t.split("<main", 1)[1]))
+
+    def test_chernovik_ne_vyhodit(self):
+        # численность «ok» — зелёный тон у записи shtat ждёт [Право] → комментария нет
+        t = self._html(O.zapis(3))
+        self.assertNotIn('data-kom="shtat"', t)
+        self.assertNotIn('data-kom="nalogi"', t)
+
+    def test_ne_proveryali_bez_kommentariya(self):
+        z = O.zapis(3)
+        for s in z["signals"]:
+            if s["title"] == "Долги по налогам":
+                s["as_of"] = None  # нет даты сведений → строка «не проверяли»
+        t = self._html(z)
+        self.assertNotIn('data-kom="nedoimka"', t)
+        z = O.zapis(3, dolg="не проверяли: набор недоступен")
+        self.assertNotIn('data-kom="nedoimka"', self._html(z))  # «не проверяли ≠ не нашли»: зелёный текст не ставим
+
+    def test_kras_pri_dolge(self):
+        z = O.zapis(3, dolg_status="bad", dolg="есть, 1 200 000 ₽")
+        k = K.iz_check(z)
+        t = K.html_kartochki(k, K.vyvody(k), [], self.kom)
+        self.assertIn('class="kom kom--kras" data-kom="nedoimka"', t)
+
+    def test_vorota_ne_menyayutsya(self):
+        for i in range(12):
+            k = K.iz_check(O.zapis(i))
+            V = K.vyvody(k)
+            self.assertEqual(K.vorota(k, V), K.vorota(K.iz_check(O.zapis(i)), K.vyvody(K.iz_check(O.zapis(i)))))
+            self.assertFalse(any("Комментарий" in x["tekst"] for x in V))
+
+    def test_razmetka_kak_v_js(self):
+        sig = [{"title": "Долги по налогам", "detail": "нет", "status": "ok"},
+               {"title": "Задолженность по налогам", "detail": "есть", "status": "bad"},
+               {"title": "Адрес", "detail": "Отметок о недостоверности нет", "status": "ok"},
+               {"title": "Дисквалификация руководителя", "detail": "есть", "status": "bad"},
+               {"title": "ФССП", "detail": "2 производства", "status": "warn"}]
+        js = ("const K=require('./js/kommentarii.js');const S=require('./data/kommentarii.json');"
+              "console.log(JSON.stringify(%s.map(s=>K.html(K.najti(S,s)))))" % json.dumps(sig, ensure_ascii=False))
+        out = subprocess.run(["node", "-e", js], cwd=KOREN, capture_output=True, text=True, check=True).stdout
+        py = [K.kom_html(K.kom_najti(self.kom, s)) for s in sig]
+        self.assertEqual(py, json.loads(out))
+        self.assertGreaterEqual(sum(1 for x in py if x), 3)
+        og = subprocess.run(["node", "-e", "process.stdout.write(require('./js/kommentarii.js').ogovorkaHtml())"],
+                            cwd=KOREN, capture_output=True, text=True, check=True).stdout
+        self.assertEqual(K.kom_ogovorka_html(), og)
+
+    def test_css_est(self):
+        css = (KOREN / "css" / "co.css").read_text(encoding="utf-8")
+        for c in (".co .kom{", ".co .kom--zel", ".co .kom--zhel", ".co .kom--kras", ".co .kom__h", ".co .kom-og"):
+            self.assertIn(c, css)
 
 
 class TestObolochka(unittest.TestCase):

@@ -256,7 +256,7 @@
     if (np && np.spisok.length && (t === 'go' || t === 'cap')) {
       ne = 'Не проверяли: ' + np.spisok.join(', ') + '. Если они есть — вперёд лучше не платить.' +
         (np.nalogiNa ? ' Долги по налогам — нет в списке ФНС на\u00a0' + np.nalogiNa + '.' : '') +
-        (np.provereno != null && np.iz ? ' Проверено ' + np.provereno + ' из ' + np.iz + ' источников' + (np.data ? ' на ' + dataRu(np.data) : '') + '.' : '');
+        (np.provereno != null && np.iz ? ' Из внешних реестров ответили ' + np.provereno + ' из ' + np.iz + (np.data ? ' на ' + dataRu(np.data) : '') + '.' : '');
     }
     return { kak: kak, ne: ne,
       podpis: 'Ориентир Делоскопа, не норма закона. Методика — в разборе «Сколько платить вперёд незнакомой компании».', url: STATYA };

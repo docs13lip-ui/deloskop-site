@@ -518,7 +518,10 @@ def vyvody(k):
             out.append(_v("V09", "ok", "Налоговой задолженности в данных ФНС нет (на%s%s)" % (NB, data_tekst(n["data"])), n["istochnik"], n["data"], s_chislom=False))
     sh = F.get("shtrafy")
     if sh and sh.get("data") and sh.get("ton") in ("warn", "bad") and sh.get("znachenie"):
-        out.append(_v("V15", "warn", "Не уплачен налоговый штраф — %s" % dengi(sh["znachenie"]), sh["istochnik"], sh["data"]))
+        # shtrafy-v1 (03.10, по сверке [Ночных запусков] 00:05, приказ ФНС ММВ-7-14/729@ п. 4): в наборе — только штрафы,
+        # НЕ уплаченные к 1 октября; уплачен ли он позже — набор не знает. Не «Не уплачен …» в настоящем времени (ст. 152 ГК).
+        out.append(_v("V15", "warn", "Налоговый штраф не был уплачен в срок — %s (данные ФНС на%s%s). Мог быть уплачен после этой даты" % (
+            dengi(sh["znachenie"]), NB, data_tekst(sh["data"])), sh["istochnik"], sh["data"]))
     nd = F.get("nedostovernost")
     if nd and nd.get("ton") == "ok" and k.get("egrul_data"):
         out.append(_v("V16", "ok", "Адрес и руководитель в реестре — без отметок о недостоверности", nd["istochnik"] or "ЕГРЮЛ", nd.get("data") or k["egrul_data"], s_chislom=False))

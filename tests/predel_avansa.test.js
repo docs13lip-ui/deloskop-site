@@ -50,7 +50,7 @@ test('источник прямо сказал not_found → строка его
   const v = U.decide(resp({ damia: { fssp: { status: 'not_found' }, polnota: { provereno: 6, iz: 7 }, data_svedeniy: '2026-09-28T09:00:00+03:00' },
     istochniki: [{ kod: 'fns_debt', status: 'not_checked' }] }));
   assert.deepStrictEqual(v.neProvereno.spisok, ['долги по налогам']);
-  assert.match(v.kak.ne, /Проверено 6 из 7 источников на 28\.09\.2026\.$/);
+  assert.match(v.kak.ne, / Из внешних реестров ответили 6 из 7 на 28\.09\.2026\.$/);
   const vse = U.decide(resp({ damia: { fssp: { status: 'found' } }, istochniki: [{ kod: 'nalogi', status: 'not_found' }] }));
   assert.strictEqual(vse.kak.ne, '');
 });

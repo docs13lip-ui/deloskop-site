@@ -16,7 +16,7 @@
   var NB = '\u00a0', MAKS = 7;
   var VES = { bad: 0, warn: 1, ok: 2, neutral: 2 };
   // порядок базовых фактов, когда замечаний нет
-  var PORYADOK = ['status', 'address', 'tax_debt', 'otchetnost', 'rukovoditel', 'age', 'zsk'];
+  var PORYADOK = ['status', 'address', 'tax_debt', 'kapital', 'otchetnost', 'rukovoditel', 'age', 'zsk'];
   var NAZV = { status: 'Статус', address: 'Отметки о недостоверности', age: 'На рынке', tax_debt: 'Долги по налогам' };
   var SEKCII = { profile: 'reestr', history: 'reestr', management: 'reestr', activity: 'reestr', taxes: 'ФНС, открытые данные', dynamics: 'ГИР БО ФНС, годовая бухгалтерская отчётность' };
   var KRATKO = { sudy: 'арбитражные суды', bankrotstvo: 'банкротство', fssp: 'приставы', priostanovki: 'приостановки счетов', mery: 'обеспечительные меры ФНС', rnp: 'РНП', kontrakty: 'госконтракты' };
@@ -95,6 +95,15 @@
     return { god: v.year, vyruchka: v.value, pribyl: p };
   }
 
+  // ---- собственный капитал: dossier.charts.balance (ГИР БО, строка 1300), без запроса к сети ----
+  function kapital(r) {
+    var b = r && r.dossier && r.dossier.charts && r.dossier.charts.balance;
+    if (!b || typeof b !== 'object') return null;
+    var g = parseInt(b.year, 10), e = b.equity;
+    if (!isFinite(g) || e === null || e === '' || typeof e === 'boolean' || !isFinite(Number(e))) return null;
+    return { god: g, znach: Number(e) };
+  }
+
   // ---- существенные факты ----
   function fakty(r, opt) {
     opt = opt || {};
@@ -140,6 +149,11 @@
       } else {
         add({ k: 'otchetnost', nazv: 'Бухотчётность', znach: 'Нет в ответе ГИР БО', ton: 'neutral', ist: 'ГИР БО ФНС', data: dataPr });
       }
+      // Собственный капитал (строка 1300 баланса) меньше нуля — обязательства больше активов. Показываем только минус:
+      // плюс решения не меняет, а нулевая или пустая строка — не факт. У банков в ГИР БО баланса нет — сюда не попадут.
+      var kp = kapital(r);
+      if (kp && kp.znach < 0) add({ k: 'kapital', nazv: 'Собственный капитал на' + NB + '31.12.' + kp.god, ton: 'warn',
+        znach: 'Минус ' + dengi(-kp.znach) + ': обязательства больше активов', ist: 'ГИР БО ФНС, баланс', data: '31.12.' + kp.god });
       var estRuk = (r.signals || []).some(function (s) { return s && /director|rukovod/i.test(s.id || ''); });
       var ot = dataIz(c.director_since);
       if (!estRuk && ot) {
@@ -339,5 +353,5 @@
     return true;
   }
 
-  return { fakty: fakty, bank: bank, glubina: glubina, otchetnost: otchetnost, html: html, mount: mount, htmlSvoj: htmlSvoj, mountSvoj: mountSvoj, dengi: dengi, srok: srok, MAKS: MAKS, CSS: CSS };
+  return { fakty: fakty, bank: bank, kapital: kapital, glubina: glubina, otchetnost: otchetnost, html: html, mount: mount, htmlSvoj: htmlSvoj, mountSvoj: mountSvoj, dengi: dengi, srok: srok, MAKS: MAKS, CSS: CSS };
 });

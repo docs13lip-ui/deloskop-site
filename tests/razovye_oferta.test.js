@@ -122,7 +122,9 @@ test('оферта п. 3.8 «Тариф основателя» — текст [�
   assert.ok(bezTegov(r6[4]).includes('Повышение цены применяется к продлению'));
   assert.ok(bezTegov(r6[7]).startsWith('Если Исполнитель станет плательщиком НДС'));
   const o = chitat('osnovatel/index.html');
-  assert.ok(o.includes('<a href="/oferta/#osnovatel">оферте, п.&nbsp;3.8</a>'));
+  // ссылка на п. 3.8 — у кнопки и в FAQ «Счёт уже занимает место?»; «закрывающие документы» — п. 6.2 ([Право] 22:30)
+  assert.ok(/<a (data-oplata-)?href="\/oferta\/#osnovatel">п\.&nbsp;3\.8 оферты<\/a>/.test(o)); // в бете — внутри шаблона оплаты
+  assert.ok(o.includes('<a href="/oferta/#o6">п.&nbsp;6.2 оферты</a>'));
   assert.ok(bezTegov(o).includes('Не продлили в течение 10 дней после окончания года — доступ «Про» закончится, бесплатные проверки останутся, а цену основателя вернуть уже нельзя.'));
   assert.ok(!o.includes('после перерыва вернуть нельзя'), 'старая формулировка FAQ без срока 10 дней');
   assert.ok(s.includes(`первые ${T.osnovatel.mest} Пользователей`), "число мест в оферте ≠ tarify.json");

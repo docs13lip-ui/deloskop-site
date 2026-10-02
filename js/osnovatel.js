@@ -1,6 +1,7 @@
 // /osnovatel/ — честный счётчик мест и две фазы кнопки (claude/Арт-директор_основатель_26.09.md, 26.09.2026).
 // GET /api/osnovatel → {vsego, zanyato, ostalos, priem_oplat} (API schet-v2). Место занимает только оплата.
-// API не ответил (до выкладки schet-v2 — 404) → остаётся «Забронировать место», счётчика нет.
+// API не ответил (до выкладки schet-v2 — 404) → остаётся «Получить счёт на тариф основателя», счётчика нет.
+// Слов «бронь/забронировать» нет: по п. 3.8 (а) оферты бронь места не даёт ([Продукт] и [Право] 02.10 21:50/22:30).
 (function () {
   var MIN_POKAZ = 10; // «1 из 300» выглядит как пустой зал — до 10 оплат счётчик не показываем
   var API = location.hostname.endsWith('deloskop.ru') ? 'https://api.deloskop.ru' : '';
@@ -25,8 +26,8 @@
       btn.removeAttribute('href');
       if (note) note.innerHTML = 'Все 300 мест заняты. Обычные тарифы — на&nbsp;<a href="/tarify/">странице тарифов</a>.';
     } else if (j.priem_oplat === true) {
-      btn.textContent = 'Получить счёт';
-      if (note) note.textContent = 'Счёт на ИП или компанию. Доступ откроем в день поступления денег.';
+      btn.textContent = 'Получить счёт на тариф основателя';
+      if (note) note.textContent = 'Счёт на ИП или компанию. Доступ и номер основателя — в день поступления денег.';
     }
   }
   window.DlkOsnovatel = { primenit: primenit, MIN_POKAZ: MIN_POKAZ };

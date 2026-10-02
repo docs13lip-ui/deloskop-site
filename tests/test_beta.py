@@ -124,8 +124,8 @@ platn = sobrat(False)
 ok("без беты: кнопки оплаты вернулись (6 на /tarify/; на главной с glavnaya-v2 — строка цен и «Как оплатить?»)",
    len(re.findall(r'<a class="cta[^"]*" data-tarif="[a-z]+" data-srok="[a-z]+" href="/schet/', B.vidimoe(platn["tarify/index.html"]))) == 6 and
    "<summary>Как оплатить?</summary>" in B.vidimoe(platn["index.html"]) and "Сейчас открытая бета" not in B.vidimoe(platn["index.html"]))
-ok("без беты: «Забронировать место» и «Получить пакет» вернулись",
-   ">Забронировать место</a>" in B.vidimoe(platn["osnovatel/index.html"]) and
+ok("без беты: «Получить счёт на тариф основателя» и «Получить пакет» вернулись",
+   ">Получить счёт на&nbsp;тариф основателя</a>" in B.vidimoe(platn["osnovatel/index.html"]) and
    B.vidimoe(platn["skoraya-115-fz/index.html"]).count(">Получить пакет</a>") == 2)
 ok("без беты: ни полосы, ни метки режима", all("data-beta-bar" not in t and B.META not in t for t in platn.values()))
 ok("без беты: реквизиты из rekvizity.json — снова в подвале", "ОГРНИП 304500116000157" in platn["index.html"])

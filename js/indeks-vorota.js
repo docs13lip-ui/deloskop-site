@@ -15,10 +15,10 @@
 })(this, function () {
   var POROG = 60;
   var ZONY = [
-    [70, 'Надёжная', 'ok'],
+    [70, 'Без серьёзных сигналов', 'ok'],
     [50, 'Есть вопросы', 'warn'],
-    [30, 'Высокий риск', 'risk'],
-    [1, 'Опасно', 'bad']
+    [30, 'Есть серьёзные сигналы', 'risk'],
+    [1, 'Много признаков риска', 'bad']
   ];
 
   function chislo(v) {
@@ -29,7 +29,7 @@
 
   function zona(ball) {
     for (var i = 0; i < ZONY.length; i++) if (ball >= ZONY[i][0]) return { nazvanie: ZONY[i][1], ton: ZONY[i][2] };
-    return { nazvanie: 'Опасно', ton: 'bad' };
+    return { nazvanie: 'Много признаков риска', ton: 'bad' };
   }
 
   // r — ответ /api/check. Возвращает, что показать на месте Индекса.

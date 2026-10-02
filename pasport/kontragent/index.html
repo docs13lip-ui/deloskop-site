@@ -161,6 +161,29 @@ td b{font-weight:600}
 .pp .pp-i{margin-top:12px;font-size:14px;font-weight:600}
 .pp .pp-p{margin-top:6px;font-size:13px;color:var(--ink2)}
 @media (max-width:600px){.pp table{table-layout:auto}.pp thead{display:none}.pp tr{border-top:1px solid var(--line);padding:9px 0}.pp td{border:0;padding:2px 0}.pp td.u{max-width:none}.pp td[data-t]::before{content:attr(data-t) ": ";color:var(--muted);font-size:12.5px}}
+/* pasport-list-v2 ([Ночные-3] 02.10): Паспорт на токенах листа отчёта — реквизиты 2 × 2, строка 1 итога — полоса «Индекс · вердикт» цветом предела аванса, статусы — точка и слово */
+.rkv-ps{display:grid;grid-template-columns:1fr 1fr;margin:14px 0 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.rkv-ps>div{padding:10px 12px 10px 0;min-width:0}.rkv-ps>div:nth-child(even){border-left:1px solid #EFEFEA;padding-left:12px}.rkv-ps>div:nth-child(n+3){border-top:1px solid #EFEFEA}
+.rkv-ps dt{font-size:12px;color:var(--muted);letter-spacing:.02em;margin:0 0 2px}
+.rkv-ps dd{margin:0;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.tk{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:1px;background:var(--ink2);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.tk.ok{background:var(--ok)}.tk.warn{background:var(--warn)}.tk.bad{background:var(--bad)}
+.itog li.vd{grid-template-columns:minmax(132px,auto) 1fr;gap:0 22px;align-items:center;padding:18px;background:var(--warn-bg);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.itog li.vd.ok{background:var(--ok-bg)}.itog li.vd.bad{background:var(--bad-bg)}
+.vd-ix{padding-right:22px;border-right:1px solid rgba(0,0,0,.08);display:flex;flex-direction:column;gap:4px;min-width:0}
+.vd-ix__l{font-size:12.5px;color:var(--ink2)}
+.vd-ix__b{font-size:44px;line-height:1;font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.vd-ix__b small{font-size:16px;font-weight:500;color:var(--muted);letter-spacing:0;margin-left:4px}
+.vd-ix__s{font-size:22px;line-height:1.2;font-weight:600;letter-spacing:-.01em}
+.vd-ix__z{font-size:13px;font-weight:600}
+.vd-ix__p{font-size:12.5px;color:var(--ink2)}
+.itog li.vd .t{font-size:19px;line-height:1.3;letter-spacing:-.01em}
+.itog li.vd .tk{width:10px;height:10px}
+.rz h2 .zn,.ogl .st{background:none;padding:0;border-radius:0;font-weight:500;font-size:13px;white-space:nowrap}
+.zn::before,.ogl .st::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor;margin-right:6px;vertical-align:1px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.zn.off::before,.ogl .st.off::before{background:none;box-shadow:inset 0 0 0 1.5px currentColor}
+.ogl .st.ok{color:var(--ok)}.ogl .st.warn{color:var(--warn)}.ogl .st.bad{color:var(--bad)}.ogl .st.info{color:var(--ink2)}.ogl .st.off{color:var(--off)}
+@media (max-width:600px){.summa select,.summa input{width:100%}.itog li.vd{grid-template-columns:1fr;gap:12px}.vd-ix{border-right:0;padding:0 0 12px;border-bottom:1px solid rgba(0,0,0,.08)}.rkv-ps dd{font-size:13.5px}}
 @media (max-width:600px){.ogl{columns:1}table,tbody,tr,th,td{display:block;width:auto}th{border:0;padding:10px 0 0;width:auto}td{padding-top:2px}.podl{grid-template-columns:1fr}.kol{flex-direction:column;align-items:flex-start}.kol .pr{text-align:left}}
 @media print{
   .kom{background:none;break-inside:avoid}
@@ -505,6 +528,23 @@ td b{font-weight:600}
       '<div class="stroka">Заполнено заказчиком Паспорта, в отпечаток SHA-256 не входит. Ориентир Делоскопа по сведениям на дату Паспорта — «'+esc(sovet)+'» (разделы 14 и 15); решение принимает ваша компания.</div></form>';
   }
 
+  // pasport-list-v2 ([Ночные-3] 02.10): реквизиты 2 × 2 и полоса «Индекс · вердикт» — на токенах листа отчёта (css/otchet.css).
+  // Только вид: сведения, отпечаток SHA-256 и номер Паспорта считаются как раньше (P.sobrat, P.vypustit).
+  function fakt1(p,id,tekst){var x=(p.razdely||[]).filter(function(z){return z.id===id})[0];return x?(x.fakty||[]).filter(function(f){return f.tekst===tekst})[0]||null:null;}
+  function rekvizity22(p,m){
+    var st=fakt1(p,'rekvizity','Статус'), dr=fakt1(p,'rekvizity','Дата регистрации');
+    var pole=[['ИНН',esc(m.inn||'—')],['ОГРН',esc(m.ogrn||'—')],['Дата регистрации',esc(dr?dr.znachenie:'—')],
+      ['Статус по ЕГРЮЛ',st?'<span class="tk '+esc(st.ton)+'" aria-hidden="true"></span>'+esc(st.znachenie):'—']];
+    return '<dl class="rkv-ps">'+pole.map(function(x){return '<div><dt>'+x[0]+'</dt><dd>'+x[1]+'</dd></div>'}).join('')+'</dl>';
+  }
+  // Тон полосы — тон «Предела аванса» (раздел 14): тот же расчёт, что «Условия сделки» на листе отчёта.
+  function tonPolosy(p){var f=fakt1(p,'predel','Предел аванса');return f&&(f.ton==='ok'||f.ton==='bad')?f.ton:'warn';}
+  function indeksBlok(m){
+    var ix=m.indeks||{}, V=window.IndeksVorota;
+    if(ix.ball!=null){var z=V&&V.zona?V.zona(ix.ball):null;
+      return '<div class="vd-ix"><span class="vd-ix__l">Индекс Делоскопа</span><span class="vd-ix__b">'+esc(ix.ball)+'<small>из&nbsp;99</small></span>'+(z?'<span class="vd-ix__z">'+esc(z.nazvanie)+'</span>':'')+(ix.sobrano!=null?'<span class="vd-ix__p">собрано '+esc(ix.sobrano)+'% данных</span>':'')+'</div>';}
+    return '<div class="vd-ix"><span class="vd-ix__l">Индекс Делоскопа</span><span class="vd-ix__s">считаем</span><span class="vd-ix__p">'+(ix.sobrano!=null?'собрано '+esc(ix.sobrano)+'% данных, для балла нужно 60%':'для балла нужно собрать 60% данных')+'</span></div>';
+  }
   function render(r,opts){
     var p=P.sobrat(r,opts), m=p.meta; INN=m.inn||"";
     document.title='Паспорт контрагента: '+m.nazvanie+' — Делоскоп';
@@ -521,21 +561,20 @@ td b{font-weight:600}
           s2=gl.length?gl.join('; '):'В полученных сведениях серьёзных отметок нет. Что не проверяли — в разделе 16.',
           s3=it.na_konu?('При претензии налоговой по сделке на '+U.money(it.na_konu.summa)+' — до '+U.money(it.na_konu.rub)+' '+(REZH[opts.rezhim||'osn']||REZH.osn)):'Введите сумму сделки — посчитаем, сколько на кону при претензии налоговой.';
       var pol=m.provereno.chto==='istochnikov'?'Проверено по '+m.provereno.n+' из '+m.provereno.m+' источников':'Сведения получены по '+m.provereno.n+' из '+m.provereno.m+' разделов';
-      var ix=m.indeks&&m.indeks.ball!=null?'Индекс: '+m.indeks.ball+' из 99 (собрано '+m.indeks.sobrano+'%)':'Индекс — считаем'+(m.indeks&&m.indeks.sobrano!=null?', собрано '+m.indeks.sobrano+'%':'');
       var h='<div class="kol"><div class="brand">'+LOGO+'делоскоп</div><div class="pr"><b>Паспорт контрагента</b>№ '+esc(m.nomer)+'<br>Сведения на '+esc(vremya(m.sformirovan))+'</div></div>'+
         (m.demo?'<span class="obrazec">Образец: компания вымышленная, данные для примера</span>':'')+
-        '<h1>'+esc(m.nazvanie)+'</h1><div class="rek">ИНН '+esc(m.inn)+(m.ogrn?' · ОГРН '+esc(m.ogrn):'')+'</div>'+
+        '<h1>'+esc(m.nazvanie)+'</h1>'+rekvizity22(p,m)+
         '<div class="itog"><h2>Итог в трёх строках</h2><ol>'+
-          '<li><span class="nn">1</span><div><div class="t">'+nbsp(s1)+'</div><div class="s">Можно ли работать и сколько платить вперёд — раздел 14.</div></div></li>'+
+          '<li class="vd '+tonPolosy(p)+'">'+indeksBlok(m)+'<div><div class="t"><span class="tk '+tonPolosy(p)+'" aria-hidden="true"></span>'+nbsp(s1)+'</div><div class="s">Можно ли работать и сколько платить вперёд — раздел 14.</div></div></li>'+
           '<li><span class="nn">2</span><div><div class="t">'+nbsp(s2)+'</div><div class="s">Главное из реестров — с датой сведений.</div></div></li>'+
           '<li><span class="nn">3</span><div><div class="t">'+nbsp(s3)+'</div>'+(it.na_konu?'<div class="s">'+esc(it.na_konu.formula)+'</div>':'')+
             '<form class="summa noprint" id="summa"><input name="summa" inputmode="numeric" placeholder="Сумма сделки, ₽" aria-label="Сумма сделки в рублях" value="'+(it.na_konu?esc(it.na_konu.summa):'')+'">'+
             '<select name="rezhim" aria-label="Режим налогообложения вашей компании">'+['osn','usn_dr','usn_d'].map(function(k){return '<option value="'+k+'"'+((opts.rezhim||'osn')===k?' selected':'')+'>'+esc(REZH_IMYA[k])+'</option>'}).join('')+'</select>'+
             '<button class="btn" type="submit">Посчитать</button></form></div></li>'+
         '</ol></div>'+
-        '<div class="polnota"><span>'+esc(pol)+'</span><span>'+esc(ix)+'</span><span>'+esc(m.versiya)+'</span></div>'+
+        '<div class="polnota"><span>'+esc(pol)+'</span><span>'+esc(m.versiya)+'</span></div>'+
         '<div class="legenda"><span><span class="m m-ist"></span>подтверждено источником</span><span><span class="m m-ras"></span>рассчитано Делоскопом</span><span><span class="m m-net"></span>не проверяли — причина в разделе</span></div>'+
-        '<ol class="ogl" aria-label="Разделы Паспорта">'+p.razdely.map(function(x){var z=znachok(x);return '<li>'+mark(x)+'<a href="#r'+x.n+'">'+x.n+'. '+esc(x.title)+'</a><span class="st">'+esc(z[1])+'</span></li>'}).join('')+'</ol>'+
+        '<ol class="ogl" aria-label="Разделы Паспорта">'+p.razdely.map(function(x){var z=znachok(x);return '<li>'+mark(x)+'<a href="#r'+x.n+'">'+x.n+'. '+esc(x.title)+'</a><span class="st '+z[0]+'">'+esc(z[1])+'</span></li>'}).join('')+'</ol>'+
         p.razdely.map(function(x){return razdelHtml(x,qr,hash)}).join('')+
         reshenieHtml(it.vyvod||'см. досье',it.na_konu&&it.na_konu.summa,r,p)+
         '<div class="podpis"><div>Проверку провёл (ФИО, должность)</div><div>Подпись, дата</div></div>'+

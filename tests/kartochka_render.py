@@ -426,7 +426,8 @@ def indeks_vid(k):
     if k.get("kind") != "LEGAL":
         return {"rezhim": "ip"}
     if b is not None and 1 <= b <= 99 and round(b) == b and p is not None and p >= POROG_INDEKSA and k.get("indeks_status") != "schitaem":
-        z = "Надёжная" if b >= 70 else "Есть вопросы" if b >= 50 else "Высокий риск" if b >= 30 else "Опасно"
+        # уровни — как indeks/metodika-v1.json ([Право] 02.10 12:30 разд. 4; 222-ФЗ: без «надёжн», «Высокий риск» — только о ЗСК)
+        z = "Без серьёзных сигналов" if b >= 70 else "Есть вопросы" if b >= 50 else "Есть серьёзные сигналы" if b >= 30 else "Много признаков риска"
         return {"rezhim": "chislo", "ball": int(b), "polnota": p, "zona": z}
     return {"rezhim": "schitaem", "polnota": p}
 

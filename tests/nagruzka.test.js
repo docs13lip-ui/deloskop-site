@@ -146,7 +146,7 @@ test("справочник собран из JSON (sobrat_nagruzka.py --check) �
   const tr = (TABL.match(/<tbody>[\s\S]*?<\/tbody>/g) || []).map((t) => (t.match(/<tr/g) || []).length);
   assert.deepStrictEqual(tr, [45, 61]);
   assert.match(TABL, /<td>Строительство<\/td><td>раздел F<\/td><td><b>15,0%<\/b><\/td><td>14,4%<\/td><td>\+0,6 п\. п\.<\/td>/);
-  assert.match(TABL, /<td>Добыча угля<\/td><td>05<\/td><td><b>убыток<\/b><\/td><td>убыток<\/td>/);
+  assert.match(TABL, /<td>Добыча угля<\/td><td>05<\/td><td><b>убыток<\/b><\/td><td>4,8%<\/td><td><b>убыток<\/b><\/td><td>убыток<\/td>/);
   assert.match(TABL, /Данные ФНС от 05\.05\.2026/);
 });
 
@@ -172,4 +172,30 @@ test("лента: запись о калькуляторе нагрузки", ()
   const z = L.find((x) => x.id === "2026-10-02-7");
   assert.ok(z, "нет записи 2026-10-02-7");
   assert.ok(z.chto_proverit.some((c) => c.ssylka === "/nalogi/nagruzka/"));
+});
+
+test("рентабельность 2024 (Информация ФНС от 07.05.2025): все 61 строка, контроль, таблица страницы", () => {
+  const R = D.rentabelnost_2024;
+  assert.match(R.istochnik.nazvanie, /Информация ФНС России от 07\.05\.2025/);
+  assert.strictEqual(R.istochnik.data, "2025-05-07");
+  assert.ok(R.istochnik.ssylki.some((u) => /garant\.ru\/412003648/.test(u)));
+  assert.deepStrictEqual(Object.keys(R.znacheniya).sort(), D.rentabelnost.stroki.map((s) => s.kod).sort());
+  for (const [k, v] of Object.entries(R.znacheniya)) {
+    assert.strictEqual(v.length, 2, k);
+    for (const x of v) assert.ok(x === "отр" || (typeof x === "number" && x > 0 && x < 100), k);
+  }
+  const r = (k) => R.znacheniya[k];
+  assert.deepStrictEqual(r("ВСЕГО"), [D.sverka.kontrol_vsego.prodazhi_2024, D.sverka.kontrol_vsego.aktivy_2024]);
+  assert.deepStrictEqual(r("ВСЕГО"), [12.7, 6.1]);
+  // контроль по Гаранту (строки 1–31) и КонсультантПлюс (все)
+  assert.deepStrictEqual(r("05"), [4.8, "отр"]);
+  assert.deepStrictEqual([r("28")[0], r("26")[0]], [14.2, 19.3]);
+  assert.deepStrictEqual(r("F"), [9.8, 3.9]);
+  assert.deepStrictEqual(r("46"), [4.5, 2.8]);
+  assert.deepStrictEqual(r("47"), [6.0, 5.4]);
+  assert.deepStrictEqual(r("35.3"), ["отр", 0.1]);
+  assert.deepStrictEqual([r("O")[0], r("K")[0]], ["отр", 45.8]);
+  assert.match(TABL, /<h2 id="rentabelnost">Рентабельность по видам деятельности за 2025 и 2024 годы<\/h2>/);
+  assert.match(TABL, /<td>Всего по России<\/td><td>все<\/td><td><b>10,9%<\/b><\/td><td>12,7%<\/td><td><b>5,0%<\/b><\/td><td>6,1%<\/td>/);
+  assert.match(TABL, /base\.garant\.ru\/412003648/);
 });

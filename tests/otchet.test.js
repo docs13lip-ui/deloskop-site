@@ -75,3 +75,12 @@ test('стили листа: текста мельче 12 px нет; огово�
   assert.strictEqual(O.OGOVORKA, 'Оценка по открытым данным на дату проверки, а не решение банка или налоговой.');
   assert.doesNotMatch(chitat('js/otchet.js'), /гарантир|лучш|надёжн/i);
 });
+
+test('правки [Арт-директора] 13:35: подпись под уровнем и прокрутка к листу', () => {
+  const O = require('../js/otchet.js');
+  assert.strictEqual(O.POD_PILL, 'по признакам из реестров');
+  assert.strictEqual(typeof O.prokrutit, 'function');
+  assert.strictEqual(O.prokrutit(null), false);
+  const src = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'index.html'), 'utf8');
+  assert.match(src, /Otchet\.prokrutit\(report\)/);
+});

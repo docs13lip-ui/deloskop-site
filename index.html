@@ -651,6 +651,8 @@ footer a{color:var(--ink2)}
       try{navigator.clipboard.writeText(t);e.target.textContent='Скопировано'}catch(_){}};
     // лист «Отчёт о проверке» на всю ширину: шапка → вывод → факты, динамика, все данные; справа — как посчитали и откуда данные (js/otchet.js)
     if(window.Otchet){try{Otchet.razlozhit(report,r,{svoj:!!shR,shR:shR,usl:ub,api:CAPI})}catch(e){}}
+    // «Что изменилось» с прошлой проверки из кабинета — на любом устройстве (вошедшим; js/dinamika.js)
+    if(window.Dinamika&&Dinamika.dogruzit&&CAPI){try{Dinamika.dogruzit(report,r,{api:CAPI})}catch(e){}}
   }
   function runCheck(v,o){
     if(!CAPI){note.className='note ok';note.textContent='Проверка работает на deloskop.ru.';return;}

@@ -13,9 +13,33 @@
     "nalogi/priznaki-tehnicheskoj-kompanii/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke"],
     "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["proverka-kontragenta-na-datu-sdelki"],
     "pasport/index.html": ["proverka-kontragenta-na-datu-sdelki"],
+    "nalogi/pismo-o-smene-rekvizitov-kak-proverit/index.html": ["dvojnik-postavshchika-bank-poluchatelya"],
+    "nalogi/kak-proverit-schet-pered-oplatoj/index.html": ["dvojnik-postavshchika-bank-poluchatelya"],
     "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud"]
   },
   "razbory": [
+    {
+      "razdel": "115-fz",
+      "slug": "dvojnik-postavshchika-bank-poluchatelya",
+      "h1": "Заплатили «двойнику» поставщика. Кто вернёт деньги — банк или никто?",
+      "title": "Заплатили «двойнику» поставщика: кто вернёт деньги — Делоскоп",
+      "description": "ВС взыскал 1,86 млн ₽ с банка получателя: ИНН в платёжке не совпал с владельцем счёта. Почему ИНН из ЕГРЮЛ — ваша страховка.",
+      "zapros": "перевели деньги не той фирме с таким же названием кто вернёт",
+      "data": "2026-10-02",
+      "minut": 4,
+      "lid": "Предприниматель оплатил оборудование — 1,86 млн ₽. Название получателя совпадало, ИНН в платёжке был верный, а деньги ушли фирме-«двойнику» с другим ИНН. Две инстанции нашли виноватыми оба банка, первая — самого предпринимателя. Верховный суд назвал одного ответчика. Разбираем, почему ИНН в платёжке — это ваша страховка.",
+      "dela": [
+        {"sud": "Верховный суд РФ, СКЭС", "sud_kratko": "ВС", "akt": "Определение", "nomer": "№ 304-ЭС23-9987", "data": "2023-10-20", "delo": "А67-1408/2022", "na_konu": "1 859 620,06 ₽", "na_konu_kratko": "1,86 млн ₽", "itog": "В пользу клиента", "itog_nov": false,
+         "istochnik": "https://kad.arbitr.ru/Document/Pdf/3e7a14cb-1989-49cf-b682-bb0abd49597f/4bb5f42f-8e6e-4d7c-bb7d-6d8866918dc4/A67-1408-2022_20231020_Opredelenie.pdf", "istochnik_podpis": "kad.arbitr.ru — текст определения; сверен по garant.ru", "sverka": "2026-10-01"}
+      ],
+      "knopka": {"zagolovok": "Сверьте ИНН до оплаты", "tekst": "«Проверь счёт»: поставщик прислал новые реквизиты — сравните старые и новые и сверьте ИНН получателя с ЕГРЮЛ до платежа.", "knopka": "Проверить счёт", "url": "/proverit-schet/#smena"},
+      "zakon": [
+        ["п. 1 ст. 312 ГК РФ — плательщик вправе потребовать доказательств, что деньги принимает сам кредитор, и несёт риск, если не потребовал", "ред. 08.03.2015 № 42-ФЗ", "https://www.consultant.ru/document/cons_doc_LAW_5142/"],
+        ["ст. 865, 866 ГК РФ — исполнение платёжного поручения и ответственность банка за ненадлежащее исполнение", "", "https://www.consultant.ru/document/cons_doc_LAW_9027/"],
+        ["ч. 7 ст. 5 Федерального закона от 27.06.2011 № 161-ФЗ — перевод безотзывный с момента списания денег со счёта плательщика", "ред. 04.08.2026", "https://www.consultant.ru/document/cons_doc_LAW_115625/"]
+      ],
+      "pohozhie": ["zagraditelnye-komissii", "otklyuchili-internet-bank"]
+    },
     {
       "razdel": "nalogi",
       "slug": "ks-12-p-svidetel-po-svoej-proverke",

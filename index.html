@@ -443,7 +443,7 @@ footer a{color:var(--ink2)}
         <h2 class="h2" id="praktika-h">Как решают суды: разборы дел</h2>
         <p class="lead">Настоящие дела с&nbsp;номером и&nbsp;датой: о&nbsp;чём спорили, чем кончилось и&nbsp;что из&nbsp;этого следует для вас.</p>
       </div>
-      <!--praktika-glavnaya--><div class="pr-gl"><a href="/praktika/nalogi/ks-12-p-svidetel-po-svoej-proverke/"><small>Налоги</small><b>Налоговая вызывает «свидетелем» по проверке вашей же деятельности. Надо идти?</b><span>Конституционный суд РФ · постановление № 12-П · 5 марта 2026</span></a><a href="/praktika/115-fz/krasnaya-zona-zsk-sud/"><small>115&#8209;ФЗ</small><b>Компанию отнесли к «красной» зоне ЗСК. Суд поможет?</b><span>Конституционный суд РФ · определение № 3476-О · 24 декабря 2024</span></a><a href="/praktika/nalogi/proverka-kontragenta-na-datu-sdelki/"><small>Налоги</small><b>Два похожих спора о подрядчиках: 137 млн ₽ отменили, 57 млн ₽ оставили. В чём разница?</b><span>АС Московского округа · постановление № Ф05-27741/24 · 8 июня 2026</span></a></div><!--/praktika-glavnaya-->
+      <!--praktika-glavnaya--><div class="pr-gl"><a href="/praktika/115-fz/dvojnik-postavshchika-bank-poluchatelya/"><small>115&#8209;ФЗ</small><b>Заплатили «двойнику» поставщика. Кто вернёт деньги — банк или никто?</b><span>Верховный суд РФ, СКЭС · определение № 304-ЭС23-9987 · 20 октября 2023</span></a><a href="/praktika/nalogi/ks-12-p-svidetel-po-svoej-proverke/"><small>Налоги</small><b>Налоговая вызывает «свидетелем» по проверке вашей же деятельности. Надо идти?</b><span>Конституционный суд РФ · постановление № 12-П · 5 марта 2026</span></a><a href="/praktika/nalogi/proverka-kontragenta-na-datu-sdelki/"><small>Налоги</small><b>Два похожих спора о подрядчиках: 137 млн ₽ отменили, 57 млн ₽ оставили. В чём разница?</b><span>АС Московского округа · постановление № Ф05-27741/24 · 8 июня 2026</span></a></div><!--/praktika-glavnaya-->
       <p class="vse"><a href="/praktika/" data-praktika-gl>Все разборы&nbsp;→</a></p>
     </div>
   </section>
@@ -543,6 +543,7 @@ footer a{color:var(--ink2)}
 
 <script src="/js/sushchestvennoe.js" defer></script>
 <script src="/js/otkuda.js" defer></script>
+<script src="/js/rekvizity-proverki.js" defer></script>
 <script src="/js/usloviya.js" defer></script>
 <script src="/js/shchit.js" defer></script>
 <script src="/js/dinamika.js" defer></script>
@@ -608,6 +609,8 @@ footer a{color:var(--ink2)}
     var ub=report.querySelector('[data-usl]');
     // «Откуда данные» вместо строки «Источники: …» — опись: какой реестр ответил, на какую дату, кто не ответил (js/otkuda.js)
     if(window.Otkuda){try{Otkuda.mount(report.querySelector('.src'),r)}catch(e){}}
+    // реквизиты проверки (№, дата и время МСК, самые давние сведения, год бухотчётности) + печать только отчёта — js/rekvizity-proverki.js
+    if(window.RekvizityProverki){try{RekvizityProverki.mount(report,r)}catch(e){}}
     var shR=null;
     // «Только существенные факты» (≤ 7, источник и дата) + свёрнутая «Все данные из реестров» — js/sushchestvennoe.js; нет модуля — строки светофора как были
     if(!svoj&&window.Sushchestvennoe){try{Sushchestvennoe.mount(report.querySelector('.rows'),r)}catch(e){}}

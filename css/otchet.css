@@ -38,6 +38,9 @@
 .ot-ix__pod{font-size:12px;color:var(--ink2,#48484C);margin-top:-4px}
 .ot-main>.din{background:transparent;border-radius:0;padding:24px 0}
 .ot-ix .pill{align-self:flex-start;background:rgba(255,255,255,.7)}
+/* «Без серьёзных сигналов» / «Есть серьёзные сигналы» длиннее прежних слов — в узкой колонке переносим, а не вылезаем за край (malo-pilyulya-v1) */
+.ot-ix .pill,.ex-ix .pill{white-space:normal;max-width:100%;line-height:1.25;border-radius:14px}
+.ot-ix .pill svg,.ex-ix .pill svg{flex:none}
 .ot-vt{grid-column:4/10;min-width:0;display:flex;flex-direction:column;gap:8px}
 .ot-vt .usl{background:transparent;padding:0;gap:10px}
 .ot-vt .usl-t{font-size:26px;line-height:1.2}
@@ -101,7 +104,7 @@
 .ex-vd--ok{background:var(--ok-bg,#E8F5EE)}
 .ex-ix{display:flex;flex-direction:column;gap:6px;min-width:0;border-right:1px solid rgba(0,0,0,.08);padding-right:16px}
 .ex-ix__lab{font-size:13px;color:var(--ink2,#48484C)}
-.ex-ix .pill{align-self:flex-start;background:rgba(255,255,255,.7);font-size:14px;padding:6px 12px}
+.ex-ix .pill{align-self:flex-start;background:rgba(255,255,255,.7);font-size:13px;padding:6px 10px;gap:6px}
 .ex-ix__pod{font-size:12px;color:var(--ink2,#48484C)}
 .ex-vt{min-width:0}
 .ex-vt .usl{background:transparent;padding:0;gap:8px}

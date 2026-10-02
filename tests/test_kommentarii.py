@@ -25,6 +25,27 @@ class T(unittest.TestCase):
         self.assertEqual(py, json.loads(out))
         self.assertIsNone(py[-1])
 
+    def test_detal_i_kak_sovpadaet_s_js(self):
+        sig = [{"title": "Адрес", "detail": "массовый адрес", "status": "warn"},
+               {"title": "Адрес", "detail": "отметка о недостоверности", "status": "bad"},
+               {"title": "Статус", "detail": "Банкротство", "status": "bad"},
+               {"title": "Статус", "detail": "Компания ликвидируется или ФНС готовит её исключение из ЕГРЮЛ", "status": "bad"},
+               {"title": "Возраст компании", "detail": "8 месяцев", "status": "warn"},
+               {"title": "Возраст компании", "detail": "1 год 8 месяцев", "status": "warn"},
+               {"title": "Среднесписочная численность", "detail": "0 человек", "status": "warn"},
+               {"title": "Доходы и расходы", "detail": "убыток 3 млн ₽", "status": "warn"},
+               {"title": "Красная группа ЗСК Банка России", "detail": "", "status": "bad"},
+               {"title": "Прогноз ЗСК (наша оценка): высокий уровень риска", "detail": "", "status": "bad"},
+               {"title": "Долги по налогам", "detail": "нет", "status": "ok"}]
+        js = ("const K=require('./js/kommentarii.js');const S=require('./data/kommentarii.json');"
+              "console.log(JSON.stringify(%s.map(s=>{const k=K.najti(S,s);return k?[k.id,k.ton,k.sdelat]:null})))" % json.dumps(sig, ensure_ascii=False))
+        out = subprocess.run(["node", "-e", js], cwd=KOREN, capture_output=True, text=True, check=True).stdout
+        sprav = K.zagruzit()
+        py = [(lambda k: [k["id"], k["ton"], k["sdelat"]] if k else None)(K.najti(sprav, s)) for s in sig]
+        self.assertEqual(py, json.loads(out))
+        self.assertEqual([x and x[0] for x in py], ["massovyj_adres", "nedostovernost", "bankrotstvo", None, "molodaya",
+                                                     None, "net_sotrudnikov", "ubytok", "zsk", None, "nedoimka"])
+
     def test_tolko_utverzhdennye(self):
         sprav = K.zagruzit()
         for t in TITLES:

@@ -28,16 +28,35 @@ def gotov(t):
                 and t.get("sdelat") and (t.get("bank") or t.get("nalog")) and dlina(t) <= MAKS)
 
 
+def _rx(s):
+    try:
+        return re.compile(s, re.I)
+    except re.error:
+        return None
+
+
 def zapis(sprav, signal):
-    title = str((signal or {}).get("title") or "")
+    """Первое совпадение сверху: re — по заголовку; uslovie — по «заголовок · деталь»; kak — тексты другой записи."""
+    signal = signal or {}
+    title = str(signal.get("title") or "")
     if not title:
         return None
-    for z in (sprav or {}).get("signaly") or []:
-        try:
-            if re.search(z["re"], title, re.I):
-                return z
-        except re.error:
+    vse = title + " · " + str(signal.get("detail") or "")
+    spisok = (sprav or {}).get("signaly") or []
+    for z in spisok:
+        r = _rx(z.get("re") or "")
+        if not r or not r.search(title):
             continue
+        if z.get("uslovie"):
+            u = _rx(z["uslovie"])
+            if not u or not u.search(vse):
+                continue
+        if not z.get("kak"):
+            return z
+        for c in spisok:
+            if c.get("id") == z["kak"] and not c.get("kak"):
+                return c
+        return None
     return None
 
 

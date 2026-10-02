@@ -148,8 +148,10 @@ test('страницы: модуль подключён на главной и �
 });
 
 test('Условия сделки: вывод API с точкой не даёт «..» (найдено на живом ответе 02.10)', () => {
-  const u = fs.readFileSync(path.join(KOREN, 'js/usloviya.js'), 'utf8');
-  assert.match(u, /String\(r\.verdict\)\.replace\(\/\^Вывод:\\s\*\/i, ''\)\.replace\(\/\[\.\\s\]\+\$\/, ''\)/);
+  // с vyvod-chisto-v1 — через Usloviya.bezPovtora (ещё и без повтора самого вывода)
+  const U = require('../js/usloviya.js');
+  assert.strictEqual(U.bezPovtora('Вывод: Есть вопросы к адресу.', 'Работать можно'), 'Есть вопросы к адресу');
+  assert.strictEqual(U.bezPovtora('Признаков не найдено..', ''), 'Признаков не найдено');
 });
 
 // dinamika-v2 (макет [Арт-директора] 02.10, блок E): таблица со спарклайном

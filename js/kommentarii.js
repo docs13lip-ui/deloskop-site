@@ -250,26 +250,36 @@
   // «Кому вы платите»: сигналы разбора выписки (engine.js) — по коду, не по заголовку. Тон у записи один: уровень сигнала
   // в движке постоянный (bad — kras, warn — zhel, info — sery: справка, не «норма»). Те же ворота gotov().
   var TON_VYP = { bad: "kras", warn: "zhel", info: "sery" };
-  function vypiska(sprav, kod) {
+  // klient — «org» (ИНН выписки из 10 цифр) / «ip» / пусто. Строка ton.dlya_organizacii — только для «org»:
+  // норма о налоге на прибыль (ч. 8 ст. 15 422-ФЗ, [Право · Налоговый юрист] 02.10 23:20) к ИП не относится.
+  function dlyaOrg(o) {
+    return !!(o && o.tekst && o.proveril && dataRu(o.data_proverki) && String(o.tekst).length <= MAKS);
+  }
+  function vypiska(sprav, kod, klient) {
     var list = (sprav && sprav.vypiska && sprav.vypiska.zapisi) || [];
     for (var i = 0; i < list.length; i++) {
       var z = list[i];
       if (!z || z.kod !== kod) continue;
       if (!TON_VYP[z.uroven] || !gotov(z.ton)) return null;
-      var t = z.ton, norma = t.norma != null ? t.norma : z.norma;
-      return { id: z.id, ton: TON_VYP[z.uroven], bank: t.bank || "", nalog: t.nalog || "", sdelat: t.sdelat,
+      var t = z.ton, norma = t.norma != null ? t.norma : z.norma, org = "";
+      if (klient === "org" && dlyaOrg(t.dlya_organizacii)) {
+        org = t.dlya_organizacii.tekst;
+        var n2 = t.dlya_organizacii.norma || "";
+        if (n2 && String(norma || "").indexOf(n2) < 0) norma = norma ? norma + "; " + n2 : n2;
+      }
+      return { id: z.id, ton: TON_VYP[z.uroven], bank: t.bank || "", nalog: t.nalog || "", sdelat: t.sdelat, org: org,
         norma: norma || "", podpis: (sprav && sprav.podpis) || "Команда Делоскопа", data: dataRu(t.data_proverki) };
     }
     return null;
   }
   // Свёрнуто под сигналом: в выписке десятки поставщиков, и раскрытый текст под каждым сигналом заслонил бы суммы.
-  function vypiskaHtml(sprav, kod) {
-    var k = vypiska(sprav, kod);
+  function vypiskaHtml(sprav, kod, klient) {
+    var k = vypiska(sprav, kod, klient);
     if (!k) return "";
     var str = function (l, t) { return t ? '<p><span class="kom__l">' + l + "</span> " + esc(t) + "</p>" : ""; };
     return '<details class="kom kom--' + esc(k.ton) + '" data-kom="' + esc(k.id) + '">' +
       '<summary class="kom__h">Комментарий команды Делоскопа</summary>' +
-      str("Банк:", k.bank) + str("Налоговая:", k.nalog) + str("Что сделать:", k.sdelat) +
+      str("Банк:", k.bank) + str("Налоговая:", k.nalog) + str("Что сделать:", k.sdelat) + str("Компании:", k.org) +
       '<div class="kom__p">' + esc(k.podpis) + (k.norma ? " · " + esc(k.norma) : "") + (k.data ? " · нормы сверены " + esc(k.data) : "") + "</div></details>";
   }
   // Есть ли в библиотеке хоть один утверждённый текст для выписки (иначе страницу не перерисовываем).

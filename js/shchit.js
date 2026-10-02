@@ -5,6 +5,8 @@
  * Три блока: «Как вас видит банк», «Как вас видит налоговая», «Что сделать сейчас» (до 3 шагов + «Следить»).
  * Тексты — ТЗ [Продукт] 01.10 (claude/Продукт_Щит_свой_взгляд_и_ответы_✎_01.10.md, разд. 2.3).
  * Ссылка на норму в скобках выводится только у строк, сверенных [Право] (sver: true) — флаг SVERENO.
+ * v2 (02.10): тексты и нормы по ответам [Право] 07:15 и 08:20 (claude/Право_ответы_✎_02.10_комментарии_команды.md, разд. 1;
+ * claude/Право_ответы_✎_kommentarii-v2_dvojnik_02.10.md, разд. 1) — все ◐ сняты, кроме «налоговая» у массового адреса (без нормы).
  */
 (function (root, factory) {
   var api = factory(root);
@@ -15,6 +17,8 @@
 
   // Включить все нормы разом — после «да» [Право] на ◐-строки (или поставить sver: true у конкретной строки).
   var SVERENO = false;
+  // Дата, на которую [Право] сверило нормы в скобках с действующими редакциями (ответы 02.10 07:15 и 08:20).
+  var SVERENO_NA = '02.10.2026';
 
   var CBR_ZSK = 'https://cbr.ru/counteraction_m_ter/platform_zsk/proverka-po-inn/';
 
@@ -27,44 +31,44 @@
            href: CBR_ZSK, knopka: 'Проверить в сервисе Банка России', ext: true, eshche: { href: '/skoraya-115-fz/?s=zsk', t: 'План, если зона красная' } }
     },
     nedost: {
-      b: { t: 'Отметка о недостоверности в ЕГРЮЛ — признак, на который банки обращают внимание в первую очередь.' },
-      n: { t: 'Если не исправить, через 6 месяцев после отметки инспекция может исключить компанию из ЕГРЮЛ', norma: '(пп. «б» п. 5 ст. 21.1 129-ФЗ)', tolkoUL: true },
+      b: { t: 'Отметка о недостоверности в ЕГРЮЛ — признак, на который банки обращают внимание.', sver: true },
+      n: { t: 'Если отметка держится больше 6 месяцев, инспекция может исключить компанию из ЕГРЮЛ', norma: '(пп. «б» п. 5 ст. 21.1 129-ФЗ)', sver: true, tolkoUL: true },
       s: { t: 'Подайте исправленные или подтверждающие сведения в инспекцию.', href: '/nalogi/nedostovernyj-adres-egryul/', knopka: 'Как снять недостоверность' }
     },
     mass: {
-      b: { t: 'Массовый адрес или руководитель — признак, по которому банки ищут «технические» компании.' },
+      b: { t: 'Массовый адрес или руководитель — признак, по которому банки ищут «технические» компании.', sver: true },
       n: { t: 'Массовый адрес или руководитель — признак, по которому инспекция ищет «технические» компании.' },
       s: { t: 'Держите под рукой договор аренды и фото офиса или вывески — их просят первыми.', href: '/nalogi/priznaki-tehnicheskoj-kompanii/', knopka: 'Признаки «технической» компании' }
     },
     young: {
-      b: { t: 'У компании младше года нет истории — банк внимательнее к каждой крупной операции.' },
-      s: { t: 'Первые месяцы — без транзита «пришло и ушло в тот же день»; к каждому крупному платежу — договор и акт.', href: '/115-fz/zapros-banka-po-115-fz-kak-otvetit/', knopka: 'Как отвечать на запрос банка' }
+      b: { t: 'У компании младше года нет истории — банк внимательнее к крупным операциям.', sver: true },
+      s: { t: 'Первые месяцы — без транзита «пришло и ушло в тот же день»; к каждому крупному платежу — договор и акт.', sver: true, href: '/115-fz/zapros-banka-po-115-fz-kak-otvetit/', knopka: 'Как отвечать на запрос банка' }
     },
     staff: {
-      b: { t: 'Оборот без сотрудников банк сверяет с видом деятельности.' },
-      n: { t: 'Работы и услуги без людей — частый вопрос о реальности сделок', norma: '(ст. 54.1 НК РФ)' },
+      b: { t: 'Оборот без сотрудников банк сверяет с видом деятельности.', sver: true },
+      n: { t: 'Работы и услуги без людей — частый вопрос о реальности сделок', norma: '(ст. 54.1 НК РФ)', sver: true },
       s: { t: 'Работаете с подрядчиками или самозанятыми — храните договоры и акты к каждому платежу.', href: '/nalogi/statya-54-1-nk-prostymi-slovami/', knopka: 'Статья 54.1 НК простыми словами' }
     },
     nagruzka: {
-      b: { t: 'Налоги, малые по сравнению с оборотом, банки замечают.' },
-      n: { t: 'Нагрузка ниже средней по отрасли — один из критериев отбора для выездной проверки.' },
+      b: { t: 'Налоги, малые по сравнению с оборотом, банки замечают.', sver: true },
+      n: { t: 'Нагрузка ниже средней по отрасли — один из критериев отбора для выездной проверки.', sver: true },
       s: { t: 'Подготовьте короткое объяснение: сезонность, вложения, убыток прошлого года.' }
     },
     dolg: {
-      b: { t: 'Долг по налогам может закончиться приостановкой операций по счёту', norma: '(ст. 76 НК РФ)' },
+      b: { t: 'Долг по налогам может закончиться приостановкой расходных операций по счёту в пределах долга', norma: '(п. 2 ст. 76 НК РФ)', sver: true },
       n: { t: 'Долг растёт пенями каждый день.', sver: true },
       s: { t: 'Сверьте единый налоговый счёт в личном кабинете и погасите долг до требования.' }
     },
     fssp: {
-      b: { t: 'По исполнительному листу банк спишет деньги со счёта сам.' },
+      b: { t: 'По исполнительному листу банк списывает деньги со счёта без согласия владельца', norma: '(ст. 8 229-ФЗ)', sver: true },
       s: { t: 'Закройте долг и попросите постановление об окончании производства.' }
     },
     report: {
-      n: { t: 'Нет отчётности и операций 12 месяцев — компанию могут исключить из ЕГРЮЛ как недействующую', norma: '(п. 1 ст. 21.1 129-ФЗ)', tolkoUL: true },
+      n: { t: 'Нет отчётности и операций 12 месяцев — компанию могут исключить из ЕГРЮЛ как недействующую', norma: '(п. 1 ст. 21.1 129-ФЗ)', sver: true, tolkoUL: true },
       s: { t: 'Сдайте отчётность, даже нулевую.' }
     },
     director: {
-      b: { t: 'После смены руководителя банк обновляет сведения о клиенте и может запросить документы.' },
+      b: { t: 'После смены руководителя банк обновляет сведения о клиенте и может запросить документы.', sver: true },
       s: { t: 'Обновите анкету в банке сами, не дожидаясь запроса.' }
     },
     // block / diskv / exit / rnp / fines / other — строка признака как есть, шаг — «Скорая».
@@ -125,7 +129,9 @@
     });
     shagi.push({ kind: 'sled', t: T.sled.t, href: T.sled.href, knopka: T.sled.knopka, sled: true });
 
-    return { banki: banki, nalogovaya: nalogovaya, shagi: shagi, chisto: !kinds.length, neProvereno: np, ul: ul, data: dataRu(r.checked_at), imya: f.name };
+    var sNormoj = banki.concat(nalogovaya).some(function (x) { return /\((п|пп|ст)\. [^)]+\)\.$/.test(x.pochemu); }) ||
+      shagi.some(function (x) { return /\((п|пп|ст)\. [^)]+\)\.$/.test(x.t); });
+    return { banki: banki, nalogovaya: nalogovaya, shagi: shagi, chisto: !kinds.length, neProvereno: np, ul: ul, data: dataRu(r.checked_at), imya: f.name, sNormoj: sNormoj };
   }
 
   // Главное действие — одна кнопка: первый шаг со ссылкой, иначе «Следить».
@@ -156,7 +162,9 @@
     '.shch-pusto{margin:0;font-size:15px;color:var(--ink2,#48484C);max-width:68ch}' +
     '.shch-ne{margin:0;font-size:14px;color:#8A5A00;background:#FFF6E0;border-radius:10px;padding:8px 10px;max-width:68ch}' +
     '.shch-k{display:inline-flex;align-items:center;justify-content:center;align-self:flex-start;border-radius:999px;background:var(--accent,#0B63E5);color:#fff!important;font-weight:600;font-size:15px;padding:12px 22px;min-height:44px;text-decoration:none;max-width:100%;text-align:center}' +
-    '.shch-k:hover{background:var(--accent-hover,#084BB0)}';
+    '.shch-k:hover{background:var(--accent-hover,#084BB0)}' +
+    '.shch-ch{font-weight:400;color:var(--muted,#6B6B70);font-variant-numeric:tabular-nums}' +
+    '.shch-sv{margin:0;font-size:12.5px;line-height:1.45;color:var(--muted,#6B6B70);max-width:68ch;border-top:1px solid var(--line,#E5E5E0);padding-top:10px}';
 
   function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function ssylka(href, t, ext, cls) { return '<a' + (cls ? ' class="' + cls + '"' : '') + ' href="' + esc(href) + '"' + (ext ? ' target="_blank" rel="noopener"' : '') + '>' + esc(t) + '</a>'; }
@@ -164,7 +172,7 @@
   function html(R) {
     function blok(zag, spisok) {
       if (!spisok.length) return '';
-      return '<div class="shch-b"><h3>' + zag + '</h3><ul>' + spisok.map(function (x) {
+      return '<div class="shch-b"><h3>' + zag + ' <span class="shch-ch">· ' + spisok.length + '</span></h3><ul>' + spisok.map(function (x) {
         return '<li><b>' + esc(x.priznak) + '</b>' + (x.pochemu ? '<span>' + esc(x.pochemu) + '</span>' : '') + '</li>';
       }).join('') + '</ul></div>';
     }
@@ -180,7 +188,8 @@
       '<p class="shch-oh">Это наша оценка по открытым данным, а не решение банка или инспекции. Банк видит ваши операции — мы нет.</p>' +
       (R.chisto ? '<p class="shch-pusto">В открытых данных заметных признаков не нашли. Это не гарантия: банк смотрит и на ваши операции.</p>' : '') +
       blok('Как вас видит банк', R.banki) + blok('Как вас видит налоговая', R.nalogovaya) + np + sh +
-      ssylka(g.href, g.knopka, g.ext, 'shch-k') + '</section>';
+      ssylka(g.href, g.knopka, g.ext, 'shch-k') +
+      (R.sNormoj ? '<p class="shch-sv">Ссылки на нормы в скобках сверены командой Делоскопа (115-ФЗ и налоги) с редакциями законов на ' + SVERENO_NA + '.</p>' : '') + '</section>';
   }
 
   // mount(el, r) — рисует разбор в el. Цель Метрики shchit_sled — клик по «Следить».
@@ -197,5 +206,5 @@
     return R;
   }
 
-  return { razbor: razbor, mount: mount, html: html, kratko: kratko, glavnyj: glavnyj, T: T, SVERENO: SVERENO, MAX_SHAGOV: MAX_SHAGOV, PORYADOK: PORYADOK };
+  return { razbor: razbor, mount: mount, html: html, kratko: kratko, glavnyj: glavnyj, T: T, SVERENO: SVERENO, SVERENO_NA: SVERENO_NA, MAX_SHAGOV: MAX_SHAGOV, PORYADOK: PORYADOK };
 });

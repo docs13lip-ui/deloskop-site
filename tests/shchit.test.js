@@ -101,7 +101,42 @@ test("◐-строки без «да» [Право] — без номера ст
   }
   for (const s of R.shagi) if (s.kind !== "zsk") assert.doesNotMatch(s.t, norma, s.kind);
   const dolg = R.banki.find((x) => x.kind === "dolg");
-  assert.strictEqual(dolg.pochemu, "Долг по налогам может закончиться приостановкой операций по счёту.");
+  assert.strictEqual(dolg.pochemu, "Долг по налогам может закончиться приостановкой расходных операций по счёту в пределах долга (п. 2 ст. 76 НК РФ).");
+  // у каждой строки с нормой в скобках — sver: true (иначе норма не выводится вовсе)
+  for (const [k, v] of Object.entries(S.T)) for (const r of ["b", "n", "s"]) {
+    if (v[r] && v[r].norma) assert.strictEqual(v[r].sver, true, k + "." + r);
+  }
+});
+
+test("shchit-v2: тексты и нормы — дословно по ответам [Право] 02.10 07:15 и 08:20", () => {
+  const R = S.razbor(otvet(Object.values(PO_VIDU)));
+  const v = (spisok, k) => (spisok.find((x) => x.kind === k) || {}).pochemu;
+  assert.strictEqual(v(R.banki, "nedost"), "Отметка о недостоверности в ЕГРЮЛ — признак, на который банки обращают внимание.");
+  assert.strictEqual(v(R.nalogovaya, "nedost"), "Если отметка держится больше 6 месяцев, инспекция может исключить компанию из ЕГРЮЛ (пп. «б» п. 5 ст. 21.1 129-ФЗ).");
+  assert.strictEqual(v(R.banki, "fssp"), "По исполнительному листу банк списывает деньги со счёта без согласия владельца (ст. 8 229-ФЗ).");
+  assert.strictEqual(v(R.nalogovaya, "report"), "Нет отчётности и операций 12 месяцев — компанию могут исключить из ЕГРЮЛ как недействующую (п. 1 ст. 21.1 129-ФЗ).");
+  assert.strictEqual(v(R.nalogovaya, "staff"), "Работы и услуги без людей — частый вопрос о реальности сделок (ст. 54.1 НК РФ).");
+  const young = S.razbor(otvet([], { company: { inn: "7707083893", name_short: "ООО «Новая»", status: "ACTIVE", reg_date: "2026-05-01" } }));
+  assert.strictEqual(v(young.banki, "young"), "У компании младше года нет истории — банк внимательнее к крупным операциям.");
+  // правки [Право]: без «в первую очередь» (не доказать) и без «каждой»; «спишет … сам» → норма 229-ФЗ
+  const vseT = JSON.stringify(S.T);
+  assert.doesNotMatch(vseT, /в первую очередь|к каждой крупной операции|спишет деньги со счёта сам|через 6 месяцев после отметки/);
+  // «налоговая» у массового адреса [Право] не подтверждало — без нормы и без sver
+  assert.ok(!S.T.mass.n.sver && !S.T.mass.n.norma);
+});
+
+test("shchit-v2: подпись о сверке норм — только если на экране есть норма; счётчик признаков в заголовке блока", () => {
+  const R = S.razbor(otvet([PO_VIDU.dolg, PO_VIDU.mass]));
+  const H = S.html(R);
+  assert.match(H, /<p class="shch-sv">Ссылки на нормы в скобках сверены командой Делоскопа \(115-ФЗ и налоги\) с редакциями законов на 02\.10\.2026\.<\/p>/);
+  assert.match(H, /<h3>Как вас видит банк <span class="shch-ch">· 2<\/span><\/h3>/);
+  assert.match(H, /<h3>Как вас видит налоговая <span class="shch-ch">· 2<\/span><\/h3>/);
+  // только «молодая» и «смена руководителя» — норм нет → подписи нет
+  const R2 = S.razbor(otvet([PO_VIDU.director]));
+  assert.strictEqual(R2.sNormoj, false);
+  assert.doesNotMatch(S.html(R2), /shch-sv/);
+  // чисто — подписи нет
+  assert.doesNotMatch(S.html(S.razbor(otvet([]))), /shch-sv/);
 });
 
 test("ИП: нет строк про исключение из ЕГРЮЛ, признак не теряется", () => {

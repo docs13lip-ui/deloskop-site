@@ -114,7 +114,15 @@
       }
       if (k === 'address' && fl) return; // у ИП адрес — место жительства
       if (k === 'address' && s.status === 'ok' && /^Отметок о недостоверности нет$/.test(znach)) znach = 'Нет';
-      add({ k: k, nazv: NAZV[k] || s.title, znach: znach, ton: ton(s.status), ist: ist, data: dmy(s.as_of) || dataPr });
+      var tn = ton(s.status);
+      // [Право] 02.10: не «Нет», а «Нет в списке ФНС на [дата]»; набор старше 3 месяцев — как непроверенный
+      if (k === 'tax_debt' && s.status === 'ok' && /^нет$/i.test(String(znach).trim())) {
+        var dn = dataIz(dmy(s.as_of)), mn = dn ? mesyacev(dn, na) : null;
+        if (!dn) { znach = 'Не проверяли — нет даты набора ФНС'; tn = 'neutral'; }
+        else if (mn > 3 || (mn === 3 && na.getDate() > dn.getDate())) { znach = 'Не проверяли — набор ФНС на' + NB + dmy(s.as_of) + ' старше 3' + NB + 'месяцев'; tn = 'neutral'; }
+        else znach = 'Нет в списке ФНС на' + NB + dmy(s.as_of);
+      }
+      add({ k: k, nazv: NAZV[k] || s.title, znach: znach, ton: tn, ist: ist, data: dmy(s.as_of) || dataPr });
     });
 
     var o = otchetnost(r);

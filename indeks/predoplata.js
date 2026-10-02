@@ -34,7 +34,8 @@
       shagi.push('Выручка и возраст неизвестны — осторожный потолок: ' + rub(R.byAge) + '.');
     }
     if (R.half) shagi.push('Вывод «Можно с пределом» — половина: ' + rub(R.doPolovinu / 2) + '.');
-    shagi.push('Округлили вниз: ' + rub(R.itog) + '.');
+    if (R.malo) shagi.push('Меньше ' + rub(U.METODIKA.MINIMUM) + ' — ориентир не ставим: советуем платить по факту.');
+    else shagi.push('Округлили вниз: ' + rub(R.itog) + '.');
     return { itog: R.itog, shagi: shagi };
   }
 

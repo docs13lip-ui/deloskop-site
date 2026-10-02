@@ -44,8 +44,43 @@ test("vypiska: каждый код движка есть в библиотеке
     assert.ok(["postavshchik", "potok"].includes(x.gde), x.id);
     assert.ok(x.nazv && !ZAPRET.test(x.nazv), x.id);
     assert.ok(x.ton && typeof x.ton === "object", x.id + ": один тон");
-    for (const k of ["bank", "nalog", "sdelat"]) if (x.ton[k]) assert.ok(!ZAPRET.test(x.ton[k]), x.id + ": " + x.ton[k]);
+    for (const k of ["bank", "nalog", "sdelat"]) if (x.ton[k]) assert.ok(!ZAPRET.test(bezIsklyucheniya(x, k)), x.id + ": " + x.ton[k]);
   });
+});
+
+// Одно исключение из ZAPRET — и только дословно: у смены счёта [Право] 21:25 называет приём («частый приём мошенников»:
+// письмо о новых реквизитах), а не поставщика. Ярлык о самом поставщике по-прежнему запрещён везде.
+const ISKLYUCHENIYA = { "vyp_acc_change.bank": "частый приём мошенников: письмо «о новых реквизитах» от имени поставщика" };
+function bezIsklyucheniya(x, k) {
+  const fr = ISKLYUCHENIYA[x.id + "." + k];
+  return fr ? x.ton[k].split(fr).join("") : x.ton[k];
+}
+
+test("vypiska v2: 6 текстов [Право] 21:25 утверждены дословно — роль, дата, норма; остальные 10 кодов молчат", () => {
+  const utv6 = { acc_person: "ст. 54.1 НК РФ", acc_change: "ст. 312 ГК РФ", key: "ст. 54.1 НК РФ",
+    oneshot: "письмо ФНС от 10.03.2021 № БВ-4-7/3060@", cash: "", lowtax: "приказ ФНС от 30.05.2007 № ММ-3-06/333@" };
+  const est = SPRAV.vypiska.zapisi.filter((x) => x.ton.status === "utverzhdeno").map((x) => x.kod).sort();
+  assert.deepStrictEqual(est, Object.keys(utv6).sort());
+  for (const [kod, norma] of Object.entries(utv6)) {
+    const k = K.vypiska(SPRAV, kod);
+    assert.ok(k, kod);
+    assert.strictEqual(k.norma, norma, kod);
+    assert.strictEqual(k.data, "02.10.2026");
+    assert.ok(k.bank && k.nalog && k.sdelat, kod + ": три фразы");
+    assert.ok(!/\u00a0/.test(k.bank + k.nalog + k.sdelat), kod + ": без NBSP — их ставит код");
+    const z = SPRAV.vypiska.zapisi.find((x) => x.kod === kod);
+    assert.strictEqual(z.ton.proveril, "Право · Юрист 115-ФЗ и Налоговый юрист");
+  }
+  assert.strictEqual(K.vypiska(SPRAV, "acc_person").ton, "kras");
+  assert.strictEqual(K.vypiska(SPRAV, "lowtax").ton, "zhel");
+  // ◐ [Право]: порог 0,9 % и 18-МР не сверены — в тексте их нет
+  const low = SPRAV.vypiska.zapisi.find((x) => x.kod === "lowtax").ton;
+  assert.ok(!/0,9|Банк России|18-МР/.test(low.bank + low.nalog + low.sdelat));
+  // исключение ZAPRET — только дословная фраза; вне её слово по-прежнему ловится
+  assert.ok(ZAPRET.test("Поставщик — мошенник"));
+  assert.ok(!ZAPRET.test(bezIsklyucheniya(SPRAV.vypiska.zapisi.find((x) => x.kod === "acc_change"), "bank")));
+  const B = { id: "vyp_acc_change", ton: { bank: "Поставщик похож на мошенников." } };
+  assert.ok(ZAPRET.test(bezIsklyucheniya(B, "bank")));
 });
 
 test("vypiska: тексты пишет [Право] — пока не утверждены, на странице ничего нет", () => {

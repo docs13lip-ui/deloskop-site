@@ -32,8 +32,32 @@ test('округление в тексте = niceFloor', () => {
   assert.ok(t.includes('шагом 10' + NB + '000' + NB + '₽') && t.includes('шагом 50' + NB + '000' + NB + '₽') && t.includes('шагом 100' + NB + '000' + NB + '₽'));
   assert.strictEqual(U.niceFloor(87400), 80000);
   assert.strictEqual(U.niceFloor(461538), 450000);
-  assert.strictEqual(U.niceFloor(3846), 10000, 'минимум 10 000 ₽ — в тексте «меньше 10 000 ₽ ориентир не ставим»');
-  assert.ok(t.includes('меньше 10' + NB + '000' + NB + '₽ ориентир не' + NB + 'ставим'));
+  assert.strictEqual(U.niceFloor(3846), 0, 'меньше 10 000 ₽ вверх не округляем');
+  assert.strictEqual(U.METODIKA.MINIMUM, 10000);
+  assert.ok(t.includes('Если предел выходит меньше 10' + NB + '000' + NB + '₽, ориентир не' + NB + 'ставим: советуем платить по' + NB + 'факту.'));
+});
+
+test('предел меньше 10 000 ₽ — числа нет, «советуем платить по факту» (malo, [Данные] 02.10 19:37)', () => {
+  const pc = U.prepayCap({ revenue: 100000, ageMonths: 60 }, 'go');
+  assert.strictEqual(pc.cap, 0);
+  assert.strictEqual(pc.malo, true);
+  const pc2 = U.prepayCap({ revenue: 400000, ageMonths: 60 }, 'cap');
+  assert.ok(pc2.malo && pc2.cap === 0, 'половина двух недель 7 692 ₽ — тоже malo');
+  assert.ok(!U.prepayCap({ revenue: 260000, ageMonths: 60 }, 'go').malo, 'ровно 10 000 ₽ — ориентир есть');
+  assert.strictEqual(U.prepayCap({ revenue: 260000, ageMonths: 60 }, 'go').cap, 10000);
+  const r = { company: { inn: '7700000001', status: 'ACTIVE', reg_date: '2015-01-10', name_short: 'ООО «Тест»' },
+    risk_level: 'low', signals: [], dossier: { kpi: [{ label: 'Выручка за 2025', value: 100000 }] } };
+  const v = U.decide(r, { amount: 50000 });
+  {
+    assert.strictEqual(v.raschet.base, 'revenue');
+    assert.ok(v.malo);
+    assert.ok(v.kak.kak.includes('Вперёд — не больше двух недель выручки компании, а это меньше 10' + NB + '000' + NB + '₽. Советуем платить по факту поставки.'), v.kak.kak);
+    assert.ok(/^Предоплату не вносите/.test(v.prepay));
+    assert.ok(!/0\u00a0₽|до 0/.test(v.headline), v.headline);
+  }
+  const m = P.raschet({ vyruchka: 100000, vozrast: 'starshe', vyvod: 'go' });
+  assert.strictEqual(m.itog, 0);
+  assert.ok(m.shagi[m.shagi.length - 1].includes('ориентир не ставим: советуем платить по факту'));
 });
 
 test('пример на странице посчитан кодом отчёта', () => {

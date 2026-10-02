@@ -618,7 +618,7 @@ footer a{color:var(--ink2)}
     report.setAttribute('aria-label','Отчёт о проверке');
     report.innerHTML='<div class="report-head"><div><div class="tag">'+(svoj?(String(c.inn||'').length===12?'Ваш бизнес':'Ваша компания')+' глазами банка и налоговой · на ':'Проверка на ')+d.toLocaleDateString('ru-RU')+'</div>'+
       '<div class="company">'+esc(name)+'</div><div class="sub">'+sub+'</div></div>'+
-      (svoj?'':'<div class="pill '+lvl+'">'+(lvl==='low'?ICON:WARNI)+esc({low:'Сигналов мало',medium:'Есть вопросы',high:'Серьёзные сигналы'}[r.risk_level]||'')+'</div>')+'</div>'+
+      (svoj?'':'<div class="pill '+lvl+'">'+(lvl==='low'?ICON:WARNI)+esc({low:'Без серьёзных сигналов',medium:'Есть вопросы',high:'Есть серьёзные сигналы'}[r.risk_level]||'')+'</div>')+'</div>'+
       '<div class="rows">'+rows+'</div>'+(window.Dinamika?Dinamika.html(r):'')+'<div class="verdict" data-usl>'+esc(r.verdict||'')+'</div>'+
       '<div class="report-actions">'+(r.report_id?'<a class="btn-doc" href="/report.html?id='+encodeURIComponent(r.report_id)+'" target="_blank" rel="noopener">PDF-досье</a><button type="button" data-act="link">Ссылка на отчёт</button>':'<button type="button" data-act="copy">'+(svoj?'Скопировать разбор':'Скопировать вывод')+'</button>')+'<button type="button" data-act="again">Проверить другую</button></div>'+
       '<div class="src">Источники: ЕГРЮЛ/ЕГРИП и открытые данные ФНС. Это оценка риска, а не решение банка.</div>';
@@ -647,7 +647,7 @@ footer a{color:var(--ink2)}
     if(cb)cb.onclick=function(e){
       if(shR){try{navigator.clipboard.writeText(Shchit.kratko(shR)+' — deloskop.ru');e.target.textContent='Скопировано'}catch(_){}return;}
       var u=window.Usloviya?Usloviya.decide(r):null;
-      var t=name+' (ИНН '+c.inn+'): '+({low:'Сигналов мало',medium:'Есть вопросы',high:'Серьёзные сигналы'}[r.risk_level]||'')+'. '+(u?u.headline+'. '+u.advice:(r.verdict||''))+' — проверено на deloskop.ru';
+      var t=name+' (ИНН '+c.inn+'): '+({low:'Без серьёзных сигналов',medium:'Есть вопросы',high:'Есть серьёзные сигналы'}[r.risk_level]||'')+'. '+(u?u.headline+'. '+u.advice:(r.verdict||''))+' — проверено на deloskop.ru';
       try{navigator.clipboard.writeText(t);e.target.textContent='Скопировано'}catch(_){}};
     // лист «Отчёт о проверке» на всю ширину: шапка → вывод → факты, динамика, все данные; справа — как посчитали и откуда данные (js/otchet.js)
     if(window.Otchet){try{Otchet.razlozhit(report,r,{svoj:!!shR,shR:shR,usl:ub,api:CAPI})}catch(e){}}

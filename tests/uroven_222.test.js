@@ -31,8 +31,15 @@ test('пилюля проверки — по risk_level, а не risk_title API'
   for (const f of ['index.html', 'report.html', 'delopis/index.html', 'proverit-schet/index.html']) {
     const t = chitat(f);
     assert.ok(!/risk_title\s*\|\|/.test(t), f);
-    assert.ok(t.includes("high:'Серьёзные сигналы'"), f);
+    assert.ok(t.includes("{low:'Без серьёзных сигналов',medium:'Есть вопросы',high:'Есть серьёзные сигналы'}"), f);
   }
+});
+
+test('«Сигналов мало» нигде не осталось; в кабинете короткое «Серьёзные сигналы» — можно ([Арт-директор] 02.10 20:55)', () => {
+  for (const f of ['index.html', 'report.html', 'delopis/index.html', 'proverit-schet/index.html', 'cabinet.html', 'js/nedavnie.js', 'js/portfel.js', 'js/otchet.js']) {
+    assert.ok(!chitat(f).includes('Сигналов мало'), f);
+  }
+  assert.ok(chitat('js/nedavnie.js').includes("high: 'Есть серьёзные сигналы'"));
 });
 
 test('/indeks/: title по [Право] и [Маркетингу], без «надёжн»', () => {

@@ -465,7 +465,7 @@ footer a{color:var(--muted)}
     if (cp.status && cp.status !== 'ACTIVE') stop.push('Компания не действует (статус: ' + esc(cp.status) + '). Заключать договор нельзя.');
     if (s.disqualified === 'bad') stop.push('Руководитель компании дисквалифицирован. Подписанный им договор можно оспорить — не заключайте его.');
     var html = '<h2>Что мы добавили в договор и почему</h2>' +
-      '<p class="dp-lvl dp-' + esc(r.risk_level) + '">' + esc(cp.name_short) + ': <b>' + esc({low:'Сигналов мало',medium:'Есть вопросы',high:'Серьёзные сигналы'}[r.risk_level] || '') + '</b>. ' + esc(r.verdict || '') +
+      '<p class="dp-lvl dp-' + esc(r.risk_level) + '">' + esc(cp.name_short) + ': <b>' + esc({low:'Без серьёзных сигналов',medium:'Есть вопросы',high:'Есть серьёзные сигналы'}[r.risk_level] || '') + '</b>. ' + esc(r.verdict || '') +
       ' <a href="/report.html?id=' + esc(r.report_id || '') + '" target="_blank" rel="noopener">Полное досье</a></p>';
     if (stop.length) html += '<div class="dp-stop">' + stop.map(function (x) { return '<p>' + x + '</p>'; }).join('') + '</div>';
     html += CLAUSES.map(function (c) {

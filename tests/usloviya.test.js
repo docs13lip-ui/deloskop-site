@@ -131,7 +131,7 @@ t('не больше 7 документов даже при всех бедах'
 t('niceFloor: круглые ориентиры вниз', function () {
   assert.strictEqual(U.niceFloor(87400), 80000);
   assert.strictEqual(U.niceFloor(1237000), 1200000);
-  assert.strictEqual(U.niceFloor(3000), 10000);
+  assert.strictEqual(U.niceFloor(3000), 0); // меньше 10 000 ₽ вверх не округляем — prepayCap даёт malo ([Данные] 02.10 19:37)
   assert.strictEqual(U.niceFloor(0), 0);
 });
 

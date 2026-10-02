@@ -68,6 +68,11 @@
     if (ton === "zel" && !istochnikOtvetil(signal)) return null;
     var t = z.tony[ton];
     if (!gotov(t)) return null;
+    // uslovie у тона: тон только для своей детали (дисквалификация «Внимание» — совпадение лишь по ФИО, [Право] 02.10 21:25)
+    if (t.uslovie) {
+      var ut = rx(t.uslovie);
+      if (!ut || !ut.test(String(signal.title || "") + " · " + String(signal.detail || ""))) return null;
+    }
     // norma у тона (если задана, хоть пустой строкой) важнее нормы записи
     var norma = t.norma != null ? t.norma : z.norma;
     return { id: z.id, ton: ton, bank: t.bank || "", nalog: t.nalog || "", sdelat: t.sdelat,

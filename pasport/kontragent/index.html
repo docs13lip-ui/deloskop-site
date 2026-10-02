@@ -66,6 +66,12 @@ td small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
 tr{break-inside:avoid}
 tr.warn td b{color:var(--warn)}tr.bad td b{color:var(--bad)}
 td b{font-weight:600}
+.kom-tr td{padding:0 0 12px}tr:has(+.kom-tr)>th,tr:has(+.kom-tr)>td{border-bottom:0}
+.kom{padding:10px 14px;border-left:3px solid var(--line);background:#FAFAF8;border-radius:0 10px 10px 0;font-size:14px;line-height:1.5;color:var(--ink)}
+.kom--zel{border-left-color:var(--ok)}.kom--zhel{border-left-color:var(--warn)}.kom--kras{border-left-color:var(--bad)}
+.kom__h{font-weight:600;font-size:12.5px;letter-spacing:.02em;color:var(--ink2);margin-bottom:4px}
+.kom p{margin:2px 0}.kom__l{font-weight:600}
+.kom__p{color:var(--muted);font-size:12px;margin-top:6px}
 .vyvod{margin:10px 0 0;font-size:14.5px}
 .net{color:var(--ink2);font-size:14.5px;background:#FAFAF8;border-radius:12px;padding:12px 14px}
 .sam{margin-top:8px;font-size:14px;line-height:1.55;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline}
@@ -155,6 +161,7 @@ td b{font-weight:600}
 @media (max-width:600px){.pp table{table-layout:auto}.pp thead{display:none}.pp tr{border-top:1px solid var(--line);padding:9px 0}.pp td{border:0;padding:2px 0}.pp td.u{max-width:none}.pp td[data-t]::before{content:attr(data-t) ": ";color:var(--muted);font-size:12.5px}}
 @media (max-width:600px){.ogl{columns:1}table,tbody,tr,th,td{display:block;width:auto}th{border:0;padding:10px 0 0;width:auto}td{padding-top:2px}.podl{grid-template-columns:1fr}.kol{flex-direction:column;align-items:flex-start}.kol .pr{text-align:left}}
 @media print{
+  .kom{background:none;break-inside:avoid}
   @page{size:A4;margin:16mm 16mm 18mm;
     @bottom-left{content:"Делоскоп · Паспорт контрагента · deloskop.ru";font:9pt 'Onest',Arial,sans-serif;color:#6B6B70}
     @bottom-right{content:"стр. " counter(page) " из " counter(pages);font:9pt 'Onest',Arial,sans-serif;color:#6B6B70}}
@@ -272,6 +279,7 @@ td b{font-weight:600}
 <script src="/pasport/qr.js"></script>
 <script src="/js/pasport-kontragenta.js"></script>
 <script src="/js/terminy.js"></script>
+<script src="/js/kommentarii.js"></script>
 <script>
 (function(){
   var API=(location.hostname.endsWith('deloskop.ru')?'https://api.deloskop.ru':'');
@@ -372,9 +380,9 @@ td b{font-weight:600}
     if(x.status==='not_checked'||x.status==='not_applicable'||x.status==='locked'){
       h+='<p class="net">'+esc(x.prichina||'Не проверяли.')+'</p>'+samHtml(x);
     } else {
-      h+='<table>'+x.fakty.map(function(f){
+      h+='<table>'+x.fakty.map(function(f,i){
         var src=[f.istochnik,f.data?'на '+P.dataRu(f.data):''].filter(Boolean).join(', ');
-        return '<tr class="'+esc(f.ton)+'"><th>'+esc(f.tekst)+'</th><td>'+(f.ton==='warn'||f.ton==='bad'?'<b>'+nbsp(f.znachenie)+'</b>':nbsp(f.znachenie))+(src&&x.id!=='predel'&&x.id!=='zaprosit'?'<small>'+esc(src)+'</small>':'')+'</td></tr>'}).join('')+'</table>';
+        return '<tr class="'+esc(f.ton)+'" data-f="'+esc(x.id)+':'+i+'"><th>'+esc(f.tekst)+'</th><td>'+(f.ton==='warn'||f.ton==='bad'?'<b>'+nbsp(f.znachenie)+'</b>':nbsp(f.znachenie))+(src&&x.id!=='predel'&&x.id!=='zaprosit'?'<small>'+esc(src)+'</small>':'')+'</td></tr>'}).join('')+'</table>';
       if(x.vyvod)h+='<p class="vyvod">'+esc(x.vyvod)+'</p>';
       if(x.ssylka)h+='<p class="vyvod noprint"><a href="'+esc(x.ssylka)+'">Методика расчёта — открыто</a></p>';
       if(x.chastichno)h+='<p class="net">'+esc(x.chastichno.charAt(0).toUpperCase()+x.chastichno.slice(1))+'.</p>';
@@ -534,6 +542,9 @@ td b{font-weight:600}
       pk.innerHTML=h; msg.hidden=true; pk.hidden=false;
       // подсказки к терминам (ЗСК, ГИР БО, РНП, приставы…) — определения дословно из статей сайта, js/terminy.js
       if(window.Terminy)Terminy.mount(pk);
+      // «Комментарий команды Делоскопа» под строками признаков — только утверждённые [Право] тексты (/data/kommentarii.json).
+      // Вставляется в страницу после выпуска: в отпечаток SHA-256 не входит, нет библиотеки — Паспорт как раньше.
+      if(window.Kommentarii)Kommentarii.zagruzit().then(function(K){try{Kommentarii.vstavitFakty(pk,Kommentarii.dlyaFaktov(p.razdely,r.signals,K))}catch(e){}});
       pk.onchange=function(e){var t=e.target;if(!t.matches||!t.matches('[data-otm-ist]'))return;var op=t.options[t.selectedIndex];if(t.form&&op)t.form.adres.value=op.getAttribute('data-url');};
       pk.onclick=function(e){if(otmKlik(e,p))return;var b=e.target.closest&&e.target.closest('.kinn');if(!b)return;var v=b.getAttribute('data-inn');
         function ok(){b.textContent='ИНН скопирован — вставьте в поиск';}

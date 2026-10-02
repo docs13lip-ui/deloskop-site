@@ -101,3 +101,67 @@ test('подключено на экране проверки и в досье',
   assert.match(rep, /<script src="\/js\/terminy\.js"><\/script>/);
   assert.match(rep, /Terminy\.mount\(doc\)/);
 });
+
+test('222-ФЗ: Индекс — не о «надёжности» (ни в справочнике, ни в лиде /indeks/)', () => {
+  // [Право] 02.10: «надёжность» — слово из определения кредитного рейтинга (п. 3 ст. 2 222-ФЗ)
+  assert.doesNotMatch(JSON.stringify(SPR), /надёжн|надежн/i);
+  const ix = fs.readFileSync(path.join(KOREN, 'indeks/index.html'), 'utf8');
+  const sub = /<p class="sub">([\s\S]*?)<\/p>/.exec(ix);
+  assert.ok(sub, 'нет лида на /indeks/');
+  assert.doesNotMatch(sub[1], /надёжн|надежн/i);
+  assert.match(tekst(ix), /не официальное заключение госоргана и не кредитный рейтинг/);
+});
+
+test('словарь проверки в статье: у каждого слова — якорь, у РНП и ст. 76 — действующие сроки', () => {
+  const html = stranica('/nalogi/proverka-kontragenta-pered-dogovorom/');
+  const m = /<!--slovar-->([\s\S]*?)<!--\/slovar-->/.exec(html);
+  assert.ok(m, 'нет блока словаря');
+  for (const id of ['girbo', 'fssp', 'rnp', 'priost', 'obesp', 'massadres', 'massruk']) assert.match(m[1], new RegExp('id="t-' + id + '"'));
+  const t = tekst(m[1]);
+  assert.match(t, /в течение 20 дней/, 'ст. 76 НК в ред. 04.08.2026 — 20 дней, не 10');
+  assert.match(t, /хранятся 2 года \(ст\. 104 44-ФЗ\)/);
+  assert.equal((html.match(/<h2[^>]*>Что значат слова в отчёте<\/h2>/g) || []).length, 1);
+});
+
+test('подключено в Паспорте контрагента', () => {
+  const ps = fs.readFileSync(path.join(KOREN, 'pasport/kontragent/index.html'), 'utf8');
+  assert.match(ps, /<script src="\/js\/terminy\.js"><\/script>/);
+  assert.match(ps, /Terminy\.mount\(pk\)/);
+});
+
+test('razmetitBlok: термин, занимающий весь текстовый узел, тоже получает подсказку', () => {
+  // мини-DOM: <dd>за 2025 год<small>ГИР БО</small></dd> — без jsdom, только то, что зовёт модуль
+  function tn(v) { return { nodeType: 3, nodeValue: v, parentNode: null }; }
+  const small = { nodeName: 'SMALL', classList: { contains: () => false }, hasAttribute: () => false, childNodes: [] };
+  const t1 = tn('за 2025 год'), t2 = tn('ГИР БО');
+  const dd = { nodeName: 'DD', childNodes: [t1, small] };
+  small.childNodes = [t2]; t1.parentNode = dd; t2.parentNode = small; small.parentNode = dd;
+  const zamena = [];
+  small.replaceChild = (nov, star) => zamena.push([nov, star]);
+  dd.replaceChild = (nov, star) => zamena.push([nov, star]);
+  const doc = {
+    getElementById: () => ({}), head: { appendChild() {} }, defaultView: null,
+    addEventListener() {},
+    createTreeWalker: () => { const a = [t1, t2]; let i = 0; return { nextNode: () => a[i++] || null }; },
+    createDocumentFragment: () => ({ kids: [], appendChild(x) { this.kids.push(x); } }),
+    createTextNode: (v) => tn(v),
+    createElement: () => ({ setAttribute() {}, textContent: '' }),
+  };
+  dd.ownerDocument = doc; dd.querySelectorAll = () => [];
+  const n = T.razmetitBlok(dd, SPR);
+  assert.equal(n, 1);
+  assert.equal(zamena.length, 1);
+  assert.equal(zamena[0][1], t2);
+});
+
+test('razmetitBlok: в заголовках разделов (H2–H6) подсказок нет', () => {
+  const t = { nodeType: 3, nodeValue: 'Реестр недобросовестных поставщиков', parentNode: null };
+  const h2 = { nodeName: 'H2', classList: { contains: () => false }, hasAttribute: () => false, replaceChild() { throw new Error('заголовок тронут'); } };
+  const kont = { nodeName: 'SECTION', querySelectorAll: () => [] };
+  t.parentNode = h2; h2.parentNode = kont;
+  kont.ownerDocument = {
+    getElementById: () => ({}), head: { appendChild() {} }, defaultView: null, addEventListener() {},
+    createTreeWalker: () => { const a = [t]; let i = 0; return { nextNode: () => a[i++] || null }; },
+  };
+  assert.equal(T.razmetitBlok(kont, SPR), 0);
+});

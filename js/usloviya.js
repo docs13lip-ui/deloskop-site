@@ -411,7 +411,7 @@
     function draw(keepFocus) {
       var v = decide(r, st), f = v.facts;
       box.className = 'usl ' + v.tone;
-      var why = v.reasons.length ? v.reasons.join(', ') : (r && r.verdict ? String(r.verdict).replace(/^Вывод:\s*/i, '') : '');
+      var why = v.reasons.length ? v.reasons.join(', ') : (r && r.verdict ? String(r.verdict).replace(/^Вывод:\s*/i, '').replace(/[.\s]+$/, '') : ''); // точку ставит строка ниже — без «найдено..»
       var stake = '';
       if (v.stake) {
         stake = v.stake.zero

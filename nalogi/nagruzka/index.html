@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Налоговая и контрагенты — Делоскоп</title>
-<meta name="description" content="Статья 54.1, вычеты НДС, технические компании и налоговая нагрузка — как защитить свои деньги заранее.">
-<link rel="canonical" href="https://deloskop.ru/nalogi/">
+<title>Налоговая нагрузка против отрасли: калькулятор — Делоскоп</title>
+<meta name="description" content="Посчитайте свою налоговую нагрузку и сравните со средней по отрасли по данным ФНС за 2025 год. Бесплатно, считается в вашем браузере.">
+<link rel="canonical" href="https://deloskop.ru/nalogi/nagruzka/">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Налоговая и контрагенты — Делоскоп">
-<meta property="og:description" content="Статья 54.1, вычеты НДС, технические компании и налоговая нагрузка — как защитить свои деньги заранее.">
-<meta property="og:url" content="https://deloskop.ru/nalogi/">
+<meta property="og:title" content="Налоговая нагрузка против отрасли: калькулятор — Делоскоп">
+<meta property="og:description" content="Посчитайте свою налоговую нагрузку и сравните со средней по отрасли по данным ФНС за 2025 год. Бесплатно, считается в вашем браузере.">
+<meta property="og:url" content="https://deloskop.ru/nalogi/nagruzka/">
 <meta property="og:image" content="https://deloskop.ru/ikonka-512.png">
 <meta name="theme-color" content="#F5F5F2">
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -54,8 +54,52 @@ article th{font-weight:600;background:#FAFAF8}article tr:last-child td{border-bo
 .card small{color:var(--accent);font-weight:600;font-size:13px}.card b{display:block;font-size:19px;line-height:1.3;margin:4px 0 6px;font-weight:600;letter-spacing:-.01em}.card span{color:var(--muted);font-size:15px}
 footer{max-width:1120px;margin:0 auto;padding:28px 20px 40px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:14px;color:var(--muted);border-top:1px solid var(--line)}
 footer a{color:var(--muted)}
+.faq{margin-top:40px}.faq h2{margin:0 0 12px}
+.faq details{background:var(--card);border-radius:16px;padding:14px 18px;margin:0 0 10px}
+.faq summary{cursor:pointer;font-weight:600;color:var(--ink)}
+.faq details p{margin:10px 0 0}
+.primer{background:var(--card);border-radius:20px;padding:18px 22px;margin:0 0 16px}
+.primer ul{margin:8px 0 0}
+.calc-st .calc{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:24px;margin-top:40px}
+.calc-st .box{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:28px}
+.calc-st label{display:block;font-weight:600;margin-bottom:8px}
+.calc-st input[type=text]{width:100%;font:inherit;font-size:22px;font-weight:600;padding:12px 16px;border:1px solid var(--line);border-radius:14px;background:var(--bg)}
+.calc-st .chk{display:flex;gap:10px;align-items:flex-start;font-weight:400;margin-top:16px;font-size:16px;color:var(--ink2)}
+.calc-st .chk input{margin-top:5px;width:18px;height:18px}
+.calc-st .row{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid var(--line);font-size:17px}
+.calc-st .row b{white-space:nowrap}
+.calc-st .tot{display:flex;justify-content:space-between;gap:16px;padding-top:16px;font-size:22px;font-weight:600}
+.calc-st .tot b{color:#B42318;white-space:nowrap}
+.calc-st .vs{margin-top:20px;background:var(--ok-bg);color:var(--ok);border-radius:var(--r-md);padding:16px 18px;font-size:17px}
+.calc-st .vs b{font-size:20px}
+.calc-st .note{font-size:14px;color:var(--muted);margin-top:14px}
+.calc-st .calc{margin-top:28px}
+@media (max-width:860px){.calc-st .calc{grid-template-columns:1fr}}
+.calc-st input[type=text]{box-sizing:border-box}
+main.shire{max-width:1040px}
+main.shire article,main.shire .faq,main.shire .check,main.shire .src,main.shire .more{max-width:760px}
+
+
+.nk{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:24px;margin-top:32px}
+.nk .box{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:26px}
+.nk label{display:block;font-weight:600;margin:16px 0 6px;font-size:16px}.nk label:first-child{margin-top:0}
+.nk input[type=text]{width:100%;box-sizing:border-box;font:inherit;font-size:20px;font-weight:600;padding:10px 14px;border:1px solid var(--line);border-radius:14px;background:var(--bg)}
+.nk .hint{font-size:14px;color:var(--muted);margin:6px 0 0}
+.nk .chk{display:flex;gap:10px;align-items:flex-start;font-weight:400;font-size:16px;color:var(--ink2)}.nk .chk input{margin-top:5px;width:18px;height:18px}
+.nk .rezh{display:flex;gap:18px;flex-wrap:wrap;font-weight:400;font-size:16px}.nk .rezh label{display:flex;gap:8px;align-items:center;margin:0;font-weight:400}
+.nk button{margin-top:20px;min-height:50px;border:0;border-radius:12px;background:var(--accent);color:#fff;font:inherit;font-weight:600;padding:0 22px;cursor:pointer;width:100%}
+.itog{font-size:17px;color:var(--ink2)}.itog p{margin:0 0 12px}
+.itog .znak{display:inline-block;font-size:13px;font-weight:600;border-radius:999px;padding:3px 10px;margin-bottom:10px;background:#F0F0EC;color:var(--ink2)}
+.itog--zelenyj .znak{background:#E7F5EC;color:#1E7B3C}.itog--zelenyj .znak::after{content:"Не ниже отрасли"}
+.itog--zheltyj .znak{background:#FFF4E0;color:#8A5300}.itog--zheltyj .znak::after{content:"Ниже средней по отрасли"}
+.itog--krasnyj .znak{background:#FDECEA;color:#B42318}.itog--krasnyj .znak::after{content:"Намного ниже отрасли"}
+.itog--usn .znak::after{content:"Упрощённая система"}.itog--net-normy .znak::after{content:"Нормы ФНС нет"}.itog--net-dannyh .znak::after{content:"Мало данных"}
+.shkala{margin:4px 0 14px}.shkala div{height:10px;border-radius:6px;margin:6px 0 2px}.shkala .vy{background:var(--accent)}.shkala .otr{background:#B8B8BD}.shkala span{font-size:14px;color:var(--muted)}
+.itog .note{font-size:14px;color:var(--muted)}
+.pusto{color:var(--muted);font-size:16px}
+@media (max-width:860px){.nk{grid-template-columns:1fr}}
 </style>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "CollectionPage", "name": "Налоговая и контрагенты", "url": "https://deloskop.ru/nalogi/"}</script>
+<script type="application/ld+json">[{"@context": "https://schema.org", "@type": "WebPage", "name": "Ваша налоговая нагрузка против отрасли", "description": "Посчитайте свою налоговую нагрузку и сравните со средней по отрасли по данным ФНС за 2025 год. Бесплатно, считается в вашем браузере.", "url": "https://deloskop.ru/nalogi/nagruzka/", "inLanguage": "ru", "dateModified": "2026-10-02", "publisher": {"@type": "Organization", "name": "Делоскоп", "url": "https://deloskop.ru/"}}, {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Делоскоп", "item": "https://deloskop.ru/"}, {"@type": "ListItem", "position": 2, "name": "Налоги", "item": "https://deloskop.ru/nalogi/"}, {"@type": "ListItem", "position": 3, "name": "Калькулятор налоговой нагрузки", "item": "https://deloskop.ru/nalogi/nagruzka/"}]}]</script>
 <link rel="stylesheet" href="/css/fonts.css">
 <link rel="stylesheet" href="/css/podval.css">
 <link rel="stylesheet" href="/css/shapka.css">
@@ -135,13 +179,70 @@ footer a{color:var(--muted)}
 </dialog>
 <!--/shapka-->
 <!--beta-polosa--><div class="beta-bar" role="region" aria-label="Открытая бета" data-beta-bar><div class="beta-bar__in"><span class="beta-bar__metka">бета</span><p class="beta-bar__t"><b>Открытая бета до&nbsp;13&nbsp;октября: всё бесплатно.</b> <span class="beta-bar__dop">Оплата и&nbsp;реквизиты появятся позже. </span><a href="mailto:help@deloskop.ru?subject=%D0%91%D0%B5%D1%82%D0%B0%20%D0%94%D0%B5%D0%BB%D0%BE%D1%81%D0%BA%D0%BE%D0%BF%D0%B0">Нашли ошибку&nbsp;— напишите</a></p><button class="beta-bar__x" type="button" aria-label="Скрыть на неделю" data-beta-x><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div></div><script>try{if(+localStorage.getItem("dlk_beta_skryt")>Date.now())document.querySelector("[data-beta-bar]").hidden=true}catch(e){}</script><!--/beta-polosa-->
-<main id="main">
-<nav class="crumbs" aria-label="Навигация"><a href="/">Делоскоп</a></nav>
-<h1>Налоговая и контрагенты</h1>
-<p class="meta" style="font-size:18px;color:var(--ink2)">Статья 54.1, вычеты НДС, технические компании и налоговая нагрузка — как защитить свои деньги заранее.</p>
-<div class="cards" style="margin-top:28px"><!--praktika--><a class="card" href="/praktika/nalogi/"><small>Практика судов</small><b>Как решают суды: 3 разбора дел с номером акта и первоисточником</b><span>Что случилось, что решил суд, что делать завтра утром</span></a><!--/praktika--><a class="card" href="/nalogi/nagruzka/"><small>Калькулятор</small><b>Налоговая нагрузка против отрасли: сравните себя с нормой ФНС за 2025 год</b><span>Посчитать за минуту · <span style="white-space:nowrap">и таблица по отраслям</span></span></a><a class="card" href="/nalogi/kalkulyator-tehnicheskij-postavshchik/"><small>Калькулятор</small><b>Во что обойдётся «технический» поставщик: вычет НДС, налог, штраф и пени</b><span>Посчитать за минуту</span></a>
-<a class="card" href="/nalogi/skolko-platit-vpered-neznakomoj-kompanii/"><small>Налоги</small><b>Сколько платить вперёд незнакомой компании: формула</b><span>6 минут чтения</span></a><a class="card" href="/nalogi/statya-54-1-nk-prostymi-slovami/"><small>Налоги</small><b>Статья 54.1 НК простыми словами: когда налоговая снимет вычет</b><span>5 минут чтения</span></a><a class="card" href="/nalogi/priznaki-tehnicheskoj-kompanii/"><small>Налоги</small><b>Признаки технической компании: проверьте поставщика за 5 минут</b><span>4 минуты чтения</span></a><a class="card" href="/nalogi/pismo-o-smene-rekvizitov-kak-proverit/"><small>Налоги</small><b>Письмо о смене реквизитов: как проверить до оплаты</b><span>4 минуты чтения · и что делать, если деньги ушли</span></a><a class="card" href="/nalogi/kak-proverit-schet-pered-oplatoj/"><small>Налоги</small><b>Как проверить счёт перед оплатой: 6 пунктов за 2 минуты</b><span>4 минуты чтения</span></a><a class="card" href="/nalogi/dokumenty-kontragenta-po-summe-sdelki/"><small>Налоги</small><b>Какие документы запросить у контрагента — по сумме сделки</b><span>6 минут чтения · с расчётом ступени</span></a><a class="card" href="/nalogi/proverka-kontragenta-pered-dogovorom/"><small>Налоги</small><b>Проверка контрагента перед договором: чек-лист и бесплатные сервисы</b><span>5 минут чтения</span></a><a class="card" href="/nalogi/nedostovernyj-adres-egryul/"><small>Налоги</small><b>Недостоверный адрес в ЕГРЮЛ: что значит отметка и как её снять</b><span>4 минуты чтения</span></a></div>
+<main id="main" class="shire">
+<nav class="crumbs" aria-label="Навигация"><a href="/">Делоскоп</a><span>›</span><a href="/nalogi/">Налоги</a></nav>
+<h1>Ваша налоговая нагрузка против отрасли</h1>
+<div class="meta">Калькулятор Делоскопа · бесплатно, без регистрации · считается в вашем браузере · нормы ФНС за 2025 год</div>
+<p style="margin-top:18px;color:var(--ink2)">Попадаете ли вы в зону внимания налоговой? Проверьте по тому же признаку, что и инспектор: нагрузка ниже средней по отрасли — первый из 12 общедоступных критериев отбора на выездную проверку.</p>
+<section class="nk" aria-label="Калькулятор">
+ <form class="box" id="nagruzka-forma" novalidate>
+  <label for="nk-okved">Основной ОКВЭД</label>
+  <input id="nk-okved" name="okved" type="text" inputmode="decimal" placeholder="например, 41.20" autocomplete="off">
+  <p class="hint">Код из выписки ЕГРЮЛ. Сравним с самой подробной строкой ФНС, в которую он входит.</p>
+  <label for="nk-doh">Доходы за 2025 год, ₽</label>
+  <input id="nk-doh" name="dohody" type="text" inputmode="numeric" placeholder="50 000 000" autocomplete="off">
+  <p class="hint">По отчёту о финансовых результатах, без доходов от участия в других организациях.</p>
+  <label for="nk-nal">Уплачено налогов за 2025 год, ₽</label>
+  <input id="nk-nal" name="nalogi" type="text" inputmode="numeric" placeholder="5 000 000" autocomplete="off">
+  <p class="hint">Все налоги, кроме страховых взносов: их нет и в норме ФНС.</p>
+  <label class="chk"><input name="ndfl" type="checkbox"> В сумме есть НДФЛ за работников — тогда сравнение точнее: в норме ФНС НДФЛ учтён</label>
+  <label>Налоговый режим</label>
+  <div class="rezh"><label><input type="radio" name="rezhim" value="osn" checked> Общий (ОСН)</label><label><input type="radio" name="rezhim" value="usn"> Упрощённый (УСН)</label></div>
+  <button type="submit">Сравнить с отраслью</button>
+ </form>
+ <div class="box" aria-live="polite">
+  <p class="pusto" id="nagruzka-pusto">Введите ОКВЭД, доходы и налоги — покажем вашу нагрузку рядом со средней по отрасли.</p>
+  <div class="itog" id="nagruzka-itog" hidden>
+   <span class="znak"></span>
+   <div class="shkala" data-shkala hidden><div class="vy" data-vy></div><span data-vy-t></span><div class="otr" data-otr></div><span data-otr-t></span></div>
+   <p data-tekst></p>
+   <p class="note" data-podpis></p>
+  </div>
+ </div>
+</section>
+<article>
+<h2>Как считаем</h2>
+<p><strong>Нагрузка = уплаченные налоги / доходы × 100%.</strong> Так советует считать памятка к налоговому калькулятору ФНС. Норма — средняя нагрузка по виду деятельности за 2025 год из приложения 3 к Концепции планирования выездных проверок (Информация ФНС от 05.05.2026). Все строки — в <a href="/nalogi/nagruzka-po-otraslyam-2025/">справочнике по отраслям</a>.</p>
+<ul>
+<li><strong>НДФЛ.</strong> Норма ФНС посчитана с НДФЛ за работников. Если вы его не добавили, ваша оценка ниже той, что видит инспектор, — поэтому «намного ниже» мы пишем только при нагрузке меньше половины нормы и доходах от 10&nbsp;млн&nbsp;₽.</li>
+<li><strong>Оценка, а не точная цифра.</strong> ФНС делит налоги на оборот по данным Росстата, а калькулятор — на доходы по бухотчётности.</li>
+<li><strong>Упрощёнка.</strong> Общая норма включает НДС и налог на прибыль, поэтому упрощенца с ней не сравниваем.</li>
+<li><strong>Новые компании.</strong> При доходах меньше 1&nbsp;млн&nbsp;₽ за год сравнивать не с чем.</li>
+<li><strong>Регионы.</strong> ФНС публикует нормы нагрузки только по России в целом, по видам деятельности, — региональных норм нет.</li>
+</ul>
+<p>Нагрузка — один из 12 признаков, и норма — это среднее по отрасли, а не порог. <a href="/#shield">«Щит»</a> показывает вашу компанию по ИНН глазами банка и налоговой по открытым данным.</p>
+</article>
+<section class="check" aria-label="Проверка компании">
+  <h2>Проверьте поставщика до оплаты</h2>
+  <p>Введите ИНН — покажем, что известно о компании, с источником и датой, и что запросить у поставщика перед оплатой. Бесплатно.</p>
+  <form action="/" method="get" data-goal="article_to_tool" data-otkuda="nagruzka"><input name="inn" inputmode="numeric" maxlength="12" pattern="\d{10}|\d{12}" required placeholder="ИНН компании"><button type="submit">Проверить</button></form>
+</section>
+<section class="src" aria-label="Источники"><h2>Источники</h2><ol>
+<li>Информация ФНС России от 05.05.2026 «Сведения о среднеотраслевых показателях налоговой нагрузки, рентабельности проданных товаров, продукции, работ, услуг и рентабельности активов организаций по видам экономической деятельности…» — <a href="https://base.garant.ru/414173177/" rel="nofollow noopener" target="_blank">Гарант</a>; нагрузка за 2025 год — <a href="https://www.consultant.ru/document/cons_doc_LAW_55729/c7c707133c95ee413e1d2d76424f41afcda1b9f8/" rel="nofollow noopener" target="_blank">КонсультантПлюс</a>, за 2024 год — <a href="https://www.consultant.ru/document/cons_doc_LAW_55729/1c86de95dd6adc8f19b3dca4696576bd43c2afb1/" rel="nofollow noopener" target="_blank">КонсультантПлюс</a>, рентабельность за 2025 год — <a href="https://www.consultant.ru/document/cons_doc_LAW_55729/46b5b065d9811c15e161f73df1f433342686dda3/" rel="nofollow noopener" target="_blank">КонсультантПлюс</a>. Сверено 02.10.2026.</li>
+<li>Приказ ФНС России от 30.05.2007 № ММ-3-06/333@ «Об утверждении Концепции системы планирования выездных налоговых проверок»: приложение 2 — 12 общедоступных критериев, приложения 3–4 — среднеотраслевые показатели — <a href="https://www.consultant.ru/document/cons_doc_LAW_55729/" rel="nofollow noopener" target="_blank">КонсультантПлюс</a>.</li>
+</ol></section>
+<p class="disc">Оценка Делоскопа по открытым данным и данным, которые вы ввели. Это не налоговая консультация и не прогноз проверки.</p>
 </main>
+<script src="/js/nagruzka.js"></script>
+<script>
+(function(){
+  var pusto=document.getElementById('nagruzka-pusto'), f=document.getElementById('nagruzka-forma');
+  fetch('/data/fns-normy-2025.json').then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(d){
+    DlkNagruzka.init(document,d);
+    f.addEventListener('submit',function(){pusto.hidden=true});
+  }).catch(function(){pusto.textContent='Не удалось загрузить нормы ФНС. Обновите страницу или откройте справочник по отраслям.'});
+})();
+</script>
 <script src="/obnovleniya.js" defer></script>
 <!--podval--><div class="podval" role="contentinfo"><div class="podval__in"><div class="podval__cols"><nav class="podval__col" aria-label="Продукты"><p class="podval__h">Продукты</p><ul><li><a href="/">Проверка по ИНН</a></li><li><a href="/indeks/">Индекс Делоскопа</a></li><li><a href="/#shield">Щит</a></li><li><a href="/nalichnye/">Наличные глазами банка</a></li><li><a href="/kontragenty-iz-vypiski/">Кому вы платите</a></li><li><a href="/proverit-schet/">Проверь счёт</a></li><li><a href="/skoraya-115-fz/">Скорая 115-ФЗ</a></li><li><a href="/pasport/">Паспорт</a></li><li><a href="/delopis/">Делопись</a></li><li><a href="/tarify/">Тарифы</a></li></ul></nav><nav class="podval__col" aria-label="Знания"><p class="podval__h">Знания</p><ul><li><a href="/115-fz/">115-ФЗ простыми словами</a></li><li><a href="/nalogi/">Налоги</a></li><li><a href="/obnovleniya/">Что нового</a></li></ul></nav><nav class="podval__col" aria-label="Компания"><p class="podval__h">Компания</p><ul><li><a href="/indeks/#metodika">Методика Индекса</a></li><li><a href="/cabinet.html">Кабинет</a></li><li><a href="/rekvizity/">Реквизиты и контакты</a></li><li><a href="mailto:help@deloskop.ru">help@deloskop.ru</a></li></ul></nav><nav class="podval__col" aria-label="Документы"><p class="podval__h">Документы</p><ul><li><a href="/oferta/">Публичная оферта</a></li><li><a href="/politika/">Политика обработки ПДн</a></li><li><a href="/soglasie/">Согласие на обработку ПДн</a></li><li><a href="/rassylki/">Согласие на рассылки</a></li><li><a href="/cookies/">Cookies и Метрика</a></li><li><a href="/vozvrat/">Возврат денег</a></li><li><a href="/partneram/usloviya/">Условия для партнёров</a></li><li><a href="/rekvizity/">Реквизиты</a></li></ul></nav></div><div class="podval__niz"><p>© 2026 Делоскоп</p><p>Сотрудничество, отзывы и предложения — <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>. Принимаем 24/7</p><p>Материалы носят информационный характер и не заменяют консультацию юриста</p></div></div></div><!--/podval-->
 </body>

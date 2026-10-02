@@ -157,6 +157,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
 <script src="/js/otzyv.js" defer></script>
 <script src="/js/kopiya.js" defer></script>
 <script src="/js/dinamika.js"></script>
+<script src="/js/terminy.js"></script>
 <meta name="deloskop-rezhim" content="beta">
 </head>
 <body>
@@ -489,6 +490,8 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
     var ub=doc.querySelector('[data-usl]');
     if(ub)try{Usloviya.mount(ub,r,{open:true})}catch(e){ub.textContent=r.verdict||''}
     bindTips(doc);bindQ(doc);
+    // подсказки к терминам — определения дословно из статей сайта (js/terminy.js); нет справочника — ничего не меняется
+    if(window.Terminy)Terminy.mount(doc);
     // «Комментарий команды Делоскопа» — только утверждённые [Право] тексты (/data/kommentarii.json); нет — ничего не меняется
     if(window.Kommentarii)Kommentarii.zagruzit().then(function(K){try{Kommentarii.vstavit(doc.querySelector('table.sig'),r.signals,K)}catch(e){}});
     var pdf=document.getElementById('pdf'), share=document.getElementById('share');

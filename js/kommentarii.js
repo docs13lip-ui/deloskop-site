@@ -242,7 +242,40 @@
     return n;
   }
 
+  // «Кому вы платите»: сигналы разбора выписки (engine.js) — по коду, не по заголовку. Тон у записи один: уровень сигнала
+  // в движке постоянный (bad — kras, warn — zhel, info — sery: справка, не «норма»). Те же ворота gotov().
+  var TON_VYP = { bad: "kras", warn: "zhel", info: "sery" };
+  function vypiska(sprav, kod) {
+    var list = (sprav && sprav.vypiska && sprav.vypiska.zapisi) || [];
+    for (var i = 0; i < list.length; i++) {
+      var z = list[i];
+      if (!z || z.kod !== kod) continue;
+      if (!TON_VYP[z.uroven] || !gotov(z.ton)) return null;
+      var t = z.ton, norma = t.norma != null ? t.norma : z.norma;
+      return { id: z.id, ton: TON_VYP[z.uroven], bank: t.bank || "", nalog: t.nalog || "", sdelat: t.sdelat,
+        norma: norma || "", podpis: (sprav && sprav.podpis) || "Команда Делоскопа", data: dataRu(t.data_proverki) };
+    }
+    return null;
+  }
+  // Свёрнуто под сигналом: в выписке десятки поставщиков, и раскрытый текст под каждым сигналом заслонил бы суммы.
+  function vypiskaHtml(sprav, kod) {
+    var k = vypiska(sprav, kod);
+    if (!k) return "";
+    var str = function (l, t) { return t ? '<p><span class="kom__l">' + l + "</span> " + esc(t) + "</p>" : ""; };
+    return '<details class="kom kom--' + esc(k.ton) + '" data-kom="' + esc(k.id) + '">' +
+      '<summary class="kom__h">Комментарий команды Делоскопа</summary>' +
+      str("Банк:", k.bank) + str("Налоговая:", k.nalog) + str("Что сделать:", k.sdelat) +
+      '<div class="kom__p">' + esc(k.podpis) + (k.norma ? " · " + esc(k.norma) : "") + (k.data ? " · нормы сверены " + esc(k.data) : "") + "</div></details>";
+  }
+  // Есть ли в библиотеке хоть один утверждённый текст для выписки (иначе страницу не перерисовываем).
+  function estVypiska(sprav) {
+    var list = (sprav && sprav.vypiska && sprav.vypiska.zapisi) || [];
+    for (var i = 0; i < list.length; i++) if (list[i] && vypiska(sprav, list[i].kod)) return true;
+    return false;
+  }
+
   return { TON: TON, MAKS: MAKS, OGOVORKA: OGOVORKA, ogovorkaHtml: ogovorkaHtml, postavitOgovorku: postavitOgovorku,
     dlyaSut: dlyaSut, vstavitSut: vstavitSut, CSS_EKRANA: CSS_EKRANA, gotov: gotov, istochnikOtvetil: istochnikOtvetil, NE_OTVETIL: NE_OTVETIL, zapis: zapis, najti: najti, html: html, zagruzit: zagruzit, vstavit: vstavit, dlina: dlina,
-    dlyaFaktov: dlyaFaktov, vstavitFakty: vstavitFakty };
+    dlyaFaktov: dlyaFaktov, vstavitFakty: vstavitFakty,
+    TON_VYP: TON_VYP, vypiska: vypiska, vypiskaHtml: vypiskaHtml, estVypiska: estVypiska };
 });

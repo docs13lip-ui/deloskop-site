@@ -151,3 +151,41 @@ test('Условия сделки: вывод API с точкой не даёт 
   const u = fs.readFileSync(path.join(KOREN, 'js/usloviya.js'), 'utf8');
   assert.match(u, /String\(r\.verdict\)\.replace\(\/\^Вывод:\\s\*\/i, ''\)\.replace\(\/\[\.\\s\]\+\$\/, ''\)/);
 });
+
+// dinamika-v2 (макет [Арт-директора] 02.10, блок E): таблица со спарклайном
+test('таблица динамики: колонки «прошлый год · последний год · Изм.», спарклайн 96 × 20 без точек', () => {
+  const h = D.htmlDinamika(otvet());
+  assert.match(h, /<table class="din__t">/);
+  assert.match(h, /<th scope="col" class="din__v din__p n">2024<\/th><th scope="col" class="din__v n">2025<\/th>/);
+  assert.match(h, /<svg class="din__sv" viewBox="0 0 96 20" width="96" height="20" aria-hidden="true"/);
+  assert.ok(!/<circle|<rect/.test(h), 'без точек и столбиков');
+  assert.strictEqual((h.match(/<polyline /g) || []).length, 2, 'выручка и прибыль');
+  assert.match(h, /din__0/, 'у прибыли с убытком — нулевая черта');
+  assert.match(h, new RegExp('▲' + NB + 'из убытка'), 'прибыль 2025 после убытка 2024');
+  assert.match(h, new RegExp('убыток 1,1' + NB + 'трлн'));
+  assert.ok(!/NaN|undefined|Infinity/.test(h));
+});
+
+test('таблица динамики: численность и уплаченные налоги из наборов ФНС — только при рядах от 3 лет', () => {
+  const ch = otvet().dossier.charts;
+  const r = otvet({ dossier: { charts: Object.assign({}, ch, {
+    staff: [{ year: 2023, value: 1200 }, { year: 2024, value: 1310 }, { year: 2025, value: 1290 }],
+    taxes_paid: [{ year: 2024, value: 5e9 }, { year: 2025, value: 6e9 }],
+  }) } });
+  const h = D.htmlDinamika(r);
+  assert.match(h, /Численность/);
+  assert.match(h, new RegExp('1' + NB + '290' + NB + 'чел\\.'));
+  assert.ok(!/Уплачено налогов/.test(h), 'два года налогов — не динамика');
+  assert.match(h, /ГИР БО и наборы ФНС/);
+  assert.match(h, /Численность и уплаченные налоги — открытые наборы ФНС/);
+  assert.ok(!/ГИР БО и наборы ФНС/.test(D.htmlDinamika(otvet())), 'без рядов ФНС — только ГИР БО');
+});
+
+test('таблица динамики: года нет в ряду — «нет данных» и «—», а не ноль', () => {
+  const r = otvet({ dossier: { charts: {
+    revenue: [{ year: 2021, value: 10e6 }, { year: 2022, value: 12e6 }, { year: 2023, value: 13e6 }, { year: 2025, value: 15e6 }],
+  } } });
+  const h = D.htmlDinamika(r);
+  assert.match(h, /<td class="din__v din__p n"><span class="din__na">нет данных<\/span><\/td>/);
+  assert.match(h, /<td class="din__v din__k n">—<\/td>/);
+});

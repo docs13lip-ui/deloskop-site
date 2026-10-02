@@ -646,7 +646,7 @@ footer a{color:var(--ink2)}
       .then(function(x){report.classList.remove('loading');
         if(!x.ok){note.className='note err';note.textContent=(x.j&&x.j.detail)||'Не получилось проверить. Попробуйте ещё раз.';return;}
         render(x.j,o);note.className='note ok';note.textContent='Готово. Отчёт — рядом.';
-        if(window.innerWidth<980)report.scrollIntoView({behavior:'smooth',block:'start'});})
+        if(window.Otchet&&report.classList.contains('ot'))Otchet.prokrutit(report);else if(window.innerWidth<980)report.scrollIntoView({behavior:'smooth',block:'start'});})
       .catch(function(){report.classList.remove('loading');note.className='note err';
         note.textContent='Сервис не ответил. Проверьте интернет и попробуйте ещё раз.';});
   }

@@ -3,7 +3,8 @@
 
 Таблицы страницы /nalogi/nagruzka-po-otraslyam-2025/ собираются из data/fns-normy-2025.json —
 между метками <!--normy--> и <!--/normy-->. Цифры руками в HTML не правим: правим JSON и запускаем сборщик.
-Источник — Информация ФНС от 05.05.2026 (приложения 3–4 к приказу № ММ-3-06/333@).
+Источник — Информация ФНС от 05.05.2026 (приложения 3–4 к приказу № ММ-3-06/333@);
+рентабельность за 2024 год — Информация ФНС от 07.05.2025 (ключ rentabelnost_2024).
 
 Запуск: python3 tests/sobrat_nagruzka.py         — собрать
         python3 tests/sobrat_nagruzka.py --check — только проверить (код 1, если нужна сборка; tests/nagruzka.test.js)
@@ -67,14 +68,23 @@ def tablicy(d):
             klass(s), nazv(s), kod(s), chislo(n["2025"]), chislo(n["2024"]), izmenenie(n["2025"], n["2024"]), chislo(s["sv"]["2025"])))
     out.append('</tbody></table></div>')
     r = d["rentabelnost"]
-    out += ['<h2 id="rentabelnost">Рентабельность по видам деятельности за %d год</h2>' % r["god"],
+    z2 = (d.get("rentabelnost_2024") or {}).get("znacheniya") or {}
+    g2 = "2024" if z2 and all(s["kod"] in z2 for s in r["stroki"]) else None
+    zag = ("за %d и %s годы" % (r["god"], g2)) if g2 else ("за %d год" % r["god"])
+    out += ['<h2 id="rentabelnost">Рентабельность по видам деятельности %s</h2>' % zag,
             '<p>Рентабельность продаж — прибыль от продаж к себестоимости с коммерческими и управленческими расходами; '
             'рентабельность активов — сальдированный финансовый результат к стоимости активов. «Убыток» — у отрасли в целом отрицательный результат.</p>',
             '<div class="tw"><table class="normy" data-normy>',
+            ('<thead><tr><th>Вид деятельности</th><th>ОКВЭД</th><th>Продаж, %d</th><th>Продаж, %s</th><th>Активов, %d</th><th>Активов, %s</th></tr></thead><tbody>'
+             % (r["god"], g2, r["god"], g2)) if g2 else
             '<thead><tr><th>Вид деятельности</th><th>ОКВЭД</th><th>Рентабельность продаж</th><th>Рентабельность активов</th></tr></thead><tbody>']
     for s in r["stroki"]:
-        out.append('<tr%s><td>%s</td><td>%s</td><td><b>%s</b></td><td>%s</td></tr>' % (
-            klass(s), nazv(s), kod(s), chislo(s["prodazhi"]), chislo(s["aktivy"])))
+        if g2:
+            out.append('<tr%s><td>%s</td><td>%s</td><td><b>%s</b></td><td>%s</td><td><b>%s</b></td><td>%s</td></tr>' % (
+                klass(s), nazv(s), kod(s), chislo(s["prodazhi"]), chislo(z2[s["kod"]][0]), chislo(s["aktivy"]), chislo(z2[s["kod"]][1])))
+        else:
+            out.append('<tr%s><td>%s</td><td>%s</td><td><b>%s</b></td><td>%s</td></tr>' % (
+                klass(s), nazv(s), kod(s), chislo(s["prodazhi"]), chislo(s["aktivy"])))
     out.append('</tbody></table></div>')
     out.append('<!--/normy-->')
     return "\n".join(out)

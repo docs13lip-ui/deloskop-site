@@ -163,10 +163,12 @@ def zapisat(put, txt):
 # свежая «сведения на дд.мм.гггг» страницы (то же правило, что lastmod()). Новых данных не храним.
 _LD = re.compile(r'<script type="application/ld\+json">(.*?)</script>', re.S)
 _DOHOD = re.compile(r"доход ([0-9]+(?:,[0-9]+)?)(?:&nbsp;|\u00a0| )(трлн|млрд|млн|тыс\.)(?:&nbsp;|\u00a0| )₽")
+_DOHOD_TAB = re.compile(r'<tbody><tr><td>\d{4}</td><td class="num">([0-9]+(?:,[0-9]+)?)(?:&nbsp;|\u00a0| )(трлн|млрд|млн|тыс\.)(?:&nbsp;|\u00a0| )₽')
 _MNOZH = {"трлн": 1e12, "млрд": 1e9, "млн": 1e6, "тыс.": 1e3}
 _SVEDENIYA = re.compile(r"сведения на (\d\d)\.(\d\d)\.(\d{4})")
 BEZ_OBOLOCHKI = "<!--shapka--><!--/shapka-->"
 _KROSH = re.compile(r'<nav class="co-krosh caption"[^>]*>(.*?)</nav>', re.S)
+_OKVED_ATTR = re.compile(r'<nav class="co-krosh caption"[^>]*? data-okved="([0-9.]+)"')
 _RAZDELY = {t for _, _, t in OKVED_RAZDELY}
 _SOS = re.compile(r'(<aside class="co-side card"><h2 class="co-h3">Полный отчёт</h2>.*?</aside>\n)(.*?)(\n<aside class="co-side card" aria-labelledby="pasport-h">)', re.S)
 
@@ -210,10 +212,13 @@ def kartochki_na_diske(koren=KOREN):
              "gorod": adr.get("addressLocality") or "", "okved": "", "fakty": {}, "_papka": d, "_s_diska": True}
         md = re.search(r'<meta name="description" content="([^"]*)"', t)
         z = _DOHOD.search(md.group(1)) if md else None
+        z = z or _DOHOD_TAB.search(t)  # kartochki-indeks-v1: старой выручки в description нет — берём строку таблицы
         if z:
             k["fakty"]["dohod"] = {"znachenie": float(z.group(1).replace(",", ".")) * _MNOZH[z.group(2)]}
         daty = [dt.date(int(g), int(mm), int(dd)) for dd, mm, g in _SVEDENIYA.findall(t)]
         k["_lastmod"] = max(daty) if daty else None
+        ok = _OKVED_ATTR.search(t)  # kartochki-okved-v1: код основного ОКВЭД (крошки, data-okved) — класс для «Похожих» и хаба
+        k["okved"] = okved_kod(ok.group(1)) if ok else ""
         kr = _KROSH.search(t)  # v3.8b: раздел ОКВЭД — последнее звено крошек
         if kr:
             hv = html.unescape(re.sub(r"<[^>]+>", "", kr.group(1))).split(" › ")[-1].strip()
@@ -250,6 +255,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
     izm = 0
     for k in kart:
         txt = ss.sobrat_stranicu(html_kartochki(k, k["_V"], pohozhie(k, vse), kom, normy), r, podval, shapka)
+        k["_noindex"] = noindex_html(txt)
         izm += zapisat(os.path.join(koren, adres_str(k).strip("/"), "index.html"), txt)
     # v3.8b: у опубликованных — свежие «Похожие компании», остальное байт в байт
     for x in starye:
@@ -258,6 +264,9 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
             t = fh.read()
         t2 = _SOS.sub(lambda m: m.group(1) + sosedi_html(x, pohozhie(x, vse)) + m.group(3), t, count=1)
         t2 = pochinit_god_dvazhdy(t2)  # v3.10: «Выручка за 2021 — … за 2021» → год один раз, как у новых карточек
+        t2 = pochinit_indeks_blok(t2)  # kartochki-okved-v1: «Индекс — считаем» → «Индекс — в полном отчёте», как у новых
+        t2 = primenit_vorota_indeksa(t2)  # kartochki-indeks-v1: те же ворота индексации, что у новых карточек
+        x["_noindex"] = noindex_html(t2)
         if BEZ_OBOLOCHKI in t2:
             # «голое» тело из комплекта — оболочка той же sobrat_stranicu
             t2 = ss.sobrat_stranicu(t2, r, podval, shapka)
@@ -272,10 +281,11 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
     stroka = "Sitemap: %s/sitemap-companies.xml" % SAJT
     robots = open(rb, encoding="utf-8").read()
     if vse:
-        lm = {adres_str(k): (k["_lastmod"] if k.get("_s_diska") else lastmod(k, k["_V"])) for k in vse}
+        # kartochki-indeks-v1: карточка с noindex в sitemap не идёт (ворота индексации, ТЗ [Данные] 03.10 разд. 3.2)
+        lm = {adres_str(k): (k["_lastmod"] if k.get("_s_diska") else lastmod(k, k["_V"])) for k in vse if not k.get("_noindex")}
         lm = {a: d for a, d in lm.items() if d}
         urls = []
-        if hub_index:
+        if hub_index and lm:
             urls.append("  <url><loc>%s/%s/</loc><lastmod>%s</lastmod></url>" % (SAJT, PAPKA, max(lm.values()).isoformat()))
         # v3.5: по адресу (= по ИНН) — полная сборка и добор дают один и тот же sitemap
         urls += ["  <url><loc>%s%s</loc><lastmod>%s</lastmod></url>" % (SAJT, a, lm[a].isoformat()) for a in sorted(lm)]

@@ -200,7 +200,7 @@ ul.list .nm span{color:var(--muted);font-size:13px}
 
     <section class="card">
       <h2>Слежение за контрагентами</h2>
-      <p class="sub" style="margin:0">Сообщим, если у компании изменится уровень риска: появится долг, сменится директор, адрес признают недостоверным.</p>
+      <p class="sub" style="margin:0">Компании, которые вы проверяете перед каждой оплатой. Статус — в списке; обновить — «Проверить».</p>
       <ul class="list" id="watch"></ul>
       <p class="empty" id="watchEmpty" hidden>Пока никого. Добавьте ИНН ключевого поставщика или покупателя.</p>
       <form id="fWatch" class="field watchadd" novalidate>
@@ -341,7 +341,7 @@ ul.list .nm span{color:var(--muted);font-size:13px}
     if(!validInn(inn)){note($('wnote2'),'ИНН — 10 цифр у компании или 12 у ИП','err');return}
     var b=this.querySelector('button');b.disabled=true;
     call('/api/me/watchlist',{method:'POST',body:{inn:inn,note:$('wnote').value.trim()||null}}).then(function(){
-      $('winn').value='';$('wnote').value='';note($('wnote2'),'Добавили. Сообщим, если что-то изменится.','ok');return loadWatch()})
+      $('winn').value='';$('wnote').value='';note($('wnote2'),'Добавили. Статус компании — в списке; обновить — «Проверить».','ok');return loadWatch()})
       .catch(function(err){note($('wnote2'),err.message,'err')}).then(function(){b.disabled=false})};
 
   // проверка прямо из кабинета — на главную с ?inn=

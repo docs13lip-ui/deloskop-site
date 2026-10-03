@@ -57,6 +57,13 @@ ul.list .nm span{color:var(--muted);font-size:13px}
 .checkin{margin-top:20px}
 .free{margin:18px 0 0;padding:14px 16px;background:var(--bg);border-radius:14px;font-size:14px;color:var(--ink2)}
 .free a{white-space:nowrap}
+/* vhod-soglasie-v1: галочка рассылок (по умолчанию снята) и строка об оферте */
+.sogl{display:flex;gap:10px;align-items:flex-start;margin:10px 0 0;font-size:13px;line-height:1.45;color:var(--muted);cursor:pointer}
+.sogl input{width:18px;height:18px;flex:0 0 18px;margin:0;accent-color:var(--accent);cursor:pointer}
+.sogl a{white-space:nowrap}
+.oferta-vhod{margin:10px 0 0;font-size:12.5px;line-height:1.45;color:var(--muted)}
+#pisma .sogl{margin:12px 0}
+#pismaNote:empty{display:none}
 .retry{margin-left:8px}
 #nedWrap .ned{margin-top:8px;max-width:none}
 @media (max-width:560px){ul.list li{flex-wrap:wrap}.acts{width:100%;padding-left:0}}
@@ -158,10 +165,12 @@ ul.list .nm span{color:var(--muted);font-size:13px}
       <input id="email" type="email" inputmode="email" autocomplete="email" placeholder="Ваша почта" required maxlength="254">
       <button class="btn primary" type="submit">Получить код</button>
     </form>
+    <label class="sogl" id="soglVhod" hidden><input type="checkbox" id="rassylki"><span>Хочу получать письма Делоскопа о&nbsp;новых функциях, статьях и&nbsp;специальных предложениях. Согласие можно отозвать в&nbsp;любой момент ссылкой «Отписаться» в&nbsp;каждом письме. <a href="/rassylki/">Подробнее</a></span></label>
     <form id="fCode" class="field" novalidate hidden style="margin-top:10px">
       <input id="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="\d{6}" maxlength="6" placeholder="Код из письма">
       <button class="btn primary" type="submit">Войти</button>
     </form>
+    <p class="oferta-vhod">Входя, вы принимаете <a href="/oferta/">оферту</a>. Как мы обрабатываем данные&nbsp;— в&nbsp;<a href="/politika/">Политике</a>.</p>
     <p class="note" id="lnote" role="status" aria-live="polite"></p>
     <p class="free">Без входа работают 3 проверки в день, <a href="/skoraya-115-fz/">Скорая 115-ФЗ</a>, <a href="/#shield">Щит</a>, <a href="/nalichnye/">Наличные глазами банка</a> и <a href="/proverit-schet/">Проверь счёт</a>. Вход нужен, чтобы сохранить историю и следить за компаниями.</p>
   </section>
@@ -209,6 +218,12 @@ ul.list .nm span{color:var(--muted);font-size:13px}
       <ul class="list" id="checks"></ul>
       <p class="empty" id="checksEmpty" hidden>Проверок пока нет. <a href="/">Проверить первую компанию →</a></p>
     </section>
+
+    <section class="card" id="pisma" hidden>
+      <h2>Письма Делоскопа</h2>
+      <div id="pismaTelo"></div>
+      <p class="note" id="pismaNote" role="status" aria-live="polite"></p>
+    </section>
   </div>
 </main>
 
@@ -241,20 +256,58 @@ ul.list .nm span{color:var(--muted);font-size:13px}
   function note(el,text,cls){el.className='note'+(cls?' '+cls:'');el.textContent=text||''}
   function validInn(v){return /^\d{10}$|^\d{12}$/.test(v)}
 
+  // ---- согласие на письма (vhod-soglasie-v1): галочка видна, только если API её принимает ----
+  // текст — дословно с /rassylki/; API отдаёт ту же редакцию (GET /api/rassylki); вход работает при любом положении галочки
+  var SOGL_VERSIYA='2026-09-26';
+  function galochka(){var g=$('rassylki');return !!(g&&!$('soglVhod').hidden&&g.checked)}
+  function sGalochkoj(b){if(galochka())b.rassylki=true;return b}
+  function proverSoglasie(){
+    call('/api/rassylki').then(function(j){if(j&&j.versiya===SOGL_VERSIYA)$('soglVhod').hidden=false}).catch(function(){});
+  }
+  var SOGL_ITOG={ok:['Подписка подтверждена.','ok'],otpiska:['Вы отписались от писем Делоскопа.','ok'],
+    staraya:['Ссылка устарела или уже не действует. Включите подписку заново — пришлём новое письмо.','err']};
+  var soglItog=(function(){var m=/[?&]rassylki=(ok|otpiska|staraya)\b/.exec(location.search);
+    if(m){try{history.replaceState(null,'',location.pathname+location.hash)}catch(e){}}return m?SOGL_ITOG[m[1]]:null})();
+  function renderPisma(u){
+    var st=u.rassylki;
+    if(st!=='net'&&st!=='zhdet'&&st!=='da'){$('pisma').hidden=true;return}
+    $('pisma').hidden=false;
+    var t=$('pismaTelo');
+    if(st==='da'){
+      t.innerHTML='<p class="sub" style="margin:0 0 12px">Вы подписаны на письма Делоскопа.</p><button class="btn" type="button" data-pisma="off">Отписаться</button>';
+    }else if(st==='zhdet'){
+      t.innerHTML='<p class="sub" style="margin:0">Мы отправили письмо на '+esc(u.email||'вашу почту')+'. Нажмите в нём «Подтвердить подписку» — до этого писем не будет.</p>';
+    }else{
+      t.innerHTML='<label class="sogl"><input type="checkbox" id="rassylkiKab"><span>'+$('soglVhod').querySelector('span').innerHTML+'</span></label>'+
+        '<button class="btn" type="button" data-pisma="on" disabled>Подписаться</button>';
+      var g=$('rassylkiKab');g.onchange=function(){t.querySelector('[data-pisma]').disabled=!g.checked};
+    }
+    if(soglItog){note($('pismaNote'),soglItog[0],soglItog[1]);soglItog=null}
+  }
+  $('pismaTelo').addEventListener('click',function(e){var b=e.target.closest('[data-pisma]');if(!b)return;
+    var vkl=b.dataset.pisma==='on';b.disabled=true;
+    call('/api/rassylki',{method:'POST',body:{vkl:vkl}}).then(function(j){
+      if(vkl&&window.dlkGoal)dlkGoal('rassylki_soglasie');
+      note($('pismaNote'),vkl?'':'Вы отписались от писем Делоскопа.','ok');
+      var keep=$('pismaNote').textContent,cls=$('pismaNote').className;
+      return call('/api/me').then(function(m){if(m.user)renderPisma(m.user);$('pismaNote').textContent=keep;$('pismaNote').className=cls})
+    }).catch(function(err){b.disabled=false;note($('pismaNote'),err.message,'err')})});
+
   // ---- вход по коду ----
   var email='';
   $('fEmail').onsubmit=function(e){e.preventDefault();
     email=$('email').value.trim().toLowerCase();
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){note($('lnote'),'Проверьте адрес почты','err');return}
     var b=this.querySelector('button');b.disabled=true;note($('lnote'),'Отправляем код…');
-    call('/api/auth/email/start',{method:'POST',body:{email:email}}).then(function(){
+    call('/api/auth/email/start',{method:'POST',body:sGalochkoj({email:email})}).then(function(){
       $('fCode').hidden=false;$('code').focus();note($('lnote'),'Код отправлен на '+email+'. Письмо может идти до минуты — проверьте и «Спам».','ok');
     }).catch(function(err){note($('lnote'),err.message,'err')}).then(function(){b.disabled=false})};
   $('fCode').onsubmit=function(e){e.preventDefault();
     var code=$('code').value.replace(/\D/g,'');
     if(code.length!==6){note($('lnote'),'Код — 6 цифр из письма','err');return}
     var b=this.querySelector('button');b.disabled=true;
-    call('/api/auth/email/verify',{method:'POST',body:{email:email,code:code}}).then(function(){if(window.dlkGoal)dlkGoal('registration');return load();})
+    var sogl=galochka();
+    call('/api/auth/email/verify',{method:'POST',body:sGalochkoj({email:email,code:code})}).then(function(){if(window.dlkGoal){dlkGoal('registration');if(sogl)dlkGoal('rassylki_soglasie')}return load();})
       .catch(function(err){note($('lnote'),err.message,'err')}).then(function(){b.disabled=false})};
   $('code').addEventListener('input',function(){if(this.value.replace(/\D/g,'').length===6)$('fCode').requestSubmit()});
 
@@ -300,12 +353,13 @@ ul.list .nm span{color:var(--muted);font-size:13px}
     try{localStorage.removeItem('dlk_voshel')}catch(e){}$('login').hidden=false;$('cab').hidden=true;$('logout').hidden=true;
     $('goCheck').className='btn';
     $('nedWrap').hidden=!(window.Nedavnie&&Nedavnie.render($('ned')));
+    proverSoglasie();
   }
   function load(){
     $('loading').hidden=false;$('loading').textContent='Загружаем кабинет…';
     return call('/api/me').then(function(j){
       $('loading').hidden=true;
-      if(!j.user){showLogin();return}
+      if(!j.user){showLogin();if(soglItog){note($('lnote'),soglItog[1]==='ok'?soglItog[0]:'Ссылка устарела или уже не действует. Войдите и включите подписку в кабинете — пришлём новое письмо.',soglItog[1]);soglItog=null}return}
       var u=j.user;try{localStorage.setItem('dlk_voshel','1')}catch(e){}$('login').hidden=true;$('nedWrap').hidden=true;$('cab').hidden=false;$('logout').hidden=false;
       $('goCheck').className='btn primary';
       $('uname').textContent=u.name||'Личный кабинет';
@@ -313,6 +367,7 @@ ul.list .nm span{color:var(--muted);font-size:13px}
       $('adminLink').hidden=!(u.role==='admin'||u.role==='tester');
       $('uplan').textContent='Тариф: '+(PLANS[u.plan]||u.plan)+(u.plan_until?' · до '+fmtDate(u.plan_until):'');
       $('sLeft').textContent=u.plan==='free'?'—':(u.plan==='team'?'∞':u.full_reports_left);
+      renderPisma(u);
       return Promise.all([call('/api/me/checks').then(function(c){renderChecks(c.checks||[])}),loadWatch()]);
     }).catch(function(err){
       $('loading').hidden=false;$('loading').textContent='Не получилось загрузить кабинет: '+err.message+' ';

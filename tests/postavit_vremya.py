@@ -59,5 +59,15 @@ def main(argv):
     return 0
 
 
+def s_lentoj(argv):
+    """После проставления времени — лента в HTML /obnovleniya/ (tests/sobrat_lentu.py, seo-pered-volnoj-v1)."""
+    kod = main(argv)
+    if kod == 0 and "--check" not in argv:
+        sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+        import sobrat_lentu
+        sobrat_lentu.main([])
+    return kod
+
+
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(s_lentoj(sys.argv[1:]))

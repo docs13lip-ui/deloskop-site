@@ -156,7 +156,9 @@ def imya(short, full=""):
         out = []
         for i, w in enumerate(slova):
             bukv = len(re.sub(r"[^А-Яа-яЁёA-Za-z]", "", w))
-            if bukv <= 3 and w not in KOROTKIE_SLOVA:
+            # kartochki-v3.8: слово без гласных — аббревиатура при любой длине: «НЛМК», а не «Нлмк»
+            bez_glasnyh = bukv >= 2 and not re.search(r"[АЕЁИОУЫЭЮЯAEIOUY]", w)
+            if (bukv <= 3 and w not in KOROTKIE_SLOVA) or bez_glasnyh:
                 out.append(w)
             elif i == 0 or i in posle_kavychki or (i == 1 and slova[0] not in KOROTKIE_SLOVA and len(re.sub(r"[^А-Яа-яЁёA-Za-z]", "", slova[0])) <= 3):
                 out.append("-".join(p[:1] + p[1:].lower() for p in w.split("-")))
@@ -897,8 +899,12 @@ def html_kartochki(k, V, sosedi, kom=None):
         zag = "Доход за %d год — %s" % (posl["god"], dengi(posl["dohod"]))
         if len(fin) >= 2 and fin[-2]["dohod"] > 0:
             izm = (posl["dohod"] / fin[-2]["dohod"] - 1) * 100
-            zag = ("Доход вырос на %d%s%% за год" % (round(izm), NB)) if izm >= 5 else \
-                  ("Доход снизился на %d%s%% за год" % (round(-izm), NB)) if izm <= -5 else "Доход почти не изменился за год"
+            # kartochki-v3.8: отчётность старше 2 лет от даты проверки (РЖД, «Газпром нефть» — 2021) — год в заголовке,
+            # иначе «за год» читается как «за последний год»
+            pg = k.get("proverka")
+            za = (" за%s%d%sгод" % (NB, posl["god"], NB)) if (pg and pg.year - posl["god"] > 2) else " за год"
+            zag = ("Доход вырос на %d%s%%%s" % (round(izm), NB, za)) if izm >= 5 else \
+                  ("Доход снизился на %d%s%%%s" % (round(-izm), NB, za)) if izm <= -5 else "Доход почти не изменился" + za
         tab = "".join("<tr><td>%d</td><td class=\"num\">%s</td></tr>" % (x["god"], dengi(x["dohod"])) for x in reversed(fin))
         fin_blok = ('<section class="co-sec" aria-labelledby="fin"><h2 id="fin">%s</h2>%s<div class="table-wrap"><table class="table">'
                     '<thead><tr><th>Год</th><th>Доход</th></tr></thead><tbody>%s</tbody></table></div>%s</section>' % (

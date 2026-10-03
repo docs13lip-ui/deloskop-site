@@ -1071,20 +1071,64 @@ def html_kartochki(k, V, sosedi, kom=None, normy=None):
         sobrano=data_tekst(k.get("proverka")) if k.get("proverka") else "")
 
 
+# hab-v2 (03.10, [Ночные запуски]; аудит [Продукт] 03.10 разд. 2.4): группировка по разделам ОКВЭД, строка регионов
+# и «Как читать карточку». Тексты — только о том, что делает сама карточка (без норм права): правовых формулировок нет.
+HAB_NET_OTRASLI = "Отрасль не указана"
+HAB_CHITAT = [
+    ("Верх карточки", "Статус и возраст компании по ЕГРЮЛ, ИНН и ОГРН. Сверяйте именно ИНН со счётом и договором: "
+              "название может совпадать у разных компаний."),
+    ("Индекс", "Балл от 1 до 99 по открытой методике. Показываем его, когда собрано не меньше 60" + NB + "% сведений; "
+               "до тех пор — «считаем» и выводы по фактам. <a href=\"/indeks/\">Как считаем</a> · "
+               "<a href=\"/tochnost/\">как проверяем точность</a>."),
+    ("Коротко о компании", "Главные факты. Под каждым — источник, дата сведений и отметка «подтверждено источником»."),
+    ("Дата сведений — не дата страницы", "Бухгалтерская отчётность за год появляется в открытом доступе в следующем году; "
+               "если свежей нет, показываем последнюю и пишем её год. Долги по налогам — на дату набора ФНС."),
+    ("Комментарий команды", "Под строкой реестра — как такой признак видят банк и налоговая и что сделать. "
+               "Комментарий общий: это не оценка компании или сделки."),
+    ("«Не проверяли» ≠ «не нашли»", "Если источник не ответил, так и пишем. Отсутствие строки не значит, что всё чисто."),
+    ("Перед оплатой", "Карточка собрана на дату внизу страницы. Перед платежом сверьте счёт и проверьте компанию на сегодня — "
+               "<a href=\"/\">полный отчёт</a> соберём за минуту."),
+]
+
+
+def hab_otrasl(k):
+    return _razdel(k) or HAB_NET_OTRASLI
+
+
 def html_haba(kart, index):
-    po_reg = {}
+    po_otr, po_reg = {}, {}
     for k in kart:
-        po_reg.setdefault(k.get("region") or "Регион не указан", []).append(k)
+        po_otr.setdefault(hab_otrasl(k), []).append(k)
+        r = k.get("region") or ""
+        if r:
+            po_reg[r] = po_reg.get(r, 0) + 1
+    # порядок: больше карточек — выше; «Отрасль не указана» — всегда последней
+    otrasli = sorted(po_otr, key=lambda o: (o == HAB_NET_OTRASLI, -len(po_otr[o]), o))
     bloki = []
-    for reg in sorted(po_reg, key=lambda r: (-len(po_reg[r]), r)):
-        sp = sorted(po_reg[reg], key=lambda x: x["name"])
+    for o in otrasli:
+        sp = sorted(po_otr[o], key=lambda x: x["name"])
         bloki.append('<section class="co-sec"><h2>%s <span class="caption">%d</span></h2><ul class="co-sos co-sos--cols">%s</ul></section>' % (
-            e(reg), len(sp), "".join('<li><a href="%s">%s</a><span class="caption">%s</span></li>' % (
-                adres_str(x), e(x["name"]), e(x.get("gorod") or "")) for x in sp)))
+            e(o), len(sp), "".join('<li><a href="%s">%s</a><span class="caption">%s</span></li>' % (
+                adres_str(x), e(x["name"]), e(x.get("gorod") or x.get("region") or "")) for x in sp)))
+    regiony = ""
+    if po_reg:
+        regiony = '<p class="co-reg caption">Группы — по основному виду деятельности в ЕГРЮЛ (раздел ОКВЭД%s2). По регионам: %s.</p>' % (NB, " · ".join(
+            "%s%s—%s%d" % (e(r), NB, NB, n) for r, n in sorted(po_reg.items(), key=lambda x: (-x[1], x[0]))))
+    chitat = ('<section class="co-sec co-chit" id="kak-chitat"><h2>Как читать карточку</h2><ol class="co-chit__sp">%s</ol>'
+              '<p class="caption">Сведения — из открытых государственных реестров на указанные даты; выводы — наш расчёт по этим '
+              'сведениям, а не решение банка или налоговой. Средняя налоговая нагрузка по отраслям — '
+              '<a href="/nalogi/nagruzka-po-otraslyam-2025/#nagruzka">таблица ФНС</a>. Нашли ошибку — '
+              '<a href="mailto:help@deloskop.ru">help@deloskop.ru</a>.</p></section>') % "".join(
+        "<li><b>%s.</b> %s</li>" % (e(z), tekst) for z, tekst in HAB_CHITAT)
+    n_otr = len([o for o in po_otr if o != HAB_NET_OTRASLI])
     t = "Компании в Делоскопе: проверка по ИНН — Делоскоп"
-    d = "%d %s с выводами по открытым реестрам: доходы, штат, налоги и долги — у каждой цифры источник и дата сведений." % (
-        len(kart), plural(len(kart), "компания", "компании", "компаний"))
+    d = "%d %s%s с выводами по открытым реестрам: доходы, штат, налоги и долги — у каждой цифры источник и дата сведений." % (
+        len(kart), plural(len(kart), "компания", "компании", "компаний"),
+        (" из %d %s" % (n_otr, plural(n_otr, "отрасли", "отраслей", "отраслей"))) if n_otr > 1 else "")
     robots = "" if index else '<meta name="robots" content="noindex, follow">\n'
+    ld = {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+        {"@type": "ListItem", "position": 1, "name": "Делоскоп", "item": SAJT + "/"},
+        {"@type": "ListItem", "position": 2, "name": "Компании", "item": "%s/%s/" % (SAJT, PAPKA)}]}
     return """<!doctype html>
 <html lang="ru">
 <head>
@@ -1098,17 +1142,20 @@ def html_haba(kart, index):
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/css/ds.css">
 <link rel="stylesheet" href="/css/co.css">
+<script type="application/ld+json">{ld}</script>
 </head>
 <body class="co">
 <!--shapka--><!--/shapka-->
 <main id="main" class="wrap co-wrap">
 <nav class="co-krosh caption" aria-label="Навигация"><a href="/">Делоскоп</a> › Компании</nav>
-<header class="co-head"><h1>Компании</h1><p class="lead">Карточки компаний с выводами по открытым госреестрам. Каждая цифра — с источником и датой сведений. Нет нужной компании — проверьте её по ИНН на <a href="/">главной</a>: отчёт соберём за минуту.</p></header>
+<header class="co-head"><h1>Компании</h1><p class="lead">Карточки компаний с выводами по открытым госреестрам. Каждая цифра — с источником и датой сведений. Нет нужной компании — проверьте её по ИНН на <a href="/">главной</a>: отчёт соберём за минуту. <a href="#kak-chitat">Как читать карточку ›</a></p>{regiony}</header>
 {bloki}
+{chitat}
 </main>
 </body>
 </html>
-""".format(t=e(t), robots=robots, d=e(d), sajt=SAJT, papka=PAPKA, bloki="".join(bloki))
+""".format(t=e(t), robots=robots, d=e(d), sajt=SAJT, papka=PAPKA, bloki="".join(bloki), regiony=regiony, chitat=chitat,
+           ld=json.dumps(ld, ensure_ascii=False, separators=(",", ":")))
 
 
 # ---------------------------------------------------------------- «Комментарий команды Делоскопа» (kommentarii-kartochki-v1)

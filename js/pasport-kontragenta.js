@@ -339,10 +339,25 @@
     // 13. Индекс — только за воротами полноты (п. 71)
     var V = IV ? IV.vid(r) : { rezhim: 'schitaem', polnota: null, porog: 60 };
     var ix = map.indeks;
+    // indeks-v-otchete-v1: сервер числа не дал — считаем в браузере по открытой методике v1.0 (js/indeks-otvet.js), те же ворота
+    var IO = opts.indeksOtvet || (root && root.IndeksOtvet) || null, B = null;
+    if (V.rezhim === 'schitaem' && IO && IO.gotov && IO.gotov()) {
+      try { B = IO.vid(r); } catch (e) { B = null; }
+      if (B && B.rezhim === 'chislo') V = { rezhim: 'chislo', ball: B.ball, polnota: B.polnota, zona: B.uroven, ton: B.ton === 'ok' ? 'ok' : B.ton === 'bad' ? 'bad' : 'warn' };
+    }
     if (V.rezhim === 'chislo') {
       fakt('indeks', 'Балл', V.ball + ' из 99 — ' + V.zona, { ton: V.ton || 'info', istochnik: 'методика Индекса' });
       fakt('indeks', 'Собрано данных', V.polnota + '%', { ton: 'info', istochnik: 'методика Индекса' });
+      if (B && B.rezhim === 'chislo') {
+        fakt('indeks', 'Как считали', IO.podpis(B).replace(/ · полнота .*$/, '') + ': база ' + B.baza +
+          B.vklady.map(function (x) { return ', ' + x.tekst.toLowerCase() + ' ' + (x.vklad > 0 ? '+' : '−') + Math.abs(x.vklad); }).join('') +
+          (B.potolok ? '; потолок ' + B.potolok.znachenie : '') + '.', { ton: 'info', istochnik: 'deloskop.ru/indeks/' });
+        fakt('indeks', 'Не учитывали', IO.strokaNe(B).replace(/^Не учитывали в этот раз: /, ''), { ton: 'info', istochnik: 'методика Индекса' });
+      }
       meta.indeks = { ball: V.ball, sobrano: V.polnota };
+    } else if (B && (B.rezhim === 'neizv' || B.rezhim === 'sokr')) {
+      ix.prichina = B.rezhim === 'neizv' ? IO.TXT_NEIZV : IO.txtSokr(B) + '.';
+      meta.indeks = { ball: null, sobrano: B.polnota != null ? B.polnota : null };
     } else {
       ix.prichina = 'Индекс — считаем: ' + (V.polnota != null ? 'собрано ' + V.polnota + '% данных, для балла нужно ' + (V.porog || 60) + '%.' : 'для балла нужно собрать не меньше ' + (V.porog || 60) + '% данных.') + ' Пока смотрите факты по разделам.';
       meta.indeks = { ball: null, sobrano: V.polnota != null ? V.polnota : null };

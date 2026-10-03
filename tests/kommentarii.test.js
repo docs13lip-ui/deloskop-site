@@ -182,11 +182,16 @@ test("v2+v4+v5: 28 тонов утверждены (22 + 5 зелёных [Пр�
   let n = 0;
   for (const x of SPRAV.signaly) for (const t of Object.values(x.tony || {})) if (t.status === "utverzhdeno") {
     n++;
+    assert.ok(!/\u00a0/.test(t.bank + t.nalog + t.sdelat));
+    if (x.id === "kapital" || x.id === "likvidnost") { // kom-kapital-v1: [Право · Юрист 115-ФЗ] 03.10 07:07, разд. 5
+      assert.strictEqual(t.proveril, "Право · Юрист 115-ФЗ");
+      assert.strictEqual(t.data_proverki, "2026-10-03");
+      continue;
+    }
     assert.strictEqual(t.proveril, "Право · Юрист 115-ФЗ и Налоговый юрист");
     assert.strictEqual(t.data_proverki, "2026-10-02");
-    assert.ok(!/\u00a0/.test(t.bank + t.nalog + t.sdelat));
   }
-  assert.strictEqual(n, 28);
+  assert.strictEqual(n, 30);
 });
 
 test("v5: uslovie у тона — «Внимание» у дисквалификации только при совпадении по ФИО без ИНН ([Право] 21:25)", () => {
@@ -292,6 +297,7 @@ test("экран проверки: dlyaSut — комментарии к сущ�
     const fakt = f.spisok.find((x) => x.k === v.k);
     assert.ok(fakt, "комментарий только к показанному факту: " + v.k);
     assert.ok(["ok", "warn", "bad"].includes(fakt.ton));
+    if (v.k === "kapital" || v.k === "likvidnost") continue; // свои факты экрана — без строки светофора (kom-kapital-v1)
     assert.strictEqual(K.TON[r.signals.find((s, j) => (s.id || "sig" + j) === v.k).status], v.kom.ton);
   }
   assert.deepStrictEqual(K.dlyaSut(f.spisok, r.signals, null), []);
@@ -441,4 +447,30 @@ test("v4: комментарий проходит через общую обёр
   const src = require("fs").readFileSync(require("path").join(__dirname, "..", "js", "kommentarii.js"), "utf8");
   assert.strictEqual((src.match(/nerazryv\((nov|el)\);/g) || []).length, 3, "вызов после каждой из трёх вставок");
   assert.ok(src.includes("w.dlkNerazryv.obernut(uzel)"));
+});
+
+test("kom-kapital-v1: минус капитала и ликвидность ниже 1 на экране — комментарий [Право] 03.10; без минуса — нет", () => {
+  const NB = "\u00a0";
+  const spisok = [
+    { k: "kapital", nazv: "Собственный капитал на" + NB + "31.12.2025", ton: "warn", znach: "Минус 12 млн ₽: обязательства больше активов" },
+    { k: "likvidnost", nazv: "Текущая ликвидность", ton: "warn", znach: "0,74: краткосрочные долги больше оборотных средств" },
+  ];
+  const sp = K.dlyaSut(spisok, [], SPRAV);
+  assert.deepStrictEqual(sp.map((v) => v.k + ":" + v.kom.id + ":" + v.kom.ton), ["kapital:kapital:zhel", "likvidnost:likvidnost:zhel"]);
+  assert.ok(sp[0].kom.bank.startsWith("Минус капитала — не признак по 115-ФЗ"));
+  assert.ok(sp[1].kom.sdelat.endsWith("здесь данные на 31 декабря."));
+  for (const v of sp) {
+    assert.strictEqual(v.kom.norma, "", "норма — внутри текста [Право], отдельной подписи нет");
+    assert.ok(K.dlina(v.kom) <= 300);
+    assert.ok(!ZAPRET.test(v.kom.bank + v.kom.nalog + v.kom.sdelat));
+  }
+  assert.strictEqual(K.dlyaSut([{ k: "kapital", nazv: "Собственный капитал на 31.12.2025", ton: "ok", znach: "1 млн ₽" }], [], SPRAV).length, 0);
+  // строка светофора с похожим словом не цепляет эти записи
+  assert.notStrictEqual((K.zapis(SPRAV, { title: "Ликвидация", status: "bad" }) || {}).id, "likvidnost");
+});
+
+test("kom-kapital-v1: настоящий экран (sushchestvennoe) — названия фактов совпадают с записями библиотеки", () => {
+  const src = fs.readFileSync(path.join(KOREN, "js/sushchestvennoe.js"), "utf8");
+  assert.ok(/k: 'kapital', nazv: 'Собственный капитал на'/.test(src));
+  assert.ok(/k: 'likvidnost', nazv: 'Текущая ликвидность'/.test(src));
 });

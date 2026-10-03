@@ -189,11 +189,21 @@
   // Чистая функция: [{ k, kom }] — только для фактов из строк светофора, у которых тон на экране совпадает со статусом строки
   // (налоги «не проверяли — набор старше 3 месяцев» — нейтральные, зелёный текст к ним не подходит).
   var TON_EKRANA = { ok: "ok", info: "ok", warn: "warn", bad: "bad" };
+  // kom-kapital-v1 ([Ночные-2] 03.10): факты, которые экран считает сам из ГИР БО (js/sushchestvennoe.js) — у них нет строки
+  // светофора; комментарий ищем по названию факта (записи kapital, likvidnost — тексты [Право · Юрист 115-ФЗ] 03.10 07:07).
+  // Только «Внимание»: экран выносит их, лишь когда капитал меньше нуля / ликвидность меньше 1.
+  var SVOI_FAKTY = { kapital: 1, likvidnost: 1 };
   function dlyaSut(spisok, signals, sprav) {
     if (!sprav) return [];
     var out = [];
     (spisok || []).forEach(function (f) {
       if (!f || !f.k) return;
+      if (SVOI_FAKTY[f.k]) {
+        if (f.ton !== "warn") return;
+        var ks = najti(sprav, { title: String(f.nazv || ""), status: "warn", detail: String(f.znach || "") });
+        if (ks) out.push({ k: f.k, kom: ks });
+        return;
+      }
       for (var j = 0; j < (signals || []).length; j++) {
         var s = signals[j];
         if (!s || !s.title || (s.id || "sig" + j) !== f.k) continue;

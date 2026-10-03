@@ -2,7 +2,7 @@
  * (решение владельца 02.10, эталон экрана — п. 5 «Динамика и тренды»).
  * Данные — только из ответа /api/check: dossier.charts (ГИР БО ФНС, годовая бухотчётность), signals, company, zsk.
  * Снимки для «что изменилось» хранятся ТОЛЬКО в браузере (localStorage, ключ dlk_snimki): без ФИО, адресов и сумм,
- * кроме выручки, прибыли, собственного капитала и текущей ликвидности из открытой отчётности (ГИР БО). Нет доступа к хранилищу — блока «что изменилось» нет.
+ * кроме выручки, прибыли, собственного капитала, текущей ликвидности и оценки рентабельности активов из открытой отчётности (ГИР БО). Нет доступа к хранилищу — блока «что изменилось» нет.
  * Чистые функции (ryady, trendy, snimok, sravnit, html) — без DOM и сети, их проверяет tests/dinamika.test.js. */
 (function (root, factory) {
   var api = factory();
@@ -217,8 +217,20 @@
       // текущая ликвидность (строка раздела досье dynamics, ГИР БО) — для «опустилась ниже 1 / снова 1 и выше»
       var lk = likvidnost(r);
       if (lk) s.lk = lk;
+      // оценка рентабельности активов (js/rentabelnost.js, без норм) — для «стала ниже средней по отрасли / больше не ниже»
+      var R = rent(), ro = R && R.ocenka ? R.ocenka(r) : null;
+      if (ro && isFinite(ro.n)) s.rn = [ro.god, Math.round(ro.n * 10) / 10];
     }
     return s;
+  }
+
+  // Модуль рентабельности ищем в момент вызова: на странице он может загрузиться позже (defer), в node — require
+  function rent() {
+    try {
+      if (typeof self !== 'undefined' && self.Rentabelnost) return self.Rentabelnost;
+      if (typeof module === 'object' && module.exports && typeof require === 'function') return require('./rentabelnost.js');
+    } catch (e) {}
+    return null;
   }
 
   // Текущая ликвидность: строка «Текущая ликвидность» раздела досье «Финансовая динамика» (тот же разбор, что в
@@ -245,7 +257,8 @@
   function dmy(iso) { var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ''); return m ? m[3] + '.' + m[2] + '.' + m[1] : ''; }
 
   // Список изменений между двумя снимками одной компании: [{ton:'huzhe'|'luchshe'|'info', t:'…'}], хуже — первыми.
-  function sravnit(a, b) {
+  // dop(a, b) → {ton, t} | null — строка, которой нужны внешние данные (нормы ФНС для рентабельности, js/rentabelnost.js).
+  function sravnit(a, b, dop) {
     if (!a || !b || a.inn !== b.inn) return [];
     var out = [];
     function add(ton, t) { out.push({ ton: ton, t: t }); }
@@ -286,6 +299,7 @@
       : a.prib[1] >= 0 && b.prib[1] < 0 ? 'huzhe' : a.prib[1] < 0 && b.prib[1] > 0 ? 'luchshe' : 'info';
     if (b.vyr && (!a.vyr || b.vyr[0] > a.vyr[0])) add(tonOtch, 'Появилась отчётность за ' + b.vyr[0] + ': выручка ' + dengi(b.vyr[1]) +
       (b.prib && b.prib[0] === b.vyr[0] ? ', ' + (b.prib[1] < 0 ? 'убыток ' + dengi(-b.prib[1]) : 'прибыль ' + dengi(b.prib[1])) : ''));
+    if (typeof dop === 'function') { try { var dx = dop(a, b); if (dx && dx.t) add(dx.ton, dx.t); } catch (e) {} }
     var poryadok = { huzhe: 0, info: 1, luchshe: 2 };
     return out.sort(function (p, q) { return poryadok[p.ton] - poryadok[q.ton]; }).slice(0, 7);
   }
@@ -361,6 +375,35 @@
   }
 
   var poslednij = null; // последний результат zapomnit() на этой странице: {inn, t, rez}
+  var pokazan = null;   // что сейчас в блоке «что изменилось»: {kl: 'ИНН:t', rez, b}
+  var dopolnenie = null; // {kl, fn} — строка с внешними данными (рентабельность против нормы), пришла позже отрисовки
+
+  // Пересобирает показанный блок с дополнительной строкой; повторно ту же строку не добавляет.
+  function sDop(rez, b, fn) {
+    if (!rez || !rez.s || !Array.isArray(rez.izm) || typeof fn !== 'function') return null;
+    var x = null;
+    try { x = fn(rez.s, b); } catch (e) { x = null; }
+    if (!x || !x.t || rez.izm.some(function (q) { return q.t === x.t; })) return null;
+    var poryadok = { huzhe: 0, info: 1, luchshe: 2 }, izm = rez.izm.concat([{ ton: x.ton, t: x.t }]);
+    izm.sort(function (p, q) { return poryadok[p.ton] - poryadok[q.ton]; });
+    var nov = {}; Object.keys(rez).forEach(function (k) { nov[k] = rez[k]; });
+    nov.izm = izm.slice(0, 7);
+    return nov;
+  }
+  // Браузер: модуль с внешними данными (js/rentabelnost.js) отдаёт функцию сравнения двух снимков после загрузки норм.
+  // Блок «что изменилось» этой же проверки — пересобираем со строкой; кабинет (dogruzit) применит её сам, если ответит позже.
+  function dobavit(report, r, fn) {
+    var b = snimok(r);
+    if (!report || !b || typeof fn !== 'function') return null;
+    var kl = b.inn + ':' + b.t;
+    dopolnenie = { kl: kl, fn: fn };
+    if (!pokazan || pokazan.kl !== kl) return null;
+    var nov = sDop(pokazan.rez, b, fn);
+    if (!nov) return null;
+    pokazan.rez = nov;
+    try { vstavit(report, htmlIzmeneniya(nov)); } catch (e) { return null; }
+    return nov;
+  }
 
   // Браузер: после отрисовки отчёта. Только для вошедших (dlk_voshel = 1); любые ошибки — молча, остаётся блок браузера.
   // opt: { api, fetch, voshel } — для тестов. Возвращает Promise<rez|null>.
@@ -383,8 +426,9 @@
       return json('/api/report/' + encodeURIComponent(srv.id)).then(function (pr) {
         var a = snimok(pr);
         if (!a || a.inn !== b.inn || !(a.t <= b.t - CHAS) || report.getAttribute('data-izm-k') !== kl) return null;
-        var rez = { s: a, izm: sravnit(a, b), id: srv.id };
+        var rez = { s: a, izm: sravnit(a, b, dopolnenie && dopolnenie.kl === kl ? dopolnenie.fn : null), id: srv.id };
         vstavit(report, htmlIzmeneniya(rez));
+        pokazan = { kl: kl, rez: rez, b: b };
         try { if (typeof window !== 'undefined' && window.dlkGoal) window.dlkGoal('izm_kabinet'); } catch (e) {}
         return rez;
       });
@@ -443,6 +487,7 @@
     try {
       var rez = zapomnit(r, ls), b = snimok(r);
       poslednij = b ? { inn: b.inn, t: b.t, rez: rez } : null;
+      pokazan = b ? { kl: b.inn + ':' + b.t, rez: rez, b: b } : null;
       izm = htmlIzmeneniya(rez);
     } catch (e) { izm = ''; }
     var din = '';
@@ -452,5 +497,5 @@
 
   return { ryad: ryad, ryady: ryady, stroka: stroka, izmenenie: izmenenie, trendy: trendy, dengi: dengi, htmlDinamika: htmlDinamika,
     snimok: snimok, sravnit: sravnit, likvidnost: likvidnost, zapomnit: zapomnit, htmlIzmeneniya: htmlIzmeneniya, html: html, KEY: KEY, CSS: CSS,
-    predydushchaya: predydushchaya, nuzhenKabinet: nuzhenKabinet, dogruzit: dogruzit };
+    predydushchaya: predydushchaya, nuzhenKabinet: nuzhenKabinet, dogruzit: dogruzit, dobavit: dobavit, sDop: sDop };
 });

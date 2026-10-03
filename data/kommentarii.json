@@ -1181,6 +1181,74 @@
      "data_proverki": "2026-10-02"
     }
    }
+  },
+  {
+   "id": "kapital",
+   "poryadok": 40,
+   "nazv": "Собственный капитал меньше нуля (баланс, строка 1300)",
+   "re": "^собственный капитал",
+   "norma": "приказ ФНС от 30.05.2007 № ММ-3-06/333@",
+   "tony": {
+    "zel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "zhel": {
+     "bank": "Минус капитала — не признак по 115-ФЗ, но для кредита и отсрочки банк о нём спросит.",
+     "nalog": "Критерий отбора на проверку — убытки несколько лет подряд (приказ ФНС № ММ-3-06/333@), а не сам минус.",
+     "sdelat": "Большой аванс — только с обеспечением; спросите, чем компания покрывает долги.",
+     "status": "utverzhdeno",
+     "proveril": "Право · Юрист 115-ФЗ",
+     "data_proverki": "2026-10-03",
+     "norma": ""
+    },
+    "kras": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   }
+  },
+  {
+   "id": "likvidnost",
+   "poryadok": 41,
+   "nazv": "Текущая ликвидность меньше 1 (баланс)",
+   "re": "^текущая ликвидност",
+   "norma": "приказ ФНС от 30.05.2007 № ММ-3-06/333@",
+   "tony": {
+    "zel": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    },
+    "zhel": {
+     "bank": "Ликвидность ниже 1 — не признак по 115-ФЗ, но для кредита и лимитов банк на неё смотрит.",
+     "nalog": "Среди критериев отбора на проверку (приказ ФНС № ММ-3-06/333@) её нет.",
+     "sdelat": "Перед крупным авансом попросите свежую отчётность или обеспечение: здесь данные на 31 декабря.",
+     "status": "utverzhdeno",
+     "proveril": "Право · Юрист 115-ФЗ",
+     "data_proverki": "2026-10-03",
+     "norma": ""
+    },
+    "kras": {
+     "bank": null,
+     "nalog": null,
+     "sdelat": null,
+     "status": "zhdet_prava",
+     "proveril": null,
+     "data_proverki": null
+    }
+   }
   }
  ],
  "vypiska": {

@@ -134,6 +134,13 @@ def imya(short, full=""):
     s = re.sub(r"\s+", " ", str(short or full or "").strip())
     if not s:
         return ""
+    # kartochki-v3.7: хвост после закрывающей кавычки — 'ПАО "ТАТНЕФТЬ" ИМ. В.Д. ШАШИНА' →
+    # 'ПАО «Татнефть» им. В.Д. Шашина' (было «Татнефть ИМ. В.Д. шашина» — хвост уходил внутрь кавычек).
+    kav = re.findall(r'["«»“”„]', s)
+    if len(kav) == 2 and not re.search(r'["«»“”„]$', s):
+        hv = re.match(r'^(.*["«»“”„])\s+([^"«»“”„]+)$', s)
+        if hv and hv.group(2) == hv.group(2).upper():
+            return imya(hv.group(1)) + " " + _hvost(hv.group(2))
     m = re.match(r'^([^"«»“”„]*?)\s*["«»“”„](.*)$', s)
     if not m:
         return s
@@ -157,6 +164,19 @@ def imya(short, full=""):
                 out.append(w.lower())
         vnutri = " ".join(out)
     return (opf + " " if opf else "") + "«" + vnutri + "»"
+
+
+def _hvost(h):
+    """Хвост названия вне кавычек: «ИМ.»/«ИМЕНИ» — строчными, инициалы как есть, фамилия — с прописной."""
+    out = []
+    for w in h.split(" "):
+        if w in ("ИМ.", "ИМЕНИ"):
+            out.append(w.lower())
+        elif re.fullmatch(r"(?:[А-ЯЁA-Z]\.)+", w):
+            out.append(w)
+        else:
+            out.append("-".join(p[:1] + p[1:].lower() for p in w.split("-")))
+    return " ".join(out)
 
 
 TRANSLIT = dict(zip("абвгдеёжзийклмнопрстуфхцчшщъыьэюя",
@@ -559,8 +579,12 @@ def vyvody(k):
     if sh and sh.get("data") and sh.get("ton") in ("warn", "bad") and sh.get("znachenie"):
         # shtrafy-v1 (03.10, по сверке [Ночных запусков] 00:05, приказ ФНС ММВ-7-14/729@ п. 4): в наборе — только штрафы,
         # НЕ уплаченные к 1 октября; уплачен ли он позже — набор не знает. Не «Не уплачен …» в настоящем времени (ст. 152 ГК).
-        out.append(_v("V15", "warn", "Налоговый штраф не был уплачен в срок — %s (данные ФНС на%s%s). Мог быть уплачен после этой даты" % (
-            dengi(sh["znachenie"]), NB, data_tekst(sh["data"])), sh["istochnik"], sh["data"]))
+        # kartochki-v3.7: текст V15 — [Право · Налоговый юрист] 03.10 07:07 (разд. 3) дословно; год — от даты набора:
+        # набор на 01.12.Y → штрафы по решениям Y−1, не уплаченные к 01.10.Y (п. 4 и п. 10 «ж» прил. к 729@ в ред. 1006@).
+        d = sh["data"]
+        y = d.year if d.month >= 10 else d.year - 1
+        out.append(_v("V15", "warn", "Налоговые штрафы по решениям %d года не были уплачены к%s01.10.%d — %s (данные ФНС на%s%s). Могли быть уплачены после этой даты" % (
+            y - 1, NB, y, dengi(sh["znachenie"]), NB, data_korotko(d)), sh["istochnik"], d))
     nd = F.get("nedostovernost")
     if nd and nd.get("ton") == "ok" and k.get("egrul_data"):
         out.append(_v("V16", "ok", "Адрес и руководитель в реестре — без отметок о недостоверности", nd["istochnik"] or "ЕГРЮЛ", nd.get("data") or k["egrul_data"], s_chislom=False))

@@ -614,6 +614,8 @@ td b{font-weight:600}
   var summa=U?U.parseAmount(q.get('summa')):null;
   if(demo){
     var r=JSON.parse(JSON.stringify(PasportEngine.DEMO)); r.checked_at=new Date().toISOString();
+    // Образец раздела 6 (pasport-balans-v1): вымышленные суммы баланса и расчётов — показать, как выглядят строки на 31.12.
+    r.dossier={charts:{revenue:[{year:2023,value:48200000},{year:2024,value:56100000},{year:2025,value:61400000}],balance:{year:2025,equity:18600000,long_debt:4000000,short_debt:12900000},debts:{year:2025,receivables:9800000,payables:7400000,loans:5200000}}};
     document.getElementById('nazad').href='/pasport/';
     render(r,{usloviya:U,indeksVorota:window.IndeksVorota,nomer:'ОБРАЗЕЦ',summa:summa});return;
   }

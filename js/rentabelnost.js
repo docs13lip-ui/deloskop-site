@@ -66,10 +66,10 @@
       ? 'Информация ФНС от 07.05.2025' : 'Информация ФНС от 05.05.2026';
   }
 
-  /* Возвращает null (блока нет) или { st, god, n, norma, stroka, pribyl, nalog, aktivy, sNalogom }.
-   * st: 'nizhe' | 'chut-nizhe' | 'ne-nizhe' | 'otr' | 'net-normy'. */
-  function raschet(r, dannye) {
-    if (!r || !r.company || !dannye) return null;
+  // Оценка без норм: только организации (не банки и не страховщики), баланс и прибыль того же года, активы ≥ 1 млн ₽.
+  // → null | { god, n, pribyl, nalog, rez, aktivy, sNalogom }. Её же хранит снимок «Что изменилось» (js/dinamika.js).
+  function ocenka(r) {
+    if (!r || !r.company) return null;
     var c = r.company, inn = String(c.inn || ''), okved = String(c.okved || '');
     if (!/^\d{10}$/.test(inn)) return null;
     if (/^64\.1(\.|\d|$)/.test(okved) || /^65(\.|$)/.test(okved)) return null;
@@ -85,21 +85,45 @@
     if (!isFinite(pribyl)) return null;
     var nalog = zaGod(ch.income_tax, god), sNalogom = isFinite(nalog) && nalog >= 0;
     var rez = sNalogom ? pribyl + nalog : pribyl;
-    var o = { st: '', god: god, n: rez / aktivy * 100, norma: null, stroka: null, pribyl: pribyl, nalog: sNalogom ? nalog : null,
-      rez: rez, aktivy: aktivy, sNalogom: sNalogom, istochnik: istochnikNormy(god, dannye) };
-    var rs = dannye.rentabelnost || {};
+    return { god: god, n: rez / aktivy * 100, pribyl: pribyl, nalog: sNalogom ? nalog : null, rez: rez, aktivy: aktivy, sNalogom: sNalogom };
+  }
+
+  // Сравнение оценки n (%) за год god с нормой ФНС для ОКВЭД. → { st, stroka, norma } | null (норм за этот год нет).
+  // st: 'nizhe' | 'chut-nizhe' | 'ne-nizhe' | 'otr' | 'net-normy'.
+  function sravnenie(n, god, okved, dannye) {
+    var rs = (dannye && dannye.rentabelnost) || {};
     if (god !== rs.god && god !== 2024) return null; // норм ФНС за этот год в справочнике нет — не сравниваем с чужим годом
-    var s = okved && N ? N.najti(okved, rs.stroki) : null;
+    var s = okved && N ? N.najti(String(okved), rs.stroki) : null;
     var nr = norma(s, god, dannye);
-    if (!s || (nr !== 'отр' && typeof nr !== 'number')) { o.st = 'net-normy'; return o; }
-    o.stroka = s;
-    if (nr === 'отр') { o.st = 'otr'; return o; }
-    o.norma = nr;
-    var n1 = Math.round(o.n * 10) / 10;
-    if (nr > 0 && n1 <= nr * 0.9) o.st = 'nizhe';
-    else if (n1 < nr) o.st = 'chut-nizhe';
-    else o.st = 'ne-nizhe';
+    if (!s || (nr !== 'отр' && typeof nr !== 'number')) return { st: 'net-normy', stroka: null, norma: null };
+    if (nr === 'отр') return { st: 'otr', stroka: s, norma: null };
+    var n1 = Math.round(n * 10) / 10;
+    return { st: nr > 0 && n1 <= nr * 0.9 ? 'nizhe' : n1 < nr ? 'chut-nizhe' : 'ne-nizhe', stroka: s, norma: nr };
+  }
+
+  /* Возвращает null (блока нет) или { st, god, n, norma, stroka, pribyl, nalog, aktivy, sNalogom }.
+   * st: 'nizhe' | 'chut-nizhe' | 'ne-nizhe' | 'otr' | 'net-normy'. */
+  function raschet(r, dannye) {
+    if (!dannye) return null;
+    var o = ocenka(r);
+    if (!o) return null;
+    var sr = sravnenie(o.n, o.god, String(r.company.okved || ''), dannye);
+    if (!sr) return null;
+    o.st = sr.st; o.stroka = sr.stroka; o.norma = sr.norma; o.istochnik = istochnikNormy(o.god, dannye);
     return o;
+  }
+
+  /* «Что изменилось с вашей проверки» (rentabelnost-izm-v1): a, b — снимки js/dinamika.js с полем rn = [год, оценка %].
+   * Только новая отчётность (год b больше года a) и только переход через «ниже средней на 10% и более» —
+   * обе оценки сравниваем с нормой ФНС своего года для ТЕКУЩЕГО ОКВЭД. → { ton, t } | null. */
+  function izmenenie(a, b, okved, dannye) {
+    if (!a || !b || !Array.isArray(a.rn) || !Array.isArray(b.rn) || !(b.rn[0] > a.rn[0])) return null;
+    var x = sravnenie(a.rn[1], a.rn[0], okved, dannye), y = sravnenie(b.rn[1], b.rn[0], okved, dannye);
+    if (!x || !y || typeof x.norma !== 'number' || typeof y.norma !== 'number') return null;
+    var hvost = ': за' + NB + b.rn[0] + ' — ' + pct(b.rn[1]) + ' при средней ' + pct(y.norma) + ' (оценка; ГИР' + NB + 'БО и ФНС)';
+    if (x.st !== 'nizhe' && y.st === 'nizhe') return { ton: 'huzhe', t: 'Рентабельность активов стала ниже средней по отрасли на 10% и более' + hvost };
+    if (x.st === 'nizhe' && y.st !== 'nizhe') return { ton: 'luchshe', t: 'Рентабельность активов больше не ниже средней по отрасли на 10% и более' + hvost };
+    return null;
   }
 
   var VYVOD = {
@@ -200,12 +224,17 @@
       if (!o) return null;
       try { stil(report.ownerDocument); } catch (e) {}
       vstavit(report, html(o, opts), opts);
+      // «Что изменилось»: строка о переходе через норму — в блок Динамики, если он на странице (js/dinamika.js)
+      try {
+        var Dn = typeof self !== 'undefined' ? self.Dinamika : null, okv = String(c.okved || '');
+        if (Dn && Dn.dobavit) Dn.dobavit(report, r, function (a, b) { return izmenenie(a, b, okv, d); });
+      } catch (e) {}
       return o;
     });
   }
 
   var PRIMECHANIE_PASPORT = 'Рассчитано Делоскопом по бухотчётности этого раздела и нормам ФНС; в отпечаток SHA-256 не входит.';
 
-  return { raschet: raschet, html: html, mount: mount, vstavit: vstavit, zagruzit: zagruzit, norma: norma, pct: pct, CSS: CSS, VYVOD: VYVOD, PRIZNAK: PRIZNAK,
+  return { raschet: raschet, ocenka: ocenka, sravnenie: sravnenie, izmenenie: izmenenie, html: html, mount: mount, vstavit: vstavit, zagruzit: zagruzit, norma: norma, pct: pct, CSS: CSS, VYVOD: VYVOD, PRIZNAK: PRIZNAK,
     PRIMECHANIE_PASPORT: PRIMECHANIE_PASPORT };
 });

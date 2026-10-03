@@ -163,12 +163,8 @@ const NA_ZHIVOM = [
   [["ФНС готовит исключение из ЕГРЮЛ — ликвидация невозможна", "", "bad"], ["isklyuchenie", "kras"]],
   [["ФНС готовит исключение из ЕГРЮЛ — из-за недостоверных сведений", "", "bad"], ["isklyuchenie", "kras"]],
   [["Статус", "ФНС готовит исключение из ЕГРЮЛ — из-за недостоверных сведений", "bad"], ["isklyuchenie", "kras"]],
-  // kommentarii-isklyucheno-v1 ([Ночные запуски] 03.10 13:40, status-kody-api-v1): 407/414/415/418/420 — «Компания исключена из ЕГРЮЛ»
-  // (уже исключена) — не текст «на пути к исключению … заберите долг до исключения»; без комментария до текста [Право].
-  [["Статус", "Компания исключена из ЕГРЮЛ", "bad"], null],
-  [["Компания исключена из ЕГРЮЛ", "", "bad"], null],
-  [["Статус", "Юрлицо исключено из ЕГРЮЛ как недействующее", "bad"], null],
-  [["Статус", "ФНС исключила компанию из ЕГРЮЛ", "bad"], null],
+  // kommentarii-isklyucheno-v1 ([Ночные запуски] 03.10 13:40): 407/414/415/418/420 — «Компания исключена из ЕГРЮЛ» (уже исключена) —
+  // не текст «на пути к исключению … заберите долг до исключения»; свой текст — запись isklyuchena (тест ниже, kommentarii-isklyuchena-v2).
   [["Статус", "Исключение из ЕГРЮЛ (недействующая)", "bad"], ["isklyuchenie", "kras"]],
   [["Статус", "Действует", "ok"], null],
   [["Возраст компании", "8 месяцев", "warn"], ["molodaya", "zhel"]],
@@ -202,6 +198,11 @@ test("v2+v4+v5: 28 тонов утверждены (22 + 5 зелёных [Пр�
   for (const x of SPRAV.signaly) for (const t of Object.values(x.tony || {})) if (t.status === "utverzhdeno") {
     n++;
     assert.ok(!/\u00a0/.test(t.bank + t.nalog + t.sdelat));
+    if (x.id === "isklyuchena") { // kommentarii-isklyuchena-v2: [Право] 03.10 14:30 разд. 1 (3) + 16:07 разд. 2 и 3
+      assert.strictEqual(t.proveril, "Право · Юрист 115-ФЗ и Налоговый юрист");
+      assert.strictEqual(t.data_proverki, "2026-10-03");
+      continue;
+    }
     if (x.id === "kapital" || x.id === "likvidnost") { // kom-kapital-v1: [Право · Юрист 115-ФЗ] 03.10 07:07, разд. 5
       assert.strictEqual(t.proveril, "Право · Юрист 115-ФЗ");
       assert.strictEqual(t.data_proverki, "2026-10-03");
@@ -210,7 +211,7 @@ test("v2+v4+v5: 28 тонов утверждены (22 + 5 зелёных [Пр�
     assert.strictEqual(t.proveril, "Право · Юрист 115-ФЗ и Налоговый юрист");
     assert.strictEqual(t.data_proverki, "2026-10-02");
   }
-  assert.strictEqual(n, 30);
+  assert.strictEqual(n, 31);
 });
 
 test("v5: uslovie у тона — «Внимание» у дисквалификации только при совпадении по ФИО без ИНН ([Право] 21:25)", () => {
@@ -492,4 +493,33 @@ test("kom-kapital-v1: настоящий экран (sushchestvennoe) — наз
   const src = fs.readFileSync(path.join(KOREN, "js/sushchestvennoe.js"), "utf8");
   assert.ok(/k: 'kapital', nazv: 'Собственный капитал на'/.test(src));
   assert.ok(/k: 'likvidnost', nazv: 'Текущая ликвидность'/.test(src));
+});
+
+// ── kommentarii-isklyuchena-v2 (Ночные-2, 03.10 22:35): компания УЖЕ исключена из ЕГРЮЛ (коды 407/414/415/418/420) ──
+// Тексты [Право] дословно: «Банк» — 14:30 разд. 1 (3) с уточнением 16:07 разд. 2 («Последствия — как при ликвидации…»
+// вместо «Закон приравнивает…»); «Налоговая» — пусто (14:30: норму о документах от исключённой ещё не сверили);
+// «Что сделать» — 16:07 разд. 3 (159 знаков: «ООО» обязательно, исход не обещаем). Норма — 14:30.
+test("isklyuchena: исключённая — свой текст [Право]; «готовится исключение» — по-прежнему isklyuchenie", () => {
+  const BANK = "Компания исключена из ЕГРЮЛ. Последствия — как при ликвидации (п. 2 ст. 64.2 ГК РФ): договор с ней не заключайте и не платите.";
+  const SDELAT = "Новый договор не заключайте. Если компания вам должна — долг можно взыскать с директора или участников ООО (п. 3.1 ст. 3 14-ФЗ). Это отдельный суд — с юристом.";
+  for (const [title, detail] of [["Статус", "Компания исключена из ЕГРЮЛ"], ["Компания исключена из ЕГРЮЛ", ""],
+    ["Статус", "Юрлицо исключено из ЕГРЮЛ как недействующее"], ["Статус", "ФНС исключила компанию из ЕГРЮЛ"],
+    ["Компания исключена из ЕГРЮЛ", "по сведениям Банка России"]]) {
+    const k = K.najti(SPRAV, { title, detail, status: "bad" });
+    assert.ok(k, title + " · " + detail);
+    assert.deepStrictEqual([k.id, k.ton, k.bank, k.nalog, k.sdelat, k.norma, k.data],
+      ["isklyuchena", "kras", BANK, "", SDELAT, "п. 2–3 ст. 64.2 ГК РФ; п. 3.1 ст. 3 14-ФЗ", "03.10.2026"], title + " · " + detail);
+    assert.ok(!/до исключения|заберите долг|вернут|гарант|приравнива/i.test(k.bank + k.sdelat));
+    assert.ok(!K.html(k).includes("Налоговая:"), "пустая «Налоговая» — строки нет");
+  }
+  // жёлтый и зелёный тоны — без текстов (молчим)
+  assert.strictEqual(K.najti(SPRAV, { title: "Статус", detail: "Компания исключена из ЕГРЮЛ", status: "warn" }), null);
+  // «готовится исключение» — прежний текст isklyuchenie; «ликвидируется или исключается» — неясно, молчим
+  assert.strictEqual(K.najti(SPRAV, { title: "Статус", detail: "Исключение из ЕГРЮЛ (недействующая)", status: "bad" }).id, "isklyuchenie");
+  assert.strictEqual(K.najti(SPRAV, { title: "ФНС готовит исключение из ЕГРЮЛ — компания недействующая", detail: "", status: "bad" }).id, "isklyuchenie");
+  assert.strictEqual(K.najti(SPRAV, { title: "Статус", detail: "Компания ликвидируется или ФНС готовит её исключение из ЕГРЮЛ", status: "bad" }), null);
+  assert.strictEqual(K.najti(SPRAV, { title: "Статус", detail: "Действует", status: "bad" }), null);
+  // 300 знаков на тон
+  const t = SPRAV.signaly.find((x) => x.id === "isklyuchena").tony.kras;
+  assert.ok(t.bank.length + t.sdelat.length <= 300);
 });

@@ -302,7 +302,7 @@ page = f'''<!doctype html>
   <div class="pol">
     <fieldset><legend>Что вам нужно</legend>
       <label class="f" for="p-otch"><span>Новых компаний в месяц, которые проверяете подробно<small>Развёрнутая проверка — Паспорт с источниками и PDF</small></span><input id="p-otch" type="text" inputmode="numeric" value="5" autocomplete="off"></label>
-      <label class="f" for="p-slezh"><span>Постоянных партнёров, за которыми следить<small>Сообщим, если у них что-то изменится</small></span><input id="p-slezh" type="text" inputmode="numeric" value="5" autocomplete="off"></label>
+      <label class="f" for="p-slezh"><span>Постоянных партнёров, за которыми следить<small>Список слежения в кабинете</small></span><input id="p-slezh" type="text" inputmode="numeric" value="5" autocomplete="off"></label>
       <label class="f" for="p-lyudi"><span>Сколько человек будут работать в Делоскопе</span><input id="p-lyudi" type="text" inputmode="numeric" value="1" autocomplete="off"></label>
       <label class="g"><input id="p-delopis" type="checkbox"><span>Нужны договоры с защитой под контрагента (Делопись)</span></label>
     </fieldset>

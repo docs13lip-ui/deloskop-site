@@ -1,4 +1,4 @@
-// [Ночные-3] indeks-v-otchete-v1: Индекс в проверке без ожидания API — ответ /api/check → факты открытой методики v1.0 → число
+// [Ночные-3] indeks-v-otchete-v1 (+ v1.1 — приёмка [Продукт · Данные] 03.10 15:55): Индекс в проверке без ожидания API — ответ /api/check → факты открытой методики v1.0 → число
 // (ТЗ [Продукт · Данные и Индекс] 03.10 13:35, разд. 1.6 (а)–(ж); Планёрка 03.10 (а)). node --test tests/indeks_otvet.test.js
 'use strict';
 const test = require('node:test');
@@ -115,15 +115,19 @@ test('минус из неподключённого источника (при�
   assert.ok(v.vklady.some((x) => x.id === 'pristavy_krupnye'));
 });
 
-test('(г) полнота < 60 % → числа нет: уровень и «оценка по сокращённым данным»', () => {
+test('(г) полнота < 60 % → ни числа, ни уровня: «Собрано N % данных…» (v1.1)', () => {
   const r = otvet();
   r.signals[3].as_of = '01.05.2026'; // набор ФНС старше 3 месяцев → fns не учтён: 30 + 20 = 50 %
   const v = IO.vid(r);
   assert.strictEqual(v.rezhim, 'sokr');
   assert.strictEqual(v.polnota, 50);
+  assert.strictEqual(v.uroven, undefined);
   const h = IO.htmlKolonka(v);
-  assert.ok(h.includes('оценка по' + NB + 'сокращённым данным (50' + NB + '%) — число покажем, когда источников хватит'));
+  assert.ok(h.includes('Индекс — по' + NB + 'сокращённым данным'));
+  assert.ok(h.includes('Собрано 50' + NB + '% данных — число и' + NB + 'уровень покажем, когда наберётся 60' + NB + '%.'));
+  assert.ok(h.includes('Не хватает: налоги и штат — свежего набора ФНС'));
   assert.ok(!/ot-ix__big/.test(h));
+  assert.ok(!/ot-ix__lv--/.test(h));
   // граница: «дата набора + 3 месяца» включительно — ещё свежий
   const r2 = otvet({ checked_at: '2026-12-01T09:00:00Z' });
   assert.strictEqual(IO.izOtveta(r2).dostupno.fns, true);
@@ -225,4 +229,32 @@ test('(ж) 222-ФЗ и 38-ФЗ: в модуле нет «надёжн», «ве�
     const f = path.join(comp, d, 'index.html');
     if (fs.existsSync(f)) assert.ok(!fs.readFileSync(f, 'utf8').includes('indeks-otvet'), d);
   }
+});
+
+// v1.1 — приёмка [Продукт · Данные и Индекс] 03.10 15:55: «сокращённые данные» не ругают компанию без сигналов
+test('v1.1 «Сбер»: 4 зелёные строки, отчётности в ответе нет → sokr 55 %, ни одного названия уровня, без тона', () => {
+  const r = otvet(); r.dossier.charts = {};
+  const v = IO.vid(r);
+  assert.strictEqual(v.rezhim, 'sokr');
+  assert.strictEqual(v.polnota, 55);
+  const h = IO.htmlKolonka(v);
+  const pr = IO.txtSokr(v) + '.';
+  M.urovni.forEach((u) => {
+    assert.ok(!h.includes(u.nazvanie), 'в колонке нет уровня «' + u.nazvanie + '»');
+    assert.ok(!pr.includes(u.nazvanie), 'в Паспорте нет уровня «' + u.nazvanie + '»');
+  });
+  assert.ok(!/ot-ix__lv--/.test(h));
+  assert.ok(h.includes('Не хватает: бухотчётность — за' + NB + 'прошлый год в' + NB + 'ответе её нет.'));
+  assert.ok(!/не\sподключён/.test(IO.neHvataet(v)));
+  assert.strictEqual(IO.ball(r), null);
+});
+
+test('v1.1 источник «ФНС» — только открытые наборы: свежая дисквалификация не засчитывает старый набор долгов', () => {
+  const r = otvet();
+  r.signals[3].as_of = '01.05.2026';
+  s_(r, s('Дисквалифицированные лица', 'Нет', 'ok', { source: 'ФНС, реестр дисквалифицированных лиц', as_of: '27.09.2026' }),
+    s('Приостановление операций по счетам', 'Нет', 'ok', { source: 'Сервис ФНС', as_of: '01.10.2026' }));
+  assert.strictEqual(IO.izOtveta(r).dostupno.fns, false);
+  r.signals[3].as_of = '01.09.2026';
+  assert.strictEqual(IO.izOtveta(r).dostupno.fns, true);
 });

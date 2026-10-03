@@ -43,14 +43,17 @@ test('кто кому должен: три строки; кредиты к вы�
   assert.strictEqual(b2.godR, 2026);
 });
 
-test('отрицательный капитал: в полосе только обязательства, капитал — красной строкой без доли', () => {
+test('отрицательный капитал: полосы нет (как в Паспорте), капитал — первой красной строкой, обязательства суммами без долей (balans-edinyj-v1)', () => {
   const r = otvet({ balance: { year: 2025, equity: -3e8, long_debt: 1e8, short_debt: 4e8 } });
   const b = D.balans(r);
-  assert.deepStrictEqual(b.chasti.map((x) => x.k), ['dol', 'kor']);
+  assert.strictEqual(b.polosa, false);
+  assert.deepStrictEqual(b.chasti.map((x) => [x.k, x.dolya]), [['dol', ''], ['kor', '']]);
   assert.strictEqual(b.kapitalMinus, -3e8);
   const h = D.htmlBalans(r);
   assert.match(h, /din__minus/);
-  assert.match(tekst(h), /Собственный капитал −300,0 млн ₽ меньше нуля/);
+  assert.doesNotMatch(h, /din__bar/);
+  assert.match(tekst(h), /На чём держится компания баланс на 31\.12\.2025 Собственный капитал −300,0 млн ₽ меньше нуля Долгосрочные обязательства 100,0 млн ₽ Краткосрочные обязательства 400,0 млн ₽/);
+  assert.doesNotMatch(tekst(h).split("Кто кому должен")[0], /%/);
 });
 
 test('нет баланса и долгов, мусор — блока нет; нулевые строки не показываем', () => {

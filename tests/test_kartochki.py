@@ -1149,5 +1149,35 @@ class TestHabV2(unittest.TestCase):
         self.assertIn("из 3 отраслей", d)
 
 
+class GodOdinRazV310(unittest.TestCase):
+    """kartochki-v3.10: год в строке реестра — один раз; текст [Право] 17:07 разд. 4 в «Как читать»."""
+
+    def test_podpis_s_godom(self):
+        self.assertTrue(K.god_v_podpisi("Выручка за 2021", 2021))
+        self.assertFalse(K.god_v_podpisi("Налоги и взносы за год", 2025))
+        self.assertFalse(K.god_v_podpisi("Выручка за 2021", 2025))
+
+    def test_opublikovannaya_stranica(self):
+        t = ('<div class="fact"><span>Выручка за 2021</span><span class="fact__v">2,7&nbsp;трлн&nbsp;₽ за&nbsp;2021</span>'
+             '<div class="fact"><span>Налоги и взносы за год</span><span class="fact__v">9&nbsp;млрд&nbsp;₽ за&nbsp;2025</span>')
+        t2 = K.pochinit_god_dvazhdy(t)
+        self.assertIn('Выручка за 2021</span><span class="fact__v">2,7&nbsp;трлн&nbsp;₽</span>', t2)
+        self.assertIn("9&nbsp;млрд&nbsp;₽ за&nbsp;2025</span>", t2)  # год только в значении — остаётся
+        self.assertEqual(K.pochinit_god_dvazhdy(t2), t2)
+
+    def test_na_diske_net_dvazhdy(self):
+        papka = os.path.join(K.KOREN, "company")
+        for d in sorted(os.listdir(papka)) if os.path.isdir(papka) else []:
+            put = os.path.join(papka, d, "index.html")
+            if os.path.isfile(put):
+                self.assertIsNone(re.search(r'за (\d{4})</span><span class="fact__v">[^<]*за&nbsp;\1<', chitat(put)), d)
+
+    def test_kak_chitat_pravo_1707(self):
+        tekst = dict(K.HAB_CHITAT)["Дата сведений — не дата страницы"]
+        self.assertIn("не позднее трёх месяцев после окончания года", tekst)
+        self.assertIn("ограничен по решению Правительства", tekst)
+        self.assertNotIn("в следующем году", tekst)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

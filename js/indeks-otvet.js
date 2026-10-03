@@ -6,7 +6,7 @@
  * и считает число тем же калькулятором, что страница /indeks/ (indeks/indeks.js = сервер indeks_v1.py).
  * Ворота честности («без данных не хвалим»):
  *   1) ИП — числа нет;  2) в ответе есть сигнал warn/bad, который методика v1 не оценивает, — числа нет;
- *   3) полнота < 60 % — только уровень и «оценка по сокращённым данным»;  4) есть r.indeks от сервера — берём его, не считаем;
+ *   3) полнота < 60 % — ни числа, ни уровня: «Индекс — данных пока мало» (v1.1–v1.2);  4) есть r.indeks от сервера — берём его, не считаем;
  *   5) dossier.score — никогда.
  * Нагрузку против отрасли не берём: API считает её со взносами, методика — без (✎ 02:05, daty-api-v1).
  * Ничего не запрашивает, кроме самой методики (один JSON, в браузере — при загрузке скрипта).
@@ -240,7 +240,7 @@
     var rez = KALK.rasschitat(M, x.fakty, x.dostupno);
     var n = 0, k;
     for (k in M.istochniki) if (x.dostupno[k]) n++;
-    var out = { polnota: rez.polnota, istochnikov: n, vsego: Object.keys(M.istochniki).length, versiya: M.versiya, neUchityvali: neUchityvali(x) };
+    var out = { polnota: rez.polnota, istochnikov: n, vsego: Object.keys(M.istochniki).length, versiya: M.versiya, neUchityvali: neUchityvali(x, c) };
     if (rez.stop) { out.rezhim = 'stop'; out.stop = rez.stop.tekst; out.ton = 'bad'; return out; }
     if (rez.indeks == null) { out.rezhim = 'net'; return out; } // нет ЕГРЮЛ — не считаем
     if (x.neizvestnye.length) { out.rezhim = 'neizv'; out.signaly = x.neizvestnye.map(function (s) { return t(s); }); return out; }
@@ -251,12 +251,20 @@
     out.potolok = rez.potolok; out.plyusy = rez.plyusy; out.plyusyUchteno = rez.plyusy_uchteno; out.plyusyMaks = M.plyusy_maksimum;
     return out;
   }
-  function neUchityvali(x) {
+  // банк: та же проверка, что bank(c) в js/sushchestvennoe.js (ОКВЭД 64.1x) — у банков ГИР БО нет по закону (ч. 4 ст. 18 402-ФЗ)
+  function bank(c) {
+    var S = root && root.Sushchestvennoe;
+    if (S && typeof S.bank === 'function') return S.bank(c);
+    return /^64\.1(\.|\d|$)/.test(String((c || {}).okved || ''));
+  }
+  function neUchityvali(x, c) {
     var a = [], b = [];
     Object.keys(NE_PODKL).forEach(function (k) { if (!x.dostupno[k]) a.push(NE_PODKL[k]); });
     if (a.length) b.push(a.join(', ') + ' — источник не' + NB + 'подключён');
     if (!x.dostupno.fns) b.push('налоги и штат — свежего набора ФНС в' + NB + 'ответе нет');
-    if (!x.dostupno.girbo) b.push('бухотчётность — за' + NB + 'прошлый год в' + NB + 'ответе её нет');
+    // v1.2 ([Право] 16:07 разд. 1 п. 1): у банка «её нет» звучит как упрёк — пишем, куда он её сдаёт
+    if (!x.dostupno.girbo) b.push(bank(c) ? 'бухотчётность — организация сдаёт её в' + NB + 'Банк России, а не в' + NB + 'ГИР' + NB + 'БО'
+      : 'бухотчётность — за' + NB + 'прошлый год в' + NB + 'ответе её нет');
     b.push('налоговая нагрузка — сравним с' + NB + 'отраслью, когда придут налоги без взносов');
     return b;
   }
@@ -270,6 +278,7 @@
   var NE_ZNACHIT = 'Не проверено — не значит «не обнаружено».';
   function strokaNe(v) { return 'Не учитывали в этот раз: ' + v.neUchityvali.join('; ') + '. ' + NE_ZNACHIT; }
   var TXT_NEIZV = 'Индекс — считаем: в' + NB + 'проверке есть сигнал, который методика v1 пока не' + NB + 'оценивает. Он показан в' + NB + 'фактах ниже.';
+  var ZAG_SOKR = 'Индекс — данных пока' + NB + 'мало';
   function txtSokr(v) { return 'Собрано ' + v.polnota + NB + '% данных — число и' + NB + 'уровень покажем, когда наберётся ' + (v.porog || 60) + NB + '%'; }
   // первый пункт «Не учитывали», которого не хватает именно для полноты (без «не подключён» и «налоговой нагрузки»)
   function neHvataet(v) {
@@ -294,7 +303,8 @@
         '<p class="ot-ix__ne-uch">' + strokaNe(v) + '</p></details>';
     }
     if (v.rezhim === 'sokr')
-      return h + '<div class="ot-ix__ne">Индекс — по' + NB + 'сокращённым данным</div>' +
+      // v1.2 ([Право] 16:07 разд. 1 п. 4): числа нет — «по сокращённым данным» читалось бы как «посчитали, но грубо»
+      return h + '<div class="ot-ix__ne">' + ZAG_SOKR + '</div>' +
         '<div class="ot-ix__po n">' + esc(txtSokr(v)) + '.' + (neHvataet(v) ? ' Не хватает: ' + esc(neHvataet(v)) + '.' : '') + '</div>' +
         '<div class="ot-ix__po n">' + podpis(v) + ' · <a href="/indeks/">методика</a></div>';
     if (v.rezhim === 'neizv')
@@ -325,5 +335,5 @@
   }
 
   return { izOtveta: izOtveta, vid: vid, ball: ball, htmlKolonka: htmlKolonka, gotov: gotov, gotovo: gotovo, ustanovit: ustanovit,
-    rubli: rubli, TXT_NEIZV: TXT_NEIZV, txtSokr: txtSokr, neHvataet: neHvataet, strokaNe: strokaNe, podpis: podpis };
+    rubli: rubli, TXT_NEIZV: TXT_NEIZV, ZAG_SOKR: ZAG_SOKR, txtSokr: txtSokr, neHvataet: neHvataet, strokaNe: strokaNe, podpis: podpis };
 });

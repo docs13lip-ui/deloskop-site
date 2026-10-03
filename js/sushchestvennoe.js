@@ -16,7 +16,7 @@
   var NB = '\u00a0', MAKS = 7;
   var VES = { bad: 0, warn: 1, ok: 2, neutral: 2 };
   // порядок базовых фактов, когда замечаний нет
-  var PORYADOK = ['status', 'address', 'tax_debt', 'kapital', 'otchetnost', 'rukovoditel', 'age', 'zsk'];
+  var PORYADOK = ['status', 'address', 'tax_debt', 'kapital', 'likvidnost', 'otchetnost', 'rukovoditel', 'age', 'zsk'];
   var NAZV = { status: 'Статус', address: 'Отметки о недостоверности', age: 'На рынке', tax_debt: 'Долги по налогам' };
   var SEKCII = { profile: 'reestr', history: 'reestr', management: 'reestr', activity: 'reestr', taxes: 'ФНС, открытые данные', dynamics: 'ГИР БО ФНС, годовая бухгалтерская отчётность' };
   var KRATKO = { sudy: 'арбитражные суды', bankrotstvo: 'банкротство', fssp: 'приставы', priostanovki: 'приостановки счетов', mery: 'обеспечительные меры ФНС', rnp: 'РНП', kontrakty: 'госконтракты' };
@@ -104,6 +104,23 @@
     return { god: g, znach: Number(e) };
   }
 
+  // ---- текущая ликвидность: строка раздела досье «Финансовая динамика по годам» (оборотные активы / краткосрочные
+  // обязательства, ГИР БО), год — из dossier.charts.balance или charts.debts. Нет года — нет факта (у факта всегда дата).
+  function likvidnost(r) {
+    var D = (r && r.dossier) || {}, ch = D.charts || {}, v = null;
+    (Array.isArray(D.sections) ? D.sections : []).forEach(function (s) {
+      if (!s || s.id !== 'dynamics' || !Array.isArray(s.rows)) return;
+      s.rows.forEach(function (row) {
+        if (!Array.isArray(row) || !/^Текущая ликвидность$/i.test(String(row[0] || '').trim())) return;
+        var m = /^\s*(\d+(?:[.,]\d+)?)\s*$/.exec(String(row[1] == null ? '' : row[1]));
+        if (m) v = Number(m[1].replace(',', '.'));
+      });
+    });
+    var g = parseInt(((ch.balance || {}).year) || ((ch.debts || {}).year), 10);
+    if (v === null || !isFinite(v) || !isFinite(g)) return null;
+    return { god: g, znach: v };
+  }
+
   // ---- существенные факты ----
   function fakty(r, opt) {
     opt = opt || {};
@@ -154,6 +171,12 @@
       var kp = kapital(r);
       if (kp && kp.znach < 0) add({ k: 'kapital', nazv: 'Собственный капитал на' + NB + '31.12.' + kp.god, ton: 'warn',
         znach: 'Минус ' + dengi(-kp.znach) + ': обязательства больше активов', ist: 'ГИР БО ФНС, баланс', data: '31.12.' + kp.god });
+      // Текущая ликвидность меньше 1 — краткосрочные обязательства больше оборотных активов: при предоплате это прямой
+      // вопрос «хватит ли им денег поставить товар». 1 и выше — решения не меняет, в факты не выносим (есть в «Всех данных»).
+      // Ноль — чаще пустая строка баланса, чем факт: не показываем.
+      var lk = likvidnost(r);
+      if (lk && lk.znach > 0 && lk.znach < 1) add({ k: 'likvidnost', nazv: 'Текущая ликвидность', ton: 'warn',
+        znach: chislo(lk.znach, 2) + ': краткосрочные долги больше оборотных средств', ist: 'ГИР БО ФНС, баланс', data: '31.12.' + lk.god });
       var estRuk = (r.signals || []).some(function (s) { return s && /director|rukovod/i.test(s.id || ''); });
       var ot = dataIz(c.director_since);
       if (!estRuk && ot) {
@@ -353,5 +376,5 @@
     return true;
   }
 
-  return { fakty: fakty, bank: bank, kapital: kapital, glubina: glubina, otchetnost: otchetnost, html: html, mount: mount, htmlSvoj: htmlSvoj, mountSvoj: mountSvoj, dengi: dengi, srok: srok, MAKS: MAKS, CSS: CSS };
+  return { fakty: fakty, bank: bank, kapital: kapital, likvidnost: likvidnost, glubina: glubina, otchetnost: otchetnost, html: html, mount: mount, htmlSvoj: htmlSvoj, mountSvoj: mountSvoj, dengi: dengi, srok: srok, MAKS: MAKS, CSS: CSS };
 });

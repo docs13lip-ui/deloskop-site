@@ -100,7 +100,9 @@
     // --- источники (полнота) ---
     dostupno.egrul = !!(c.inn && S.some(function (s) { return t(s) === 'Статус'; }));
     dostupno.fns = S.some(function (s) {
-      if (!/ФНС/.test(String(s.source || ''))) return false;
+      // v1.1 ([Продукт · Данные] 15:55, разд. 2.2): источник «ФНС» — только открытые наборы (не реестр дисквалифицированных, не «Сервис ФНС»)
+      var src = String(s.source || '');
+      if (!/ФНС/.test(src) || !/открыт/i.test(src)) return false;
       var a = ru(s.as_of);
       if (!a) return false;
       var n = mesyacev(a, na);
@@ -242,8 +244,9 @@
     if (rez.stop) { out.rezhim = 'stop'; out.stop = rez.stop.tekst; out.ton = 'bad'; return out; }
     if (rez.indeks == null) { out.rezhim = 'net'; return out; } // нет ЕГРЮЛ — не считаем
     if (x.neizvestnye.length) { out.rezhim = 'neizv'; out.signaly = x.neizvestnye.map(function (s) { return t(s); }); return out; }
+    // v1.1: «сокращённые данные» — без уровня и тона: потолок 69 «без данных не хвалим» не должен читаться как «Есть вопросы»
+    if (rez.polnota < M.polnota.porog_sokrashchennoj) { out.rezhim = 'sokr'; out.porog = M.polnota.porog_sokrashchennoj; return out; }
     out.uroven = rez.uroven.nazvanie; out.ton = TON[rez.uroven.ton] || 'warn';
-    if (rez.polnota < M.polnota.porog_sokrashchennoj) { out.rezhim = 'sokr'; return out; }
     out.rezhim = 'chislo'; out.ball = rez.indeks; out.baza = M.shkala.baza; out.vklady = rez.vklady;
     out.potolok = rez.potolok; out.plyusy = rez.plyusy; out.plyusyUchteno = rez.plyusy_uchteno; out.plyusyMaks = M.plyusy_maksimum;
     return out;
@@ -267,7 +270,12 @@
   var NE_ZNACHIT = 'Не проверено — не значит «не обнаружено».';
   function strokaNe(v) { return 'Не учитывали в этот раз: ' + v.neUchityvali.join('; ') + '. ' + NE_ZNACHIT; }
   var TXT_NEIZV = 'Индекс — считаем: в' + NB + 'проверке есть сигнал, который методика v1 пока не' + NB + 'оценивает. Он показан в' + NB + 'фактах ниже.';
-  function txtSokr(v) { return v.uroven + ' · оценка по' + NB + 'сокращённым данным (' + v.polnota + NB + '%) — число покажем, когда источников хватит'; }
+  function txtSokr(v) { return 'Собрано ' + v.polnota + NB + '% данных — число и' + NB + 'уровень покажем, когда наберётся ' + (v.porog || 60) + NB + '%'; }
+  // первый пункт «Не учитывали», которого не хватает именно для полноты (без «не подключён» и «налоговой нагрузки»)
+  function neHvataet(v) {
+    var a = (v.neUchityvali || []).filter(function (x) { return !/не\s?подключён/.test(x) && !/^налоговая нагрузка/.test(x); });
+    return a.length ? a[0] : '';
+  }
 
   // html колонки для режимов, которые считает браузер; для остальных — '' (лист оставит свою строку «считаем»)
   function htmlKolonka(v) {
@@ -286,7 +294,8 @@
         '<p class="ot-ix__ne-uch">' + strokaNe(v) + '</p></details>';
     }
     if (v.rezhim === 'sokr')
-      return h + '<div class="ot-ix__ne ot-ix__lv--' + v.ton + '">' + esc(txtSokr(v)) + '</div>' +
+      return h + '<div class="ot-ix__ne">Индекс — по' + NB + 'сокращённым данным</div>' +
+        '<div class="ot-ix__po n">' + esc(txtSokr(v)) + '.' + (neHvataet(v) ? ' Не хватает: ' + esc(neHvataet(v)) + '.' : '') + '</div>' +
         '<div class="ot-ix__po n">' + podpis(v) + ' · <a href="/indeks/">методика</a></div>';
     if (v.rezhim === 'neizv')
       return h + '<div class="ot-ix__ne">Индекс — считаем</div><div class="ot-ix__po">' + TXT_NEIZV.replace(/^Индекс — считаем: в/, 'В') + '</div>' +
@@ -316,5 +325,5 @@
   }
 
   return { izOtveta: izOtveta, vid: vid, ball: ball, htmlKolonka: htmlKolonka, gotov: gotov, gotovo: gotovo, ustanovit: ustanovit,
-    rubli: rubli, TXT_NEIZV: TXT_NEIZV, txtSokr: txtSokr, strokaNe: strokaNe, podpis: podpis };
+    rubli: rubli, TXT_NEIZV: TXT_NEIZV, txtSokr: txtSokr, neHvataet: neHvataet, strokaNe: strokaNe, podpis: podpis };
 });

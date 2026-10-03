@@ -16,7 +16,7 @@
   var NB = '\u00a0', MAKS = 7;
   var VES = { bad: 0, warn: 1, ok: 2, neutral: 2 };
   // порядок базовых фактов, когда замечаний нет
-  var PORYADOK = ['status', 'address', 'tax_debt', 'kapital', 'likvidnost', 'otchetnost', 'rukovoditel', 'age', 'zsk'];
+  var PORYADOK = ['status', 'address', 'tax_debt', 'kapital', 'likvidnost', 'ubytki', 'otchetnost', 'rukovoditel', 'age', 'zsk'];
   var NAZV = { status: 'Статус', address: 'Отметки о недостоверности', age: 'На рынке', tax_debt: 'Долги по налогам' };
   var SEKCII = { profile: 'reestr', history: 'reestr', management: 'reestr', activity: 'reestr', taxes: 'ФНС, открытые данные', dynamics: 'ГИР БО ФНС, годовая бухгалтерская отчётность' };
   var KRATKO = { sudy: 'арбитражные суды', bankrotstvo: 'банкротство', fssp: 'приставы', priostanovki: 'приостановки счетов', mery: 'обеспечительные меры ФНС', rnp: 'РНП', kontrakty: 'госконтракты' };
@@ -121,6 +121,24 @@
     return { god: g, znach: v };
   }
 
+  // ---- убытки подряд: dossier.charts.profit (ГИР БО, чистая прибыль по годам), без запроса к сети ----
+  // Серия считается от последнего года ряда назад, только по соседним годам (пропуск года рвёт серию: «не знаем» ≠ «убыток»).
+  // Ноль — не убыток. Факт — только при 2 годах и больше: один убыточный год уже виден в строке «Выручка за …».
+  // → { god: последний год, n: лет подряд, ot: первый год серии } | null
+  function ubytki(r) {
+    var ch = (r && r.dossier && r.dossier.charts) || {}, po = {};
+    (Array.isArray(ch.profit) ? ch.profit : []).forEach(function (x) {
+      var g = x ? parseInt(x.year, 10) : NaN;
+      if (isFinite(g) && x.value !== null && x.value !== '' && typeof x.value !== 'boolean' && isFinite(Number(x.value))) po[g] = Number(x.value);
+    });
+    var gody = Object.keys(po).map(Number).sort(function (a, b) { return a - b; });
+    if (!gody.length) return null;
+    var g1 = gody[gody.length - 1], n = 0;
+    while (po.hasOwnProperty(g1 - n) && po[g1 - n] < 0) n++;
+    return n >= 2 ? { god: g1, n: n, ot: g1 - n + 1 } : null;
+  }
+  function godySerii(u) { return u.n === 2 ? u.ot + ' и ' + u.god : u.ot + '–' + u.god; }
+
   // ---- существенные факты ----
   function fakty(r, opt) {
     opt = opt || {};
@@ -161,7 +179,7 @@
         add({ k: 'otchetnost', nazv: 'Выручка за ' + o.god, znach: dengi(o.vyruchka) + pr, ton: 'neutral', ist: 'ГИР БО ФНС', data: '31.12.' + o.god });
       } else if (bank(c)) {
         // банк сдаёт отчётность в Банк России, в ГИР БО ФНС её нет — «нет в ответе» здесь вводит в заблуждение
-        add({ k: 'otchetnost', nazv: 'Бухотчётность', znach: 'Банк сдаёт её в' + NB + 'Банк России, а не в' + NB + 'ГИР' + NB + 'БО', ton: 'neutral',
+        add({ k: 'otchetnost', nazv: 'Бухотчётность', znach: 'Организация сдаёт отчётность в' + NB + 'Банк России, а не в' + NB + 'ГИР' + NB + 'БО', ton: 'neutral',
           ist: reestr + ', ОКВЭД ' + c.okved, data: dataPr, ssylka: CBR_BANK + (/^\d{13}$/.test(String(c.ogrn || '')) ? '?ogrn=' + c.ogrn : '') });
       } else {
         add({ k: 'otchetnost', nazv: 'Бухотчётность', znach: 'Нет в ответе ГИР БО', ton: 'neutral', ist: 'ГИР БО ФНС', data: dataPr });
@@ -177,6 +195,10 @@
       var lk = likvidnost(r);
       if (lk && lk.znach > 0 && lk.znach < 1) add({ k: 'likvidnost', nazv: 'Текущая ликвидность', ton: 'warn',
         znach: chislo(lk.znach, 2) + ': краткосрочные долги больше оборотных средств', ist: 'ГИР БО ФНС, баланс', data: '31.12.' + lk.god });
+      // Убыток 2 года подряд и больше — по годовой отчётности; сам по себе минус одного года решения не меняет.
+      var ub = ubytki(r);
+      if (ub) add({ k: 'ubytki', nazv: 'Убыток ' + ub.n + NB + skl(ub.n, 'год', 'года', 'лет') + ' подряд', ton: 'warn',
+        znach: 'По годовой отчётности за ' + godySerii(ub), ist: 'ГИР БО ФНС, отчёт о финансовых результатах', data: '31.12.' + ub.god });
       var estRuk = (r.signals || []).some(function (s) { return s && /director|rukovod/i.test(s.id || ''); });
       var ot = dataIz(c.director_since);
       if (!estRuk && ot) {
@@ -376,5 +398,5 @@
     return true;
   }
 
-  return { fakty: fakty, bank: bank, kapital: kapital, likvidnost: likvidnost, glubina: glubina, otchetnost: otchetnost, html: html, mount: mount, htmlSvoj: htmlSvoj, mountSvoj: mountSvoj, dengi: dengi, srok: srok, MAKS: MAKS, CSS: CSS };
+  return { fakty: fakty, bank: bank, kapital: kapital, likvidnost: likvidnost, ubytki: ubytki, glubina: glubina, otchetnost: otchetnost, html: html, mount: mount, htmlSvoj: htmlSvoj, mountSvoj: mountSvoj, dengi: dengi, srok: srok, MAKS: MAKS, CSS: CSS };
 });

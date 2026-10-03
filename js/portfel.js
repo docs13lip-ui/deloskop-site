@@ -24,6 +24,7 @@
   };
   var IZ_API = { high: 'ser', medium: 'vopr', low: 'bez' };
   var INN_RE = /^\d{10}(\d{2})?$/;
+  var ISKL = { '105': 1, '106': 1, '107': 1, '108': 1, '110': 1 };
 
   function esc(t) {
     return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
@@ -68,6 +69,17 @@
     (Array.isArray(nedavnie) ? nedavnie : []).forEach(function (x) {
       if (x) vzyat(x.inn, Number(x.t), uroven(x), x.name);
     });
+    // «ФНС готовит исключение из ЕГРЮЛ» — по коду состояния в последнем снимке, если он не старше строки больше чем на час
+    // (коды 105–108, 110 — как в js/dinamika.js; более поздняя проверка без снимка отметку снимает)
+    if (snimki && typeof snimki === 'object' && !Array.isArray(snimki)) {
+      Object.keys(po).forEach(function (inn) {
+        var a = Array.isArray(snimki[inn]) ? snimki[inn].filter(function (s) { return s && String(s.inn) === inn && isFinite(Number(s.t)); }) : [];
+        if (!a.length || po[inn].ip) return;
+        var z = a.reduce(function (m, s) { return Number(s.t) > Number(m.t) ? s : m; });
+        var k = String(z.kod || '');
+        if (ISKL[k] && Number(z.t) >= po[inn].t - 3600 * 1000) po[inn].isk = k;
+      });
+    }
     return Object.keys(po).map(function (k) { return po[k]; }).sort(function (a, b) {
       return (UR[a.ur].p - UR[b.ur].p) || (a.t - b.t);
     });
@@ -105,7 +117,8 @@
     var k = kogda(r.t, now);
     var imya = r.ip ? 'Индивидуальный предприниматель' : (r.nm || 'Компания');
     return '<li class="pf__r" data-inn="' + r.inn + '">' +
-      '<div class="pf__a"><b class="pf__nm">' + esc(imya) + '</b><span class="pf__pill pf__pill--' + r.ur + '">' + UR[r.ur].t + '</span></div>' +
+      '<div class="pf__a"><b class="pf__nm">' + esc(imya) + '</b><span class="pf__pill pf__pill--' + r.ur + '">' + UR[r.ur].t + '</span>' +
+      (r.isk ? '<span class="pf__isk">ФНС готовит исключение из' + NB + 'ЕГРЮЛ' + (r.isk === '108' ? ' по' + NB + 'сведениям Банка России' : '') + '</span>' : '') + '</div>' +
       '<div class="pf__b"><span class="pf__inn n">ИНН' + NB + r.inn + '</span><span class="pf__d n' + (k.staryj ? ' pf__d--star' : '') + '">' + k.t + '</span></div>' +
       '<div class="pf__c"><button type="button" class="pf__go" data-pf-go="' + r.inn + '">Перепроверить</button>' +
       '<button type="button" class="pf__x" data-pf-x="' + r.inn + '" aria-label="Убрать из списка">' + KREST + '</button></div></li>';

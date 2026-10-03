@@ -144,20 +144,25 @@ def kroshki_html(items):
     return '<nav class="crumbs" aria-label="Навигация">' + '<span aria-hidden="true">›</span>'.join(ch) + "</nav>"
 
 
+def akt_nomer(d):
+    """[Ночные запуски] razbor9-v1: обзор практики Президиума ВС номера не имеет (`vid: obzor`, `nomer` пустой) — без висящего пробела."""
+    return ("%s %s" % (d["akt"], d["nomer"])).strip()
+
+
 def kartochka(d, n, vsego):
-    t = "Карточка дела" if vsego == 1 else "Дело %d из %d" % (n, vsego)
+    t = ("Карточка обзора" if d.get("vid") == "obzor" else "Карточка дела") if vsego == 1 else "Дело %d из %d" % (n, vsego)
     itog = '<span class="itog%s">%s</span>' % (" itog--nov" if d.get("itog_nov") else "", e(d["itog"]))
     return """<section class="delo" aria-label="%(t)s">
 <div class="delo__h"><p class="delo__t">%(t)s</p>%(itog)s</div>
 <dl>
 <dt>Суд</dt><dd>%(sud)s</dd>
-<dt>Акт</dt><dd>%(akt)s %(nomer)s</dd>
+<dt>Акт</dt><dd>%(akt_nomer)s</dd>
 <dt>Дата</dt><dd><time datetime="%(data)s">%(data_ch)s</time></dd>
-<dt>Дело</dt><dd>%(delo)s</dd>
+<dt>%(delo_p)s</dt><dd>%(delo)s</dd>
 <dt>На кону</dt><dd>%(na_konu)s</dd>
 </dl>
 <p class="delo__src">Первоисточник: <a href="%(ist)s" rel="noopener" target="_blank">%(ist_p)s</a> · сверено <time datetime="%(sv)s">%(sv_ch)s</time></p>
-</section>""" % {"t": t, "itog": itog, "sud": e(d["sud"]), "akt": e(d["akt"]), "nomer": e(d["nomer"]),
+</section>""" % {"t": t, "itog": itog, "sud": e(d["sud"]), "akt_nomer": e(akt_nomer(d)), "delo_p": e(d.get("delo_podpis") or "Дело"),
                   "data": d["data"], "data_ch": data_ch(d["data"]), "delo": e(d["delo"]), "na_konu": e(d["na_konu"]),
                   "ist": e(d["istochnik"]), "ist_p": e(d["istochnik_podpis"]), "sv": d["sverka"], "sv_ch": data_ch(d["sverka"])}
 
@@ -173,7 +178,8 @@ def citaty(r):
 
 def pk(r):
     d = r["dela"][0]
-    meta = "%s · %s · %s · %s" % (d["sud_kratko"], data_ch(d["data"]), d["nomer"], d["itog"].lower() if not d["itog"].startswith("В ") else "в" + d["itog"][1:])
+    itog = d["itog"][0].lower() + d["itog"][1:]
+    meta = " · ".join(x for x in (d["sud_kratko"], data_ch(d["data"]), d["nomer"], itog) if x)
     if len(r["dela"]) > 1:
         meta = "%s · %d дела · %s" % (d["sud_kratko"], len(r["dela"]), " и ".join(x["nomer"] for x in r["dela"]))
     kon = " и ".join(x.get("na_konu_kratko") or x["na_konu"] for x in r["dela"])
@@ -190,7 +196,7 @@ def razbor(r, D, po_slug, F=None):
            "author": {"@type": "Organization", "name": "Редакция Делоскопа", "url": SAJT},
            "publisher": {"@type": "Organization", "name": "Делоскоп", "url": SAJT + "/", "logo": {"@type": "ImageObject", "url": SAJT + "/ikonka-512.png"}},
            "mainEntityOfPage": SAJT + url, "articleSection": rz["kratko"],
-           "about": "; ".join("%s %s от %s %s" % (d["akt"], d["sud"], data_ch(d["data"]), d["nomer"]) for d in r["dela"])},
+           "about": "; ".join(("%s %s от %s %s" % (d["akt"], d["sud"], data_ch(d["data"]), d["nomer"])).strip() for d in r["dela"])},
           kroshki_ld(kr[:-1] + [(r["h1"], url)])]
     cit = citaty(r)
     if cit:
@@ -274,7 +280,8 @@ def svodka_haba(spisok):
 
 
 def vse_sudebnye(spisok):
-    return all(r.get("dela") and all((d.get("sud") or "").strip() for d in r["dela"]) for r in spisok)
+    # [Право] 03.10 14:30, разд. 2: обзор практики Президиума ВС (`vid: obzor`) — позиция, а не решение по делу → второй вариант строки.
+    return all(r.get("dela") and all((d.get("sud") or "").strip() and d.get("vid") != "obzor" for d in r["dela"]) for r in spisok)
 
 
 def hab(D, razdel=None):
@@ -379,7 +386,7 @@ def glavnaya(txt, D):
     kart = []
     for r in tri_dlya_glavnoj(D):
         d = r["dela"][0]
-        stroka = "%s · %s %s · %s" % (d["sud"], d["akt"].lower(), d["nomer"], data_ru(d["data"]))
+        stroka = "%s · %s · %s" % (d["sud"], akt_nomer(d)[0].lower() + akt_nomer(d)[1:], data_ru(d["data"]))
         kart.append('<a href="%s"><small>%s</small><b>%s</b><span>%s</span></a>' % (
             url_razbora(r), e(D["razdely"][r["razdel"]]["kratko"]), e(r["h1"]), e(stroka)))
     blok = '<!--praktika-glavnaya--><div class="pr-gl">%s</div><!--/praktika-glavnaya-->' % "".join(kart)

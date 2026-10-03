@@ -2,7 +2,7 @@
  * (решение владельца 02.10, эталон экрана — п. 5 «Динамика и тренды»).
  * Данные — только из ответа /api/check: dossier.charts (ГИР БО ФНС, годовая бухотчётность), signals, company, zsk.
  * Снимки для «что изменилось» хранятся ТОЛЬКО в браузере (localStorage, ключ dlk_snimki): без ФИО, адресов и сумм,
- * кроме выручки, прибыли и собственного капитала из открытой отчётности (ГИР БО). Нет доступа к хранилищу — блока «что изменилось» нет.
+ * кроме выручки, прибыли, собственного капитала и текущей ликвидности из открытой отчётности (ГИР БО). Нет доступа к хранилищу — блока «что изменилось» нет.
  * Чистые функции (ryady, trendy, snimok, sravnit, html) — без DOM и сети, их проверяет tests/dinamika.test.js. */
 (function (root, factory) {
   var api = factory();
@@ -214,8 +214,28 @@
       // собственный капитал (строка 1300 баланса, dossier.charts.balance) — для «ушёл в минус / вышел из минуса»
       var bl = ch.balance, kg = bl && typeof bl === 'object' ? parseInt(bl.year, 10) : NaN, ke = bl ? bl.equity : null;
       if (isFinite(kg) && ke !== null && ke !== '' && typeof ke !== 'boolean' && isFinite(Number(ke))) s.kap = [kg, Number(ke)];
+      // текущая ликвидность (строка раздела досье dynamics, ГИР БО) — для «опустилась ниже 1 / снова 1 и выше»
+      var lk = likvidnost(r);
+      if (lk) s.lk = lk;
     }
     return s;
+  }
+
+  // Текущая ликвидность: строка «Текущая ликвидность» раздела досье «Финансовая динамика» (тот же разбор, что в
+  // js/sushchestvennoe.js), год — из charts.balance или charts.debts. Ноль и пусто — не значение. → [год, число] | null
+  function likvidnost(r) {
+    var D = (r && r.dossier) || {}, ch = D.charts || {}, v = null;
+    (Array.isArray(D.sections) ? D.sections : []).forEach(function (sk) {
+      if (!sk || sk.id !== 'dynamics' || !Array.isArray(sk.rows)) return;
+      sk.rows.forEach(function (row) {
+        if (!Array.isArray(row) || !/^Текущая ликвидность$/i.test(String(row[0] || '').trim())) return;
+        var m = /^\s*(\d+(?:[.,]\d+)?)\s*$/.exec(String(row[1] == null ? '' : row[1]));
+        if (m) v = Number(m[1].replace(',', '.'));
+      });
+    });
+    var g = parseInt(((ch.balance || {}).year) || ((ch.debts || {}).year), 10);
+    if (v === null || !isFinite(v) || !(v > 0) || !isFinite(g)) return null;
+    return [g, Math.round(v * 100) / 100];
   }
 
   function dataRu(t) {
@@ -253,7 +273,18 @@
       else if (a.kap[1] < 0 && b.kap[1] >= 0) add('luchshe', 'Собственный капитал больше не отрицательный: на' + NB + '31.12.' + b.kap[0] +
         ' — ' + (b.kap[1] > 0 ? dengi(b.kap[1]) : '0' + NB + '₽') + ' (ГИР' + NB + 'БО)');
     }
-    if (b.vyr && (!a.vyr || b.vyr[0] > a.vyr[0])) add('info', 'Появилась отчётность за ' + b.vyr[0] + ': выручка ' + dengi(b.vyr[1]) +
+    // ликвидность: только переход через 1 и только между двумя снимками, где она есть (как капитал)
+    if (a.lk && b.lk && b.lk[0] >= a.lk[0]) {
+      if (a.lk[1] >= 1 && b.lk[1] < 1) add('huzhe', 'Текущая ликвидность опустилась ниже 1: на' + NB + '31.12.' + b.lk[0] +
+        ' — ' + chislo(b.lk[1], 2) + ', краткосрочные долги больше оборотных средств (ГИР' + NB + 'БО)');
+      else if (a.lk[1] < 1 && b.lk[1] >= 1) add('luchshe', 'Оборотные средства снова покрывают краткосрочные долги: текущая ликвидность на' +
+        NB + '31.12.' + b.lk[0] + ' — ' + chislo(b.lk[1], 2) + ' (ГИР' + NB + 'БО)');
+    }
+    // новая отчётность: прибыль сменилась убытком — красная точка, убыток прибылью — зелёная, иначе — справочно
+    var novPrib = b.prib && b.vyr && b.prib[0] === b.vyr[0];
+    var tonOtch = !novPrib || !a.prib || !(b.prib[0] > a.prib[0]) ? 'info'
+      : a.prib[1] >= 0 && b.prib[1] < 0 ? 'huzhe' : a.prib[1] < 0 && b.prib[1] > 0 ? 'luchshe' : 'info';
+    if (b.vyr && (!a.vyr || b.vyr[0] > a.vyr[0])) add(tonOtch, 'Появилась отчётность за ' + b.vyr[0] + ': выручка ' + dengi(b.vyr[1]) +
       (b.prib && b.prib[0] === b.vyr[0] ? ', ' + (b.prib[1] < 0 ? 'убыток ' + dengi(-b.prib[1]) : 'прибыль ' + dengi(b.prib[1])) : ''));
     var poryadok = { huzhe: 0, info: 1, luchshe: 2 };
     return out.sort(function (p, q) { return poryadok[p.ton] - poryadok[q.ton]; }).slice(0, 7);
@@ -420,6 +451,6 @@
   }
 
   return { ryad: ryad, ryady: ryady, stroka: stroka, izmenenie: izmenenie, trendy: trendy, dengi: dengi, htmlDinamika: htmlDinamika,
-    snimok: snimok, sravnit: sravnit, zapomnit: zapomnit, htmlIzmeneniya: htmlIzmeneniya, html: html, KEY: KEY, CSS: CSS,
+    snimok: snimok, sravnit: sravnit, likvidnost: likvidnost, zapomnit: zapomnit, htmlIzmeneniya: htmlIzmeneniya, html: html, KEY: KEY, CSS: CSS,
     predydushchaya: predydushchaya, nuzhenKabinet: nuzhenKabinet, dogruzit: dogruzit };
 });

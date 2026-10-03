@@ -767,6 +767,9 @@ class TestKartochkiV4Kod(unittest.TestCase):
         self.assertEqual(K.imya('ПАО "НК "РОСНЕФТЬ"'), "ПАО «НК Роснефть»")
         self.assertEqual(K.imya('ООО "МИР ТЕХНИКИ"'), "ООО «Мир техники»")
         self.assertEqual(K.imya('ПАО "МТС"'), "ПАО «МТС»")
+        # kartochki-v3.7: хвост после кавычек не уходит внутрь и не теряет прописную
+        self.assertEqual(K.imya('ПАО "ТАТНЕФТЬ" ИМ. В.Д. ШАШИНА'), "ПАО «Татнефть» им. В.Д. Шашина")
+        self.assertEqual(K.imya('ФГУП "ЗАВОД" ИМЕНИ М.В. ХРУНИЧЕВА'), "ФГУП «Завод» имени М.В. Хруничева")
 
     def _msp(self, detail, status="ok", as_of="2026-09-10"):
         r = O.zapis(3, shtat=1, dohod=None)  # меньше выводов — V21 (⚪, последний по порядку) не срезается пределом 6
@@ -811,9 +814,17 @@ class TestKartochkiShtrafyV1(unittest.TestCase):
         v = self._v15()
         self.assertEqual(len(v), 1)
         t = v[0]["tekst"]
-        self.assertTrue(t.startswith("Налоговый штраф не был уплачен в срок — "), t)
-        self.assertIn("(данные ФНС на" + NB + "1" + NB + "декабря 2025)", t)
-        self.assertTrue(t.endswith("Мог быть уплачен после этой даты"), t)
+        # kartochki-v3.7: текст [Право · Налоговый юрист] 03.10 07:07, разд. 3
+        self.assertTrue(t.startswith("Налоговые штрафы по решениям 2024 года не были уплачены к" + NB + "01.10.2025 — "), t)
+        self.assertIn("(данные ФНС на" + NB + "01.12.2025)", t)
+        self.assertTrue(t.endswith("Могли быть уплачены после этой даты"), t)
+
+    def test_god_ot_daty_nabora(self):
+        t = self._v15(as_of="2026-12-01")[0]["tekst"]
+        self.assertIn("по решениям 2025 года", t)
+        self.assertIn("01.10.2026", t)
+        t = self._v15(as_of="2026-03-01")[0]["tekst"]
+        self.assertIn("по решениям 2024 года", t)
         self.assertNotIn("Не уплачен", t)
 
     def test_bez_daty_i_bez_signala_net_vyvoda(self):

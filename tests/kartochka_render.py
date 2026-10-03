@@ -412,6 +412,28 @@ def iz_check(r):
             if p0 and p0["god"] == p1["god"] - 1 and p0["dohod"] > 0:
                 f["delta"] = (p1["dohod"] / p0["dohod"] - 1) * 100
             k["fakty"]["dohod"] = f
+    # pribyl-kapital-v1 (Ночные-2, 03.10): прибыль и собственный капитал из ГИР БО уже есть в ответе (charts.profit,
+    # charts.balance.equity — строки 2400 и 1300), но выводами не становились. Берём только год выручки на карточке:
+    # другой год рядом с выручкой читался бы как один отчёт. Ряд пустой, значение не число — факта нет.
+    gv = (k["fakty"].get("dohod") or {}).get("god") if str((k["fakty"].get("dohod") or {}).get("istochnik") or "").startswith("ГИР БО") else None
+    if gv:
+        pr = None
+        for p in ch.get("profit") or []:
+            if isinstance(p, dict) and str(p.get("year")) == str(gv):
+                pr = chislo(p.get("value"))
+        if pr is None:
+            for x in D.get("kpi") or []:
+                if str(x.get("label") or "") == "Чистая прибыль за %d" % gv:
+                    pr = chislo(x.get("value"))
+        if pr is not None:
+            k["fakty"]["pribyl"] = {"kod": "pribyl", "god": gv, "znachenie": pr, "data": dt.date(gv, 12, 31),
+                                    "istochnik": "ГИР БО, бухгалтерская отчётность"}
+        b = ch.get("balance")
+        if isinstance(b, dict) and str(b.get("year")) == str(gv) and not isinstance(b.get("equity"), bool):
+            kp = chislo(b.get("equity"))
+            if kp is not None:
+                k["fakty"]["kapital"] = {"kod": "kapital", "god": gv, "znachenie": kp, "data": dt.date(gv, 12, 31),
+                                         "istochnik": "ГИР БО, бухгалтерская отчётность"}
     # kartochki-v2: с какой даты руководитель тот же (ЕГРЮЛ) — только дата, без ФИО (люди — при PERSONS_PUBLIC)
     k["rukovodit_s"] = data_iz(c.get("director_date")) or _rukovodit_s(D)
     if k["rukovodit_s"] and ((k["reg_date"] and k["rukovodit_s"] < k["reg_date"]) or (proverka and k["rukovodit_s"] > proverka)):
@@ -495,6 +517,18 @@ def vyvody(k):
             out.append(_v("V04", "warn", "%s%s — %s, на%s%d%s%% меньше, чем годом раньше" % (sl, za, dengi(d["znachenie"]), NB, round(-dl), NB), d["istochnik"], d["data"]))
         elif d["znachenie"] > 0:
             out.append(_v("V03a", "info", "%s%s — %s" % (sl, za, dengi(d["znachenie"])), d["istochnik"], d["data"]))
+    # pribyl-kapital-v1: V25 — капитал меньше нуля (та же фраза, что на экране проверки, kapital-v1); плюс — строки нет.
+    # V24 — чистая прибыль / убыток того же года. Порядок важен для предела «2 из одного источника»: капитал главнее убытка.
+    kp = F.get("kapital")
+    if kp and kp.get("znachenie") is not None and kp["znachenie"] < 0:
+        out.append(_v("V25", "warn", "Собственный капитал на%s31.12.%d — минус %s: обязательства больше активов" % (
+            NB, kp["god"], dengi(-kp["znachenie"])), kp["istochnik"], kp["data"]))
+    pb = F.get("pribyl")
+    if pb and pb.get("znachenie"):
+        if pb["znachenie"] > 0:
+            out.append(_v("V24", "ok", "Чистая прибыль за%s%d — %s" % (NB, pb["god"], dengi(pb["znachenie"])), pb["istochnik"], pb["data"]))
+        else:
+            out.append(_v("V24a", "warn", "Убыток за%s%d — %s" % (NB, pb["god"], dengi(-pb["znachenie"])), pb["istochnik"], pb["data"]))
     s = F.get("shtat")
     if s and s.get("znachenie") is not None and s.get("data"):
         n = int(s["znachenie"])

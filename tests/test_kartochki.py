@@ -825,5 +825,64 @@ class TestKartochkiShtrafyV1(unittest.TestCase):
         self.assertNotIn('"Не уплачен налоговый штраф', src)
 
 
+class TestPribylKapitalV1(unittest.TestCase):
+    """pribyl-kapital-v1 (Ночные-2, 03.10): прибыль и капитал из ГИР БО (charts.profit, charts.balance) — выводы с числом;
+    ворота не ослаблены: тот же предел «2 из одного источника», без выручки карточки нет."""
+
+    def _r(self, profit=None, balance=None, revenue=True):
+        r = _gazprom_kak_v_api()
+        ch = {} if not revenue else {"revenue": [{"year": 2024, "value": 40e6}, {"year": 2025, "value": 48.2e6}]}
+        if profit is not None:
+            ch["profit"] = profit
+        if balance is not None:
+            ch["balance"] = balance
+        r["dossier"]["charts"] = ch
+        return r
+
+    def test_pribyl_vyvod_s_chislom(self):
+        V = K.vyvody(K.iz_check(self._r(profit=[{"year": 2024, "value": 1e6}, {"year": 2025, "value": 3.4e6}])))
+        x = [v for v in V if v["kod"] == "V24"]
+        self.assertEqual([(v["ton"], v["tekst"], v["istochnik"], v["data"], v["s_chislom"]) for v in x],
+                         [("ok", "Чистая прибыль за" + NB + "2025 — 3,4" + NB + "млн" + NB + "₽", "ГИР БО, бухгалтерская отчётность",
+                           K.dt.date(2025, 12, 31), True)])
+
+    def test_ubytok_i_minus_kapital(self):
+        V = K.vyvody(K.iz_check(self._r(profit=[{"year": 2025, "value": -1.5e6}], balance={"year": 2025, "equity": -12.4e6})))
+        t = [(v["kod"], v["ton"], v["tekst"]) for v in V if v["istochnik"].startswith("ГИР БО")]
+        # предел «2 из одного источника»: капитал и убыток (жёлтые) главнее справочной выручки
+        self.assertEqual(t, [("V25", "warn", "Собственный капитал на" + NB + "31.12.2025 — минус 12,4" + NB + "млн" + NB + "₽: обязательства больше активов"),
+                             ("V24a", "warn", "Убыток за" + NB + "2025 — 1,5" + NB + "млн" + NB + "₽")])
+
+    def test_plyus_kapital_i_chuzhoj_god_molchat(self):
+        k = K.iz_check(self._r(profit=[{"year": 2024, "value": 5e6}], balance={"year": 2025, "equity": 7e6}))
+        kody = [v["kod"] for v in K.vyvody(k)]
+        self.assertNotIn("V24", kody)      # прибыль только за 2024, выручка — 2025: другой год не ставим
+        self.assertNotIn("V25", kody)      # капитал в плюсе — строки нет (как на экране проверки)
+        k = K.iz_check(self._r(balance={"year": 2024, "equity": -1e6}))
+        self.assertNotIn("kapital", k["fakty"])
+
+    def test_bez_vyruchki_ni_pribyli_ni_vorot(self):
+        k = K.iz_check(self._r(profit=[{"year": 2025, "value": 3e6}], balance={"year": 2025, "equity": -1e6}, revenue=False))
+        self.assertNotIn("pribyl", k["fakty"])
+        self.assertEqual(K.vorota(k)[1], "нет финансов (доход > 0 по ФНС / ГИР БО)")
+
+    def test_musor_ne_fakt(self):
+        k = K.iz_check(self._r(profit=[{"year": 2025, "value": "н/д"}], balance={"year": 2025, "equity": True}))
+        self.assertNotIn("pribyl", k["fakty"])
+        self.assertNotIn("kapital", k["fakty"])
+
+    def test_pribyl_otkryvaet_vorota_kotorye_byli_zakryty(self):
+        # пилот 02.10: 9 из 17 — «выводов 2 из 3». Компания: выручка + возраст, остальное без дат → раньше 2 вывода
+        r = self._r()
+        r["signals"] = [s for s in r["signals"] if s["id"] in ("status", "age")]
+        r["dossier"]["sections"] = []
+        k = K.iz_check(r)
+        self.assertEqual(K.vorota(k)[1], "выводов 2 из 3")
+        r = self._r(profit=[{"year": 2025, "value": 3.4e6}])
+        r["signals"] = [s for s in r["signals"] if s["id"] in ("status", "age")]
+        r["dossier"]["sections"] = []
+        self.assertEqual(K.vorota(K.iz_check(r)), (True, "ок"))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

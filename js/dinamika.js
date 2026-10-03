@@ -51,6 +51,22 @@
     var r = Math.round(p);
     return (r > 0 ? '+' : r < 0 ? '−' : '') + Math.abs(r) + NB + '%';
   }
+  // Рост в 3 раза и больше — «в 28 раз», а не «+2680 %»: так читается с первого взгляда.
+  // Ниже трёх раз и при снижении — проценты, как раньше. was и stalo — положительные числа.
+  function izmenenie(was, stalo) {
+    var k = stalo / was;
+    if (k < 3) return procent((stalo - was) / was * 100);
+    if (k < 10) {
+      var t = chislo(Math.round(k * 10) / 10, 1).replace(/,0$/, '');
+      return 'в' + NB + t + NB + (/,/.test(t) ? 'раза' : skl(+t, 'раз', 'раза', 'раз'));
+    }
+    var n = Math.round(k);
+    return 'в' + NB + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, NB) + NB + skl(n, 'раз', 'раза', 'раз');
+  }
+  function skl(n, a, b, c) {
+    var m = n % 100, d = n % 10;
+    return m > 10 && m < 20 ? c : d === 1 ? a : d >= 2 && d <= 4 ? b : c;
+  }
 
   // Ряд по годам: числа, без повторов года, по возрастанию, последние 5 лет.
   function ryad(arr) {
@@ -82,13 +98,14 @@
     if (p.znak && (pred.value < 0) !== (posl.value < 0)) {
       o.kGodu = posl.value < 0 ? 'в ' + pred.year + NB + '— прибыль' : 'в ' + pred.year + NB + '— убыток';
       o.ton = posl.value < 0 ? 'vniz' : 'vverh';
+      o.smena = true;
     } else if (pred.value > 0 && posl.value >= 0) {
       var d = (posl.value - pred.value) / pred.value * 100;
-      o.kGodu = procent(d) + ' к' + NB + pred.year;
+      o.kGodu = izmenenie(pred.value, posl.value) + ' к' + NB + pred.year;
       o.ton = Math.round(d) > 0 ? 'vverh' : Math.round(d) < 0 ? 'vniz' : 'ro';
       if (p.znak && posl.value === 0) o.ton = 'ro';
     }
-    if (perv.value > 0 && posl.value > 0) o.zaPeriod = procent((posl.value - perv.value) / perv.value * 100) + ' с' + NB + perv.year;
+    if (perv.value > 0 && posl.value > 0) o.zaPeriod = izmenenie(perv.value, posl.value) + ' с' + NB + perv.year;
     if (p.znak) {
       var ub = a.filter(function (x) { return x.value < 0; }).map(function (x) { return x.year; });
       // убыток прошлого года уже назван в строке «в 2024 — убыток» — не повторяем
@@ -153,7 +170,7 @@
     var rows = st.map(function (s) {
       // «Изм.» — только если у строки есть оба последних года таблицы; иначе честное «—»
       var izm = s.god === g1 && s.ryad.length > 1 && s.ryad[s.ryad.length - 2].year === gp && s.kGodu
-        ? (STRELKA[s.ton] ? STRELKA[s.ton] + NB : '') + (/^в\s/.test(s.kGodu) ? (s.ton === 'vverh' ? 'из убытка' : 'в убыток') : s.kGodu.replace(/\sк\s\d{4}$/, '')) : '—';
+        ? (STRELKA[s.ton] ? STRELKA[s.ton] + NB : '') + (s.smena ? (s.ton === 'vverh' ? 'из убытка' : 'в убыток') : s.kGodu.replace(/\sк\s\d{4}$/, '')) : '—';
       return '<tr class="din__r din__r--' + s.ton + '">' +
         '<th scope="row" class="din__n">' + esc(s.nazv) + (s.zaPeriod ? '<small>' + s.zaPeriod + '</small>' : '') + '</th>' +
         '<td class="din__g">' + sparklajn(s.ryad) + '</td>' +
@@ -402,7 +419,7 @@
     return izm + din;
   }
 
-  return { ryad: ryad, ryady: ryady, stroka: stroka, trendy: trendy, dengi: dengi, htmlDinamika: htmlDinamika,
+  return { ryad: ryad, ryady: ryady, stroka: stroka, izmenenie: izmenenie, trendy: trendy, dengi: dengi, htmlDinamika: htmlDinamika,
     snimok: snimok, sravnit: sravnit, zapomnit: zapomnit, htmlIzmeneniya: htmlIzmeneniya, html: html, KEY: KEY, CSS: CSS,
     predydushchaya: predydushchaya, nuzhenKabinet: nuzhenKabinet, dogruzit: dogruzit };
 });

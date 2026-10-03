@@ -19,7 +19,7 @@ test('уровни одинаковы: методика, страница /indek
 });
 
 test('«Высокий риск» — только про ЗСК и Банк России, не уровень Индекса', () => {
-  for (const f of ['indeks/index.html', 'indeks/metodika-v1.json', 'js/indeks-vorota.js', 'js/otchet.js', 'js/nedavnie.js', 'cabinet.html', 'index.html', 'report.html', 'delopis/index.html', 'proverit-schet/index.html']) {
+  for (const f of ['indeks/index.html', 'indeks/metodika-v1.json', 'js/indeks-vorota.js', 'js/indeks-otvet.js', 'js/otchet.js', 'js/nedavnie.js', 'cabinet.html', 'index.html', 'report.html', 'delopis/index.html', 'proverit-schet/index.html']) {
     const t = chitat(f);
     let i = -1;
     while ((i = t.indexOf('Высокий риск', i + 1)) >= 0) assert.match(t.slice(Math.max(0, i - 300), i + 300), /ЗСК|Банк[а-я]* России/, f);

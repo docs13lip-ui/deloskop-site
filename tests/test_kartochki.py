@@ -1088,5 +1088,51 @@ class TestKartochkiV38(unittest.TestCase):
         self.assertIn("Выручка выросла на 33" + NB + "% за год", t)
 
 
+class TestHabV2(unittest.TestCase):
+    """hab-v2 (03.10): хаб /company/ — разделы ОКВЭД, строка регионов, «Как читать карточку» (аудит [Продукт] 03.10, 2.4)."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.d, cls.kart, _ = sobrat(O.nabor(12))
+        cls.hub = chitat(pathlib.Path(cls.d, "company", "index.html"))
+
+    def test_razdely_okved(self):
+        h2 = [re.sub(r"<[^>]+>.*", "", x).strip() for x in re.findall(r'<section class="co-sec"><h2>(.*?)</h2>', self.hub)]
+        self.assertEqual(sorted(h2), sorted(["Строительство", "Торговля", "Транспорт и хранение"]))
+        self.assertIn("по основному виду деятельности в ЕГРЮЛ", self.hub)
+
+    def test_kazhdaya_kartochka_odin_raz(self):
+        for k in self.kart:
+            self.assertEqual(self.hub.count('href="%s"' % K.adres_str(k)), 1, k["inn"])
+
+    def test_bez_otrasli_poslednej(self):
+        z = O.zapis(20)
+        z["company"]["okved"] = ""
+        d, kart, _ = sobrat(O.nabor(4) + [z])
+        hub = chitat(pathlib.Path(d, "company", "index.html"))
+        h2 = re.findall(r'<section class="co-sec"><h2>([^<]*?) <span', hub)
+        self.assertEqual(h2[-1], "Отрасль не указана")
+
+    def test_kak_chitat(self):
+        self.assertIn('id="kak-chitat"', self.hub)
+        self.assertIn('href="#kak-chitat"', self.hub)
+        for a in ('href="/indeks/"', 'href="/tochnost/"', 'href="/nalogi/nagruzka-po-otraslyam-2025/#nagruzka"'):
+            self.assertIn(a, self.hub)
+        blok = re.search(r'id="kak-chitat".*?</section>', self.hub, re.S).group(0)
+        self.assertEqual(blok.count("<li>"), len(K.HAB_CHITAT))
+        # только о том, что делает карточка: без норм права, обещаний и «надёжности» (222-ФЗ)
+        self.assertIsNone(re.search(r"ст\.\s|ФЗ|НК РФ|гарант|надёжн|безопасн", blok, re.I))
+        self.assertIn("«Не проверяли» ≠ «не нашли»", blok)
+
+    def test_regiony_i_razmetka(self):
+        self.assertIn("По регионам:", self.hub)
+        ld = json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', self.hub).group(1))
+        self.assertEqual(ld["@type"], "BreadcrumbList")
+        self.assertEqual(ld["itemListElement"][-1]["item"], "https://deloskop.ru/company/")
+        d = re.search(r'<meta name="description" content="([^"]*)"', self.hub).group(1)
+        self.assertLessEqual(len(d), 160)
+        self.assertIn("из 3 отраслей", d)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

@@ -34,8 +34,29 @@
   function kodSost(v) { var k = String(v == null ? '' : v).trim(); return /^\d{3}$/.test(k) ? k : ''; }
   function iskl(k) { return !!(k && ISKL[k]); }
   function nazvIskl(k) { return 'ФНС готовит исключение из ЕГРЮЛ' + (k === '108' ? ' по' + NB + 'сведениям Банка России' : ''); }
+  // 407, 414, 415, 418, 420 — компания уже исключена из ЕГРЮЛ (заголовок [Право] 03.10 14:30, разд. 1 п. 3)
+  var ISKLYUCHENA = { '407': 1, '414': 1, '415': 1, '418': 1, '420': 1 };
+  function isklyuchena(k) { return !!(k && ISKLYUCHENA[k]); }
+  // Срок возражения кредитора: 3 месяца со дня публикации в «Вестнике», по 108 — 6 месяцев (п. 4 и 7 ст. 21.1 129-ФЗ).
+  // Публикации в снимке нет — считаем от даты записи и пишем «ориентировочно» ([Право] 03.10 14:30, разд. 1 п. 1).
+  function plusMes(iso, n) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || '');
+    if (!m) return '';
+    var g = +m[1], me = +m[2] - 1 + n, d = +m[3];
+    g += Math.floor(me / 12); me = me % 12;
+    var posl = new Date(Date.UTC(g, me + 1, 0)).getUTCDate();
+    return g + '-' + ('0' + (me + 1)).slice(-2) + '-' + ('0' + Math.min(d, posl)).slice(-2);
+  }
+  // Подстрочник к строке «ФНС готовит исключение» — текст «Истории» [Право] 14:30 (разд. 1 п. 4) + дата и «Вестник» (п. 1)
+  function podIskl(k, kodd) {
+    var mes = k === '108' ? 6 : 3, do_ = kodd ? dmy(plusMes(kodd, mes)) : '';
+    return 'Новых авансов не платите. Если компания вам должна — возражение в налоговую нужно подать в течение ' + mes + NB + 'месяцев ' +
+      'со дня публикации в «Вестнике государственной регистрации».' + (do_ ? ' Ориентировочно до' + NB + do_ + '.' : '') +
+      ' Дату публикации проверьте на vestnik-gosreg.ru.';
+  }
   // подпись статуса для строки «Статус в ЕГРЮЛ: … → …»: с кодом — точнее, чем «ликвидируется или исключается»
   function nazvSt(st, kod) {
+    if (isklyuchena(kod)) return 'исключена из' + NB + 'ЕГРЮЛ';
     if (st === 'LIQUIDATING' && kod) return iskl(kod) ? 'готовится исключение из' + NB + 'ЕГРЮЛ' : 'ликвидируется';
     return STATUS[st];
   }
@@ -397,11 +418,18 @@
   function sravnit(a, b, dop) {
     if (!a || !b || a.inn !== b.inn) return [];
     var out = [];
-    function add(ton, t) { out.push({ ton: ton, t: t }); }
+    function add(ton, t, pod) { var x = { ton: ton, t: t }; if (pod) x.pod = pod; out.push(x); }
     // предстоящее исключение из ЕГРЮЛ (код состояния): одна строка вместо «Статус в ЕГРЮЛ: …» и «Статус: норма → риск»
-    var iA = iskl(a.kod), iB = iskl(b.kod), bezSt = false;
-    if (iB && !iA && (a.kod || a.st === 'ACTIVE')) {
-      add('huzhe', nazvIskl(b.kod) + (b.kodd ? ': запись в' + NB + 'ЕГРЮЛ от' + NB + dmy(b.kodd) : '') + (a.st ? ' (на' + NB + 'прошлой проверке — ' + nazvSt(a.st, a.kod) + ')' : ''));
+    var iA = iskl(a.kod), iB = iskl(b.kod), xA = isklyuchena(a.kod), xB = isklyuchena(b.kod), bezSt = false;
+    var zapis = function (s) { return s.kodd ? ': запись в' + NB + 'ЕГРЮЛ от' + NB + dmy(s.kodd) : ''; };
+    var ranshe = a.st ? ' (на' + NB + 'прошлой проверке — ' + nazvSt(a.st, a.kod) + ')' : '';
+    if (xB && !xA && (a.kod || a.st === 'ACTIVE' || a.st === 'LIQUIDATING')) {
+      // уже исключена: тон — стоп; подстрочник — текст «Банк» записи isklyuchena [Право] 14:30 (разд. 1 п. 3)
+      add('huzhe', 'Компания исключена из' + NB + 'ЕГРЮЛ' + zapis(b) + ranshe,
+        'Закон приравнивает это к' + NB + 'ликвидации (п.' + NB + '2 ст.' + NB + '64.2 ГК' + NB + 'РФ): договор с' + NB + 'ней не' + NB + 'заключайте и' + NB + 'не' + NB + 'платите.');
+      bezSt = true;
+    } else if (iB && !iA && (a.kod || a.st === 'ACTIVE')) {
+      add('huzhe', nazvIskl(b.kod) + zapis(b) + ranshe, podIskl(b.kod, b.kodd));
       bezSt = true;
     } else if (iA && !iB && b.st === 'ACTIVE') {
       add('luchshe', 'Отметки о' + NB + 'предстоящем исключении из' + NB + 'ЕГРЮЛ больше нет: компания действующая');
@@ -512,7 +540,10 @@
     if (!rez.izm.length) return '<div class="izm"' + (rez.id ? ' data-izm="kabinet"' : '') + '><b>С вашей проверки ' + kogda + ' существенных изменений нет</b>' +
       '<span>Статус, руководитель, долги, оценка риска и признаки светофора — прежние.' + (rez.id ? ' Сравнили с ' + dosje + ' в вашем кабинете.' : '') + '</span></div>';
     return '<div class="izm izm--da"' + (rez.id ? ' data-izm="kabinet"' : '') + '><b>Что изменилось с вашей проверки ' + kogda + '</b><ul>' +
-      rez.izm.map(function (x) { return '<li class="izm--' + x.ton + '">' + esc(x.t) + '</li>'; }).join('') +
+      rez.izm.map(function (x) {
+        return '<li class="izm--' + x.ton + '">' + esc(x.t) + (x.pod ? '<small class="izm__pod">' + esc(x.pod).replace('vestnik-gosreg.ru',
+          '<a href="https://vestnik-gosreg.ru/" target="_blank" rel="noopener">vestnik-gosreg.ru</a>') + '</small>' : '') + '</li>';
+      }).join('') +
       '</ul><span>' + (rez.id ? 'Сравниваем с ' + dosje + ' из вашего кабинета — проверка с любого устройства.'
         : 'Сравниваем с проверкой на этом устройстве; снимок хранится только в вашем браузере.') + '</span></div>';
   }
@@ -552,7 +583,8 @@
     var x = null;
     try { x = fn(rez.s, b); } catch (e) { x = null; }
     if (!x || !x.t || rez.izm.some(function (q) { return q.t === x.t; })) return null;
-    var poryadok = { huzhe: 0, info: 1, luchshe: 2 }, izm = rez.izm.concat([{ ton: x.ton, t: x.t }]);
+    var dx = { ton: x.ton, t: x.t }; if (x.pod) dx.pod = x.pod;
+    var poryadok = { huzhe: 0, info: 1, luchshe: 2 }, izm = rez.izm.concat([dx]);
     izm.sort(function (p, q) { return poryadok[p.ton] - poryadok[q.ton]; });
     var nov = {}; Object.keys(rez).forEach(function (k) { nov[k] = rez[k]; });
     nov.izm = izm.slice(0, 7);
@@ -643,6 +675,7 @@
     '.izm b{font-size:15px;font-weight:600}.izm span{font-size:12px;color:var(--muted,#6B6B70)}.izm span a{color:inherit;text-decoration:underline;text-underline-offset:2px}' +
     '.izm ul{margin:4px 0;padding:0;list-style:none;display:grid;gap:4px}.izm li{padding-left:18px;position:relative}' +
     '.izm li::before{content:"";position:absolute;left:2px;top:.55em;width:8px;height:8px;border-radius:50%;background:var(--muted,#6B6B70)}' +
+    '.izm__pod{display:block;margin-top:2px;font-size:12.5px;line-height:1.45;color:var(--muted,#6B6B70)}.izm__pod a{white-space:nowrap;color:inherit;text-decoration:underline;text-underline-offset:2px}' +
     '.izm li.izm--huzhe::before{background:#E5484D}.izm li.izm--luchshe::before{background:#2FA36B}' +
     '.izm--0{margin:0;padding:0;border:0;font-size:13px;color:var(--muted,#6B6B70)}' +
     '#doc .izm,#doc .din{margin-top:14px}' +
@@ -675,5 +708,5 @@
 
   return { ryad: ryad, ryady: ryady, stroka: stroka, izmenenie: izmenenie, trendy: trendy, dengi: dengi, htmlDinamika: htmlDinamika, balans: balans, htmlBalans: htmlBalans,
     snimok: snimok, sravnit: sravnit, likvidnost: likvidnost, okved: okved, vRaz: vRaz, zapomnit: zapomnit, htmlIzmeneniya: htmlIzmeneniya, html: html, KEY: KEY, CSS: CSS,
-    iskl: iskl, kodSost: kodSost, predydushchaya: predydushchaya, nuzhenKabinet: nuzhenKabinet, dogruzit: dogruzit, dobavit: dobavit, sDop: sDop };
+    iskl: iskl, isklyuchena: isklyuchena, plusMes: plusMes, kodSost: kodSost, predydushchaya: predydushchaya, nuzhenKabinet: nuzhenKabinet, dogruzit: dogruzit, dobavit: dobavit, sDop: sDop };
 });

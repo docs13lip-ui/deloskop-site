@@ -447,7 +447,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
          (D.concerns.length?'<div class="box minus"><h3>На что обратить внимание</h3>'+lst(D.concerns)+'</div>':'<div class="box minus"><h3>На что обратить внимание</h3><ul><li>Существенных замечаний нет</li></ul></div>')+'</div>';
     if(ZSK)h+=zskHtml(ZSK);
     // «Что изменилось с вашей проверки» + «Динамика за 3–5 лет» (js/dinamika.js; нет модуля — блоков нет)
-    if(window.Dinamika)h+=Dinamika.html(R);
+    if(window.Dinamika)h+=Dinamika.html(R,{balans:false});
     if(D.kpi&&D.kpi.length)h+=kpiHtml(D.kpi);
     if(D.charts)h+=chartsHtml(D.charts);
     D.sections.forEach(function(sct){

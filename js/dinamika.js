@@ -162,7 +162,7 @@
   var STRELKA = { vverh: '▲', vniz: '▼', ro: '' };
 
   // Таблица «Показатель · спарклайн · прошлый год · последний год · Изм.» (блок E макета).
-  function htmlDinamika(r) {
+  function htmlDinamika(r, opt) {
     var rs = ryady(r);
     if (!rs.length) return '';
     var st = rs.map(stroka), g0 = st[0].ryad[0].year, g1 = st[0].god;
@@ -186,9 +186,74 @@
       '<th scope="col" class="din__v din__p n">' + gp + '</th><th scope="col" class="din__v n">' + g1 + '</th><th scope="col" class="din__v">Изм.</th></tr></thead>' +
       '<tbody>' + rows + '</tbody></table></div>' +
       (tr.length ? '<p class="din__tr">' + tr.map(esc).join(' ') + '</p>' : '') +
+      (opt && opt.balans === false ? '' : htmlBalans(r)) +
       '<p class="din__src">Источник: ГИР БО ФНС, годовая бухгалтерская отчётность; последний год — ' + g1 + ' (на' + NB + '31.12.' + g1 + ').' +
       (fns ? ' Численность и уплаченные налоги — открытые наборы ФНС за год.' : '') + '</p>' +
       '</section>';
+  }
+
+  // ---- «Баланс на 31.12»: на чём держится компания и кто кому должен (balans-ekran-v1) ----
+  // Только факты годовой отчётности (ГИР БО): dossier.charts.balance (капитал, долгосрочные и краткосрочные обязательства)
+  // и dossier.charts.debts (дебиторка, кредиторка, кредиты и займы). Без оценок — их даёт «Комментарий команды».
+  // В PDF-досье (report.html) свои графики баланса — там html(r, {balans: false}).
+  function chisl(v) { return typeof v === 'number' && isFinite(v) ? v : null; }
+  function dolya(v, tot) { var p = Math.round(v / tot * 100); return p < 1 ? '<1' + NB + '%' : p + NB + '%'; }
+  function balans(r) {
+    var ch = (r && r.dossier && r.dossier.charts) || {};
+    var b = ch.balance && typeof ch.balance === 'object' ? ch.balance : null, d = ch.debts && typeof ch.debts === 'object' ? ch.debts : null;
+    var out = { god: null, chasti: [], kapitalMinus: null, raschety: [], godR: null, zajmyKVyr: null };
+    if (b) {
+      var gb = parseInt(b.year, 10), eq = chisl(b.equity), ld = chisl(b.long_debt), sd = chisl(b.short_debt);
+      if (isFinite(gb) && (eq != null || ld != null || sd != null)) {
+        out.god = gb;
+        var ch3 = [{ k: 'kap', nazv: 'Собственный капитал', v: eq }, { k: 'dol', nazv: 'Долгосрочные обязательства', v: ld }, { k: 'kor', nazv: 'Краткосрочные обязательства', v: sd }]
+          .filter(function (x) { return x.v != null && x.v > 0; });
+        var tot = ch3.reduce(function (a, x) { return a + x.v; }, 0);
+        out.chasti = tot > 0 ? ch3.map(function (x) { return { k: x.k, nazv: x.nazv, v: x.v, dolya: dolya(x.v, tot), w: x.v / tot * 100 }; }) : [];
+        if (eq != null && eq < 0) out.kapitalMinus = eq;
+      }
+    }
+    if (d) {
+      var gd = parseInt(d.year, 10);
+      if (isFinite(gd)) {
+        [['rec', 'Фирме должны покупатели', d.receivables], ['pay', 'Фирма должна поставщикам', d.payables], ['loan', 'Кредиты и займы', d.loans]].forEach(function (x) {
+          var v = chisl(x[2]); if (v != null && v > 0) out.raschety.push({ k: x[0], nazv: x[1], v: v });
+        });
+        if (out.raschety.length) out.godR = gd;
+        var vy = (Array.isArray(ch.revenue) ? ch.revenue : []).filter(function (x) { return x && parseInt(x.year, 10) === gd; })[0];
+        var zl = chisl(d.loans);
+        if (zl != null && zl > 0 && vy && chisl(vy.value) != null && vy.value > 0) out.zajmyKVyr = Math.round(zl / vy.value * 100);
+      }
+    }
+    return out.chasti.length || out.kapitalMinus != null || out.raschety.length ? out : null;
+  }
+  function htmlBalans(r) {
+    var b = balans(r);
+    if (!b) return '';
+    var h = '<div class="din__bal" data-blok="balans">';
+    if (b.god != null) {
+      h += '<div class="din__bh"><b>На чём держится компания</b><span>баланс на' + NB + '31.12.' + b.god + '</span></div>';
+      if (b.chasti.length) {
+        h += '<div class="din__bar" role="img" aria-label="' + esc(b.chasti.map(function (x) { return x.nazv + ' — ' + x.dolya.replace(NB, ' '); }).join(', ')) + '">' +
+          b.chasti.map(function (x) { return '<i class="din__b--' + x.k + '" style="width:' + x.w.toFixed(1) + '%"></i>'; }).join('') + '</div>';
+      }
+      h += '<ul class="din__leg">' + b.chasti.map(function (x) {
+        return '<li><i class="din__b--' + x.k + '"></i><span>' + esc(x.nazv) + '</span><b class="n">' + dengi(x.v) + '</b><em class="n">' + x.dolya + '</em></li>';
+      }).join('') + (b.kapitalMinus != null ? '<li class="din__minus"><i></i><span>Собственный капитал</span><b class="n">' + dengi(b.kapitalMinus) + '</b><em>меньше нуля</em></li>' : '') + '</ul>';
+    }
+    if (b.raschety.length) {
+      h += '<div class="din__bh"><b>Кто кому должен</b><span>на' + NB + '31.12.' + b.godR + '</span></div><ul class="din__leg din__ras">' + b.raschety.map(function (x) {
+        return '<li><span>' + esc(x.nazv) + '</span><b class="n">' + dengi(x.v) + '</b><em class="n">' +
+          (x.k === 'loan' && b.zajmyKVyr != null ? b.zajmyKVyr + NB + '% выручки за' + NB + b.godR : '') + '</em></li>';
+      }).join('') + '</ul>';
+    }
+    return h + '</div>';
+  }
+  function htmlBalansOtdelno(r) {
+    var bh = htmlBalans(r);
+    if (!bh) return '';
+    return '<section class="din" aria-label="Баланс по годовой отчётности">' + bh +
+      '<p class="din__src">Источник: ГИР БО ФНС, годовая бухгалтерская отчётность (баланс).</p></section>';
   }
 
   // ---- «Что изменилось»: снимок существенных фактов, без персональных данных ----
@@ -534,6 +599,16 @@
     '.din__g{width:96px}.din__sv{display:block}.din__sv polyline{fill:none;stroke:var(--accent,#0B63E5);stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}' +
     '.din__sv .din__0{stroke:#C9C9C4;stroke-width:1;stroke-dasharray:2 2}' +
     '.din__tr{margin:0;font-size:14px;color:var(--ink2,#48484C)}.din__src{margin:0;font-size:12px;color:var(--muted,#6B6B70)}' +
+    '.din__bal{display:grid;gap:8px;padding-top:6px;border-top:1px solid var(--line,#E6E6E1)}' +
+    '.din__bh{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 10px;margin-top:6px}.din__bh b{font-size:14px;font-weight:600}.din__bh span{font-size:12px;color:var(--muted,#6B6B70)}' +
+    '.din__bar{display:flex;gap:2px;height:10px;border-radius:5px;overflow:hidden;background:var(--surface-2,#EEEEEA)}.din__bar i{display:block;height:100%;min-width:2px}' +
+    '.din__b--kap{background:var(--accent,#0B63E5)}.din__b--dol{background:#7FA8F0}.din__b--kor{background:#C9C9C4}' +
+    '.din__leg{margin:0;padding:0;list-style:none;display:grid;gap:2px;font-size:14px}' +
+    '.din__leg li{display:grid;grid-template-columns:auto 1fr auto 10em;align-items:baseline;gap:8px;padding:5px 0;border-top:1px solid var(--line,#E6E6E1)}.din__leg li:first-child{border-top:0}' +
+    '.din__leg li>i{width:8px;height:8px;border-radius:2px;align-self:center}.din__ras li{grid-template-columns:1fr auto 10em}' +
+    '.din__leg b{font-weight:600;text-align:right;white-space:nowrap}.din__leg em{font-style:normal;font-size:12px;color:var(--muted,#6B6B70);text-align:right;white-space:nowrap}' +
+    '.din__minus>i{background:#B3261E}.din__minus b{color:#B3261E}' +
+    '@media (max-width:520px){.din__leg li{grid-template-columns:auto 1fr auto}.din__ras li{grid-template-columns:1fr auto}.din__leg em{grid-column:2/-1;text-align:left;margin-top:-4px}.din__ras em{grid-column:1/-1}.din__leg em:empty{display:none}}' +
     '.izm{display:grid;gap:4px;padding:14px 18px;border-radius:16px;border:1px solid var(--line,#E6E6E1);font-size:14px}' +
     '.izm b{font-size:15px;font-weight:600}.izm span{font-size:12px;color:var(--muted,#6B6B70)}.izm span a{color:inherit;text-decoration:underline;text-underline-offset:2px}' +
     '.izm ul{margin:4px 0;padding:0;list-style:none;display:grid;gap:4px}.izm li{padding-left:18px;position:relative}' +
@@ -564,11 +639,11 @@
       izm = htmlIzmeneniya(rez);
     } catch (e) { izm = ''; }
     var din = '';
-    try { din = htmlDinamika(r); } catch (e) { din = ''; }
+    try { din = htmlDinamika(r, opt); if (!din && opt.balans !== false) din = htmlBalansOtdelno(r); } catch (e) { din = ''; }
     return izm + din;
   }
 
-  return { ryad: ryad, ryady: ryady, stroka: stroka, izmenenie: izmenenie, trendy: trendy, dengi: dengi, htmlDinamika: htmlDinamika,
+  return { ryad: ryad, ryady: ryady, stroka: stroka, izmenenie: izmenenie, trendy: trendy, dengi: dengi, htmlDinamika: htmlDinamika, balans: balans, htmlBalans: htmlBalans,
     snimok: snimok, sravnit: sravnit, likvidnost: likvidnost, okved: okved, vRaz: vRaz, zapomnit: zapomnit, htmlIzmeneniya: htmlIzmeneniya, html: html, KEY: KEY, CSS: CSS,
     predydushchaya: predydushchaya, nuzhenKabinet: nuzhenKabinet, dogruzit: dogruzit, dobavit: dobavit, sDop: sDop };
 });

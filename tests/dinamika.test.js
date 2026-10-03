@@ -144,7 +144,7 @@ test('страницы: модуль подключён на главной и �
   assert.match(ind, /<script src="\/js\/dinamika\.js" defer><\/script>/);
   assert.match(ind, /window\.Dinamika\?Dinamika\.html\(r\):''/);
   assert.match(rep, /<script src="\/js\/dinamika\.js"><\/script>/);
-  assert.match(rep, /if\(window\.Dinamika\)h\+=Dinamika\.html\(R\);/);
+  assert.match(rep, /if\(window\.Dinamika\)h\+=Dinamika\.html\(R(,\{balans:false\})?\);/);
 });
 
 test('Условия сделки: вывод API с точкой не даёт «..» (найдено на живом ответе 02.10)', () => {

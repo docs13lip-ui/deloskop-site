@@ -766,7 +766,7 @@ def _istochnik_stroka(ist, data, status="podtverzhdeno", podklyuchaem=False):
         STATUS_METKA.get(status, status))
 
 
-def svg_stolbcy(fin):
+def svg_stolbcy(fin, sl="Доход"):
     """Столбцы выручки — рисует сервер, без JS. Под ними таблица с теми же числами."""
     if len(fin) < 2:
         return ""
@@ -780,29 +780,97 @@ def svg_stolbcy(fin):
         bars.append('<rect x="%d" y="%d" width="%d" height="%d" rx="6" class="co-bar%s"/>'
                     '<text x="%d" y="%d" class="co-bar-t">%d</text>' % (
                         xx, h - bh, w, bh, " co-bar--last" if i == len(fin) - 1 else "", xx + w // 2, h + 18, x["god"]))
-    return ('<svg class="co-chart" viewBox="0 0 %d %d" role="img" aria-label="Доход по годам: %s">%s</svg>' % (
-        shir, h + 24, e("; ".join("%d — %s" % (x["god"], dengi(x["dohod"])) for x in fin)), "".join(bars)))
+    return ('<svg class="co-chart" viewBox="0 0 %d %d" role="img" aria-label="%s по годам: %s">%s</svg>' % (
+        shir, h + 24, sl, e("; ".join("%d — %s" % (x["god"], dengi(x["dohod"])) for x in fin)), "".join(bars)))
+
+
+def _razdel(x):
+    """Раздел ОКВЭД: из кода или из крошек страницы (добор)."""
+    return okved_razdel(x.get("okved")) or x.get("razdel") or ""
+
+
+def _dohod_kart(x):
+    """Доход как напечатан (dengi) — добор и полная сборка сортируют одинаково."""
+    v = (x.get("fakty", {}).get("dohod") or {}).get("znachenie") or 0
+    if v <= 0:
+        return 0.0
+    m = re.match(r"^([0-9]+(?:,[0-9]+)?) (трлн|млрд|млн|тыс\.)", dengi(v).replace("&nbsp;", NB))
+    return float(m.group(1).replace(",", ".")) * {"трлн": 1e12, "млрд": 1e9, "млн": 1e6, "тыс.": 1e3}[m.group(2)] if m else float(v)
+
+
+SOSEDEJ = 5  # v3.8b: 3–5 ссылок (ТЗ Маркетинга 03.10, 2.4)
 
 
 def pohozhie(k, vse):
-    """До 6 соседей: тот же регион и класс ОКВЭД → регион и раздел → класс по России → регион (Маркетинг §2.5)."""
-    moi_d = (k["fakty"].get("dohod") or {}).get("znachenie") or 0
-    ok4, ok2 = k["okved"][:5], k["okved"][:2]
-    ur = [lambda x: x["region"] == k["region"] and x["okved"][:5] == ok4 and ok4,
-          lambda x: x["region"] == k["region"] and x["okved"][:2] == ok2 and ok2,
-          lambda x: x["okved"][:5] == ok4 and ok4,
-          lambda x: x["region"] == k["region"] and k["region"]]
+    """v3.8b: регион+раздел ОКВЭД → раздел → регион → остальные (до 3). Только напечатанное на странице: добор = полная
+    сборка. Внутри уровня — ближе по доходу, затем ИНН."""
+    moi_d, rz = _dohod_kart(k), _razdel(k)
+    ur = [lambda x: rz and k.get("region") and x.get("region") == k["region"] and _razdel(x) == rz,
+          lambda x: rz and _razdel(x) == rz,
+          lambda x: k.get("region") and x.get("region") == k["region"],
+          None]
     out = []
     for f in ur:
-        kand = [x for x in vse if x["inn"] != k["inn"] and x not in out and f(x)]
-        kand.sort(key=lambda x: (abs(math.log1p(max(0, (x["fakty"].get("dohod") or {}).get("znachenie") or 0)) - math.log1p(max(0, moi_d))), x["inn"]))
-        out.extend(kand[:6 - len(out)])
-        if len(out) >= 6:
+        if f is None and len(out) >= 3:
+            break
+        kand = [x for x in vse if x["inn"] != k["inn"] and x not in out and (f is None or f(x))]
+        kand.sort(key=lambda x: (abs(math.log1p(_dohod_kart(x)) - math.log1p(moi_d)), x["inn"]))
+        out.extend(kand[:(SOSEDEJ if f else 3) - len(out)])
+        if len(out) >= SOSEDEJ:
             break
     return out
 
 
-def html_kartochki(k, V, sosedi, kom=None):
+def sosedi_html(k, sosedi):
+    """Блок «Похожие компании»; добор обновляет им и опубликованные карточки."""
+    if not sosedi:
+        return ""
+    rz = _razdel(k)
+    if k.get("region") and all(x.get("region") == k["region"] for x in sosedi):
+        zag = "Похожие компании — " + e(k["region"])
+    elif all((rz and _razdel(x) == rz) or (k.get("region") and x.get("region") == k["region"]) for x in sosedi):
+        zag = "Похожие компании"
+    else:
+        zag = "Ещё компании в Делоскопе"
+    return '<aside class="co-side card" aria-labelledby="sos"><h2 id="sos" class="co-h3">%s</h2><ul class="co-sos">%s</ul></aside>' % (
+        zag, "".join('<li><a href="%s">%s</a><span class="caption">%s</span></li>' % (
+            adres_str(x), e(x["name"]), e(", ".join(filter(None, [x.get("gorod") or x.get("region"),
+                                                                    dengi(_dohod_kart(x)) if _dohod_kart(x) else ""]))).replace("&nbsp;", NB))
+            for x in sosedi))
+
+
+# v3.8b: средняя нагрузка отрасли (data/fns-normy-2025.json, прил. 3 ММ-3-06/333@); свою нагрузку не сравниваем —
+# в API налоги со взносами. Модуль без чтения файлов (его берёт API): строки передаёт сборщик (normy).
+
+
+def otrasl_nagruzka(okved, normy):
+    """→ (строка ФНС, % за 2025) по самому длинному префиксу ОКВЭД (при равенстве — узкая строка) или None."""
+    kod = re.sub(r"[^0-9.]", "", str(okved or ""))
+    luchshij = None
+    for r in normy or []:
+        z = (r.get("nagruzka") or {}).get("2025")
+        if not kod or not isinstance(z, (int, float)):
+            continue
+        for pr in r.get("okved") or []:
+            klyuch = (len(pr), -len(r.get("okved") or []))
+            if kod.startswith(pr) and (luchshij is None or klyuch > luchshij[0]):
+                luchshij = (klyuch, r, z)
+    if not luchshij:
+        return None
+    nz = re.sub(r"\s+-\s+всего$", "", luchshij[1]["nazvanie"]).strip()
+    return nz[:1].upper() + nz[1:], luchshij[2]
+
+
+def otrasl_html(k, normy):
+    o = otrasl_nagruzka(k.get("okved"), normy)
+    if not o:
+        return ""
+    return ('<p class="small co-otr">Средняя налоговая нагрузка в отрасли «%s» за%s2025%sгод — %s%s%% (данные ФНС, без страховых взносов). '
+            '<a href="/nalogi/nagruzka-po-otraslyam-2025/#nagruzka">Таблица ФНС по отраслям ›</a></p>' % (
+                e(o[0]), NB, NB, ("%.1f" % o[1]).replace(".", ","), NB))
+
+
+def html_kartochki(k, V, sosedi, kom=None, normy=None):
     """kom — библиотека data/kommentarii.json (сайт читает файл сам, API передаёт её же); None — без комментариев."""
     nm = k["name"]
     iv = indeks_vid(k)
@@ -896,19 +964,23 @@ def html_kartochki(k, V, sosedi, kom=None):
     fin_blok = ""
     if fin:
         posl = fin[-1]
-        zag = "Доход за %d год — %s" % (posl["god"], dengi(posl["dohod"]))
+        # v3.8b: ряд ГИР БО — выручка, как в V03
+        vyr = str(k.get("finansy_istochnik") or "ГИР БО").startswith("ГИР БО")
+        sl = "Выручка" if vyr else "Доход"
+        zag = "%s за %d год — %s" % (sl, posl["god"], dengi(posl["dohod"]))
         if len(fin) >= 2 and fin[-2]["dohod"] > 0:
             izm = (posl["dohod"] / fin[-2]["dohod"] - 1) * 100
             # kartochki-v3.8: отчётность старше 2 лет от даты проверки (РЖД, «Газпром нефть» — 2021) — год в заголовке,
             # иначе «за год» читается как «за последний год»
             pg = k.get("proverka")
             za = (" за%s%d%sгод" % (NB, posl["god"], NB)) if (pg and pg.year - posl["god"] > 2) else " за год"
-            zag = ("Доход вырос на %d%s%%%s" % (round(izm), NB, za)) if izm >= 5 else \
-                  ("Доход снизился на %d%s%%%s" % (round(-izm), NB, za)) if izm <= -5 else "Доход почти не изменился" + za
+            rod = ("выросла", "снизилась", "почти не изменилась") if vyr else ("вырос", "снизился", "почти не изменился")
+            zag = ("%s %s на %d%s%%%s" % (sl, rod[0], round(izm), NB, za)) if izm >= 5 else \
+                  ("%s %s на %d%s%%%s" % (sl, rod[1], round(-izm), NB, za)) if izm <= -5 else "%s %s%s" % (sl, rod[2], za)
         tab = "".join("<tr><td>%d</td><td class=\"num\">%s</td></tr>" % (x["god"], dengi(x["dohod"])) for x in reversed(fin))
         fin_blok = ('<section class="co-sec" aria-labelledby="fin"><h2 id="fin">%s</h2>%s<div class="table-wrap"><table class="table">'
-                    '<thead><tr><th>Год</th><th>Доход</th></tr></thead><tbody>%s</tbody></table></div>%s</section>' % (
-                        e(zag).replace("&nbsp;", NB), svg_stolbcy(fin), tab,
+                    '<thead><tr><th>Год</th><th>%s</th></tr></thead><tbody>%s</tbody></table></div>%s</section>' % (
+                        e(zag).replace("&nbsp;", NB), svg_stolbcy(fin, sl), sl, tab,
                         _istochnik_stroka(k.get("finansy_istochnik") or "ГИР БО", k.get("finansy_data"),
                                           "podtverzhdeno" if k.get("finansy_data") else "ne_provereno")))
     elif (k["fakty"].get("dohod") or {}).get("znachenie") is not None:
@@ -935,15 +1007,9 @@ def html_kartochki(k, V, sosedi, kom=None):
         if rows:
             lyudi = ('<section class="co-sec" aria-labelledby="lyudi"><h2 id="lyudi">Руководство и владельцы</h2>%s%s</section>'
                      % ("".join(rows), _istochnik_stroka("ЕГРЮЛ", k.get("egrul_data"))))
-    # соседи
-    sos = ""
-    if sosedi:
-        sos = '<aside class="co-side card" aria-labelledby="sos"><h2 id="sos" class="co-h3">Похожие компании%s</h2><ul class="co-sos">%s</ul></aside>' % (
-            (" — " + e(k["region"])) if k.get("region") and all(x["region"] == k["region"] for x in sosedi) else "",
-            "".join('<li><a href="%s">%s</a><span class="caption">%s</span></li>' % (
-                adres_str(x), e(x["name"]), e(", ".join(filter(None, [x.get("gorod") or x.get("region"),
-                                                                        dengi(x["fakty"]["dohod"]["znachenie"]) if (x["fakty"].get("dohod") or {}).get("znachenie") else ""]))).replace("&nbsp;", NB))
-                for x in sosedi))
+    if fin_blok and fin_blok.endswith("</section>"):
+        fin_blok = fin_blok[:-len("</section>")] + otrasl_html(k, normy) + "</section>"
+    sos = sosedi_html(k, sosedi)
     podzag = " · ".join(filter(None, ["Действующая", ("работает " + vozr) if mes else "", e(mesto) if mesto else "",
                                       "ИНН " + k["inn"], ("ОГРН " + k["ogrn"]) if k.get("ogrn") else ""]))
     return """<!doctype html>
@@ -1151,13 +1217,14 @@ def kom_ogovorka_html():
 
 
 # ---------------------------------------------------------------- точка входа для API (render-v1)
-def kartochka_iz_check(zapis, sosedi=(), kom=None):
+def kartochka_iz_check(zapis, sosedi=(), kom=None, normy=None):
     """Ответ /api/check → (годится, причина, адрес, html без оболочки).
 
     Те же ворота, что у статичной волны (vorota): не прошла — (False, причина, None, None), и API отвечает 404.
     ИП (ИНН из 12 цифр) отбрасывается до всякой обработки, как в otobrat. sosedi — уже разобранные
     карточки (iz_check) для блока «Похожие»; пусто — блока нет. kom — библиотека data/kommentarii.json сайта
-    (как partials/obolochka.json): без неё карточка API выйдет без «Комментария команды» и не совпадёт с файлом волны."""
+    (как partials/obolochka.json): без неё карточка API выйдет без «Комментария команды» и не совпадёт с файлом волны.
+    normy — «nagruzka» из data/fns-normy-2025.json (v3.8b)."""
     inn = re.sub(r"\D", "", str(((zapis.get("company") or {}).get("inn")) or zapis.get("inn") or ""))
     if len(inn) == 12:
         return False, "не юрлицо или неверный ИНН", None, None
@@ -1166,7 +1233,7 @@ def kartochka_iz_check(zapis, sosedi=(), kom=None):
     ok, pr = vorota(k, V)
     if not ok:
         return False, pr, None, None
-    return True, pr, adres_str(k), html_kartochki(k, V, pohozhie(k, list(sosedi)), kom)
+    return True, pr, adres_str(k), html_kartochki(k, V, pohozhie(k, list(sosedi)), kom, normy)
 
 
 # ---------------------------------------------------------------- оболочка для API (obolochka-v1)

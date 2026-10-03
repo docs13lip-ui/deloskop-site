@@ -437,7 +437,7 @@ class TestObshchijRender(unittest.TestCase):
         pervye = {}
         kom = json.loads((KOREN / "data" / "kommentarii.json").read_text(encoding="utf-8"))  # API передаёт тот же файл сайта
         for z in zap:
-            ok, pr, adres, telo = R.kartochka_iz_check(z, kart, kom)
+            ok, pr, adres, telo = R.kartochka_iz_check(z, kart, kom, K.zagruzit_normy())
             self.assertTrue(ok, pr)
             pervye[adres] = ss.sobrat_stranicu(telo, r, podval, shapka)
         self.assertEqual(len(pervye), len(kart))
@@ -938,11 +938,15 @@ class TestDoborV35(unittest.TestCase):
         self.assertEqual(o["s_diska"], 7)
         posle = self._snimok(d2)
         self.assertEqual([str(p.relative_to(d1)) for p in stranicy(d1)], [str(p.relative_to(d2)) for p in stranicy(d2)])
-        for put, bajty in do.items():
-            if put.startswith("company/") and put != "company/index.html":
-                self.assertEqual(posle[put], bajty, "добор изменил опубликованную карточку " + put)
-        for put in ("company/index.html", "sitemap-companies.xml"):
-            self.assertEqual(posle[put], pathlib.Path(d1, put).read_bytes(), put + " после добора ≠ полной сборке")
+        # v3.8b: добор обновляет у опубликованных карточек только «Похожие компании» — и все файлы = полной сборке
+        polnaya = self._snimok(d1)
+        self.assertEqual(sorted(posle), sorted(polnaya))
+        for put, bajty in polnaya.items():
+            self.assertEqual(posle[put], bajty, put + " после добора ≠ полной сборке")
+        izm = [p for p in do if p.startswith("company/") and p != "company/index.html" and do[p] != posle[p]]
+        for put in izm:
+            a, b = do[put].decode(), posle[put].decode()
+            self.assertEqual(K._SOS.sub(r"\1\3", a), K._SOS.sub(r"\1\3", b), "добор изменил не только соседей: " + put)
 
     def test_bez_dobavit_stiraet_kak_ranshe(self):
         z = O.nabor(6)
@@ -984,6 +988,85 @@ class TestDoborV35(unittest.TestCase):
                 self.assertEqual(K.dengi(s["fakty"]["dohod"]["znachenie"]), K.dengi(dk))
 
 
+class TestSosediV38b(unittest.TestCase):
+    """kartochki-v3.8b: 3–5 «Похожих компаний» у каждой карточки, раздел ОКВЭД — и со страницы (добор)."""
+
+    def test_ot_treh_do_pyati(self):
+        z = O.nabor(12)
+        d, kart, _ = sobrat(z)
+        for p in stranicy(d):
+            m = re.search(r'<ul class="co-sos">(.*?)</ul>', chitat(p))
+            n = m.group(1).count("<li>") if m else 0
+            self.assertTrue(3 <= n <= 5, (p, n))
+
+    def test_razdel_so_stranicy(self):
+        z = O.nabor(4)
+        d, kart, _ = sobrat(z)
+        st = K.kartochki_na_diske(d)
+        for k in kart:
+            self.assertEqual(st[k["inn"]]["razdel"], K.okved_razdel(k["okved"]))
+
+    def test_vhodyashchie_u_vseh(self):
+        z = O.nabor(10)
+        d, kart, _ = sobrat(z)
+        vse = "".join(chitat(p) for p in stranicy(d))
+        for p in stranicy(d):
+            self.assertIn('href="/company/%s/"' % p.parent.name, vse.replace(chitat(p), ""), "нет входящих: " + p.parent.name)
+
+
+class TestOtraslV38b(unittest.TestCase):
+    """kartochki-v3.8b: средняя нагрузка отрасли — самый длинный префикс ОКВЭД в data/fns-normy-2025.json."""
+
+    def test_prefiks(self):
+        n = K.zagruzit_normy()
+        nz, z = K.otrasl_nagruzka("24.10.29", n)
+        self.assertTrue(nz.startswith("Производство металлургическое"))
+        self.assertEqual(z, 5.2)
+        self.assertEqual(K.otrasl_nagruzka("06.10", n)[1], 51.7)   # «05–06» точнее раздела B
+        self.assertEqual(K.otrasl_nagruzka("20.15.3", n)[1], 2.9)
+        self.assertIsNone(K.otrasl_nagruzka("", n))
+
+    def test_net_fajla_net_stroki(self):
+        self.assertEqual(K.zagruzit_normy("/net/takogo.json"), [])
+        self.assertIsNone(K.otrasl_nagruzka("24.10", []))
+
+    def test_na_kartochke(self):
+        z = O.zapis(1, finansy=[100e6, 108e6], dohod=108e6)
+        z["company"]["okved"] = "24.10.29"
+        d, kart, _ = sobrat([z], limit=5)
+        t = chitat(stranicy(d)[0])
+        self.assertIn("Средняя налоговая нагрузка в отрасли «Производство металлургическое", t)
+        self.assertIn("5,2" + NB + "% (данные ФНС, без страховых взносов)", t)
+        self.assertIn('href="/nalogi/nagruzka-po-otraslyam-2025/#nagruzka"', t)
+
+
+class TestGolajaKartochkaV38b(unittest.TestCase):
+    """kartochki-v3.8b: карточка в комплекте — «голое» тело html_kartochki; добор надевает оболочку → байты полной сборки."""
+
+    def test_golaya_odevaetsya(self):
+        z = O.nabor(6)
+        d1, _, _ = sobrat(z)
+        d2, _, _ = sobrat(z[:5])
+        kart, _ = K.otobrat(z, K.STUPENI[0])
+        vse = kart
+        k = next(x for x in kart if x["inn"] == K.iz_check(z[5])["inn"])
+        put = pathlib.Path(d2, K.adres_str(k).strip("/"), "index.html")
+        put.parent.mkdir(parents=True, exist_ok=True)
+        telo = K.html_kartochki(k, k["_V"], K.pohozhie(k, vse), K.kommentarii.zagruzit(), K.zagruzit_normy())
+        self.assertIn(K.BEZ_OBOLOCHKI, telo)
+        put.write_text(telo, encoding="utf-8")
+        K.sobrat([], d2, dobavit=True)
+        for p in pathlib.Path(d1).rglob("*"):
+            if p.is_file():
+                self.assertEqual(pathlib.Path(d2, p.relative_to(d1)).read_bytes(), p.read_bytes(), str(p.relative_to(d1)))
+
+    def test_vyruchka_v_tablice(self):
+        d, kart, _ = sobrat(O.nabor(3), limit=5)
+        t = chitat(stranicy(d)[0])
+        self.assertIn("<th>Выручка</th>", t)
+        self.assertIn('aria-label="Выручка по годам:', t)
+
+
 class TestKartochkiV38(unittest.TestCase):
     """kartochki-v3.8: аббревиатура без гласных и год у старой отчётности."""
 
@@ -996,13 +1079,13 @@ class TestKartochkiV38(unittest.TestCase):
         z = O.zapis(1, finansy=[100e6, 108e6], dohod=108e6)  # последний год — 2022, проверка — 2026
         d, kart, _ = sobrat([z], limit=5)
         t = chitat(stranicy(d)[0])
-        self.assertIn("Доход вырос на 8" + NB + "% за" + NB + "2022" + NB + "год", t)
+        self.assertIn("Выручка выросла на 8" + NB + "% за" + NB + "2022" + NB + "год", t)  # v3.8b: ряд ГИР БО — выручка
         self.assertNotIn("% за год</h2>", t)
 
     def test_svezhaya_otchetnost_za_god(self):
         d, kart, _ = sobrat(O.nabor(3), limit=5)
         t = "".join(chitat(p) for p in stranicy(d))
-        self.assertIn("Доход вырос на 33" + NB + "% за год", t)
+        self.assertIn("Выручка выросла на 33" + NB + "% за год", t)
 
 
 if __name__ == "__main__":

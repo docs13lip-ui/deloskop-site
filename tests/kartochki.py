@@ -26,6 +26,7 @@
 
 Данные в репозиторий не кладём: файл .jsonl живёт у того, кто собирает (папка tests/kartochki_dannye/ — в .gitignore).
 """
+import html
 import json
 import os
 import re
@@ -164,6 +165,22 @@ _LD = re.compile(r'<script type="application/ld\+json">(.*?)</script>', re.S)
 _DOHOD = re.compile(r"доход ([0-9]+(?:,[0-9]+)?)(?:&nbsp;|\u00a0| )(трлн|млрд|млн|тыс\.)(?:&nbsp;|\u00a0| )₽")
 _MNOZH = {"трлн": 1e12, "млрд": 1e9, "млн": 1e6, "тыс.": 1e3}
 _SVEDENIYA = re.compile(r"сведения на (\d\d)\.(\d\d)\.(\d{4})")
+BEZ_OBOLOCHKI = "<!--shapka--><!--/shapka-->"
+_KROSH = re.compile(r'<nav class="co-krosh caption"[^>]*>(.*?)</nav>', re.S)
+_RAZDELY = {t for _, _, t in OKVED_RAZDELY}
+_SOS = re.compile(r'(<aside class="co-side card"><h2 class="co-h3">Полный отчёт</h2>.*?</aside>\n)(.*?)(\n<aside class="co-side card" aria-labelledby="pasport-h">)', re.S)
+
+
+NORMY_FNS = os.path.join(KOREN, "data", "fns-normy-2025.json")
+
+
+def zagruzit_normy(put=NORMY_FNS):
+    """v3.8b: строки «nagruzka» справочника ФНС; нет файла — []."""
+    try:
+        with open(put, encoding="utf-8") as fh:
+            return json.load(fh).get("nagruzka") or []
+    except (OSError, ValueError):
+        return []
 
 
 def kartochki_na_diske(koren=KOREN):
@@ -197,6 +214,10 @@ def kartochki_na_diske(koren=KOREN):
             k["fakty"]["dohod"] = {"znachenie": float(z.group(1).replace(",", ".")) * _MNOZH[z.group(2)]}
         daty = [dt.date(int(g), int(mm), int(dd)) for dd, mm, g in _SVEDENIYA.findall(t)]
         k["_lastmod"] = max(daty) if daty else None
+        kr = _KROSH.search(t)  # v3.8b: раздел ОКВЭД — последнее звено крошек
+        if kr:
+            hv = html.unescape(re.sub(r"<[^>]+>", "", kr.group(1))).split(" › ")[-1].strip()
+            k["razdel"] = hv if hv in _RAZDELY else ""
         out[k["inn"]] = k
     return out
 
@@ -224,11 +245,22 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         zapisat(os.path.join(papka, "index.html"), "")  # чтобы подвал уже знал о хабе
     podval = ss.podval_html(r)
     shapka = ss.shapka_html()
+    normy = zagruzit_normy()
     kom = kommentarii.zagruzit()  # «Комментарий команды» — data/kommentarii.json (только утверждённые [Право] тексты)
     izm = 0
     for k in kart:
-        txt = ss.sobrat_stranicu(html_kartochki(k, k["_V"], pohozhie(k, vse), kom), r, podval, shapka)
+        txt = ss.sobrat_stranicu(html_kartochki(k, k["_V"], pohozhie(k, vse), kom, normy), r, podval, shapka)
         izm += zapisat(os.path.join(koren, adres_str(k).strip("/"), "index.html"), txt)
+    # v3.8b: у опубликованных — свежие «Похожие компании», остальное байт в байт
+    for x in starye:
+        put = os.path.join(papka, x["_papka"], "index.html")
+        with open(put, encoding="utf-8") as fh:
+            t = fh.read()
+        t2 = _SOS.sub(lambda m: m.group(1) + sosedi_html(x, pohozhie(x, vse)) + m.group(3), t, count=1)
+        if BEZ_OBOLOCHKI in t2:
+            # «голое» тело из комплекта — оболочка той же sobrat_stranicu
+            t2 = ss.sobrat_stranicu(t2, r, podval, shapka)
+        izm += zapisat(put, t2)
     if vse:
         zapisat(os.path.join(papka, "index.html"), ss.sobrat_stranicu(html_haba(vse, hub_index), r, podval, shapka))
     elif os.path.exists(os.path.join(papka, "index.html")):

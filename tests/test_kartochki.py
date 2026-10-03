@@ -884,5 +884,94 @@ class TestPribylKapitalV1(unittest.TestCase):
         self.assertEqual(K.vorota(K.iz_check(r)), (True, "ок"))
 
 
+class TestFinansyDataV34(unittest.TestCase):
+    """kartochki-v3.4 (Ночные-2, 03.10): таблица дохода из ряда ГИР БО — с датой 31.12 последнего года и «● подтверждено»,
+    как вывод «Выручка за Г» над ней (живые МТС, Магнит, ВК 03.10 писали «дата сведений не указана · ○ не проверяли»)."""
+
+    def _fin(self, t):
+        i = t.index('aria-labelledby="fin"')
+        return t[i:t.index("</section>", i)]
+
+    def test_ryad_girbo_s_datoj(self):
+        k = K.iz_check(_gazprom_kak_v_api())
+        self.assertEqual(k["finansy_data"], K.dt.date(2025, 12, 31))
+        f = self._fin(K.html_kartochki(k, K.vyvody(k), []))
+        self.assertIn("сведения на", f)
+        self.assertNotIn("дата сведений не указана", f)
+        self.assertNotIn("не проверяли", f)
+
+    def test_yavnaya_data_vygruzki_glavnee(self):
+        k = K.iz_check(_gazprom_kak_v_api(finansy_data="2026-04-01"))
+        self.assertEqual(k["finansy_data"], K.dt.date(2026, 4, 1))
+
+    def test_bez_ryada_girbo_daty_net(self):
+        r = _gazprom_kak_v_api(finansy=[{"god": 2024, "dohod": 1e6}, {"god": 2025, "dohod": 2e6}])
+        r["dossier"]["charts"] = {}
+        k = K.iz_check(r)
+        self.assertIsNone(k["finansy_data"])   # источник ряда не назван — дату не придумываем
+
+
+class TestDoborV35(unittest.TestCase):
+    """kartochki-v3.5 (Ночные-2, 03.10): `sobrat --dobavit` — порция новых карточек не стирает опубликованные;
+    хаб и sitemap после добора — те же байты, что при полной сборке всех данных сразу."""
+
+    def _snimok(self, d):
+        return {str(p.relative_to(d)): p.read_bytes() for p in pathlib.Path(d).rglob("*") if p.is_file()}
+
+    def test_dobor_kak_polnaya_sborka(self):
+        z = O.nabor(12)
+        d1, _, _ = sobrat(z)
+        d2, _, _ = sobrat(z[:7])
+        do = self._snimok(d2)
+        _, o = K.sobrat(z[7:], d2, dobavit=True)
+        self.assertEqual(o["s_diska"], 7)
+        posle = self._snimok(d2)
+        self.assertEqual([str(p.relative_to(d1)) for p in stranicy(d1)], [str(p.relative_to(d2)) for p in stranicy(d2)])
+        for put, bajty in do.items():
+            if put.startswith("company/") and put != "company/index.html":
+                self.assertEqual(posle[put], bajty, "добор изменил опубликованную карточку " + put)
+        for put in ("company/index.html", "sitemap-companies.xml"):
+            self.assertEqual(posle[put], pathlib.Path(d1, put).read_bytes(), put + " после добора ≠ полной сборке")
+
+    def test_bez_dobavit_stiraet_kak_ranshe(self):
+        z = O.nabor(6)
+        d, _, _ = sobrat(z[:4])
+        K.sobrat(z[4:], d)
+        self.assertEqual(len(stranicy(d)), 2)
+
+    def test_svezhij_ne_proshel_vorota_uhodit(self):
+        z = O.nabor(5)
+        d, kart, _ = sobrat(z)
+        plohoj = json.loads(json.dumps(z[0]))
+        plohoj["company"]["status"] = "LIQUIDATED"   # свежая порция: компания больше не действует
+        k0 = K.iz_check(z[0])
+        self.assertFalse(K.vorota(K.iz_check(plohoj))[0])
+        K.sobrat([plohoj], d, dobavit=True)
+        ostalis = [p.parent.name[:10] for p in stranicy(d)]
+        self.assertNotIn(k0["inn"], ostalis)
+        self.assertEqual(len(ostalis), 4)
+
+    def test_chuzhuyu_papku_ne_trogaet(self):
+        z = O.nabor(4)
+        d, _, _ = sobrat(z[:2])
+        chuzhaya = pathlib.Path(d, "company", "0000000000-ruchnaya")
+        chuzhaya.mkdir()
+        (chuzhaya / "index.html").write_text("<p>без JSON-LD</p>", encoding="utf-8")
+        K.sobrat(z[2:], d, dobavit=True)
+        self.assertTrue((chuzhaya / "index.html").exists())
+
+    def test_zaglushka_so_stranicy(self):
+        z = O.nabor(3)
+        d, kart, _ = sobrat(z)
+        st = K.kartochki_na_diske(d)
+        for k in kart:
+            s = st[k["inn"]]
+            self.assertEqual((s["name"], s["region"], s["gorod"] or ""), (k["name"], k["region"], k.get("gorod") or ""))
+            self.assertEqual(s["_lastmod"], K.lastmod(k, k["_V"]))
+            dk = (k["fakty"].get("dohod") or {}).get("znachenie")
+            if dk:
+                self.assertEqual(K.dengi(s["fakty"]["dohod"]["znachenie"]), K.dengi(dk))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

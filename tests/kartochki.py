@@ -5,7 +5,8 @@
 собирает статичные страницы-карточки, хаб /company/, sitemap-companies.xml и строку Sitemap в robots.txt.
 Только стандартная библиотека Python.
 
-    python3 tests/kartochki.py sobrat  --vhod kartochki.jsonl [--stupen 0] [--spros 800 --kontrol 200]
+    python3 tests/kartochki.py sobrat  --vhod kartochki.jsonl [--stupen 0] [--spros 800 --kontrol 200] [--dobavit]
+        # --dobavit (v3.5): опубликованные карточки не трогать, новые — добавить; хаб и sitemap — по всем
     python3 tests/kartochki.py proverka --vhod kartochki.jsonl [--podrobno]  # только отчёт «сколько проходит ворота», файлы не трогает
     python3 tests/kartochki.py iz-api  --inn spisok.txt --vyhod kartochki.jsonl [--pauza 6] [--maks 300]  # живой /api/check; 429 — стоп;
         # служебный доступ — DELOSKOP_SERVICE_TOKEN в окружении запуска (заголовок X-Deloskop-Service; не в файлы)
@@ -153,29 +154,83 @@ def zapisat(put, txt):
     return False
 
 
-def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None):
+# ---------------------------------------------------------------- kartochki-v3.5: добор порциями (--dobavit)
+# Сведения компаний в репозиторий и проект не кладём, а анонимно API отдаёт 3–6 ответов за запуск. Поэтому полная
+# пересборка из одного запуска стёрла бы карточки прошлых порций. В режиме «добавить» уже опубликованные карточки
+# остаются как есть (байт в байт), а хаб, sitemap и «Похожие компании» новых карточек знают о них по самим
+# страницам: JSON-LD Organization (ИНН, название, регион, город), доход — из meta description, lastmod — самая
+# свежая «сведения на дд.мм.гггг» страницы (то же правило, что lastmod()). Новых данных не храним.
+_LD = re.compile(r'<script type="application/ld\+json">(.*?)</script>', re.S)
+_DOHOD = re.compile(r"доход ([0-9]+(?:,[0-9]+)?)(?:&nbsp;|\u00a0| )(трлн|млрд|млн|тыс\.)(?:&nbsp;|\u00a0| )₽")
+_MNOZH = {"трлн": 1e12, "млрд": 1e9, "млн": 1e6, "тыс.": 1e3}
+_SVEDENIYA = re.compile(r"сведения на (\d\d)\.(\d\d)\.(\d{4})")
+
+
+def kartochki_na_diske(koren=KOREN):
+    """→ {ИНН: заглушка} опубликованных карточек: только то, что уже напечатано на странице."""
+    papka = os.path.join(koren, PAPKA)
+    out = {}
+    if not os.path.isdir(papka):
+        return out
+    for d in sorted(os.listdir(papka)):
+        m = re.match(r"^(\d{10})-", d)
+        put = os.path.join(papka, d, "index.html")
+        if not m or not os.path.isfile(put):
+            continue
+        with open(put, encoding="utf-8") as fh:
+            t = fh.read()
+        org = None
+        for blok in _LD.findall(t):
+            try:
+                graf = json.loads(blok).get("@graph") or []
+            except ValueError:
+                continue
+            org = next((x for x in graf if isinstance(x, dict) and x.get("@type") == "Organization"), org)
+        if not org or org.get("taxID") != m.group(1) or not org.get("name"):
+            continue
+        adr = org.get("address") or {}
+        k = {"inn": m.group(1), "name": org["name"], "region": adr.get("addressRegion") or "",
+             "gorod": adr.get("addressLocality") or "", "okved": "", "fakty": {}, "_papka": d, "_s_diska": True}
+        md = re.search(r'<meta name="description" content="([^"]*)"', t)
+        z = _DOHOD.search(md.group(1)) if md else None
+        if z:
+            k["fakty"]["dohod"] = {"znachenie": float(z.group(1).replace(",", ".")) * _MNOZH[z.group(2)]}
+        daty = [dt.date(int(g), int(mm), int(dd)) for dd, mm, g in _SVEDENIYA.findall(t)]
+        k["_lastmod"] = max(daty) if daty else None
+        out[k["inn"]] = k
+    return out
+
+
+def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, dobavit=False):
     kart, otchet = otobrat(zapisi, limit, spros, kontrol)
     r = ss.rekv_sajta()  # beta-v1: режим сайта (в бете — без реквизитов ИП и с полосой беты)
     papka = os.path.join(koren, PAPKA)
     nuzhnye = {adres_str(k).strip("/").split("/", 1)[1] for k in kart}
+    starye, svezhie = [], set()
+    if dobavit:
+        # свежие сведения главнее страницы; ИНН, который сейчас не прошёл ворота, уходит, как при полной сборке
+        svezhie = {inn for inn, _, _ in otchet.get("po_inn", [])}
+        starye = [x for inn, x in sorted(kartochki_na_diske(koren).items()) if inn not in svezhie]
+        nuzhnye |= {x["_papka"] for x in starye}
+    vse = kart + starye
     # карточки, которые больше не проходят ворота, убираем — адрес уйдёт в «мягкую 404» → живую проверку
     if os.path.isdir(papka):
         for d in os.listdir(papka):
-            if re.match(r"^\d{10}-", d) and d not in nuzhnye:
-                shutil.rmtree(os.path.join(papka, d))
+            if re.match(r"^\d{10}-", d) and d not in nuzhnye and (not dobavit or d[:10] in svezhie):
+                shutil.rmtree(os.path.join(papka, d))  # при доборе — только ИНН из этой порции, чужое не трогаем
     # хаб и подвал: ссылка «Компании» в подвале появляется вместе с хабом (sobrat_shapku смотрит на company/index.html)
-    hub_index = len(kart) >= HUB_INDEX_OT
-    if kart:
+    hub_index = len(vse) >= HUB_INDEX_OT
+    if vse:
         zapisat(os.path.join(papka, "index.html"), "")  # чтобы подвал уже знал о хабе
     podval = ss.podval_html(r)
     shapka = ss.shapka_html()
     kom = kommentarii.zagruzit()  # «Комментарий команды» — data/kommentarii.json (только утверждённые [Право] тексты)
     izm = 0
     for k in kart:
-        txt = ss.sobrat_stranicu(html_kartochki(k, k["_V"], pohozhie(k, kart), kom), r, podval, shapka)
+        txt = ss.sobrat_stranicu(html_kartochki(k, k["_V"], pohozhie(k, vse), kom), r, podval, shapka)
         izm += zapisat(os.path.join(koren, adres_str(k).strip("/"), "index.html"), txt)
-    if kart:
-        zapisat(os.path.join(papka, "index.html"), ss.sobrat_stranicu(html_haba(kart, hub_index), r, podval, shapka))
+    if vse:
+        zapisat(os.path.join(papka, "index.html"), ss.sobrat_stranicu(html_haba(vse, hub_index), r, podval, shapka))
     elif os.path.exists(os.path.join(papka, "index.html")):
         os.remove(os.path.join(papka, "index.html"))
     # sitemap-companies.xml + robots.txt
@@ -183,11 +238,14 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None):
     rb = os.path.join(koren, "robots.txt")
     stroka = "Sitemap: %s/sitemap-companies.xml" % SAJT
     robots = open(rb, encoding="utf-8").read()
-    if kart:
+    if vse:
+        lm = {adres_str(k): (k["_lastmod"] if k.get("_s_diska") else lastmod(k, k["_V"])) for k in vse}
+        lm = {a: d for a, d in lm.items() if d}
         urls = []
         if hub_index:
-            urls.append("  <url><loc>%s/%s/</loc><lastmod>%s</lastmod></url>" % (SAJT, PAPKA, max(lastmod(k, k["_V"]) for k in kart).isoformat()))
-        urls += ["  <url><loc>%s%s</loc><lastmod>%s</lastmod></url>" % (SAJT, adres_str(k), lastmod(k, k["_V"]).isoformat()) for k in kart]
+            urls.append("  <url><loc>%s/%s/</loc><lastmod>%s</lastmod></url>" % (SAJT, PAPKA, max(lm.values()).isoformat()))
+        # v3.5: по адресу (= по ИНН) — полная сборка и добор дают один и тот же sitemap
+        urls += ["  <url><loc>%s%s</loc><lastmod>%s</lastmod></url>" % (SAJT, a, lm[a].isoformat()) for a in sorted(lm)]
         zapisat(sm, '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + "\n".join(urls) + "\n</urlset>\n")
         if stroka not in robots:
             zapisat(rb, robots.rstrip("\n") + "\n" + stroka + "\n")
@@ -197,6 +255,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None):
         if stroka in robots:
             zapisat(rb, robots.replace(stroka + "\n", "").replace(stroka, ""))
     otchet["izmeneno_stranic"] = izm
+    otchet["s_diska"] = len(starye)
     return kart, otchet
 
 
@@ -302,11 +361,13 @@ def main(argv):
         _, o = otobrat(zapisi, limit, spros, kontrol)
         pechat_otcheta(o, "--podrobno" in argv)
         return 0
-    _, o = sobrat(zapisi, KOREN, limit, spros, kontrol)
+    _, o = sobrat(zapisi, KOREN, limit, spros, kontrol, dobavit="--dobavit" in argv)
     # хаб появился/исчез → ссылка «Компании» в подвале всех страниц; пересобираем общий подвал сразу
     import subprocess
     subprocess.run([sys.executable, os.path.join(KOREN, "tests", "sobrat_shapku.py")], cwd=KOREN, check=True)
     pechat_otcheta(o)
+    if o.get("s_diska"):
+        print("Добор (--dobavit): опубликованных карточек оставлено как есть: %d." % o["s_diska"])
     print("Карточек изменено: %d. Дальше: node --test tests/*.test.* && python3 tests/test_kartochki.py → PR." % o["izmeneno_stranic"])
     return 0
 

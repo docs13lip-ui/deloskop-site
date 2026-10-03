@@ -27,6 +27,18 @@
   var STX = { ok: 'норма', info: 'справочно', warn: 'внимание', bad: 'риск' };
   var VES = { ok: 0, info: 0, warn: 1, bad: 2 };
   var STATUS = { ACTIVE: 'действующая', LIQUIDATING: 'ликвидируется или исключается из ЕГРЮЛ', LIQUIDATED: 'ликвидирована', BANKRUPT: 'банкротство', REORGANIZING: 'реорганизация' };
+  // Код состояния ЕГРЮЛ (company.state_code, API status-kody-api-v1; DaData кладёт эти коды в LIQUIDATING):
+  // 105–107, 110 — ФНС готовит исключение из ЕГРЮЛ; 108 — по сведениям Банка России (заголовки [Право] 03.10 08:11 и 12:07).
+  // Нет кода в ответе (API до выкладки, старые снимки) — сравниваем по одному статусу, как раньше.
+  var ISKL = { '105': 1, '106': 1, '107': 1, '108': 1, '110': 1 };
+  function kodSost(v) { var k = String(v == null ? '' : v).trim(); return /^\d{3}$/.test(k) ? k : ''; }
+  function iskl(k) { return !!(k && ISKL[k]); }
+  function nazvIskl(k) { return 'ФНС готовит исключение из ЕГРЮЛ' + (k === '108' ? ' по' + NB + 'сведениям Банка России' : ''); }
+  // подпись статуса для строки «Статус в ЕГРЮЛ: … → …»: с кодом — точнее, чем «ликвидируется или исключается»
+  function nazvSt(st, kod) {
+    if (st === 'LIQUIDATING' && kod) return iskl(kod) ? 'готовится исключение из' + NB + 'ЕГРЮЛ' : 'ликвидируется';
+    return STATUS[st];
+  }
 
   function esc(t) {
     return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) {
@@ -295,6 +307,13 @@
       // основной вид деятельности (ЕГРЮЛ): код и название — для «основной вид деятельности сменился»
       var ok = okved(r);
       if (ok) { s.ok = ok.kod; if (ok.nazv) s.okn = ok.nazv; }
+      // код состояния ЕГРЮЛ и дата записи — для «ФНС начала готовить исключение / отметки больше нет»
+      var kd = kodSost(c.state_code);
+      if (kd) {
+        s.kod = kd;
+        var kdd = /^(\d{4}-\d{2}-\d{2})/.exec(String(c.state_actuality_date || ''));
+        if (kdd) s.kodd = kdd[1];
+      }
     }
     return s;
   }
@@ -379,7 +398,17 @@
     if (!a || !b || a.inn !== b.inn) return [];
     var out = [];
     function add(ton, t) { out.push({ ton: ton, t: t }); }
-    if (a.st && b.st && a.st !== b.st) add(b.st === 'ACTIVE' ? 'luchshe' : 'huzhe', 'Статус в ЕГРЮЛ: ' + STATUS[a.st] + ' → ' + STATUS[b.st]);
+    // предстоящее исключение из ЕГРЮЛ (код состояния): одна строка вместо «Статус в ЕГРЮЛ: …» и «Статус: норма → риск»
+    var iA = iskl(a.kod), iB = iskl(b.kod), bezSt = false;
+    if (iB && !iA && (a.kod || a.st === 'ACTIVE')) {
+      add('huzhe', nazvIskl(b.kod) + (b.kodd ? ': запись в' + NB + 'ЕГРЮЛ от' + NB + dmy(b.kodd) : '') + (a.st ? ' (на' + NB + 'прошлой проверке — ' + nazvSt(a.st, a.kod) + ')' : ''));
+      bezSt = true;
+    } else if (iA && !iB && b.st === 'ACTIVE') {
+      add('luchshe', 'Отметки о' + NB + 'предстоящем исключении из' + NB + 'ЕГРЮЛ больше нет: компания действующая');
+      bezSt = true;
+    }
+    if (!bezSt && a.st && b.st && (a.st !== b.st || (a.kod && b.kod && iskl(a.kod) !== iskl(b.kod))) && nazvSt(a.st, a.kod) !== nazvSt(b.st, b.kod))
+      add(b.st === 'ACTIVE' ? 'luchshe' : 'huzhe', 'Статус в ЕГРЮЛ: ' + nazvSt(a.st, a.kod) + ' → ' + nazvSt(b.st, b.kod));
     if (a.lvl && b.lvl && a.lvl !== b.lvl) {
       var o = ['low', 'medium', 'high'];
       add(o.indexOf(b.lvl) > o.indexOf(a.lvl) ? 'huzhe' : 'luchshe', 'Оценка риска: ' + LVL[a.lvl] + ' → ' + LVL[b.lvl]);
@@ -392,6 +421,7 @@
     if (a.nedost === true && b.nedost === false) add('luchshe', 'Отметка о недостоверности сведений в ЕГРЮЛ снята');
     if (a.dir && b.dir && a.dir !== b.dir) add('info', 'Руководитель сменился: новая запись в ЕГРЮЛ с' + NB + dmy(b.dir));
     Object.keys(b.sig || {}).forEach(function (id) {
+      if (bezSt && id === 'status') return;
       var x = (a.sig || {})[id], y = b.sig[id];
       if (!x) { if (VES[y[0]] > 0) add('huzhe', y[1] + ': ' + STX[y[0]]); return; }
       if (x[0] !== y[0]) add(VES[y[0]] > VES[x[0]] ? 'huzhe' : VES[y[0]] < VES[x[0]] ? 'luchshe' : 'info', y[1] + ': ' + STX[x[0]] + ' → ' + STX[y[0]]);
@@ -645,5 +675,5 @@
 
   return { ryad: ryad, ryady: ryady, stroka: stroka, izmenenie: izmenenie, trendy: trendy, dengi: dengi, htmlDinamika: htmlDinamika, balans: balans, htmlBalans: htmlBalans,
     snimok: snimok, sravnit: sravnit, likvidnost: likvidnost, okved: okved, vRaz: vRaz, zapomnit: zapomnit, htmlIzmeneniya: htmlIzmeneniya, html: html, KEY: KEY, CSS: CSS,
-    predydushchaya: predydushchaya, nuzhenKabinet: nuzhenKabinet, dogruzit: dogruzit, dobavit: dobavit, sDop: sDop };
+    iskl: iskl, kodSost: kodSost, predydushchaya: predydushchaya, nuzhenKabinet: nuzhenKabinet, dogruzit: dogruzit, dobavit: dobavit, sDop: sDop };
 });

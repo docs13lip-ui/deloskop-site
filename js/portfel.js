@@ -25,6 +25,8 @@
   var IZ_API = { high: 'ser', medium: 'vopr', low: 'bez' };
   var INN_RE = /^\d{10}(\d{2})?$/;
   var ISKL = { '105': 1, '106': 1, '107': 1, '108': 1, '110': 1 };
+  // 407, 414, 415, 418, 420 — уже исключена из ЕГРЮЛ (как ISKLYUCHENA в js/dinamika.js)
+  var ISKLYUCHENA = { '407': 1, '414': 1, '415': 1, '418': 1, '420': 1 };
 
   function esc(t) {
     return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
@@ -77,7 +79,7 @@
         if (!a.length || po[inn].ip) return;
         var z = a.reduce(function (m, s) { return Number(s.t) > Number(m.t) ? s : m; });
         var k = String(z.kod || '');
-        if (ISKL[k] && Number(z.t) >= po[inn].t - 3600 * 1000) po[inn].isk = k;
+        if ((ISKL[k] || ISKLYUCHENA[k]) && Number(z.t) >= po[inn].t - 3600 * 1000) po[inn].isk = k;
       });
     }
     return Object.keys(po).map(function (k) { return po[k]; }).sort(function (a, b) {
@@ -118,7 +120,7 @@
     var imya = r.ip ? 'Индивидуальный предприниматель' : (r.nm || 'Компания');
     return '<li class="pf__r" data-inn="' + r.inn + '">' +
       '<div class="pf__a"><b class="pf__nm">' + esc(imya) + '</b><span class="pf__pill pf__pill--' + r.ur + '">' + UR[r.ur].t + '</span>' +
-      (r.isk ? '<span class="pf__isk">ФНС готовит исключение из' + NB + 'ЕГРЮЛ' + (r.isk === '108' ? ' по' + NB + 'сведениям Банка России' : '') + '</span>' : '') + '</div>' +
+      (r.isk ? '<span class="pf__isk">' + (ISKLYUCHENA[r.isk] ? 'Компания исключена из' + NB + 'ЕГРЮЛ' : 'ФНС готовит исключение из' + NB + 'ЕГРЮЛ' + (r.isk === '108' ? ' по' + NB + 'сведениям Банка России' : '')) + '</span>' : '') + '</div>' +
       '<div class="pf__b"><span class="pf__inn n">ИНН' + NB + r.inn + '</span><span class="pf__d n' + (k.staryj ? ' pf__d--star' : '') + '">' + k.t + '</span></div>' +
       '<div class="pf__c"><button type="button" class="pf__go" data-pf-go="' + r.inn + '">Перепроверить</button>' +
       '<button type="button" class="pf__x" data-pf-x="' + r.inn + '" aria-label="Убрать из списка">' + KREST + '</button></div></li>';

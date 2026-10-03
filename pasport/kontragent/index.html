@@ -312,6 +312,8 @@ td b{font-weight:600}
 <script src="/js/lestnica.js"></script>
 <script src="/js/papka.js"></script>
 <script src="/js/indeks-vorota.js"></script>
+<script src="/indeks/indeks.js"></script>
+<script src="/js/indeks-otvet.js"></script>
 <script src="/js/nagruzka.js"></script>
 <script src="/js/rentabelnost.js"></script>
 <script src="/pasport/engine.js"></script>
@@ -666,7 +668,7 @@ td b{font-weight:600}
     };
   }
   fetch(API+'/api/report/'+encodeURIComponent(id)).then(function(x){if(!x.ok)throw x.status;return x.json()})
-    .then(function(r){render(r,{usloviya:U,indeksVorota:window.IndeksVorota,dostup:r.dostup||null,summa:summa,rezhim:q.get('rezhim')||'osn'});})
+    .then(function(r){var go=function(){render(r,{usloviya:U,indeksVorota:window.IndeksVorota,dostup:r.dostup||null,summa:summa,rezhim:q.get('rezhim')||'osn'});};if(window.IndeksOtvet)IndeksOtvet.gotovo(go);else go();})
     .catch(function(s){fail(s===404||s===410?'Досье по этой ссылке не найдено. <a href="/">Проверить компанию заново</a>':'Не получилось загрузить сведения. Обычно это минута — <a href="">обновите страницу</a>.');});
 })();
 </script>

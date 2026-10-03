@@ -234,6 +234,96 @@ class TestStranica(unittest.TestCase):
         self.assertEqual(len(stranicy(d)), 5, "карточки, выпавшие из волны, должны удаляться")
 
 
+class TestVolnaPartiiIStranicy(unittest.TestCase):
+    """kartochki-volna-v1 (ТЗ [Продукт · Данные] 03.10 разд. 3.3): sitemap — не больше N новых адресов в сутки;
+    хаб /company/ — по 100 карточек на страницу; IndexNow — карточки только новой партии."""
+    D1 = K.dt.date(2026, 10, 4)
+
+    def test_partiya_po_dohodu_i_schet_za_den(self):
+        lm = {"/company/%d/" % i: self.D1 for i in range(5)}
+        dohod = {"/company/%d/" % i: i * 10 for i in range(5)}
+        vybor, metka, zhdut = K.partiya_sitemap(lm, "", self.D1, 3, dohod)
+        self.assertEqual(sorted(vybor), ["/company/2/", "/company/3/", "/company/4/"])  # самые крупные — первыми
+        self.assertEqual((metka, zhdut), (("2026-10-04", 3, 3), 2))
+        xml = "<!-- partiya 2026-10-04: 3 -->\n" + "".join("<loc>%s%s</loc>" % (K.SAJT, a) for a in vybor)
+        v2, m2, z2 = K.partiya_sitemap(lm, xml, self.D1, 3, dohod)  # тот же день — лимит выбран
+        self.assertEqual((sorted(v2), m2, z2), (sorted(vybor), ("2026-10-04", 3, 0), 2))
+        v3, m3, z3 = K.partiya_sitemap(lm, xml, self.D1 + K.dt.timedelta(days=1), 3, dohod)  # завтра — остальные
+        self.assertEqual((len(v3), m3, z3), (5, ("2026-10-05", 2, 2), 0))
+
+    def test_stoyashchie_ostayutsya_vypavshie_uhodyat(self):
+        xml = "<loc>%s/company/a/</loc><loc>%s/company/b/</loc>" % (K.SAJT, K.SAJT)
+        lm = {"/company/a/": self.D1, "/company/c/": self.D1}  # b не прошла ворота индексации
+        vybor, metka, zhdut = K.partiya_sitemap(lm, xml, self.D1, 0)
+        self.assertEqual((sorted(vybor), metka, zhdut), (["/company/a/"], None, 1))
+
+    def test_sobrat_partiyami_i_determinirovano(self):
+        # в наборе-образце за воротами индексации одна карточка: партия 0 — ждёт; завтра с партией 1 — в sitemap
+        d, kart, o = sobrat(O.nabor(30), partiya=0, segodnya=self.D1)
+        sm = pathlib.Path(d, "sitemap-companies.xml")
+        t1 = sm.read_text(encoding="utf-8")
+        self.assertEqual(re.findall(r"<loc>[^<]+/company/\d{10}-", t1), [])
+        self.assertNotIn("partiya", t1)
+        self.assertEqual((o["sitemap_vsego"], o["sitemap_novyh"], o["sitemap_zhdut"]), (0, 0, 1))
+        self.assertEqual(len(stranicy(d)), len(kart), "партия ограничивает только sitemap, не публикацию")
+        _, o2 = K.sobrat(O.nabor(30), d, partiya=1, segodnya=self.D1 + K.dt.timedelta(days=1))
+        t2 = sm.read_text(encoding="utf-8")
+        self.assertEqual(len(re.findall(r"<loc>[^<]+/company/\d{10}-", t2)), 1)
+        self.assertTrue(t2.startswith('<?xml version="1.0" encoding="UTF-8"?>\n<!-- partiya 2026-10-05: 1 -->\n<urlset'), t2[:120])
+        self.assertEqual((o2["sitemap_novyh"], o2["sitemap_zhdut"]), (1, 0))
+        _, o3 = K.sobrat(O.nabor(30), d, partiya=1, segodnya=self.D1 + K.dt.timedelta(days=2))
+        self.assertEqual(sm.read_text(encoding="utf-8"), t2, "повторная сборка без новых меняет sitemap")
+        self.assertEqual(o3["izmeneno_stranic"], 0)
+
+    def test_hab_po_stranicam(self):
+        stary = K.HAB_NA_STRANICE
+        K.HAB_NA_STRANICE = 10
+        try:
+            d, kart, _ = sobrat(O.nabor(30), segodnya=self.D1)
+            s1 = chitat(pathlib.Path(d, "company", "index.html"))
+            s2p = pathlib.Path(d, "company", "stranica", "2", "index.html")
+            s2 = chitat(s2p)
+            vse = [chitat(pathlib.Path(d, "company", "index.html"))] + [
+                chitat(p) for p in sorted(pathlib.Path(d, "company", "stranica").glob("*/index.html"))]
+            n = len(vse)
+            self.assertEqual(n, -(-len(kart) // 10))
+            ssylki = [a for t in vse for a in re.findall(r'<li><a href="(/company/\d{10}-[^"]+)"', t)]
+            self.assertEqual(sorted(ssylki), sorted(K.adres_str(k) for k in kart), "каждая карточка — ровно на одной странице")
+            self.assertIn('rel="canonical" href="https://deloskop.ru/company/stranica/2/"', s2)
+            self.assertIn('content="noindex, follow"', s2)
+            self.assertIn('aria-current="page">2<', s2)
+            self.assertIn('href="/company/" rel="prev"', s2)
+            self.assertNotIn('id="kak-chitat"', s2)
+            self.assertIn('id="kak-chitat"', s1)
+            self.assertIn('href="/company/stranica/2/" rel="next"', s1)
+            self.assertIn('rel="canonical" href="https://deloskop.ru/company/"', s1)
+            sm = pathlib.Path(d, "sitemap-companies.xml").read_text(encoding="utf-8")
+            self.assertNotIn("stranica", sm)
+            self.assertEqual(len(stranicy(d)), len(kart), "страницы хаба не считаются карточками")
+            K.sobrat(O.nabor(30)[:12], d, segodnya=self.D1)
+            self.assertFalse(pathlib.Path(d, "company", "stranica", "3").exists(), "лишняя страница хаба осталась")
+            K.sobrat(O.nabor(30)[:5], d, segodnya=self.D1)
+            self.assertFalse(pathlib.Path(d, "company", "stranica").exists())
+        finally:
+            K.HAB_NA_STRANICE = stary
+
+    def test_odna_stranica_bez_navigacii(self):
+        d, _, _ = sobrat(O.nabor(12), segodnya=self.D1)
+        s1 = chitat(pathlib.Path(d, "company", "index.html"))
+        self.assertNotIn("co-str", s1)
+        self.assertFalse(pathlib.Path(d, "company", "stranica").exists())
+
+    def test_indexnow_tolko_novaya_partiya(self):
+        import indexnow as ix
+        v_sm = ["https://deloskop.ru/", "https://deloskop.ru/company/", "https://deloskop.ru/company/1234567890-a/",
+                "https://deloskop.ru/company/1234567891-b/"]
+        izm = ["index.html", "company/index.html", "company/1234567890-a/index.html", "company/1234567891-b/index.html"]
+        self.assertEqual(ix.vybrat(izm, v_sm, {"https://deloskop.ru/company/1234567891-b/"}),
+                         ["https://deloskop.ru/", "https://deloskop.ru/company/", "https://deloskop.ru/company/1234567891-b/"])
+        self.assertEqual(ix.vybrat(izm, v_sm), v_sm)  # без списка новых — как раньше
+        self.assertEqual(ix.locs_kart("<loc>x</loc><loc>y</loc>"), {"x", "y"})
+
+
 class TestPasportNaKartochke(unittest.TestCase):
     """karta-v1.1: ссылка «Собрать Паспорт» по ИНН и знаки ● ◆ ○ как в Паспорте контрагента."""
 
@@ -1374,6 +1464,42 @@ class TestOkvedV1(unittest.TestCase):
                 self.assertTrue(kl, imya_ + ": «Похожие» без кода ОКВЭД")
                 for s2 in re.findall(r'href="/company/([^/]+)/"', re.search(r'<ul class="co-sos">(.*?)</ul>', t, re.S).group(1)):
                     self.assertEqual(self.okved_str(stranicy_s.get(s2, ""))[:2], kl, imya_ + " → " + s2)
+
+
+
+class TestNdsPorogV1(unittest.TestCase):
+    """nds-porog-v1 (Ночные-2, 03.10): на карточке УСН — факт «выручка за 2025 год при пороге освобождения от НДС 20 млн ₽»
+    (текст [Право · Налоговый юрист] 03.10 21:10 дословно) вместо «Применяет упрощённую систему»; без совета и прогноза."""
+
+    def _k(self, ryad, na=K.dt.date(2026, 10, 3)):
+        return {"finansy": [{"god": g, "dohod": v} for g, v in ryad], "finansy_istochnik": "ГИР БО, бухгалтерская отчётность"}, na
+
+    def test_tekst_pravo(self):
+        self.assertEqual(K.vyvod_nds_porog(*self._k([(2024, 15e6), (2025, 18.4e6)])),
+                         "Упрощённая система; выручка за 2025 год — 18,4" + NB + "млн" + NB + "₽ при пороге освобождения от НДС 20" + NB + "млн" + NB + "₽ (п." + NB + "1 ст." + NB + "145 НК РФ)")
+        self.assertIn("— 48,2" + NB + "млн" + NB + "₽ при пороге", K.vyvod_nds_porog(*self._k([(2025, 48.2e6)])))
+        self.assertIn("— 20" + NB + "000" + NB + "001" + NB + "₽ при пороге", K.vyvod_nds_porog(*self._k([(2025, 20_000_001)])))
+
+    def test_molchim(self):
+        self.assertIsNone(K.vyvod_nds_porog(*self._k([(2024, 18e6)])))                                   # нет 2025
+        self.assertIsNone(K.vyvod_nds_porog(*self._k([(2025, 18e6), (2026, 19e6)])))                     # есть 2026 — не прогноз
+        self.assertIsNone(K.vyvod_nds_porog(*self._k([(2025, 18e6)], K.dt.date(2027, 5, 2))))            # окно закрылось
+        self.assertIsNone(K.vyvod_nds_porog(*self._k([(2025, 18e6)], K.dt.date(2025, 12, 31))))
+        self.assertIsNone(K.vyvod_nds_porog(*self._k([(2025, 18e6)], None)))
+        self.assertIsNone(K.vyvod_nds_porog({"finansy": [{"god": 2025, "dohod": 18e6}], "finansy_istochnik": "ФНС"}, K.dt.date(2026, 10, 3)))
+
+    def test_v_kartochke_vmesto_v13(self):
+        r = _gazprom_kak_v_api()
+        r["dossier"]["charts"] = {"revenue": [{"year": 2024, "value": 15e6}, {"year": 2025, "value": 18.4e6}]}
+        r["signals"].append({"title": "Налоговый режим", "status": "ok", "detail": "УСН", "source": "ФНС, открытые данные: специальные налоговые режимы", "as_of": "2026-09-25"})
+        k = K.iz_check(r)
+        if not k.get("proverka") or not (K.dt.date(2026, 1, 1) <= k["proverka"] < K.dt.date(2027, 5, 1)):
+            k["proverka"] = K.dt.date(2026, 10, 3)
+        kody = {v["kod"]: v for v in K.vyvody(k)}
+        self.assertNotIn("V13", kody)
+        self.assertIn("V13n", kody)
+        self.assertTrue(kody["V13n"]["s_chislom"])
+        self.assertTrue(kody["V13n"]["tekst"].startswith("Упрощённая система; выручка за 2025 год — 18,4"))
 
 
 if __name__ == "__main__":

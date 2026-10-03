@@ -8,7 +8,8 @@
  *   → основное: существенные факты → что изменилось → динамика → «Все данные из реестров»
  *   → справа: «Как посчитали предел», «Откуда данные» → подвал (действия) → оговорка.
  * На ≤ 860 px — одна колонка: … динамика → как посчитали → откуда → все данные → подвал.
- * Числа Индекса нет в ответе /api/check — пишем «считаем», ничего не выдумываем.
+ * Числа Индекса нет в ответе /api/check — колонку считает браузер по открытой методике v1.0 (js/indeks-otvet.js,
+ * indeks-v-otchete-v1) с воротами честности; не прошло ворота или нет модуля — «считаем», ничего не выдумываем.
  */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -83,6 +84,15 @@
     return h;
   }
 
+  // indeks-v-otchete-v1: нет числа от сервера — колонка по открытой методике в браузере (js/indeks-otvet.js); иначе — как раньше
+  function htmlIndeksIz(r, IO) {
+    if (indeks(r) == null && IO && IO.vid && IO.htmlKolonka) {
+      try { var h = IO.htmlKolonka(IO.vid(r)); if (h) return h; } catch (e) {}
+    }
+    return htmlIndeks(r);
+  }
+  function modulIO() { return typeof self !== 'undefined' && self.IndeksOtvet ? self.IndeksOtvet : null; }
+
   function htmlDejstviya(r, svoj, g) {
     return dejstviya(r, svoj, g).map(function (d) {
       return '<a class="ot-btn ' + (d.glavnaya ? 'p' : 's') + '" href="' + esc(d.href) + '" data-cel="' + d.cel + '"' + (d.ext ? ' target="_blank" rel="noopener"' : '') + '>' + esc(d.t) + '</a>';
@@ -148,11 +158,22 @@
     var vd = el(doc, 'section', 'ot-vd ot-vd--' + tonPolosy(r));
     vd.setAttribute('aria-label', 'Вывод');
     var ix = el(doc, 'div', 'ot-ix', htmlIndeks(r));
-    if (pill && indeks(r) == null) {
-      pill.classList.add('ot-pill'); ix.insertBefore(pill, ix.lastChild);
-      // правка [Арт-директора] 02.10 13:35: уровень риска — не Индекс, подписываем, откуда он
-      ix.insertBefore(el(doc, 'div', 'ot-ix__pod', POD_PILL), ix.lastChild);
-    }
+    // колонка Индекса: число браузера (если методика загружена) — без пилюли; «считаем» — с пилюлей уровня риска, как раньше
+    var zapolnit = function () {
+      var IO = modulIO(), h = htmlIndeksIz(r, IO);
+      ix.innerHTML = h;
+      var chislo = /ot-ix__big/.test(h);
+      if (pill && !chislo) {
+        pill.classList.add('ot-pill'); ix.insertBefore(pill, ix.lastChild);
+        // правка [Арт-директора] 02.10 13:35: уровень риска — не Индекс, подписываем, откуда он
+        ix.insertBefore(el(doc, 'div', 'ot-ix__pod', POD_PILL), ix.lastChild);
+      }
+      var pch = ix.querySelector('.ot-ix__pch');
+      if (pch) pch.addEventListener('toggle', function () { try { if (pch.open && window.dlkGoal) dlkGoal('indeks_raskladka'); } catch (e) {} });
+    };
+    zapolnit();
+    var IO0 = modulIO();
+    if (IO0 && indeks(r) == null && IO0.gotov && !IO0.gotov() && IO0.gotovo) IO0.gotovo(zapolnit);
     var vt = el(doc, 'div', 'ot-vt');
     if (svoj) {
       var kr = '';
@@ -208,5 +229,5 @@
   }
 
   return { razlozhit: razlozhit, indeks: indeks, polnota: polnota, uroven: uroven, tonPolosy: tonPolosy, dejstviya: dejstviya,
-    htmlIndeks: htmlIndeks, htmlKak: htmlKak, prokrutit: prokrutit, UROVNI: UROVNI, OGOVORKA: OGOVORKA, POD_PILL: POD_PILL };
+    htmlIndeks: htmlIndeks, htmlIndeksIz: htmlIndeksIz, htmlKak: htmlKak, prokrutit: prokrutit, UROVNI: UROVNI, OGOVORKA: OGOVORKA, POD_PILL: POD_PILL };
 });

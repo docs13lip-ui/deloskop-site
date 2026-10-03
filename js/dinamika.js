@@ -328,6 +328,9 @@
       // основной вид деятельности (ЕГРЮЛ): код и название — для «основной вид деятельности сменился»
       var ok = okved(r);
       if (ok) { s.ok = ok.kod; if (ok.nazv) s.okn = ok.nazv; }
+      // Индекс (сервер или браузер по открытой методике, js/indeks-otvet.js) — для «Индекс: 64 → 58 с проверки 01.10»
+      var ix = ixChislo(r);
+      if (ix != null) s.ix = ix;
       // код состояния ЕГРЮЛ и дата записи — для «ФНС начала готовить исключение / отметки больше нет»
       var kd = kodSost(c.state_code);
       if (kd) {
@@ -390,6 +393,27 @@
     return null;
   }
 
+  // Модуль Индекса в браузере (indeks-v-otchete-v1) — как rent(): на странице может загрузиться позже, в node — require
+  function ixModul() {
+    try {
+      if (typeof self !== 'undefined' && self.IndeksOtvet) return self.IndeksOtvet;
+      if (typeof module === 'object' && module.exports && typeof require === 'function') return require('./indeks-otvet.js');
+    } catch (e) {}
+    return null;
+  }
+  // Число Индекса для снимка: серверное (целое 1–99) главнее; иначе — браузерное, только если прошло ворота
+  function ixChislo(r) {
+    var v = r && r.indeks;
+    if (v !== undefined && v !== null && v !== '') {
+      if (typeof v === 'object') v = v.znachenie != null ? v.znachenie : v.ball;
+      v = typeof v === 'string' && /^\d{1,2}$/.test(v) ? +v : v;
+      return typeof v === 'number' && v >= 1 && v <= 99 && Math.round(v) === v ? v : null;
+    }
+    var IO = ixModul();
+    try { return IO && IO.gotov && IO.gotov() ? IO.ball(r) : null; } catch (e) { return null; }
+  }
+  function ddmm(t) { var q = new Date(t + 3 * 3600 * 1000); return ('0' + q.getUTCDate()).slice(-2) + '.' + ('0' + (q.getUTCMonth() + 1)).slice(-2); }
+
   // Текущая ликвидность: строка «Текущая ликвидность» раздела досье «Финансовая динамика» (тот же разбор, что в
   // js/sushchestvennoe.js), год — из charts.balance или charts.debts. Ноль и пусто — не значение. → [год, число] | null
   function likvidnost(r) {
@@ -441,6 +465,8 @@
       var o = ['low', 'medium', 'high'];
       add(o.indexOf(b.lvl) > o.indexOf(a.lvl) ? 'huzhe' : 'luchshe', 'Оценка риска: ' + LVL[a.lvl] + ' → ' + LVL[b.lvl]);
     }
+    if (a.ix && b.ix && a.ix !== b.ix && isFinite(a.t))
+      add(b.ix < a.ix ? 'huzhe' : 'luchshe', 'Индекс: ' + a.ix + ' → ' + b.ix + ' с' + NB + 'проверки ' + ddmm(a.t));
     if (a.zsk && b.zsk && a.zsk !== b.zsk) {
       var z = ['low', 'medium', 'high'];
       add(z.indexOf(b.zsk) > z.indexOf(a.zsk) ? 'huzhe' : 'luchshe', 'Прогноз ЗСК (наша оценка): ' + LVL[a.zsk] + ' → ' + LVL[b.zsk]);
@@ -708,5 +734,5 @@
 
   return { ryad: ryad, ryady: ryady, stroka: stroka, izmenenie: izmenenie, trendy: trendy, dengi: dengi, htmlDinamika: htmlDinamika, balans: balans, htmlBalans: htmlBalans,
     snimok: snimok, sravnit: sravnit, likvidnost: likvidnost, okved: okved, vRaz: vRaz, zapomnit: zapomnit, htmlIzmeneniya: htmlIzmeneniya, html: html, KEY: KEY, CSS: CSS,
-    iskl: iskl, isklyuchena: isklyuchena, plusMes: plusMes, kodSost: kodSost, predydushchaya: predydushchaya, nuzhenKabinet: nuzhenKabinet, dogruzit: dogruzit, dobavit: dobavit, sDop: sDop };
+    iskl: iskl, isklyuchena: isklyuchena, ixChislo: ixChislo, plusMes: plusMes, kodSost: kodSost, predydushchaya: predydushchaya, nuzhenKabinet: nuzhenKabinet, dogruzit: dogruzit, dobavit: dobavit, sDop: sDop };
 });

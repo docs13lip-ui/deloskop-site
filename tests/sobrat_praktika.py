@@ -159,11 +159,12 @@ def kartochka(d, n, vsego):
 <dt>Акт</dt><dd>%(akt_nomer)s</dd>
 <dt>Дата</dt><dd><time datetime="%(data)s">%(data_ch)s</time></dd>
 <dt>%(delo_p)s</dt><dd>%(delo)s</dd>
-<dt>На кону</dt><dd>%(na_konu)s</dd>
+<dt>На кону</dt><dd>%(na_konu)s%(na_konu_2)s</dd>
 </dl>
 <p class="delo__src">Первоисточник: <a href="%(ist)s" rel="noopener" target="_blank">%(ist_p)s</a> · сверено <time datetime="%(sv)s">%(sv_ch)s</time></p>
 </section>""" % {"t": t, "itog": itog, "sud": e(d["sud"]), "akt_nomer": e(akt_nomer(d)), "delo_p": e(d.get("delo_podpis") or "Дело"),
                   "data": d["data"], "data_ch": data_ch(d["data"]), "delo": e(d["delo"]), "na_konu": e(d["na_konu"]),
+                  "na_konu_2": ('<br><small class="delo__dop">%s</small>' % e(d["na_konu_2"])) if d.get("na_konu_2") else "",  # [Право] 21:10 разд. 3 п. 6
                   "ist": e(d["istochnik"]), "ist_p": e(d["istochnik_podpis"]), "sv": d["sverka"], "sv_ch": data_ch(d["sverka"])}
 
 

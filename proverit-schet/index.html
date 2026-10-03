@@ -223,7 +223,7 @@ footer a{color:var(--muted)}
 </section>
 <!--faq-mesto-->
 <!--faq--><section class="faq" aria-label="Частые вопросы"><h2>Частые вопросы</h2><details><summary>Проверка счёта и&nbsp;БИК покажет, чей это счёт?</summary><p>Ключ ловит опечатку или изменённую цифру. Чей это счёт, он не&nbsp;показывает: правильные реквизиты чужой компании пройдут проверку&nbsp;— поэтому в&nbsp;результате мы отдельно пишем «принадлежность счёта не&nbsp;подтверждена».</p></details><details><summary>Как по&nbsp;номеру отличить счёт организации от&nbsp;личного счёта?</summary><p>Счёт организации начинается с&nbsp;40702, предпринимателя&nbsp;— с&nbsp;40802; 40817 и&nbsp;423&nbsp;— личные счета людей.</p></details><details><summary>Какая ставка НДС должна стоять в&nbsp;счёте в&nbsp;2026&nbsp;году?</summary><p>С&nbsp;2026&nbsp;года основная ставка&nbsp;— 22%.</p></details><details><summary>Поставщик прислал новые реквизиты&nbsp;— что сделать до&nbsp;оплаты?</summary><p>Позвоните поставщику по&nbsp;номеру из&nbsp;договора или с&nbsp;его сайта&nbsp;— не&nbsp;по&nbsp;номеру из&nbsp;письма. Продиктуйте новый счёт и&nbsp;БИК, пусть подтвердит.</p></details><details><summary>Как распознать поддельное письмо со сменой реквизитов?</summary><p>Подделку выдаёт одна буква или чужой домен: romashka-ooo.ru вместо ooo-romashka.ru, почта на&nbsp;бесплатном сервисе вместо корпоративной.</p></details><details><summary>Видно ли, что счёт поставщика заблокирован?</summary><p>Решения налоговой о&nbsp;приостановке видны в&nbsp;сервисе ФНС по&nbsp;ИНН и&nbsp;БИК; ограничения банка по&nbsp;115&#8209;ФЗ там не&nbsp;видны&nbsp;— как поставщик выглядит для&nbsp;банка, покажет проверка по&nbsp;ИНН.</p></details><details><summary>Уходит ли&nbsp;файл счёта на&nbsp;сервер?</summary><p>Файл не&nbsp;уходит с&nbsp;вашего компьютера: реквизиты читаются прямо в&nbsp;браузере. На&nbsp;сервер отправляется только ИНН поставщика.</p></details></section><!--/faq-->
-<section class="more"><h2>Читайте также</h2><div class="cards"><a class="card" href="/nalogi/statya-54-1-nk-prostymi-slovami/"><small>Налоги</small><b>Статья 54.1 НК простыми словами: когда налоговая снимет вычет</b><span>5 минут чтения</span></a><a class="card" href="/nalogi/kak-proverit-schet-pered-oplatoj/"><small>Налоги</small><b>Как проверить счёт перед оплатой: 6 пунктов за 2 минуты</b><span>4 минуты чтения</span></a><a class="card" href="/nalogi/proverka-kontragenta-pered-dogovorom/"><small>Налоги</small><b>Проверка контрагента перед договором: чек-лист и бесплатные сервисы</b><span>5 минут чтения</span></a></div></section>
+<section class="more"><h2>Читайте также</h2><div class="cards"><a class="card" href="/nalogi/nds-postavshchika-na-usn-po-inn/"><small>Налоги</small><b>Будет ли НДС в счёте поставщика на упрощёнке</b><span>Порог 2027 года — 20&nbsp;млн&nbsp;₽ · проверка по ИНН</span></a><a class="card" href="/nalogi/statya-54-1-nk-prostymi-slovami/"><small>Налоги</small><b>Статья 54.1 НК простыми словами: когда налоговая снимет вычет</b><span>5 минут чтения</span></a><a class="card" href="/nalogi/kak-proverit-schet-pered-oplatoj/"><small>Налоги</small><b>Как проверить счёт перед оплатой: 6 пунктов за 2 минуты</b><span>4 минуты чтения</span></a><a class="card" href="/nalogi/proverka-kontragenta-pered-dogovorom/"><small>Налоги</small><b>Проверка контрагента перед договором: чек-лист и бесплатные сервисы</b><span>5 минут чтения</span></a></div></section>
 </main>
 <script>(function(){
 'use strict';
@@ -361,7 +361,9 @@ function render(r,sel,local,remote,remoteErr){
   var chips=r.inns.length>1?'<div class="chips"><span>ИНН в счёте:</span>'+r.inns.map(function(x){
       return '<button type="button" data-inn="'+x.inn+'" class="'+(sel&&x.inn===sel.inn?'on':'')+'">'+x.inn+(x.role==='seller'?' · поставщик':x.role==='buyer'?' · покупатель':'')+'</button>'}).join('')+'</div>':'';
   var rows=all.map(function(x){return '<div class="row"><span>'+esc(x.title)+'</span><b class="d '+CL[x.st]+'">'+esc(x.detail)+'</b></div>'}).join('');
-  var rem=remoteErr?'<p class="note warn">'+remoteErr+'</p>':'';
+  // лимит бесплатных проверок — общий экран js/limit.js (remoteErr = {limit:true}); текст API не выводим
+  var lim=remoteErr&&remoteErr.limit;
+  var rem=lim?'<div id="limitHost"></div>':remoteErr?'<p class="note warn">'+remoteErr+'</p>':'';
   var pur=purpose(r);
   out.innerHTML='<div class="res '+worst+'"><div class="verdict-big">'+head[0]+'</div><p>'+head[1]+'</p></div>'+chips+
     '<div id="accHost"></div><div class="rows">'+rows+'</div>'+rem+
@@ -371,6 +373,9 @@ function render(r,sel,local,remote,remoteErr){
     '<p class="small">Это автоматическая проверка реквизитов и открытых данных ФНС, а не гарантия. Если поставщик прислал новые реквизиты письмом — перезвоните ему по известному номеру и <a href="#smena">сравните реквизиты</a>.</p>';
   out.hidden=false;
   if(window.DlkAcc)DlkAcc.render(document,$('accHost'),AD);
+  if(lim){var dop='Реквизиты выше проверены и без лимита.';
+    if(window.dlkLimit)dlkLimit.pokazat($('limitHost'),{stranica:'schet',inn:sel&&sel.inn,dop:dop});
+    else $('limitHost').innerHTML='<p class="note warn">На сегодня 3 бесплатные проверки закончились. Завтра — снова 3. '+dop+'</p>';}
   $('copyPur').onclick=function(e){try{navigator.clipboard.writeText(pur);e.target.textContent='Скопировано'}catch(_){}};
   [].forEach.call(out.querySelectorAll('[data-inn]'),function(b){b.onclick=function(){
     var s=r.inns.filter(function(x){return x.inn===b.dataset.inn})[0];run(r,s)}});
@@ -385,7 +390,7 @@ function run(r,sel){
     .then(function(res){return res.json().then(function(j){return {ok:res.ok,s:res.status,j:j}})})
     .then(function(x){msg.textContent='';
       if(x.ok)render(r,sel,local,x.j,null);
-      else render(r,sel,local,null,x.s===429?esc(x.j.detail)+' <a href="/cabinet.html">Войти или выбрать тариф</a>. Реквизиты выше проверены и без лимита.':esc(x.j.detail||'Проверка поставщика не удалась.'));})
+      else render(r,sel,local,null,x.s===429?{limit:true}:esc(x.j.detail||'Проверка поставщика не удалась.'));})
     .catch(function(){msg.textContent='';render(r,sel,local,null,'Нет связи с сервером. Реквизиты проверены, а поставщика проверьте позже.')});
 }
 
@@ -426,6 +431,7 @@ go.onclick=function(){check(txt.value)};
 window.__schet={parse:parse,innOk:innOk,accOk:accOk,ksOk:ksOk,localChecks:localChecks,pickSeller:pickSeller,purpose:purpose};
 })();
 </script>
+<script src="/js/limit.js" defer></script>
 <script src="/obnovleniya.js" defer></script>
 <!--podval--><div class="podval" role="contentinfo"><div class="podval__in"><div class="podval__cols"><nav class="podval__col" aria-label="Продукты"><p class="podval__h">Продукты</p><ul><li><a href="/">Проверка по ИНН</a></li><li><a href="/indeks/">Индекс Делоскопа</a></li><li><a href="/#shield">Щит</a></li><li><a href="/nalichnye/">Наличные глазами банка</a></li><li><a href="/kontragenty-iz-vypiski/">Кому вы платите</a></li><li><a href="/proverit-schet/">Проверь счёт</a></li><li><a href="/skoraya-115-fz/">Скорая 115-ФЗ</a></li><li><a href="/pasport/">Паспорт</a></li><li><a href="/delopis/">Делопись</a></li><li><a href="/tarify/">Тарифы</a></li></ul></nav><nav class="podval__col" aria-label="Знания"><p class="podval__h">Знания</p><ul><li><a href="/115-fz/">115-ФЗ простыми словами</a></li><li><a href="/nalogi/">Налоги</a></li><li><a href="/obnovleniya/">Что нового</a></li><li><a href="/company/">Компании</a></li></ul></nav><nav class="podval__col" aria-label="Компания"><p class="podval__h">Компания</p><ul><li><a href="/indeks/#metodika">Методика Индекса</a></li><li><a href="/tochnost/">Точность Индекса</a></li><li><a href="/cabinet.html">Кабинет</a></li><li><a href="/rekvizity/">Реквизиты и контакты</a></li><li><a href="mailto:help@deloskop.ru">help@deloskop.ru</a></li></ul></nav><nav class="podval__col" aria-label="Документы"><p class="podval__h">Документы</p><ul><li><a href="/oferta/">Публичная оферта</a></li><li><a href="/politika/">Политика обработки ПДн</a></li><li><a href="/soglasie/">Согласие на обработку ПДн</a></li><li><a href="/rassylki/">Согласие на рассылки</a></li><li><a href="/cookies/">Cookies и Метрика</a></li><li><a href="/vozvrat/">Возврат денег</a></li><li><a href="/partneram/usloviya/">Условия для партнёров</a></li><li><a href="/rekvizity/">Реквизиты</a></li></ul></nav></div><div class="podval__niz"><p>© 2026 Делоскоп</p><p>Сотрудничество, отзывы и предложения — <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>. Принимаем 24/7</p><p>Материалы носят информационный характер и не заменяют консультацию юриста</p></div></div></div><!--/podval-->
 </body>

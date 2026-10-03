@@ -56,3 +56,8 @@
 .co-chit__sp li{margin:0 0 var(--s-3);line-height:1.55}.co-chit__sp li::marker{color:var(--muted);font-variant-numeric:tabular-nums}
 .co-chit__sp b{font-weight:600}
 .co-chit .caption{max-width:720px}
+/* kartochki-volna-v1: страницы хаба /company/ (по 100 карточек) */
+.co-str{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--s-3) var(--s-5);margin:var(--s-6) 0;font-variant-numeric:tabular-nums}
+.co-str__sp{display:flex;flex-wrap:wrap;gap:var(--s-2) var(--s-3)}
+.co-str__sp a,.co-str__sp span{min-width:2ch;text-align:center}
+.co-str__sp [aria-current]{font-weight:600;color:var(--ink)}

@@ -556,6 +556,8 @@ footer a{color:var(--ink2)}
 <script src="/js/dinamika.js" defer></script>
 <script src="/js/nagruzka.js" defer></script>
 <script src="/js/rentabelnost.js" defer></script>
+<script src="/js/bez-nds.js" defer></script>
+<script src="/js/nds-porog.js" defer></script>
 <script src="/js/terminy.js" defer></script>
 <script src="/js/pasport-cta.js" defer></script>
 <script src="/js/pasport-oplata.js" defer></script>
@@ -564,6 +566,7 @@ footer a{color:var(--ink2)}
 <script src="/js/otchet.js" defer></script>
 <script src="/js/nedavnie.js" defer></script>
 <script src="/js/portfel.js" defer></script>
+<script src="/js/limit.js"></script>
 <script src="/js/inn.js"></script>
 <script>
 (function(){
@@ -659,14 +662,20 @@ footer a{color:var(--ink2)}
     if(window.Dinamika&&Dinamika.dogruzit&&CAPI){try{Dinamika.dogruzit(report,r,{api:CAPI})}catch(e){}}
     // «Рентабельность активов против отрасли» — оценка по ГИР БО против нормы ФНС (приложение 4 к ММ-3-06/333@), после «Динамики»; js/rentabelnost.js
     if(window.Rentabelnost){try{Rentabelnost.mount(report,r).catch(function(){})}catch(e){}}
+    // «НДС в 2027 году» — выручка 2025 года поставщика на упрощёнке рядом с порогом 20 млн ₽ (п. 1 ст. 145 НК), только к сведению; js/nds-porog.js
+    if(!svoj&&window.NdsPorog){try{NdsPorog.mount(report,r)}catch(e){}}
   }
   function runCheck(v,o){
     if(!CAPI){note.className='note ok';note.textContent='Проверка работает на deloskop.ru.';return;}
+    if(window.dlkLimit)dlkLimit.ubrat(note);
     note.className='note';note.textContent='Проверяем по реестрам…';report.classList.add('loading');if(window.dlkGoal)dlkGoal('check_started');
     fetch(CAPI+'/api/check?q='+encodeURIComponent(v),{credentials:'include'})
-      .then(function(res){return res.json().then(function(j){return {ok:res.ok,j:j}})})
+      .then(function(res){return res.json().then(function(j){return {ok:res.ok,s:res.status,j:j}},function(){return {ok:false,s:res.status,j:{}}})})
       .then(function(x){report.classList.remove('loading');
+        // лимит бесплатных проверок — понятный экран вместо текста API (js/limit.js); `detail` не выводим
+        if(x.s===429){note.className='note';note.textContent='';if(window.dlkLimit)dlkLimit.pokazat(note,{stranica:'glavnaya',inn:v});else note.textContent='На сегодня 3 бесплатные проверки закончились. Завтра — снова 3.';return;}
         if(!x.ok){note.className='note err';note.textContent=(x.j&&x.j.detail)||'Не получилось проверить. Попробуйте ещё раз.';return;}
+        if(window.dlkLimit)dlkLimit.proveren((x.j.company&&x.j.company.inn)||v);
         render(x.j,o);note.className='note ok';note.textContent='Готово. Отчёт — рядом.';
         if(window.Otchet&&report.classList.contains('ot'))Otchet.prokrutit(report);else if(window.innerWidth<980)report.scrollIntoView({behavior:'smooth',block:'start'});})
       .catch(function(){report.classList.remove('loading');note.className='note err';
@@ -746,6 +755,8 @@ footer a{color:var(--ink2)}
   var qi=new URLSearchParams(location.search).get('inn');
   if(qi&&/^\d{10}(\d{2})?$/.test(qi)){input.value=qi;
     if(window.DlkInn&&!DlkInn.ok(qi)){note.className='note err';note.textContent=DlkInn.OPECHATKA;}else runCheck(qi);}
+  // вчера упёрлись в лимит — ИНН сохранён на устройстве: «Вчера не успели проверить: … ›» (js/limit.js, только ИНН организаций)
+  else if(window.dlkLimit&&CAPI)dlkLimit.napomnit(note,function(inn){input.value=inn;runCheck(inn);});
   // Щит: своя компания глазами банка и налоговой (js/shchit.js) — в том же окне отчёта, наверху страницы
   var sf=document.getElementById('shieldForm');
   if(sf)sf.addEventListener('submit',function(e){e.preventDefault();

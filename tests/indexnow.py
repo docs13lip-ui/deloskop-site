@@ -60,15 +60,35 @@ def fajl_v_adres(put):
     return SAJT + "/" + put
 
 
-def vybrat(izmenennye, v_sitemap):
-    """Оставляет только изменённые страницы, которые есть в sitemap (т. е. открыты для индекса), без повторов."""
+def vybrat(izmenennye, v_sitemap, novye_kartochki=None):
+    """Оставляет только изменённые страницы, которые есть в sitemap (т. е. открыты для индекса), без повторов.
+    kartochki-volna-v1 (ТЗ [Продукт · Данные] 03.10 разд. 3.3): карточки /company/<ИНН>-…/ — только новой партии
+    (адреса, которых не было в sitemap-companies.xml до этого слияния): добор волны переписывает «Похожие компании»
+    у сотен старых карточек, и без этого правила каждая партия слала бы Яндексу их все. Хаб /company/ — как обычно."""
     dopustimye = set(v_sitemap)
+    hab = SAJT + "/company/"
     out = []
     for f in izmenennye:
         a = fajl_v_adres(f)
-        if a and a in dopustimye and a not in out:
-            out.append(a)
+        if not a or a not in dopustimye or a in out:
+            continue
+        if novye_kartochki is not None and a.startswith(hab) and a != hab and a not in novye_kartochki:
+            continue
+        out.append(a)
     return out
+
+
+def locs_kart(xml):
+    return set(re.findall(r"<loc>([^<]+)</loc>", xml or ""))
+
+
+def novye_kartochki(ot=None, koren=ROOT):
+    """Адреса sitemap-companies.xml, которых не было в нём на коммите `ot` (по умолчанию — первый родитель HEAD)."""
+    sk = koren / "sitemap-companies.xml"
+    seichas = locs_kart(sk.read_text(encoding="utf-8")) if sk.exists() else set()
+    r = subprocess.run(["git", "show", "%s:sitemap-companies.xml" % (ot or "HEAD^1")], cwd=koren, capture_output=True, text=True)
+    bylo = locs_kart(r.stdout) if r.returncode == 0 else set()
+    return seichas - bylo
 
 
 def izmenennye_fajly(ot=None):
@@ -118,7 +138,7 @@ def main(argv):
         adresa = list(dict.fromkeys(v_sitemap))
     else:
         ot = argv[argv.index("--ot") + 1] if "--ot" in argv else None
-        adresa = vybrat(izmenennye_fajly(ot), v_sitemap)
+        adresa = vybrat(izmenennye_fajly(ot), v_sitemap, novye_kartochki(ot))
     print(f"Страниц к переобходу: {len(adresa)}")
     for a in adresa:
         print("  " + a)

@@ -127,3 +127,114 @@ test("страница «Кому вы платите» подключает м�
   assert.ok(a > 0 && a < b);
   assert.match(h, /DlkBezNds\.strokaVypiski\(s,rm\)/);
 });
+
+// ---------- «НДС в 2027 году»: строка «у порога» (nds-porog-v1; тексты [Право · Налоговый юрист] 03.10 21:10) ----------
+const NP = require("../js/nds-porog.js");
+const OKT3 = new Date("2026-10-03T12:00:00+03:00");
+function usn(v25, v24 = null, inn = "7707083893", rezhim = "УСН", ryad = null) {
+  const rev = ryad || [{ year: 2024, value: v24 }, { year: 2025, value: v25 }].filter((x) => typeof x.value === "number");
+  return { company: { inn }, dossier: { data_dates: "ЕГРЮЛ/ЕГРИП — на 03.10.2026; специальные налоговые режимы — на 25.09.2026",
+    sections: [{ id: "activity", rows: [["Налоговый режим", rezhim]] }], charts: { revenue: rev } } };
+}
+
+test("НДС-2027: УСН, 18,4 млн за 2025 — u_poroga, текст [Право] дословно, хвост и п. 5 ст. 145", () => {
+  const x = B.prognoz(usn(18_400_000, 18_300_000), OKT3);
+  assert.strictEqual(x.kod, "u_poroga");
+  assert.strictEqual(x.st, "info");
+  assert.strictEqual(x.title, "НДС в 2027 году");
+  assert.strictEqual(x.detail.replace(/ /g, " "),
+    "Поставщик на упрощёнке, выручка за 2025 год по бухотчётности — 18,4 млн ₽, у порога 20 млн ₽. Если доход за 2026 год превысит 20 млн ₽, " +
+    "в 2027 году освобождения от НДС не будет (п. 1 ст. 145 НК РФ). Если превысит уже в 2026 году — НДС появится с 1-го числа следующего месяца " +
+    "(п. 5 ст. 145 НК РФ). Спросите поставщика, будет ли НДС в счетах 2027 года, и закрепите в договоре, что будет с ценой: пункт 2.2 Делописи. " +
+    "Доход для порога считают по правилам упрощёнки, не по бухотчётности, а «без НДС» законно и при льготной операции (ст. 149 НК РФ) — поэтому это вопрос, а не нарушение.");
+});
+
+test("НДС-2027: рост к порогу — u_poroga_rost с фразой «наша оценка… а не данные ФНС»", () => {
+  const x = B.prognoz(usn(18_400_000, 13_731_343), OKT3);
+  assert.strictEqual(x.kod, "u_poroga_rost");
+  assert.match(x.detail, /За 2025 год выручка выросла на 34 %\. Если рост сохранится, доход за 2026 год превысит 20 млн ₽\. Это наша оценка по двум годам отчётности, а не данные ФНС\./);
+  assert.ok(!/выросла/.test(B.prognoz(usn(18_400_000, 19e6), OKT3).detail), "падение — без фразы о росте");
+});
+
+test("НДС-2027: граница — ровно 20 000 000 «у порога», 20 000 001 — uzhe_platit (в рублях, без «20 млн выше 20 млн»)", () => {
+  assert.strictEqual(B.prognoz(usn(20_000_000), OKT3).kod, "u_poroga");
+  const x = B.prognoz(usn(20_000_001), OKT3);
+  assert.strictEqual(x.kod, "uzhe_platit");
+  assert.strictEqual(x.title, "НДС в 2026 году");
+  assert.match(x.detail, /— 20 000 001 ₽, выше порога 20 млн ₽\. Поэтому в 2026 году он, вероятно, платит НДС — по общей ставке или по ставке 5 или 7% \(п\. 8 ст\. 164 НК РФ\)\. Если в счёте «Без НДС» — спросите основание\./);
+  assert.match(B.prognoz(usn(48_210_000), OKT3).detail, /— 48,2 млн ₽, выше порога/);
+});
+
+test("НДС-2027: молчим — 12 млн (на экране), ОСН и неизвестный режим, ИП, нет 2025, май 2027 с выручкой 2026", () => {
+  const o = B.prognoz(usn(12e6), OKT3);
+  assert.strictEqual(o.kod, "osvobozhdena");
+  assert.strictEqual(NP.html(o, "x"), "", "освобождена — на экране блока нет");
+  assert.strictEqual(B.prognoz(usn(18.4e6, null, "7707083893", "Общая система (ОСН)"), OKT3), null);
+  assert.strictEqual(B.prognoz(usn(18.4e6, null, "7707083893", "АУСН"), OKT3), null);
+  const bezRezhima = usn(48e6); bezRezhima.dossier.sections = [];
+  assert.strictEqual(B.prognoz(bezRezhima, OKT3), null, "режим неизвестен — не пишем «на упрощёнке»");
+  assert.strictEqual(B.prognoz(usn(18.4e6, null, "500100732259"), OKT3), null);
+  assert.strictEqual(B.prognoz(usn(null, 18e6), OKT3), null);
+  assert.strictEqual(B.prognoz(usn(0, null, "7707083893", "УСН", [{ year: 2024, value: 18e6 }]), OKT3), null);
+  const s26 = usn(0, null, "7707083893", "УСН", [{ year: 2025, value: 18.4e6 }, { year: 2026, value: 19e6 }]);
+  assert.strictEqual(B.prognoz(s26, new Date("2027-05-02T12:00:00+03:00")), null);
+  assert.strictEqual(B.prognoz(s26, new Date("2027-02-01T12:00:00+03:00")), null, "отчётность за 2026 есть — уже не прогноз");
+  assert.strictEqual(B.prognoz(usn(18.4e6), new Date("2027-02-01T12:00:00+03:00")).kod, "u_poroga", "до мая 2027 — ещё прогноз");
+  assert.strictEqual(B.prognoz(usn(18.4e6), new Date("2025-12-31T12:00:00+03:00")), null);
+  assert.strictEqual(B.prognoz(null, OKT3), null);
+});
+
+test("НДС-2027: подпись — дата набора спецрежимов из досье; нет даты — без неё", () => {
+  assert.strictEqual(B.podpis(usn(1), 2025), "Режим — открытые данные ФНС на 25.09.2026; выручка — бухотчётность ГИР БО за 2025 год.");
+  assert.strictEqual(B.podpis({ dossier: {} }, 2025), "Режим — открытые данные ФНС; выручка — бухотчётность ГИР БО за 2025 год.");
+});
+
+test("НДС-2027: блок на экране — тон info, ссылка на Делопись с целью, экранирование", () => {
+  const x = B.prognoz(usn(18.4e6), OKT3);
+  const h = NP.html(x, B.podpis(usn(1), 2025));
+  assert.match(h, /^<section class="ndp" aria-label="НДС в 2027 году" data-nds-porog="u_poroga">/);
+  assert.match(h, /<a href="\/delopis\/" data-goal="nds_porog_klik">пункт 2\.2 Делописи<\/a>/);
+  assert.match(h, /«без НДС»/);
+  assert.ok(!/ndp--(warn|bad)|#E0A100|#D9480F/.test(h + NP.CSS), "не жёлтый и не красный");
+  const ix = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+  assert.ok(ix.indexOf('<script src="/js/bez-nds.js" defer></script>') > 0 && ix.indexOf('<script src="/js/bez-nds.js" defer></script>') < ix.indexOf('<script src="/js/nds-porog.js" defer></script>'));
+  assert.match(ix, /if\(!svoj&&window\.NdsPorog\)\{try\{NdsPorog\.mount\(report,r\)\}catch\(e\)\{\}\}/);
+});
+
+test("НДС-2027: «Кому вы платите» — счёт поставщиков у порога (УСН, доход 2025 от 15 млн до 20 млн включительно)", () => {
+  const sp = [
+    { inn: "7707083893", rezhim: "usn", dohod: 18e6, dohod_na: "2025-12-31" },
+    { inn: "7707083894", rezhim: "usn", dohod: 20e6, dohod_na: "2025-12-31" },
+    { inn: "7707083895", rezhim: "usn", dohod: 20_000_001, dohod_na: "2025-12-31" },
+    { inn: "7707083896", rezhim: "usn", dohod: 15e6, dohod_na: "2025-12-31" },
+    { inn: "7707083897", rezhim: null, dohod: 18e6, dohod_na: "2025-12-31" },
+    { inn: "7707083898", rezhim: "usn", dohod: 18e6, dohod_na: "2024-12-31" },
+    { inn: "500100732259", rezhim: "usn", dohod: 18e6, dohod_na: "2025-12-31" },
+    null,
+  ];
+  assert.strictEqual(B.uPorogaVypiski(sp), 2);
+  assert.strictEqual(B.uPorogaVypiski(null), 0);
+});
+
+// Защита от мифа «15 млн ₽ с 2027 года»: 228-ФЗ от 04.07.2026 сохранил 20 млн ₽ на 2027–2029 годы ([Право] 21:10, разд. 2).
+// Верная будущая ступень «15 млн … за 2029 год» / «в 2030 году» и опровержение «…15 млн ₽… в 2027 году не действует» — не нарушение.
+test("НДС-2027: на сайте нет «15 млн» рядом с «2027»", () => {
+  const koren = path.join(__dirname, "..");
+  const plohie = [];
+  (function obhod(d) {
+    for (const f of fs.readdirSync(d, { withFileTypes: true })) {
+      if (f.name.startsWith(".") || f.name === "node_modules" || f.name === "tests" || f.name === "kartochki_dannye") continue;
+      const p = path.join(d, f.name);
+      if (f.isDirectory()) { obhod(p); continue; }
+      if (!/\.(html|js|json|xml|txt)$/.test(f.name)) continue;
+      const t = fs.readFileSync(p, "utf8").replace(/ |&nbsp;|&#160;/g, " ");
+      const rx = /15\s*млн/g; let m;
+      while ((m = rx.exec(t))) {
+        const okno = t.slice(Math.max(0, m.index - 80), m.index + 80);
+        const vpered = t.slice(m.index, m.index + 40);
+        if (/2027/.test(okno) && !/^15\s*млн[^.;]{0,25}(2029|2030)/.test(vpered) && !/^15\s*млн[^.;]{0,60}не действует/.test(t.slice(m.index, m.index + 90))) plohie.push(path.relative(koren, p) + ": …" + okno.replace(/\s+/g, " ") + "…");
+      }
+    }
+  })(koren);
+  assert.deepStrictEqual(plohie, []);
+});

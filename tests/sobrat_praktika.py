@@ -254,6 +254,21 @@ def norma(z):
     return '<li>%s%s%s</li>' % (e(n), red_html, ssylki)
 
 
+def chislo_razborov(n):
+    return "разбор" if n % 10 == 1 and n % 100 != 11 else ("разбора" if 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14 else "разборов")
+
+
+def svodka_haba(spisok):
+    """[Ночные запуски] seo-pered-volnoj-v1 (ТЗ [Продукт · Маркетинг] 03.10 разд. 2.2): вводная строка хаба — только из dela.json.
+    Число и дата не пишутся руками: новый разбор первым в dela.json — строка обновится сама."""
+    if not spisok:
+        return ""
+    r = spisok[0]  # новые — первыми (правило dela.json, _kak)
+    h = r["h1"].replace("«", "„").replace("»", "“")
+    return "%d %s решений ВС, КС и арбитражных судов: суть, сколько на кону, что сделать. Последний — «%s», %s." % (
+        len(spisok), chislo_razborov(len(spisok)), h, data_ru(r["data"]))
+
+
 def hab(D, razdel=None):
     if razdel:
         rz = D["razdely"][razdel]
@@ -267,6 +282,7 @@ def hab(D, razdel=None):
         lid = "Одно дело — одна страница: что случилось, что решил суд, где грань и что сделать завтра утром. У каждого разбора — номер дела и ссылка на текст акта."
         kr = [("Делоскоп", "/"), ("Практика", url)]
         spisok = list(D["razbory"])
+    lid = lid + " " + svodka_haba(spisok)
     ld = [{"@context": "https://schema.org", "@type": "CollectionPage", "name": h1, "description": desc, "url": SAJT + url, "inLanguage": "ru",
            "hasPart": [{"@type": "Article", "headline": r["h1"][:110], "url": SAJT + url_razbora(r)} for r in spisok]}, kroshki_ld(kr)]
     razd = [("Все", "/praktika/")] + [(v["nazvanie"], "/praktika/%s/" % k) for k, v in D["razdely"].items()]
@@ -294,7 +310,7 @@ def hab(D, razdel=None):
 
 def ssylka_v_hab(txt, razdel, n):
     """Карточка «Практика судов» в хабах /115-fz/ и /nalogi/ — между метками <!--praktika-->…<!--/praktika-->."""
-    slova = "разбор" if n % 10 == 1 and n % 100 != 11 else ("разбора" if 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14 else "разборов")
+    slova = chislo_razborov(n)
     blok = ('<!--praktika--><a class="card" href="/praktika/%s/"><small>Практика судов</small><b>Как решают суды: %d %s дел с номером акта и первоисточником</b>'
             '<span>Что случилось, что решил суд, что делать завтра утром</span></a><!--/praktika-->') % (razdel, n, slova)
     if "<!--praktika-->" in txt:

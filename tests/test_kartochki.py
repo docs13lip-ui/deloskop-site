@@ -984,5 +984,26 @@ class TestDoborV35(unittest.TestCase):
                 self.assertEqual(K.dengi(s["fakty"]["dohod"]["znachenie"]), K.dengi(dk))
 
 
+class TestKartochkiV38(unittest.TestCase):
+    """kartochki-v3.8: аббревиатура без гласных и год у старой отчётности."""
+
+    def test_abbreviatura_bez_glasnyh(self):
+        self.assertEqual(K.imya('ПАО "НЛМК"'), "ПАО «НЛМК»")
+        self.assertEqual(K.imya('ОАО "РЖД"'), "ОАО «РЖД»")
+        self.assertEqual(K.imya('ПАО "АКРОН"'), "ПАО «Акрон»")
+
+    def test_staraya_otchetnost_s_godom(self):
+        z = O.zapis(1, finansy=[100e6, 108e6], dohod=108e6)  # последний год — 2022, проверка — 2026
+        d, kart, _ = sobrat([z], limit=5)
+        t = chitat(stranicy(d)[0])
+        self.assertIn("Доход вырос на 8" + NB + "% за" + NB + "2022" + NB + "год", t)
+        self.assertNotIn("% за год</h2>", t)
+
+    def test_svezhaya_otchetnost_za_god(self):
+        d, kart, _ = sobrat(O.nabor(3), limit=5)
+        t = "".join(chitat(p) for p in stranicy(d))
+        self.assertIn("Доход вырос на 33" + NB + "% за год", t)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

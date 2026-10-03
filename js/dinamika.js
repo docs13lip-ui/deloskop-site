@@ -2,7 +2,8 @@
  * (решение владельца 02.10, эталон экрана — п. 5 «Динамика и тренды»).
  * Данные — только из ответа /api/check: dossier.charts (ГИР БО ФНС, годовая бухотчётность), signals, company, zsk.
  * Снимки для «что изменилось» хранятся ТОЛЬКО в браузере (localStorage, ключ dlk_snimki): без ФИО, адресов и сумм,
- * кроме выручки, прибыли, собственного капитала, текущей ликвидности и оценки рентабельности активов из открытой отчётности (ГИР БО). Нет доступа к хранилищу — блока «что изменилось» нет.
+ * кроме выручки, прибыли, собственного капитала, кредитов и займов, текущей ликвидности и оценки рентабельности активов из открытой отчётности (ГИР БО);
+ * у организаций — ещё код и название основного вида деятельности из ЕГРЮЛ. Нет доступа к хранилищу — блока «что изменилось» нет.
  * Чистые функции (ryady, trendy, snimok, sravnit, html) — без DOM и сети, их проверяет tests/dinamika.test.js. */
 (function (root, factory) {
   var api = factory();
@@ -223,8 +224,42 @@
       // оценка рентабельности активов (js/rentabelnost.js, без норм) — для «стала ниже средней по отрасли / больше не ниже»
       var R = rent(), ro = R && R.ocenka ? R.ocenka(r) : null;
       if (ro && isFinite(ro.n)) s.rn = [ro.god, Math.round(ro.n * 10) / 10];
+      // кредиты и займы (баланс, dossier.charts.debts.loans; та же строка «Кредиты и займы» в досье) — для «стали больше годовой выручки» и «выросли в 2 раза»
+      var db = ch.debts, zg = db && typeof db === 'object' ? parseInt(db.year, 10) : NaN, zl = db ? db.loans : null;
+      if (isFinite(zg) && zl !== null && zl !== '' && typeof zl !== 'boolean' && isFinite(Number(zl)) && Number(zl) >= 0) s.zm = [zg, Number(zl)];
+      // основной вид деятельности (ЕГРЮЛ): код и название — для «основной вид деятельности сменился»
+      var ok = okved(r);
+      if (ok) { s.ok = ok.kod; if (ok.nazv) s.okn = ok.nazv; }
     }
     return s;
+  }
+
+  // Основной ОКВЭД: код из company.okved, название — из company.okved_name или строки досье «Основной вид деятельности»
+  // («46.71.4 — Торговля оптовая…», только если код в строке тот же). → {kod, nazv} | null
+  function okved(r) {
+    var c = (r && r.company) || {}, kod = String(c.okved == null ? '' : c.okved).trim();
+    if (!/^\d{2}(\.\d{1,2}){0,2}$/.test(kod)) return null;
+    var nazv = String(c.okved_name == null ? '' : c.okved_name).trim();
+    if (!nazv) {
+      var D = (r && r.dossier) || {};
+      (Array.isArray(D.sections) ? D.sections : []).forEach(function (sk) {
+        if (!sk || !Array.isArray(sk.rows)) return;
+        sk.rows.forEach(function (row) {
+          if (nazv || !Array.isArray(row) || !/^Основной вид деятельности$/i.test(String(row[0] || '').trim())) return;
+          var m = /^\s*(\d{2}(?:\.\d{1,2}){0,2})\s*[—–-]\s*(.+?)\s*$/.exec(String(row[1] == null ? '' : row[1]));
+          if (m && m[1] === kod) nazv = m[2];
+        });
+      });
+    }
+    nazv = nazv.replace(/\s+/g, ' ');
+    return { kod: kod, nazv: nazv.length > 90 ? nazv.slice(0, 89).replace(/\s+\S*$/, '') + '…' : nazv };
+  }
+
+  // Во сколько раз: «в 2 раза», «в 2,4 раза», «в 12 раз» (k ≥ 2)
+  function vRaz(k) {
+    if (k >= 10) { var n = Math.round(k); return 'в' + NB + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, NB) + NB + skl(n, 'раз', 'раза', 'раз'); }
+    var t = chislo(Math.floor(k * 10) / 10, 1).replace(/,0$/, '');
+    return 'в' + NB + t + NB + (/,/.test(t) ? 'раза' : skl(+t, 'раз', 'раза', 'раз'));
   }
 
   // Серия убыточных лет от последнего года ряда назад, только соседние годы; меньше 2 лет — null. → [год, n] | null
@@ -323,6 +358,19 @@
       var n = b.ub[1], ot = b.ub[0] - n + 1;
       add('huzhe', 'Убыток ' + n + NB + skl(n, 'год', 'года', 'лет') + ' подряд: по годовой отчётности за ' +
         (n === 2 ? ot + ' и ' + b.ub[0] : ot + '–' + b.ub[0]) + ' (ГИР' + NB + 'БО)');
+    }
+    // основной вид деятельности: смена кода в ЕГРЮЛ — справочно (факт, без оценки)
+    if (a.ok && b.ok && a.ok !== b.ok) add('info', 'Основной вид деятельности в ЕГРЮЛ сменился: ' + a.ok + ' → ' + b.ok + (b.okn ? ' — ' + b.okn : ''));
+    // кредиты и займы: только с новой годовой отчётностью (год баланса новее) и только между снимками, где они есть
+    if (a.zm && b.zm && b.zm[0] > a.zm[0]) {
+      var vA = a.vyr && a.vyr[0] === a.zm[0] && a.vyr[1] > 0 ? a.vyr[1] : null, vB = b.vyr && b.vyr[0] === b.zm[0] && b.vyr[1] > 0 ? b.vyr[1] : null;
+      var nd = 'на' + NB + '31.12.' + b.zm[0] + ' — ' + dengi(b.zm[1]);
+      if (vA !== null && vB !== null && a.zm[1] <= vA && b.zm[1] > vB) add('huzhe', 'Кредиты и займы стали больше годовой выручки: ' + nd +
+        ', выручка за ' + b.zm[0] + ' — ' + dengi(vB) + ' (ГИР' + NB + 'БО)');
+      else if (vA !== null && vB !== null && a.zm[1] > vA && b.zm[1] <= vB) add('luchshe', 'Кредиты и займы больше не превышают годовую выручку: ' + nd +
+        ', выручка за ' + b.zm[0] + ' — ' + dengi(vB) + ' (ГИР' + NB + 'БО)');
+      else if (a.zm[1] > 0 && b.zm[1] >= 2 * a.zm[1]) add('info', 'Кредиты и займы выросли ' + vRaz(b.zm[1] / a.zm[1]) + ': ' + nd +
+        ', на' + NB + '31.12.' + a.zm[0] + ' — ' + dengi(a.zm[1]) + ' (ГИР' + NB + 'БО)');
     }
     if (typeof dop === 'function') { try { var dx = dop(a, b); if (dx && dx.t) add(dx.ton, dx.t); } catch (e) {} }
     var poryadok = { huzhe: 0, info: 1, luchshe: 2 };
@@ -521,6 +569,6 @@
   }
 
   return { ryad: ryad, ryady: ryady, stroka: stroka, izmenenie: izmenenie, trendy: trendy, dengi: dengi, htmlDinamika: htmlDinamika,
-    snimok: snimok, sravnit: sravnit, likvidnost: likvidnost, zapomnit: zapomnit, htmlIzmeneniya: htmlIzmeneniya, html: html, KEY: KEY, CSS: CSS,
+    snimok: snimok, sravnit: sravnit, likvidnost: likvidnost, okved: okved, vRaz: vRaz, zapomnit: zapomnit, htmlIzmeneniya: htmlIzmeneniya, html: html, KEY: KEY, CSS: CSS,
     predydushchaya: predydushchaya, nuzhenKabinet: nuzhenKabinet, dogruzit: dogruzit, dobavit: dobavit, sDop: sDop };
 });

@@ -368,21 +368,23 @@ footer a{color:var(--muted)}
     form.addEventListener('submit',function(e){e.preventDefault();var v=input.value.replace(/\D/g,'');
       var out=form.nextElementSibling&&form.nextElementSibling.classList.contains('askmsg')?form.nextElementSibling:null;
       function tell(t,err){if(!out){out=document.createElement('p');out.className='askmsg';out.setAttribute('role','status');form.parentNode.insertBefore(out,form.nextSibling);}
-        out.textContent=t;out.classList.toggle('err',!!err);}
+        if(window.dlkLimit)dlkLimit.ubrat(out);out.textContent=t;out.classList.toggle('err',!!err);}
       if(!E.innValid(v)){tell(v.length===10||v.length===12?'В ИНН ошибка: не сходится контрольная цифра.':'ИНН организации — 10 цифр.',true);input.focus();return;}
       if(v.length===12){tell('Паспорт индивидуального предпринимателя пока не выпускаем. Проверить предпринимателя перед оплатой можно обычной проверкой — ',false);
         var a=document.createElement('a');a.href='/?inn='+v;a.textContent='проверить по ИНН '+v;out.appendChild(a);return;}
       if(form.getAttribute('data-rol')==='svoya'){location.href='/pasport/?inn='+v;return;}
-      sobratKontr(v,tell,form.querySelector('button'));});
+      sobratKontr(v,tell,form.querySelector('button'),function(){return out});});
   }
   // Паспорт контрагента = досье (одна проверка) → /pasport/kontragent/?id=…
-  function sobratKontr(v,tell,btn){
+  function sobratKontr(v,tell,btn,gde){
     if(!API){location.href='/pasport/kontragent/?demo=1';return;}
     btn.disabled=true;tell('Сверяем с реестрами и собираем Паспорт…');
     fetch(API+'/api/check?q='+encodeURIComponent(v)+'&from=pasport',{credentials:'include'})
       .then(function(res){return res.json().then(function(j){return {ok:res.ok,status:res.status,j:j}},function(){return {ok:false,status:res.status,j:{}}})})
       .then(function(x){btn.disabled=false;
-        if(!x.ok){tell(x.status===429?'Бесплатные проверки на сегодня закончились. Паспорт соберётся завтра — или войдите в кабинет.':((x.j&&x.j.detail)||'Не получилось собрать Паспорт. Попробуйте через минуту.'),true);return;}
+        // лимит бесплатных проверок — общий экран js/limit.js, текст API не выводим
+        if(x.status===429){tell('');if(window.dlkLimit)dlkLimit.pokazat(gde(),{stranica:'pasport',inn:v});else tell('На сегодня 3 бесплатные проверки закончились. Завтра — снова 3.');return;}
+        if(!x.ok){tell((x.j&&x.j.detail)||'Не получилось собрать Паспорт. Попробуйте через минуту.',true);return;}
         if(x.j&&x.j.report_id){location.href='/pasport/kontragent/?id='+encodeURIComponent(x.j.report_id);return;}
         location.href='/?inn='+v;})
       .catch(function(){btn.disabled=false;tell('Сервис не ответил. Проверьте интернет и попробуйте ещё раз.',true);});
@@ -525,13 +527,15 @@ footer a{color:var(--muted)}
       .then(function(res){return res.json().then(function(j){return {ok:res.ok,status:res.status,j:j}},function(){return {ok:false,status:res.status,j:{}}})})
       .then(function(x){
         if(!x.ok){view.innerHTML='';
-          say(x.status===429?'Бесплатные проверки на сегодня закончились. Паспорт откроется завтра — или войдите в кабинет.':((x.j&&x.j.detail)||'Не получилось собрать паспорт. Обновите страницу через минуту.'),true);return;}
+          if(x.status===429){say('');if(window.dlkLimit)dlkLimit.pokazat(msg,{stranica:'pasport',inn:inn});else say('На сегодня 3 бесплатные проверки закончились. Завтра — снова 3.');return;}
+          say((x.j&&x.j.detail)||'Не получилось собрать паспорт. Обновите страницу через минуту.',true);return;}
         say('');render(x.j);})
       .catch(function(){view.innerHTML='';say('Сервис не ответил. Проверьте интернет и обновите страницу.',true);});
 
   })();
 })();
 </script>
+<script src="/js/limit.js" defer></script>
 <script src="/obnovleniya.js" defer></script>
 <!--podval--><div class="podval" role="contentinfo"><div class="podval__in"><div class="podval__cols"><nav class="podval__col" aria-label="Продукты"><p class="podval__h">Продукты</p><ul><li><a href="/">Проверка по ИНН</a></li><li><a href="/indeks/">Индекс Делоскопа</a></li><li><a href="/#shield">Щит</a></li><li><a href="/nalichnye/">Наличные глазами банка</a></li><li><a href="/kontragenty-iz-vypiski/">Кому вы платите</a></li><li><a href="/proverit-schet/">Проверь счёт</a></li><li><a href="/skoraya-115-fz/">Скорая 115-ФЗ</a></li><li><a href="/pasport/">Паспорт</a></li><li><a href="/delopis/">Делопись</a></li><li><a href="/tarify/">Тарифы</a></li></ul></nav><nav class="podval__col" aria-label="Знания"><p class="podval__h">Знания</p><ul><li><a href="/115-fz/">115-ФЗ простыми словами</a></li><li><a href="/nalogi/">Налоги</a></li><li><a href="/obnovleniya/">Что нового</a></li><li><a href="/company/">Компании</a></li></ul></nav><nav class="podval__col" aria-label="Компания"><p class="podval__h">Компания</p><ul><li><a href="/indeks/#metodika">Методика Индекса</a></li><li><a href="/tochnost/">Точность Индекса</a></li><li><a href="/cabinet.html">Кабинет</a></li><li><a href="/rekvizity/">Реквизиты и контакты</a></li><li><a href="mailto:help@deloskop.ru">help@deloskop.ru</a></li></ul></nav><nav class="podval__col" aria-label="Документы"><p class="podval__h">Документы</p><ul><li><a href="/oferta/">Публичная оферта</a></li><li><a href="/politika/">Политика обработки ПДн</a></li><li><a href="/soglasie/">Согласие на обработку ПДн</a></li><li><a href="/rassylki/">Согласие на рассылки</a></li><li><a href="/cookies/">Cookies и Метрика</a></li><li><a href="/vozvrat/">Возврат денег</a></li><li><a href="/partneram/usloviya/">Условия для партнёров</a></li><li><a href="/rekvizity/">Реквизиты</a></li></ul></nav></div><div class="podval__niz"><p>© 2026 Делоскоп</p><p>Сотрудничество, отзывы и предложения — <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>. Принимаем 24/7</p><p>Материалы носят информационный характер и не заменяют консультацию юриста</p></div></div></div><!--/podval-->
 </body>

@@ -20,6 +20,7 @@ body{margin:0;background:#F5F5F2;-webkit-font-smoothing:antialiased}
 .pr .itog--nov::before{background:none;box-shadow:inset 0 0 0 1.5px currentColor}  /* на новое рассмотрение — кольцо: дело не кончено */
 .pr .delo dl{display:grid;grid-template-columns:max-content 1fr;gap:10px 20px;margin:0;padding:14px 0 0;border-top:1px solid var(--line);font-size:16px}
 .pr .delo dt{color:var(--muted)}.pr .delo dd{margin:0;color:var(--ink);font-variant-numeric:tabular-nums}
+.pr .delo .delo__dop{font-size:14px;line-height:1.4;color:var(--muted)}
 .pr .delo__src{margin:14px 0 0;padding:12px 0 0;border-top:1px solid var(--line);font-size:15px;color:var(--muted)}
 @media (max-width:480px){.pr .delo{padding:18px}.pr .delo dl{grid-template-columns:1fr;gap:2px}.pr .delo dd{margin-bottom:8px}}
 /* тело разбора */

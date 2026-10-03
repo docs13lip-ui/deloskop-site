@@ -3,7 +3,7 @@
  * Данные — только из ответа /api/check: dossier.charts (ГИР БО ФНС, годовая бухотчётность), signals, company, zsk.
  * Снимки для «что изменилось» хранятся ТОЛЬКО в браузере (localStorage, ключ dlk_snimki): без ФИО, адресов и сумм,
  * кроме выручки, прибыли, собственного капитала, кредитов и займов, текущей ликвидности и оценки рентабельности активов из открытой отчётности (ГИР БО);
- * у организаций — ещё код и название основного вида деятельности из ЕГРЮЛ. Нет доступа к хранилищу — блока «что изменилось» нет.
+ * у организаций — ещё код и название основного вида деятельности из ЕГРЮЛ, число Индекса и коды факторов открытой методики (для «почему сдвинулся»). Нет доступа к хранилищу — блока «что изменилось» нет.
  * Чистые функции (ryady, trendy, snimok, sravnit, html) — без DOM и сети, их проверяет tests/dinamika.test.js. */
 (function (root, factory) {
   var api = factory();
@@ -344,7 +344,12 @@
       if (ok) { s.ok = ok.kod; if (ok.nazv) s.okn = ok.nazv; }
       // Индекс (сервер или браузер по открытой методике, js/indeks-otvet.js) — для «Индекс: 64 → 58 с проверки 01.10»
       var ix = ixChislo(r);
-      if (ix != null) s.ix = ix;
+      if (ix != null) {
+        s.ix = ix;
+        // почему такое число (indeks-pochemu-v1): id факторов, полнота и версия методики — только у браузерного расчёта
+        var ir = ixRazbor(r);
+        if (ir) { s.ixf = ir.f; s.ixp = ir.p; s.ixv = ir.v; }
+      }
       // код состояния ЕГРЮЛ и дата записи — для «ФНС начала готовить исключение / отметки больше нет»
       var kd = kodSost(c.state_code);
       if (kd) {
@@ -426,6 +431,48 @@
     var IO = ixModul();
     try { return IO && IO.gotov && IO.gotov() ? IO.ball(r) : null; } catch (e) { return null; }
   }
+  // Разбор браузерного Индекса для снимка: {f: [id факторов], p: полнота %, v: версия методики} | null.
+  // Серверное число (r.indeks) не раскладываем — его факторов в ответе нет.
+  function ixRazbor(r) {
+    var v = r && r.indeks;
+    if (v !== undefined && v !== null && v !== '') return null;
+    var IO = ixModul();
+    try {
+      if (!IO || !IO.gotov || !IO.gotov() || !IO.versiya) return null;
+      var x = IO.vid(r);
+      if (x.rezhim !== 'chislo' || !Array.isArray(x.vklady)) return null;
+      return { f: x.vklady.map(function (q) { return String(q.id); }).filter(function (id) { return /^[a-z0-9_]{2,40}$/.test(id); }).slice(0, 40),
+        p: isFinite(x.polnota) ? Math.round(x.polnota) : null, v: IO.versiya() };
+    } catch (e) { return null; }
+  }
+  // Подстрочник к «Индекс: A → B»: какие факторы методики появились и какие ушли (не больше 3, крупные — первыми).
+  // Без разбора в одном из снимков (сервер, старый снимок) — молчим; методика сменилась — так и пишем, факторы не сравниваем.
+  function ixPochemu(a, b) {
+    if (!Array.isArray(a.ixf) || !Array.isArray(b.ixf)) return '';
+    if (a.ixv && b.ixv && a.ixv !== b.ixv) return 'Методика Индекса обновилась: v' + a.ixv + ' → v' + b.ixv + ' — факторы двух проверок не' + NB + 'сравниваем.';
+    var IO = ixModul(), F = function (id) { try { return IO && IO.faktor ? IO.faktor(id) : null; } catch (e) { return null; } };
+    var nov = [], ush = [];
+    b.ixf.forEach(function (id) { if (a.ixf.indexOf(id) < 0) { var f = F(id); if (f) nov.push(f); } });
+    a.ixf.forEach(function (id) { if (b.ixf.indexOf(id) < 0) { var f = F(id); if (f) ush.push(f); } });
+    var vse = nov.map(function (f) { return { f: f, d: f.vklad, n: 1 }; }).concat(ush.map(function (f) { return { f: f, d: -f.vklad, n: 0 }; }));
+    if (!vse.length) {
+      if (typeof a.ixp === 'number' && typeof b.ixp === 'number' && a.ixp !== b.ixp)
+        return 'Факторы те' + NB + 'же — изменилась полнота данных: ' + a.ixp + NB + '% → ' + b.ixp + NB + '%.';
+      return '';
+    }
+    vse.sort(function (p, q) { return Math.abs(q.d) - Math.abs(p.d); });
+    var est = vse.length > 3 ? vse.length - 3 : 0;
+    vse = vse.slice(0, 3);
+    var zn = function (n) { return (n > 0 ? '+' : '−') + Math.abs(n); };
+    // название фактора — в ёлочках, внутренние кавычки — „лапками“
+    var kav = function (t) { return '«' + String(t).replace(/«/g, '„').replace(/»/g, '“') + '»'; };
+    var chast = function (spisok, zag) {
+      return spisok.length ? zag + ' — ' + spisok.map(function (x) { return kav(x.f.tekst) + NB + '(' + zn(x.d) + ')'; }).join(', ') : '';
+    };
+    var t = [chast(vse.filter(function (x) { return x.n; }), 'появилось'), chast(vse.filter(function (x) { return !x.n; }), 'ушло')]
+      .filter(Boolean).join('; ');
+    return 'Почему: ' + t + (est ? '; и' + NB + 'ещё ' + est : '') + '. Вклады — по' + NB + 'открытой методике' + (b.ixv ? ' v' + b.ixv : '') + '.';
+  }
   function ddmm(t) { var q = new Date(t + 3 * 3600 * 1000); return ('0' + q.getUTCDate()).slice(-2) + '.' + ('0' + (q.getUTCMonth() + 1)).slice(-2); }
 
   // Текущая ликвидность: строка «Текущая ликвидность» раздела досье «Финансовая динамика» (тот же разбор, что в
@@ -480,7 +527,7 @@
       add(o.indexOf(b.lvl) > o.indexOf(a.lvl) ? 'huzhe' : 'luchshe', 'Оценка риска: ' + LVL[a.lvl] + ' → ' + LVL[b.lvl]);
     }
     if (a.ix && b.ix && a.ix !== b.ix && isFinite(a.t))
-      add(b.ix < a.ix ? 'huzhe' : 'luchshe', 'Индекс: ' + a.ix + ' → ' + b.ix + ' с' + NB + 'проверки ' + ddmm(a.t));
+      add(b.ix < a.ix ? 'huzhe' : 'luchshe', 'Индекс: ' + a.ix + ' → ' + b.ix + ' с' + NB + 'проверки ' + ddmm(a.t), ixPochemu(a, b));
     if (a.zsk && b.zsk && a.zsk !== b.zsk) {
       var z = ['low', 'medium', 'high'];
       add(z.indexOf(b.zsk) > z.indexOf(a.zsk) ? 'huzhe' : 'luchshe', 'Прогноз ЗСК (наша оценка): ' + LVL[a.zsk] + ' → ' + LVL[b.zsk]);

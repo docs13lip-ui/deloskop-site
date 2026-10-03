@@ -22,14 +22,12 @@
     var indeks = Math.max(sh.min, Math.min(sh.max, sh.baza + minusy + pu)), potolok = null;
     potolki.sort(function (a, b) { return a[0] - b[0]; });
     if (potolki.length && indeks > potolki[0][0]) { indeks = potolki[0][0]; potolok = { znachenie: indeks, prichina: potolki[0][1] }; }
-    var sokr = polnota < m.polnota.porog_sokrashchennoj;
-    if (sokr && indeks > m.polnota.potolok_sokrashchennoj) {
-      indeks = m.polnota.potolok_sokrashchennoj;
-      potolok = potolok || { znachenie: indeks, prichina: 'Оценка по сокращённым данным' };
-    }
+    // методика 1.0.1: меньше порога полноты — числа и уровня нет (раньше — потолок 69), пишем, сколько данных собрано
+    if (polnota < m.polnota.porog_sokrashchennoj)
+      return { indeks: null, uroven: null, stop: null, polnota: polnota, sokrashchennaya: true, vklady: [] };
     vklady.sort(function (a, b) { return (a.vklad > 0) - (b.vklad > 0) || a.vklad - b.vklad; });
     var u = m.urovni.filter(function (x) { return x.ot <= indeks && indeks <= x.do; })[0];
-    return { indeks: indeks, uroven: u, stop: null, polnota: polnota, sokrashchennaya: sokr, minusy: minusy,
+    return { indeks: indeks, uroven: u, stop: null, polnota: polnota, sokrashchennaya: false, minusy: minusy,
              plyusy: plyusy, plyusy_uchteno: pu, potolok: potolok, vklady: vklady };
   }
 

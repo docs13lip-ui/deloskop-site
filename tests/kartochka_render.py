@@ -252,6 +252,35 @@ OKVED_RAZDELY = [
     (97, 98, "Домашние хозяйства"), (99, 99, "Экстерриториальные организации")]
 
 
+_OKVED_KOD = re.compile(r"^\d{2}(?:\.\d{1,2}){0,2}$")
+
+
+def okved_kod(okved):
+    """kartochki-okved-v1: код основного ОКВЭД как в ЕГРЮЛ («46.71.4») или "" (мусор, «46,71», 5 уровней)."""
+    s = str(okved or "").strip()
+    return s if _OKVED_KOD.match(s) else ""
+
+
+def okved_klass(x):
+    """Класс ОКВЭД — первые 2 цифры кода («46.71.4» → «46»); у страницы без кода — "" (класс неизвестен)."""
+    kod = okved_kod(x.get("okved"))
+    return kod[:2] if kod else ""
+
+
+def okved_nazvanie_iz_dosie(r, kod):
+    """Живой /api/check отдаёт okved_name = null, а название — строкой досье «Основной вид деятельности»
+    («46.71.4 — Торговля оптовая…»). Берём только при том же коде (как okved-zajmy-izm-v1 на сайте)."""
+    if not kod:
+        return ""
+    for sec in ((r.get("dossier") or {}).get("sections") or []):
+        for row in sec.get("rows") or []:
+            if isinstance(row, (list, tuple)) and len(row) >= 2 and re.match(r"^\s*Основной вид деятельности", str(row[0])):
+                m = re.match(r"^\s*(\d{2}(?:\.\d{1,2}){0,2})\s*[—–-]\s*(.+?)\s*$", str(row[1]))
+                if m and m.group(1) == kod:
+                    return m.group(2)
+    return ""
+
+
 def okved_razdel(okved):
     m = re.match(r"^(\d{2})", str(okved or ""))
     if not m:
@@ -373,6 +402,8 @@ def iz_check(r):
         "fakty": {}, "finansy": [], "ne_provereno": [],
         "gruppa": r.get("gruppa") or "",
     }
+    if not k["okved_name"]:
+        k["okved_name"] = okved_nazvanie_iz_dosie(r, okved_kod(k["okved"]))  # kartochki-okved-v1
     reg, gor = region_gorod(k["address"])
     k["region"] = r.get("region") or c.get("region") or reg
     k["gorod"] = r.get("gorod") or c.get("city") or gor
@@ -831,9 +862,17 @@ SOSEDEJ = 5  # v3.8b: 3–5 ссылок (ТЗ Маркетинга 03.10, 2.4)
 
 
 def pohozhie(k, vse):
-    """v3.8b: регион+раздел ОКВЭД → раздел → регион → остальные (до 3). Только напечатанное на странице: добор = полная
-    сборка. Внутри уровня — ближе по доходу, затем ИНН."""
-    moi_d, rz = _dohod_kart(k), _razdel(k)
+    """kartochki-okved-v1 (ТЗ [Продукт · Данные] 03.10 разд. 3.2 п. 4, ТЗ 16:50): есть компании того же класса ОКВЭД
+    (2 цифры) — только они (сначала свой регион), до 5; нет — как v3.8b: регион+раздел → раздел → регион → остальные
+    (до 3), и блок называется «Ещё компании в Делоскопе». Только напечатанное на странице: добор = полная сборка.
+    Внутри уровня — ближе по доходу, затем ИНН."""
+    moi_d, rz, kl = _dohod_kart(k), _razdel(k), okved_klass(k)
+    if kl:
+        kand = [x for x in vse if x["inn"] != k["inn"] and okved_klass(x) == kl]
+        if kand:
+            kand.sort(key=lambda x: (not (k.get("region") and x.get("region") == k["region"]),
+                                     abs(math.log1p(_dohod_kart(x)) - math.log1p(moi_d)), x["inn"]))
+            return kand[:SOSEDEJ]
     ur = [lambda x: rz and k.get("region") and x.get("region") == k["region"] and _razdel(x) == rz,
           lambda x: rz and _razdel(x) == rz,
           lambda x: k.get("region") and x.get("region") == k["region"],
@@ -854,11 +893,11 @@ def sosedi_html(k, sosedi):
     """Блок «Похожие компании»; добор обновляет им и опубликованные карточки."""
     if not sosedi:
         return ""
-    rz = _razdel(k)
-    if k.get("region") and all(x.get("region") == k["region"] for x in sosedi):
-        zag = "Похожие компании — " + e(k["region"])
-    elif all((rz and _razdel(x) == rz) or (k.get("region") and x.get("region") == k["region"]) for x in sosedi):
-        zag = "Похожие компании"
+    # kartochki-okved-v1: «Похожие» — только если у всех тот же класс ОКВЭД (2 цифры); регион или раздел — не похожесть
+    kl = okved_klass(k)
+    if kl and all(okved_klass(x) == kl for x in sosedi):
+        zag = ("Похожие компании — " + e(k["region"])) if (k.get("region") and all(x.get("region") == k["region"] for x in sosedi)) \
+            else "Похожие компании"
     else:
         zag = "Ещё компании в Делоскопе"
     return '<aside class="co-side card" aria-labelledby="sos"><h2 id="sos" class="co-h3">%s</h2><ul class="co-sos">%s</ul></aside>' % (
@@ -899,6 +938,27 @@ def otrasl_html(k, normy):
                 e(o[0]), NB, NB, ("%.1f" % o[1]).replace(".", ","), NB))
 
 
+def indeks_v_otchete_html(inn):
+    """Блок «Индекс — в полном отчёте» (ТЗ [Продукт · Маркетинг] 03.10 16:50, разд. 2; цель Метрики kartochka_indeks).
+    Ссылка — без «#indeks»: на главной такого якоря нет (tests/ssylki.test.js); появится id у блока Индекса — допишем."""
+    return ('<section class="co-ind co-ind--wait" aria-label="Индекс Делоскопа"><p class="co-ind__n">Индекс%s— в%sполном отчёте</p>'
+            '<div><p class="caption">Балл от 1 до 99 считаем на сегодняшних данных, когда собрано не меньше %d%s%% сведений. '
+            'Здесь%s— выводы по фактам на дату карточки.</p><p class="caption"><a href="/?inn=%s" data-goal="kartochka_indeks">'
+            'Посчитать Индекс на сегодня ›</a></p></div></section>' % (NB, NB, POROG_INDEKSA, NB, NB, inn))
+
+
+_IND_STARYJ = re.compile(r'<section class="co-ind co-ind--wait" aria-label="Индекс Делоскопа">.*?</section>', re.S)
+_KANON_INN = re.compile(r'<link rel="canonical" href="[^"]*/(\d{10})-')
+
+
+def pochinit_indeks_blok(t):
+    """kartochki-okved-v1: опубликованные карточки («Индекс — считаем») → «Индекс — в полном отчёте». Повтор ничего не меняет."""
+    m = _KANON_INN.search(t)
+    if not m:
+        return t
+    return _IND_STARYJ.sub(lambda _: indeks_v_otchete_html(m.group(1)), t, count=1)
+
+
 def html_kartochki(k, V, sosedi, kom=None, normy=None):
     """kom — библиотека data/kommentarii.json (сайт читает файл сам, API передаёт её же); None — без комментариев."""
     nm = k["name"]
@@ -932,14 +992,9 @@ def html_kartochki(k, V, sosedi, kom=None, normy=None):
                '<div><p class="co-ind__z">Индекс Делоскопа · %s</p><p class="caption">Собрано %d%s%% данных · '
                '<a href="/indeks/">как считаем</a></p></div></section>' % (iv["ball"], NB, e(iv["zona"]), iv["polnota"], NB))
     else:
-        pol = iv.get("polnota")
-        t = ("Для этой компании собрано %d%s%% данных, для балла нужно %d%s%%." % (pol, NB, POROG_INDEKSA, NB)) if pol is not None \
-            else "Собираем данные из источников; балл покажем, когда их будет не меньше %d%s%%." % (POROG_INDEKSA, NB)
-        bar = ('<div class="co-bar-pol" role="img" aria-label="Собрано %d%% данных, для балла нужно %d%%"><i style="width:%d%%"></i><b style="left:%d%%"></b></div>'
-               % (pol, POROG_INDEKSA, pol, POROG_INDEKSA)) if pol is not None else ""
-        ind = ('<section class="co-ind co-ind--wait" aria-label="Индекс Делоскопа"><p class="co-ind__n">Индекс%s— считаем</p>'
-               '<div><p class="caption">%s Пока смотрите выводы по фактам ниже. <a href="/indeks/">Как считаем</a></p>%s</div></section>'
-               % (NB, e(t), bar))
+        # kartochki-okved-v1: карточка статична, числа на ней нет (решение 03.10 13:35) — «считаем» читалось как сломанная
+        # страница; ведём в полный отчёт (ТЗ [Продукт · Маркетинг] 03.10 16:50, разд. 2)
+        ind = indeks_v_otchete_html(k["inn"])
     # выводы
     vv = "".join('<li class="co-v co-v--%s"><span class="co-v__z" aria-label="%s"></span><div><p>%s</p>%s</div></li>' % (
         ZNAK[x["ton"]][0], ZNAK[x["ton"]][1], e(x["tekst"]).replace("&nbsp;", NB), _istochnik_stroka(x["istochnik"], x["data"], x["status"]))
@@ -1040,9 +1095,17 @@ def html_kartochki(k, V, sosedi, kom=None, normy=None):
     if fin_blok and fin_blok.endswith("</section>"):
         fin_blok = fin_blok[:-len("</section>")] + otrasl_html(k, normy) + "</section>"
     sos = sosedi_html(k, sosedi)
+    # kartochki-okved-v1 (ТЗ 16:50, разд. 2): строка основного ОКВЭД под заголовком; код — ещё и в крошках (data-okved),
+    # чтобы добор опубликованных карточек знал класс для «Похожих» и хаба без пересборки из сведений
+    okk = okved_kod(k.get("okved"))
+    okved_str = ""
+    if okk:
+        nz = re.sub(r"\s+", " ", str(k.get("okved_name") or "")).strip()
+        okved_str = '\n<p class="caption co-okved">Основной вид деятельности — <span class="num">%s</span>%s · ЕГРЮЛ%s</p>' % (
+            okk, (" " + e(nz)) if nz else "", (" · сведения на " + data_korotko(k["egrul_data"])) if k.get("egrul_data") else "")
     podzag = " · ".join(filter(None, ["Действующая", ("работает " + vozr) if mes else "", e(mesto) if mesto else "",
                                       "ИНН " + k["inn"], ("ОГРН " + k["ogrn"]) if k.get("ogrn") else ""]))
-    return """<!doctype html>
+    return primenit_vorota_indeksa("""<!doctype html>
 <html lang="ru">
 <head>
 <meta charset="utf-8">
@@ -1067,10 +1130,10 @@ def html_kartochki(k, V, sosedi, kom=None, normy=None):
 <body class="co">
 <!--shapka--><!--/shapka-->
 <main id="main" class="wrap co-wrap">
-<nav class="co-krosh caption" aria-label="Навигация"><a href="/">Делоскоп</a> › <a href="/{papka}/">Компании</a>{kr_reg}{kr_razd}</nav>
+<nav class="co-krosh caption" aria-label="Навигация"{okved_attr}><a href="/">Делоскоп</a> › <a href="/{papka}/">Компании</a>{kr_reg}{kr_razd}</nav>
 <header class="co-head">
 <h1>{h1}</h1>
-<p class="co-sub">{podzag}</p>
+<p class="co-sub">{podzag}</p>{okved_str}
 <div class="co-act"><a class="btn btn--primary" href="/?inn={inn}">Проверить сейчас — полный отчёт</a><a class="btn btn--secondary" href="/proverit-schet/">Проверить счёт от этой компании</a></div>
 </header>
 <div class="co-grid">
@@ -1096,9 +1159,91 @@ def html_kartochki(k, V, sosedi, kom=None, normy=None):
         title=e(title(k)), desc=e(description(k, V)).replace("&nbsp;", NB), url=url,
         ld=json.dumps(ld, ensure_ascii=False, sort_keys=True).replace("</", "<\\/"), papka=PAPKA,
         kr_reg=(" › " + e(k["region"])) if k.get("region") else "", kr_razd=(" › " + e(razdel)) if razdel else "",
-        h1=e(nm), podzag=podzag, inn=k["inn"], ind=ind, vv=vv, pered=pered, fin=fin_blok, stroki="".join(stroki),
+        h1=e(nm), podzag=podzag, okved_attr=(' data-okved="%s"' % okk) if okk else "", okved_str=okved_str, inn=k["inn"], ind=ind, vv=vv, pered=pered, fin=fin_blok, stroki="".join(stroki),
         ne_blok=ne_blok, lyudi=lyudi, sos=sos, tema=urllib.parse.quote("Ошибка в карточке ИНН " + k["inn"]),
-        sobrano=data_tekst(k.get("proverka")) if k.get("proverka") else "")
+        sobrano=data_tekst(k.get("proverka")) if k.get("proverka") else ""))
+
+
+# ---------------------------------------------------------------- ворота индексации (kartochki-indeks-v1)
+# ТЗ [Продукт · Данные] 03.10 18:55 разд. 3.2 и ответ на ✎ 16:50 (claude/Продукт_волна_5000_карточек_ворота_ответы_✎_03.10.md).
+# Ворота публикации (vorota) — как были. Карточка идёт в индекс и в sitemap, только если на самой странице:
+#   1) не меньше 6 строк фактов с датой сведений (выводы «Коротко» + строки «Проверка по реестрам») не меньше чем из 3 источников
+#      (ЕГРЮЛ, ГИР БО, набор ФНС…; источник блока выручки засчитывается в источники);
+#   2) год последней открытой отчётности ≥ 2024;
+#   3) есть хотя бы один вывод: «Комментарий команды» под фактом или «что изменилось» год к году в блоке выручки.
+# Иначе — `noindex, follow` и не в sitemap. Старше 2024 года выручка не попадает в description (title её и так не несёт),
+# а в блоке выручки — подпись о годе последней открытой отчётности. Считаем по готовому HTML: полная сборка, добор
+# опубликованных страниц и API (одна функция, вызывается в html_kartochki) дают одно и то же.
+GOD_INDEKSA_OT = 2024
+FAKTOV_INDEKSA = 6
+ISTOCHNIKOV_INDEKSA = 3
+ROBOTS_NOINDEX = '<meta name="robots" content="noindex, follow">\n'
+_PROB = "(?:&nbsp;|\u00a0| )"
+_IND_V = re.compile(r'<li class="co-v [^"]*">.*?<span class="co-src">([^<]*?) · сведения на \d', re.S)
+_IND_F = re.compile(r'<span class="fact__src co-src">([^<]*?) · сведения на \d')
+_IND_FIN_SRC = re.compile(r'<section class="co-sec" aria-labelledby="fin">.*?<span class="co-src">([^<]*?) · сведения на \d', re.S)
+_IND_FIN = re.compile(r'(<h2 id="fin">)([^<]*)(</h2>)')
+_IND_TAB = re.compile(r'<tbody><tr><td>(\d{4})</td>')
+_IND_DESC = re.compile(r'(<meta (?:name|property)="(?:og:)?description" content="[^"]*?), доход [0-9]+(?:,[0-9]+)?' + _PROB +
+                       r'(?:трлн|млрд|млн|тыс\.)' + _PROB + r'₽(?: за' + _PROB + r'\d{4})?')
+IND_FIN_PODPIS = "Последняя открытая отчётность — за" + NB + "%d" + NB + "год."
+
+
+def _ind_semya(ist):
+    """«ГИР БО, бухгалтерская отчётность» → «ГИР БО»; «ФНС, открытые данные» → «ФНС»."""
+    return re.split(r"[,(·]", html.unescape(ist))[0].strip()
+
+
+def god_otchetnosti_html(t):
+    """Год последней открытой отчётности на карточке: первая строка таблицы выручки, иначе год в заголовке блока; нет — None."""
+    m = _IND_TAB.search(t)
+    if m:
+        return int(m.group(1))
+    h = _IND_FIN.search(t)
+    g = re.search(r"за" + _PROB + r"(\d{4})", h.group(2)) if h else None
+    return int(g.group(1)) if g else None
+
+
+def vorota_indeksa_html(t):
+    """(в индекс, причина) по готовой странице карточки."""
+    ist = _IND_V.findall(t) + _IND_F.findall(t)
+    if len(ist) < FAKTOV_INDEKSA:
+        return False, "фактов с датой %d из %d" % (len(ist), FAKTOV_INDEKSA)
+    # источник блока выручки (ряд ГИР БО по годам) — тоже факты о компании с датой; в счёт строк не идёт
+    if len({_ind_semya(x) for x in ist + _IND_FIN_SRC.findall(t)}) < ISTOCHNIKOV_INDEKSA:
+        return False, "источников меньше %d" % ISTOCHNIKOV_INDEKSA
+    g = god_otchetnosti_html(t)
+    if g is None or g < GOD_INDEKSA_OT:
+        return False, "последняя открытая отчётность — %s (нужна ≥ %d)" % (g or "нет года", GOD_INDEKSA_OT)
+    h = _IND_FIN.search(t)
+    izm = bool(h and re.search(r"выросл|снизил|не изменил", h.group(2)))
+    if '<div class="kom ' not in t and not izm:
+        return False, "нет вывода: ни комментария команды, ни изменения год к году"
+    return True, "ок"
+
+
+def noindex_html(t):
+    return 'name="robots" content="noindex' in t
+
+
+def primenit_vorota_indeksa(t):
+    """Готовая карточка (тело или страница) → та же карточка с решением ворот индексации. Повторный вызов ничего не меняет."""
+    g = god_otchetnosti_html(t)
+    if g is not None and g < GOD_INDEKSA_OT:
+        # старая выручка — не в сниппет (description и og:description)
+        t = _IND_DESC.sub(lambda m: m.group(1), t)
+        podpis = IND_FIN_PODPIS % g
+        if "co-fin-god" not in t:
+            t = _IND_FIN.sub(lambda m: m.group(0) + '<p class="caption co-fin-god">%s</p>' % podpis, t, count=1)
+    ok, _ = vorota_indeksa_html(t)
+    est = noindex_html(t)
+    if not ok and not est:
+        i = t.find('<meta name="description"')
+        if i >= 0:
+            t = t[:i] + ROBOTS_NOINDEX + t[i:]
+    elif ok and est:
+        t = t.replace(ROBOTS_NOINDEX, "", 1)
+    return t
 
 
 def god_v_podpisi(zagolovok, god):
@@ -1120,8 +1265,9 @@ HAB_NET_OTRASLI = "Отрасль не указана"
 HAB_CHITAT = [
     ("Верх карточки", "Статус и возраст компании по ЕГРЮЛ, ИНН и ОГРН. Сверяйте именно ИНН со счётом и договором: "
               "название может совпадать у разных компаний."),
-    ("Индекс", "Балл от 1 до 99 по открытой методике. Показываем его, когда собрано не меньше 60" + NB + "% сведений; "
-               "до тех пор — «считаем» и выводы по фактам. <a href=\"/indeks/\">Как считаем</a> · "
+    # kartochki-okved-v1: текст [Продукт · Маркетинг] 03.10 16:50 разд. 2 — дословно
+    ("Индекс", "Балл от 1 до 99 по открытой методике. На карточке его нет: считаем в полном отчёте на сегодня, когда собрано "
+               "не меньше 60" + NB + "% сведений. <a href=\"/indeks/\">Как считаем</a> · "
                "<a href=\"/tochnost/\">как проверяем точность</a>."),
     ("Коротко о компании", "Главные факты. Под каждым — источник, дата сведений и отметка «подтверждено источником»."),
     # kartochki-v3.10: текст [Право] 03.10 17:07 разд. 4 — дословно (ст. 18 402-ФЗ: срок, кто сдаёт не в налоговую, ограничение доступа)
@@ -1153,9 +1299,12 @@ def html_haba(kart, index):
     bloki = []
     for o in otrasli:
         sp = sorted(po_otr[o], key=lambda x: x["name"])
+        # kartochki-okved-v1 (ТЗ 16:50, разд. 2): под названием — «город · ОКВЭД 46.71», если код напечатан на карточке
         bloki.append('<section class="co-sec"><h2>%s <span class="caption">%d</span></h2><ul class="co-sos co-sos--cols">%s</ul></section>' % (
             e(o), len(sp), "".join('<li><a href="%s">%s</a><span class="caption">%s</span></li>' % (
-                adres_str(x), e(x["name"]), e(x.get("gorod") or x.get("region") or "")) for x in sp)))
+                adres_str(x), e(x["name"]), " · ".join(filter(None, [e(x.get("gorod") or x.get("region") or ""),
+                                                                   ("ОКВЭД%s<span class=\"num\">%s</span>" % (NB, okved_kod(x.get("okved"))))
+                                                                   if okved_kod(x.get("okved")) else ""]))) for x in sp)))
     regiony = ""
     if po_reg:
         regiony = '<p class="co-reg caption">Группы — по основному виду деятельности в ЕГРЮЛ (раздел ОКВЭД%s2). По регионам: %s.</p>' % (NB, " · ".join(

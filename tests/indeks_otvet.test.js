@@ -38,7 +38,7 @@ test('(б) чистая компания: 72 + «больше 10 лет» +3 = 7
   assert.strictEqual(v.istochnikov, 3);
   assert.strictEqual(v.uroven, 'Без серьёзных сигналов');
   assert.deepStrictEqual(v.vklady.map((x) => x.id), ['vozrast_10g']);
-  assert.strictEqual(IO.podpis(v), 'По открытой методике v1.0 · 3' + NB + 'из' + NB + '7 источников · полнота 75' + NB + '%');
+  assert.strictEqual(IO.podpis(v), 'По открытой методике v' + M.versiya + ' · 3' + NB + 'из' + NB + '7 источников · полнота 75' + NB + '%');
 });
 
 test('браузер = калькулятор /indeks/ (тот же indeks.js = indeks_v1.py): число из фактов ответа совпадает с прямым расчётом', () => {
@@ -210,7 +210,7 @@ test('Паспорт: без серверного числа — балл по �
   const ix = p.razdely.find((x) => x.id === 'indeks');
   assert.strictEqual(p.meta.indeks.ball, 75);
   assert.ok(ix.fakty.some((f) => f.tekst === 'Балл' && f.znachenie === '75 из 99 — Без серьёзных сигналов'));
-  assert.ok(ix.fakty.some((f) => f.tekst === 'Как считали' && /^По открытой методике v1\.0 · 3.из.7 источников: база 72, компании больше 10 лет \+3\.$/.test(f.znachenie)));
+  assert.ok(ix.fakty.some((f) => f.tekst === 'Как считали' && new RegExp('^По открытой методике v' + M.versiya.replace(/\./g, '\\.') + ' · 3.из.7 источников: база 72, компании больше 10 лет \\+3\\.$').test(f.znachenie)));
   const p2 = P.sobrat(otvet({ indeks: 72, polnota: 40 }), { usloviya: U, indeksVorota: IV, indeksOtvet: IO });
   assert.strictEqual(p2.meta.indeks.ball, null);
   const p3 = P.sobrat(otvet(), { usloviya: U, indeksVorota: IV });

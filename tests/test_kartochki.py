@@ -108,7 +108,8 @@ class TestStranica(unittest.TestCase):
             self.assertEqual(ti.count("«"), ti.count("»"), "кавычки непарные: " + ti)
             de = re.search(r'<meta name="description" content="([^"]*)"', t).group(1)
             self.assertLessEqual(len(de.replace("&quot;", '"').replace("&amp;", "&")), 160)
-            self.assertNotIn("noindex", t)
+            # kartochki-indeks-v1: noindex — ровно у тех, кто не прошёл ворота индексации
+            self.assertEqual("noindex" in t, not K.vorota_indeksa_html(t)[0], p.parent.name)
             kan = re.search(r'<link rel="canonical" href="([^"]+)"', t).group(1)
             self.assertTrue(kan.endswith("/company/" + p.parent.name + "/"), kan)
 
@@ -162,7 +163,10 @@ class TestStranica(unittest.TestCase):
 
     def test_indeks_tolko_za_vorotami(self):
         for t in self.html.values():
-            self.assertIn("Индекс" + NB + "— считаем", t)
+            # kartochki-okved-v1: числа на статичной карточке нет — ведём в полный отчёт (ТЗ [Маркетинг] 16:50 разд. 2)
+            self.assertIn("Индекс" + NB + "— в" + NB + "полном отчёте", t)
+            self.assertIn('data-goal="kartochka_indeks"', t)
+            self.assertNotIn("Индекс" + NB + "— считаем", t)
         k = K.iz_check(O.zapis(1, indeks={"ball": 74, "polnota": 65}))
         self.assertEqual(K.indeks_vid(k)["rezhim"], "chislo")
         self.assertIn("Индекс 74", K.title(k))
@@ -206,7 +210,12 @@ class TestStranica(unittest.TestCase):
 
     def test_sitemap_i_lastmod(self):
         sm = pathlib.Path(self.d, "sitemap-companies.xml").read_text(encoding="utf-8")
-        self.assertEqual(sm.count("<url>"), len(self.kart) + 1)  # + хаб (≥ 20 карточек)
+        v_indekse = [p for p, t in self.html.items() if "noindex" not in t]
+        self.assertGreater(len(v_indekse), 0)
+        self.assertLess(len(v_indekse), len(self.kart), "в наборе есть и карточки под noindex")
+        self.assertEqual(sm.count("<url>"), len(v_indekse) + 1)  # + хаб (≥ 20 карточек); noindex — не в sitemap
+        for p, t in self.html.items():
+            self.assertEqual("/company/%s/</loc>" % p.parent.name in sm, "noindex" not in t, p.parent.name)
         self.assertIn("<loc>https://deloskop.ru/company/</loc>", sm)
         self.assertNotIn("2026-09-30", sm)
         self.assertIn("Sitemap: https://deloskop.ru/sitemap-companies.xml", pathlib.Path(self.d, "robots.txt").read_text(encoding="utf-8"))
@@ -1177,6 +1186,194 @@ class GodOdinRazV310(unittest.TestCase):
         self.assertIn("не позднее трёх месяцев после окончания года", tekst)
         self.assertIn("ограничен по решению Правительства", tekst)
         self.assertNotIn("в следующем году", tekst)
+
+
+
+class TestVorotaIndeksa(unittest.TestCase):
+    """kartochki-indeks-v1: ворота индексации (ТЗ [Продукт · Данные] 03.10 18:55, разд. 3.2 и ответ на ✎ 16:50)."""
+
+    def html_iz(self, r):
+        k = K.iz_check(r)
+        return K.html_kartochki(k, K.vyvody(k), [], K.kommentarii.zagruzit(), K.zagruzit_normy())
+
+    def test_polnaya_v_indekse(self):
+        t = self.html_iz(O.zapis(0, finansy=[8e6, 11e6, 14e6, 18e6, 24e6], dohod=24e6, delta=33))
+        self.assertEqual(K.vorota_indeksa_html(t), (True, "ок"))
+        self.assertNotIn("noindex", t)
+        self.assertNotIn("co-fin-god", t)
+
+    def test_dva_istochnika_noindex(self):
+        t = self.html_iz(O.zapis(1))  # доход только из набора ФНС, без ГИР БО: ЕГРЮЛ + ФНС
+        ok, pr = K.vorota_indeksa_html(t)
+        self.assertFalse(ok)
+        self.assertIn("источников", pr)
+        self.assertIn('<meta name="robots" content="noindex, follow">', t)
+
+    def test_staraya_otchetnost(self):
+        t = self.html_iz(O.zapis(2, finansy=[100e6, 108e6], dohod=108e6))  # последний год — 2022
+        ok, pr = K.vorota_indeksa_html(t)
+        self.assertFalse(ok)
+        self.assertIn("2022", pr)
+        self.assertIn('content="noindex, follow"', t)
+        self.assertIn("Последняя открытая отчётность — за" + NB + "2022" + NB + "год.", t)
+        for m in re.findall(r'<meta (?:name|property)="(?:og:)?description" content="([^"]*)"', t):
+            self.assertNotIn("доход", m)
+            self.assertNotIn("млн", m)
+        self.assertEqual(K.primenit_vorota_indeksa(t), t, "повторное применение ничего не меняет")
+
+    def test_bez_vyvoda_noindex(self):
+        t = self.html_iz(O.zapis(0, finansy=[8e6, 11e6, 14e6, 18e6, 24e6], dohod=24e6, delta=33))
+        t2 = re.sub(r'<div class="kom .*?</div></div>', "", t)
+        t2 = re.sub(r'(<h2 id="fin">)[^<]*', r"\1Выручка за 2025 год — 24 млн ₽", t2)
+        self.assertEqual(K.vorota_indeksa_html(t2)[0], False)
+
+    def test_snyatie_noindex(self):
+        t = self.html_iz(O.zapis(0, finansy=[8e6, 11e6, 14e6, 18e6, 24e6], dohod=24e6, delta=33))
+        i = t.find('<meta name="description"')
+        s_metkoj = t[:i] + K.ROBOTS_NOINDEX + t[i:]
+        self.assertEqual(K.primenit_vorota_indeksa(s_metkoj), t, "свежие сведения прошли ворота — noindex снимается")
+
+    def test_dobor_staroj_stranicy(self):
+        z = [O.zapis(0, finansy=[8e6, 11e6, 14e6, 18e6, 24e6], dohod=24e6, delta=33), O.zapis(2, finansy=[100e6, 108e6], dohod=108e6)]
+        d1, _, _ = sobrat(z, limit=5)
+        # страница «старого» вида (до ворот): без noindex и с выручкой в description
+        st = next(p for p in stranicy(d1) if "noindex" in p.read_text(encoding="utf-8"))
+        t = st.read_text(encoding="utf-8").replace(K.ROBOTS_NOINDEX, "")
+        st.write_text(t, encoding="utf-8")
+        _, o = K.sobrat([], d1, dobavit=True)
+        self.assertEqual(o["izmeneno_stranic"], 1)
+        self.assertIn("noindex", st.read_text(encoding="utf-8"))
+        sm = pathlib.Path(d1, "sitemap-companies.xml").read_text(encoding="utf-8")
+        self.assertNotIn(st.parent.name, sm)
+        _, o2 = K.sobrat([], d1, dobavit=True)
+        self.assertEqual(o2["izmeneno_stranic"], 0)
+
+    def test_na_saite(self):
+        papka = KOREN / "company"
+        sm = (KOREN / "sitemap-companies.xml").read_text(encoding="utf-8") if (KOREN / "sitemap-companies.xml").exists() else ""
+        for p in sorted(papka.glob("*/index.html")) if papka.is_dir() else []:
+            t = p.read_text(encoding="utf-8")
+            ok, pr = K.vorota_indeksa_html(t)
+            self.assertEqual("noindex" in t, not ok, "%s: %s" % (p.parent.name, pr))
+            self.assertEqual("/company/%s/</loc>" % p.parent.name in sm, ok, p.parent.name)
+            g = K.god_otchetnosti_html(t)
+            if g is not None and g < K.GOD_INDEKSA_OT:
+                for m in re.findall(r'<meta (?:name|property)="(?:og:)?description" content="([^"]*)"', t):
+                    self.assertNotIn("доход", m, p.parent.name)
+
+
+class TestOkvedV1(unittest.TestCase):
+    """kartochki-okved-v1: ОКВЭД на карточке, «Похожие» — только тот же класс (2 цифры), «Индекс — в полном отчёте»
+    (ТЗ [Продукт · Данные] 03.10 18:55 разд. 3.2 п. 4; ТЗ [Продукт · Маркетинг] 03.10 16:50 разд. 2)."""
+
+    @staticmethod
+    def zag_sos(t):
+        m = re.search(r'<h2 id="sos" class="co-h3">([^<]*)</h2>', t)
+        return m.group(1) if m else None
+
+    @staticmethod
+    def okved_str(t):
+        m = re.search(r'data-okved="([0-9.]+)"', t)
+        return m.group(1) if m else ""
+
+    def test_kod(self):
+        for x in ("41.20", "46.71.4", "62.01.1", "01"):
+            self.assertEqual(K.okved_kod(x), x)
+        for x in (None, "", "4", "abc", "46.71.4.1.2", "46,71", "46.711"):
+            self.assertEqual(K.okved_kod(x), "", x)
+        self.assertEqual(K.okved_klass({"okved": "46.71.4"}), "46")
+        self.assertEqual(K.okved_klass({"okved": ""}), "")
+
+    def test_nazvanie_iz_dosie(self):
+        r = O.zapis(0)
+        r["company"]["okved"], r["company"]["okved_name"] = "46.71.4", None
+        r["dossier"]["sections"] = [{"id": "activity", "rows": [["Основной вид деятельности", "46.71.4 — Торговля оптовая природным (естественным) газом"]]}]
+        self.assertEqual(K.iz_check(r)["okved_name"], "Торговля оптовая природным (естественным) газом")
+        r["company"]["okved"] = "41.20"  # в строке досье другой код — название не берём
+        self.assertEqual(K.iz_check(r)["okved_name"], "")
+
+    def test_stroka_na_kartochke(self):
+        k = K.iz_check(O.zapis(0))
+        t = K.html_kartochki(k, K.vyvody(k), [])
+        self.assertIn('<nav class="co-krosh caption" aria-label="Навигация" data-okved="41.20">', t)
+        self.assertIn('<p class="caption co-okved">Основной вид деятельности — <span class="num">41.20</span> '
+                      'Строительство жилых и нежилых зданий · ЕГРЮЛ · сведения на 29.09.2026</p>', t)
+        r = O.zapis(0)
+        r["company"]["okved"] = "46,71"
+        k = K.iz_check(r)
+        t = K.html_kartochki(k, K.vyvody(k), [])
+        self.assertNotIn("co-okved", t)
+        self.assertNotIn("data-okved", t)
+        # строка ОКВЭД — не факт для ворот индексации (ворота не ослабляем)
+        self.assertNotRegex(t, r'class="fact__src co-src">[^<]*ОКВЭД')
+
+    def test_pohozhie_tolko_klass(self):
+        z = O.nabor(12)
+        d, kart, _ = sobrat(z, limit=20)
+        po_papke = {p.parent.name: chitat(p) for p in stranicy(d)}
+        for papka, t in po_papke.items():
+            zag = self.zag_sos(t)
+            self.assertTrue(zag, papka)
+            sos = re.findall(r'href="/company/([^/]+)/"', re.search(r'<ul class="co-sos">(.*?)</ul>', t, re.S).group(1))
+            kl = self.okved_str(t)[:2]
+            if zag.startswith("Похожие"):
+                for s2 in sos:
+                    self.assertEqual(self.okved_str(po_papke[s2])[:2], kl, "%s → %s" % (papka, s2))
+            else:
+                self.assertEqual(zag, "Ещё компании в Делоскопе")
+                self.assertFalse(any(self.okved_str(po_papke[s2])[:2] == kl for s2 in sos), papka)
+
+    def test_raznyj_klass_ne_pohozhie(self):
+        k = K.iz_check(O.zapis(0))       # 41.20
+        drug = K.iz_check(O.zapis(1))    # 46.90
+        drug["region"] = k["region"]     # тот же регион — всё равно не «похожие»
+        self.assertEqual(K.pohozhie(k, [k, drug]), [drug])
+        self.assertIn("Ещё компании в Делоскопе", K.sosedi_html(k, [drug]))
+        self.assertNotIn("Похожие", K.sosedi_html(k, [drug]))
+        bez_koda = dict(k, okved="")
+        self.assertIn("Ещё компании в Делоскопе", K.sosedi_html(bez_koda, [drug]))
+        tot_zhe = K.iz_check(O.zapis(3))  # 41.20
+        self.assertEqual(K.pohozhie(k, [k, drug, tot_zhe]), [tot_zhe], "есть тот же класс — только он")
+        self.assertTrue(K.sosedi_html(k, [tot_zhe]).count("Похожие компании"))
+
+    def test_staraya_stranica_bez_koda(self):
+        z = O.nabor(6)
+        d, _, _ = sobrat(z[:3])
+        for p in stranicy(d):  # страницы «до v1»: без data-okved и с «Индекс — считаем»
+            t = chitat(p)
+            t = re.sub(r' data-okved="[0-9.]+"', "", t)
+            t = re.sub(r'<section class="co-ind co-ind--wait".*?</section>', lambda _: '<section class="co-ind co-ind--wait" aria-label="Индекс Делоскопа"><p class="co-ind__n">'
+                       'Индекс&nbsp;— считаем</p><div></div></section>', t, count=1, flags=re.S)
+            p.write_text(t, encoding="utf-8")
+        K.sobrat(z[3:], d, dobavit=True)
+        for p in stranicy(d):
+            t = chitat(p).replace(NB, "&nbsp;")
+            self.assertNotIn("Индекс&nbsp;— считаем", t, p.parent.name)
+            self.assertIn("Индекс&nbsp;— в&nbsp;полном отчёте", t, p.parent.name)
+            if "data-okved" not in t:
+                self.assertEqual(self.zag_sos(t), "Ещё компании в Делоскопе", p.parent.name)
+        _, o = K.sobrat([], d, dobavit=True)
+        self.assertEqual(o["izmeneno_stranic"], 0, "повторный добор ничего не меняет")
+
+    def test_hab_okved(self):
+        d, _, _ = sobrat(O.nabor(4))
+        hab = pathlib.Path(d, "company", "index.html").read_text(encoding="utf-8")
+        self.assertIn('Образцовск · ОКВЭД&nbsp;<span class="num">41.20</span>', hab)
+        self.assertIn("На карточке его нет: считаем в полном отчёте на сегодня", hab)
+        self.assertNotIn("«считаем»", hab)
+
+    def test_na_saite(self):
+        papka = KOREN / "company"
+        stranicy_s = {p.parent.name: p.read_text(encoding="utf-8") for p in sorted(papka.glob("*/index.html"))} if papka.is_dir() else {}
+        for imya_, t in stranicy_s.items():
+            self.assertNotIn("Индекс&nbsp;— считаем", t, imya_)
+            self.assertIn("Индекс&nbsp;— в&nbsp;полном отчёте", t, imya_)
+            zag = self.zag_sos(t)
+            if zag and zag.startswith("Похожие"):
+                kl = self.okved_str(t)[:2]
+                self.assertTrue(kl, imya_ + ": «Похожие» без кода ОКВЭД")
+                for s2 in re.findall(r'href="/company/([^/]+)/"', re.search(r'<ul class="co-sos">(.*?)</ul>', t, re.S).group(1)):
+                    self.assertEqual(self.okved_str(stranicy_s.get(s2, ""))[:2], kl, imya_ + " → " + s2)
 
 
 if __name__ == "__main__":

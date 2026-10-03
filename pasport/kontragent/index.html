@@ -185,6 +185,18 @@ td b{font-weight:600}
 .ogl .st.ok{color:var(--ok)}.ogl .st.warn{color:var(--warn)}.ogl .st.bad{color:var(--bad)}.ogl .st.info{color:var(--ink2)}.ogl .st.off{color:var(--off)}
 @media (max-width:600px){.summa select,.summa input{width:100%}.itog li.vd{grid-template-columns:1fr;gap:12px}.vd-ix{border-right:0;padding:0 0 12px;border-bottom:1px solid rgba(0,0,0,.08)}.rkv-ps dd{font-size:13.5px}}
 @media (max-width:600px){.ogl{columns:1}table,tbody,tr,th,td{display:block;width:auto}th{border:0;padding:10px 0 0;width:auto}td{padding-top:2px}.podl{grid-template-columns:1fr}.kol{flex-direction:column;align-items:flex-start}.kol .pr{text-align:left}}
+/* pasport-polosa-v1: «На чём держится компания» в разделе 6 — те же доли, что в строках; печатается */
+.pbal{margin:14px 0 4px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;break-inside:avoid}
+.pbal figcaption{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap;margin-bottom:10px;font-size:14px}
+.pbal figcaption span{font-size:12.5px;color:var(--muted)}
+.pbal__bar{display:flex;gap:2px;height:10px;border-radius:5px;overflow:hidden;background:var(--line)}
+.pbal__bar i{display:block;height:100%;min-width:2px}
+.pbal--kap{background:var(--accent)}.pbal--dol{background:#7FA8F0}.pbal--kor{background:#C9C9C4}
+.pbal ul{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px 20px;font-size:13px;color:var(--ink2)}
+.pbal li{display:flex;align-items:center;gap:7px}.pbal li i{width:10px;height:10px;border-radius:3px;flex:none}
+.pbal li b{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.pbal p{margin:8px 0 0;font-size:12px;color:var(--muted);line-height:1.5}
+@media print{.pbal{border-color:#D9D9D4}.pbal__bar,.pbal li i{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 @media print{
   .kom{background:none;break-inside:avoid}
   @page{size:A4;margin:16mm 16mm 18mm;
@@ -592,6 +604,9 @@ td b{font-weight:600}
       // «Рентабельность активов против отрасли» (rentabelnost-v2) — в конце раздела 6 «Финансы и штат», если раздел открыт.
       // Вставляется после выпуска, как комментарий команды: в отпечаток SHA-256 не входит (подпись под блоком).
       var r6=(p.razdely||[]).filter(function(z){return z.id==='finansy'})[0], s6=pk.querySelector('#r'+(r6?r6.n:6));
+      // «На чём держится компания» (pasport-polosa-v1) — полоса под таблицей раздела 6: рисунок тех же строк (доли — один расчёт P.strukturaBalansa).
+      // Вставляется после выпуска: в отпечаток SHA-256 не входит; закрытый раздел — без полосы.
+      if(r6&&r6.status!=='locked'&&s6&&P.polosaBalansaHtml){try{var pb=P.polosaBalansaHtml(r.dossier,U),tb=s6.querySelector('table');if(pb&&tb)tb.insertAdjacentHTML('afterend',pb);}catch(e){}}
       if(window.Rentabelnost&&r6&&r6.status!=='locked'&&s6){try{Rentabelnost.mount(pk,r,{vKonec:s6,otkryto:true,primechanie:Rentabelnost.PRIMECHANIE_PASPORT}).catch(function(){})}catch(e){}}
       pk.onchange=function(e){var t=e.target;if(!t.matches||!t.matches('[data-otm-ist]'))return;var op=t.options[t.selectedIndex];if(t.form&&op)t.form.adres.value=op.getAttribute('data-url');};
       pk.onclick=function(e){if(otmKlik(e,p))return;var b=e.target.closest&&e.target.closest('.kinn');if(!b)return;var v=b.getAttribute('data-inn');

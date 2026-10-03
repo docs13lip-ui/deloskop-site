@@ -123,7 +123,7 @@ test('(г) полнота < 60 % → ни числа, ни уровня: «Со�
   assert.strictEqual(v.polnota, 50);
   assert.strictEqual(v.uroven, undefined);
   const h = IO.htmlKolonka(v);
-  assert.ok(h.includes('Индекс — по' + NB + 'сокращённым данным'));
+  assert.ok(h.includes('Индекс — данных пока' + NB + 'мало'));
   assert.ok(h.includes('Собрано 50' + NB + '% данных — число и' + NB + 'уровень покажем, когда наберётся 60' + NB + '%.'));
   assert.ok(h.includes('Не хватает: налоги и штат — свежего набора ФНС'));
   assert.ok(!/ot-ix__big/.test(h));
@@ -257,4 +257,35 @@ test('v1.1 источник «ФНС» — только открытые наб�
   assert.strictEqual(IO.izOtveta(r).dostupno.fns, false);
   r.signals[3].as_of = '01.09.2026';
   assert.strictEqual(IO.izOtveta(r).dostupno.fns, true);
+});
+
+// v1.2 — [Право · Юрист 115-ФЗ] 03.10 16:07, разд. 1 п. 1 и п. 4
+test('v1.2 заголовок «Индекс — данных пока мало»; «по сокращённым данным» на экране проверки нет', () => {
+  const r = otvet(); r.dossier.charts = {};
+  const h = IO.htmlKolonka(IO.vid(r));
+  assert.ok(h.includes('<div class="ot-ix__ne">Индекс — данных пока' + NB + 'мало</div>'));
+  assert.ok(!/сокращённ/.test(h));
+  assert.ok(!/сокращённ/.test(fs.readFileSync(path.join(K, 'js', 'indeks-otvet.js'), 'utf8').replace(/\/\/.*|\/\*[\s\S]*?\*\//g, '')), 'в коде (без комментариев) нет «сокращённ»');
+});
+
+test('v1.2 банк (ОКВЭД 64.19) без ГИР БО: «организация сдаёт её в Банк России, а не в ГИР БО» — без «её нет»', () => {
+  const r = otvet(); r.dossier.charts = {}; r.company.okved = '64.19';
+  const v = IO.vid(r);
+  assert.strictEqual(v.rezhim, 'sokr');
+  const h = IO.htmlKolonka(v);
+  assert.ok(h.includes('Не хватает: бухотчётность — организация сдаёт её в' + NB + 'Банк России, а не в' + NB + 'ГИР' + NB + 'БО.'));
+  assert.ok(!h.includes('ответе её нет'));
+  assert.ok(IO.strokaNe(v).includes('Банк России'));
+  // не банк (64.9x — прочие финансовые услуги) — прежняя строка
+  r.company.okved = '64.92';
+  assert.ok(IO.htmlKolonka(IO.vid(r)).includes('прошлый год в' + NB + 'ответе её нет'));
+});
+
+test('v1.2 проверка банка совпадает с bank(c) из js/sushchestvennoe.js', () => {
+  const S = require('../js/sushchestvennoe.js');
+  ['64.19', '64.1', '64.11', '64.92', '65.12', '', undefined].forEach((ok) => {
+    const r = otvet(); r.dossier.charts = {}; if (ok !== undefined) r.company.okved = ok;
+    const banka = /Банк России/.test(IO.strokaNe(IO.vid(r)));
+    assert.strictEqual(banka, S.bank(r.company), 'ОКВЭД ' + ok);
+  });
 });

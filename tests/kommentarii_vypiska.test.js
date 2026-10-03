@@ -56,18 +56,20 @@ function bezIsklyucheniya(x, k) {
   return fr ? x.ton[k].split(fr).join("") : x.ton[k];
 }
 
-test("vypiska v3: 6 текстов [Право] 21:25 + 9 текстов 22:30 утверждены дословно — роль, дата, норма; bigcash молчит", () => {
+test("vypiska v3: 6 текстов [Право] 21:25 + 10 текстов 22:30 утверждены дословно — роль, дата, норма; взносы от 1 млн ₽ молчат", () => {
   // bigcash не утверждён намеренно: в движке это операции с наличными от 1 млн ₽ — и снятие, и взнос,
   // а текст [Право] 22:30 — только о снятии (правило [Право]: смысл кода другой — запись не ставить, ✎).
   const utv6 = { acc_person: "ст. 54.1 НК РФ", acc_change: "ст. 312 ГК РФ", key: "ст. 54.1 НК РФ",
     oneshot: "письмо ФНС от 10.03.2021 № БВ-4-7/3060@", cash: "", lowtax: "приказ ФНС от 30.05.2007 № ММ-3-06/333@",
     inn_invalid: "", inn_missing: "", acc_many: "ст. 312 ГК РФ", vague: "", round: "", novat: "п. 2 ст. 171 НК РФ",
-    persons: "п. 1 ст. 226 НК РФ", cashin: "", self: "" };
-  assert.strictEqual(SPRAV.vypiska.zapisi.find((x) => x.kod === "bigcash").ton.status, "zhdet_prava");
+    persons: "п. 1 ст. 226 НК РФ", cashin: "", self: "", bigcash: "" };
+  // kommentarii-bigcash-v1 (03.10): движок делит сигнал — bigcash (есть снятие) получил текст [Право] 22:30,
+  // bigcash_vznos (только взносы) молчит; тест ниже
+  assert.strictEqual(SPRAV.vypiska.zapisi.find((x) => x.kod === "bigcash_vznos").ton.status, "zhdet_prava");
   assert.strictEqual(K.vypiska(SPRAV, "inn_invalid").ton, "kras", "уровень bad — красный");
   assert.strictEqual(K.vypiska(SPRAV, "vague").ton, "sery", "уровень info — серый, как в движке");
   // ◐ [Право] 22:30: нормы по наличным, ровным суммам и переводам себе намеренно не ставим (18-МР не сверен)
-  for (const kod of ["cashin", "round", "self", "vague"]) {
+  for (const kod of ["cashin", "round", "self", "vague", "bigcash"]) {
     const t = SPRAV.vypiska.zapisi.find((x) => x.kod === kod).ton;
     assert.ok(!/18-МР|Банк России|ст\. 6 115/.test(t.bank + t.nalog + t.sdelat), kod);
   }
@@ -191,4 +193,23 @@ test("vypiska persons: строка о чеке самозанятого — т�
   // страница передаёт тип клиента по ИНН выписки
   assert.ok(/i\.length===10\?'org':i\.length===12\?'ip':''/.test(STR));
   assert.ok(/K\.vypiskaHtml\(state\.kom,code,klient\(\)\)/.test(STR));
+});
+
+// kommentarii-bigcash-v1: bigcash — есть снятие от 1 млн ₽ (текст [Право] 22:30 — о снятии); bigcash_vznos — только взносы
+test("bigcash: со снятием — текст [Право] дословно; одни взносы — bigcash_vznos без комментария", () => {
+  const z = SPRAV.vypiska.zapisi.find((x) => x.kod === "bigcash").ton;
+  assert.strictEqual(z.bank + z.nalog + z.sdelat, "Крупное снятие наличных банк может попросить объяснить; единого лимита в законе нет." +
+    "Расход наличными признают, только если есть документы: кому и за что заплатили." + "Храните чеки, авансовые отчёты и договоры, по которым платили наличными.");
+  const S = "7707083893", A = "40702810000000000001";
+  const d = (n, s, pa, ra, p) => `СекцияДокумент=Платежное поручение\nНомер=${n}\nДата=0${n}.07.2026\nСумма=${s}\nПлательщикСчет=${pa}\nПлательщикИНН=${pa === A ? S : ""}\nПолучательСчет=${ra}\nПолучательИНН=${ra === A ? S : "7728168971"}\nНазначениеПлатежа=${p}\nКонецДокумента`;
+  const big = (...x) => E.analyze(E.parse(["1CClientBankExchange", "РасчСчет=" + A, "СекцияРасчСчет", "РасчСчет=" + A, "КонецРасчСчет", ...x, "КонецФайла"].join("\n"))).flows.find((f) => /^bigcash/.test(f.code));
+  const vz = d(1, "1500000.00", "20202810000000000001", A, "Взнос наличных. Торговая выручка");
+  const sn = d(2, "1200000.00", A, "30232810000000000001", "Снятие наличных по чеку на хозяйственные нужды");
+  const op = d(3, "300000.00", A, "40702810100000000011", "Оплата по договору 5 от 01.07.2026");
+  const b = big(vz, sn);
+  assert.ok(b && b.code === "bigcash" && /— 2, на 2\s700\s000\s₽/u.test(b.text), JSON.stringify(b));
+  assert.ok(/Крупное снятие наличных/.test(K.vypiskaHtml(SPRAV, b.code)));
+  const a = big(vz, op);
+  assert.ok(a && a.code === "bigcash_vznos" && a.level === "info" && a.href === "/nalichnye/", JSON.stringify(a));
+  assert.strictEqual(K.vypiskaHtml(SPRAV, a.code), "");
 });

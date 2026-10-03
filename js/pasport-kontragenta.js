@@ -17,7 +17,7 @@
 })(typeof self !== 'undefined' ? self : this, function (root) {
   'use strict';
 
-  var VERSIYA = 'Паспорт v2.7';
+  var VERSIYA = 'Паспорт v2.8'; // v2.8 — раздел 6: баланс и расчёты на 31.12 (pasport-balans-v1)
   // Определение Индекса и подпись предела аванса — дословно [Юриста 115-ФЗ] 29.09 (222-ФЗ), разд. 3 пп. 1 и 4.
   var OPREDELENIE_INDEKSA = 'Индекс Делоскопа — оценка признаков риска для сделки по открытым и лицензированным данным: регистрационных, налоговых, признаков по 115-ФЗ и нарушений. Это не кредитный рейтинг и не мнение о способности компании исполнять финансовые обязательства.';
   var PODPIS_PREDELA = 'Сколько разумно платить вперёд с учётом найденных признаков — расчёт Делоскопа по открытой формуле. Это не оценка способности компании вернуть деньги.';
@@ -160,6 +160,58 @@
       sam: (def.sam || []).map(function (a) { return { tekst: a[0], url: a[1], chto: a[2] || '' }; }) };
   }
 
+  // Раздел 6: баланс и расчёты на 31.12 последнего года (pasport-balans-v1; тот же источник, что «На чём держится компания»
+  // и «Кто кому должен» на экране проверки — dossier.charts.balance / debts, ГИР БО). Только суммы первоисточника и доли,
+  // без оценок. Доли «от баланса» — только когда известны все три части пассива и капитал не меньше нуля (иначе это не доля баланса).
+  // Капитал меньше нуля — единственная строка с тоном «warn»: раздел тогда не может говорить «настораживающих отметок нет».
+  var IST_BALANS = 'ГИР БО, бухгалтерский баланс';
+  function chislo(v) { return typeof v === 'number' && isFinite(v) ? v : null; }
+  function rub(v, U) {
+    var n = Math.round(Math.abs(v));
+    var s = U && U.money ? U.money(n) : n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' ₽';
+    return (v < 0 ? 'минус ' : '') + s;
+  }
+  function balansFakty(D, dobavit, U) {
+    var ch = (D && D.charts) || {}, n = 0;
+    var b = ch.balance && typeof ch.balance === 'object' ? ch.balance : null;
+    var d = ch.debts && typeof ch.debts === 'object' ? ch.debts : null;
+    var gb = b ? parseInt(b.year, 10) : NaN;
+    if (b && isFinite(gb) && gb > 1990) {
+      var eq = chislo(b.equity), ld = chislo(b.long_debt), sd = chislo(b.short_debt);
+      var vse = eq != null && ld != null && sd != null && eq >= 0 && ld >= 0 && sd >= 0;
+      var tot = vse ? eq + ld + sd : 0;
+      var data = gb + '-12-31';
+      // доли — методом наибольшего остатка: в документе три доли баланса дают ровно 100 %
+      var doli = {};
+      if (tot > 0) {
+        var ch3 = [['Собственный капитал', eq], ['Долгосрочные обязательства', ld], ['Краткосрочные обязательства', sd]].map(function (x) { var t = x[1] / tot * 100; return { k: x[0], c: Math.floor(t), o: t - Math.floor(t) }; });
+        var ost = 100 - ch3.reduce(function (a, x) { return a + x.c; }, 0);
+        ch3.slice().sort(function (a, b) { return b.o - a.o; }).slice(0, ost).forEach(function (x) { x.c++; });
+        ch3.forEach(function (x) { doli[x.k] = x.c; });
+      }
+      [['Собственный капитал', eq], ['Долгосрочные обязательства', ld], ['Краткосрочные обязательства', sd]].forEach(function (x) {
+        var v = x[1]; if (v == null) return;
+        if (v < 0 && x[0] === 'Собственный капитал') { dobavit(x[0], rub(v, U) + ' — меньше нуля', { ton: 'warn', data: data, istochnik: IST_BALANS }); n++; return; }
+        if (v < 0) return;
+        var p = tot > 0 ? doli[x[0]] : null;
+        dobavit(x[0], rub(v, U) + (p != null ? ' — ' + (p < 1 && v > 0 ? 'меньше\u00a01' : p) + '\u00a0% баланса' : ''), { ton: 'info', data: data, istochnik: IST_BALANS });
+        n++;
+      });
+    }
+    var gd = d ? parseInt(d.year, 10) : NaN;
+    if (d && isFinite(gd) && gd > 1990) {
+      var vy = (Array.isArray(ch.revenue) ? ch.revenue : []).filter(function (x) { return x && parseInt(x.year, 10) === gd; })[0];
+      var vyr = vy ? chislo(vy.value) : null;
+      [['Дебиторская задолженность (должны компании)', d.receivables, false], ['Кредиторская задолженность (должна компания)', d.payables, false], ['Кредиты и займы', d.loans, true]].forEach(function (x) {
+        var v = chislo(x[1]); if (v == null || v < 0) return;
+        var hvost = x[2] && v > 0 && vyr != null && vyr > 0 ? ' — ' + Math.round(v / vyr * 100) + '\u00a0% выручки за\u00a0' + gd : '';
+        dobavit(x[0], rub(v, U) + hvost, { ton: 'info', data: gd + '-12-31', istochnik: IST_BALANS });
+        n++;
+      });
+    }
+    return n;
+  }
+
   function sobrat(r, opts) {
     opts = opts || {};
     r = r || {};
@@ -246,6 +298,7 @@
       var rv = D.charts.revenue.slice(-5).map(function (x) { return x.year + ' — ' + U.money(x.value); }).join(' · ');
       fakt('finansy', 'Выручка по годам', rv, { ton: 'info', istochnik: 'ГИР БО' });
     }
+    balansFakty(D, function (tekst, znachenie, s) { fakt('finansy', tekst, znachenie, s); }, U);
 
     // 8–11. Блоки DaMIA по контракту Арт-директора 27.09 (status, itog, znachenie, prichina, istochnik, data_svedeniy)
     var dm = r.damia || {};

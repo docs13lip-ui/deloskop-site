@@ -265,8 +265,16 @@ def svodka_haba(spisok):
         return ""
     r = spisok[0]  # новые — первыми (правило dela.json, _kak)
     h = r["h1"].replace("«", "„").replace("»", "“")
-    return "%d %s решений ВС, КС и арбитражных судов: суть, сколько на кону, что сделать. Последний — «%s», %s." % (
-        len(spisok), chislo_razborov(len(spisok)), h, data_ru(r["data"]))
+    # [Право] 03.10 10:20, разд. 4: «решений ВС, КС и арбитражных судов» — только если у КАЖДОГО разбора все карточки дел —
+    # судебные акты (поле `sud` заполнено). Разбор по письму Минфина/ФНС (карточка без `sud`) или без поля → «судебных решений и позиций ведомств».
+    # Дата — публикации разбора («опубликован»), а не акта суда.
+    vid = "решений ВС, КС и арбитражных судов" if vse_sudebnye(spisok) else "судебных решений и позиций ведомств"
+    return "%d %s %s: суть, сколько на кону, что сделать. Последний — «%s», опубликован %s." % (
+        len(spisok), chislo_razborov(len(spisok)), vid, h, data_ru(r["data"]))
+
+
+def vse_sudebnye(spisok):
+    return all(r.get("dela") and all((d.get("sud") or "").strip() for d in r["dela"]) for r in spisok)
 
 
 def hab(D, razdel=None):

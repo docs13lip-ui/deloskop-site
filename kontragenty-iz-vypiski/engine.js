@@ -207,7 +207,7 @@
     });
 
     var totals = { out: 0, in: 0, supplier: 0, budget: 0, salary: 0, person: 0, bank: 0, self: 0, loan: 0, cash: 0, cashIn: 0, bigCash: 0 };
-    var counts = { out: 0, supplier: 0, person: 0, cash: 0, cashIn: 0, bigCash: 0 };
+    var counts = { out: 0, supplier: 0, person: 0, cash: 0, cashIn: 0, bigCash: 0, bigCashOut: 0 };
     var map = {}, dates = [];
     docs.forEach(function (d) {
       var sum = num(d.Сумма);
@@ -224,7 +224,7 @@
       var cat = category(d, self);
       totals[cat] = (totals[cat] || 0) + sum;
       if (cat === 'person') counts.person++;
-      if (cat === 'cash') { counts.cash++; if (sum >= NORMS.bigCashOp) { totals.bigCash += sum; counts.bigCash++; } }
+      if (cat === 'cash') { counts.cash++; if (sum >= NORMS.bigCashOp) { totals.bigCash += sum; counts.bigCash++; counts.bigCashOut++; } }
       if (cat !== 'supplier') return;
       counts.supplier++;
       var inn = (d.ПолучательИНН || '').replace(/\D/g, '');
@@ -362,8 +362,10 @@
     var cashShare = t.cash / t.out;
     if (cashShare >= NORMS.cashShare) out.push({ level: 'warn', code: 'cash', href: '/nalichnye/', more: 'Разобрать наличные по неделям',
       text: 'Наличными ушло ' + pct(cashShare) + ' всех списаний — ' + money(t.cash) + ' ₽. Чем выше доля, тем чаще банк спрашивает, на что пошли деньги: зарплата, закупки, подотчёт.' });
-    if (r.counts.bigCash) out.push({ level: 'info', code: 'bigcash', href: '/nalichnye/', more: 'Что делать с наличными',
-      text: 'Операций с наличными от 1 млн ₽ — ' + r.counts.bigCash + ', на ' + money(t.bigCash) + ' ₽. По ст. 6 115-ФЗ банк сообщает о них в Росфинмониторинг. Это не блокировка, но их изучают внимательнее.' });
+    // bigcash — среди операций от 1 млн ₽ есть снятие; bigcash_vznos — только взносы (текст сигнала тот же;
+    // «Комментарий команды» [Право] 02.10 22:30 — о снятии, поэтому у взносов его нет)
+    if (r.counts.bigCash) out.push(Object.assign(r.counts.bigCashOut ? { level: 'info', code: 'bigcash' } : { level: 'info', code: 'bigcash_vznos' }, { href: '/nalichnye/', more: 'Что делать с наличными',
+      text: 'Операций с наличными от 1 млн ₽ — ' + r.counts.bigCash + ', на ' + money(t.bigCash) + ' ₽. По ст. 6 115-ФЗ банк сообщает о них в Росфинмониторинг. Это не блокировка, но их изучают внимательнее.' }));
     if (t.in && t.cashIn / t.in >= NORMS.depositShare) out.push({ level: 'info', code: 'cashin', href: '/nalichnye/', more: 'Что спросит банк',
       text: 'Наличными внесено ' + pct(t.cashIn / t.in) + ' всех поступлений — ' + money(t.cashIn) + ' ₽. Если ваш бизнес не работает с наличными покупателями, банк спросит, откуда они.' });
     var taxShare = t.budget / t.out;

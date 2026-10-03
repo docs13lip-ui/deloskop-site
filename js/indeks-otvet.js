@@ -242,10 +242,10 @@
     for (k in M.istochniki) if (x.dostupno[k]) n++;
     var out = { polnota: rez.polnota, istochnikov: n, vsego: Object.keys(M.istochniki).length, versiya: M.versiya, neUchityvali: neUchityvali(x, c) };
     if (rez.stop) { out.rezhim = 'stop'; out.stop = rez.stop.tekst; out.ton = 'bad'; return out; }
-    if (rez.indeks == null) { out.rezhim = 'net'; return out; } // нет ЕГРЮЛ — не считаем
+    if (rez.indeks == null && !rez.sokrashchennaya) { out.rezhim = 'net'; return out; } // нет ЕГРЮЛ — не считаем
     if (x.neizvestnye.length) { out.rezhim = 'neizv'; out.signaly = x.neizvestnye.map(function (s) { return t(s); }); return out; }
-    // v1.1: «сокращённые данные» — без уровня и тона: потолок 69 «без данных не хвалим» не должен читаться как «Есть вопросы»
-    if (rez.polnota < M.polnota.porog_sokrashchennoj) { out.rezhim = 'sokr'; out.porog = M.polnota.porog_sokrashchennoj; return out; }
+    // v1.1: «данных пока мало» — без уровня и тона; методика 1.0.1 — ниже порога числа нет и в расчёте (indeks/indeks.js)
+    if (rez.sokrashchennaya || rez.polnota < M.polnota.porog_sokrashchennoj) { out.rezhim = 'sokr'; out.porog = M.polnota.porog_sokrashchennoj; return out; }
     out.uroven = rez.uroven.nazvanie; out.ton = TON[rez.uroven.ton] || 'warn';
     out.rezhim = 'chislo'; out.ball = rez.indeks; out.baza = M.shkala.baza; out.vklady = rez.vklady;
     out.potolok = rez.potolok; out.plyusy = rez.plyusy; out.plyusyUchteno = rez.plyusy_uchteno; out.plyusyMaks = M.plyusy_maksimum;
@@ -322,6 +322,14 @@
     return v.rezhim === 'chislo' ? v.ball : null;
   }
 
+  // Фактор методики по id — для «Что изменилось»: почему сдвинулся Индекс (js/dinamika.js, indeks-pochemu-v1)
+  function faktor(id) {
+    if (!M || !Array.isArray(M.faktory)) return null;
+    var f = M.faktory.filter(function (x) { return x.id === id; })[0];
+    return f ? { id: f.id, tekst: f.tekst, vklad: f.vklad } : null;
+  }
+  function versiya() { return M ? String(M.versiya || '') : ''; }
+
   // ---------- загрузка методики ----------
   if (typeof module === 'object' && module.exports && typeof require === 'function') {
     try { ustanovit(require('../indeks/metodika-v1.json'), require('../indeks/indeks.js')); } catch (e) {}
@@ -334,6 +342,6 @@
     }).catch(function () {});
   }
 
-  return { izOtveta: izOtveta, vid: vid, ball: ball, htmlKolonka: htmlKolonka, gotov: gotov, gotovo: gotovo, ustanovit: ustanovit,
+  return { izOtveta: izOtveta, vid: vid, ball: ball, htmlKolonka: htmlKolonka, gotov: gotov, gotovo: gotovo, ustanovit: ustanovit, faktor: faktor, versiya: versiya,
     rubli: rubli, TXT_NEIZV: TXT_NEIZV, ZAG_SOKR: ZAG_SOKR, txtSokr: txtSokr, neHvataet: neHvataet, strokaNe: strokaNe, podpis: podpis };
 });

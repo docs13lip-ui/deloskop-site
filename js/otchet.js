@@ -108,6 +108,20 @@
   }
 
   var POD_PILL = 'по признакам из реестров';
+  // «Данных пока мало» (Индекс без числа) + пилюля API «Без серьёзных сигналов»: слова уровня 70–99 читались бы как оценка,
+  // которой нет — пишем о найденном и сколько источников проверено (ТЗ [Продукт · Данные] 03.10 18:55 разд. 4, [Право] 20:07 разд. 3).
+  var PILL_SOKR = 'В найденных данных серьёзных сигналов нет';
+  function podSokr(o) {
+    if (!o || !(o.oprosheno > 0) || !(o.otvetili >= 0)) return '';
+    var t = 'Проверено источников: ' + o.otvetili + NB + 'из' + NB + o.oprosheno;
+    return o.otvetili < o.oprosheno ? t + '. По остальным не' + NB + 'проверяли — это не' + NB + 'значит «нарушений нет».' : t;
+  }
+  // pilyulya(r, v, opis) → { t, pod } — что написать в пилюле и под ней; t = null — текст пилюли не трогаем.
+  // v — IndeksOtvet.vid(r), opis — Otkuda.istochniki(r).
+  function pilyulya(r, v, opis) {
+    if (r && r.risk_level === 'low' && v && v.rezhim === 'sokr') return { t: PILL_SOKR, pod: podSokr(opis) || POD_PILL };
+    return { t: null, pod: POD_PILL };
+  }
 
   // Отступ сверху под липкие полосы (шапка сайта, строка проверки) — чтобы начало листа не пряталось под ними.
   function otstup(doc) {
@@ -135,6 +149,14 @@
   var OGOVORKA = 'Оценка по открытым данным на дату проверки, а не решение банка или налоговой.';
 
   // ---------- браузер: раскладка готового отчёта по листу ----------
+  // текст пилюли (после значка): t — новый, null — исходный (запомнен в data-t0)
+  function tekstPilyuli(pill, t) {
+    var uz = null;
+    for (var i = pill.childNodes.length - 1; i >= 0; i--) if (pill.childNodes[i].nodeType === 3) { uz = pill.childNodes[i]; break; }
+    if (!uz) return;
+    if (!pill.hasAttribute('data-t0')) pill.setAttribute('data-t0', uz.nodeValue);
+    uz.nodeValue = t == null ? pill.getAttribute('data-t0') : t;
+  }
   function el(doc, tag, cls, html) { var e = doc.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
   function vzyat(report, sel) { var x = report.querySelector(sel); return x && x.parentNode ? x : null; }
 
@@ -165,8 +187,13 @@
       var chislo = /ot-ix__big/.test(h);
       if (pill && !chislo) {
         pill.classList.add('ot-pill'); ix.insertBefore(pill, ix.lastChild);
+        var pv = null, op = null, w = doc.defaultView || {};
+        try { pv = IO && indeks(r) == null && IO.gotov && IO.gotov() ? IO.vid(r) : null; } catch (e) { pv = null; }
+        try { op = w.Otkuda && w.Otkuda.istochniki ? w.Otkuda.istochniki(r) : null; } catch (e) { op = null; }
+        var pp = pilyulya(r, pv, op);
+        tekstPilyuli(pill, pp.t);
         // правка [Арт-директора] 02.10 13:35: уровень риска — не Индекс, подписываем, откуда он
-        ix.insertBefore(el(doc, 'div', 'ot-ix__pod', POD_PILL), ix.lastChild);
+        ix.insertBefore(el(doc, 'div', 'ot-ix__pod', esc(pp.pod)), ix.lastChild);
       }
       var pch = ix.querySelector('.ot-ix__pch');
       if (pch) pch.addEventListener('toggle', function () { try { if (pch.open && window.dlkGoal) dlkGoal('indeks_raskladka'); } catch (e) {} });
@@ -229,5 +256,6 @@
   }
 
   return { razlozhit: razlozhit, indeks: indeks, polnota: polnota, uroven: uroven, tonPolosy: tonPolosy, dejstviya: dejstviya,
-    htmlIndeks: htmlIndeks, htmlIndeksIz: htmlIndeksIz, htmlKak: htmlKak, prokrutit: prokrutit, UROVNI: UROVNI, OGOVORKA: OGOVORKA, POD_PILL: POD_PILL };
+    htmlIndeks: htmlIndeks, htmlIndeksIz: htmlIndeksIz, htmlKak: htmlKak, prokrutit: prokrutit, UROVNI: UROVNI, OGOVORKA: OGOVORKA, POD_PILL: POD_PILL,
+    pilyulya: pilyulya, PILL_SOKR: PILL_SOKR };
 });

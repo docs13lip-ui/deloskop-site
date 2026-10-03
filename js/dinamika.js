@@ -217,11 +217,28 @@
       // текущая ликвидность (строка раздела досье dynamics, ГИР БО) — для «опустилась ниже 1 / снова 1 и выше»
       var lk = likvidnost(r);
       if (lk) s.lk = lk;
+      // убыток подряд (та же серия, что факт «Убыток N лет подряд» в js/sushchestvennoe.js) — [последний год, лет подряд]
+      var u = ubSerija(ch.profit);
+      if (u) s.ub = u;
       // оценка рентабельности активов (js/rentabelnost.js, без норм) — для «стала ниже средней по отрасли / больше не ниже»
       var R = rent(), ro = R && R.ocenka ? R.ocenka(r) : null;
       if (ro && isFinite(ro.n)) s.rn = [ro.god, Math.round(ro.n * 10) / 10];
     }
     return s;
+  }
+
+  // Серия убыточных лет от последнего года ряда назад, только соседние годы; меньше 2 лет — null. → [год, n] | null
+  function ubSerija(arr) {
+    var po = {};
+    (Array.isArray(arr) ? arr : []).forEach(function (x) {
+      var g = x ? parseInt(x.year, 10) : NaN;
+      if (isFinite(g) && x.value !== null && x.value !== '' && typeof x.value !== 'boolean' && isFinite(Number(x.value))) po[g] = Number(x.value);
+    });
+    var gody = Object.keys(po).map(Number).sort(function (a, b) { return a - b; });
+    if (!gody.length) return null;
+    var g1 = gody[gody.length - 1], n = 0;
+    while (po.hasOwnProperty(g1 - n) && po[g1 - n] < 0) n++;
+    return n >= 2 ? [g1, n] : null;
   }
 
   // Модуль рентабельности ищем в момент вызова: на странице он может загрузиться позже (defer), в node — require
@@ -299,6 +316,14 @@
       : a.prib[1] >= 0 && b.prib[1] < 0 ? 'huzhe' : a.prib[1] < 0 && b.prib[1] > 0 ? 'luchshe' : 'info';
     if (b.vyr && (!a.vyr || b.vyr[0] > a.vyr[0])) add(tonOtch, 'Появилась отчётность за ' + b.vyr[0] + ': выручка ' + dengi(b.vyr[1]) +
       (b.prib && b.prib[0] === b.vyr[0] ? ', ' + (b.prib[1] < 0 ? 'убыток ' + dengi(-b.prib[1]) : 'прибыль ' + dengi(b.prib[1])) : ''));
+    // убыток подряд: только с новой годовой отчётностью, в которой серия убытков дошла до 2 лет и больше
+    // (старый снимок без поля ub — сравниваем по году его прибыли; без года — молчим)
+    var gA = a.prib ? a.prib[0] : a.ub ? a.ub[0] : null;
+    if (b.ub && gA !== null && b.ub[0] > gA) {
+      var n = b.ub[1], ot = b.ub[0] - n + 1;
+      add('huzhe', 'Убыток ' + n + NB + skl(n, 'год', 'года', 'лет') + ' подряд: по годовой отчётности за ' +
+        (n === 2 ? ot + ' и ' + b.ub[0] : ot + '–' + b.ub[0]) + ' (ГИР' + NB + 'БО)');
+    }
     if (typeof dop === 'function') { try { var dx = dop(a, b); if (dx && dx.t) add(dx.ton, dx.t); } catch (e) {} }
     var poryadok = { huzhe: 0, info: 1, luchshe: 2 };
     return out.sort(function (p, q) { return poryadok[p.ton] - poryadok[q.ton]; }).slice(0, 7);

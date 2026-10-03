@@ -257,6 +257,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         with open(put, encoding="utf-8") as fh:
             t = fh.read()
         t2 = _SOS.sub(lambda m: m.group(1) + sosedi_html(x, pohozhie(x, vse)) + m.group(3), t, count=1)
+        t2 = pochinit_god_dvazhdy(t2)  # v3.10: «Выручка за 2021 — … за 2021» → год один раз, как у новых карточек
         if BEZ_OBOLOCHKI in t2:
             # «голое» тело из комплекта — оболочка той же sobrat_stranicu
             t2 = ss.sobrat_stranicu(t2, r, podval, shapka)

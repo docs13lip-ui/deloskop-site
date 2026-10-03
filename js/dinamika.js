@@ -230,19 +230,31 @@
   // и dossier.charts.debts (дебиторка, кредиторка, кредиты и займы). Без оценок — их даёт «Комментарий команды».
   // В PDF-досье (report.html) свои графики баланса — там html(r, {balans: false}).
   function chisl(v) { return typeof v === 'number' && isFinite(v) ? v : null; }
-  function dolya(v, tot) { var p = Math.round(v / tot * 100); return p < 1 ? '<1' + NB + '%' : p + NB + '%'; }
+  // Доли пассива — тем же расчётом, что PasportKontragenta.strukturaBalansa (balans-edinyj-v1): метод наибольшего остатка,
+  // три доли дают ровно 100 %; доли — только когда известны все три части и ни одна не меньше нуля. Совпадение — tests/balans_edinyj.test.js.
+  function doliBalansa(ch) {
+    var vse = ch.length === 3 && ch.every(function (x) { return x.v != null && x.v >= 0; });
+    var tot = vse ? ch.reduce(function (a, x) { return a + x.v; }, 0) : 0;
+    if (!(tot > 0)) return false;
+    ch.forEach(function (x) { var t = x.v / tot * 100; x.p = Math.floor(t); x.o = t - x.p; x.w = t; });
+    var ost = 100 - ch.reduce(function (a, x) { return a + x.p; }, 0);
+    ch.slice().sort(function (a, c) { return c.o - a.o; }).slice(0, ost).forEach(function (x) { x.p++; });
+    ch.forEach(function (x) { x.dolya = x.p < 1 && x.v > 0 ? 'меньше' + NB + '1' + NB + '%' : x.p + NB + '%'; });
+    return true;
+  }
   function balans(r) {
     var ch = (r && r.dossier && r.dossier.charts) || {};
     var b = ch.balance && typeof ch.balance === 'object' ? ch.balance : null, d = ch.debts && typeof ch.debts === 'object' ? ch.debts : null;
-    var out = { god: null, chasti: [], kapitalMinus: null, raschety: [], godR: null, zajmyKVyr: null };
+    var out = { god: null, chasti: [], polosa: false, kapitalMinus: null, raschety: [], godR: null, zajmyKVyr: null };
     if (b) {
       var gb = parseInt(b.year, 10), eq = chisl(b.equity), ld = chisl(b.long_debt), sd = chisl(b.short_debt);
       if (isFinite(gb) && (eq != null || ld != null || sd != null)) {
         out.god = gb;
-        var ch3 = [{ k: 'kap', nazv: 'Собственный капитал', v: eq }, { k: 'dol', nazv: 'Долгосрочные обязательства', v: ld }, { k: 'kor', nazv: 'Краткосрочные обязательства', v: sd }]
-          .filter(function (x) { return x.v != null && x.v > 0; });
-        var tot = ch3.reduce(function (a, x) { return a + x.v; }, 0);
-        out.chasti = tot > 0 ? ch3.map(function (x) { return { k: x.k, nazv: x.nazv, v: x.v, dolya: dolya(x.v, tot), w: x.v / tot * 100 }; }) : [];
+        var ch3 = [{ k: 'kap', nazv: 'Собственный капитал', v: eq }, { k: 'dol', nazv: 'Долгосрочные обязательства', v: ld }, { k: 'kor', nazv: 'Краткосрочные обязательства', v: sd }];
+        // полоса и доли — только при всех трёх частях ≥ 0; иначе строки суммами без долей (капитал меньше нуля — первой строкой, красным)
+        out.polosa = doliBalansa(ch3);
+        out.chasti = ch3.filter(function (x) { return x.v != null && x.v > 0; })
+          .map(function (x) { return { k: x.k, nazv: x.nazv, v: x.v, dolya: out.polosa ? x.dolya : '', p: out.polosa ? x.p : null, w: out.polosa ? x.w : null }; });
         if (eq != null && eq < 0) out.kapitalMinus = eq;
       }
     }
@@ -266,13 +278,15 @@
     var h = '<div class="din__bal" data-blok="balans">';
     if (b.god != null) {
       h += '<div class="din__bh"><b>На чём держится компания</b><span>баланс на' + NB + '31.12.' + b.god + '</span></div>';
-      if (b.chasti.length) {
+      if (b.polosa && b.chasti.length) {
         h += '<div class="din__bar" role="img" aria-label="' + esc(b.chasti.map(function (x) { return x.nazv + ' — ' + x.dolya.replace(NB, ' '); }).join(', ')) + '">' +
           b.chasti.map(function (x) { return '<i class="din__b--' + x.k + '" style="width:' + x.w.toFixed(1) + '%"></i>'; }).join('') + '</div>';
       }
-      h += '<ul class="din__leg">' + b.chasti.map(function (x) {
-        return '<li><i class="din__b--' + x.k + '"></i><span>' + esc(x.nazv) + '</span><b class="n">' + dengi(x.v) + '</b><em class="n">' + x.dolya + '</em></li>';
-      }).join('') + (b.kapitalMinus != null ? '<li class="din__minus"><i></i><span>Собственный капитал</span><b class="n">' + dengi(b.kapitalMinus) + '</b><em>меньше нуля</em></li>' : '') + '</ul>';
+      h += '<ul class="din__leg">' + (b.kapitalMinus != null ? '<li class="din__minus"><i></i><span>Собственный капитал</span><b class="n">' + dengi(b.kapitalMinus) + '</b><em>меньше нуля</em></li>' : '') +
+        b.chasti.map(function (x) {
+          // без полосы цветной квадрат легенды ничего не обозначает — место оставляем пустым (строки ровные)
+          return '<li><i' + (b.polosa ? ' class="din__b--' + x.k + '"' : '') + '></i><span>' + esc(x.nazv) + '</span><b class="n">' + dengi(x.v) + '</b><em class="n">' + x.dolya + '</em></li>';
+        }).join('') + '</ul>';
     }
     if (b.raschety.length) {
       h += '<div class="din__bh"><b>Кто кому должен</b><span>на' + NB + '31.12.' + b.godR + '</span></div><ul class="din__leg din__ras">' + b.raschety.map(function (x) {
@@ -695,7 +709,7 @@
     '.din__leg li{display:grid;grid-template-columns:auto 1fr auto 10em;align-items:baseline;gap:8px;padding:5px 0;border-top:1px solid var(--line,#E6E6E1)}.din__leg li:first-child{border-top:0}' +
     '.din__leg li>i{width:8px;height:8px;border-radius:2px;align-self:center}.din__ras li{grid-template-columns:1fr auto 10em}' +
     '.din__leg b{font-weight:600;text-align:right;white-space:nowrap}.din__leg em{font-style:normal;font-size:12px;color:var(--muted,#6B6B70);text-align:right;white-space:nowrap}' +
-    '.din__minus>i{background:#B3261E}.din__minus b{color:#B3261E}' +
+    '.din__minus>i{background:#B3261E}.din__minus b,.din__minus em{color:#B3261E}' +
     '@media (max-width:520px){.din__leg li{grid-template-columns:auto 1fr auto}.din__ras li{grid-template-columns:1fr auto}.din__leg em{grid-column:2/-1;text-align:left;margin-top:-4px}.din__ras em{grid-column:1/-1}.din__leg em:empty{display:none}}' +
     '.izm{display:grid;gap:4px;padding:14px 18px;border-radius:16px;border:1px solid var(--line,#E6E6E1);font-size:14px}' +
     '.izm b{font-size:15px;font-weight:600}.izm span{font-size:12px;color:var(--muted,#6B6B70)}.izm span a{color:inherit;text-decoration:underline;text-underline-offset:2px}' +

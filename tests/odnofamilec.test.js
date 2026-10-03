@@ -59,7 +59,7 @@ test('внешние ссылки — https, первоисточники, rel=n
   const v = [...S.matchAll(/<a [^>]*href="(https?:\/\/[^"]+)"[^>]*>/g)];
   assert.ok(v.length >= 4);
   for (const m of v) {
-    assert.ok(/^https:\/\/(www\.consultant\.ru|www\.fedsfm\.ru|www\.cbr\.ru)\//.test(m[1]), 'не первоисточник: ' + m[1]);
+    assert.ok(/^https:\/\/(www\.consultant\.ru|www\.fedsfm\.ru|www\.cbr\.ru|publication\.pravo\.gov\.ru)\//.test(m[1]), 'не первоисточник: ' + m[1]);
     assert.ok(/rel="noopener"/.test(m[0]), m[1]);
   }
 });
@@ -76,4 +76,10 @@ test('типографика: NBSP только сущностью, 115‑ФЗ �
   assert.ok(!S.includes(' '));
   assert.ok(!/№ \d/.test(S.replace(/<script[\s\S]*?<\/script>/g, '')));
   assert.ok(S.includes('115&#8209;ФЗ'));
+});
+
+test('срок 24 часа — с 14.06.2026 по закону № 462-ФЗ (сверено с текстом закона 03.10.2026)', () => {
+  const s = S.replace(/&nbsp;/g, ' ');
+  assert.ok(s.includes('№ 462-ФЗ') && s.includes('с 14 июня 2026 года'));
+  assert.ok(S.includes('publication.pravo.gov.ru/Document/View/0001202512150027'));
 });

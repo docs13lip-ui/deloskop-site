@@ -12,7 +12,7 @@ const KOREN = path.join(__dirname, '..');
 const chitat = (f) => fs.readFileSync(path.join(KOREN, f), 'utf8');
 const D = JSON.parse(chitat('praktika/dela.json'));
 const SUDY = /^https:\/\/(www\.)?(vsrf\.ru|ksrf\.ru|kad\.arbitr\.ru|publication\.pravo\.gov\.ru)\//;
-const ITOGI = ['В пользу банка', 'В пользу клиента', 'В пользу компании', 'В пользу налоговой', 'В пользу налогоплательщика', 'На новое рассмотрение', 'Жалоба не принята'];
+const ITOGI = ['В пользу банка', 'В пользу клиента', 'В пользу компании', 'В пользу налоговой', 'В пользу налогоплательщика', 'На новое рассмотрение', 'Жалоба не принята', 'Позиция ВС'];
 const un = (s) => s.replace(/\u00a0/g, ' ').replace(/&nbsp;/g, ' ');
 
 test('dela.json: у каждого дела номер, дата, первоисточник суда, дата сверки и итог из словаря', () => {
@@ -23,7 +23,8 @@ test('dela.json: у каждого дела номер, дата, первоис
     assert.ok(D.razdely[r.razdel], r.slug + ': раздел');
     assert.ok(fs.existsSync(path.join(KOREN, 'tests/praktika', r.slug + '.html')), r.slug + ': нет текста автора');
     for (const d of r.dela) {
-      assert.match(d.nomer, /^№ /, r.slug);
+      if (d.vid === 'obzor') assert.ok(d.nomer === '' && d.itog === 'Позиция ВС' && /Президиум/.test(d.sud), r.slug + ': обзор — без номера, итог «Позиция ВС»');
+      else assert.match(d.nomer, /^№ /, r.slug);
       assert.match(d.data, /^\d{4}-\d{2}-\d{2}$/, r.slug);
       assert.match(d.sverka, /^\d{4}-\d{2}-\d{2}$/, r.slug);
       assert.match(d.istochnik, SUDY, r.slug + ': первоисточник — сайт суда');
@@ -173,4 +174,14 @@ test('«Частые вопросы» в каждом разборе: ≥ 3 во
     assert.ok(a > 0 && a < b && b < c, r.slug + ': порядок «Где в законе» → «Частые вопросы» → «Сверено»');
     assert.strictEqual(t.split('<section class="faq"').length, 2, r.slug + ': блок вопросов — один');
   }
+});
+
+// razbor9-v1 ([Ночные запуски] 03.10 21:05; текст [Право · Налоговый юрист] 14:30 разд. 2, title [Продукт · Маркетинг] 15:55 разд. 4)
+test('Разбор № 9: обзор ВС — без номера и без «№», строка хабов «…позиций ведомств», исход не обещан', () => {
+  const s = un(chitat('praktika/nalogi/isklyuchili-iz-egryul-dolg-s-direktora/index.html'));
+  assert.ok(s.includes('<dd>Обзор судебной практики</dd>') && s.includes('<dt>Название</dt>'), 'карточка обзора');
+  assert.ok(!/№ ·|  ·|· ·/.test(s), 'нет пустого номера в строках');
+  assert.ok(!/долг взыщут|директор заплатит|субсидиарк/i.test(s.replace(/субсидиарной ответственности/g, '')), 'исход не обещаем, без «субсидиарки»');
+  assert.ok(un(chitat('praktika/index.html')).includes('судебных решений и позиций ведомств'), 'обзор — не «решение»');
+  assert.ok(s.includes('data-goal="razbor9_check"'));
 });

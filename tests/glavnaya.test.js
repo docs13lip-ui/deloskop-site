@@ -39,7 +39,7 @@ test('«Разборы дел»: 3 карточки, все адреса сущ�
   const D = JSON.parse(chitat('praktika/dela.json'));
   const razdely = new Set(ssylki.map((s) => s.split('/')[2]));
   assert.ok(Object.keys(D.razdely).every((r) => razdely.has(r)), 'по одному из каждого раздела');
-  for (const m of blok.matchAll(/<span>([^<]+)<\/span>/g)) assert.match(m[1], /·.*№.*·\s*\d{1,2}\s\S+\s\d{4}/, 'строка «суд · № · дата»');
+  for (const m of blok.matchAll(/<span>([^<]+)<\/span>/g)) assert.match(m[1], /·.*(№|обзор судебной практики).*·\s*\d{1,2}\s\S+\s\d{4}/, 'строка «суд · № (или обзор ВС, razbor9-v1) · дата»');
   assert.match(MAIN, /<a href="\/praktika\/" data-praktika-gl>/);
   assert.match(chitat('js/metrika.js'), /praktika_cta", \{ otkuda: "glavnaya"/);
 });

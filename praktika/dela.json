@@ -8,7 +8,7 @@
     "_kak": "Входящие ссылки на разборы с живых страниц (SEO-обвязка [Маркетинга] 30.09): файл страницы → slug разборов или «hab:<раздел>». Сборщик ставит блок между метками <!--praktika-ssylki-->…<!--/praktika-ssylki--> (в статье — перед </article>). Тест: у каждого разбора ≥ 2 входящие ссылки вне /praktika/.",
     "115-fz/zablokirovali-schet-chto-delat/index.html": ["otklyuchili-internet-bank", "zagraditelnye-komissii", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"],
     "115-fz/zapros-banka-po-115-fz-kak-otvetit/index.html": ["otklyuchili-internet-bank"],
-    "115-fz/zsk-zony-riska/index.html": ["krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "zagraditelnye-komissii"],
+    "115-fz/zsk-zony-riska/index.html": ["krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "zagraditelnye-komissii", "isklyuchili-iz-egryul-dolg-s-direktora"],
     "nalogi/statya-54-1-nk-prostymi-slovami/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke", "droblenie-uplachennaya-usn-zachityvaetsya"],
     "nalogi/nagruzka/index.html": ["droblenie-uplachennaya-usn-zachityvaetsya"],
     "nalogi/priznaki-tehnicheskoj-kompanii/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke"],
@@ -17,9 +17,94 @@
     "nalogi/svezhest-dannyh-proverki-kontragenta/index.html": ["proverka-kontragenta-na-datu-sdelki"],
     "nalogi/pismo-o-smene-rekvizitov-kak-proverit/index.html": ["dvojnik-postavshchika-bank-poluchatelya"],
     "nalogi/kak-proverit-schet-pered-oplatoj/index.html": ["dvojnik-postavshchika-bank-poluchatelya"],
+    "nalogi/nedostovernyj-adres-egryul/index.html": ["isklyuchili-iz-egryul-dolg-s-direktora"],
+    "nalogi/skolko-platit-vpered-neznakomoj-kompanii/index.html": ["isklyuchili-iz-egryul-dolg-s-direktora"],
     "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"]
   },
   "razbory": [
+    {
+      "razdel": "nalogi",
+      "slug": "isklyuchili-iz-egryul-dolg-s-direktora",
+      "h1": "Контрагента исключили из ЕГРЮЛ. Долг пропал?",
+      "title": "Контрагента исключили из ЕГРЮЛ: можно ли взыскать долг с директора",
+      "description": "Компанию-должника исключили из реестра как брошенную. Верховный суд разъяснил, когда долг платят директор и участники и что доказывает кредитор.",
+      "zapros": "контрагента исключили из егрюл как взыскать долг с директора",
+      "data": "2026-10-03",
+      "minut": 5,
+      "lid": "Поставщик взял аванс, пропал, а через год ФНС исключила его из реестра как недействующего. Долг не пропадает автоматически: его можно требовать с тех, кто компанией управлял. В ноябре 2025 года Президиум Верховного суда собрал практику таких споров в один обзор.",
+      "dela": [
+        {
+          "vid": "obzor",
+          "sud": "Верховный суд РФ, Президиум",
+          "sud_kratko": "ВС",
+          "akt": "Обзор судебной практики",
+          "nomer": "",
+          "data": "2025-11-19",
+          "delo_podpis": "Название",
+          "delo": "Обзор практики рассмотрения арбитражными судами дел по корпоративным спорам о субсидиарной ответственности контролирующих лиц по обязательствам недействующего юридического лица",
+          "na_konu": "долги компаний, исключённых из ЕГРЮЛ как недействующие: можно ли требовать их с директора и участников",
+          "na_konu_kratko": "долг исключённой компании",
+          "itog": "Позиция ВС",
+          "itog_nov": false,
+          "istochnik": "https://vsrf.ru/documents/all/34902/",
+          "istochnik_podpis": "vsrf.ru — страница Обзора и PDF; тезисы пп. 2–5, 7, 8, 10, 11, 13–15 сверены по PDF",
+          "sverka": "2026-10-03"
+        }
+      ],
+      "knopka": {
+        "zagolovok": "Что с вашим должником сейчас",
+        "tekst": "Проверка по ИНН: статус компании в ЕГРЮЛ на дату проверки и что сделать, если её ликвидируют или готовят к исключению.",
+        "knopka": "Проверить по ИНН",
+        "url": "/",
+        "cel": "razbor9_check"
+      },
+      "zakon": [
+        [
+          "ст. 21.1 Федерального закона от 08.08.2001 № 129-ФЗ — исключение недействующего юрлица и возражения кредиторов",
+          "ред. 04.08.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_32881/0017a6361857fb364a367648cedcb5946ce49bf1/"
+        ],
+        [
+          "п. 8 ст. 22 и п. 13 ст. 21.3 129-ФЗ — обжалование исключения в течение года",
+          "ред. 04.08.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_32881/3f496d35475c671525f06bd66a7d662acc77486e/"
+        ],
+        [
+          "п. 2–3 ст. 64.2 ГК РФ — последствия исключения и ответственность лиц из ст. 53.1",
+          "ред. 10.06.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_5142/d6d6de53cf01f35850ed20f9bbb6db60b72f8556/"
+        ],
+        [
+          "п. 5.2 ст. 64 ГК РФ — распределение обнаруженного имущества исключённой компании",
+          "",
+          "https://www.consultant.ru/document/cons_doc_LAW_5142/06a8e01f9df1874a0df040fdcae8c0b463b834bc/"
+        ],
+        [
+          "п. 3.1 ст. 3 Федерального закона от 08.02.1998 № 14-ФЗ — субсидиарная ответственность в ООО",
+          "ред. 04.08.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_17819/486c6ce4b3303339bfb9d05a0288ff364a246cea/"
+        ],
+        [
+          "Постановление КС РФ от 21.05.2021 № 20-П",
+          "",
+          "https://www.consultant.ru/document/cons_doc_LAW_384805/"
+        ],
+        [
+          "Постановление КС РФ от 07.02.2023 № 6-П",
+          "",
+          "https://www.consultant.ru/document/cons_doc_LAW_439423/"
+        ],
+        [
+          "Обзор практики по спорам о субсидиарной ответственности по обязательствам недействующего юрлица (утв. Президиумом ВС РФ 19.11.2025)",
+          "",
+          "https://www.consultant.ru/document/cons_doc_LAW_519204/"
+        ]
+      ],
+      "pohozhie": [
+        "proverka-kontragenta-na-datu-sdelki",
+        "krasnaya-zona-zsk-sud"
+      ]
+    },
     {
       "razdel": "nalogi",
       "slug": "blokirovka-lichnogo-scheta-ip",

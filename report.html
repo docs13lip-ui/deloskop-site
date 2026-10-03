@@ -158,6 +158,8 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
 <script src="/js/otzyv.js" defer></script>
 <script src="/js/kopiya.js" defer></script>
 <script src="/js/dinamika.js"></script>
+<script src="/js/nagruzka.js"></script>
+<script src="/js/rentabelnost.js"></script>
 <script src="/js/terminy.js"></script>
 <meta name="deloskop-rezhim" content="beta">
 </head>
@@ -407,7 +409,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
     if(ch.balance)h+='<div class="chart"><h3>На чём держится компания'+qb('На чём держится')+'</h3><div class="cs">структура источников средств за '+ch.balance.year+' год</div>'+balanceChart(ch.balance)+'</div>';
     if(ch.debts){var dc=debtsChart(ch.debts);if(dc)h+='<div class="chart"><h3>Кто кому должен'+qb('Кто кому должен')+'</h3><div class="cs">по бухотчётности за '+ch.debts.year+' год</div><div class="debts">'+dc+'</div></div>';}
     if(ch.taxes&&ch.taxes.length)h+='<div class="chart wide"><h3>Какие налоги платит компания</h3><div class="cs">уплачено за год по данным ФНС</div>'+hbarChart(ch.taxes)+'</div>';
-    return h?'<div class="sec"><h2>Финансы в цифрах</h2>'+'<div class="charts">'+h+'</div></div>':'';}
+    return h?'<div class="sec fin"><h2>Финансы в цифрах</h2>'+'<div class="charts">'+h+'</div></div>':'';}
   function bindTips(root){var tip=document.getElementById('tip');if(!tip){tip=document.createElement('div');tip.id='tip';tip.hidden=true;document.body.appendChild(tip);}
     root.addEventListener('pointermove',function(e){var t=e.target.closest('[data-tip]');if(!t){tip.hidden=true;return;}
       tip.textContent='';var b=document.createElement('b');b.textContent=t.getAttribute('data-val');tip.appendChild(b);tip.appendChild(document.createTextNode(t.getAttribute('data-tip')));
@@ -493,6 +495,9 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
     bindTips(doc);bindQ(doc);
     // подсказки к терминам — определения дословно из статей сайта (js/terminy.js); нет справочника — ничего не меняется
     if(window.Terminy)Terminy.mount(doc);
+    // «Рентабельность активов против отрасли» (rentabelnost-v2) — тот же расчёт, что на экране проверки: после «Финансов в цифрах»,
+    // «Как посчитали» раскрыто — на бумаге свёрнутое не прочесть; нет баланса, ИП, банк или нет нормы ФНС за год — блока нет
+    if(window.Rentabelnost){try{Rentabelnost.mount(doc,r,{posle:['.sec.fin','.kpis','.din'],otkryto:true}).catch(function(){})}catch(e){}}
     // «Комментарий команды Делоскопа» — только утверждённые [Право] тексты (/data/kommentarii.json); нет — ничего не меняется
     if(window.Kommentarii)Kommentarii.zagruzit().then(function(K){try{Kommentarii.vstavit(doc.querySelector('table.sig'),r.signals,K)}catch(e){}});
     var pdf=document.getElementById('pdf'), share=document.getElementById('share');
@@ -508,6 +513,6 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
 })();
 </script>
 <script src="/obnovleniya.js" defer></script>
-<!--podval--><div class="podval" role="contentinfo"><div class="podval__in"><div class="podval__cols"><nav class="podval__col" aria-label="Продукты"><p class="podval__h">Продукты</p><ul><li><a href="/">Проверка по ИНН</a></li><li><a href="/indeks/">Индекс Делоскопа</a></li><li><a href="/#shield">Щит</a></li><li><a href="/nalichnye/">Наличные глазами банка</a></li><li><a href="/kontragenty-iz-vypiski/">Кому вы платите</a></li><li><a href="/proverit-schet/">Проверь счёт</a></li><li><a href="/skoraya-115-fz/">Скорая 115-ФЗ</a></li><li><a href="/pasport/">Паспорт</a></li><li><a href="/delopis/">Делопись</a></li><li><a href="/tarify/">Тарифы</a></li></ul></nav><nav class="podval__col" aria-label="Знания"><p class="podval__h">Знания</p><ul><li><a href="/115-fz/">115-ФЗ простыми словами</a></li><li><a href="/nalogi/">Налоги</a></li><li><a href="/obnovleniya/">Что нового</a></li></ul></nav><nav class="podval__col" aria-label="Компания"><p class="podval__h">Компания</p><ul><li><a href="/indeks/#metodika">Методика Индекса</a></li><li><a href="/tochnost/">Точность Индекса</a></li><li><a href="/cabinet.html">Кабинет</a></li><li><a href="/rekvizity/">Реквизиты и контакты</a></li><li><a href="mailto:help@deloskop.ru">help@deloskop.ru</a></li></ul></nav><nav class="podval__col" aria-label="Документы"><p class="podval__h">Документы</p><ul><li><a href="/oferta/">Публичная оферта</a></li><li><a href="/politika/">Политика обработки ПДн</a></li><li><a href="/soglasie/">Согласие на обработку ПДн</a></li><li><a href="/rassylki/">Согласие на рассылки</a></li><li><a href="/cookies/">Cookies и Метрика</a></li><li><a href="/vozvrat/">Возврат денег</a></li><li><a href="/partneram/usloviya/">Условия для партнёров</a></li><li><a href="/rekvizity/">Реквизиты</a></li></ul></nav></div><div class="podval__niz"><p>© 2026 Делоскоп</p><p>Сотрудничество, отзывы и предложения — <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>. Принимаем 24/7</p><p>Материалы носят информационный характер и не заменяют консультацию юриста</p></div></div></div><!--/podval-->
+<!--podval--><div class="podval" role="contentinfo"><div class="podval__in"><div class="podval__cols"><nav class="podval__col" aria-label="Продукты"><p class="podval__h">Продукты</p><ul><li><a href="/">Проверка по ИНН</a></li><li><a href="/indeks/">Индекс Делоскопа</a></li><li><a href="/#shield">Щит</a></li><li><a href="/nalichnye/">Наличные глазами банка</a></li><li><a href="/kontragenty-iz-vypiski/">Кому вы платите</a></li><li><a href="/proverit-schet/">Проверь счёт</a></li><li><a href="/skoraya-115-fz/">Скорая 115-ФЗ</a></li><li><a href="/pasport/">Паспорт</a></li><li><a href="/delopis/">Делопись</a></li><li><a href="/tarify/">Тарифы</a></li></ul></nav><nav class="podval__col" aria-label="Знания"><p class="podval__h">Знания</p><ul><li><a href="/115-fz/">115-ФЗ простыми словами</a></li><li><a href="/nalogi/">Налоги</a></li><li><a href="/obnovleniya/">Что нового</a></li><li><a href="/company/">Компании</a></li></ul></nav><nav class="podval__col" aria-label="Компания"><p class="podval__h">Компания</p><ul><li><a href="/indeks/#metodika">Методика Индекса</a></li><li><a href="/tochnost/">Точность Индекса</a></li><li><a href="/cabinet.html">Кабинет</a></li><li><a href="/rekvizity/">Реквизиты и контакты</a></li><li><a href="mailto:help@deloskop.ru">help@deloskop.ru</a></li></ul></nav><nav class="podval__col" aria-label="Документы"><p class="podval__h">Документы</p><ul><li><a href="/oferta/">Публичная оферта</a></li><li><a href="/politika/">Политика обработки ПДн</a></li><li><a href="/soglasie/">Согласие на обработку ПДн</a></li><li><a href="/rassylki/">Согласие на рассылки</a></li><li><a href="/cookies/">Cookies и Метрика</a></li><li><a href="/vozvrat/">Возврат денег</a></li><li><a href="/partneram/usloviya/">Условия для партнёров</a></li><li><a href="/rekvizity/">Реквизиты</a></li></ul></nav></div><div class="podval__niz"><p>© 2026 Делоскоп</p><p>Сотрудничество, отзывы и предложения — <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>. Принимаем 24/7</p><p>Материалы носят информационный характер и не заменяют консультацию юриста</p></div></div></div><!--/podval-->
 </body>
 </html>

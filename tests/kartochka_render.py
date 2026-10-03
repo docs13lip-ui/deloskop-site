@@ -439,6 +439,11 @@ def iz_check(r):
     if k["rukovodit_s"] and ((k["reg_date"] and k["rukovodit_s"] < k["reg_date"]) or (proverka and k["rukovodit_s"] > proverka)):
         k["rukovodit_s"] = None
     k["finansy_data"] = data_iz(r.get("finansy_data")) or data_iz(r.get("girbo_data"))
+    # kartochki-v3.4 (Ночные-2, 03.10): ряд из ГИР БО (charts.revenue) — те же строки 2110, что и вывод «Выручка за Г»
+    # (сведения на 31.12.Г, ● подтверждено). Таблица под ним писала «дата сведений не указана · ○ не проверяли» —
+    # одно и то же число на странице с двумя статусами. Дата ряда = 31.12 последнего года ряда.
+    if not k["finansy_data"] and k["finansy"] and k["finansy_istochnik"].startswith("ГИР БО") and ch.get("revenue"):
+        k["finansy_data"] = dt.date(k["finansy"][-1]["god"], 12, 31)
     # полнота и Индекс — как в js/indeks-vorota.js
     ind = r.get("indeks")
     obj = ind if isinstance(ind, dict) else None

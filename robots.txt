@@ -8,3 +8,4 @@ Disallow: /schet/dokument/
 Clean-param: ref /
 
 Sitemap: https://deloskop.ru/sitemap.xml
+Sitemap: https://deloskop.ru/sitemap-companies.xml

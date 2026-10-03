@@ -36,7 +36,9 @@ class T(unittest.TestCase):
                {"title": "Доходы и расходы", "detail": "убыток 3 млн ₽", "status": "warn"},
                {"title": "Красная группа ЗСК Банка России", "detail": "", "status": "bad"},
                {"title": "Прогноз ЗСК (наша оценка): высокий уровень риска", "detail": "", "status": "bad"},
-               {"title": "Долги по налогам", "detail": "нет", "status": "ok"}]
+               {"title": "Долги по налогам", "detail": "нет", "status": "ok"},
+               {"title": "Статус", "detail": "Компания исключена из ЕГРЮЛ", "status": "bad"},
+               {"title": "Статус", "detail": "ФНС готовит исключение из ЕГРЮЛ — компания недействующая", "status": "bad"}]
         js = ("const K=require('./js/kommentarii.js');const S=require('./data/kommentarii.json');"
               "console.log(JSON.stringify(%s.map(s=>{const k=K.najti(S,s);return k?[k.id,k.ton,k.sdelat]:null})))" % json.dumps(sig, ensure_ascii=False))
         out = subprocess.run(["node", "-e", js], cwd=KOREN, capture_output=True, text=True, check=True).stdout
@@ -44,7 +46,8 @@ class T(unittest.TestCase):
         py = [(lambda k: [k["id"], k["ton"], k["sdelat"]] if k else None)(K.najti(sprav, s)) for s in sig]
         self.assertEqual(py, json.loads(out))
         self.assertEqual([x and x[0] for x in py], ["massovyj_adres", "nedostovernost", "bankrotstvo", None, "molodaya",
-                                                     None, "net_sotrudnikov", "ubytok", "zsk", None, "nedoimka"])
+                                                     None, "net_sotrudnikov", "ubytok", "zsk", None, "nedoimka",
+                                                     None, "isklyuchenie"])
 
     def test_uslovie_tona_sovpadaet_s_js(self):
         sig = [{"title": "Дисквалификация руководителя", "detail": d, "status": st}

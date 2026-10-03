@@ -140,7 +140,9 @@
     if (!report || !report.ownerDocument) return false;
     var doc = report.ownerDocument, w = doc.defaultView;
     if (!w || !w.scrollTo) return false;
-    var y = report.getBoundingClientRect().top + (w.pageYOffset || 0) - otstup(doc) - 12;
+    // пришли по ссылке «…#indeks» — к колонке Индекса (отчёт рисуется после ответа API, сам браузер к якорю не прокрутит)
+    var cel = (w.location && w.location.hash === '#indeks' && doc.getElementById('indeks')) || report;
+    var y = cel.getBoundingClientRect().top + (w.pageYOffset || 0) - otstup(doc) - 12;
     var plavno = !(w.matchMedia && w.matchMedia('(prefers-reduced-motion: reduce)').matches);
     w.scrollTo({ top: Math.max(0, Math.round(y)), behavior: plavno ? 'smooth' : 'auto' });
     return true;
@@ -180,6 +182,7 @@
     var vd = el(doc, 'section', 'ot-vd ot-vd--' + tonPolosy(r));
     vd.setAttribute('aria-label', 'Вывод');
     var ix = el(doc, 'div', 'ot-ix', htmlIndeks(r));
+    ix.id = 'indeks'; // якорь: карточки /company/ ведут на /?inn=…#indeks (✎ [Ночные-2] 03.10 20:50)
     // колонка Индекса: число браузера (если методика загружена) — без пилюли; «считаем» — с пилюлей уровня риска, как раньше
     var zapolnit = function () {
       var IO = modulIO(), h = htmlIndeksIz(r, IO);

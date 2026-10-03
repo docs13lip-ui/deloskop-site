@@ -47,7 +47,7 @@ class T(unittest.TestCase):
         self.assertEqual(py, json.loads(out))
         self.assertEqual([x and x[0] for x in py], ["massovyj_adres", "nedostovernost", "bankrotstvo", None, "molodaya",
                                                      None, "net_sotrudnikov", "ubytok", "zsk", None, "nedoimka",
-                                                     None, "isklyuchenie"])
+                                                     "isklyuchena", "isklyuchenie"])
 
     def test_uslovie_tona_sovpadaet_s_js(self):
         sig = [{"title": "Дисквалификация руководителя", "detail": d, "status": st}

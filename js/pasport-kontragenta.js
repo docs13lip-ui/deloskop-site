@@ -17,7 +17,7 @@
 })(typeof self !== 'undefined' ? self : this, function (root) {
   'use strict';
 
-  var VERSIYA = 'Паспорт v2.8'; // v2.8 — раздел 6: баланс и расчёты на 31.12 (pasport-balans-v1)
+  var VERSIYA = 'Паспорт v2.9'; // v2.9 — раздел 6: полоса «На чём держится компания» (pasport-polosa-v1); v2.8 — баланс и расчёты на 31.12
   // Определение Индекса и подпись предела аванса — дословно [Юриста 115-ФЗ] 29.09 (222-ФЗ), разд. 3 пп. 1 и 4.
   var OPREDELENIE_INDEKSA = 'Индекс Делоскопа — оценка признаков риска для сделки по открытым и лицензированным данным: регистрационных, налоговых, признаков по 115-ФЗ и нарушений. Это не кредитный рейтинг и не мнение о способности компании исполнять финансовые обязательства.';
   var PODPIS_PREDELA = 'Сколько разумно платить вперёд с учётом найденных признаков — расчёт Делоскопа по открытой формуле. Это не оценка способности компании вернуть деньги.';
@@ -171,30 +171,47 @@
     var s = U && U.money ? U.money(n) : n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' ₽';
     return (v < 0 ? 'минус ' : '') + s;
   }
+  var CHASTI_BALANSA = [['kap', 'Собственный капитал', 'equity'], ['dol', 'Долгосрочные обязательства', 'long_debt'], ['kor', 'Краткосрочные обязательства', 'short_debt']];
+  // Доли пассива — методом наибольшего остатка: три доли дают ровно 100 %. Только когда известны все три части и ни одна не меньше нуля
+  // (иначе это не доля баланса). Один расчёт на строки раздела 6 и на полосу «На чём держится компания» — числа не расходятся.
+  function strukturaBalansa(D) {
+    var b = D && D.charts && D.charts.balance && typeof D.charts.balance === 'object' ? D.charts.balance : null;
+    var god = b ? parseInt(b.year, 10) : NaN;
+    if (!b || !isFinite(god) || god <= 1990) return null;
+    var ch = CHASTI_BALANSA.map(function (x) { return { k: x[0], nazv: x[1], v: chislo(b[x[2]]) }; });
+    var vse = ch.every(function (x) { return x.v != null && x.v >= 0; });
+    var tot = vse ? ch.reduce(function (a, x) { return a + x.v; }, 0) : 0;
+    if (tot > 0) {
+      ch.forEach(function (x) { var t = x.v / tot * 100; x.p = Math.floor(t); x.o = t - x.p; x.w = t; });
+      var ost = 100 - ch.reduce(function (a, x) { return a + x.p; }, 0);
+      ch.slice().sort(function (a, c) { return c.o - a.o; }).slice(0, ost).forEach(function (x) { x.p++; });
+    }
+    return { god: god, data: god + '-12-31', chasti: ch, tot: tot };
+  }
+  function dolyaTekst(x) { return x.p < 1 && x.v > 0 ? 'меньше\u00a01\u00a0%' : x.p + '\u00a0%'; }
+  // Полоса для раздела 6 (экран и печать): рисунок тех же строк документа, новых сведений не добавляет.
+  // Нет всех трёх частей или капитал меньше нуля — полосы нет (строки раздела говорят сами).
+  function polosaBalansaHtml(D, U) {
+    var s = strukturaBalansa(D);
+    if (!s || !(s.tot > 0)) return '';
+    function e(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+    var ch = s.chasti.filter(function (x) { return x.v > 0; });
+    return '<figure class="pbal" data-blok="polosa-balansa"><figcaption><b>На чём держится компания</b><span>баланс на\u00a031.12.' + s.god + '</span></figcaption>' +
+      '<div class="pbal__bar" role="img" aria-label="' + e(ch.map(function (x) { return x.nazv + ' — ' + dolyaTekst(x).replace(/\u00a0/g, ' '); }).join(', ')) + '">' +
+      ch.map(function (x) { return '<i class="pbal--' + x.k + '" style="width:' + x.w.toFixed(1) + '%"></i>'; }).join('') + '</div>' +
+      '<ul>' + ch.map(function (x) { return '<li><i class="pbal--' + x.k + '"></i><span>' + e(x.nazv) + '</span><b>' + e(dolyaTekst(x)) + '</b></li>'; }).join('') + '</ul>' +
+      '<p>Доли — от суммы капитала и обязательств по бухгалтерскому балансу (ГИР БО); суммы — в строках раздела выше.</p></figure>';
+  }
   function balansFakty(D, dobavit, U) {
     var ch = (D && D.charts) || {}, n = 0;
-    var b = ch.balance && typeof ch.balance === 'object' ? ch.balance : null;
     var d = ch.debts && typeof ch.debts === 'object' ? ch.debts : null;
-    var gb = b ? parseInt(b.year, 10) : NaN;
-    if (b && isFinite(gb) && gb > 1990) {
-      var eq = chislo(b.equity), ld = chislo(b.long_debt), sd = chislo(b.short_debt);
-      var vse = eq != null && ld != null && sd != null && eq >= 0 && ld >= 0 && sd >= 0;
-      var tot = vse ? eq + ld + sd : 0;
-      var data = gb + '-12-31';
-      // доли — методом наибольшего остатка: в документе три доли баланса дают ровно 100 %
-      var doli = {};
-      if (tot > 0) {
-        var ch3 = [['Собственный капитал', eq], ['Долгосрочные обязательства', ld], ['Краткосрочные обязательства', sd]].map(function (x) { var t = x[1] / tot * 100; return { k: x[0], c: Math.floor(t), o: t - Math.floor(t) }; });
-        var ost = 100 - ch3.reduce(function (a, x) { return a + x.c; }, 0);
-        ch3.slice().sort(function (a, b) { return b.o - a.o; }).slice(0, ost).forEach(function (x) { x.c++; });
-        ch3.forEach(function (x) { doli[x.k] = x.c; });
-      }
-      [['Собственный капитал', eq], ['Долгосрочные обязательства', ld], ['Краткосрочные обязательства', sd]].forEach(function (x) {
-        var v = x[1]; if (v == null) return;
-        if (v < 0 && x[0] === 'Собственный капитал') { dobavit(x[0], rub(v, U) + ' — меньше нуля', { ton: 'warn', data: data, istochnik: IST_BALANS }); n++; return; }
+    var s = strukturaBalansa(D);
+    if (s) {
+      s.chasti.forEach(function (x) {
+        var v = x.v; if (v == null) return;
+        if (v < 0 && x.k === 'kap') { dobavit(x.nazv, rub(v, U) + ' — меньше нуля', { ton: 'warn', data: s.data, istochnik: IST_BALANS }); n++; return; }
         if (v < 0) return;
-        var p = tot > 0 ? doli[x[0]] : null;
-        dobavit(x[0], rub(v, U) + (p != null ? ' — ' + (p < 1 && v > 0 ? 'меньше\u00a01' : p) + '\u00a0% баланса' : ''), { ton: 'info', data: data, istochnik: IST_BALANS });
+        dobavit(x.nazv, rub(v, U) + (s.tot > 0 ? ' — ' + dolyaTekst(x) + ' баланса' : ''), { ton: 'info', data: s.data, istochnik: IST_BALANS });
         n++;
       });
     }
@@ -610,7 +627,7 @@
     return osh;
   }
 
-  return { VERSIYA: VERSIYA, RAZDELY: RAZDELY, sobrat: sobrat, proverit: proverit, razdelDlya: razdelDlya,
+  return { VERSIYA: VERSIYA, RAZDELY: RAZDELY, sobrat: sobrat, strukturaBalansa: strukturaBalansa, polosaBalansaHtml: polosaBalansaHtml, proverit: proverit, razdelDlya: razdelDlya,
     vypustit: vypustit, nomerIz: nomerIz, podpisant: podpisant, datuIz: datuIz, tuZheDolzhnost: tuZheDolzhnost, SSYLKI_PODPISANTA: SSYLKI_PODPISANTA, qrSsylka: qrSsylka, podval: podval, SLOVAR_222: SLOVAR_222,
     OPREDELENIE_INDEKSA: OPREDELENIE_INDEKSA, PODPIS_PREDELA: PODPIS_PREDELA,
     otmetka: otmetka, otmetkiSvodka: otmetkiSvodka, dataIzRu: dataIzRu, tuZheSajt: tuZheSajt, OTM_SNIMOK: OTM_SNIMOK, OTM_EP: OTM_EP, OTM_EP_HOST: OTM_EP_HOST, OTM_OGOVORKA: OTM_OGOVORKA, OTM_REZ: OTM_REZ, OTM_SVEZHEST_DNEJ: OTM_SVEZHEST_DNEJ, OTM_ZSK: OTM_ZSK, zskAdres: zskAdres, dnejTekst: dnejTekst,

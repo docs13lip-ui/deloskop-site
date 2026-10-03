@@ -227,7 +227,43 @@ def kartochki_na_diske(koren=KOREN):
     return out
 
 
-def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, dobavit=False):
+# ---------------------------------------------------------------- kartochki-volna-v1: партии sitemap (ТЗ [Данные] 03.10 разд. 3.3)
+# Новые адреса карточек идут в sitemap-companies.xml не больше PARTIYA_V_SUTKI в сутки (по Москве) — темп волны 5 000 без
+# всплеска «малоценных» в Вебмастере. Счёт партии — строка-комментарий в самом sitemap (отдельного файла состояния нет):
+# <!-- partiya ГГГГ-ММ-ДД: N -->. Уже стоящие в sitemap адреса остаются (пока проходят ворота индексации); новые —
+# по доходу по убыванию, затем по адресу. Не вошедшие публикуются как обычно и ждут следующей сборки (--dobavit завтра).
+# IndexNow берёт только адреса из sitemap (tests/indexnow.py) — значит, и он идёт партиями.
+PARTIYA_V_SUTKI = 500
+_PARTIYA = re.compile(r"<!-- partiya (\d{4}-\d{2}-\d{2}): (\d+) -->")
+_LOC = re.compile(r"<loc>([^<]+)</loc>")
+
+
+def segodnya_msk():
+    return (dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=3)).date()
+
+
+def partiya_sitemap(lm, staryj_xml, segodnya, partiya=PARTIYA_V_SUTKI, dohod=None):
+    """lm {адрес: lastmod} — карточки за воротами индексации → ({адрес: lastmod} в sitemap, метка или None, ждут).
+    Метка — (дата, всего новых за эту дату, новых в этой сборке); без новых — прежняя строка без изменений."""
+    dohod = dohod or {}
+    uzhe = {u[len(SAJT):] for u in _LOC.findall(staryj_xml or "") if u.startswith(SAJT + "/")}
+    m = _PARTIYA.search(staryj_xml or "")
+    den = segodnya.isoformat()
+    bylo = int(m.group(2)) if m and m.group(1) == den else 0
+    novye = sorted((a for a in lm if a not in uzhe), key=lambda a: (-(dohod.get(a) or 0), a))
+    berem = novye[:max(0, int(partiya) - bylo)]
+    vybor = {a: d for a, d in lm.items() if a in uzhe or a in set(berem)}
+    if berem:
+        metka = (den, bylo + len(berem), len(berem))
+    elif m:
+        metka = (m.group(1), int(m.group(2)), 0)
+    else:
+        metka = None
+    return vybor, metka, len(novye) - len(berem)
+
+
+def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, dobavit=False,
+           partiya=PARTIYA_V_SUTKI, segodnya=None):
     kart, otchet = otobrat(zapisi, limit, spros, kontrol)
     r = ss.rekv_sajta()  # beta-v1: режим сайта (в бете — без реквизитов ИП и с полосой беты)
     papka = os.path.join(koren, PAPKA)
@@ -271,10 +307,21 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
             # «голое» тело из комплекта — оболочка той же sobrat_stranicu
             t2 = ss.sobrat_stranicu(t2, r, podval, shapka)
         izm += zapisat(put, t2)
+    # kartochki-volna-v1: хаб — по HAB_NA_STRANICE карточек; лишние страницы прошлой сборки убираем
+    str_haba = stranicy_haba(vse, HAB_NA_STRANICE) if vse else []
     if vse:
-        zapisat(os.path.join(papka, "index.html"), ss.sobrat_stranicu(html_haba(vse, hub_index), r, podval, shapka))
+        for n, chast in enumerate(str_haba, 1):
+            put = os.path.join(koren, adres_stranicy_haba(n).strip("/"), "index.html")
+            zapisat(put, ss.sobrat_stranicu(html_haba(chast, hub_index, n, len(str_haba), vse), r, podval, shapka))
     elif os.path.exists(os.path.join(papka, "index.html")):
         os.remove(os.path.join(papka, "index.html"))
+    papka_str = os.path.join(papka, HAB_STRANICA)
+    if os.path.isdir(papka_str):
+        for d in os.listdir(papka_str):
+            if not (d.isdigit() and 2 <= int(d) <= len(str_haba)):
+                shutil.rmtree(os.path.join(papka_str, d))
+        if not os.listdir(papka_str):
+            os.rmdir(papka_str)
     # sitemap-companies.xml + robots.txt
     sm = os.path.join(koren, "sitemap-companies.xml")
     rb = os.path.join(koren, "robots.txt")
@@ -284,12 +331,23 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         # kartochki-indeks-v1: карточка с noindex в sitemap не идёт (ворота индексации, ТЗ [Данные] 03.10 разд. 3.2)
         lm = {adres_str(k): (k["_lastmod"] if k.get("_s_diska") else lastmod(k, k["_V"])) for k in vse if not k.get("_noindex")}
         lm = {a: d for a, d in lm.items() if d}
+        # kartochki-volna-v1: новые адреса — партиями, не больше `partiya` в сутки (по Москве); остальные ждут завтра
+        staryj = open(sm, encoding="utf-8").read() if os.path.exists(sm) else ""
+        dohod = {adres_str(k): ((k.get("fakty") or {}).get("dohod") or {}).get("znachenie") or 0 for k in vse}
+        lm, metka, zhdut = partiya_sitemap(lm, staryj, segodnya or segodnya_msk(), partiya, dohod)
+        otchet["sitemap_vsego"], otchet["sitemap_zhdut"] = len(lm), zhdut
+        otchet["sitemap_novyh"] = metka[2] if metka else 0
         urls = []
+        if metka:
+            urls.append("<!-- partiya %s: %d -->" % (metka[0], metka[1]))
         if hub_index and lm:
             urls.append("  <url><loc>%s/%s/</loc><lastmod>%s</lastmod></url>" % (SAJT, PAPKA, max(lm.values()).isoformat()))
         # v3.5: по адресу (= по ИНН) — полная сборка и добор дают один и тот же sitemap
         urls += ["  <url><loc>%s%s</loc><lastmod>%s</lastmod></url>" % (SAJT, a, lm[a].isoformat()) for a in sorted(lm)]
-        zapisat(sm, '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + "\n".join(urls) + "\n</urlset>\n")
+        kom_ = [u for u in urls if u.startswith("<!--")]
+        urls = [u for u in urls if not u.startswith("<!--")]
+        zapisat(sm, '<?xml version="1.0" encoding="UTF-8"?>\n' + "".join(x + "\n" for x in kom_) +
+                '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + "\n".join(urls) + "\n</urlset>\n")
         if stroka not in robots:
             zapisat(rb, robots.rstrip("\n") + "\n" + stroka + "\n")
     else:
@@ -404,13 +462,17 @@ def main(argv):
         _, o = otobrat(zapisi, limit, spros, kontrol)
         pechat_otcheta(o, "--podrobno" in argv)
         return 0
-    _, o = sobrat(zapisi, KOREN, limit, spros, kontrol, dobavit="--dobavit" in argv)
+    _, o = sobrat(zapisi, KOREN, limit, spros, kontrol, dobavit="--dobavit" in argv,
+                  partiya=int(_arg(argv, "--partiya", str(PARTIYA_V_SUTKI))))
     # хаб появился/исчез → ссылка «Компании» в подвале всех страниц; пересобираем общий подвал сразу
     import subprocess
     subprocess.run([sys.executable, os.path.join(KOREN, "tests", "sobrat_shapku.py")], cwd=KOREN, check=True)
     pechat_otcheta(o)
     if o.get("s_diska"):
         print("Добор (--dobavit): опубликованных карточек оставлено как есть: %d." % o["s_diska"])
+    if "sitemap_vsego" in o:
+        print("Sitemap: %d адресов карточек · новых в этой сборке: %d · ждут следующей партии: %d (не больше %s в сутки)." % (
+            o["sitemap_vsego"], o["sitemap_novyh"], o["sitemap_zhdut"], _arg(argv, "--partiya", str(PARTIYA_V_SUTKI))))
     print("Карточек изменено: %d. Дальше: node --test tests/*.test.* && python3 tests/test_kartochki.py → PR." % o["izmeneno_stranic"])
     return 0
 

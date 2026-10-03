@@ -575,6 +575,36 @@ def msp_kategoriya(t):
     return ""
 
 
+# nds-porog-v1 (Ночные-2, 03.10): «НДС в 2027 году» на карточке — только факт, без совета (текст [Право · Налоговый юрист]
+# 03.10 21:10, разд. 2 claude/Право_Старт_390_оферта_НДС-2027_Вокфорс_03.10.md: «Упрощённая система; выручка за 2025 год —
+# 18,4 млн ₽ при пороге освобождения от НДС 20 млн ₽ (п. 1 ст. 145 НК РФ).»). Логика — как js/bez-nds.js prognoz():
+# окно с 01.01.(T−1) до 01.05.T, выручка за T−2 из ГИР БО, выручки за T−1 в ряду нет; T = 2027. Пороги п. 1 ст. 145
+# (ред. 228-ФЗ от 04.07.2026): 20 млн ₽ — доход за 2025–2028 годы, 15 млн ₽ — за 2029-й, 10 млн ₽ — дальше.
+NDS_GOD_PROGNOZA = 2027
+
+
+def nds_porog(god):
+    if god < 2025:
+        return None
+    return 20e6 if god <= 2028 else (15e6 if god == 2029 else 10e6)
+
+
+def vyvod_nds_porog(k, na, T=NDS_GOD_PROGNOZA):
+    if not na or not (dt.date(T - 1, 1, 1) <= na < dt.date(T, 5, 1)):
+        return None
+    if not str(k.get("finansy_istochnik") or "").startswith("ГИР БО"):
+        return None
+    ryad = {p["god"]: p["dohod"] for p in k.get("finansy") or []}
+    v, p = ryad.get(T - 2), nds_porog(T - 2)
+    if T - 1 in ryad or not v or v <= 0 or not p:
+        return None
+    vs = dengi(v)
+    if vs == dengi(p) and v != p:  # 20 000 001 ₽ не пишем «20 млн ₽ при пороге 20 млн ₽»
+        vs = "{:,}".format(int(round(v))).replace(",", NB) + NB + "₽"
+    return "Упрощённая система; выручка за %d год — %s при пороге освобождения от НДС %s (п.%s1 ст.%s145 НК РФ)" % (
+        T - 2, vs, dengi(p), NB, NB)
+
+
 def vyvody(k):
     out = []
     F = k["fakty"]
@@ -654,7 +684,9 @@ def vyvody(k):
             out.append(_v("V12", "warn", "У приставов есть производства на %s (на%s%s)" % (dengi(fs["znachenie"]), NB, data_tekst(fs["data"])), fs["istochnik"], fs["data"]))
     sn = F.get("snr")
     if sn and sn.get("data") and re.search(r"УСН|упрощ", sn.get("detal", "") + sn.get("zagolovok", ""), re.I):
-        out.append(_v("V13", "info", "Применяет упрощённую систему налогообложения", sn["istochnik"], sn["data"], s_chislom=False))
+        nds = vyvod_nds_porog(k, na)
+        out.append(_v("V13n", "info", nds, sn["istochnik"], sn["data"]) if nds else
+                   _v("V13", "info", "Применяет упрощённую систему налогообложения", sn["istochnik"], sn["data"], s_chislom=False))
     # V21 (каталог Данных 26.09): «В реестре МСП: {малое} предприятие» — ⚪, без числа. Только категория, прямо названная
     # в строке реестра МСП («Микропредприятие / Малое / Среднее предприятие»), и только с датой сведений: заголовок вида
     # «субъект малого и среднего предпринимательства» категорию не называет — вывода нет (ничего не додумываем).
@@ -1287,15 +1319,65 @@ def hab_otrasl(k):
     return _razdel(k) or HAB_NET_OTRASLI
 
 
-def html_haba(kart, index):
-    po_otr, po_reg = {}, {}
+# kartochki-volna-v1 (ТЗ [Продукт · Данные] 03.10 разд. 3.3): хаб /company/ — по 100 карточек на страницу.
+# Страница 1 — /company/ (как была); 2…N — /company/stranica/N/: noindex, follow (в sitemap не идут — карточки и так там),
+# canonical на себя, ссылки на все страницы. Порядок — тот же, что был у одной страницы: отрасли, внутри — по названию.
+HAB_NA_STRANICE = 100
+HAB_STRANICA = "stranica"
+
+
+def _hab_poryadok(kart):
+    po_otr = {}
     for k in kart:
         po_otr.setdefault(hab_otrasl(k), []).append(k)
+    # порядок: больше карточек — выше; «Отрасль не указана» — всегда последней
+    otrasli = sorted(po_otr, key=lambda o: (o == HAB_NET_OTRASLI, -len(po_otr[o]), o))
+    return [x for o in otrasli for x in sorted(po_otr[o], key=lambda x: x["name"])]
+
+
+def stranicy_haba(kart, na_stranice=HAB_NA_STRANICE):
+    """→ [карточки страницы 1, страницы 2, …] в порядке хаба; пустой список карточек — одна пустая страница."""
+    sp = _hab_poryadok(kart)
+    return [sp[i:i + na_stranice] for i in range(0, len(sp), na_stranice)] or [[]]
+
+
+def adres_stranicy_haba(n):
+    return "/%s/" % PAPKA if n <= 1 else "/%s/%s/%d/" % (PAPKA, HAB_STRANICA, n)
+
+
+def _nav_stranic(n, vsego):
+    if vsego <= 1:
+        return ""
+    sp = []
+    for i in range(1, vsego + 1):
+        if i == n:
+            sp.append('<span aria-current="page">%d</span>' % i)
+        else:
+            sp.append('<a href="%s">%d</a>' % (adres_stranicy_haba(i), i))
+    tuda = []
+    if n > 1:
+        tuda.append('<a href="%s" rel="prev">‹%sНазад</a>' % (adres_stranicy_haba(n - 1), NB))
+    if n < vsego:
+        tuda.append('<a href="%s" rel="next">Дальше%s›</a>' % (adres_stranicy_haba(n + 1), NB))
+    return '<nav class="co-str caption" aria-label="Страницы списка компаний">%s<span class="co-str__sp">%s</span></nav>' % (
+        "".join(tuda), "".join(sp))
+
+
+def html_haba(kart, index, n=1, vsego=1, vse=None):
+    """Страница n из vsego хаба; kart — карточки этой страницы, vse — все (для описания и строки регионов)."""
+    vse = kart if vse is None else vse
+    po_otr, po_reg = {}, {}
+    for k in vse:
         r = k.get("region") or ""
         if r:
             po_reg[r] = po_reg.get(r, 0) + 1
-    # порядок: больше карточек — выше; «Отрасль не указана» — всегда последней
-    otrasli = sorted(po_otr, key=lambda o: (o == HAB_NET_OTRASLI, -len(po_otr[o]), o))
+    vse_otr = {hab_otrasl(k) for k in vse}
+    for k in _hab_poryadok(kart):
+        po_otr.setdefault(hab_otrasl(k), []).append(k)
+    otrasli = list(po_otr)  # порядок уже задан _hab_poryadok (по всем карточкам страницы)
+    if vse is not kart:
+        poryadok = {o: i for i, o in enumerate(dict.fromkeys(hab_otrasl(x) for x in _hab_poryadok(vse)))}
+        otrasli = sorted(otrasli, key=lambda o: poryadok.get(o, 0))
     bloki = []
     for o in otrasli:
         sp = sorted(po_otr[o], key=lambda x: x["name"])
@@ -1306,7 +1388,7 @@ def html_haba(kart, index):
                                                                    ("ОКВЭД%s<span class=\"num\">%s</span>" % (NB, okved_kod(x.get("okved"))))
                                                                    if okved_kod(x.get("okved")) else ""]))) for x in sp)))
     regiony = ""
-    if po_reg:
+    if po_reg and n <= 1:
         regiony = '<p class="co-reg caption">Группы — по основному виду деятельности в ЕГРЮЛ (раздел ОКВЭД%s2). По регионам: %s.</p>' % (NB, " · ".join(
             "%s%s—%s%d" % (e(r), NB, NB, n) for r, n in sorted(po_reg.items(), key=lambda x: (-x[1], x[0]))))
     chitat = ('<section class="co-sec co-chit" id="kak-chitat"><h2>Как читать карточку</h2><ol class="co-chit__sp">%s</ol>'
@@ -1315,15 +1397,29 @@ def html_haba(kart, index):
               '<a href="/nalogi/nagruzka-po-otraslyam-2025/#nagruzka">таблица ФНС</a>. Нашли ошибку — '
               '<a href="mailto:help@deloskop.ru">help@deloskop.ru</a>.</p></section>') % "".join(
         "<li><b>%s.</b> %s</li>" % (e(z), tekst) for z, tekst in HAB_CHITAT)
-    n_otr = len([o for o in po_otr if o != HAB_NET_OTRASLI])
+    n_otr = len([o for o in vse_otr if o != HAB_NET_OTRASLI])
     t = "Компании в Делоскопе: проверка по ИНН — Делоскоп"
     d = "%d %s%s с выводами по открытым реестрам: доходы, штат, налоги и долги — у каждой цифры источник и дата сведений." % (
-        len(kart), plural(len(kart), "компания", "компании", "компаний"),
+        len(vse), plural(len(vse), "компания", "компании", "компаний"),
         (" из %d %s" % (n_otr, plural(n_otr, "отрасли", "отраслей", "отраслей"))) if n_otr > 1 else "")
-    robots = "" if index else '<meta name="robots" content="noindex, follow">\n'
+    robots = "" if (index and n <= 1) else '<meta name="robots" content="noindex, follow">\n'
     ld = {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
         {"@type": "ListItem", "position": 1, "name": "Делоскоп", "item": SAJT + "/"},
         {"@type": "ListItem", "position": 2, "name": "Компании", "item": "%s/%s/" % (SAJT, PAPKA)}]}
+    h1, krosh, lead = "Компании", "Компании", (
+        'Карточки компаний с выводами по открытым госреестрам. Каждая цифра — с источником и датой сведений. Нет нужной '
+        'компании — проверьте её по ИНН на <a href="/">главной</a>: отчёт соберём за минуту. <a href="#kak-chitat">Как читать карточку ›</a>')
+    if n > 1:
+        t = "Компании в Делоскопе — страница %d из %d" % (n, vsego)
+        d = "%s Страница %d из %d." % (d, n, vsego)
+        h1 = "Компании — страница%s%d из%s%d" % (NB, n, NB, vsego)
+        krosh = '<a href="/%s/">Компании</a> › Страница%s%d' % (PAPKA, NB, n)
+        lead = ('Продолжение списка карточек компаний. Нет нужной — проверьте её по ИНН на <a href="/">главной</a>. '
+                '<a href="/%s/#kak-chitat">Как читать карточку ›</a>' % PAPKA)
+        chitat = ""
+        ld["itemListElement"].append({"@type": "ListItem", "position": 3, "name": "Страница %d" % n,
+                                      "item": SAJT + adres_stranicy_haba(n)})
+    nav = _nav_stranic(n, vsego)
     return """<!doctype html>
 <html lang="ru">
 <head>
@@ -1331,7 +1427,7 @@ def html_haba(kart, index):
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{t}</title>
 {robots}<meta name="description" content="{d}">
-<link rel="canonical" href="{sajt}/{papka}/">
+<link rel="canonical" href="{sajt}{kanon}">
 <meta name="theme-color" content="#F5F5F2">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -1342,14 +1438,15 @@ def html_haba(kart, index):
 <body class="co">
 <!--shapka--><!--/shapka-->
 <main id="main" class="wrap co-wrap">
-<nav class="co-krosh caption" aria-label="Навигация"><a href="/">Делоскоп</a> › Компании</nav>
-<header class="co-head"><h1>Компании</h1><p class="lead">Карточки компаний с выводами по открытым госреестрам. Каждая цифра — с источником и датой сведений. Нет нужной компании — проверьте её по ИНН на <a href="/">главной</a>: отчёт соберём за минуту. <a href="#kak-chitat">Как читать карточку ›</a></p>{regiony}</header>
+<nav class="co-krosh caption" aria-label="Навигация"><a href="/">Делоскоп</a> › {krosh}</nav>
+<header class="co-head"><h1>{h1}</h1><p class="lead">{lead}</p>{regiony}</header>
 {bloki}
-{chitat}
+{nav}{chitat}
 </main>
 </body>
 </html>
-""".format(t=e(t), robots=robots, d=e(d), sajt=SAJT, papka=PAPKA, bloki="".join(bloki), regiony=regiony, chitat=chitat,
+""".format(t=e(t), robots=robots, d=e(d), sajt=SAJT, kanon=adres_stranicy_haba(n), bloki="".join(bloki), regiony=regiony,
+           chitat=chitat, nav=nav + ("\n" if nav else ""), h1=h1, krosh=krosh, lead=lead,
            ld=json.dumps(ld, ensure_ascii=False, separators=(",", ":")))
 
 

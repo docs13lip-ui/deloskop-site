@@ -317,6 +317,21 @@ class TestMelochi(unittest.TestCase):
     def test_region(self):
         self.assertEqual(K.region_gorod("398000, Липецкая обл, г Липецк, ул Ленина, д 1"), ("Липецкая область", "Липецк"))
         self.assertEqual(K.region_gorod("г Москва, ул Тверская, д 1"), ("Москва", "Москва"))
+        # v3.9: адрес ЕГРЮЛ прописными и без пробела после «Г.» (ответ /api/check, «Газпром нефть» 03.10)
+        self.assertEqual(K.region_gorod("190000, Г.САНКТ-ПЕТЕРБУРГ, УЛ. ПОЧТАМТСКАЯ, Д. 3-5, ЛИТЕРА А"),
+                         ("Санкт-Петербург", "Санкт-Петербург"))
+        self.assertEqual(K.region_gorod("398040, ЛИПЕЦКАЯ ОБЛ, Г. ЛИПЕЦК, ПЛ. МЕТАЛЛУРГОВ, Д.2"), ("Липецкая область", "Липецк"))
+        self.assertEqual(K.region_gorod("423450, РЕСП ТАТАРСТАН, Г АЛЬМЕТЬЕВСК, УЛ ЛЕНИНА, Д 75"), ("Республика Татарстан", "Альметьевск"))
+        self.assertEqual(K.region_gorod("НИЖЕГОРОДСКАЯ ОБЛАСТЬ, Г. НИЖНИЙ НОВГОРОД"), ("Нижегородская область", "Нижний Новгород"))
+
+    def test_description_staraya_otchetnost(self):
+        # v3.9: выручка старше прошлого года — год в сниппете; свежая — без года (как раньше)
+        import datetime as dt
+        k = {"name": "ПАО «Пример»", "gorod": "Москва", "reg_date": dt.date(1995, 1, 1), "proverka": dt.date(2026, 10, 3),
+             "fakty": {"dohod": {"znachenie": 2.7e12, "god": 2021}}}
+        self.assertIn("за 2021", K.description(k, []))
+        k["fakty"]["dohod"]["god"] = 2025
+        self.assertNotIn("за 2025", K.description(k, []))
 
 
 def _zhivoj_otvet(data_dates, kpi, signals=None):

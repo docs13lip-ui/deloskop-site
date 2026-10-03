@@ -202,8 +202,33 @@ AVT_OKRUG = re.compile(r"(?:^|,\s*)([А-ЯЁ][а-яё]+(?:-[А-ЯЁ][а-яё]+)*
 SOKR = {"обл": "область", "респ": "Республика", "Респ": "Республика"}
 
 
+# v3.9: ЕГРЮЛ отдаёт адрес ПРОПИСНЫМИ и без пробела после «Г.» («Г.САНКТ-ПЕТЕРБУРГ»,
+# ответ /api/check у «Газпром нефти» 03.10) — без приведения город и регион терялись.
+_MALYE = {"Г": "г", "ГОРОД": "город", "ОБЛ": "обл", "ОБЛАСТЬ": "область", "КРАЙ": "край", "РЕСП": "Респ",
+          "РЕСПУБЛИКА": "Республика", "АВТОНОМНЫЙ": "автономный", "ОКРУГ": "округ", "Д": "д", "УЛ": "ул",
+          "ПОМ": "пом", "КАБ": "каб", "ЛИТЕРА": "литера", "ЛИТ": "лит", "ПР-КТ": "пр-кт", "ПЕР": "пер",
+          "Ш": "ш", "ПЛ": "пл", "НАБ": "наб", "СТР": "стр", "КОРП": "корп", "ЭТАЖ": "этаж", "ОФИС": "офис",
+          "ВН.ТЕР.Г.": "вн.тер.г.", "МУНИЦИПАЛЬНЫЙ": "муниципальный", "ПОС": "пос", "С": "с", "Р-Н": "р-н"}
+
+
+def _iz_propisnyh(a):
+    """Адрес без строчных кириллических букв → обычный регистр: «Г.САНКТ-ПЕТЕРБУРГ» → «г. Санкт-Петербург»."""
+    if re.search(r"[а-яё]", a) or not re.search(r"[А-ЯЁ]", a):
+        return a
+    a = re.sub(r"(?<![А-ЯЁ])(Г|ОБЛ|РЕСП|УЛ|Д)\.(?=[А-ЯЁ])", r"\1. ", a)
+
+    def slovo(m):
+        w = m.group(0)
+        if w in _MALYE:
+            return _MALYE[w]
+        if w == "АО" or re.fullmatch(r"[А-ЯЁ]", w):
+            return w.lower() if w != "АО" else w
+        return "-".join(p[:1] + p[1:].lower() for p in w.split("-"))
+    return re.sub(r"[А-ЯЁ][А-ЯЁ\-]*", slovo, a)
+
+
 def region_gorod(adres):
-    a = str(adres or "")
+    a = _iz_propisnyh(str(adres or ""))
     m = GOROD_FED.search(a)
     if m:
         return m.group(1), m.group(1)
@@ -718,7 +743,11 @@ def description(k, V):
         chasti.append(k["name"])
     d = k["fakty"].get("dohod")
     if d and d.get("znachenie"):
-        chasti.append("доход %s" % dengi(d["znachenie"]))
+        # v3.9: отчётность старше прошлого года (ГИР БО закрыта, «Газпром нефть» — 2021) — год в сниппете,
+        # иначе старая выручка читается как нынешняя
+        pr, g = k.get("proverka"), d.get("god")
+        staraya = bool(g and hasattr(pr, "year") and g < pr.year - 1)
+        chasti.append("доход %s%s" % (dengi(d["znachenie"]), (" за%s%d" % (NB, g)) if staraya else ""))
     s = k["fakty"].get("shtat")
     if s and s.get("znachenie") and s["znachenie"] >= 2:
         n = int(s["znachenie"])

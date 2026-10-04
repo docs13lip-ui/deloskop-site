@@ -3,18 +3,53 @@
    (окно открывается только по событию deloskop:whatsnew от кнопки в шапке). */
 (function () {
   "use strict";
-  // 0. Полоса «Открытая бета» (beta-v1): крестик прячет её на неделю; хранилище недоступно — просто прячем
+  // 0. Полоса «Открытая бета» (beta-v1; bez-dvusmyslennosti-v1.1 — 04.10.2026).
+  //    Крестик прячет полосу на неделю, но не дольше конца беты (14.10 00:00 МСК): после 14.10 полосы нет
+  //    вовсе, а новость «с 14 октября — тарифы» должен увидеть каждый — поэтому ключ новый (dlk_beta_skryt2),
+  //    старое «скрыть» (dlk_beta_skryt) больше не действует. Хранилище недоступно — просто прячем.
+  //    Ссылка «Цена основателя» гаснет сама, когда все места заняты (п. 3.8 оферты; [Право] 04.10 10:15,
+  //    пп. 3–4 ч. 3 ст. 5 38-ФЗ): GET /api/osnovatel {vsego, zanyato}. API молчит — ссылку не трогаем:
+  //    место занимает только оплата, а в бете оплат нет.
   var NEDELYA = 7 * 24 * 3600 * 1000;
+  var KONEC_BETY = Date.UTC(2026, 9, 13, 21, 0, 0); // 14.10.2026 00:00 МСК
+  var BETA_KLYUCH = "dlk_beta_skryt2";
+  function srokSkrytiya(seichas) { return Math.min(seichas + NEDELYA, KONEC_BETY); }
+  function nadpisKrestika(seichas) { return KONEC_BETY - seichas < NEDELYA ? "Скрыть до конца беты" : "Скрыть на неделю"; }
+  function osnSsylka(j) {
+    if (!j || typeof j.vsego !== "number" || typeof j.zanyato !== "number") return true;
+    return j.zanyato < j.vsego;
+  }
+  function osnProverit(bar) {
+    var a = bar.querySelector("[data-beta-osn]");
+    if (!a || bar.hidden || typeof fetch !== "function") return;
+    var ubrat = function () { a.parentNode && a.parentNode.removeChild(a); };
+    try { if (sessionStorage.getItem("dlk_osn_net") === "1") { ubrat(); return; } } catch (e) {}
+    var API = location.hostname && /deloskop\.ru$/.test(location.hostname) ? "https://api.deloskop.ru" : "";
+    if (!API) return;
+    fetch(API + "/api/osnovatel", { headers: { Accept: "application/json" } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (osnSsylka(j)) return;
+        ubrat();
+        try { sessionStorage.setItem("dlk_osn_net", "1"); } catch (e) {}
+      })
+      .catch(function () {});
+  }
   function betaPolosa() {
     var bar = document.querySelector("[data-beta-bar]");
     if (!bar) return;
     var x = bar.querySelector("[data-beta-x]");
-    if (x) x.addEventListener("click", function () {
-      bar.hidden = true;
-      try { localStorage.setItem("dlk_beta_skryt", String(Date.now() + NEDELYA)); } catch (e) {}
-      if (window.dlkGoal) window.dlkGoal("beta_bar_close");
-    });
+    if (x) {
+      x.setAttribute("aria-label", nadpisKrestika(Date.now()));
+      x.addEventListener("click", function () {
+        bar.hidden = true;
+        try { localStorage.setItem(BETA_KLYUCH, String(srokSkrytiya(Date.now()))); } catch (e) {}
+        if (window.dlkGoal) window.dlkGoal("beta_bar_close");
+      });
+    }
+    osnProverit(bar);
   }
+  window.dlkBeta = { srokSkrytiya: srokSkrytiya, nadpisKrestika: nadpisKrestika, osnSsylka: osnSsylka, KLYUCH: BETA_KLYUCH, KONEC_BETY: KONEC_BETY };
   // 8. Типографика: номера дел, законов и писем не рвутся на переносе строки
   //    («А67-1408/2022», «304-ЭС23-9987», «115-ФЗ», «ММ-3-06/333@»). Текст не меняется —
   //    только обёртка <span class="nw"> (white-space:nowrap): копирование и поиск по номеру работают.

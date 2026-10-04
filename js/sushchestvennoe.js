@@ -14,6 +14,10 @@
   'use strict';
 
   var NB = '\u00a0', MAKS = 7;
+
+  var BANK_GIRBO = 'Организация сдаёт в' + NB + 'Банк России; в' + NB + 'ГИР' + NB + 'БО её передаёт Банк России, доступ может быть ограничен (ч.' + NB + '9' + NB + 'ст.' + NB + '18' + NB + '402-ФЗ)';
+  // «402-ФЗ)» на 390 px рвался по дефису («402-» / «ФЗ)») — номер закона со скобкой одним куском (после esc)
+  function nwFz(h) { return String(h).replace(/(\d+-ФЗ\)?)/g, '<span class="nw">$1</span>'); }
   var VES = { bad: 0, warn: 1, ok: 2, neutral: 2 };
   // порядок базовых фактов, когда замечаний нет
   var PORYADOK = ['status', 'address', 'tax_debt', 'kapital', 'likvidnost', 'ubytki', 'otchetnost', 'rukovoditel', 'age', 'zsk'];
@@ -188,8 +192,10 @@
         var pr = o.pribyl == null ? '' : o.pribyl < 0 ? ' · убыток ' + dengi(-o.pribyl) : ' · прибыль ' + dengi(o.pribyl);
         add({ k: 'otchetnost', nazv: 'Выручка за ' + o.god, znach: dengi(o.vyruchka) + pr, ton: 'neutral', ist: 'ГИР БО ФНС', data: '31.12.' + o.god });
       } else if (bank(c)) {
-        // банк сдаёт отчётность в Банк России, в ГИР БО ФНС её нет — «нет в ответе» здесь вводит в заблуждение
-        add({ k: 'otchetnost', nazv: 'Бухотчётность', znach: 'Организация сдаёт отчётность в' + NB + 'Банк России, а не в' + NB + 'ГИР' + NB + 'БО', ton: 'neutral',
+        // банк сдаёт отчётность в Банк России; в ГИР БО её передаёт Банк России (ч. 9 ст. 18 402-ФЗ), доступ может быть
+        // ограничен. Есть она в ответе — считаем как у всех (ветка выше); нет — пишем, как устроено, без «её нет».
+        // Текст — [Право · Налоговый] 04.10 11:30 разд. 1.4 дословно.
+        add({ k: 'otchetnost', nazv: 'Бухотчётность', znach: BANK_GIRBO, ton: 'neutral',
           ist: reestr + ', ОКВЭД ' + c.okved, data: dataPr, ssylka: CBR_BANK + (/^\d{13}$/.test(String(c.ogrn || '')) ? '?ogrn=' + c.ogrn : '') });
       } else {
         add({ k: 'otchetnost', nazv: 'Бухотчётность', znach: 'Нет в ответе ГИР БО', ton: 'neutral', ist: 'ГИР БО ФНС', data: dataPr });
@@ -297,7 +303,7 @@
     return '<div class="row sut__r" data-fakt="' + esc(x.k) + '"><span>' + esc(x.nazv) +
       '<small>' + esc(meta) + (x.ssylka ? ' · <a href="' + esc(x.ssylka) + '" target="_blank" rel="noopener">проверить в' + NB + 'ЦБ</a>' : '') +
       (x.spravka ? ' · <a href="' + esc(x.spravka) + '" data-goal="statusy_iz_proverki">' + esc(x.spravkaT) + '</a>' : '') + '</small></span>' +
-      '<b class="d ' + x.ton + '">' + esc(x.znach) + '</b></div>';
+      '<b class="d ' + x.ton + '">' + nwFz(esc(x.znach)) + '</b></div>';
   }
   function glubinaHtml(g, podpis, dop) {
     if (!g.razdely.length) return '';

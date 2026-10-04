@@ -131,11 +131,19 @@
   // (у «Аэрофлота» 2020: убыток 96,5 млрд ₽ и «налог» 26,6 млрд ₽), а не расходом — знак не виден ([Право] 04.10 разд. 1:
   // «не гадаем»). → годы с убытком, в которые налог ≠ 0; ряд со знаком (есть значение < 0) — пустой список.
   function nalogBezZnaka(ch) {
+    // znak-naloga-v1.1: флаг ряда `income_tax_znak: true`, `znak` у точки и строка 2300 (`profit_before_tax`) за год
+    // ([Продукт · Данные] 04.10 разд. 1) — знак известен; без флагов — прежнее правило «есть значение < 0».
     var t = Array.isArray(ch && ch.income_tax) ? ch.income_tax : [];
-    if (t.some(function (x) { return x && Number(x.value) < 0; })) return [];
-    var ub = {};
+    if (ch && ch.income_tax_znak === true) return [];
+    var sFlagom = t.some(function (x) { return x && typeof x.znak === 'boolean'; });
+    if (!sFlagom && t.some(function (x) { return x && Number(x.value) < 0; })) return [];
+    var izv = {}, ub = {};
+    t.forEach(function (x) { if (x && x.znak === true) izv[parseInt(x.year, 10)] = 1; });
+    (Array.isArray(ch && ch.profit_before_tax) ? ch.profit_before_tax : []).forEach(function (x) {
+      if (x && x.value !== null && x.value !== '' && isFinite(Number(x.value))) izv[parseInt(x.year, 10)] = 1;
+    });
     (Array.isArray(ch && ch.profit) ? ch.profit : []).forEach(function (x) { if (x && x.value !== null && x.value !== '' && Number(x.value) < 0) ub[parseInt(x.year, 10)] = 1; });
-    return ryad(t).filter(function (x) { return ub[x.year] && x.value !== 0; }).map(function (x) { return x.year; });
+    return ryad(t).filter(function (x) { return ub[x.year] && !izv[x.year] && x.value !== 0; }).map(function (x) { return x.year; });
   }
 
   // Одна строка: значение последнего года, изменение к прошлому году и за период — простыми словами.
@@ -144,6 +152,7 @@
     var o = { k: p.k, nazv: p.nazv, god: posl.year, znach: posl.value, ryad: a, kGodu: '', zaPeriod: '', ton: 'ro', fns: !!p.fns };
     o.fmt = p.chel ? chel : dengi;
     if (p.znak && posl.value < 0) o.znachTekst = 'убыток ' + dengi(-posl.value);
+    else if (p.k === 'income_tax' && posl.value < 0) o.znachTekst = 'доход ' + dengi(-posl.value);
     else o.znachTekst = o.fmt(posl.value);
     if (p.znak && (pred.value < 0) !== (posl.value < 0)) {
       o.kGodu = posl.value < 0 ? 'в ' + pred.year + NB + '— прибыль' : 'в ' + pred.year + NB + '— убыток';
@@ -216,6 +225,8 @@
     if (!x) return '<span class="din__na">нет данных</span>';
     if (s.k === 'profit' && x.value < 0) return 'убыток ' + dengi(-x.value);
     if (s.ubGody && s.ubGody.indexOf(g) >= 0) return '<span title="В год убытка не видно, расход это или доход по налогу">±' + s.fmt(x.value) + '</span>';
+    // znak-naloga-v1.1: налог со знаком < 0 — доход по налогу (например, из-за отложенного налога), словом, а не минусом
+    if (s.k === 'income_tax' && x.value < 0) return '<span title="Доход по налогу на прибыль">доход ' + dengi(-x.value) + '</span>';
     return s.fmt(x.value);
   }
 
@@ -573,12 +584,13 @@
     });
     // izm-indeks-v1: признак был «внимание»/«риск», а в новом ответе строки нет. Сняли его или источник не ответил — из ответа
     // не видно, поэтому серая точка, не зелёная («не проверили» ≠ «не нашли»). Пустой список признаков — сбой ответа, молчим.
+    // Подстрочник — [Право] 04.10 07:07 разд. 4 (правка ритма), дословно (shchit-ubytki-v1).
     if (Object.keys(b.sig || {}).length) Object.keys(a.sig || {}).forEach(function (id) {
       if ((bezSt && id === 'status') || b.sig.hasOwnProperty(id)) return;
       var x = a.sig[id];
       if (!Array.isArray(x) || !(VES[x[0]] > 0) || !x[1]) return;
       add('info', x[1] + ': на' + NB + 'прошлой проверке — ' + STX[x[0]] + ', в' + NB + 'этой строки нет',
-        'Признак могли снять, а' + NB + 'мог не' + NB + 'ответить источник: «не' + NB + 'проверили» — не' + NB + 'значит «не' + NB + 'нашли».');
+        'Признак могли снять — или источник в' + NB + 'этот раз не' + NB + 'ответил. «Не' + NB + 'проверили» — не' + NB + 'значит «не' + NB + 'нашли».');
     });
     // капитал: только смена знака и только между двумя снимками, где он есть (старый снимок без капитала — «не сравнивали»)
     if (a.kap && b.kap && b.kap[0] >= a.kap[0]) {

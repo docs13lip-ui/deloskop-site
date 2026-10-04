@@ -32,6 +32,9 @@
 .co-bar{fill:var(--surface-2)}.co-bar--last{fill:var(--accent)}
 .co-bar-t{font:500 13px var(--font);fill:var(--muted);text-anchor:middle}
 .co-sec .table th{text-align:left}.co-sec .table td.num,.co-sec .table th:last-child{text-align:right}
+/* kartochki-v4.2 (ТЗ [Арт-директор] 04.10): «убыток» — подписью над числом; на узком экране таблицы без прокрутки вбок */
+.co-ub{display:block;font-size:12px;line-height:1.3;color:var(--muted);font-variant-numeric:normal}
+@media (max-width:419px){.co-sec .table th,.co-sec .table td{padding-left:6px;padding-right:6px}.co-sec .table th:first-child,.co-sec .table td:first-child{padding-left:0}.co-sec .table th:last-child,.co-sec .table td:last-child{padding-right:0}.co-sec .table th{letter-spacing:0}}
 .co-ogov p+p{margin-top:var(--s-2)}
 /* kommentarii-kartochki-v1: «Комментарий команды Делоскопа» под строкой реестра — как на экране проверки (js/kommentarii.js, CSS_EKRANA) */
 .co .kom{margin:0 0 var(--s-3);padding:10px 14px;border-left:3px solid var(--line);background:#FAFAF8;border-radius:0 10px 10px 0;font-size:14px;line-height:1.5;color:var(--ink)}

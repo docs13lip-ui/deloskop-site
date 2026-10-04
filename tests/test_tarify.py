@@ -120,4 +120,11 @@ for x in _DOP.values():
         ok(f'v3: «{x["nazvanie"]}» — в строке «скоро», без кнопки', f'<li><b>{x["nazvanie"]}</b>' in pg and 'data-produkt="' + [k for k, v in _DOP.items() if v is x][0] not in pg)
 ok('v3: во встроенных данных калькулятора — пакет развёрнутых проверок', '"paket_pasportov"' in pg)
 
+# ---------- start390-v1: стартовая цена «Старта» (решение владельца 03.10.2026) — данные и репетиция снятия беты ----------
+if not os.environ.get('START390_BEZ_REPETICII'):
+    import subprocess as _sp
+    _r = _sp.run([sys.executable, os.path.join(R, 'tests', 'test_startovaya.py')], capture_output=True, text=True)
+    print(_r.stdout.rstrip())
+    ok('start390: tests/test_startovaya.py', _r.returncode == 0)
+
 print(f'\n{n} проверок пройдено')

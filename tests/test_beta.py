@@ -65,6 +65,9 @@ def sobrat(beta):
     p = os.path.join(kop, "tarify", "tarify.json")
     s = open(p, encoding="utf-8").read()
     s = re.sub(r'"beta": (true|false)', '"beta": ' + ("true" if beta else "false"), s, count=1)
+    # start390-v1.1: стартовая цена «Старта» включается вместе с оплатами и обратно сама не откатывается (оферту молча
+    # не переписываем) — её репетиция в tests/test_startovaya.py; здесь проверяем только сам переключатель беты
+    s = re.sub(r'("startovaya": \{.*?"vklyuchit": )true', r'\1false', s, count=1)
     open(p, "w", encoding="utf-8").write(s)
     for cmd in (["python3", "tests/sobrat_tarify.py", "."], ["python3", "tests/sobrat_shapku.py"]):
         subprocess.check_output(cmd, cwd=kop, stderr=subprocess.STDOUT)

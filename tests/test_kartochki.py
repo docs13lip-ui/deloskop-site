@@ -1007,6 +1007,10 @@ class TestKartochkiV4Kod(unittest.TestCase):
 
     def test_imya_posle_vnutrennej_kavychki(self):
         self.assertEqual(K.imya('АО "АВИАКОМПАНИЯ "СИБИРЬ"'), "АО «Авиакомпания Сибирь»")
+        # kartochki-v4.1: точные написания — латиница в кириллице и внутренняя прописная
+        self.assertEqual(K.imya('ООО "МЕТРО КЭШ ЭНД КЕРРИ"'), "ООО «Метро Кэш энд Керри»")
+        self.assertEqual(K.imya('ПАО "ФОСАГРО"'), "ПАО «ФосАгро»")
+        self.assertEqual(K.imya('ООО "ФОСАГРО-ТРАНС"'), "ООО «Фосагро-Транс»")  # только точное совпадение
         self.assertEqual(K.imya('ООО "ТОРГОВЫЙ ДОМ "ЛЕНТА"'), "ООО «Торговый дом Лента»")
         self.assertEqual(K.imya('ПАО "НК "РОСНЕФТЬ"'), "ПАО «НК Роснефть»")
         self.assertEqual(K.imya('ООО "МИР ТЕХНИКИ"'), "ООО «Мир техники»")
@@ -1706,7 +1710,7 @@ class TestKartochkiFinansyV1(unittest.TestCase):
         i = h.index('aria-labelledby="fin"')
         f = h[i:h.index("</section>", i)]
         self.assertIn("<th>Чистая прибыль</th>", f)
-        self.assertIn("убыток 29,5" + NB + "млрд" + NB + "₽", f)
+        self.assertIn('<span class="co-ub">убыток</span> 29,5' + NB + "млрд" + NB + "₽", f)  # v4.2: подпись над числом
         # без ряда прибыли — колонки нет (как раньше)
         k = K.iz_check(self._r())
         self.assertNotIn("Чистая прибыль</th>", K.html_kartochki(k, K.vyvody(k), []))
@@ -1820,6 +1824,37 @@ class TestKartochkiTonV1(unittest.TestCase):
         r["dossier"]["charts"]["income_tax"] = [{"year": 2025, "value": 37.1e9}]
         k = K.iz_check(r)
         self.assertNotIn("Налог на прибыль по отчёту", K.html_kartochki(k, K.vyvody(k), []))
+
+
+class TestUbytokPodpisV42(unittest.TestCase):
+    """kartochki-v4.2 (ТЗ [Арт-директор] 04.10, разд. 2): «убыток» в таблице — подписью над числом, число — одной строкой."""
+
+    def test_yachejka(self):
+        y = K.pribyl_yachejka(-45.6e9)
+        self.assertTrue(y.startswith('<span class="co-ub">убыток</span> '), y)
+        self.assertNotIn("убыток ", y)  # слово — отдельным блоком, не в строке с числом
+        self.assertNotIn(" ", y.split("</span> ", 1)[1])  # в числе — только неразрывные пробелы
+        self.assertEqual(K.pribyl_yachejka(None), "—")
+        self.assertNotIn("убыток", K.pribyl_yachejka(5e9))
+
+    def test_pochinit_opublikovannye(self):
+        t = '<td class="num">убыток 45,6&nbsp;млрд&nbsp;₽</td><p>годом раньше — убыток 3 млрд</p>'
+        t2 = K.pochinit_ubytok(t)
+        self.assertIn('<td class="num"><span class="co-ub">убыток</span> 45,6&nbsp;млрд&nbsp;₽</td>', t2)
+        self.assertIn("годом раньше — убыток 3 млрд", t2)  # выводы не трогаем
+        self.assertEqual(K.pochinit_ubytok(t2), t2)  # повтор ничего не меняет
+
+    def test_na_sajte_net_staroj_yachejki(self):
+        import glob
+        for f in glob.glob(os.path.join(K.KOREN, "company", "*", "index.html")):
+            with open(f, encoding="utf-8") as fh:
+                self.assertNotRegex(fh.read(), r'<td class="num">убыток \d', f)
+
+    def test_css(self):
+        with open(os.path.join(K.KOREN, "css", "co.css"), encoding="utf-8") as fh:
+            c = fh.read()
+        self.assertIn(".co-ub{display:block;font-size:12px", c)
+        self.assertIn("@media (max-width:419px){.co-sec .table th,.co-sec .table td{padding-left:6px", c)
 
 if __name__ == "__main__":
     unittest.main(verbosity=1)

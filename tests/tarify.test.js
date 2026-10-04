@@ -4,6 +4,8 @@ const fs = require('fs');
 const path = require('path');
 const T = require('../tarify/tarify.js');
 const D = JSON.parse(fs.readFileSync(path.join(__dirname, '../tarify/tarify.json'), 'utf8'));
+// start390-v1: цена «Старта» — из файла (после снятия беты она станет стартовой, tests/startovaya.py)
+const S = D.tarify.find((t) => t.id === 'start');
 let n = 0;
 function ok(name, fn) { fn(); n++; console.log('✓', name); }
 
@@ -13,17 +15,17 @@ ok('ничего не нужно — бесплатно', () => {
 });
 ok('3 отчёта и 3 компании — Старт', () => {
   const p = T.podobrat(D, { otchetov: 3, slezhenie: 3, polzovatelej: 1 }, 'god');
-  assert.strictEqual(p.luchshij.id, 'start'); assert.strictEqual(p.luchshij.god, 4700);
+  assert.strictEqual(p.luchshij.id, 'start'); assert.strictEqual(p.luchshij.god, S.god);
 });
 ok('5 отчётов, 3 компании: за год Про дешевле, чем Старт + пакет', () => {
   const p = T.podobrat(D, { otchetov: 5, slezhenie: 3, polzovatelej: 1 }, 'god');
   assert.strictEqual(p.luchshij.id, 'pro'); assert.strictEqual(p.luchshij.god, 14300);
-  assert.strictEqual(p.alternativa.id, 'start'); assert.strictEqual(p.alternativa.god, 4700 + 990 * 12);
+  assert.strictEqual(p.alternativa.id, 'start'); assert.strictEqual(p.alternativa.god, S.god + 990 * 12);
 });
-ok('5 отчётов, 3 компании: помесячно Старт + 1 пакет на 10 ₽ дешевле Про', () => {
+ok('5 отчётов, 3 компании: помесячно Старт + 1 пакет дешевле Про', () => {
   const p = T.podobrat(D, { otchetov: 5, slezhenie: 3, polzovatelej: 1 }, 'mes');
   assert.strictEqual(p.luchshij.id, 'start'); assert.strictEqual(p.luchshij.pakety, 1);
-  assert.strictEqual(p.alternativa.id, 'pro'); assert.strictEqual(p.alternativa.god - p.luchshij.god, 120);
+  assert.strictEqual(p.alternativa.id, 'pro'); assert.strictEqual(p.alternativa.god - p.luchshij.god, (D.tarify.find((t) => t.id === 'pro').mesyac - S.mesyac - D.paket_pasportov.cena_rub) * 12);
 });
 ok('слежение за 5 — Старт не подходит, Про', () => {
   const p = T.podobrat(D, { otchetov: 5, slezhenie: 5, polzovatelej: 1 }, 'god');
@@ -59,7 +61,7 @@ ok('бесплатный тариф не докупает пакеты', () => {
   assert.strictEqual(p.luchshij.id, 'start');
 });
 ok('при равной цене выбираем тариф выше', () => {
-  const D2 = JSON.parse(JSON.stringify(D)); D2.tarify[2].mesyac = 490 + 990;
+  const D2 = JSON.parse(JSON.stringify(D)); D2.tarify[2].mesyac = S.mesyac + 990;
   const p = T.podobrat(D2, { otchetov: 5, slezhenie: 3, polzovatelej: 1 }, 'mes');
   assert.strictEqual(p.luchshij.id, 'pro');
 });

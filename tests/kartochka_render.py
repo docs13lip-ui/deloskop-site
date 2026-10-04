@@ -147,6 +147,12 @@ def chislo(v):
 # ---------------------------------------------------------------- имя, адрес, slug
 # kartochki-v4-kod: короткие обычные слова — не аббревиатуры («Торговый дом», а не «Торговый ДОМ»); ТД, НК, ГК, ПК — как есть.
 KOROTKIE_SLOVA = {"ДОМ", "МИР", "САД", "ЛЕС"}
+# kartochki-v4.1: написание, которое правило регистра не выводит (латиница в кириллице, внутренняя прописная).
+# Ключ — то, что внутри кавычек в ЕГРЮЛ (заглавными); значение — как пишет сама компания. Только точное совпадение.
+IMENA_TOCHNO = {
+    "МЕТРО КЭШ ЭНД КЕРРИ": "Метро Кэш энд Керри",
+    "ФОСАГРО": "ФосАгро",
+}
 
 
 def imya(short, full=""):
@@ -175,6 +181,8 @@ def imya(short, full=""):
     for i, w in enumerate([x for x in m.group(2).strip().split(" ") if re.sub(r'["«»“”„]', "", x)]):
         if i > 0 and re.match(r'^["«»“”„]', w):
             posle_kavychki.add(i)
+    if vnutri in IMENA_TOCHNO:
+        return (opf + " " if opf else "") + "«" + IMENA_TOCHNO[vnutri] + "»"
     if vnutri == vnutri.upper() and re.search(r"[А-ЯЁA-Z]", vnutri):
         slova = vnutri.split(" ")
         out = []
@@ -1096,11 +1104,25 @@ def pochinit_indeks_blok(t):
     return _IND_STARYJ.sub(lambda _: indeks_v_otchete_html(m.group(1)), t, count=1)
 
 
+UBYTOK_METKA = '<span class="co-ub">убыток</span> '  # пробел — для чтения вслух и копирования; после блока он не виден
+
+
 def pribyl_yachejka(v):
-    """Ячейка «Чистая прибыль»: убыток — словом, а не минусом (минус в таблице легко не заметить); нет года — тире."""
+    """Ячейка «Чистая прибыль»: убыток — словом, а не минусом (минус в таблице легко не заметить); нет года — тире.
+    kartochki-v4.2 (ТЗ [Арт-директор] 04.10, разд. 2): «убыток» — подписью над числом (12 px, серым, css/co.css .co-ub),
+    число с единицей — одной строкой (неразрывные пробелы из dengi): на 390 px «убыток 45,6 млрд ₽» больше не рвётся."""
     if v is None:
         return "—"
-    return ("убыток " + dengi(-v)) if v < 0 else dengi(v)
+    return (UBYTOK_METKA + dengi(-v)) if v < 0 else dengi(v)
+
+
+_UB_STARYJ = re.compile(r'<td class="num">убыток (?=\d)')
+
+
+def pochinit_ubytok(t):
+    """kartochki-v4.2: опубликованные карточки — ячейка «убыток 45,6 млрд ₽» → подпись над числом, как у новых.
+    Только ячейки таблицы; текст выводов («годом раньше — убыток») не трогаем. Повтор ничего не меняет."""
+    return _UB_STARYJ.sub('<td class="num">' + UBYTOK_METKA, t)
 
 
 def doli_balansa(chasti):

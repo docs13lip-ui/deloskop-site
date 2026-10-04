@@ -86,6 +86,8 @@ test('2.5: каждый адрес sitemap-companies.xml существует ф
   const locs = [...chitat('sitemap-companies.xml').matchAll(/<loc>https:\/\/deloskop\.ru(\/[^<]*)<\/loc>/g)].map((x) => x[1]);
   assert.ok(locs.length > 0);
   for (const u of locs) {
+    // kartochki-v4.1: хаб /company/ идёт в этот же sitemap, когда в индексе ≥ 20 карточек (HUB_INDEX_OT, Маркетинг §2.6)
+    if (u === '/company/') { assert.ok(!/noindex/.test(chitat('company/index.html').slice(0, 4000)), 'хаб в sitemap, но noindex'); continue; }
     assert.ok(/^\/company\/\d{10}-[a-z0-9-]+\/$/.test(u), u + ': только юрлица (10 цифр ИНН), slug латиницей');
     const f = path.join(K, u, 'index.html');
     assert.ok(fs.existsSync(f), u + ' — нет файла');

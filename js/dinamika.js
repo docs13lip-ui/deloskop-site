@@ -119,9 +119,23 @@
   // Показатели с рядом не короче 3 лет (иначе это не динамика).
   function ryady(r) {
     var ch = (r && r.dossier && r.dossier.charts) || {};
+    var ubGody = nalogBezZnaka(ch);
     return POKAZATELI.map(function (p) {
-      return { k: p.k, nazv: p.nazv, znak: !!p.znak, chel: !!p.chel, fns: !!p.fns, ryad: ryad(ch[p.k]) };
+      var o = { k: p.k, nazv: p.nazv, znak: !!p.znak, chel: !!p.chel, fns: !!p.fns, ryad: ryad(ch[p.k]) };
+      if (p.k === 'income_tax' && ubGody.length) o.ubGody = ubGody;
+      return o;
     }).filter(function (p) { return p.ryad.length >= 3; });
+  }
+
+  // znak-naloga-v1 (04.10): строка 2410 в ответе API — без знака. В год с убытком сумма может быть доходом по налогу
+  // (у «Аэрофлота» 2020: убыток 96,5 млрд ₽ и «налог» 26,6 млрд ₽), а не расходом — знак не виден ([Право] 04.10 разд. 1:
+  // «не гадаем»). → годы с убытком, в которые налог ≠ 0; ряд со знаком (есть значение < 0) — пустой список.
+  function nalogBezZnaka(ch) {
+    var t = Array.isArray(ch && ch.income_tax) ? ch.income_tax : [];
+    if (t.some(function (x) { return x && Number(x.value) < 0; })) return [];
+    var ub = {};
+    (Array.isArray(ch && ch.profit) ? ch.profit : []).forEach(function (x) { if (x && x.value !== null && x.value !== '' && Number(x.value) < 0) ub[parseInt(x.year, 10)] = 1; });
+    return ryad(t).filter(function (x) { return ub[x.year] && x.value !== 0; }).map(function (x) { return x.year; });
   }
 
   // Одна строка: значение последнего года, изменение к прошлому году и за период — простыми словами.
@@ -142,6 +156,16 @@
       if (p.znak && posl.value === 0) o.ton = 'ro';
     }
     if (perv.value > 0 && posl.value > 0) o.zaPeriod = izmenenie(perv.value, posl.value) + ' с' + NB + perv.year;
+    // налог без знака: сравнение с убыточным годом не делаем — неизвестно, расход там или доход
+    if (p.ubGody) {
+      o.ubGody = p.ubGody;
+      var vRyadu = a.filter(function (x) { return p.ubGody.indexOf(x.year) >= 0; }).map(function (x) { return x.year; });
+      if (vRyadu.indexOf(perv.year) >= 0 || vRyadu.indexOf(posl.year) >= 0) o.zaPeriod = '';
+      if (vRyadu.indexOf(posl.year) >= 0 || vRyadu.indexOf(pred.year) >= 0) {
+        o.kGodu = ''; o.ton = 'ro';
+        o.zaPeriod = '±' + NB + '— в год убытка не видно, расход это или доход';
+      }
+    }
     if (p.znak) {
       var ub = a.filter(function (x) { return x.value < 0; }).map(function (x) { return x.year; });
       // убыток прошлого года уже назван в строке «в 2024 — убыток» — не повторяем
@@ -191,6 +215,7 @@
     var x = s.ryad.filter(function (q) { return q.year === g; })[0];
     if (!x) return '<span class="din__na">нет данных</span>';
     if (s.k === 'profit' && x.value < 0) return 'убыток ' + dengi(-x.value);
+    if (s.ubGody && s.ubGody.indexOf(g) >= 0) return '<span title="В год убытка не видно, расход это или доход по налогу">±' + s.fmt(x.value) + '</span>';
     return s.fmt(x.value);
   }
 
@@ -337,7 +362,8 @@
       if (u) s.ub = u;
       // оценка рентабельности активов (js/rentabelnost.js, без норм) — для «стала ниже средней по отрасли / больше не ниже»
       var R = rent(), ro = R && R.ocenka ? R.ocenka(r) : null;
-      if (ro && isFinite(ro.n)) s.rn = [ro.god, Math.round(ro.n * 10) / 10];
+      // налог без знака (znak-naloga-v1) — два варианта: [год, меньшая, большая]
+      if (ro && isFinite(ro.n)) s.rn = ro.bezZnaka && isFinite(ro.nMin) ? [ro.god, Math.round(ro.nMin * 10) / 10, Math.round(ro.nMax * 10) / 10] : [ro.god, Math.round(ro.n * 10) / 10];
       // кредиты и займы (баланс, dossier.charts.debts.loans; та же строка «Кредиты и займы» в досье) — для «стали больше годовой выручки» и «выросли в 2 раза»
       var db = ch.debts, zg = db && typeof db === 'object' ? parseInt(db.year, 10) : NaN, zl = db ? db.loans : null;
       if (isFinite(zg) && zl !== null && zl !== '' && typeof zl !== 'boolean' && isFinite(Number(zl)) && Number(zl) >= 0) s.zm = [zg, Number(zl)];
@@ -858,7 +884,7 @@
     return izm + din;
   }
 
-  return { ryad: ryad, ryady: ryady, stroka: stroka, izmenenie: izmenenie, trendy: trendy, dengi: dengi, htmlDinamika: htmlDinamika, balans: balans, htmlBalans: htmlBalans,
+  return { ryad: ryad, ryady: ryady, nalogBezZnaka: nalogBezZnaka, stroka: stroka, izmenenie: izmenenie, trendy: trendy, dengi: dengi, htmlDinamika: htmlDinamika, balans: balans, htmlBalans: htmlBalans,
     snimok: snimok, sravnit: sravnit, likvidnost: likvidnost, okved: okved, vRaz: vRaz, zapomnit: zapomnit, htmlIzmeneniya: htmlIzmeneniya, html: html, KEY: KEY, CSS: CSS,
     iskl: iskl, isklyuchena: isklyuchena, ixChislo: ixChislo, plusMes: plusMes, kodSost: kodSost, predydushchaya: predydushchaya, nuzhenKabinet: nuzhenKabinet, dogruzit: dogruzit, dobavit: dobavit, sDop: sDop, ozhidatIndeks: ozhidatIndeks, dopisatIndeks: dopisatIndeks };
 });

@@ -85,9 +85,24 @@
     if (!(aktivy >= MIN_AKTIVY)) return null;
     var pribyl = zaGod(ch.profit, god);
     if (!isFinite(pribyl)) return null;
-    var nalog = zaGod(ch.income_tax, god), sNalogom = isFinite(nalog) && nalog >= 0;
-    var rez = sNalogom ? pribyl + nalog : pribyl;
-    return { god: god, n: rez / aktivy * 100, pribyl: pribyl, nalog: sNalogom ? nalog : null, rez: rez, aktivy: aktivy, sNalogom: sNalogom };
+    var nalog = zaGod(ch.income_tax, god), sNalogom = isFinite(nalog);
+    // znak-naloga-v1 (04.10): API отдаёт строку 2410 без знака (модуль): у «Аэрофлота» 2020 при убытке 96,5 млрд ₽
+    // «налог» +26,6 млрд ₽ — это доход по налогу, а не расход. Строки 2300 в ответе нет — знак не вычислить ([Право] 04.10 разд. 1:
+    // «не гадаем»). Поэтому при налоге без знака считаем оба варианта: расход (прибыль + налог) и доход (прибыль − налог);
+    // вывод даём, только если оба варианта ведут к одному выводу. Ряд со знаком (есть значение < 0) — один точный вариант.
+    var soZnakom = rjadSoZnakom(ch.income_tax);
+    if (!sNalogom || nalog === 0 || soZnakom) {
+      var rez = sNalogom ? pribyl + nalog : pribyl, n1 = rez / aktivy * 100;
+      return { god: god, n: n1, nMin: n1, nMax: n1, pribyl: pribyl, nalog: sNalogom ? nalog : null, rez: rez, aktivy: aktivy,
+        sNalogom: sNalogom, bezZnaka: false };
+    }
+    var t = Math.abs(nalog), rMax = pribyl + t, rMin = pribyl - t;
+    return { god: god, n: rMax / aktivy * 100, nMin: rMin / aktivy * 100, nMax: rMax / aktivy * 100, pribyl: pribyl, nalog: t,
+      rez: rMax, rezMin: rMin, aktivy: aktivy, sNalogom: true, bezZnaka: true };
+  }
+  // Ряд налога на прибыль со знаком, как в форме (расход > 0, доход < 0): видно по хотя бы одному отрицательному значению.
+  function rjadSoZnakom(arr) {
+    return (Array.isArray(arr) ? arr : []).some(function (q) { return q && isFinite(chislo(q.value)) && chislo(q.value) < 0; });
   }
 
   // Сравнение оценки n (%) за год god с нормой ФНС для ОКВЭД. → { st, stroka, norma } | null (норм за этот год нет).
@@ -103,13 +118,24 @@
     return { st: nr > 0 && n1 <= nr * 0.9 ? 'nizhe' : n1 < nr ? 'chut-nizhe' : 'ne-nizhe', stroka: s, norma: nr };
   }
 
-  /* Возвращает null (блока нет) или { st, god, n, norma, stroka, pribyl, nalog, aktivy, sNalogom }.
-   * st: 'nizhe' | 'chut-nizhe' | 'ne-nizhe' | 'otr' | 'net-normy'. */
+  // Два варианта оценки (налог без знака) → один вывод или 'neyasno'. Главное — критерий 11 («ниже на 10% и более»):
+  // оба ниже — 'nizhe'; оба не ниже на 10% — 'chut-nizhe'/'ne-nizhe' (разошлись между собой — 'ne-nizhe-10'); иначе 'neyasno'.
+  function sravnenieDvuh(nMin, nMax, god, okved, dannye) {
+    var a = sravnenie(nMin, god, okved, dannye);
+    if (!a || nMin === nMax || typeof a.norma !== 'number') return a;
+    var b = sravnenie(nMax, god, okved, dannye);
+    if (a.st === b.st) return a;
+    var st = a.st === 'nizhe' || b.st === 'nizhe' ? 'neyasno' : 'ne-nizhe-10';
+    return { st: st, stroka: a.stroka, norma: a.norma };
+  }
+
+  /* Возвращает null (блока нет) или { st, god, n, nMin, nMax, norma, stroka, pribyl, nalog, aktivy, sNalogom, bezZnaka }.
+   * st: 'nizhe' | 'chut-nizhe' | 'ne-nizhe' | 'ne-nizhe-10' | 'neyasno' | 'otr' | 'net-normy'. */
   function raschet(r, dannye) {
     if (!dannye) return null;
     var o = ocenka(r);
     if (!o) return null;
-    var sr = sravnenie(o.n, o.god, String(r.company.okved || ''), dannye);
+    var sr = sravnenieDvuh(o.nMin, o.nMax, o.god, String(r.company.okved || ''), dannye);
     if (!sr) return null;
     o.st = sr.st; o.stroka = sr.stroka; o.norma = sr.norma; o.istochnik = istochnikNormy(o.god, dannye);
     return o;
@@ -119,10 +145,13 @@
    * Только новая отчётность (год b больше года a) и только переход через «ниже средней на 10% и более» —
    * обе оценки сравниваем с нормой ФНС своего года для ТЕКУЩЕГО ОКВЭД. → { ton, t } | null. */
   function izmenenie(a, b, okved, dannye) {
+    // снимок: rn = [год, оценка] или [год, меньшая, большая] (налог без знака, znak-naloga-v1)
     if (!a || !b || !Array.isArray(a.rn) || !Array.isArray(b.rn) || !(b.rn[0] > a.rn[0])) return null;
-    var x = sravnenie(a.rn[1], a.rn[0], okved, dannye), y = sravnenie(b.rn[1], b.rn[0], okved, dannye);
-    if (!x || !y || typeof x.norma !== 'number' || typeof y.norma !== 'number') return null;
-    var hvost = ': за' + NB + b.rn[0] + ' — ' + pct(b.rn[1]) + ' при средней ' + pct(y.norma) + ' (оценка; ГИР' + NB + 'БО и ФНС)';
+    function dva(rn) { return [rn[1], rn.length > 2 && isFinite(rn[2]) ? rn[2] : rn[1]]; }
+    var da = dva(a.rn), db = dva(b.rn);
+    var x = sravnenieDvuh(da[0], da[1], a.rn[0], okved, dannye), y = sravnenieDvuh(db[0], db[1], b.rn[0], okved, dannye);
+    if (!x || !y || typeof x.norma !== 'number' || typeof y.norma !== 'number' || x.st === 'neyasno' || y.st === 'neyasno') return null;
+    var hvost = ': за' + NB + b.rn[0] + ' — ' + diapazon(db[0], db[1]) + ' при средней ' + pct(y.norma) + ' (оценка; ГИР' + NB + 'БО и ФНС)';
     if (x.st !== 'nizhe' && y.st === 'nizhe') return { ton: 'huzhe', t: 'Рентабельность активов стала ниже средней по отрасли на 10% и более' + hvost };
     if (x.st === 'nizhe' && y.st !== 'nizhe') return { ton: 'luchshe', t: 'Рентабельность активов больше не ниже средней по отрасли на 10% и более' + hvost };
     return null;
@@ -132,6 +161,8 @@
     'nizhe': 'Ниже средней по отрасли на 10% и более.',
     'chut-nizhe': 'Ниже средней по отрасли, но меньше чем на 10%.',
     'ne-nizhe': 'Не ниже средней по отрасли.',
+    'ne-nizhe-10': 'Не ниже средней по отрасли на 10% и более.',
+    'neyasno': 'Сравнить точно нельзя: при одном знаке налога оценка ниже средней по отрасли на 10% и более, при другом — нет.',
     'otr': 'У отрасли в целом за этот год, по данным ФНС, убыток — сравнивать не с чем.',
     'net-normy': 'Средней рентабельности для этого вида деятельности ФНС не публикует — со строкой «Всего» не сравниваем.'
   };
@@ -139,18 +170,30 @@
   var PRIZNAK = 'Признак отбора — рентабельность по бухучёту ниже среднеотраслевой на 10% и более (критерий 11 приложения 2 к Концепции). ' +
     'Это средние значения, а не порог: ФНС сравнивает с ними компании как с одним из 12 признаков при отборе на выездную проверку.';
 
+  // фраза — моя (znak-naloga-v1), ✎ [Право · Налоговый]: почему два варианта
+  var BEZ_ZNAKA = 'В открытых данных у налога на прибыль нет знака: по ним не видно, расход это или доход по налогу (доход бывает, например, из-за отложенного налога).';
+  // «2,1–4,3 %» — диапазон двух вариантов; один вариант — одно число
+  function diapazon(a, b) {
+    var x = Math.round(Math.min(a, b) * 10) / 10, y = Math.round(Math.max(a, b) * 10) / 10;
+    if (x === y) return pct(x);
+    return pct(x).replace(NB + '%', '') + (x < 0 || y < 0 ? ' … ' : '–') + pct(y);
+  }
+  function znachenie(o) { return o ? diapazon(isFinite(o.nMin) ? o.nMin : o.n, isFinite(o.nMax) ? o.nMax : o.n) : ''; }
+
   // opts.otkryto — «Как посчитали» раскрыто (PDF-досье: на бумаге свёрнутое не видно);
   // opts.primechanie — строка под блоком (Паспорт: «в отпечаток SHA-256 не входит»).
   function html(o, opts) {
     if (!o) return '';
     opts = opts || {};
-    var ton = o.st === 'nizhe' ? 'warn' : o.st === 'ne-nizhe' || o.st === 'chut-nizhe' ? 'ok' : 'ro';
+    var ton = o.st === 'nizhe' ? 'warn' : o.st === 'ne-nizhe' || o.st === 'chut-nizhe' || o.st === 'ne-nizhe-10' ? 'ok' : 'ro';
     var podpis = o.stroka ? N.podpisStroki(o.stroka) : '';
     var sr = o.norma != null
       ? 'Средняя по отрасли — <b class="n">' + pct(o.norma) + '</b> · ' + esc(podpis) + ', данные ФНС за' + NB + o.god + NB + 'год'
       : (o.st === 'otr' ? esc(podpis) : '');
-    var kak = (o.sNalogom
-      ? 'Прибыль до налогообложения — чистая прибыль ' + dengi(o.pribyl) + ' плюс налог на прибыль ' + dengi(o.nalog) + ' = ' + dengi(o.rez)
+    var kak = (o.bezZnaka ? BEZ_ZNAKA + ' Если это расход — прибыль до налогообложения ' + dengi(o.pribyl) + ' + ' + dengi(o.nalog) + ' = ' + dengi(o.rez) +
+        ', если доход — ' + dengi(o.pribyl) + ' − ' + dengi(o.nalog) + ' = ' + dengi(o.rezMin) + '; считаем оба варианта'
+      : o.sNalogom
+      ? 'Прибыль до налогообложения — чистая прибыль ' + dengi(o.pribyl) + (o.nalog < 0 ? ' минус доход по налогу на прибыль ' + dengi(-o.nalog) : ' плюс налог на прибыль ' + dengi(o.nalog)) + ' = ' + dengi(o.rez)
       : 'Налога на прибыль в ответе нет — взяли чистую прибыль ' + dengi(o.pribyl)) +
       ' (ГИР БО, ' + o.god + '). Активы на' + NB + '31.12.' + o.god + ' — ' + dengi(o.aktivy) +
       ': капитал, долгосрочные и краткосрочные обязательства (баланс, строки 1300 + 1400 + 1500). ' +
@@ -158,7 +201,7 @@
       'Норма — приложение 4 к приказу ФНС № ММ-3-06/333@, ' + o.istochnik + '.';
     return '<section class="rnt rnt--' + ton + '" aria-label="Рентабельность активов против отрасли">' +
       '<div class="rnt__h"><b>Рентабельность активов против отрасли</b><span>оценка · ГИР БО и ФНС · ' + o.god + '</span></div>' +
-      '<p class="rnt__v"><b class="n">' + pct(o.n) + '</b><span>за' + NB + o.god + NB + 'год</span></p>' +
+      '<p class="rnt__v"><b class="n">' + znachenie(o) + '</b><span>за' + NB + o.god + NB + 'год</span></p>' +
       (sr ? '<p class="rnt__s">' + sr + '</p>' : '') +
       '<p class="rnt__z">' + esc(VYVOD[o.st]) + '</p>' +
       (o.st === 'nizhe' ? '<p class="rnt__p">' + esc(PRIZNAK) + '</p>' : '') +
@@ -237,6 +280,7 @@
 
   var PRIMECHANIE_PASPORT = 'Рассчитано Делоскопом по бухотчётности этого раздела и нормам ФНС; в отпечаток SHA-256 не входит.';
 
-  return { raschet: raschet, ocenka: ocenka, sravnenie: sravnenie, izmenenie: izmenenie, html: html, mount: mount, vstavit: vstavit, zagruzit: zagruzit, norma: norma, pct: pct, CSS: CSS, VYVOD: VYVOD, PRIZNAK: PRIZNAK,
+  return { raschet: raschet, ocenka: ocenka, sravnenie: sravnenie, sravnenieDvuh: sravnenieDvuh, izmenenie: izmenenie, znachenie: znachenie,
+    diapazon: diapazon, BEZ_ZNAKA: BEZ_ZNAKA, html: html, mount: mount, vstavit: vstavit, zagruzit: zagruzit, norma: norma, pct: pct, CSS: CSS, VYVOD: VYVOD, PRIZNAK: PRIZNAK,
     PRIMECHANIE_PASPORT: PRIMECHANIE_PASPORT };
 });

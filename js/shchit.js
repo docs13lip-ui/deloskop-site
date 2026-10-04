@@ -142,7 +142,7 @@
       try {
         var R = Rn(o), x = R && R.raschet ? R.raschet(r, o.normy) : null;
         if (x && x.st === 'nizhe' && typeof x.norma === 'number')
-          out.rentabelnost = 'Рентабельность активов за ' + x.god + ' — ' + R.pct(x.n) + ' при средней по отрасли ' + R.pct(x.norma) + ' (оценка; ГИР' + NB + 'БО и ФНС)';
+          out.rentabelnost = 'Рентабельность активов за ' + x.god + ' — ' + (R.znachenie ? R.znachenie(x) : R.pct(x.n)) + ' при средней по отрасли ' + R.pct(x.norma) + ' (оценка; ГИР' + NB + 'БО и ФНС)';
       } catch (e) {}
     }
     return out;

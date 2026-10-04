@@ -12,6 +12,7 @@
  * что «Существенные факты» (js/sushchestvennoe.js) и блок рентабельности (js/rentabelnost.js, нормы ФНС грузятся один раз);
  * «почему» — дословно утверждённые [Право] тексты «Комментария команды» (data/kommentarii.json, тон «жёлтый»: ubytok,
  * kapital, likvidnost) — tests/shchit_finansy.test.js сверяет их с файлом. Капитал и ликвидность — только «банк», без шага.
+ * v3.1 (04.10, shchit-ubytki-v1): убыток 2+ года — и в «Как вас видит налоговая» (критерий 2 ММ-3-06/333@, текст [Право] 09:20).
  */
 (function (root, factory) {
   var api = factory(root);
@@ -80,6 +81,11 @@
     // Шаг у убытков и рентабельности — тот же, что у нагрузки (объяснение для инспекции); у капитала и ликвидности шага нет.
     ubytki: {
       b: { t: 'Убытки и отрицательные чистые активы банк учитывает при оценке платёжеспособности.', sver: true },
+      // shchit-ubytki-v1 (04.10): [Право · Налоговый] 04.10 09:20 разд. 3, дословно — критерий 2 прил. 2 к приказу ФНС
+      // от 30.05.2007 № ММ-3-06/333@: «…с убытком в течение 2-х и более календарных лет»; порог «2+» — из нормы.
+      n: { t: 'Убытки два года и более — один из открытых критериев, по которым налоговая отбирает компании для выездной проверки',
+           norma: '(критерий 2, приказ ФНС от 30.05.2007 № ММ-3-06/333@)', dop: 'Проверка от этого не обязательна.', sver: true,
+           ist: 'https://www.consultant.ru/document/cons_doc_LAW_55729/f579efc1e846c86acedf1433b3fb8817a96a6916/' },
       s: 'nagruzka'
     },
     rentabelnost: {
@@ -106,7 +112,10 @@
   var MAX_SHAGOV = 3;
   var ST = { LIQUIDATING: 'Компания ликвидируется или ФНС готовит её исключение из ЕГРЮЛ', LIQUIDATED: 'Компания ликвидирована', BANKRUPT: 'Идёт банкротство', REORGANIZING: 'Идёт реорганизация' };
 
-  function tekst(x) { return x.norma && (x.sver || SVERENO) ? x.t + ' ' + x.norma + '.' : (/[.!?»]$/.test(x.t) ? x.t : x.t + '.'); }
+  function tekst(x) {
+    var t = x.norma && (x.sver || SVERENO) ? x.t + ' ' + x.norma + '.' : (/[.!?»]$/.test(x.t) ? x.t : x.t + '.');
+    return x.dop ? t + ' ' + x.dop : t;   // dop — второе предложение после нормы (убытки: «Проверка от этого не обязательна.»)
+  }
   function reestr(t, ul) { return ul ? t : t.replace(/ЕГРЮЛ/g, 'ЕГРИП'); }   // у ИП свой реестр
   function Su(o) { return (o && o.sushchestvennoe) || (root && root.Sushchestvennoe) || (typeof require === 'function' ? require('./sushchestvennoe.js') : null); }
   function Rn(o) {
@@ -233,6 +242,8 @@
     '.shch-ch{font-weight:400;color:var(--muted,#6B6B70);font-variant-numeric:tabular-nums}' +
     '.shch-sv{margin:0;font-size:12.5px;line-height:1.45;color:var(--muted,#6B6B70);max-width:68ch;border-top:1px solid var(--line,#E5E5E0);padding-top:10px}';
 
+  // «№ ММ-3-06/333@)» вместе со скобкой и точкой — одним куском: иначе на 390 px «)» уходит на новую строку.
+  function nwNomer(h) { return h.replace(/№ ([^\s)<]+\)\.?)/g, '<span class="nw">№ $1</span>'); }
   function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function ssylka(href, t, ext, cls) { return '<a' + (cls ? ' class="' + cls + '"' : '') + ' href="' + esc(href) + '"' + (ext ? ' target="_blank" rel="noopener"' : '') + '>' + esc(t) + '</a>'; }
 
@@ -240,7 +251,7 @@
     function blok(zag, spisok) {
       if (!spisok.length) return '';
       return '<div class="shch-b"><h3>' + zag + ' <span class="shch-ch">· ' + spisok.length + '</span></h3><ul>' + spisok.map(function (x) {
-        return '<li><b>' + esc(x.priznak) + '</b>' + (x.pochemu ? '<span>' + esc(x.pochemu) + '</span>' : '') + '</li>';
+        return '<li><b>' + esc(x.priznak) + '</b>' + (x.pochemu ? '<span>' + nwNomer(esc(x.pochemu)) + '</span>' : '') + '</li>';
       }).join('') + '</ul></div>';
     }
     var g = glavnyj(R);
@@ -259,13 +270,17 @@
       (R.sNormoj ? '<p class="shch-sv">Ссылки на нормы в скобках сверены командой Делоскопа (115-ФЗ и налоги) с редакциями законов на ' + SVERENO_NA + '.</p>' : '') + '</section>';
   }
 
+  // Номера норм не рвутся на переносе («№ ММ-3-06/333@», «115-ФЗ») — общий js/shapka.js (nerazryv-v1), если он есть.
+  function nw(el) {
+    try { var w = root && root.dlkNerazryv ? root : (typeof window !== 'undefined' ? window : null); if (w && w.dlkNerazryv) w.dlkNerazryv.obernut(el); } catch (e) {}
+  }
   // mount(el, r) — рисует разбор в el. Цель Метрики shchit_sled — клик по «Следить».
   function mount(el, r, o) {
     if (!r || !r.company || !r.company.inn) throw new Error('shchit: нет данных о компании');
     var doc = el.ownerDocument;
     if (!doc.getElementById('shch-css')) { var s = doc.createElement('style'); s.id = 'shch-css'; s.textContent = CSS; doc.head.appendChild(s); }
     var R = razbor(r, o);
-    el.innerHTML = html(R);
+    el.innerHTML = html(R); nw(el);
     el.addEventListener('click', function (e) {
       var a = e.target && e.target.closest ? e.target.closest('a[href="/cabinet.html"]') : null;
       if (a && root && root.dlkGoal) root.dlkGoal('shchit_sled', { inn_dlina: String(r.company.inn).length });
@@ -280,7 +295,7 @@
         var R2 = razbor(r, o2);
         if (R2.banki.length + R2.nalogovaya.length === R.banki.length + R.nalogovaya.length) return R;
         Object.keys(R2).forEach(function (k) { R[k] = R2[k]; });
-        el.innerHTML = html(R);
+        el.innerHTML = html(R); nw(el);
         return R;
       }).catch(function () { return R; });
     }

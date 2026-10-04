@@ -90,7 +90,11 @@
     // «налог» +26,6 млрд ₽ — это доход по налогу, а не расход. Строки 2300 в ответе нет — знак не вычислить ([Право] 04.10 разд. 1:
     // «не гадаем»). Поэтому при налоге без знака считаем оба варианта: расход (прибыль + налог) и доход (прибыль − налог);
     // вывод даём, только если оба варианта ведут к одному выводу. Ряд со знаком (есть значение < 0) — один точный вариант.
-    var soZnakom = rjadSoZnakom(ch.income_tax);
+    // znak-naloga-v1.1 (04.10, контракт [Продукт · Данные] 04.10 разд. 1): строка 2300 за год — налог = 2300 − чистая прибыль,
+    // точно и со знаком; иначе знак по флагу ряда `income_tax_znak` / точки `znak`, а без флагов — прежнее правило.
+    var pbt = zaGod(ch.profit_before_tax, god);
+    if (isFinite(pbt)) { nalog = pbt - pribyl; sNalogom = true; }
+    var soZnakom = isFinite(pbt) || nalogSoZnakom(ch, god);
     if (!sNalogom || nalog === 0 || soZnakom) {
       var rez = sNalogom ? pribyl + nalog : pribyl, n1 = rez / aktivy * 100;
       return { god: god, n: n1, nMin: n1, nMax: n1, pribyl: pribyl, nalog: sNalogom ? nalog : null, rez: rez, aktivy: aktivy,
@@ -103,6 +107,17 @@
   // Ряд налога на прибыль со знаком, как в форме (расход > 0, доход < 0): видно по хотя бы одному отрицательному значению.
   function rjadSoZnakom(arr) {
     return (Array.isArray(arr) ? arr : []).some(function (q) { return q && isFinite(chislo(q.value)) && chislo(q.value) < 0; });
+  }
+  // Знак налога за год god: флаг ряда `income_tax_znak: true` — весь ряд со знаком; у точки есть `znak` — по нему
+  // (в смешанном ряду точка `znak: false` — модуль, даже если рядом есть отрицательные); флагов нет — rjadSoZnakom.
+  function nalogSoZnakom(ch, god) {
+    if (!ch) return false;
+    if (ch.income_tax_znak === true) return true;
+    var arr = Array.isArray(ch.income_tax) ? ch.income_tax : [];
+    var x = arr.filter(function (q) { return q && parseInt(q.year, 10) === god; })[0];
+    if (x && typeof x.znak === 'boolean') return x.znak;
+    if (arr.some(function (q) { return q && typeof q.znak === 'boolean'; })) return false;
+    return rjadSoZnakom(arr);
   }
 
   // Сравнение оценки n (%) за год god с нормой ФНС для ОКВЭД. → { st, stroka, norma } | null (норм за этот год нет).
@@ -281,6 +296,6 @@
   var PRIMECHANIE_PASPORT = 'Рассчитано Делоскопом по бухотчётности этого раздела и нормам ФНС; в отпечаток SHA-256 не входит.';
 
   return { raschet: raschet, ocenka: ocenka, sravnenie: sravnenie, sravnenieDvuh: sravnenieDvuh, izmenenie: izmenenie, znachenie: znachenie,
-    diapazon: diapazon, BEZ_ZNAKA: BEZ_ZNAKA, html: html, mount: mount, vstavit: vstavit, zagruzit: zagruzit, norma: norma, pct: pct, CSS: CSS, VYVOD: VYVOD, PRIZNAK: PRIZNAK,
+    diapazon: diapazon, nalogSoZnakom: nalogSoZnakom, BEZ_ZNAKA: BEZ_ZNAKA, html: html, mount: mount, vstavit: vstavit, zagruzit: zagruzit, norma: norma, pct: pct, CSS: CSS, VYVOD: VYVOD, PRIZNAK: PRIZNAK,
     PRIMECHANIE_PASPORT: PRIMECHANIE_PASPORT };
 });

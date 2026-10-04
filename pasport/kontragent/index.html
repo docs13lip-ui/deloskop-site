@@ -196,6 +196,8 @@ td b{font-weight:600}
 .pbal li{display:flex;align-items:center;gap:7px}.pbal li i{width:10px;height:10px;border-radius:3px;flex:none}
 .pbal li b{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
 .pbal p{margin:8px 0 0;font-size:12px;color:var(--muted);line-height:1.5}
+.pk-izm{margin:14px 0 0}.pk-izm .izm{margin:0}
+.pk-izm__n{margin:6px 2px 0;font-size:12px;line-height:1.5;color:var(--muted)}
 @media print{.pbal{border-color:#D9D9D4}.pbal__bar,.pbal li i{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 @media print{
   .kom{background:none;break-inside:avoid}
@@ -316,6 +318,7 @@ td b{font-weight:600}
 <script src="/js/indeks-otvet.js"></script>
 <script src="/js/nagruzka.js"></script>
 <script src="/js/rentabelnost.js"></script>
+<script src="/js/dinamika.js"></script>
 <script src="/pasport/engine.js"></script>
 <script src="/pasport/qr.js"></script>
 <script src="/js/pasport-kontragenta.js"></script>
@@ -617,6 +620,11 @@ td b{font-weight:600}
       pk.innerHTML=h; msg.hidden=true; pk.hidden=false;
       // подсказки к терминам (ЗСК, ГИР БО, РНП, приставы…) — определения дословно из статей сайта, js/terminy.js
       if(window.Terminy)Terminy.mount(pk);
+      // «Что изменилось с вашей прошлой проверки» (pasport-izm-v1): снимки этого браузера (js/dinamika.js), только чтение.
+      // Под «Итогом», только на экране: в PDF и в отпечаток SHA-256 не входит. Нет прошлой проверки — блока нет.
+      if(window.Dinamika&&Dinamika.htmlPasport){try{var ls=null;try{ls=window.localStorage}catch(_){}
+        var rz=m.demo?Dinamika.obrazecIzm(r):Dinamika.sravnitSnimki(r,ls),hz=Dinamika.htmlPasport(rz,!!m.demo),ig=pk.querySelector('.itog');
+        if(hz&&ig){Dinamika.stil(document);ig.insertAdjacentHTML('afterend',hz);}}catch(e){}}
       // «Комментарий команды Делоскопа» под строками признаков — только утверждённые [Право] тексты (/data/kommentarii.json).
       // Вставляется в страницу после выпуска: в отпечаток SHA-256 не входит, нет библиотеки — Паспорт как раньше.
       if(window.Kommentarii)Kommentarii.zagruzit().then(function(K){try{Kommentarii.vstavitFakty(pk,Kommentarii.dlyaFaktov(p.razdely,r.signals,K))}catch(e){}});

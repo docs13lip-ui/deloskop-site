@@ -476,7 +476,11 @@ class TestPasportNaKartochke(unittest.TestCase):
         k = K.iz_check(O.zapis(3))
         t = K.html_kartochki(k, K.vyvody(k), [])
         self.assertIn('href="/pasport/kontragent/?inn=%s" rel="nofollow"' % k["inn"], t)
-        self.assertEqual(t.count("/pasport/kontragent/?inn="), 1)
+        # kartochki-daty-v1: + вход в Паспорт в «Датах из реестра» — две половины беты (одна в <template>, без href)
+        self.assertEqual(t.count("/pasport/kontragent/?inn="), 3)
+        self.assertEqual(t.count('href="/pasport/kontragent/?inn='), 3)  # до режима беты обе половины — с href
+        import beta as B
+        self.assertEqual(B.vidimoe(B.primenit(t, True, "")).count('href="/pasport/kontragent/?inn='), 2)
         self.assertNotIn("?id=", t, "номер досье на карточку не попадает")
 
     def test_znaki_kak_v_pasporte(self):
@@ -696,7 +700,7 @@ class TestObshchijRender(unittest.TestCase):
         pervye = {}
         kom = json.loads((KOREN / "data" / "kommentarii.json").read_text(encoding="utf-8"))  # API передаёт тот же файл сайта
         for z in zap:
-            ok, pr, adres, telo = R.kartochka_iz_check(z, kart, kom, K.zagruzit_normy())
+            ok, pr, adres, telo = R.kartochka_iz_check(z, kart, kom, K.zagruzit_normy(), K.cena_pasporta())  # цену API передаёт ту же
             self.assertTrue(ok, pr)
             pervye[adres] = ss.sobrat_stranicu(telo, r, podval, shapka)
         self.assertEqual(len(pervye), len(kart))
@@ -1901,6 +1905,113 @@ class TestKapitalMinusV43(unittest.TestCase):
     def test_css(self):
         with open(os.path.join(K.KOREN, "css", "co.css"), encoding="utf-8") as fh:
             self.assertIn(".co-mn{font-size:12px", fh.read())
+
+class TestDatyIzReestraV1(unittest.TestCase):
+    """kartochki-daty-v1 (ТЗ [Продукт] 04.10 08:45 разд. 2 и 10:20 разд. 2; [Право] 09:20 разд. 5, 10:15 разд. 3):
+    «Даты из реестра» на карточке и вход в Паспорт — в бете «по 13 октября», после — цена из tarify.json."""
+
+    def _k(self, **pr):
+        r = O.zapis(0, reg_date=pr.pop("reg_date", "2011-03-14"))
+        r["dossier"]["data_dates"] = pr.pop("data_dates", "ЕГРЮЛ/ЕГРИП — на 21.09.2026; задолженность — на 01.09.2026")
+        r["company"]["director_date"] = pr.pop("director_date", "2024-09-20")
+        return K.iz_check(r)
+
+    def test_tri_stroki_i_rkn(self):
+        k = self._k()
+        h = K.daty_html(k, 490)
+        self.assertIn("<dt>Зарегистрирована</dt> <dd><span class=\"num\">14" + NB + "марта" + NB + "2011" + NB + "года</span>"
+                      " <span class=\"co-daty__p\">— 15" + NB + "лет назад</span></dd>", h)
+        self.assertIn("<dt>Сведения в" + NB + "реестре актуальны на</dt> <dd><span class=\"num\">21" + NB + "сентября" + NB + "2026" + NB + "года</span>", h)
+        self.assertNotIn("нынешнем руководител", h)  # строка о руководителе — только после «РКН отправлено»
+        os.environ["RKN_OTPRAVLENO"] = "1"
+        self.addCleanup(os.environ.pop, "RKN_OTPRAVLENO", None)
+        h2 = K.daty_html(k, 490)
+        self.assertIn("Сведения о" + NB + "нынешнем руководителе внесены в" + NB + "ЕГРЮЛ</dt> <dd><span class=\"num\">20" + NB + "сентября" + NB + "2024" + NB + "года", h2)
+        self.assertNotIn("Примеров", h2)  # ФИО нет
+
+    def test_net_polya_net_stroki(self):
+        k = self._k(data_dates="")
+        h = K.daty_html(k, 490)
+        self.assertIn("Зарегистрирована", h)
+        self.assertNotIn("актуальны", h)
+        k = self._k(data_dates="", reg_date="")
+        self.assertEqual(K.daty_html(k, 490), "")  # нет ни одной даты — нет блока
+        k = self._k(reg_date="2026-02-01")
+        self.assertIn("меньше года назад", K.daty_html(k, 490))
+
+    def test_vhod_dve_poloviny(self):
+        h = K.pasport_vhod_html("0012345678", 490)
+        self.assertIn("У" + NB + "каждого факта" + NB + "— источник и" + NB + "дата, расчёты" + NB + "— по" + NB + "открытой методике.", h)
+        self.assertIn("<!--v-bete--><a href=\"/pasport/kontragent/?inn=0012345678\" rel=\"nofollow\" data-goal=\"kartochka_pasport_vhod\">В" + NB + "бете бесплатно по" + NB + "13" + NB + "октября" + NB + "→</a><!--/v-bete-->", h)
+        self.assertIn("Полный Паспорт на" + NB + "дату сделки" + NB + "— 490" + NB + "₽ или в" + NB + "тарифе «Старт»" + NB + "→", h)
+        self.assertNotRegex(h, r"каждая строка|что менялось|истори|до(\s|\u00a0)13")
+        # бета → видна только «по 13 октября»; после беты → только цена
+        import beta as B
+        vb, vp = B.vidimoe(B.primenit(h, True, "")), B.vidimoe(B.primenit(h, False, ""))
+        self.assertIn("бесплатно по", vb)
+        self.assertNotIn("490", vb)
+        self.assertIn("490" + NB + "₽", vp)
+        self.assertNotIn("бесплатно", vp)
+        self.assertEqual(K.cena_pasporta(), 490)  # цена — из tarify.json, не руками
+        self.assertIsNone(K.cena_pasporta("/net/takogo/fajla.json"))
+        self.assertIn("Полный Паспорт на" + NB + "дату сделки" + NB + "→", K.pasport_vhod_html("0012345678", None))
+
+    def test_v_kartochke(self):
+        k = self._k()
+        h = K.html_kartochki(k, K.vyvody(k), [])
+        self.assertIn('<section class="co-sec co-daty" aria-labelledby="daty"><h2 id="daty">Даты из реестра</h2>', h)
+        self.assertLess(h.index("co-pered"), h.index("co-daty"))
+        self.assertIn('"foundingDate": "2011-03-14"', h)
+        self.assertIn("17 разделов, у каждого факта" + NB + "— источник", h)
+        self.assertNotIn("у каждого источник", h)
+
+    def test_pochinit_opublikovannye(self):
+        k = self._k()
+        h = K.html_kartochki(k, K.vyvody(k), [])
+        h = h.replace("17 разделов, у каждого факта" + NB + "— источник", "17 разделов, у каждого источник")
+        star = re.sub(r'<section class="co-sec co-daty".*?</section>\n', "", h, flags=re.S)
+        self.assertNotIn("co-daty", star)
+        t = K.pochinit_daty(star, 490)
+        self.assertIn("<dt>Зарегистрирована</dt> <dd><span class=\"num\">14" + NB + "марта" + NB + "2011" + NB + "года</span>", t)
+        self.assertNotIn("актуальны", t)  # даты актуальности на опубликованной странице нет — строки нет
+        self.assertIn("ЕГРЮЛ · сведения на 29.09.2026", t)
+        self.assertIn("у каждого факта" + NB + "— источник", t)
+        self.assertEqual(K.pochinit_daty(t, 490), t)  # повтор ничего не меняет
+        self.assertEqual(t.count("co-daty__vhod"), 1)
+        # смена цены — абзац входа обновляется, блок не дублируется
+        t2 = K.pochinit_daty(t, 590)
+        self.assertIn("— 590" + NB + "₽", t2)
+        self.assertEqual(t2.count('<section class="co-sec co-daty"'), 1)
+
+    def test_na_sajte(self):
+        import glob
+        fs = glob.glob(os.path.join(K.KOREN, "company", "*", "index.html"))
+        for f in [x for x in fs if os.path.basename(os.path.dirname(x))[:1].isdigit()]:
+            t = chitat(f)
+            self.assertIn('<h2 id="daty">Даты из реестра</h2>', t, f)
+            self.assertIn('data-goal="kartochka_pasport_vhod"', t, f)
+            self.assertNotIn("у каждого источник", t, f)
+            vid = re.sub(r"<template\b.*?</template>", "", t, flags=re.S)
+            self.assertNotRegex(vid, r"до(\s|\u00a0)13(\s|\u00a0)октября|что менялось", f)
+
+    def test_pasport_kazhdyj_fakt(self):
+        with open(os.path.join(K.KOREN, "pasport", "index.html"), encoding="utf-8") as fh:
+            self.assertNotRegex(fh.read(), r"[Кк]аждая строка[^.<]{0,40}источник")  # [Право] 10:15: «каждый факт»
+
+    def test_beta_poloviny_kak_beta_py(self):
+        import beta as B
+        h = K.pasport_vhod_html("0012345678", 490) + '<!--oplata--><a href="/schet/">Оплатить</a><!--/oplata-->'
+        for b in (True, False):
+            x = B.primenit(h, b, "")
+            self.assertEqual(K.beta_poloviny(h, b), x, b)
+            self.assertEqual(K.beta_poloviny(x, b), x, b)  # идемпотентно
+            self.assertEqual(K.beta_poloviny(K.beta_poloviny(x, not b), b), x, b)  # туда и обратно — байт в байт
+
+    def test_css(self):
+        with open(os.path.join(K.KOREN, "css", "co.css"), encoding="utf-8") as fh:
+            c = fh.read()
+        self.assertIn(".co-daty__sp dt,.co-daty__sp dd{display:inline;margin:0}", c)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=1)

@@ -493,6 +493,8 @@ def iz_check(r):
     # «ЕГРЮЛ/ЕГРИП — на …» в досье — state.actuality_date DaData, то есть дата последних изменений записи, а не дата
     # сведений: для ЕГРЮЛ остаётся дата проверки (сведения получены в этот день).
     dd = daty_naborov(D.get("data_dates"))
+    # kartochki-daty-v1: «ЕГРЮЛ/ЕГРИП — на …» — state.actuality_date (см. выше) → строка «Сведения в реестре актуальны на …»
+    k["egrul_aktualno"] = dd.get("egrul")
     for x in D.get("kpi") or []:
         lab = str(x.get("label") or "")
         for kod, rx in KPI:
@@ -1119,6 +1121,131 @@ def pochinit_otrasl_yakor(t, normy):
     return _OTR_STARYJ.sub(zamena, t, count=1)
 
 
+# ---------------------------------------------------------------- «Даты из реестра» и вход в Паспорт (kartochki-daty-v1)
+# ТЗ [Продукт · Маркетинг] 04.10 08:45 разд. 2 (claude/Продукт_знак_налога_контракт_API_даты_ЕГРЮЛ_на_карточке_04.10.md),
+# окончательный текст — [Продукт] 10:20 разд. 2 с правками [Право · Юрист 115-ФЗ] 09:20 разд. 5 и 10:15 разд. 3
+# (claude/Право_полоса_беты_основатель_вход_Паспорт_ст48_04.10.md). Публично — только даты-факты о компании; «что менялось»
+# не пишем (истории с регистрации у нас нет). Строка о руководителе — без ФИО и только после «РКН отправлено»
+# (RKN_OTPRAVLENO=1 в окружении сборки): дата записи косвенно относится к человеку (п. 1 ст. 3 152-ФЗ).
+# Вход в Паспорт — две половины разметки беты (tests/beta.py): в бете — «бесплатно по 13 октября», после — цена из
+# tarify/tarify.json. Переключили флаг беты → sobrat_shapku.py меняет половины на всех карточках сам.
+PASPORT_VHOD_GOAL = "kartochka_pasport_vhod"
+PASPORT_VHOD_TEKST = ("Полный Паспорт контрагента: руководитель и" + NB + "учредители, финансы и" + NB + "налоги, предел аванса "
+                      "под вашу сумму и" + NB + "документы, которые стоит запросить. У" + NB + "каждого факта" + NB + "— источник и" + NB +
+                      "дата, расчёты" + NB + "— по" + NB + "открытой методике.")
+PASPORT_VHOD_BETA = "В" + NB + "бете бесплатно по" + NB + "13" + NB + "октября" + NB + "→"
+
+
+def rkn_otpravleno():
+    return os.environ.get("RKN_OTPRAVLENO", "") == "1"
+
+
+# Половины беты (<!--oplata-->…<!--/oplata--><!--v-bete-->…<!--/v-bete-->) — то же, что tests/beta.py (blok/primenit), без
+# чтения файлов: модуль подключает API, а там нет tests/beta.py. Совпадение с beta.py проверяет tests/test_kartochki.py.
+_BETA_BLOK = re.compile(r"<!--oplata-->(.*?)<!--/oplata-->(?:<!--v-bete-->(.*?)<!--/v-bete-->)?", re.S)
+_T_OPL = ("<template data-oplata>", "</template>")
+_T_BET = ("<template data-v-bete>", "</template>")
+
+
+def _beta_snyat(s, t):
+    if s.startswith(t[0]) and s.endswith(t[1]):
+        s = s[len(t[0]):-len(t[1])].replace(" data-oplata-href=", " href=")
+    return s
+
+
+def _beta_spryatat(s, t):
+    return (t[0] + s.replace(" href=", " data-oplata-href=") + t[1]) if s else s
+
+
+def beta_poloviny(txt, beta):
+    """Привести половины беты к режиму (идемпотентно)."""
+    def blok(m):
+        op, vb = _beta_snyat(m.group(1), _T_OPL), _beta_snyat(m.group(2) or "", _T_BET)
+        if beta:
+            return "<!--oplata-->" + _beta_spryatat(op, _T_OPL) + "<!--/oplata--><!--v-bete-->" + vb + "<!--/v-bete-->"
+        return "<!--oplata-->" + op + "<!--/oplata--><!--v-bete-->" + _beta_spryatat(vb, _T_BET) + "<!--/v-bete-->"
+    return _BETA_BLOK.sub(blok, txt)
+
+
+def data_slovami(d):
+    """14 марта 2011 года — с неразрывными пробелами внутри даты."""
+    return "%d%s%s%s%d%sгода" % (d.day, NB, MESYACY[d.month - 1], NB, d.year, NB) if d else ""
+
+
+def skolko_nazad(d, na):
+    """«15 лет назад» / «меньше года назад» на дату сборки; дата позже даты сборки — пусто."""
+    if not d or not na or d > na:
+        return ""
+    mes = (na.year - d.year) * 12 + na.month - d.month - (1 if na.day < d.day else 0)
+    if mes < 12:
+        return "меньше года назад"
+    let = mes // 12
+    return "%d%s%s назад" % (let, NB, plural(let, "год", "года", "лет"))
+
+
+def pasport_vhod_html(inn, cena=None):
+    """Абзац входа в Паспорт: общий текст + ссылка; ссылка — две половины беты (в бете / после беты)."""
+    href = "/pasport/kontragent/?inn=%s" % inn
+    a = '<a href="%s" rel="nofollow" data-goal="%s">%%s</a>' % (href, PASPORT_VHOD_GOAL)
+    posle = ("Полный Паспорт на" + NB + "дату сделки" + NB + "— %d" + NB + "₽ или в" + NB + "тарифе «Старт»" + NB + "→") % cena if cena \
+        else "Полный Паспорт на" + NB + "дату сделки" + NB + "→"
+    return ('<p class="co-daty__vhod">%s <!--oplata-->%s<!--/oplata--><!--v-bete-->%s<!--/v-bete--></p>'
+            % (PASPORT_VHOD_TEKST, a % posle, a % PASPORT_VHOD_BETA))
+
+
+def daty_html(k, cena=None):
+    """Блок «Даты из реестра». Нет поля — нет строки; нет ни одной даты — блока нет (Паспорт остаётся в правой колонке)."""
+    na = k.get("proverka") or k.get("egrul_data")
+    stroki = []
+    rd = k.get("reg_date")
+    if rd and (not na or rd <= na):
+        nz = skolko_nazad(rd, na)
+        stroki.append(("Зарегистрирована", data_slovami(rd), nz))
+    rs = k.get("rukovodit_s")
+    if rs and rkn_otpravleno():
+        stroki.append(("Сведения о" + NB + "нынешнем руководителе внесены в" + NB + "ЕГРЮЛ", data_slovami(rs), ""))
+    ak = k.get("egrul_aktualno")
+    if ak and (not na or ak <= na):
+        stroki.append(("Сведения в" + NB + "реестре актуальны на", data_slovami(ak), ""))
+    if not stroki:
+        return ""
+    dl = "".join('<div><dt>%s</dt> <dd><span class="num">%s</span>%s</dd></div>' % (
+        z, d, (' <span class="co-daty__p">— %s</span>' % p) if p else "") for z, d, p in stroki)
+    return ('<section class="co-sec co-daty" aria-labelledby="daty"><h2 id="daty">Даты из реестра</h2><dl class="co-daty__sp">%s</dl>'
+            '%s%s</section>' % (dl, _istochnik_stroka("ЕГРЮЛ", k.get("egrul_data")), pasport_vhod_html(k["inn"], cena)))
+
+
+_DATY_VHOD = re.compile(r'<p class="co-daty__vhod">.*?</p>', re.S)
+_DATY_EST = '<section class="co-sec co-daty"'
+_DATY_LD = re.compile(r'"foundingDate": "(\d{4}-\d{2}-\d{2})"')
+_DATY_SOBRANO = re.compile(r"Страница собрана (\d{1,2})(?:&nbsp;|\u00a0| )(\S+?) (\d{4})\.")
+_DATY_INN = re.compile(r'"taxID": "(\d{10})"')
+_DATY_KUDA = ('<section class="co-sec" aria-labelledby="fin">', '<section class="co-sec" aria-labelledby="reestry">')
+_PASPORT_ASIDE_STAROE = "17 разделов, у каждого источник и дата сведений"
+PASPORT_ASIDE_NOVOE = "17 разделов, у каждого факта" + NB + "— источник и дата сведений"
+
+
+def pochinit_daty(t, cena=None):
+    """kartochki-daty-v1: опубликованные карточки — блок «Даты из реестра» (дата регистрации из JSON-LD foundingDate,
+    «N лет назад» и «сведения на» — на дату сборки страницы) и свежий абзац входа в Паспорт; в правой колонке —
+    «у каждого факта» вместо «у каждого» ([Право] 10:15). Повтор ничего не меняет."""
+    t = t.replace(_PASPORT_ASIDE_STAROE, PASPORT_ASIDE_NOVOE)
+    inn = _DATY_INN.search(t)
+    if _DATY_EST in t:
+        return _DATY_VHOD.sub(lambda m: pasport_vhod_html(inn.group(1), cena), t, count=1) if inn else t
+    ld, sb = _DATY_LD.search(t), _DATY_SOBRANO.search(t)
+    if not (inn and ld and sb) or sb.group(2) not in MESYACY:
+        return t
+    na = dt.date(int(sb.group(3)), MESYACY.index(sb.group(2)) + 1, int(sb.group(1)))
+    blok = daty_html({"inn": inn.group(1), "reg_date": data_iz(ld.group(1)), "proverka": na, "egrul_data": na}, cena)
+    if not blok:
+        return t
+    for kuda in _DATY_KUDA:
+        if kuda in t:
+            return t.replace(kuda, blok + "\n" + kuda, 1)
+    return t
+
+
 def indeks_v_otchete_html(inn):
     """Блок «Индекс — в полном отчёте» (ТЗ [Продукт · Маркетинг] 03.10 16:50, разд. 2; цель Метрики kartochka_indeks).
     Ссылка — без «#indeks»: на главной такого якоря нет (tests/ssylki.test.js); появится id у блока Индекса — допишем."""
@@ -1218,8 +1345,9 @@ def balans_html(k):
                 "".join(h), _istochnik_stroka("ГИР БО, бухгалтерская отчётность", dt.date(god, 12, 31))))
 
 
-def html_kartochki(k, V, sosedi, kom=None, normy=None):
-    """kom — библиотека data/kommentarii.json (сайт читает файл сам, API передаёт её же); None — без комментариев."""
+def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None):
+    """kom — библиотека data/kommentarii.json (сайт читает файл сам, API передаёт её же); None — без комментариев.
+    cena — цена Паспорта после беты из tarify.json (kartochki-daty-v1; сайт читает файл сам, API передаёт её же)."""
     nm = k["name"]
     iv = indeks_vid(k)
     url = SAJT + adres_str(k)
@@ -1371,6 +1499,9 @@ def html_kartochki(k, V, sosedi, kom=None, normy=None):
         nz = re.sub(r"\s+", " ", str(k.get("okved_name") or "")).strip()
         okved_str = '\n<p class="caption co-okved">Основной вид деятельности — <span class="num">%s</span>%s · ЕГРЮЛ%s</p>' % (
             okk, (" " + e(nz)) if nz else "", (" · сведения на " + data_korotko(k["egrul_data"])) if k.get("egrul_data") else "")
+    daty_blok = daty_html(k, cena)  # kartochki-daty-v1
+    if daty_blok:
+        daty_blok += "\n"
     podzag = " · ".join(filter(None, ["Действующая", ("работает " + vozr) if mes else "", e(mesto) if mesto else "",
                                       "ИНН " + k["inn"], ("ОГРН " + k["ogrn"]) if k.get("ogrn") else ""]))
     return primenit_vorota_indeksa("""<!doctype html>
@@ -1409,7 +1540,7 @@ def html_kartochki(k, V, sosedi, kom=None, normy=None):
 {ind}
 <section class="co-sec" aria-labelledby="korotko"><h2 id="korotko">Коротко о компании</h2><ul class="co-vv">{vv}</ul></section>
 <section class="co-sec co-pered" aria-labelledby="pered"><h2 id="pered">Перед оплатой</h2><ul>{pered}</ul></section>
-{fin}
+{daty}{fin}
 <section class="co-sec" aria-labelledby="reestry"><h2 id="reestry">Проверка по реестрам</h2>{stroki}{ne_blok}</section>
 {lyudi}
 <section class="co-sec co-ogov caption"><p>Сведения — из открытых государственных реестров на указанные даты; выводы — наш расчёт по этим сведениям, а не решение банка или налоговой. Сведения могли измениться после даты: полная проверка на сегодня — <a href="/?inn={inn}">в отчёте</a>.</p><p>Нашли ошибку или не согласны с выводом? Напишите на <a href="mailto:help@deloskop.ru?subject={tema}">help@deloskop.ru</a> — проверим по первоисточнику и исправим.</p><p>Страница собрана {sobrano}.</p></section>
@@ -1417,7 +1548,7 @@ def html_kartochki(k, V, sosedi, kom=None, normy=None):
 <div class="co-aside">
 <aside class="co-side card"><h2 class="co-h3">Полный отчёт</h2><p class="small">Финансы за пять лет, налоги и долги, разбор Индекса и Паспорт контрагента для печати — и что проверить самим, со ссылками на первоисточники.</p><a class="btn btn--secondary co-w100" href="/?inn={inn}">Открыть отчёт</a></aside>
 {sos}
-<aside class="co-side card" aria-labelledby="pasport-h"><h2 id="pasport-h" class="co-h3">Паспорт контрагента</h2><p class="small">Документ для папки к сделке: 17 разделов, у каждого источник и дата сведений, «Чего мы не знаем и почему», PDF с номером и QR проверки подлинности.</p><a class="btn btn--secondary co-w100" href="/pasport/kontragent/?inn={inn}" rel="nofollow">Собрать Паспорт</a></aside>
+<aside class="co-side card" aria-labelledby="pasport-h"><h2 id="pasport-h" class="co-h3">Паспорт контрагента</h2><p class="small">Документ для папки к сделке: 17 разделов, у каждого факта{nb}— источник и дата сведений, «Чего мы не знаем и почему», PDF с номером и QR проверки подлинности.</p><a class="btn btn--secondary co-w100" href="/pasport/kontragent/?inn={inn}" rel="nofollow">Собрать Паспорт</a></aside>
 </div>
 </div>
 </main>
@@ -1427,7 +1558,7 @@ def html_kartochki(k, V, sosedi, kom=None, normy=None):
         title=e(title(k)), desc=e(description(k, V)).replace("&nbsp;", NB), url=url,
         ld=json.dumps(ld, ensure_ascii=False, sort_keys=True).replace("</", "<\\/"), papka=PAPKA,
         kr_reg=(" › " + e(k["region"])) if k.get("region") else "", kr_razd=(" › " + e(razdel)) if razdel else "",
-        h1=e(nm), podzag=podzag, okved_attr=(' data-okved="%s"' % okk) if okk else "", okved_str=okved_str, inn=k["inn"], ind=ind, vv=vv, pered=pered, fin=fin_blok, stroki="".join(stroki),
+        h1=e(nm), podzag=podzag, nb=NB, daty=daty_blok, okved_attr=(' data-okved="%s"' % okk) if okk else "", okved_str=okved_str, inn=k["inn"], ind=ind, vv=vv, pered=pered, fin=fin_blok, stroki="".join(stroki),
         ne_blok=ne_blok, lyudi=lyudi, sos=sos, tema=urllib.parse.quote("Ошибка в карточке ИНН " + k["inn"]),
         sobrano=data_tekst(k.get("proverka")) if k.get("proverka") else ""))
 
@@ -1995,7 +2126,7 @@ def kom_ogovorka_html():
 
 
 # ---------------------------------------------------------------- точка входа для API (render-v1)
-def kartochka_iz_check(zapis, sosedi=(), kom=None, normy=None):
+def kartochka_iz_check(zapis, sosedi=(), kom=None, normy=None, cena=None):
     """Ответ /api/check → (годится, причина, адрес, html без оболочки).
 
     Те же ворота, что у статичной волны (vorota): не прошла — (False, причина, None, None), и API отвечает 404.
@@ -2011,7 +2142,7 @@ def kartochka_iz_check(zapis, sosedi=(), kom=None, normy=None):
     ok, pr = vorota(k, V)
     if not ok:
         return False, pr, None, None
-    return True, pr, adres_str(k), html_kartochki(k, V, pohozhie(k, list(sosedi)), kom, normy)
+    return True, pr, adres_str(k), html_kartochki(k, V, pohozhie(k, list(sosedi)), kom, normy, cena)
 
 
 # ---------------------------------------------------------------- оболочка для API (obolochka-v1)
@@ -2026,7 +2157,8 @@ def nadet_obolochku(telo, ob):
     карточкой проверяет tests/test_kartochki.py. Нет метки или </head> — None (API отвечает 503, а не кривой страницей)."""
     if not telo or OBOLOCHKA_METKA not in telo or "</head>" not in telo or "</body>" not in telo:
         return None
-    t = telo.replace("</head>", ob["head"] + "</head>", 1)
+    t = beta_poloviny(telo, bool(ob.get("beta")))  # kartochki-daty-v1: вход в Паспорт — половина по режиму, как на сайте
+    t = t.replace("</head>", ob["head"] + "</head>", 1)
     t = t.replace(OBOLOCHKA_METKA, ob["shapka"], 1)
     i = t.rfind("</body>")
     return t[:i] + ob["podval"] + t[i:]

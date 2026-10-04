@@ -76,6 +76,7 @@
   }
   // Кредитная организация — по основному ОКВЭД 64.1 (денежное посредничество): банки и НКО.
   var CBR_BANK = 'https://www.cbr.ru/finorg/foinfo/';
+  var SPRAVKA_STATUSY = '/nalogi/kody-statusa-egryul/';
   function bank(c) { return /^64\.1(\.|\d|$)/.test(String((c || {}).okved || '')); }
   function ip(r) { return String(((r || {}).company || {}).inn || '').length === 12; }
 
@@ -169,7 +170,16 @@
         else if (mn > 3 || (mn === 3 && na.getDate() > dn.getDate())) { znach = 'Не проверяли — набор ФНС на' + NB + dmy(s.as_of) + ' старше 3' + NB + 'месяцев'; tn = 'neutral'; }
         else znach = 'Нет в списке ФНС на' + NB + dmy(s.as_of);
       }
-      add({ k: k, nazv: NAZV[k] || s.title, znach: znach, ton: tn, ist: ist, data: dmy(s.as_of) || dataPr });
+      var f = { k: k, nazv: NAZV[k] || s.title, znach: znach, ton: tn, ist: ist, data: dmy(s.as_of) || dataPr };
+      // справочник «Коды статуса компании в ЕГРЮЛ» (/nalogi/kody-statusa-egryul/, приказ ФНС ММВ-7-6/433@, СЮЛСТ):
+      // есть код состояния (company.state_code, API status-kody) — ссылка на его строку; кода нет, а статус не «норма» — на страницу.
+      // У ИП — нет: справочник только для юрлиц.
+      if (k === 'status' && !fl) {
+        var kd = String(c.state_code == null ? '' : c.state_code).trim();
+        if (/^\d{3}$/.test(kd)) { f.spravka = SPRAVKA_STATUSY + '#k' + kd; f.spravkaT = 'что значит код' + NB + kd; }
+        else if (s.status && s.status !== 'ok') { f.spravka = SPRAVKA_STATUSY; f.spravkaT = 'что значат коды статуса'; }
+      }
+      add(f);
     });
 
     var o = otchetnost(r);
@@ -285,7 +295,8 @@
   function rowHtml(x) {
     var meta = [x.ist, x.data ? 'на' + NB + x.data : ''].filter(Boolean).join(' · ');
     return '<div class="row sut__r" data-fakt="' + esc(x.k) + '"><span>' + esc(x.nazv) +
-      '<small>' + esc(meta) + (x.ssylka ? ' · <a href="' + esc(x.ssylka) + '" target="_blank" rel="noopener">проверить в' + NB + 'ЦБ</a>' : '') + '</small></span>' +
+      '<small>' + esc(meta) + (x.ssylka ? ' · <a href="' + esc(x.ssylka) + '" target="_blank" rel="noopener">проверить в' + NB + 'ЦБ</a>' : '') +
+      (x.spravka ? ' · <a href="' + esc(x.spravka) + '" data-goal="statusy_iz_proverki">' + esc(x.spravkaT) + '</a>' : '') + '</small></span>' +
       '<b class="d ' + x.ton + '">' + esc(x.znach) + '</b></div>';
   }
   function glubinaHtml(g, podpis, dop) {

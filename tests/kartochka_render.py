@@ -1152,7 +1152,8 @@ def balans_html(k):
         doli = doli_balansa(ch)
         stroki = []
         if b["kap"] is not None and b["kap"] < 0:
-            stroki.append("<tr><td>Собственный капитал</td><td class=\"num\">%s</td><td>меньше нуля</td></tr>" % dengi(b["kap"]))
+            # kartochki-v4.3: «меньше нуля» — серой подписью 12 px, как «убыток» (МВМ на 360 px — таблица без прокрутки вбок)
+            stroki.append("<tr><td>Собственный капитал</td><td class=\"num\">%s</td><td class=\"co-mn\">меньше нуля</td></tr>" % dengi(b["kap"]))
         for i, nazv in enumerate(("Собственный капитал", "Долгосрочные обязательства", "Краткосрочные обязательства")):
             if ch[i] is not None and ch[i] > 0:
                 stroki.append("<tr><td>%s</td><td class=\"num\">%s</td><td class=\"num\">%s</td></tr>" % (nazv, dengi(ch[i]), doli[i] if doli else ""))

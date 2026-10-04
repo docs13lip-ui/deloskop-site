@@ -1856,5 +1856,19 @@ class TestUbytokPodpisV42(unittest.TestCase):
         self.assertIn(".co-ub{display:block;font-size:12px", c)
         self.assertIn("@media (max-width:419px){.co-sec .table th,.co-sec .table td{padding-left:6px", c)
 
+class TestKapitalMinusV43(unittest.TestCase):
+    """kartochki-v4.3: «меньше нуля» в таблице баланса — серой подписью 12 px (МВМ на 360 px без прокрутки вбок)."""
+
+    def test_yachejka(self):
+        k = {"balans": {"kap": -63.8e9, "dol": 50.9e9, "kor": 318e9, "god": 2025}}
+        h = K.balans_html(k) if hasattr(K, "balans_html") else None
+        if h is None:
+            self.skipTest("нет balans_html")
+        self.assertIn('<td class="co-mn">меньше нуля</td>', h)
+
+    def test_css(self):
+        with open(os.path.join(K.KOREN, "css", "co.css"), encoding="utf-8") as fh:
+            self.assertIn(".co-mn{font-size:12px", fh.read())
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

@@ -262,8 +262,10 @@
     Object.keys(NE_PODKL).forEach(function (k) { if (!x.dostupno[k]) a.push(NE_PODKL[k]); });
     if (a.length) b.push(a.join(', ') + ' — источник не' + NB + 'подключён');
     if (!x.dostupno.fns) b.push('налоги и штат — свежего набора ФНС в' + NB + 'ответе нет');
-    // v1.2 ([Право] 16:07 разд. 1 п. 1): у банка «её нет» звучит как упрёк — пишем, куда он её сдаёт
-    if (!x.dostupno.girbo) b.push(bank(c) ? 'бухотчётность — организация сдаёт её в' + NB + 'Банк России, а не в' + NB + 'ГИР' + NB + 'БО'
+    // v1.2 ([Право] 16:07 разд. 1 п. 1): у банка «её нет» звучит как упрёк — пишем, куда он её сдаёт.
+    // v1.3 ([Право · Налоговый] 04.10 11:30 разд. 1.4): «а не в ГИР БО» неполно — Банк России передаёт её в ГИР БО
+    // (ч. 9 ст. 18 402-ФЗ), доступ может быть ограничен. «;» внутри — на «,»: пункты списка разделены «; ».
+    if (!x.dostupno.girbo) b.push(bank(c) ? 'бухотчётность — организация сдаёт в' + NB + 'Банк России, в' + NB + 'ГИР' + NB + 'БО её передаёт Банк России, доступ может быть ограничен (ч.' + NB + '9' + NB + 'ст.' + NB + '18' + NB + '402-ФЗ)'
       : 'бухотчётность — за' + NB + 'прошлый год в' + NB + 'ответе её нет');
     b.push('налоговая нагрузка — сравним с' + NB + 'отраслью, когда придут налоги без взносов');
     return b;
@@ -271,6 +273,8 @@
 
   // ---------- вёрстка колонки Индекса листа отчёта (полоса B) ----------
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (q) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[q]; }); }
+  // «402-ФЗ).» на 390 px рвался по дефису — номер закона со скобкой и точкой одним куском (после esc)
+  function nwFz(h) { return String(h).replace(/(\d+-ФЗ\)?\.?)/g, '<span class="nw">$1</span>'); }
   function zn(n) { return (n > 0 ? '+' : '−') + Math.abs(n); }
   function podpis(v) {
     return 'По открытой методике v' + esc(v.versiya) + ' · ' + v.istochnikov + NB + 'из' + NB + v.vsego + ' источников · полнота ' + v.polnota + NB + '%';
@@ -305,7 +309,7 @@
     if (v.rezhim === 'sokr')
       // v1.2 ([Право] 16:07 разд. 1 п. 4): числа нет — «по сокращённым данным» читалось бы как «посчитали, но грубо»
       return h + '<div class="ot-ix__ne">' + ZAG_SOKR + '</div>' +
-        '<div class="ot-ix__po n">' + esc(txtSokr(v)) + '.' + (neHvataet(v) ? ' Не хватает: ' + esc(neHvataet(v)) + '.' : '') + '</div>' +
+        '<div class="ot-ix__po n">' + esc(txtSokr(v)) + '.' + (neHvataet(v) ? ' Не хватает: ' + nwFz(esc(neHvataet(v)) + '.') : '') + '</div>' +
         '<div class="ot-ix__po n">' + podpis(v) + ' · <a href="/indeks/">методика</a></div>';
     if (v.rezhim === 'neizv')
       return h + '<div class="ot-ix__ne">Индекс — считаем</div><div class="ot-ix__po">' + TXT_NEIZV.replace(/^Индекс — считаем: в/, 'В') + '</div>' +

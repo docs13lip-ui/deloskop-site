@@ -7,6 +7,11 @@
  * Ссылка на норму в скобках выводится только у строк, сверенных [Право] (sver: true) — флаг SVERENO.
  * v2 (02.10): тексты и нормы по ответам [Право] 07:15 и 08:20 (claude/Право_ответы_✎_02.10_комментарии_команды.md, разд. 1;
  * claude/Право_ответы_✎_kommentarii-v2_dvojnik_02.10.md, разд. 1) — все ◐ сняты, кроме «налоговая» у массового адреса (без нормы).
+ * v3 (04.10, shchit-finansy-v1): финансы из того же ответа (ГИР БО) — Щит больше не пишет «заметных признаков нет», когда ниже
+ * на экране стоят «ликвидность меньше 1» и «рентабельность ниже средней по отрасли — признак отбора». Признаки — те же функции,
+ * что «Существенные факты» (js/sushchestvennoe.js) и блок рентабельности (js/rentabelnost.js, нормы ФНС грузятся один раз);
+ * «почему» — дословно утверждённые [Право] тексты «Комментария команды» (data/kommentarii.json, тон «жёлтый»: ubytok,
+ * kapital, likvidnost) — tests/shchit_finansy.test.js сверяет их с файлом. Капитал и ликвидность — только «банк», без шага.
  */
 (function (root, factory) {
   var api = factory(root);
@@ -71,6 +76,24 @@
       b: { t: 'После смены руководителя банк обновляет сведения о клиенте и может запросить документы.', sver: true },
       s: { t: 'Обновите анкету в банке сами, не дожидаясь запроса.' }
     },
+    // Финансы (v3): тексты — data/kommentarii.json, тон zhel, status utverzhdeno ([Право] 02.10–03.10), дословно.
+    // Шаг у убытков и рентабельности — тот же, что у нагрузки (объяснение для инспекции); у капитала и ликвидности шага нет.
+    ubytki: {
+      b: { t: 'Убытки и отрицательные чистые активы банк учитывает при оценке платёжеспособности.', sver: true },
+      s: 'nagruzka'
+    },
+    rentabelnost: {
+      n: { t: 'Рентабельность ниже отраслевой на 10% и более — критерий отбора на выездную проверку.', sver: true },
+      s: 'nagruzka'
+    },
+    kapital: {
+      b: { t: 'Минус капитала — не признак по 115-ФЗ, но для кредита и отсрочки банк о нём спросит.', sver: true },
+      s: null
+    },
+    likvidnost: {
+      b: { t: 'Ликвидность ниже 1 — не признак по 115-ФЗ, но для кредита и лимитов банк на неё смотрит.', sver: true },
+      s: null
+    },
     // block / diskv / exit / rnp / fines / other — строка признака как есть, шаг — «Скорая».
     skoraya: { t: 'Если банк уже прислал запрос или ограничил счёт — план по дням.', sver: true, href: '/skoraya-115-fz/', knopka: 'Открыть план по дням' },
     sled: { t: 'Следить за своей компанией: добавьте её в список слежения в кабинете и проверяйте раз в месяц.', href: '/cabinet.html', knopka: 'Следить за компанией', sled: true }
@@ -78,12 +101,52 @@
   // Куда идут признаки без своего текста: банк или налоговая.
   var KAK_EST = { block: 'b', rnp: 'b', other: 'b', diskv: 'n', exit: 'n', fines: 'n' };
   // Порядок шагов (ТЗ 2.3) + признаки «как есть» в конце.
-  var PORYADOK = ['block', 'zsk', 'dolg', 'fssp', 'nedost', 'report', 'mass', 'staff', 'nagruzka', 'director', 'young', 'diskv', 'exit', 'rnp', 'other', 'fines'];
+  var PORYADOK = ['block', 'zsk', 'dolg', 'fssp', 'nedost', 'report', 'mass', 'staff', 'nagruzka', 'ubytki', 'rentabelnost', 'kapital', 'likvidnost',
+    'director', 'young', 'diskv', 'exit', 'rnp', 'other', 'fines'];
   var MAX_SHAGOV = 3;
   var ST = { LIQUIDATING: 'Компания ликвидируется или ФНС готовит её исключение из ЕГРЮЛ', LIQUIDATED: 'Компания ликвидирована', BANKRUPT: 'Идёт банкротство', REORGANIZING: 'Идёт реорганизация' };
 
   function tekst(x) { return x.norma && (x.sver || SVERENO) ? x.t + ' ' + x.norma + '.' : (/[.!?»]$/.test(x.t) ? x.t : x.t + '.'); }
   function reestr(t, ul) { return ul ? t : t.replace(/ЕГРЮЛ/g, 'ЕГРИП'); }   // у ИП свой реестр
+  function Su(o) { return (o && o.sushchestvennoe) || (root && root.Sushchestvennoe) || (typeof require === 'function' ? require('./sushchestvennoe.js') : null); }
+  function Rn(o) {
+    if (o && o.rentabelnost) return o.rentabelnost;
+    if (root && root.Rentabelnost) return root.Rentabelnost;
+    try { return typeof require === 'function' ? require('./rentabelnost.js') : null; } catch (e) { return null; }
+  }
+  var NB = '\u00a0';
+  function skl(n, a, b, c) { var m = n % 100, k = n % 10; return m > 10 && m < 20 ? c : k === 1 ? a : k > 1 && k < 5 ? b : c; }
+  function dengiF(v) {
+    var a = Math.abs(v), e = [[1e12, 'трлн'], [1e9, 'млрд'], [1e6, 'млн'], [1e3, 'тыс.']];
+    for (var i = 0; i < e.length; i++) if (a >= e[i][0]) return String(Math.round(a / e[i][0] * 10) / 10).replace('.', ',') + NB + e[i][1] + NB + '₽';
+    return String(Math.round(a)) + NB + '₽';
+  }
+  // Финансовые признаки организации из ответа (ГИР БО): {kind → строка признака}. Те же пороги, что «Существенные факты»:
+  // убыток 2 года подряд и больше, капитал меньше нуля, текущая ликвидность больше 0 и меньше 1. Рентабельность — только
+  // с нормами ФНС (o.normy) и только «ниже средней на 10% и более». ИП и банков здесь нет (у них нет ГИР БО / сдают в ЦБ).
+  function finansy(r, o) {
+    var out = {}, c = r && r.company;
+    if (!c || !/^\d{10}$/.test(String(c.inn || ''))) return out;
+    var S = null; try { S = Su(o); } catch (e) { S = null; }
+    if (S) {
+      try {
+        var ub = S.ubytki && S.ubytki(r);
+        if (ub) out.ubytki = 'Убыток ' + ub.n + NB + skl(ub.n, 'год', 'года', 'лет') + ' подряд — по годовой отчётности за ' + (ub.n === 2 ? ub.ot + ' и ' + ub.god : ub.ot + '–' + ub.god);
+        var kp = S.kapital && S.kapital(r);
+        if (kp && kp.znach < 0) out.kapital = 'Собственный капитал на' + NB + '31.12.' + kp.god + ' — минус ' + dengiF(kp.znach) + ': обязательства больше активов';
+        var lk = S.likvidnost && S.likvidnost(r);
+        if (lk && lk.znach > 0 && lk.znach < 1) out.likvidnost = 'Текущая ликвидность на' + NB + '31.12.' + lk.god + ' — ' + lk.znach.toFixed(2).replace('.', ',') + ': краткосрочные долги больше оборотных средств';
+      } catch (e) {}
+    }
+    if (o && o.normy) {
+      try {
+        var R = Rn(o), x = R && R.raschet ? R.raschet(r, o.normy) : null;
+        if (x && x.st === 'nizhe' && typeof x.norma === 'number')
+          out.rentabelnost = 'Рентабельность активов за ' + x.god + ' — ' + R.pct(x.n) + ' при средней по отрасли ' + R.pct(x.norma) + ' (оценка; ГИР' + NB + 'БО и ФНС)';
+      } catch (e) {}
+    }
+    return out;
+  }
   function U(o) { return (o && o.usloviya) || (root && root.Usloviya) || (typeof require === 'function' ? require('./usloviya.js') : null); }
   function dataRu(s) { var d = new Date(s || Date.now()); if (isNaN(d)) d = new Date(); function z(n) { return (n < 10 ? '0' : '') + n; } return z(d.getDate()) + '.' + z(d.getMonth() + 1) + '.' + d.getFullYear(); }
   function nbsp(t) { return String(t).replace(/(\d) (?=\d{3}(\D|$))/g, '$1\u00a0').replace(/ ₽/g, '\u00a0₽'); }
@@ -100,6 +163,8 @@
     if ((f.warn.young || f.bad.young) && !est.young) est.young = 'Компании меньше года';
     if ((f.staff === 0 || f.staff === 1) && !est.staff) est.staff = f.staff ? 'В штате 1 человек' : 'В штате никого';
     if (ST[f.status] && !est.exit) est.exit = ST[f.status];
+    var fin = finansy(r, o);
+    Object.keys(fin).forEach(function (k) { if (!est[k]) est[k] = fin[k]; });
 
     var banki = [], nalogovaya = [], kinds = [];
     PORYADOK.forEach(function (k) {
@@ -122,8 +187,10 @@
     var shagi = [], bylo = {};
     kinds.forEach(function (k) {
       if (shagi.length >= MAX_SHAGOV) return;
-      var s = T[k] && T[k].s ? T[k].s : T.skoraya;
-      var key = s === T.skoraya ? 'skoraya' : k;
+      if (T[k] && T[k].s === null) return;                       // финансы банка: шага нет (не «Скорая»)
+      var ss = T[k] && typeof T[k].s === 'string' ? T[k].s : k;   // чужой шаг (убытки, рентабельность → «нагрузка»)
+      var s = T[ss] && T[ss].s ? T[ss].s : T.skoraya;
+      var key = s === T.skoraya ? 'skoraya' : ss;
       if (bylo[key]) return; bylo[key] = 1;
       shagi.push({ kind: key, t: tekst(s), href: s.href || '', knopka: s.knopka || '', ext: !!s.ext, eshche: s.eshche || null });
     });
@@ -203,8 +270,22 @@
       var a = e.target && e.target.closest ? e.target.closest('a[href="/cabinet.html"]') : null;
       if (a && root && root.dlkGoal) root.dlkGoal('shchit_sled', { inn_dlina: String(r.company.inn).length });
     });
+    // v3: рентабельность против отрасли — когда загрузятся нормы ФНС (тот же файл и тот же расчёт, что блок ниже).
+    // Разбор обновляем на месте (R — тот же объект: «Скопировать разбор» берёт его), новая проверка — старый не трогаем.
+    var Rnt = Rn(o), metka = {}; el.__shch = metka;
+    if (!(o && o.normy) && Rnt && Rnt.zagruzit && /^\d{10}$/.test(String(r.company.inn))) {
+      R.gotovo = Rnt.zagruzit().then(function (d) {
+        if (!d || el.__shch !== metka) return R;
+        var o2 = {}; Object.keys(o || {}).forEach(function (k) { o2[k] = o[k]; }); o2.normy = d;
+        var R2 = razbor(r, o2);
+        if (R2.banki.length + R2.nalogovaya.length === R.banki.length + R.nalogovaya.length) return R;
+        Object.keys(R2).forEach(function (k) { R[k] = R2[k]; });
+        el.innerHTML = html(R);
+        return R;
+      }).catch(function () { return R; });
+    }
     return R;
   }
 
-  return { razbor: razbor, mount: mount, html: html, kratko: kratko, glavnyj: glavnyj, T: T, SVERENO: SVERENO, SVERENO_NA: SVERENO_NA, MAX_SHAGOV: MAX_SHAGOV, PORYADOK: PORYADOK };
+  return { razbor: razbor, mount: mount, html: html, kratko: kratko, glavnyj: glavnyj, finansy: finansy, T: T, SVERENO: SVERENO, SVERENO_NA: SVERENO_NA, MAX_SHAGOV: MAX_SHAGOV, PORYADOK: PORYADOK };
 });

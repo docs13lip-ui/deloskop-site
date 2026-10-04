@@ -118,6 +118,20 @@ def dengi(v):
     return znak + s.replace(".", ",") + NB + ed + NB + "₽"
 
 
+def _god(v):
+    """Год отчётности: целое 1990…2100, иначе None (bool и мусор — не год)."""
+    if isinstance(v, bool):
+        return None
+    try:
+        g = int(str(v).strip())
+    except (TypeError, ValueError):
+        return None
+    return g if 1990 <= g <= 2100 else None
+
+
+PORYADKOVYE = {2: "второй", 3: "третий", 4: "четвёртый", 5: "пятый", 6: "шестой", 7: "седьмой"}
+
+
 def chislo(v):
     if isinstance(v, bool) or v is None:
         return None
@@ -542,6 +556,27 @@ def iz_check(r):
             if kp is not None:
                 k["fakty"]["kapital"] = {"kod": "kapital", "god": gv, "znachenie": kp, "data": dt.date(gv, 12, 31),
                                          "istochnik": "ГИР БО, бухгалтерская отчётность"}
+    # kartochki-finansy-v1 (Ночные-2, 04.10): ряд прибыли, баланс и расчёты из ГИР БО уже есть в живом ответе
+    # (charts.profit / balance / debts — «Аэрофлот», «Газпром» 04.10), но на карточку шли только выручка и одна прибыль.
+    # Берём как факты с годом отчётности; без числа или года — молчим. Год позже даты проверки — не факт.
+    k["pribyl_ryad"], k["balans"], k["raschety"] = {}, None, None
+    gp = proverka.year if proverka else 9999
+    if str(k["finansy_istochnik"]).startswith("ГИР БО"):
+        for p in ch.get("profit") or []:
+            if isinstance(p, dict):
+                g, v = _god(p.get("year")), chislo(p.get("value"))
+                if g and g <= gp and v is not None:
+                    k["pribyl_ryad"][g] = v
+    b = ch.get("balance")
+    if isinstance(b, dict) and _god(b.get("year")) and _god(b.get("year")) <= gp:
+        chasti = [chislo(b.get(x)) for x in ("equity", "long_debt", "short_debt")]
+        if any(x is not None for x in chasti):
+            k["balans"] = {"god": _god(b.get("year")), "kap": chasti[0], "dol": chasti[1], "kor": chasti[2]}
+    db = ch.get("debts")
+    if isinstance(db, dict) and _god(db.get("year")) and _god(db.get("year")) <= gp:
+        ras = [chislo(db.get(x)) for x in ("receivables", "payables", "loans")]
+        if any(x is not None and x > 0 for x in ras):
+            k["raschety"] = {"god": _god(db.get("year")), "rec": ras[0], "pay": ras[1], "loan": ras[2]}
     # kartochki-v2: с какой даты руководитель тот же (ЕГРЮЛ) — только дата, без ФИО (люди — при PERSONS_PUBLIC)
     k["rukovodit_s"] = data_iz(c.get("director_date")) or _rukovodit_s(D)
     if k["rukovodit_s"] and ((k["reg_date"] and k["rukovodit_s"] < k["reg_date"]) or (proverka and k["rukovodit_s"] > proverka)):
@@ -668,10 +703,29 @@ def vyvody(k):
             NB, kp["god"], dengi(-kp["znachenie"])), kp["istochnik"], kp["data"]))
     pb = F.get("pribyl")
     if pb and pb.get("znachenie"):
-        if pb["znachenie"] > 0:
-            out.append(_v("V24", "ok", "Чистая прибыль за%s%d — %s" % (NB, pb["god"], dengi(pb["znachenie"])), pb["istochnik"], pb["data"]))
+        # kartochki-finansy-v1: к прибыли — сравнение с прошлым годом того же ряда ГИР БО (пороги — как у выручки V03/V04),
+        # к убытку — сколько лет подряд. Один вывод, без лишнего слота «2 из одного источника».
+        ryad, g, v = k.get("pribyl_ryad") or {}, pb["god"], pb["znachenie"]
+        p0 = ryad.get(g - 1)
+        if v > 0:
+            t = "Чистая прибыль за%s%d — %s" % (NB, g, dengi(v))
+            if p0 is not None and p0 < 0:
+                t += ", годом раньше — убыток"
+            elif p0:
+                dl = (v / p0 - 1) * 100
+                if dl >= 10:
+                    t += ", на%s%d%s%% больше, чем годом раньше" % (NB, round(dl), NB)
+                elif dl <= -30:
+                    t += ", на%s%d%s%% меньше, чем годом раньше" % (NB, round(-dl), NB)
+            out.append(_v("V24", "ok", t, pb["istochnik"], pb["data"]))
         else:
-            out.append(_v("V24a", "warn", "Убыток за%s%d — %s" % (NB, pb["god"], dengi(-pb["znachenie"])), pb["istochnik"], pb["data"]))
+            n = 1
+            while (ryad.get(g - n) or 0) < 0:
+                n += 1
+            t = "Убыток за%s%d — %s" % (NB, g, dengi(-v))
+            if n >= 2:
+                t += ", %s%sгод подряд" % (PORYADKOVYE.get(n, "%d-й" % n), NB)
+            out.append(_v("V24a", "warn", t, pb["istochnik"], pb["data"]))
     s = F.get("shtat")
     if s and s.get("znachenie") is not None and s.get("data"):
         n = int(s["znachenie"])
@@ -1021,6 +1075,69 @@ def pochinit_indeks_blok(t):
     return _IND_STARYJ.sub(lambda _: indeks_v_otchete_html(m.group(1)), t, count=1)
 
 
+def pribyl_yachejka(v):
+    """Ячейка «Чистая прибыль»: убыток — словом, а не минусом (минус в таблице легко не заметить); нет года — тире."""
+    if v is None:
+        return "—"
+    return ("убыток " + dengi(-v)) if v < 0 else dengi(v)
+
+
+def doli_balansa(chasti):
+    """Доли пассива методом наибольшего остатка — как js/dinamika.js doliBalansa и Паспорт (balans-edinyj-v1):
+    только когда известны все три части и ни одна не меньше нуля; сумма — ровно 100."""
+    if len(chasti) != 3 or any(v is None or v < 0 for v in chasti):
+        return None
+    tot = sum(chasti)
+    if tot <= 0:
+        return None
+    t = [v / tot * 100 for v in chasti]
+    p = [math.floor(x) for x in t]
+    for i in sorted(range(3), key=lambda i: -(t[i] - p[i]))[:100 - sum(p)]:
+        p[i] += 1
+    return [("меньше%s1%s%%" % (NB, NB)) if (p[i] < 1 and chasti[i] > 0) else "%d%s%%" % (p[i], NB) for i in range(3)]
+
+
+def balans_html(k):
+    """kartochki-finansy-v1: «На чём держится компания» и «Кто кому должен» — те же строки и подписи, что на экране
+    проверки (js/dinamika.js balans-ekran-v1), только факты баланса ГИР БО на 31.12 года, без оценок."""
+    b, r = k.get("balans"), k.get("raschety")
+    if not b and not r:
+        return ""
+    h = []
+    if b:
+        ch = [b["kap"], b["dol"], b["kor"]]
+        doli = doli_balansa(ch)
+        stroki = []
+        if b["kap"] is not None and b["kap"] < 0:
+            stroki.append("<tr><td>Собственный капитал</td><td class=\"num\">%s</td><td>меньше нуля</td></tr>" % dengi(b["kap"]))
+        for i, nazv in enumerate(("Собственный капитал", "Долгосрочные обязательства", "Краткосрочные обязательства")):
+            if ch[i] is not None and ch[i] > 0:
+                stroki.append("<tr><td>%s</td><td class=\"num\">%s</td><td class=\"num\">%s</td></tr>" % (nazv, dengi(ch[i]), doli[i] if doli else ""))
+        if stroki:
+            h.append('<h3 class="co-h3">На чём держится компания — баланс на%s31.12.%d</h3><div class="table-wrap"><table class="table">'
+                     '<thead><tr><th>Источник средств</th><th>Сумма</th><th>Доля</th></tr></thead><tbody>%s</tbody></table></div>' % (
+                         NB, b["god"], "".join(stroki)))
+    if r:
+        vyr = {x["god"]: x["dohod"] for x in k.get("finansy") or []} if str(k.get("finansy_istochnik") or "").startswith("ГИР БО") else {}
+        stroki = []
+        for kl, nazv in (("rec", "Фирме должны покупатели"), ("pay", "Фирма должна поставщикам"), ("loan", "Кредиты и займы")):
+            v = r.get(kl)
+            if v is not None and v > 0:
+                vy = vyr.get(r["god"])
+                dop = ("%d%s%% выручки за%s%d" % (round(v / vy * 100), NB, NB, r["god"])) if (kl == "loan" and vy and vy > 0) else ""
+                stroki.append("<tr><td>%s</td><td class=\"num\">%s</td><td class=\"num\">%s</td></tr>" % (nazv, dengi(v), dop))
+        if stroki:
+            h.append('<h3 class="co-h3">Кто кому должен — на%s31.12.%d</h3><div class="table-wrap"><table class="table">'
+                     '<thead><tr><th>Расчёты</th><th>Сумма</th><th>К выручке</th></tr></thead><tbody>%s</tbody></table></div>' % (
+                         NB, r["god"], "".join(stroki)))
+    if not h:
+        return ""
+    god = max(x["god"] for x in (b, r) if x)
+    return ('<section class="co-sec" aria-labelledby="bal"><h2 id="bal">Баланс и расчёты</h2>%s'
+            '<p class="small">Только суммы из бухгалтерской отчётности на конец года, без оценок. Что они значат для сделки — в полном отчёте.</p>%s</section>' % (
+                "".join(h), _istochnik_stroka("ГИР БО, бухгалтерская отчётность", dt.date(god, 12, 31))))
+
+
 def html_kartochki(k, V, sosedi, kom=None, normy=None):
     """kom — библиотека data/kommentarii.json (сайт читает файл сам, API передаёт её же); None — без комментариев."""
     nm = k["name"]
@@ -1124,10 +1241,14 @@ def html_kartochki(k, V, sosedi, kom=None, normy=None):
             rod = ("выросла", "снизилась", "почти не изменилась") if vyr else ("вырос", "снизился", "почти не изменился")
             zag = ("%s %s на %d%s%%%s" % (sl, rod[0], round(izm), NB, za)) if izm >= 5 else \
                   ("%s %s на %d%s%%%s" % (sl, rod[1], round(-izm), NB, za)) if izm <= -5 else "%s %s%s" % (sl, rod[2], za)
-        tab = "".join("<tr><td>%d</td><td class=\"num\">%s</td></tr>" % (x["god"], dengi(x["dohod"])) for x in reversed(fin))
+        # kartochki-finansy-v1: чистая прибыль (строка 2400) — второй колонкой, если в ряду ГИР БО есть хоть один год таблицы
+        pr = k.get("pribyl_ryad") or {}
+        s_pr = vyr and any(x["god"] in pr for x in fin)
+        tab = "".join("<tr><td>%d</td><td class=\"num\">%s</td>%s</tr>" % (
+            x["god"], dengi(x["dohod"]), ("<td class=\"num\">%s</td>" % pribyl_yachejka(pr.get(x["god"]))) if s_pr else "") for x in reversed(fin))
         fin_blok = ('<section class="co-sec" aria-labelledby="fin"><h2 id="fin">%s</h2>%s<div class="table-wrap"><table class="table">'
-                    '<thead><tr><th>Год</th><th>%s</th></tr></thead><tbody>%s</tbody></table></div>%s</section>' % (
-                        e(zag).replace("&nbsp;", NB), svg_stolbcy(fin, sl), sl, tab,
+                    '<thead><tr><th>Год</th><th>%s</th>%s</tr></thead><tbody>%s</tbody></table></div>%s</section>' % (
+                        e(zag).replace("&nbsp;", NB), svg_stolbcy(fin, sl), sl, "<th>Чистая прибыль</th>" if s_pr else "", tab,
                         _istochnik_stroka(k.get("finansy_istochnik") or "ГИР БО", k.get("finansy_data"),
                                           "podtverzhdeno" if k.get("finansy_data") else "ne_provereno")))
     elif (k["fakty"].get("dohod") or {}).get("znachenie") is not None:
@@ -1156,6 +1277,8 @@ def html_kartochki(k, V, sosedi, kom=None, normy=None):
                      % ("".join(rows), _istochnik_stroka("ЕГРЮЛ", k.get("egrul_data"))))
     if fin_blok and fin_blok.endswith("</section>"):
         fin_blok = fin_blok[:-len("</section>")] + otrasl_html(k, normy) + "</section>"
+    if fin_blok:
+        fin_blok += balans_html(k)
     sos = sosedi_html(k, sosedi)
     # kartochki-okved-v1 (ТЗ 16:50, разд. 2): строка основного ОКВЭД под заголовком; код — ещё и в крошках (data-okved),
     # чтобы добор опубликованных карточек знал класс для «Похожих» и хаба без пересборки из сведений

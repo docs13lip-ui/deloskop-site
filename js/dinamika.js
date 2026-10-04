@@ -13,6 +13,8 @@
   'use strict';
 
   var NB = ' ';
+  // Разбор № 9 — куда ведёт подстрочник «Компания исключена из ЕГРЮЛ» (ссылка в htmlIzmeneniya)
+  var RAZBOR_ISKL = '/praktika/nalogi/isklyuchili-iz-egryul-dolg-s-direktora/';
   var KEY = 'dlk_snimki', MAKS_INN = 40, MAKS_SNIMKOV = 4, CHAS = 3600 * 1000;
   var POKAZATELI = [
     { k: 'revenue', nazv: 'Выручка', dengi: true },
@@ -510,8 +512,10 @@
     var ranshe = a.st ? ' (на' + NB + 'прошлой проверке — ' + nazvSt(a.st, a.kod) + ')' : '';
     if (xB && !xA && (a.kod || a.st === 'ACTIVE' || a.st === 'LIQUIDATING')) {
       // уже исключена: тон — стоп; подстрочник — [Право] 16:07 разд. 2 («последствия — как при ликвидации»: норма говорит о последствиях)
+      // + что делать кредитору — [Право] 03.10 19:10 разд. 2 дословно (claude/Право_исключение_год_субсидиарка_Разбор_03.10.md); «Разбор дела…» — ссылка на Разбор № 9
       add('huzhe', 'Компания исключена из' + NB + 'ЕГРЮЛ' + zapis(b) + ranshe,
-        'Последствия — как при' + NB + 'ликвидации (п.' + NB + '2 ст.' + NB + '64.2 ГК' + NB + 'РФ): договор с' + NB + 'ней не' + NB + 'заключайте и' + NB + 'не' + NB + 'платите.');
+        'Последствия — как при' + NB + 'ликвидации (п.' + NB + '2 ст.' + NB + '64.2 ГК' + NB + 'РФ): договор с' + NB + 'ней не' + NB + 'заключайте и' + NB + 'не' + NB + 'платите. ' +
+        'Если она вам должна: исключение можно обжаловать в' + NB + 'суде в' + NB + 'течение года со дня, когда вы узнали или' + NB + 'должны были узнать о' + NB + 'нём (п.' + NB + '8 ст.' + NB + '22' + NB + '129-ФЗ). Долг можно требовать с' + NB + 'тех, кто' + NB + 'управлял компанией, если она не' + NB + 'заплатила из-за их' + NB + 'недобросовестных или' + NB + 'неразумных действий (п.' + NB + '3 ст.' + NB + '64.2 ГК' + NB + 'РФ, п.' + NB + '3.1 ст.' + NB + '3' + NB + '14-ФЗ). Разбор дела: что доказывать кредитору.');
       bezSt = true;
     } else if (iB && !iA && (a.kod || a.st === 'ACTIVE')) {
       add('huzhe', nazvIskl(b.kod) + zapis(b) + ranshe, podIskl(b.kod, b.kodd));
@@ -629,7 +633,8 @@
     return '<div class="izm izm--da"' + (rez.id ? ' data-izm="kabinet"' : '') + '><b>Что изменилось с вашей проверки ' + kogda + '</b><ul>' +
       rez.izm.map(function (x) {
         return '<li class="izm--' + x.ton + '">' + esc(x.t) + (x.pod ? '<small class="izm__pod">' + esc(x.pod).replace('vestnik-gosreg.ru',
-          '<a href="https://vestnik-gosreg.ru/" target="_blank" rel="noopener">vestnik-gosreg.ru</a>') + '</small>' : '') + '</li>';
+          '<a href="https://vestnik-gosreg.ru/" target="_blank" rel="noopener">vestnik-gosreg.ru</a>').replace('Разбор дела: что доказывать кредитору.',
+          '<a href="' + RAZBOR_ISKL + '">Разбор дела: что доказывать кредитору.</a>') + '</small>' : '') + '</li>';
       }).join('') +
       '</ul><span>' + (rez.id ? 'Сравниваем с ' + dosje + ' из вашего кабинета — проверка с любого устройства.'
         : 'Сравниваем с проверкой на этом устройстве; снимок хранится только в вашем браузере.') + '</span></div>';

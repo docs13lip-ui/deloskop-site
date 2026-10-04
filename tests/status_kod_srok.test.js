@@ -4,6 +4,7 @@
 const test = require('node:test');
 const assert = require('node:assert');
 const fs = require('node:fs');
+const path = require('node:path');
 const D = require('../js/dinamika.js');
 const P = require('../js/portfel.js');
 const NB = '\u00a0';
@@ -54,7 +55,16 @@ test('действующая → 414: «Компания исключена из
   assert.strictEqual(izm.length, 1, JSON.stringify(izm));
   assert.strictEqual(izm[0].ton, 'huzhe');
   assert.strictEqual(izm[0].t, 'Компания исключена из' + NB + 'ЕГРЮЛ: запись в' + NB + 'ЕГРЮЛ от' + NB + '02.10.2026 (на' + NB + 'прошлой проверке — действующая)');
-  assert.strictEqual(izm[0].pod.replace(/\u00a0/g, ' '), 'Последствия — как при ликвидации (п. 2 ст. 64.2 ГК РФ): договор с ней не заключайте и не платите.');
+  // + второе и третье предложения — [Право] 03.10 19:10 разд. 2 дословно; хвост — ссылка на Разбор № 9
+  assert.strictEqual(izm[0].pod.replace(/\u00a0/g, ' '), 'Последствия — как при ликвидации (п. 2 ст. 64.2 ГК РФ): договор с ней не заключайте и не платите. ' +
+    'Если она вам должна: исключение можно обжаловать в суде в течение года со дня, когда вы узнали или должны были узнать о нём (п. 8 ст. 22 129-ФЗ). ' +
+    'Долг можно требовать с тех, кто управлял компанией, если она не заплатила из-за их недобросовестных или неразумных действий (п. 3 ст. 64.2 ГК РФ, п. 3.1 ст. 3 14-ФЗ). ' +
+    'Разбор дела: что доказывать кредитору.');
+  const h = D.htmlIzmeneniya({ s: A, izm: izm });
+  assert.ok(h.includes('<a href="/praktika/nalogi/isklyuchili-iz-egryul-dolg-s-direktora/">Разбор дела: что доказывать кредитору.</a>'), h);
+  assert.ok(fs.existsSync(path.join(__dirname, '..', 'praktika/nalogi/isklyuchili-iz-egryul-dolg-s-direktora/index.html')), 'ссылка ведёт на живой Разбор № 9');
+  // без обещания исхода ([Право] 19:10: «можно обжаловать», «можно требовать»)
+  assert.doesNotMatch(izm[0].pod, /гарант|вернут|обязательно|долг пропад/i);
 });
 
 test('готовилось исключение (105) → исключена (407): прошлая подпись точная', () => {

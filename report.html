@@ -405,7 +405,9 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
   function chartsHtml(ch){var h='';
     if(ch.revenue&&ch.revenue.length)h+='<div class="chart"><h3>Выручка'+qb('Выручка')+'</h3><div class="cs">по годам, по данным бухотчётности</div>'+colChart(ch.revenue,{title:'Выручка по годам'})+'</div>';
     if(ch.profit&&ch.profit.length)h+='<div class="chart"><h3>Чистая прибыль'+qb('Чистая прибыль')+'</h3><div class="cs">убыток — красным</div>'+colChart(ch.profit,{title:'Чистая прибыль по годам'})+'</div>';
-    if(ch.income_tax&&ch.income_tax.length>1)h+='<div class="chart"><h3>Налог на прибыль'+qb('Налог на прибыль')+'</h3><div class="cs">по годам</div>'+colChart(ch.income_tax,{title:'Налог на прибыль по годам'})+'</div>';
+    // znak-naloga-v1: строка 2410 без знака — в год убытка это может быть доход по налогу; ряд со знаком (есть < 0) — без оговорки
+    if(ch.income_tax&&ch.income_tax.length>1){var ubN=ch.income_tax.some(function(x){return x&&Number(x.value)<0})?[]:(ch.profit||[]).filter(function(x){return x&&Number(x.value)<0&&ch.income_tax.some(function(t){return t&&t.year===x.year&&Number(t.value)!==0})}).map(function(x){return x.year});
+      h+='<div class="chart"><h3>Налог на прибыль'+qb('Налог на прибыль')+'</h3><div class="cs">по годам'+(ubN.length?' · в год убытка ('+ubN.join(', ')+') не видно, расход это или доход по налогу':'')+'</div>'+colChart(ch.income_tax,{title:'Налог на прибыль по годам'})+'</div>';}
     if(ch.balance)h+='<div class="chart"><h3>На чём держится компания'+qb('На чём держится')+'</h3><div class="cs">структура источников средств за '+ch.balance.year+' год</div>'+balanceChart(ch.balance)+'</div>';
     if(ch.debts){var dc=debtsChart(ch.debts);if(dc)h+='<div class="chart"><h3>Кто кому должен'+qb('Кто кому должен')+'</h3><div class="cs">по бухотчётности за '+ch.debts.year+' год</div><div class="debts">'+dc+'</div></div>';}
     if(ch.taxes&&ch.taxes.length)h+='<div class="chart wide"><h3>Какие налоги платит компания</h3><div class="cs">уплачено за год по данным ФНС</div>'+hbarChart(ch.taxes)+'</div>';

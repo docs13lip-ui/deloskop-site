@@ -1515,6 +1515,11 @@ HAB_CHITAT = [
 ]
 
 
+def _ssylka_chitat(zagolovok, statyi):
+    adr, txt = HAB_CHITAT_SSYLKI.get(zagolovok, (None, None))
+    return ' <a href="%s">%s%s›</a>' % (adr, txt, NB) if adr and adr in statyi else ""
+
+
 def hab_otrasl(k):
     return _razdel(k) or HAB_NET_OTRASLI
 
@@ -1563,9 +1568,17 @@ def _nav_stranic(n, vsego):
         "".join(tuda), "".join(sp))
 
 
-def html_haba(kart, index, n=1, vsego=1, vse=None, kg=None):
+# kartochki-v4.5 (✎ [Ночные запуски] 04.10 13:05, ТЗ [Маркетинга] 10:50 разд. 2 — входящая № 2): в «Как читать карточку»
+# у пункта об отчётности — ссылка на статью. Ставим, только если статья уже есть на сайте (statyi — от сборщика):
+# битой ссылки не будет ни до, ни после выкладки net-otchetnosti-v1.
+STATYA_NET_OTCHETNOSTI = "/nalogi/net-otchetnosti-v-otkrytyh-dannyh/"
+HAB_CHITAT_SSYLKI = {"Дата сведений — не дата страницы": (STATYA_NET_OTCHETNOSTI, "Почему отчётности может не быть")}
+
+
+def html_haba(kart, index, n=1, vsego=1, vse=None, kg=None, statyi=frozenset()):
     """Страница n из vsego хаба; kart — карточки этой страницы, vse — все (для описания и строки регионов);
-    kg — {(vid, имя): адрес} хабов групп (kartochki-haby-v1): заголовок отрасли и регион — ссылкой на свой хаб."""
+    kg — {(vid, имя): адрес} хабов групп (kartochki-haby-v1): заголовок отрасли и регион — ссылкой на свой хаб;
+    statyi — адреса статей сайта, которые уже есть (ссылки HAB_CHITAT_SSYLKI ставим только на них)."""
     vse = kart if vse is None else vse
     kg = kg or {}
 
@@ -1602,7 +1615,7 @@ def html_haba(kart, index, n=1, vsego=1, vse=None, kg=None):
               'сведениям, а не решение банка или налоговой. Средняя налоговая нагрузка по отраслям — '
               '<a href="/nalogi/nagruzka-po-otraslyam-2025/#nagruzka">таблица ФНС</a>. Нашли ошибку — '
               '<a href="mailto:help@deloskop.ru">help@deloskop.ru</a>.</p></section>') % "".join(
-        "<li><b>%s.</b> %s</li>" % (e(z), tekst) for z, tekst in HAB_CHITAT)
+        "<li><b>%s.</b> %s%s</li>" % (e(z), tekst, _ssylka_chitat(z, statyi)) for z, tekst in HAB_CHITAT)
     n_otr = len([o for o in vse_otr if o != HAB_NET_OTRASLI])
     t = "Компании в Делоскопе: проверка по ИНН — Делоскоп"
     d = "%d %s%s с выводами по открытым реестрам: доходы, штат, налоги и долги — у каждой цифры источник и дата сведений." % (

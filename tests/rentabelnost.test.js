@@ -57,7 +57,7 @@ test('не ниже и «чуть ниже» — без фразы о призн
   const chut = otvet(); chut.dossier.charts.income_tax = []; chut.dossier.charts.profit = [{ year: 2025, value: nr * 1e6 * 0.95 }];
   const o2 = R.raschet(chut, D);
   assert.strictEqual(o2.st, 'chut-nizhe');
-  assert.match(R.html(o2), /меньше чем на 10%/);
+  assert.match(R.html(o2), /меньше чем на 10\u00a0%/);
   assert.match(R.html(o2), /Налога на прибыль в ответе нет/);
 });
 

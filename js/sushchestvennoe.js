@@ -146,6 +146,14 @@
   function godySerii(u) { return u.n === 2 ? u.ot + ' и ' + u.god : u.ot + '–' + u.god; }
 
   // ---- существенные факты ----
+  // tipografika-proverka-v1 (05.10): сумма в строке факта — с разрядами, как во всём экране: «2000000 ₽» → «2 000 000 ₽».
+  // Только целое из 5+ цифр прямо перед «₽» (не часть дроби, не номер документа); остальной текст строки не трогаем.
+  function razryady(t) {
+    return String(t == null ? '' : t).replace(/(^|[^\d,.\u2116])(\d{5,})(?=[ \u00a0]?₽)/g, function (_, a, d) {
+      return a + d.replace(/\B(?=(\d{3})+(?!\d))/g, NB);
+    });
+  }
+
   function fakty(r, opt) {
     opt = opt || {};
     if (!r || !r.company) return { spisok: [], eshche: [], neProvereno: [] };
@@ -159,7 +167,7 @@
 
     (r.signals || []).forEach(function (s, i) {
       if (!s || !s.title) return;
-      var k = s.id || ('sig' + i), znach = s.detail || '';
+      var k = s.id || ('sig' + i), znach = razryady(s.detail || '');
       var ist = s.source ? String(s.source).replace('ЕГРЮЛ/ЕГРИП', reestr) : reestr;
       if (k === 'age' && c.reg_date) {
         var m = mesyacev(dataIz(c.reg_date), na);
@@ -419,5 +427,5 @@
     return true;
   }
 
-  return { fakty: fakty, bank: bank, kapital: kapital, likvidnost: likvidnost, ubytki: ubytki, glubina: glubina, otchetnost: otchetnost, html: html, mount: mount, htmlSvoj: htmlSvoj, mountSvoj: mountSvoj, dengi: dengi, srok: srok, MAKS: MAKS, CSS: CSS };
+  return { razryady: razryady, fakty: fakty, bank: bank, kapital: kapital, likvidnost: likvidnost, ubytki: ubytki, glubina: glubina, otchetnost: otchetnost, html: html, mount: mount, htmlSvoj: htmlSvoj, mountSvoj: mountSvoj, dengi: dengi, srok: srok, MAKS: MAKS, CSS: CSS };
 });

@@ -35,7 +35,7 @@
 .ot-ix__ne{font-size:22px;line-height:1.2;font-weight:600;letter-spacing:-.01em}
 .ot-ix__pl{font-size:14px;color:var(--ink2,#48484C)}
 .ot-ix__lv{font-size:14px;font-weight:600}
-.ot-ix__pod{font-size:12px;color:var(--ink2,#48484C);margin-top:-4px}
+.ot-ix__pod{font-size:12.5px;line-height:1.45;color:var(--muted,#6B6B70);margin-top:4px;font-variant-numeric:tabular-nums}
 /* indeks-v-otchete-v1: число по открытой методике в браузере, раскладка «Почему N» */
 .ot-ix__lv--ok{color:var(--ok,#16723F)}.ot-ix__lv--warn{color:var(--warn,#9A5B00)}.ot-ix__lv--bad{color:var(--bad,#B3261E)}
 .ot-ix__po{font-size:13px;line-height:1.4;color:var(--muted,#6B6B70)}

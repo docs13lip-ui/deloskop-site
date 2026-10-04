@@ -361,6 +361,12 @@ footer a{color:var(--muted)}
   function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
   function say(t,err){msg.textContent=t||'';msg.className=err?'err':''}
   function msk(d,opt){return d.toLocaleString('ru-RU',Object.assign({timeZone:'Europe/Moscow'},opt))}
+  // Когда сверено: checked_at из /api/check бывает только датой («2026-10-04») — полночь UTC вышла бы «03:00 МСК», времени, которого не было.
+  // Дата без времени: сегодня по Москве — берём момент получения ответа; другой день — показываем только дату (vremya-proverki-v1).
+  function kogdaSvereno(v,seichas){var s=String(v==null?'':v).trim(),now=seichas||new Date();
+    if(/^\d{4}-\d{2}-\d{2}$/.test(s)){if(msk(now,{year:'numeric',month:'2-digit',day:'2-digit'})===s.split('-').reverse().join('.'))return {at:now,vremya:true};
+      return {at:new Date(s+'T12:00:00+03:00'),vremya:false};}
+    var d=v?new Date(v):now;return isNaN(d)?{at:now,vremya:true}:{at:d,vremya:true};}
 
   // --- форма ИНН (лендинг и низ паспорта) ---
   function bindAsk(form,input){
@@ -434,7 +440,7 @@ footer a{color:var(--muted)}
 
   function render(r){
     var c=r.company||{}, g=E.classify(r), h=E.headline(g), code=E.fingerprint(r);
-    var name=c.name_short||c.name_full||('ИНН '+c.inn), at=new Date(r.checked_at||Date.now());
+    var name=c.name_short||c.name_full||('ИНН '+c.inn), kog=kogdaSvereno(r.checked_at), at=kog.at;
     var url=E.passportUrl(ORIGIN,c.inn,code,at), live=ORIGIN+'/pasport/?inn='+c.inn;
     var cmp=E.compare({f:P.get('f'),d:P.get('d')},code);
     document.title='Паспорт компании: '+name+' — Делоскоп';
@@ -455,7 +461,7 @@ footer a{color:var(--muted)}
         (facts?'<dl class="facts">'+facts+'</dl>':'')+
       '</div>'+
       '<div class="qrbox"><div class="q">'+qr+'</div><div><div class="fp">Отпечаток данных<b>'+E.fpPretty(code)+'</b></div>'+
-        '<div class="when">Сверено с реестрами<br>'+msk(at,{day:'numeric',month:'long',year:'numeric'})+', '+msk(at,{hour:'2-digit',minute:'2-digit'})+' МСК</div></div></div>'+
+        '<div class="when">Сверено с реестрами<br>'+msk(at,{day:'numeric',month:'long',year:'numeric'})+(kog.vremya?', '+msk(at,{hour:'2-digit',minute:'2-digit'})+' МСК':'')+'</div></div></div>'+
       '</div>'+
       '<div class="mrz" aria-hidden="true">'+esc(mrz(name,c.inn,code))+'</div>'+
       '</article>';

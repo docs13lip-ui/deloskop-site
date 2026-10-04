@@ -377,7 +377,9 @@ td b{font-weight:600}
       '<span class="otm-a noprint"><button type="button" class="otm-b" data-otm-open="'+o.razdel+'">Изменить</button><button type="button" class="otm-b" data-otm-del="'+o.razdel+'">Убрать</button></span>'+
       (o.stroki||[]).map(function(t){return '<span class="otm-s">'+esc(t)+'</span>'}).join('')+
       '<span class="otm-s otm-kto">Проверил: '+(o.dolzhnost?esc(o.dolzhnost):'<span class="pechat">______________________</span>')+'<span class="pechat"> · подпись и расшифровка ______________________</span></span>'+
-      (o.sovet?'<small>'+esc(o.sovet)+'</small>':'')+'<small>'+esc(o.ogovorka)+'</small></div>';
+      (o.sovet?'<small>'+esc(o.sovet)+'</small>':'')+
+      (o.zskSud?'<small class="otm-zs noprint">'+esc(P.OTM_ZSK_SUD)+' <a href="'+P.OTM_ZSK_SUD_URL+'" data-goal="zsk_dolg_razbor">Разбор дела&nbsp;→</a></small>':'')+
+      '<small>'+esc(o.ogovorka)+'</small></div>';
   }
   function tzMetka(){var m=-new Date().getTimezoneOffset();if(m===180)return 'МСК';if(!m)return 'UTC';var h=Math.floor(Math.abs(m)/60),mm=Math.abs(m)%60;return 'UTC'+(m<0?'−':'+')+h+(mm?':'+(mm<10?'0':'')+mm:'');}
   function seichas(){var d=new Date();return (d.getHours()<10?'0':'')+d.getHours()+':'+(d.getMinutes()<10?'0':'')+d.getMinutes();}

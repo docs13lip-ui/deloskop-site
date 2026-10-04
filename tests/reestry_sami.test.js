@@ -19,7 +19,7 @@ test('справочник: у каждой записи — кто ведёт, 
     assert.match(x.cel, /^reestry_[a-z]+$/);
     assert.ok(!ids.has(x.id)); ids.add(x.id);
   }
-  assert.ok(SPRAV.reestry.length >= 3);
+  assert.ok(SPRAV.reestry.length >= 5);
 });
 
 test('сверка не старше 92 дней от даты в файле до следующей сверки', () => {
@@ -52,7 +52,7 @@ test('чужой домен и запись без нормы не выводя�
 
 test('разметка: раздел «Все данные из реестров», ссылки наружу, цели Метрики, дата сверки, оговорка', () => {
   const h = RS.html(RS.dlya(ORG, SPRAV), SPRAV);
-  assert.match(h, /<section class="sut__s rs" data-reestry-sami><h4>Что ещё проверить самим — бесплатно<\/h4>/);
+  assert.match(h, /<section class="sut__s rs" data-reestry-sami><h4>Что ещё проверить самим в открытых реестрах<\/h4>/);
   assert.strictEqual((h.match(/target="_blank" rel="noopener"/g) || []).length, SPRAV.reestry.length);
   for (const x of SPRAV.reestry) assert.ok(h.includes('data-goal="' + x.cel + '"'));
   assert.match(h, /Ссылки и нормы сверены 04\.10\.2026\./);
@@ -71,4 +71,36 @@ test('главная подключает модуль и вставляет р�
   const s = fs.readFileSync(path.join(KOREN, 'index.html'), 'utf8');
   assert.ok(s.includes('<script src="/js/reestry-sami.js" defer></script>'));
   assert.ok(s.includes("if(!svoj&&window.Sushchestvennoe&&window.ReestrySami){ReestrySami.zagruzit()"));
+});
+
+// reestry-sami-v2: правки [Право] 04.10 21:07 и новые реестры (Федресурс, Росаккредитация)
+test('v2: Федресурс и Росаккредитация — официальные домены, цели, сверенные нормы', () => {
+  const R = Object.fromEntries(SPRAV.reestry.map(x => [x.id, x]));
+  assert.strictEqual(R.fedresurs.ssylka, 'https://fedresurs.ru/');
+  assert.strictEqual(R.fsa.ssylka, 'https://pub.fsa.gov.ru/');
+  assert.strictEqual(R.fedresurs.cel, 'reestry_fedresurs');
+  assert.strictEqual(R.fsa.cel, 'reestry_fsa');
+  assert.match(R.fedresurs.norma, /ст\. 7\.1 129-ФЗ/);
+  assert.match(R.fedresurs.norma, /п\. 2\.1 ст\. 7 127-ФЗ/);
+  assert.match(R.fsa.norma, /п\. 6 ст\. 24 184-ФЗ/);
+  assert.match(R.fedresurs.chto, /Сведения открыты для всех\.$/);
+  assert.match(R.fsa.chto, /Не на каждый товар они нужны\.$/);
+  // в норме нет «бесплатно» — не пишем; лизинг не сверен дословно; маркетплейсы с 01.10 — только СМИ
+  assert.ok(!/бесплатн/i.test(R.fedresurs.chto + R.fedresurs.kogda + R.fsa.chto + R.fsa.kogda));
+  assert.ok(!/лизинг/i.test(JSON.stringify(R.fedresurs)));
+  assert.ok(!/обязан|с 1 октября|01\.10/i.test(JSON.stringify(R.fsa)));
+  assert.ok(!/КоАП|14\.25/.test(JSON.stringify(SPRAV)));
+});
+
+test('v2: правки v1 — движимое имущество, МСП раз в год, норма о залоге полностью', () => {
+  const R = Object.fromEntries(SPRAV.reestry.map(x => [x.id, x]));
+  assert.match(R.zalogi.chto, /^Заложено ли движимое имущество компании и кому\./);
+  assert.match(R.zalogi.norma, /если третье лицо не знало о залоге раньше \(п\. 4 ст\. 339\.1 ГК РФ\)/);
+  assert.match(R.msp.chto, /пересобирают по отчётности раз в год — 10 июля\.$/);
+  assert.match(R.znaki.chto, /если он ссылается на знак или лицензию\.$/);
+  assert.strictEqual(R.znaki.norma, 'п. 1 ст. 1503 ГК РФ');
+  // заголовок раздела не обещает «бесплатно» для всех реестров
+  const h = RS.html(RS.dlya(ORG, SPRAV), SPRAV);
+  assert.ok(!/<h4>[^<]*бесплатн/i.test(h));
+  assert.ok(h.includes('ст.\u00a07.1\u00a0129-ФЗ') && h.includes('ст.\u00a024\u00a0184-ФЗ'));
 });

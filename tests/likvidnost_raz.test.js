@@ -89,15 +89,17 @@ test('рост в 3 раза и больше — «в N раз», ниже — �
 });
 
 test('«Динамика»: налог на прибыль 361,8 млн → 10,1 млрд — «▲ в 28 раз», переход через ноль — по-прежнему «из убытка»', () => {
+  // znak-naloga-v1: в год убытка налог без знака не сравниваем — поэтому «в 28 раз» проверяем на прибыльных годах
   const r = { dossier: { charts: {
     revenue: [{ year: 2023, value: 422e9 }, { year: 2024, value: 458e9 }, { year: 2025, value: 477e9 }],
-    profit: [{ year: 2023, value: 48e9 }, { year: 2024, value: -5e9 }, { year: 2025, value: 26e9 }],
+    profit: [{ year: 2023, value: 48e9 }, { year: 2024, value: 5e9 }, { year: 2025, value: 26e9 }],
     income_tax: [{ year: 2023, value: 400e6 }, { year: 2024, value: 361.8e6 }, { year: 2025, value: 10.1e9 }],
   } } };
   const h = D.htmlDinamika(r);
   assert.ok(h.includes('▲' + NB + 'в' + NB + '28' + NB + 'раз'), 'изменение к прошлому году словами');
   assert.ok(!/\d{4}\s?%/.test(h), 'нет четырёхзначных процентов');
-  assert.ok(h.includes('▲' + NB + 'из убытка'), 'смена знака прибыли — как раньше');
   const t = D.stroka(D.ryady(r).find((x) => x.k === 'income_tax'));
   assert.strictEqual(t.zaPeriod, 'в' + NB + '25' + NB + 'раз с' + NB + '2023');
+  const r2 = JSON.parse(JSON.stringify(r)); r2.dossier.charts.profit[1].value = -5e9;
+  assert.ok(D.htmlDinamika(r2).includes('▲' + NB + 'из убытка'), 'смена знака прибыли — как раньше');
 });

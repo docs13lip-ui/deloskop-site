@@ -583,11 +583,26 @@ test("v6: 108, 110, реорганизация — тексты [Право] 04.
   // реорганизация — тон «Внимание», не «Риск»: красного текста нет
   assert.strictEqual(K.najti(SPRAV, { title: "Статус", detail: "Находится в процессе реорганизации в форме слияния", status: "bad" }), null);
   // [Право]: для 105–110 нет «закроет счёт» (это текст про уже исключённую компанию), нет «банк спросит», «упрощ», «гарант», «взыщут»
-  for (const id of ["isklyuchenie_cb", "isklyuchenie_uchastniki", "reorganizaciya"]) {
+  for (const id of ["isklyuchenie", "isklyuchenie_cb", "isklyuchenie_uchastniki", "reorganizaciya"]) {
     const z = SPRAV.signaly.find((x) => x.id === id);
     const t = Object.values(z.tony).find((x) => x.status === "utverzhdeno");
     const vse = t.bank + " " + t.nalog + " " + t.sdelat;
     assert.ok(!/закроет сч[её]т|банк спросит|упрощ|гарант|взыщ|по сведениям банка россии/i.test(vse), id);
     assert.ok(K.dlina(t) <= 300, id);
   }
+});
+
+test("isklyuchenie-v1.1: коды 105–107 (ФНС готовит исключение) — без «закроет счёт», компания ещё не исключена ([Право] 04.10 23:15)", () => {
+  for (const detail of [
+    "Регистрирующий орган принял решение о предстоящем исключении недействующего юрлица из ЕГРЮЛ",
+    "Предстоящее исключение из ЕГРЮЛ: недостоверные сведения",
+  ]) {
+    const k = K.najti(SPRAV, { title: "Статус", detail, status: "bad" });
+    assert.ok(k, detail);
+    assert.ok(!/закроет сч[её]т/i.test(k.bank + " " + k.nalog + " " + k.sdelat), detail);
+    assert.strictEqual(k.bank, "Компания на пути к исключению из ЕГРЮЛ — после исключения её не станет.");
+  }
+  // уже исключённая — своя запись (isklyuchena), её текст не трогали
+  const z = SPRAV.signaly.find((x) => x.id === "isklyuchena");
+  assert.ok(z);
 });

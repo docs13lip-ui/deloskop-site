@@ -242,6 +242,19 @@ _PARTIYA = re.compile(r"<!-- partiya (\d{4}-\d{2}-\d{2}): (\d+) -->")
 _LOC = re.compile(r"<loc>([^<]+)</loc>")
 
 
+TARIFY = os.path.join(KOREN, "tarify", "tarify.json")
+
+
+def cena_pasporta(put=TARIFY):
+    """kartochki-daty-v1: цена «Паспорта на дату сделки» из tarify.json (не руками, как js/pasport-cta.js); нет — None."""
+    try:
+        with open(put, encoding="utf-8") as fh:
+            c = (json.load(fh).get("pasport_razovyj") or {}).get("cena_rub")
+        return int(c) if isinstance(c, (int, float)) and c > 0 else None
+    except (OSError, ValueError, AttributeError):
+        return None
+
+
 def segodnya_msk():
     return (dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=3)).date()
 
@@ -329,13 +342,14 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
     podval = ss.podval_html(r)
     shapka = ss.shapka_html()
     normy = zagruzit_normy()
+    cena = cena_pasporta()  # kartochki-daty-v1: цена Паспорта после беты — из tarify.json
     kom = kommentarii.zagruzit()  # «Комментарий команды» — data/kommentarii.json (только утверждённые [Право] тексты)
     # kartochki-haby-v1: хабы отраслей и регионов (≥ HAB_GRUPPY_OT карточек) — до карточек: крошки ссылаются на них
     gruppy = gruppy_haba(vse, HAB_GRUPPY_OT)
     kg = karta_grupp(gruppy)
     izm = 0
     for k in kart:
-        txt = ss.sobrat_stranicu(html_kartochki(k, k["_V"], pohozhie(k, vse), kom, normy), r, podval, shapka)
+        txt = ss.sobrat_stranicu(html_kartochki(k, k["_V"], pohozhie(k, vse), kom, normy, cena), r, podval, shapka)
         txt = ssylki_kroshek(txt, kg)
         k["_noindex"] = noindex_html(txt)
         izm += zapisat(os.path.join(koren, adres_str(k).strip("/"), "index.html"), txt)
@@ -349,6 +363,8 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         t2 = pochinit_indeks_blok(t2)  # kartochki-okved-v1: «Индекс — считаем» → «Индекс — в полном отчёте», как у новых
         t2 = pochinit_ubytok(t2)  # kartochki-v4.2: «убыток» в таблице — подписью над числом, как у новых
         t2 = pochinit_otrasl_yakor(t2, normy)  # nagruzka-yakorya-v1: «Таблица ФНС» — на строку отрасли, как у новых
+        t2 = pochinit_daty(t2, cena)  # kartochki-daty-v1: «Даты из реестра» и вход в Паспорт, как у новых
+        t2 = beta_poloviny(t2, r["_beta"])  # половины беты — по флагу, как sobrat_shapku
         t2 = primenit_vorota_indeksa(t2)  # kartochki-indeks-v1: те же ворота индексации, что у новых карточек
         t2 = ssylki_kroshek(t2, kg)  # kartochki-haby-v1: регион и раздел в крошках — ссылкой на хаб группы
         x["_noindex"] = noindex_html(t2)

@@ -545,6 +545,15 @@
       if (!x) { if (VES[y[0]] > 0) add('huzhe', y[1] + ': ' + STX[y[0]]); return; }
       if (x[0] !== y[0]) add(VES[y[0]] > VES[x[0]] ? 'huzhe' : VES[y[0]] < VES[x[0]] ? 'luchshe' : 'info', y[1] + ': ' + STX[x[0]] + ' → ' + STX[y[0]]);
     });
+    // izm-indeks-v1: признак был «внимание»/«риск», а в новом ответе строки нет. Сняли его или источник не ответил — из ответа
+    // не видно, поэтому серая точка, не зелёная («не проверили» ≠ «не нашли»). Пустой список признаков — сбой ответа, молчим.
+    if (Object.keys(b.sig || {}).length) Object.keys(a.sig || {}).forEach(function (id) {
+      if ((bezSt && id === 'status') || b.sig.hasOwnProperty(id)) return;
+      var x = a.sig[id];
+      if (!Array.isArray(x) || !(VES[x[0]] > 0) || !x[1]) return;
+      add('info', x[1] + ': на' + NB + 'прошлой проверке — ' + STX[x[0]] + ', в' + NB + 'этой строки нет',
+        'Признак могли снять, а' + NB + 'мог не' + NB + 'ответить источник: «не' + NB + 'проверили» — не' + NB + 'значит «не' + NB + 'нашли».');
+    });
     // капитал: только смена знака и только между двумя снимками, где он есть (старый снимок без капитала — «не сравнивали»)
     if (a.kap && b.kap && b.kap[0] >= a.kap[0]) {
       if (a.kap[1] >= 0 && b.kap[1] < 0) add('huzhe', 'Собственный капитал ушёл в минус: на' + NB + '31.12.' + b.kap[0] +
@@ -780,6 +789,56 @@
     var s = doc.createElement('style'); s.id = 'din-css'; s.textContent = CSS; (doc.head || doc.documentElement).appendChild(s);
   }
 
+  // ---- izm-indeks-v1: методика Индекса загрузилась позже ответа API ----
+  // Снимок сохраняется сразу при отрисовке; если методика (js/indeks-otvet.js) ещё грузилась, в снимке нет Индекса — и через
+  // неделю строки «Индекс: A → B» не будет. Ждём методику и дописываем Индекс в тот же снимок (и в показанное сравнение).
+  function ozhidatIndeks(r, ls, doc) {
+    var b = snimok(r), v = r && r.indeks;
+    if (!b || b.ix != null || b.inn.length !== 10 || (v !== undefined && v !== null && v !== '')) return false;
+    var IO = ixModul();
+    if (!IO || typeof IO.gotovo !== 'function' || typeof IO.gotov !== 'function' || IO.gotov()) return false;
+    var kl = b.inn + ':' + b.t, popytki = 0;
+    // gotovo() через 4 с зовёт и без методики — тогда ждём ещё (до 4 раз, ~16 с), медленная сеть тоже получит Индекс
+    var zhdat = function () {
+      if (!IO.gotov() && ++popytki < 4) { IO.gotovo(zhdat); return; }
+      try { dopisatIndeks(r, ls, kl, doc); } catch (e) {}
+    };
+    IO.gotovo(zhdat);
+    return true;
+  }
+  // → null (Индекса так и нет / другая проверка) | { b, zapisan: bool, rez: новое сравнение | null }
+  function dopisatIndeks(r, ls, kl, doc) {
+    var b = snimok(r);
+    if (!b || b.ix == null || b.inn + ':' + b.t !== kl) return null;
+    var zapisan = false;
+    var vse = ls ? chitat(ls) : null;
+    if (vse && Array.isArray(vse[b.inn])) {
+      vse[b.inn].forEach(function (x) {
+        if (!x || x.inn !== b.inn || !isFinite(x.t) || Math.abs(x.t - b.t) >= CHAS || x.ix != null) return;
+        x.ix = b.ix;
+        if (Array.isArray(b.ixf)) { x.ixf = b.ixf; x.ixp = b.ixp; x.ixv = b.ixv; }
+        zapisan = true;
+      });
+      if (zapisan) zapisan = zapisat(ls, vse);
+    }
+    var out = { b: b, zapisan: zapisan, rez: null };
+    if (!pokazan || pokazan.kl !== kl || !pokazan.rez || !pokazan.rez.s || !Array.isArray(pokazan.rez.izm)) return out;
+    var star = pokazan.rez, izm = sravnit(star.s, b, dopolnenie && dopolnenie.kl === kl ? dopolnenie.fn : null);
+    pokazan.b = b;
+    if (JSON.stringify(izm) === JSON.stringify(star.izm)) return out;
+    var nov = {}; Object.keys(star).forEach(function (k) { nov[k] = star[k]; });
+    nov.izm = izm;
+    pokazan.rez = nov;
+    if (poslednij && poslednij.inn + ':' + poslednij.t === kl && !star.id) poslednij.rez = nov;
+    out.rez = nov;
+    try {
+      doc = doc || (typeof document !== 'undefined' ? document : null);
+      var mesto = doc && (doc.querySelector('.report') || doc.body);
+      if (mesto && mesto.querySelector('.izm')) vstavit(mesto, htmlIzmeneniya(nov));
+    } catch (e) {}
+    return out;
+  }
+
   // Браузер: html(r) — блок «что изменилось» (если есть с чем сравнить) + «Динамика». Снимок сохраняется один раз на проверку.
   function html(r, opt) {
     opt = opt || {};
@@ -792,6 +851,7 @@
       poslednij = b ? { inn: b.inn, t: b.t, rez: rez } : null;
       pokazan = b ? { kl: b.inn + ':' + b.t, rez: rez, b: b } : null;
       izm = htmlIzmeneniya(rez);
+      ozhidatIndeks(r, ls, opt.doc);
     } catch (e) { izm = ''; }
     var din = '';
     try { din = htmlDinamika(r, opt); if (!din && opt.balans !== false) din = htmlBalansOtdelno(r); } catch (e) { din = ''; }
@@ -800,5 +860,5 @@
 
   return { ryad: ryad, ryady: ryady, stroka: stroka, izmenenie: izmenenie, trendy: trendy, dengi: dengi, htmlDinamika: htmlDinamika, balans: balans, htmlBalans: htmlBalans,
     snimok: snimok, sravnit: sravnit, likvidnost: likvidnost, okved: okved, vRaz: vRaz, zapomnit: zapomnit, htmlIzmeneniya: htmlIzmeneniya, html: html, KEY: KEY, CSS: CSS,
-    iskl: iskl, isklyuchena: isklyuchena, ixChislo: ixChislo, plusMes: plusMes, kodSost: kodSost, predydushchaya: predydushchaya, nuzhenKabinet: nuzhenKabinet, dogruzit: dogruzit, dobavit: dobavit, sDop: sDop };
+    iskl: iskl, isklyuchena: isklyuchena, ixChislo: ixChislo, plusMes: plusMes, kodSost: kodSost, predydushchaya: predydushchaya, nuzhenKabinet: nuzhenKabinet, dogruzit: dogruzit, dobavit: dobavit, sDop: sDop, ozhidatIndeks: ozhidatIndeks, dopisatIndeks: dopisatIndeks };
 });

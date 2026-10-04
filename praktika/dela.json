@@ -8,9 +8,10 @@
     "_kak": "Входящие ссылки на разборы с живых страниц (SEO-обвязка [Маркетинга] 30.09): файл страницы → slug разборов или «hab:<раздел>». Сборщик ставит блок между метками <!--praktika-ssylki-->…<!--/praktika-ssylki--> (в статье — перед </article>). Тест: у каждого разбора ≥ 2 входящие ссылки вне /praktika/.",
     "115-fz/zablokirovali-schet-chto-delat/index.html": ["shtraf-banka-za-dokumenty-115-fz", "otklyuchili-internet-bank", "zagraditelnye-komissii", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"],
     "115-fz/zapros-banka-po-115-fz-kak-otvetit/index.html": ["shtraf-banka-za-dokumenty-115-fz", "otklyuchili-internet-bank"],
-    "115-fz/zsk-zony-riska/index.html": ["krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "zagraditelnye-komissii", "isklyuchili-iz-egryul-dolg-s-direktora"],
+    "115-fz/zsk-zony-riska/index.html": ["krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "zagraditelnye-komissii", "isklyuchili-iz-egryul-dolg-s-direktora", "zsk-dolzhnika-sudebnyj-prikaz"],
     "nalogi/statya-54-1-nk-prostymi-slovami/index.html": ["razryv-nds-v-cepochke-krascvetmet", "vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke", "droblenie-uplachennaya-usn-zachityvaetsya"],
-    "nalogi/nagruzka/index.html": ["droblenie-uplachennaya-usn-zachityvaetsya"],
+    "nalogi/nagruzka/index.html": ["droblenie-uplachennaya-usn-zachityvaetsya", "zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
+    "nalogi/nagruzka-po-otraslyam-2025/index.html": ["zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/priznaki-tehnicheskoj-kompanii/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke"],
     "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki"],
     "pasport/index.html": ["proverka-kontragenta-na-datu-sdelki"],
@@ -22,6 +23,131 @@
     "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"]
   },
   "razbory": [
+    {
+      "razdel": "nalogi",
+      "slug": "zemelnyj-nalog-izhs-koefficienty-ks-52-p",
+      "h1": "Земельный налог до 6 %: КС запретил коэффициенты 2 и 4 для участков ИЖС у бизнеса — но с 2027 года",
+      "title": "Земельный налог по ИЖС у компании: КС 52-П, коэффициенты 2 и 4",
+      "description": "Конституционный суд запретил умножать ставку 1,5 % на коэффициенты 2 и 4 для участков ИЖС в бизнесе. С какого года, кого пересчитают и что проверить.",
+      "zapros": "земельный налог ижс коэффициент 4 организация",
+      "data": "2026-10-04",
+      "minut": 5,
+      "lid": "Компания строит дома на участках под ИЖС. Налоговая берёт с неё земельный налог по ставке 1,5 % и умножает его на 2, а после трёх лет — на 4. Выходит до 6 % кадастровой стоимости в год. Конституционный суд признал такой счёт неопределённым. Но вернуть деньги смогут не все.",
+      "dela": [
+        {
+          "sud": "Конституционный суд РФ",
+          "sud_kratko": "КС",
+          "akt": "Постановление",
+          "nomer": "№ 52-П",
+          "data": "2026-07-21",
+          "delo": "жалоба ООО «Корнер Казань» на п. 1 ст. 394 и п. 15 ст. 396 НК (дело А65-42005/2024)",
+          "na_konu": "ставка до 6 % кадастровой стоимости в год вместо 1,5 %",
+          "na_konu_kratko": "до 6 % в год",
+          "itog": "В пользу налогоплательщика",
+          "itog_nov": false,
+          "istochnik": "https://www.ksrf.ru/ru/Decision/Pages/default.aspx",
+          "istochnik_podpis": "ksrf.ru — решения Конституционного суда; текст постановления сверен по consultant.ru",
+          "sverka": "2026-10-04"
+        }
+      ],
+      "knopka": {
+        "zagolovok": "Ваша компания глазами налоговой",
+        "tekst": "Проверка по ИНН: статус в ЕГРЮЛ, долги по налогам и уплаченные налоги по открытым данным ФНС на дату проверки.",
+        "knopka": "Проверить свою компанию",
+        "url": "/",
+        "cel": "razbor13_check"
+      },
+      "zakon": [
+        [
+          "п. 1 ст. 394, п. 15 ст. 396 НК РФ — ставки земельного налога и коэффициенты 2 и 4 для участков под жилищное строительство",
+          "в истолковании КС, 21.07.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_28165/"
+        ],
+        [
+          "Постановление КС РФ от 21.07.2026 № 52-П — полный текст",
+          "",
+          "https://www.consultant.ru/document/cons_doc_LAW_539915/"
+        ],
+        [
+          "Письмо ФНС от 21.07.2026 № БС-36-21/6262@ — без коэффициентов с исчисления налога и авансов за 2027 год",
+          "",
+          "https://www.garant.ru/products/ipo/prime/doc/414529034/"
+        ]
+      ],
+      "pohozhie": [
+        "droblenie-uplachennaya-usn-zachityvaetsya",
+        "ks-12-p-svidetel-po-svoej-proverke"
+      ]
+    },
+    {
+      "razdel": "115-fz",
+      "slug": "zsk-dolzhnika-sudebnyj-prikaz",
+      "h1": "Должник в «красной зоне» ЗСК. Банк вправе не исполнять судебный приказ?",
+      "title": "Должник в красной зоне ЗСК: банк не исполняет приказ",
+      "description": "Банк отказался списать деньги с должника по судебному приказу из-за ЗСК. Верховный суд: 115-ФЗ не мешает исполнению, банк платит проценты по ст. 395.",
+      "zapros": "банк не исполняет исполнительный лист должник в красной зоне зск",
+      "data": "2026-10-04",
+      "minut": 3,
+      "lid": "Нет. Верховный суд: 115-ФЗ не регулирует исполнение судебных актов, а отнесение должника к высокому риску само по себе не основание отказать взыскателю. За просрочку банк платит проценты по ст. 395 ГК РФ.",
+      "dela": [
+        {
+          "sud": "Верховный суд РФ, Судебная коллегия по экономическим спорам",
+          "sud_kratko": "ВС",
+          "akt": "Определение",
+          "nomer": "№ 305-ЭС25-1505",
+          "data": "2025-07-24",
+          "delo": "А40-124902/2023 (ООО «Управляющая компания «Империал» против АО «ТБанк»)",
+          "na_konu": "проценты по ст. 395 ГК РФ — около 46,5 тыс. ₽ за неисполненный судебный приказ на 360 000 ₽",
+          "na_konu_kratko": "проценты ≈ 46,5 тыс. ₽",
+          "itog": "В пользу компании",
+          "itog_nov": false,
+          "istochnik": "https://kad.arbitr.ru/",
+          "istochnik_podpis": "kad.arbitr.ru — поиск по номеру дела А40-124902/2023; текст определения сверен по garant.ru",
+          "sverka": "2026-10-04"
+        }
+      ],
+      "knopka": {
+        "zagolovok": "Что с вашим должником сейчас",
+        "tekst": "Проверка по ИНН: статус компании в ЕГРЮЛ на дату проверки и прогноз зоны ЗСК по открытым данным — это наша оценка, а не решение Банка России.",
+        "knopka": "Проверить должника по ИНН",
+        "url": "/",
+        "cel": "razbor12_check",
+        "slezh": {
+          "knopka": "Следить за должником",
+          "url": "/cabinet.html#watch",
+          "cel": "razbor12_slezh"
+        }
+      },
+      "zakon": [
+        [
+          "ст. 856 ГК РФ — ответственность банка за несвоевременное списание денег со счёта",
+          "",
+          "https://www.consultant.ru/document/cons_doc_LAW_9027/"
+        ],
+        [
+          "ст. 395 ГК РФ — проценты за пользование чужими денежными средствами",
+          "",
+          "https://www.consultant.ru/document/cons_doc_LAW_5142/"
+        ],
+        [
+          "ст. 8 и ч. 5 ст. 70 Федерального закона от 02.10.2007 № 229-ФЗ «Об исполнительном производстве» — исполнение банком исполнительного документа",
+          "",
+          "https://www.consultant.ru/document/cons_doc_LAW_71450/"
+        ],
+        [
+          "ст. 7.7 Федерального закона от 07.08.2001 № 115-ФЗ — меры банка к клиенту с высоким уровнем риска по ЗСК",
+          "ред. 04.08.2026 № 283-ФЗ",
+          "https://www.consultant.ru/document/cons_doc_LAW_32834/"
+        ]
+      ],
+      "pohozhie": [
+        "krasnaya-zona-zsk-sud",
+        "isklyuchili-iz-egryul-dolg-s-direktora"
+      ],
+      "statyi": [
+        "/115-fz/proverit-kontragenta-zsk-po-inn/"
+      ]
+    },
     {
       "razdel": "nalogi",
       "slug": "razryv-nds-v-cepochke-krascvetmet",
@@ -432,7 +558,7 @@
         ["п. 3 ст. 845, п. 1 ст. 858 ГК РФ — права банка и клиента по договору счёта", "", "https://www.consultant.ru/document/cons_doc_LAW_9027/"],
         ["Рекомендации Банка России предпринимателям — проверка уровня риска по ИНН", "cbr.ru", "https://cbr.ru/counteraction_m_ter/platform_zsk/proverka-po-inn/"]
       ],
-      "pohozhie": ["otklyuchili-internet-bank", "zagraditelnye-komissii"]
+      "pohozhie": ["otklyuchili-internet-bank", "zagraditelnye-komissii", "zsk-dolzhnika-sudebnyj-prikaz"]
     },
     {
       "razdel": "115-fz",

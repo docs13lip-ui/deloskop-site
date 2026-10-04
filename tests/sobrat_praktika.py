@@ -6,7 +6,7 @@
 Сборщик пишет:
   praktika/index.html, praktika/115-fz/index.html, praktika/nalogi/index.html — хабы (новые сверху);
   praktika/<раздел>/<slug>/index.html — разборы: крошки → H1 → карточка дела → текст автора → одно действие →
-  «Где в законе» → «Частые вопросы» (praktika/faq.json, ответы дословно из текста автора) → «Сверено» → «Похожие разборы» → «Полезно?» (js/otzyv.js);
+  «Где в законе» → «Частые вопросы» (praktika/faq.json, ответы дословно из текста автора) → «Сверено» → «Похожие разборы» (с полем statyi — «Читайте также») → «Полезно?» (js/otzyv.js);
   строки /praktika/… в sitemap.xml; ссылку «Практика судов» в хабах /115-fz/ и /nalogi/ (между метками).
 Шапку и подвал ставит sobrat_shapku.sobrat_stranicu — после этого сборщика sobrat_shapku.py ничего не меняет.
 Запуск: python3 tests/sobrat_praktika.py [--check]
@@ -188,6 +188,22 @@ def pk(r):
         url_razbora(r), e(r["h1"]), e(meta), e(kon))
 
 
+def statya_k(url):
+    """«Читайте также» — статья сайта (поле statyi в dela.json, [Продукт] 04.10 18:38 разд. 2): заголовок берём из <h1> самой
+    статьи, чтобы ссылка не расходилась с живым текстом; нет файла или <h1> — сборка останавливается."""
+    if not (url.startswith("/") and url.endswith("/") and not url.startswith("/praktika/")):
+        raise SystemExit("statyi: адрес статьи вида /раздел/статья/ вне /praktika/: %r" % url)
+    f = put(*url.strip("/").split("/"), "index.html")
+    if not os.path.exists(f):
+        raise SystemExit("statyi: нет страницы %s" % url)
+    with open(f, encoding="utf-8") as fh:
+        m = re.search(r"<h1[^>]*>(.*?)</h1>", fh.read(), re.S)
+    if not m:
+        raise SystemExit("statyi: нет <h1> на %s" % url)
+    h1 = html.unescape(re.sub(r"<[^>]+>", "", m.group(1))).strip()
+    return """<a class="pk" href="%s"><span class="pk__q">%s</span><span class="pk__m">Статья Делоскопа</span></a>""" % (e(url), e(h1))
+
+
 def razbor(r, D, po_slug, F=None):
     rz = D["razdely"][r["razdel"]]
     url = url_razbora(r)
@@ -210,7 +226,7 @@ def razbor(r, D, po_slug, F=None):
     k = r["knopka"]
     zakon = "\n".join(norma(z) for z in r["zakon"])
     sverka = max(d["sverka"] for d in r["dela"])
-    sos = "\n".join(pk(po_slug[s]) for s in r["pohozhie"])
+    sos = "\n".join([pk(po_slug[s]) for s in r["pohozhie"]] + [statya_k(u) for u in r.get("statyi", [])])
     kartochki = "\n".join(kartochka(d, i + 1, len(r["dela"])) for i, d in enumerate(r["dela"]))
     stranica = golova(r["title"], r["description"], url, ld) + """<main class="pr" id="main">
 %(kr)s
@@ -233,7 +249,7 @@ def razbor(r, D, po_slug, F=None):
 </ul>
 %(faq)s
 <p class="sver">Сверено по первоисточникам <time datetime="%(sv)s">%(sv_ru)s</time>. Материал носит информационный характер, исход спора не гарантирует и не заменяет консультацию юриста. Нашли неточность — <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>.</p>
-<h2>Похожие разборы</h2>
+<h2>%(sos_z)s</h2>
 <div class="sos">
 %(sos)s
 </div>
@@ -246,7 +262,8 @@ def razbor(r, D, po_slug, F=None):
 """ % {"kr": kroshki_html(kr), "h1": e(r["h1"]), "data": r["data"], "data_ru": data_ru(r["data"]), "min": r["minut"],
        "lid": e(r["lid"]), "kart": kartochki, "telo": telo, "kz": e(k["zagolovok"]), "kt": e(k["tekst"]), "ku": e(k["url"]),
        "kk": e(k["knopka"]),
-       "cel": (' data-goal="%s"' % e(k["cel"])) if k.get("cel") else "", "slezh": slezh_attr(k), "slezh_js": '<script src="/js/slezh-knopka.js" defer></script>\n' if k.get("slezh") else "", "zakon": zakon, "faq": faq, "sv": sverka, "sv_ru": data_ru(sverka), "sos": sos}
+       "cel": (' data-goal="%s"' % e(k["cel"])) if k.get("cel") else "", "slezh": slezh_attr(k), "slezh_js": '<script src="/js/slezh-knopka.js" defer></script>\n' if k.get("slezh") else "", "zakon": zakon, "faq": faq, "sv": sverka, "sv_ru": data_ru(sverka), "sos": sos,
+       "sos_z": "Читайте также" if r.get("statyi") else "Похожие разборы"}
     return url, stranica
 
 

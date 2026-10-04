@@ -235,3 +235,26 @@ test('Разбор № 11: ВС 305-ЭС19-16064 «Красцветмет» — 
   assert.ok(!s.includes('Итог нового рассмотрения мы не проверяли'));
   assert.ok(s.includes('data-goal="razbor11_vypiska"') && s.includes('href="/kontragenty-iz-vypiski/"'));
 });
+
+// razbor13-v1 ([Ночные запуски] 04.10 19:05; текст [Право · Налоговый юрист] 16:10 разд. 4 с правками сверки 18:05 по тексту акта, «да» [Право] 18:40)
+test('Разбор № 13: КС 52-П — «с нового налогового периода», «если закон не установит иное», исключения до 21.07.2026, авансы 2027 — «разъяснила ФНС»', () => {
+  const s = un(chitat('praktika/nalogi/zemelnyj-nalog-izhs-koefficienty-ks-52-p/index.html')).replace(/<span class="nw">([^<]*)<\/span>/g, '$1');
+  assert.ok(s.includes('№ 52-П') && s.includes('А65-42005/2024') && s.includes('ООО «Корнер Казань»'));
+  assert.ok(s.includes('с нового налогового периода — с 2027 года, если закон не установит иное'));
+  assert.ok(!/со следующего налогового периода/.test(s), 'в акте — «с нового»');
+  assert.ok(s.includes('исполненных налогоплательщиками обязательств'), 'п. 2 — дословно');
+  assert.ok(s.includes('до 21 июля 2026 года — дня постановления'));
+  assert.ok(s.includes('так разъяснила ФНС (письмо от 21.07.2026 № БС-36-21/6262@)') && !/велит ФНС/.test(s), 'письмо — разъяснение, не норма');
+  assert.ok(!/БС-36-21\/8636@|0001202607220001/.test(s), '◐ не ставим до текста');
+  assert.ok(!/вернут(?!ь)|(?<!не )гарантир/.test(s), 'исход не обещаем');
+  assert.ok(s.includes('data-goal="razbor13_check"'));
+});
+
+// razbor11-v1.1 ([Ночные запуски] 04.10 19:05; [Право · Налоговый юрист] 18:40 разд. 1 пп. 2–3)
+test('Разбор № 11 v1.1: пример — две ступени штрафа (20 % и 40 %), FAQ «Чем закончилось» — с «Кассацию мы не проверяли», без «окончательно»', () => {
+  const s = un(chitat('praktika/nalogi/razryv-nds-v-cepochke-krascvetmet/index.html')).replace(/<span class="nw">([^<]*)<\/span>/g, '$1');
+  assert.ok(s.includes('штраф 40 %, 0,88 млн ₽ (п. 3 ст. 122 НК)') && s.includes('тогда ставка была 18 %'));
+  assert.ok(!/окончательно|выиграл дело/.test(s));
+  const f = JSON.parse(chitat('praktika/faq.json')).razbory['razryv-nds-v-cepochke-krascvetmet'];
+  assert.ok(f.find((x) => /Чем закончилось/.test(x.v)).o.includes('Кассацию мы не проверяли.'));
+});

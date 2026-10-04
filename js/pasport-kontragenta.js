@@ -511,6 +511,11 @@
   // cbr.ru/counteraction_m_ter/platform_zsk/proverka-po-inn/ (проверено 01.10.2026): «Информация платформы ЗСК ежедневно
   // передается в кредитные организации», «Информация является справочной». Поэтому у сверки с ЦБ свой срок свежести — день, а не 30.
   var OTM_ZSK = 'Сведения ЗСК Банк России передаёт банкам ежедневно — в день оплаты проверьте ещё раз.';
+  // zsk-dolg-sud-v1 ([Ночные-3] 04.10, ТЗ [Продукт] 14:00 разд. 2.3; текст из Разбора № 12, [Право] 13:10 разд. 4):
+  // подсказка пользователю под его отметкой «есть сведения» в сервисе ЗСК Банка России. Не факт о контрагенте:
+  // только на экране (noprint), в отпечаток, Индекс и «Комментарий команды» не идёт.
+  var OTM_ZSK_SUD = 'Красная зона сама по\u00a0себе не\u00a0даёт банку права не\u00a0исполнить решение суда о\u00a0взыскании (ВС, №\u00a0305-ЭС25-1505).';
+  var OTM_ZSK_SUD_URL = '/praktika/115-fz/zsk-dolzhnika-sudebnyj-prikaz/';
   function zskAdres(u) { return /^https:\/\/(www\.)?cbr\.ru\/counteraction_m_ter\/platform_zsk\//i.test(String(u || '').trim()); }
   function dnejTekst(n) { var d = n % 10, s = n % 100; return n + ' ' + (d === 1 && s !== 11 ? 'день' : d >= 2 && d <= 4 && (s < 12 || s > 14) ? 'дня' : 'дней'); }
   function hostIz(u) { var m = /^https:\/\/([a-z0-9.-]+)(?::\d+)?(\/|$)/i.exec(String(u || '').trim()); return m ? m[1].toLowerCase() : ''; }
@@ -555,7 +560,7 @@
     if (zsk) sovet = ((dnej > 0 ? 'Сверка с Банком России была ' + dnejTekst(dnej) + ' назад. ' : '') + OTM_ZSK + ' ' + sovet).trim();
     else if (dnej > OTM_SVEZHEST_DNEJ) sovet = ('Проверке больше ' + OTM_SVEZHEST_DNEJ + ' дней — перед оплатой перепроверьте. ' + sovet).trim();
     return { ok: true, razdel: x.n, id: x.id, rez: vvod.rez, ton: OTM_TON[vvod.rez], ist: i, url: ist.url, adres: adres,
-      data: dataRu(d), vremya: dd(vr[0]) + ':' + dd(vr[1]), tz: tz, kogda: kogda, dnej: dnej, pril: pril, ep: ep, zsk: zsk,
+      data: dataRu(d), vremya: dd(vr[0]) + ':' + dd(vr[1]), tz: tz, kogda: kogda, dnej: dnej, pril: pril, ep: ep, zsk: zsk, zskSud: zsk && vvod.rez === 'est',
       dolzhnost: dolzh, tekst: tekst, stroki: stroki, sovet: sovet, ogovorka: OTM_OGOVORKA };
   }
   // Сводка для «Решения о сделке»: какие разделы заказчик проверил сам. Порядок — по номеру раздела.
@@ -654,7 +659,7 @@
   return { VERSIYA: VERSIYA, RAZDELY: RAZDELY, sobrat: sobrat, strukturaBalansa: strukturaBalansa, polosaBalansaHtml: polosaBalansaHtml, proverit: proverit, razdelDlya: razdelDlya,
     vypustit: vypustit, nomerIz: nomerIz, podpisant: podpisant, datuIz: datuIz, tuZheDolzhnost: tuZheDolzhnost, SSYLKI_PODPISANTA: SSYLKI_PODPISANTA, qrSsylka: qrSsylka, podval: podval, SLOVAR_222: SLOVAR_222,
     OPREDELENIE_INDEKSA: OPREDELENIE_INDEKSA, PODPIS_PREDELA: PODPIS_PREDELA,
-    otmetka: otmetka, otmetkiSvodka: otmetkiSvodka, dataIzRu: dataIzRu, tuZheSajt: tuZheSajt, OTM_SNIMOK: OTM_SNIMOK, OTM_EP: OTM_EP, OTM_EP_HOST: OTM_EP_HOST, OTM_OGOVORKA: OTM_OGOVORKA, OTM_REZ: OTM_REZ, OTM_SVEZHEST_DNEJ: OTM_SVEZHEST_DNEJ, OTM_ZSK: OTM_ZSK, zskAdres: zskAdres, dnejTekst: dnejTekst,
+    otmetka: otmetka, otmetkiSvodka: otmetkiSvodka, dataIzRu: dataIzRu, tuZheSajt: tuZheSajt, OTM_SNIMOK: OTM_SNIMOK, OTM_EP: OTM_EP, OTM_EP_HOST: OTM_EP_HOST, OTM_OGOVORKA: OTM_OGOVORKA, OTM_REZ: OTM_REZ, OTM_SVEZHEST_DNEJ: OTM_SVEZHEST_DNEJ, OTM_ZSK: OTM_ZSK, OTM_ZSK_SUD: OTM_ZSK_SUD, OTM_ZSK_SUD_URL: OTM_ZSK_SUD_URL, zskAdres: zskAdres, dnejTekst: dnejTekst,
     netBezDaty: netBezDaty, diskvalProveren: diskvalProveren, DISKVAL_SAM: DISKVAL_SAM,
     kanon: kanon, otpechatok: otpechatok, otpechatokKratko: otpechatokKratko, dataRu: dataRu, isIp: isIp, VSEGDA_NE_ZNAEM: VSEGDA_NE_ZNAEM };
 });

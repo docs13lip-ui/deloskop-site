@@ -223,7 +223,7 @@ test('(ж) 222-ФЗ и 38-ФЗ: в модуле нет «надёжн», «ве�
   const html = fs.readFileSync(path.join(K, 'index.html'), 'utf8');
   assert.ok(html.indexOf('/indeks/indeks.js') < html.indexOf('/js/indeks-otvet.js') && html.indexOf('/js/indeks-otvet.js') < html.indexOf('/js/otchet.js'));
   const pk = fs.readFileSync(path.join(K, 'pasport/kontragent/index.html'), 'utf8');
-  assert.ok(pk.includes('<script src="/js/indeks-otvet.js"></script>') && pk.includes('IndeksOtvet.gotovo(go)'));
+  assert.ok(pk.includes('<script src="/js/indeks-otvet.js"></script>') && pk.includes('zhdatMetodiku('));
   const comp = path.join(K, 'company');
   for (const d of fs.readdirSync(comp)) {
     const f = path.join(comp, d, 'index.html');

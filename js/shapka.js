@@ -44,6 +44,15 @@
     }
     return false;
   }
+  // Родитель — flex/grid (вопрос FAQ в <summary>, кнопки): каждый кусок текста стал бы отдельной
+  // колонкой — вопрос распадается на три столбца, «+» уезжает за край экрана на 390 px.
+  // Тогда куски кладём в одну строчную обёртку <span class="nw-k"> — для раскладки это один элемент.
+  function vFlex(el) {
+    try {
+      var d = window.getComputedStyle && el && el.nodeType === 1 ? window.getComputedStyle(el).display : "";
+      return /(^|-)(flex|grid)$/.test(d || "");
+    } catch (e) { return false; }
+  }
   function obernut(root) {
     root = root || document.body;
     if (!root || !document.createTreeWalker) return 0;
@@ -60,11 +69,15 @@
         var sp = document.createElement("span"); sp.className = "nw"; sp.textContent = c.t;
         fr.appendChild(sp); k++;
       });
+      if (vFlex(u.parentNode)) {
+        var ob = document.createElement("span"); ob.className = "nw-k";
+        ob.appendChild(fr); fr = ob;
+      }
       u.parentNode.replaceChild(fr, u);
     });
     return k;
   }
-  window.dlkNerazryv = { kuski: kuski, obernut: obernut };
+  window.dlkNerazryv = { kuski: kuski, obernut: obernut, vFlex: vFlex };
 
   function init() {
     var h = document.querySelector("[data-shapka]");

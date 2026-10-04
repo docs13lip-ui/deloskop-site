@@ -99,7 +99,7 @@ test('HTML: счётчик, точки, легенда; ФИО и адрес н�
   r.damia.sudy.proverit_samim = 'javascript:alert(1)';
   const h = O.html(r);
   assert.ok(h.includes('Откуда данные'));
-  assert.ok(h.includes('ответили 3 из 10' + NB + 'источников'));
+  assert.ok(h.includes('ответили 3 из 10' + NB + 'запрошенных'));
   assert.ok(h.includes('●●●○○○○○○○'));
   assert.ok(h.includes('не значит «не нашли»'));
   assert.ok(h.includes('Это оценка риска, а не решение банка.'));
@@ -124,9 +124,9 @@ test('пустой ответ — пусто; склонение счётчик�
   assert.strictEqual(O.html(null), '');
   assert.strictEqual(O.html({}), '');
   const r = otvet({ damia: {}, signals: [], dossier: {} });
-  assert.ok(O.html(r).includes('ответили 1 из 2' + NB + 'источников'));
+  assert.ok(O.html(r).includes('ответил 1 из 2' + NB + 'запрошенных'));
   const r1 = otvet({ damia: {}, signals: [], dossier: {}, company: { inn: '770000000012' } });
-  assert.ok(O.html(r1).includes('ответили 1 из 1' + NB + 'источника'));
+  assert.ok(O.html(r1).includes('ответил 1 из 1' + NB + 'запрошенного'));
 });
 
 test('тексты: без превосходных степеней и обещаний; ИИ не упоминаем', () => {

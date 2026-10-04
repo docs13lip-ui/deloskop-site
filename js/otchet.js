@@ -109,17 +109,19 @@
 
   var POD_PILL = 'по признакам из реестров';
   // «Данных пока мало» (Индекс без числа) + пилюля API «Без серьёзных сигналов»: слова уровня 70–99 читались бы как оценка,
-  // которой нет — пишем о найденном и сколько источников проверено (ТЗ [Продукт · Данные] 03.10 18:55 разд. 4, [Право] 20:07 разд. 3).
+  // которой нет — пишем о найденном и сколько реестров методики учтено (ТЗ [Продукт · Данные] 03.10 18:55 разд. 4, [Право] 20:07 разд. 3).
+  // indeks-yasno-v1 (ТЗ [Продукт] 03.10 22:55 разд. 2): на листе одно «из» — 7 реестров методики, то же число, что в колонке Индекса
+  // (IndeksOtvet.vid(r).istochnikov / vsego). Опись «Откуда данные» считает другое и называется «ответили N из M запрошенных».
   var PILL_SOKR = 'В найденных данных серьёзных сигналов нет';
-  function podSokr(o) {
-    if (!o || !(o.oprosheno > 0) || !(o.otvetili >= 0)) return '';
-    var t = 'Проверено источников: ' + o.otvetili + NB + 'из' + NB + o.oprosheno;
-    return o.otvetili < o.oprosheno ? t + '. По остальным не' + NB + 'проверяли — это не' + NB + 'значит «нарушений нет».' : t;
+  function podSokr(v) {
+    if (!v || !(v.vsego > 0) || !(v.istochnikov >= 0)) return '';
+    var t = 'Учтено реестров: ' + v.istochnikov + NB + 'из' + NB + v.vsego;
+    return v.istochnikov < v.vsego ? t + '. По остальным не' + NB + 'проверяли — это не' + NB + 'значит «нарушений нет».' : t;
   }
-  // pilyulya(r, v, opis) → { t, pod } — что написать в пилюле и под ней; t = null — текст пилюли не трогаем.
-  // v — IndeksOtvet.vid(r), opis — Otkuda.istochniki(r).
-  function pilyulya(r, v, opis) {
-    if (r && r.risk_level === 'low' && v && v.rezhim === 'sokr') return { t: PILL_SOKR, pod: podSokr(opis) || POD_PILL };
+  // pilyulya(r, v) → { t, pod } — что написать в пилюле и под ней; t = null — текст пилюли не трогаем.
+  // v — IndeksOtvet.vid(r).
+  function pilyulya(r, v) {
+    if (r && r.risk_level === 'low' && v && v.rezhim === 'sokr') return { t: PILL_SOKR, pod: podSokr(v) || POD_PILL };
     return { t: null, pod: POD_PILL };
   }
 
@@ -190,10 +192,9 @@
       var chislo = /ot-ix__big/.test(h);
       if (pill && !chislo) {
         pill.classList.add('ot-pill'); ix.insertBefore(pill, ix.lastChild);
-        var pv = null, op = null, w = doc.defaultView || {};
+        var pv = null;
         try { pv = IO && indeks(r) == null && IO.gotov && IO.gotov() ? IO.vid(r) : null; } catch (e) { pv = null; }
-        try { op = w.Otkuda && w.Otkuda.istochniki ? w.Otkuda.istochniki(r) : null; } catch (e) { op = null; }
-        var pp = pilyulya(r, pv, op);
+        var pp = pilyulya(r, pv);
         tekstPilyuli(pill, pp.t);
         // правка [Арт-директора] 02.10 13:35: уровень риска — не Индекс, подписываем, откуда он
         ix.insertBefore(el(doc, 'div', 'ot-ix__pod', esc(pp.pod)), ix.lastChild);

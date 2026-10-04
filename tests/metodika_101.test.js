@@ -80,19 +80,21 @@ test('экран: ответ без отчётности → «данных по
   assert.ok(!/ot-ix__big/.test(IO.htmlKolonka(v)));
 });
 
-test('пилюля при «данных пока мало»: low → «В найденных данных серьёзных сигналов нет» + «Проверено источников: N из M»', () => {
+test('пилюля при «данных пока мало»: low → «В найденных данных серьёзных сигналов нет» + «Учтено реестров: N из 7» (indeks-yasno-v1)', () => {
   const r = otvet(), v = IO.vid(r);
-  const p = O.pilyulya(r, v, { otvetili: 3, oprosheno: 7 });
+  assert.strictEqual(v.vsego, 7);
+  const p = O.pilyulya(r, v);
   assert.strictEqual(p.t, 'В найденных данных серьёзных сигналов нет');
-  assert.strictEqual(p.pod, 'Проверено источников: 3' + NB + 'из' + NB + '7. По остальным не' + NB + 'проверяли — это не' + NB + 'значит «нарушений нет».');
-  // все ответили — без оговорки
-  assert.strictEqual(O.pilyulya(r, v, { otvetili: 5, oprosheno: 5 }).pod, 'Проверено источников: 5' + NB + 'из' + NB + '5');
-  // описи нет — прежняя подпись
-  assert.strictEqual(O.pilyulya(r, v, null).pod, O.POD_PILL);
-  // опись — из «Откуда данные»
-  const op = OT.istochniki(r);
-  assert.ok(op.oprosheno > 0);
-  assert.match(O.pilyulya(r, v, op).pod, new RegExp('^Проверено источников: ' + op.otvetili + NB + 'из' + NB + op.oprosheno));
+  assert.strictEqual(p.pod, 'Учтено реестров: ' + v.istochnikov + NB + 'из' + NB + '7. По остальным не' + NB + 'проверяли — это не' + NB + 'значит «нарушений нет».');
+  // знаменатель и числитель — те же, что в колонке Индекса: расхождения быть не может
+  assert.ok(IO.podpis(v).includes(v.istochnikov + NB + 'из' + NB + v.vsego + ' источников'));
+  // все 7 учтены — без оговорки
+  assert.strictEqual(O.pilyulya(r, Object.assign({}, v, { istochnikov: 7 })).pod, 'Учтено реестров: 7' + NB + 'из' + NB + '7');
+  // опись «Откуда данные» в подстрочник больше не передаётся: третий аргумент ничего не меняет
+  assert.strictEqual(O.pilyulya(r, v, { otvetili: 3, oprosheno: 10 }).pod, p.pod);
+  // нет вида Индекса — прежняя подпись
+  assert.strictEqual(O.pilyulya(r, null).pod, O.POD_PILL);
+  assert.ok(!/Проверено источников/.test(chitat('js/otchet.js')), 'старое «Проверено источников: N из M» осталось');
 });
 
 test('пилюля не меняется: есть число, другой уровень риска, нет разбора', () => {

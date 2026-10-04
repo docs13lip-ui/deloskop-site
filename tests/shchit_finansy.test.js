@@ -136,3 +136,45 @@ test('шапка листа Щита («Признаков: N») пересчи�
   const s = chitat('js/otchet.js');
   assert.match(s, /o\.shR\.gotovo\.then\(shKr/);
 });
+
+// shchit-ubytki-v1 (04.10.2026, [Ночные-3]): убыток 2+ года — и «глазами налоговой». Текст — [Право · Налоговый] 04.10 09:20
+// разд. 3 дословно (claude/Право_статья_по_сумме_знак_налога_даты_ЕГРЮЛ_ГИРБО_04.10.md): критерий 2 прил. 2 к ММ-3-06/333@.
+const UBYTKI_NALOG = 'Убытки два года и более — один из открытых критериев, по которым налоговая отбирает компании для выездной проверки ' +
+  '(критерий 2, приказ ФНС от 30.05.2007 № ММ-3-06/333@). Проверка от этого не обязательна.';
+
+test('убыток 2 года подряд — строка у налоговой дословно [Право] 09:20; шаг один (объяснение для инспекции)', () => {
+  const r = zhivoj();
+  r.dossier.charts.profit = [{ year: 2023, value: 5e6 }, { year: 2024, value: -2e6 }, { year: 2025, value: -3e6 }];
+  r.dossier.sections = [];
+  const X = S.razbor(r);
+  const n = X.nalogovaya.find((x) => x.kind === 'ubytki');
+  assert.ok(n, 'нет строки у налоговой');
+  assert.strictEqual(n.pochemu, UBYTKI_NALOG);
+  assert.strictEqual(n.priznak, 'Убыток 2 года подряд — по годовой отчётности за 2024 и 2025');
+  assert.ok(X.banki.some((x) => x.kind === 'ubytki'), 'у банка строка осталась');
+  assert.deepStrictEqual(X.shagi.map((s) => s.kind), ['nagruzka', 'sled']);
+  // подпись «Ссылки на нормы в скобках сверены … на 02.10.2026» эта строка не включает: сверена 04.10, и это приказ, не закон
+  assert.ok(!/\((п|пп|ст)\. [^)]+\)\.$/.test(n.pochemu));
+  assert.match(S.html(X), /Проверка от этого не\s?обязательна\./);
+  assert.match(S.html(X), /<span class="nw">№ ММ-3-06\/333@\)\.<\/span>/, 'номер со скобкой не рвётся');
+});
+
+test('один убыточный год, ИП и прибыль — строки у налоговой нет; без обещаний исхода', () => {
+  const r1 = zhivoj(); r1.dossier.charts.profit = [{ year: 2024, value: 7e6 }, { year: 2025, value: -5 }];
+  assert.ok(!S.razbor(r1).nalogovaya.some((x) => x.kind === 'ubytki'));
+  assert.ok(!S.razbor(zhivoj()).nalogovaya.some((x) => x.kind === 'ubytki'));
+  const ip = zhivoj(); ip.company.inn = '771234567890'; ip.company.kind = 'INDIVIDUAL';
+  ip.dossier.charts.profit = [{ year: 2024, value: -2e6 }, { year: 2025, value: -3e6 }];
+  assert.ok(!S.razbor(ip).nalogovaya.some((x) => x.kind === 'ubytki'));
+  assert.ok(!/провер(ят|ка будет)|обязательно (придут|проверят)|гарантир/i.test(S.T.ubytki.n.t + ' ' + S.T.ubytki.n.dop));
+});
+
+test('mount: номера норм оборачиваются общим dlkNerazryv (не рвутся на 390 px), без него — без ошибок', () => {
+  const r = zhivoj();
+  r.dossier.charts.profit = [{ year: 2024, value: -2e6 }, { year: 2025, value: -3e6 }];
+  const el = fakeEl(); let vyzov = 0;
+  const bylo = global.window; global.window = { dlkNerazryv: { obernut: (u) => { if (u === el) vyzov++; } } };
+  try { S.mount(el, r, { normy: NORMY }); } finally { if (bylo === undefined) delete global.window; else global.window = bylo; }
+  assert.ok(vyzov >= 1, 'obernut не вызван');
+  assert.doesNotThrow(() => S.mount(fakeEl(), r, { normy: NORMY }));
+});

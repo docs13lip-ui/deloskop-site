@@ -104,6 +104,7 @@ footer a{color:var(--muted)}
 <link rel="stylesheet" href="/css/shapka.css">
 <link rel="stylesheet" href="/css/acc.css">
 <script src="/js/acc.js" defer></script>
+<script src="/js/kpp-inn.js" defer></script>
 <script src="/js/smena.js" defer></script>
 <script src="/js/bez-nds.js" defer></script>
 <script src="/js/shapka.js" defer></script>
@@ -278,8 +279,8 @@ function parse(raw){
   r.ks=accs.filter(function(a){return a.indexOf('301')===0})[0]||null;
   var cand=accs.filter(function(a){return a.indexOf('301')!==0});
   if(r.bik){var good=cand.filter(function(a){return accOk(r.bik,a)});r.acc=good[0]||cand[0]||null}else r.acc=cand[0]||null;
-  m=t.match(/КПП[^\d]{0,12}(\d{9})(?!\d)/i)||t.match(/(?:ИНН|ИНН\s*\/\s*КПП)[^\d]{0,12}\d{10}\s*\/\s*(\d{9})(?!\d)/i);
-  if(m)r.kpp=m[1];
+  m=t.match(/КПП[^\d]{0,12}(\d{4}[0-9A-Z]{2}\d{3})(?![0-9A-Z])/i)||t.match(/(?:ИНН|ИНН\s*\/\s*КПП)[^\d]{0,12}\d{10}\s*\/\s*(\d{4}[0-9A-Z]{2}\d{3})(?![0-9A-Z])/i);
+  if(m)r.kpp=m[1].toUpperCase();
   m=t.match(/(?:всего|итого)\s*к\s*оплате[^\d]{0,30}(\d[\d ]*[.,]\d{2})/i)||t.match(/итого[^\d]{0,30}(\d[\d ]*[.,]\d{2})/i);
   if(m)r.total=num(m[1]);
   m=t.match(/(?:в\s*т(?:ом)?\.?\s*ч(?:исле)?\.?\s*)?(?:сумма\s*)?НДС[^\d]{0,4}(?:\(?\s*(\d{1,2})\s*%\s*\)?)?[^\d]{0,20}(\d[\d ]*[.,]\d{2})/i);
@@ -350,7 +351,7 @@ function render(r,sel,local,remote,remoteErr){
     all.push({st:lvl==='high'?'bad':lvl==='medium'?'warn':'ok',title:'Признаки риска поставщика',
       detail:(co.name_short||co.name_full||'')+': '+({low:'Без серьёзных сигналов',medium:'Есть вопросы',high:'Есть серьёзные сигналы'}[remote.risk_level]||'')+'. '+(remote.verdict||'')});
     if(co.status&&co.status!=='ACTIVE')all.push({st:'bad',title:'Статус в ЕГРЮЛ',detail:'Компания не действует: '+({LIQUIDATING:'ликвидируется или ФНС готовит исключение из ЕГРЮЛ',LIQUIDATED:'ликвидирована',BANKRUPT:'дело о банкротстве',REORGANIZING:'реорганизация'}[co.status]||co.status)+'.'});
-    if(r.kpp&&co.kpp&&r.kpp!==co.kpp)all.push({st:'warn',title:'КПП',detail:'В счёте '+r.kpp+', в ЕГРЮЛ '+co.kpp+'. Так бывает у филиалов, но стоит уточнить.'});
+    if(r.kpp&&co.kpp&&r.kpp!==co.kpp)all.push({st:'warn',title:'КПП',detail:(window.DlkKppInn?DlkKppInn.strokaRashozhdeniya(r.kpp,co.kpp):'В счёте '+r.kpp+', в ЕГРЮЛ '+co.kpp+'. Так бывает у филиалов, но стоит уточнить.')});
     var bn=window.DlkBezNds&&DlkBezNds.stroka(r.noVat,remote,new Date());if(bn)all.push(bn);
   }
   var worst=(accBad||all.some(function(x){return x.st==='bad'}))?'bad':(accHigh||all.some(function(x){return x.st==='warn'}))?'warn':'ok';

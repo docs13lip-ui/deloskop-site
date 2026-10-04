@@ -1363,9 +1363,15 @@ def _nav_stranic(n, vsego):
         "".join(tuda), "".join(sp))
 
 
-def html_haba(kart, index, n=1, vsego=1, vse=None):
-    """Страница n из vsego хаба; kart — карточки этой страницы, vse — все (для описания и строки регионов)."""
+def html_haba(kart, index, n=1, vsego=1, vse=None, kg=None):
+    """Страница n из vsego хаба; kart — карточки этой страницы, vse — все (для описания и строки регионов);
+    kg — {(vid, имя): адрес} хабов групп (kartochki-haby-v1): заголовок отрасли и регион — ссылкой на свой хаб."""
     vse = kart if vse is None else vse
+    kg = kg or {}
+
+    def _s(vid, imya, txt):
+        adr = kg.get((vid, imya))
+        return '<a href="%s">%s</a>' % (adr, txt) if adr else txt
     po_otr, po_reg = {}, {}
     for k in vse:
         r = k.get("region") or ""
@@ -1383,14 +1389,14 @@ def html_haba(kart, index, n=1, vsego=1, vse=None):
         sp = sorted(po_otr[o], key=lambda x: x["name"])
         # kartochki-okved-v1 (ТЗ 16:50, разд. 2): под названием — «город · ОКВЭД 46.71», если код напечатан на карточке
         bloki.append('<section class="co-sec"><h2>%s <span class="caption">%d</span></h2><ul class="co-sos co-sos--cols">%s</ul></section>' % (
-            e(o), len(sp), "".join('<li><a href="%s">%s</a><span class="caption">%s</span></li>' % (
+            _s("otrasl", o, e(o)), len(sp), "".join('<li><a href="%s">%s</a><span class="caption">%s</span></li>' % (
                 adres_str(x), e(x["name"]), " · ".join(filter(None, [e(x.get("gorod") or x.get("region") or ""),
                                                                    ("ОКВЭД%s<span class=\"num\">%s</span>" % (NB, okved_kod(x.get("okved"))))
                                                                    if okved_kod(x.get("okved")) else ""]))) for x in sp)))
     regiony = ""
     if po_reg and n <= 1:
         regiony = '<p class="co-reg caption">Группы — по основному виду деятельности в ЕГРЮЛ (раздел ОКВЭД%s2). По регионам: %s.</p>' % (NB, " · ".join(
-            "%s%s—%s%d" % (e(r), NB, NB, n) for r, n in sorted(po_reg.items(), key=lambda x: (-x[1], x[0]))))
+            "%s%s—%s%d" % (_s("region", r, e(r)), NB, NB, c) for r, c in sorted(po_reg.items(), key=lambda x: (-x[1], x[0]))))
     chitat = ('<section class="co-sec co-chit" id="kak-chitat"><h2>Как читать карточку</h2><ol class="co-chit__sp">%s</ol>'
               '<p class="caption">Сведения — из открытых государственных реестров на указанные даты; выводы — наш расчёт по этим '
               'сведениям, а не решение банка или налоговой. Средняя налоговая нагрузка по отраслям — '
@@ -1415,7 +1421,7 @@ def html_haba(kart, index, n=1, vsego=1, vse=None):
         h1 = "Компании — страница%s%d из%s%d" % (NB, n, NB, vsego)
         krosh = '<a href="/%s/">Компании</a> › Страница%s%d' % (PAPKA, NB, n)
         lead = ('Продолжение списка карточек компаний. Нет нужной — проверьте её по ИНН на <a href="/">главной</a>. '
-                '<a href="/%s/#kak-chitat">Как читать карточку ›</a>' % PAPKA)
+                '<a href="/%s/#kak-chitat">Как читать карточку%s›</a>' % (PAPKA, NB))
         chitat = ""
         ld["itemListElement"].append({"@type": "ListItem", "position": 3, "name": "Страница %d" % n,
                                       "item": SAJT + adres_stranicy_haba(n)})
@@ -1448,6 +1454,190 @@ def html_haba(kart, index, n=1, vsego=1, vse=None):
 """.format(t=e(t), robots=robots, d=e(d), sajt=SAJT, kanon=adres_stranicy_haba(n), bloki="".join(bloki), regiony=regiony,
            chitat=chitat, nav=nav + ("\n" if nav else ""), h1=h1, krosh=krosh, lead=lead,
            ld=json.dumps(ld, ensure_ascii=False, separators=(",", ":")))
+
+
+# ---------------------------------------------------------------- kartochki-haby-v1: хабы отраслей и регионов
+# ТЗ [Продукт · Данные] 03.10 разд. 3.3 и hab-v2: «Хаб региона или раздела ОКВЭД появляется, когда в нём ≥ 30 карточек».
+# /company/otrasl/<slug>/ — раздел ОКВЭД (основной вид деятельности в ЕГРЮЛ), /company/region/<slug>/ — регион по адресу
+# в ЕГРЮЛ. Меньше HAB_GRUPPY_OT опубликованных карточек — страницы нет вовсе (тонкий список — риск «малоценных»), ссылок
+# на неё тоже нет. В индекс и sitemap-companies — только когда ≥ HAB_GRUPPY_OT карточек группы сами за воротами
+# индексации (то же правило, что перевод /company/ в index — тестом по sitemap); иначе noindex, follow. По 100 карточек
+# на страницу, страницы 2…N — noindex, follow. Ссылки: заголовки отраслей и строка регионов хаба /company/, звенья
+# «регион» и «раздел» в крошках карточек. Тексты — только о том, что делает страница (без норм права).
+HAB_GRUPPY_OT = 30
+GRUPPY_VIDY = ("otrasl", "region")
+
+
+def region_polnyj(r):
+    """«Челябинская обл» → «Челябинская область», «Респ Татарстан» → «Республика Татарстан» (только вид, не смысл)."""
+    s = str(r or "").strip()
+    s = re.sub(r"\bобл\.?$", "область", s)
+    s = re.sub(r"^Респ\.?\s", "Республика ", s)
+    s = re.sub(r"\sРесп\.?$", " Республика", s)
+    return s
+
+
+def gruppa_karty(k, vid):
+    if vid == "otrasl":
+        o = hab_otrasl(k)
+        return "" if o == HAB_NET_OTRASLI else o
+    return k.get("region") or ""
+
+
+def gruppy_haba(vse, ot=None):
+    """→ [{vid, imya, slug, kart}] — группы с ≥ ot опубликованных карточек; порядок и адреса детерминированы."""
+    ot = HAB_GRUPPY_OT if ot is None else ot
+    out = []
+    for vid in GRUPPY_VIDY:
+        po = {}
+        for k in vse:
+            g = gruppa_karty(k, vid)
+            if g:
+                po.setdefault(g, []).append(k)
+        zanyato = set()
+        for imya in sorted(po, key=lambda x: (-len(po[x]), x)):
+            if len(po[imya]) < ot:
+                continue
+            s = slug(region_polnyj(imya) if vid == "region" else imya)
+            s0, i = s, 2
+            while s in zanyato:
+                s, i = "%s-%d" % (s0, i), i + 1
+            zanyato.add(s)
+            out.append({"vid": vid, "imya": imya, "slug": s, "kart": sorted(po[imya], key=lambda x: (x["name"], x["inn"]))})
+    return out
+
+
+def adres_gruppy(g, n=1):
+    base = "/%s/%s/%s/" % (PAPKA, g["vid"], g["slug"])
+    return base if n <= 1 else "%s%s/%d/" % (base, HAB_STRANICA, n)
+
+
+def karta_grupp(gruppy):
+    """{(vid, имя): адрес} — для ссылок из хаба и крошек."""
+    return {(g["vid"], g["imya"]): adres_gruppy(g) for g in gruppy}
+
+
+def _nav_obshij(n, vsego, adres, metka):
+    if vsego <= 1:
+        return ""
+    sp = [('<span aria-current="page">%d</span>' % i) if i == n else ('<a href="%s">%d</a>' % (adres(i), i))
+          for i in range(1, vsego + 1)]
+    tuda = []
+    if n > 1:
+        tuda.append('<a href="%s" rel="prev">‹%sНазад</a>' % (adres(n - 1), NB))
+    if n < vsego:
+        tuda.append('<a href="%s" rel="next">Дальше%s›</a>' % (adres(n + 1), NB))
+    return '<nav class="co-str caption" aria-label="%s">%s<span class="co-str__sp">%s</span></nav>' % (
+        metka, "".join(tuda), "".join(sp))
+
+
+def _li_haba(x, s_otraslyu=False):
+    podpis = [e(x.get("gorod") or x.get("region") or "")]
+    if s_otraslyu and hab_otrasl(x) != HAB_NET_OTRASLI:
+        podpis.append(e(hab_otrasl(x)))
+    if okved_kod(x.get("okved")):
+        podpis.append("ОКВЭД%s<span class=\"num\">%s</span>" % (NB, okved_kod(x.get("okved"))))
+    return '<li><a href="%s">%s</a><span class="caption">%s</span></li>' % (
+        adres_str(x), e(x["name"]), " · ".join(filter(None, podpis)))
+
+
+def stranicy_gruppy(g, na_stranice=None):
+    na = na_stranice or HAB_NA_STRANICE
+    sp = g["kart"]
+    return [sp[i:i + na] for i in range(0, len(sp), na)] or [[]]
+
+
+def title_gruppy(g):
+    imya = region_polnyj(g["imya"]) if g["vid"] == "region" else g["imya"]
+    t = ("Компании: %s — проверка по ИНН" % imya) if g["vid"] == "region" else ("%s: компании — проверка по ИНН" % imya)
+    return t + " — Делоскоп" if len(t) + len(" — Делоскоп") <= 70 else t
+
+
+def html_gruppy(g, kart, index, n=1, vsego=1):
+    """Страница n из vsego хаба группы g; kart — карточки страницы."""
+    vsego_k = len(g["kart"])
+    kom = "%d%s%s" % (vsego_k, NB, plural(vsego_k, "компания", "компании", "компаний"))
+    if g["vid"] == "region":
+        imya = region_polnyj(g["imya"])
+        h1 = "Компании: %s" % e(imya)
+        lead = ("%s, у которых адрес в ЕГРЮЛ — %s. Сгруппированы по основному виду деятельности. " % (kom, e(imya)))
+        d = "%s в Делоскопе, адрес в ЕГРЮЛ — %s: доходы, штат, налоги и долги, у каждой цифры источник и дата сведений." % (kom, imya)
+        po = {}
+        for x in kart:
+            po.setdefault(hab_otrasl(x), []).append(x)
+        otr = sorted(po, key=lambda o: (o == HAB_NET_OTRASLI, -len(po[o]), o))
+        bloki = "".join('<section class="co-sec"><h2>%s <span class="caption">%d</span></h2><ul class="co-sos co-sos--cols">%s</ul></section>' % (
+            e(o), len(po[o]), "".join(_li_haba(x) for x in po[o])) for o in otr)
+    else:
+        imya = g["imya"]
+        h1 = e(imya)
+        lead = ("%s, у которых основной вид деятельности в ЕГРЮЛ — из раздела «%s» (ОКВЭД%s2). " % (kom, e(imya), NB))
+        d = "%s в Делоскопе с основным видом деятельности «%s»: доходы, штат, налоги и долги — с источником и датой сведений." % (kom, imya)
+        bloki = '<section class="co-sec"><ul class="co-sos co-sos--cols">%s</ul></section>' % "".join(_li_haba(x) for x in kart)
+    lead += ('У каждой цифры на карточке — источник и дата сведений. Нет нужной компании — проверьте её по ИНН на '
+             '<a href="/">главной</a>. <a href="/%s/#kak-chitat">Как читать карточку%s›</a>' % (PAPKA, NB))
+    t = title_gruppy(g)
+    if len(d) > 160:
+        d = d[:157].rsplit(" ", 1)[0] + "…"
+    ld = {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+        {"@type": "ListItem", "position": 1, "name": "Делоскоп", "item": SAJT + "/"},
+        {"@type": "ListItem", "position": 2, "name": "Компании", "item": "%s/%s/" % (SAJT, PAPKA)},
+        {"@type": "ListItem", "position": 3, "name": imya, "item": SAJT + adres_gruppy(g)}]}
+    krosh = '<a href="/%s/">Компании</a> › %s' % (PAPKA, e(imya))
+    if n > 1:
+        t = "%s — страница %d из %d" % (imya if g["vid"] == "otrasl" else "Компании: " + imya, n, vsego)
+        d = "%s Страница %d из %d." % (d.rstrip("…"), n, vsego) if len(d) < 140 else d
+        h1 = "%s — страница%s%d из%s%d" % (h1, NB, n, NB, vsego)
+        krosh = '<a href="/%s/">Компании</a> › <a href="%s">%s</a> › Страница%s%d' % (PAPKA, adres_gruppy(g), e(imya), NB, n)
+        ld["itemListElement"].append({"@type": "ListItem", "position": 4, "name": "Страница %d" % n,
+                                      "item": SAJT + adres_gruppy(g, n)})
+    robots = "" if (index and n <= 1) else '<meta name="robots" content="noindex, follow">\n'
+    nav = _nav_obshij(n, vsego, lambda i: adres_gruppy(g, i), "Страницы списка компаний")
+    return """<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{t}</title>
+{robots}<meta name="description" content="{d}">
+<link rel="canonical" href="{sajt}{kanon}">
+<meta name="theme-color" content="#F5F5F2">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/css/ds.css">
+<link rel="stylesheet" href="/css/co.css">
+<script type="application/ld+json">{ld}</script>
+</head>
+<body class="co">
+<!--shapka--><!--/shapka-->
+<main id="main" class="wrap co-wrap">
+<nav class="co-krosh caption" aria-label="Навигация"><a href="/">Делоскоп</a> › {krosh}</nav>
+<header class="co-head"><h1>{h1}</h1><p class="lead">{lead}</p></header>
+{bloki}
+{nav}</main>
+</body>
+</html>
+""".format(t=e(t), robots=robots, d=e(d), sajt=SAJT, kanon=adres_gruppy(g, n), krosh=krosh, h1=h1, lead=lead,
+           bloki=bloki, nav=nav + ("\n" if nav else ""), ld=json.dumps(ld, ensure_ascii=False, separators=(",", ":")))
+
+
+_KROSH_KART = re.compile(r'(<nav class="co-krosh caption" aria-label="Навигация"[^>]*><a href="/">Делоскоп</a> › '
+                         r'<a href="/%s/">Компании</a>)((?: › (?:<a href="[^"]*">)?[^<›]*(?:</a>)?)*)(</nav>)' % PAPKA)
+
+
+def ssylki_kroshek(t, kg):
+    """Звенья «регион» и «раздел ОКВЭД» в крошках карточки — ссылкой на хаб группы, если он есть; иначе текстом.
+    Повторный вызов с теми же группами ничего не меняет; хаб пропал — ссылка снимается."""
+    def zamena(m):
+        zvenya = [z for z in m.group(2).split(" › ") if z]
+        out = []
+        for z in zvenya:
+            imya = html.unescape(re.sub(r"<[^>]+>", "", z)).strip()
+            vid = "otrasl" if imya in {t_ for _, _, t_ in OKVED_RAZDELY} else "region"
+            adr = kg.get((vid, imya))
+            out.append('<a href="%s">%s</a>' % (adr, e(imya)) if adr else e(imya))
+        return m.group(1) + "".join(" › " + z for z in out) + m.group(3)
+    return _KROSH_KART.sub(zamena, t, count=1)
 
 
 # ---------------------------------------------------------------- «Комментарий команды Делоскопа» (kommentarii-kartochki-v1)

@@ -162,7 +162,7 @@
     }
     var tochki = o.spisok.filter(function (x) { return x.status !== 'raschet'; }).map(function (x) { return x.znak; }).join('');
     return '<details class="otk"><summary><span class="otk__t">Откуда данные</span>' +
-      '<span class="otk__s">ответили ' + o.otvetili + ' из ' + o.oprosheno + NB + skl(o.oprosheno, 'источника', 'источников', 'источников') +
+      '<span class="otk__s">' + skl(o.otvetili, 'ответил', 'ответили', 'ответили') + ' ' + o.otvetili + ' из ' + o.oprosheno + NB + skl(o.oprosheno, 'запрошенного', 'запрошенных', 'запрошенных') +
       ' · проверка ' + o.dataPr + '</span><span class="otk__m" aria-hidden="true">' + tochki + '</span></summary>' +
       '<ul>' + o.spisok.map(stroka).join('') + '</ul>' +
       (obshchaya ? '<p class="otk__p otk__p--net">Не ответили ' + net.length + ' из ' + o.oprosheno + ': ' + nw(esc(obshchaya)) + '.</p>' : '') +

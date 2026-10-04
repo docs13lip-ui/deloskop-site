@@ -1632,5 +1632,34 @@ class TestNdsPorogV1(unittest.TestCase):
         self.assertTrue(kody["V13n"]["tekst"].startswith("Упрощённая система; выручка за 2025 год — 18,4"))
 
 
+class TestKartochkiOpf(unittest.TestCase):
+    """kartochki-opf-v1: форма в скобках в конце названия и из строки досье; НКО и унитарные — по-прежнему вне волны."""
+
+    def test_imya_i_slug(self):
+        self.assertEqual(K.imya("БАНК ВТБ (ПАО)"), "Банк ВТБ (ПАО)")
+        self.assertEqual(K.imya("БАНК ГПБ (АО)"), "Банк ГПБ (АО)")
+        self.assertEqual(K.imya('АКБ "ПЕРЕСВЕТ" (АО)'), "АКБ «Пересвет» (АО)")
+        self.assertEqual(K.slug("Банк ВТБ (ПАО)"), "bank-vtb")
+        self.assertEqual(K.slug("ПАО «Татнефть» им. В.Д. Шашина"), "tatneft-im-v-d-shashina")  # опубликованные адреса не меняются
+
+    def test_vorota_po_forme(self):
+        r = O.zapis(3, name="БАНК ВТБ (ПАО)")
+        self.assertEqual(K.vorota(K.iz_check(r))[1], "ок")
+        r = O.zapis(3, name='АНО "ОБРАЗЕЦ"')
+        self.assertEqual(K.vorota(K.iz_check(r))[1], "не ООО/АО (НКО, учреждения — вне волны)")
+        # форма из досье: название без формы, строка «Организационно-правовая форма» — ПАО
+        r = O.zapis(3, name='"ОБРАЗЕЦ"')
+        r["dossier"]["sections"] = [{"id": "profile", "rows": [["Организационно-правовая форма", "Публичное акционерное общество"]]}]
+        k = K.iz_check(r)
+        self.assertEqual(k["opf"], "Публичное акционерное общество")
+        self.assertEqual(K.vorota(k)[1], "ок")
+        r["dossier"]["sections"][0]["rows"][0][1] = "Федеральное государственное унитарное предприятие"
+        self.assertEqual(K.vorota(K.iz_check(r))[1], "не ООО/АО (НКО, учреждения — вне волны)")
+
+    def test_finansy_ne_oslableny(self):
+        r = O.zapis(3, name="БАНК ВТБ (ПАО)", dohod=None)
+        self.assertEqual(K.vorota(K.iz_check(r))[1], "нет финансов (доход > 0 по ФНС / ГИР БО)")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

@@ -29,6 +29,12 @@ POROG_INDEKSA = 60
 STUPENI = {0: 300, 1: 1000, 2: 5000, 3: 20000, 4: 50000}
 HUB_INDEX_OT = 20  # хаб /company/ в индексе — от 20 карточек (Маркетинг §2.6)
 KOMMERCHESKIE = re.compile(r"^(ООО|АО|ПАО|НАО|ЗАО|ОАО)\b")
+# kartochki-opf-v1: ЕГРЮЛ пишет форму и в конце в скобках — «БАНК ВТБ (ПАО)», «БАНК ГПБ (АО)», 'АКБ "ПЕРЕСВЕТ" (АО)';
+# живой /api/check 04.10 отсеивал ВТБ как «не ООО/АО». Те же формы — и полным названием в строке досье
+# «Организационно-правовая форма» (НКО, унитарные, госкорпорации сюда не входят — вне волны, как было).
+OPF_V_SKOBKAH = re.compile(r"\((ООО|АО|ПАО|НАО|ЗАО|ОАО)\)$")
+OPF_POLNYE = {"общество с ограниченной ответственностью", "акционерное общество", "публичное акционерное общество",
+              "непубличное акционерное общество", "закрытое акционерное общество", "открытое акционерное общество"}
 STOP_SLOVA = re.compile(r"однодневк|надёжн|надежн|опасн|уклон|гарант|мошенн|фирма-прокладк|обнал", re.I)
 NE_PROVERYALI_ZAPRET = re.compile(r"(^|[^а-яё])(нет|не найдено|не нашли|чисто|отсутству)", re.I)
 
@@ -143,6 +149,10 @@ def imya(short, full=""):
             return imya(hv.group(1)) + " " + _hvost(hv.group(2))
     m = re.match(r'^([^"«»“”„]*?)\s*["«»“”„](.*)$', s)
     if not m:
+        # kartochki-opf-v1: «БАНК ВТБ (ПАО)» → «Банк ВТБ (ПАО)» — регистр как внутри кавычек, кавычек не добавляем
+        sk = re.match(r"^(.+?)\s*(\((?:ООО|АО|ПАО|НАО|ЗАО|ОАО)\))$", s)
+        if sk and sk.group(1) == sk.group(1).upper() and re.search(r"[А-ЯЁA-Z]", sk.group(1)):
+            return imya('"%s"' % sk.group(1))[1:-1] + " " + sk.group(2)
         return s
     opf, vnutri = m.group(1).strip(), re.sub(r'["«»“”„]', "", m.group(2)).strip()
     # kartochki-v4-kod: слово сразу после внутренней кавычки — тоже имя собственное, с прописной:
@@ -174,6 +184,8 @@ def _hvost(h):
     for w in h.split(" "):
         if w in ("ИМ.", "ИМЕНИ"):
             out.append(w.lower())
+        elif OPF_V_SKOBKAH.fullmatch(w):
+            out.append(w)  # kartochki-opf-v1: 'АКБ "ПЕРЕСВЕТ" (АО)' → «(АО)», а не «(ао)»
         elif re.fullmatch(r"(?:[А-ЯЁA-Z]\.)+", w):
             out.append(w)
         else:
@@ -188,6 +200,7 @@ TRANSLIT = dict(zip("абвгдеёжзийклмнопрстуфхцчшщъы�
 
 def slug(name):
     s = re.sub(r"^(ООО|АО|ПАО|НАО|ЗАО|ОАО)\s+", "", str(name or ""))
+    s = re.sub(r"\s*\((ООО|АО|ПАО|НАО|ЗАО|ОАО)\)$", "", s)  # kartochki-opf-v1: «Банк ВТБ (ПАО)» → bank-vtb
     s = "".join(TRANSLIT.get(ch, ch) for ch in s.lower())
     s = re.sub(r"[^a-z0-9]+", "-", s).strip("-")
     if len(s) > 60:
@@ -382,6 +395,22 @@ def _rukovodit_s(D):
     return None
 
 
+def opf_iz_dosie(r):
+    """kartochki-opf-v1: строка «Организационно-правовая форма» раздела «Профиль» досье /api/check (или пусто)."""
+    for sek in ((r.get("dossier") or {}).get("sections") or []):
+        for row in sek.get("rows") or []:
+            if isinstance(row, (list, tuple)) and len(row) >= 2 and str(row[0]).strip() == "Организационно-правовая форма":
+                return str(row[1] or "").strip()
+    return ""
+
+
+def kommercheskaya(k):
+    """ООО/АО/ПАО/НАО/ЗАО/ОАО — в начале названия, в скобках в конце или полным названием формы из досье."""
+    nm = k.get("name") or ""
+    return bool(KOMMERCHESKIE.match(nm) or OPF_V_SKOBKAH.search(nm)
+                or (k.get("opf") or "").strip().lower() in OPF_POLNYE)
+
+
 def iz_check(r):
     """Ответ /api/check (или запись выгрузки в том же формате) → словарь карточки. Ничего не выдумываем:
     факт без даты сведений получает статус ne_provereno и в ворота не идёт."""
@@ -401,6 +430,7 @@ def iz_check(r):
         "proverka": proverka,
         "fakty": {}, "finansy": [], "ne_provereno": [],
         "gruppa": r.get("gruppa") or "",
+        "opf": opf_iz_dosie(r),
     }
     if not k["okved_name"]:
         k["okved_name"] = okved_nazvanie_iz_dosie(r, okved_kod(k["okved"]))  # kartochki-okved-v1
@@ -726,7 +756,7 @@ def vorota(k, V=None):
         return False, "не юрлицо или неверный ИНН"
     if k.get("status") != "ACTIVE":
         return False, "статус не «действующая»"
-    if not KOMMERCHESKIE.match(k.get("name") or ""):
+    if not kommercheskaya(k):
         return False, "не ООО/АО (НКО, учреждения — вне волны)"
     mes = vozrast_mes(k, k.get("proverka"))
     if mes is None or mes < 12:

@@ -67,3 +67,15 @@ test('без обещаний исхода и превосходных степ�
   assert.ok(fs.readFileSync(path.join(KOREN, 'sitemap.xml'), 'utf8').includes('https://deloskop.ru/nalogi/ofshornye-zony-perechen-minfina/'));
   assert.ok(!/\u00a0/.test(STR), 'сырой NBSP — пишем &nbsp;');
 });
+
+// ofshory-v1.1: в 2024–2026 годах нулевую ставку по дивидендам считают по специальному перечню (№ 35н, ст. 4 595-ФЗ),
+// основной перечень (№ 86н) — для контролируемых сделок (пп. 3 п. 1 ст. 105.14 НК РФ).
+test('ofshory-v1.1: дивиденды — по специальному перечню, основной — для контролируемых сделок', () => {
+  const fs = require('fs');
+  const s = fs.readFileSync(require('path').join(__dirname, '..', 'nalogi/ofshornye-zony-perechen-minfina/index.html'), 'utf8').replace(/&nbsp;/g, ' ');
+  const assert = require('assert');
+  assert.ok(!s.includes('Перечень утверждён для правила о нулевой ставке'), 'основной перечень не определяет нулевую ставку в 2024–2026');
+  assert.ok(s.includes('в 2024–2026 годах применяется не основной, а специальный перечень'));
+  assert.ok(s.includes('№ 595-ФЗ') && s.includes('cons_doc_LAW_523359'));
+  assert.ok(s.includes('Основной перечень важен прежде всего для правил о контролируемых сделках'));
+});

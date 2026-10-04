@@ -2,7 +2,9 @@
  * «шапка отчёта … номер проверки, дата и время, «данные на …» — как реквизиты документа; печатная версия без потерь»).
  * Строка реквизитов под названием компании — только из ответа /api/check, ничего не дорисовываем:
  *   Проверка № — report_id (если API его выдал; тот же номер, что в PDF-досье);
- *   Проверено — дата и время проверки, МСК;
+ *   Проверено — дата и время проверки, МСК; если API дал только дату («2026-10-04»), дата — как в ответе,
+ *     а время — момент получения ответа (opt.polucheno) и только если по Москве это тот же день; иначе — без времени
+ *     (раньше полночь UTC выходила «03:00 МСК» — время, которого не было; vremya-proverki-v1, 04.10.2026);
  *   Самые давние сведения — самая ранняя дата «на …» среди строк светофора и её источник
  *     (открытые наборы ФНС обновляются раз в месяц — человек видит, насколько свежи данные);
  *   Бухотчётность — последний год ряда ГИР БО (dossier.charts).
@@ -47,16 +49,35 @@
   }
 
   /* Реквизиты: { nomer, data, vremya, davnie: {data, istochnik} | null, otchetnost: год | null } или null */
-  function sobrat(r) {
+  // момент (мс) → дата, время и ключ дня по Москве (UTC+3, без перехода на летнее время)
+  function poMoskve(t) {
+    var m = new Date(t + 3 * 3600 * 1000);
+    return { data: z(m.getUTCDate()) + '.' + z(m.getUTCMonth() + 1) + '.' + m.getUTCFullYear(),
+      vremya: z(m.getUTCHours()) + ':' + z(m.getUTCMinutes()),
+      klyuch: +(m.getUTCFullYear() + z(m.getUTCMonth() + 1) + z(m.getUTCDate())) };
+  }
+  var TOLKO_DATA = /^\s*\d{4}-\d{2}-\d{2}\s*$/;
+  // opt.polucheno — Date или мс: когда браузер получил ответ /api/check (нужен, только если API дал дату без времени)
+  function sobrat(r, opt) {
     if (!r || !r.company) return null;
-    var t = Date.parse(r.checked_at || '');
+    opt = opt || {};
+    var s = r.checked_at || '';
     var o = { nomer: chistyjNomer(r.report_id), data: '', vremya: '', davnie: null, otchetnost: null };
     var segodnya = 0;
-    if (isFinite(t)) {
-      var msk = new Date(t + 3 * 3600 * 1000);
-      o.data = z(msk.getUTCDate()) + '.' + z(msk.getUTCMonth() + 1) + '.' + msk.getUTCFullYear();
-      o.vremya = z(msk.getUTCHours()) + ':' + z(msk.getUTCMinutes());
-      segodnya = +(msk.getUTCFullYear() + z(msk.getUTCMonth() + 1) + z(msk.getUTCDate()));
+    if (TOLKO_DATA.test(s)) {
+      var d0 = data(s);
+      o.data = d0.tekst; segodnya = d0.klyuch;
+      var pt = opt.polucheno instanceof Date ? opt.polucheno.getTime() : Number(opt.polucheno);
+      if (opt.polucheno != null && isFinite(pt)) {
+        var p = poMoskve(pt);
+        if (p.klyuch === segodnya) o.vremya = p.vremya;
+      }
+    } else {
+      var t = Date.parse(s);
+      if (isFinite(t)) {
+        var m = poMoskve(t);
+        o.data = m.data; o.vremya = m.vremya; segodnya = m.klyuch;
+      }
     }
     // самая ранняя дата сведений среди строк светофора; даты позже проверки не берём (ошибка источника)
     (r.signals || []).forEach(function (x) {
@@ -71,8 +92,8 @@
     return o;
   }
 
-  function html(r) {
-    var o = sobrat(r);
+  function html(r, opt) {
+    var o = sobrat(r, opt);
     if (!o) return '';
     var p = [];
     if (o.nomer) p.push(['Проверка №', '<span class="rkv__nom">' + esc(o.nomer) + '</span>']);
@@ -117,10 +138,10 @@
   }
 
   // Браузер: реквизиты — сразу под шапкой отчёта; печать — только отчёт. Ошибка — отчёт остаётся как был.
-  function mount(report, r) {
+  function mount(report, r, opt) {
     if (!report) return false;
     var h = '';
-    try { h = html(r); } catch (e) { h = ''; }
+    try { h = html(r, opt); } catch (e) { h = ''; }
     var doc = report.ownerDocument || document;
     try { stil(doc); } catch (e) {}
     try { pechatTolkoOtchet(report); } catch (e) {}

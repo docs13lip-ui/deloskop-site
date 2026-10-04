@@ -34,6 +34,8 @@
     return /^\d{2}\.\d{2}\.\d{4}$/.test(String(v)) ? String(v) : '';
   }
   function vremyaRu(v) {
+    // только дата («2026-10-04») — без времени: полночь UTC иначе вышла бы «в 03:00» (vremya-proverki-v1)
+    if (/^\s*\d{4}-\d{2}-\d{2}\s*$/.test(String(v || ''))) return dataRu(String(v).trim());
     var d = new Date(v);
     if (!v || isNaN(d)) return '';
     // время — по Москве (UTC+3, без перехода на летнее время)

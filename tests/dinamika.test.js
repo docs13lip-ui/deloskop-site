@@ -194,7 +194,7 @@ test('таблица динамики: года нет в ряду — «нет 
 
 // kapital-izm-v1 (Ночные-3, 03.10): собственный капитал (dossier.charts.balance, строка 1300) — в снимке и в «что изменилось»
 function sKap(t, god, eq) {
-  const ch = Object.assign({}, otvet().dossier.charts, { balance: { year: god, equity: eq, long_liab: 1, short_liab: 2 } });
+  const ch = Object.assign({}, otvet().dossier.charts, { balance: { year: god, equity: eq, long_debt: 1, short_debt: 2 } });
   return D.snimok(otvet({ checked_at: t, dossier: { charts: ch } }));
 }
 

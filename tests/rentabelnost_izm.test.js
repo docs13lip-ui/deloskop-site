@@ -17,7 +17,7 @@ function otvet(t, god, pribyl, over) {
     company: { inn: '7740000076', kind: 'LEGAL', status: 'ACTIVE', okved: OKVED, name_short: 'ООО «Пример»' },
     risk_level: 'low', checked_at: t, signals: [],
     dossier: { sections: [], charts: { revenue: [{ year: god, value: 400e6 }], profit: [{ year: god, value: pribyl }],
-      balance: { year: god, equity: 50e6, long_liab: 0, short_liab: 50e6 } } },
+      balance: { year: god, equity: 50e6, long_debt: 0, short_debt: 50e6 } } },
   }, over || {});
 }
 const RAN = '2026-04-12T10:00:00Z', SEJ = '2026-10-03T04:30:00Z';
@@ -34,7 +34,7 @@ test('снимок хранит оценку rn = [год, % с 1 знаком] 
   // нет баланса, активы < 1 млн, банк, ИП — оценки нет
   const bez = otvet(SEJ, 2025, 1e6); delete bez.dossier.charts.balance;
   assert.ok(!('rn' in D.snimok(bez)));
-  const mal = otvet(SEJ, 2025, 1e5); mal.dossier.charts.balance = { year: 2025, equity: 3e5, long_liab: 0, short_liab: 2e5 };
+  const mal = otvet(SEJ, 2025, 1e5); mal.dossier.charts.balance = { year: 2025, equity: 3e5, long_debt: 0, short_debt: 2e5 };
   assert.ok(!('rn' in D.snimok(mal)));
   assert.ok(!('rn' in D.snimok(otvet(SEJ, 2025, 1e6, { company: { inn: '7740000076', status: 'ACTIVE', okved: '64.19' } }))));
   assert.ok(!('rn' in D.snimok(otvet(SEJ, 2025, 1e6, { company: { inn: '500100732259', status: 'ACTIVE', okved: OKVED } }))));

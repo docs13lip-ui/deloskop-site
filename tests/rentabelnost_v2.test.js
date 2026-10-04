@@ -12,7 +12,7 @@ const OTVET = {
   company: { inn: '7700000001', okved: '41.20' },
   dossier: { charts: {
     profit: [{ year: 2025, value: 2e6 }], income_tax: [{ year: 2025, value: 0.5e6 }],
-    balance: { year: 2025, equity: 40e6, long_liab: 10e6, short_liab: 50e6 }
+    balance: { year: 2025, equity: 40e6, long_debt: 10e6, short_debt: 50e6 }
   } }
 };
 

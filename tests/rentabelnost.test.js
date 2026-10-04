@@ -14,7 +14,7 @@ function otvet(over) {
     dossier: { charts: {
       profit: [{ year: 2024, value: 4e6 }, { year: 2025, value: 2e6 }],
       income_tax: [{ year: 2025, value: 0.5e6 }],
-      balance: { year: 2025, equity: 40e6, long_liab: 10e6, short_liab: 50e6 }
+      balance: { year: 2025, equity: 40e6, long_debt: 10e6, short_debt: 50e6 }
     } }
   };
   return Object.assign(o, over || {});
@@ -69,7 +69,7 @@ test('убыток — ниже средней; минус пишется зна
 });
 
 test('2024 год — норма из rentabelnost_2024 и Информация ФНС от 07.05.2025', () => {
-  const r = otvet(); r.dossier.charts.balance = { year: 2024, equity: 40e6, long_liab: 10e6, short_liab: 50e6 };
+  const r = otvet(); r.dossier.charts.balance = { year: 2024, equity: 40e6, long_debt: 10e6, short_debt: 50e6 };
   const o = R.raschet(r, D);
   assert.strictEqual(o.norma, norma('41.20', 2024));
   assert.match(R.html(o), /07\.05\.2025/);
@@ -79,14 +79,14 @@ test('нет блока: ИП, банк, страховщик, малые акт
   assert.strictEqual(R.raschet(otvet({ company: { inn: '770000000012', okved: '41.20' } }), D), null);
   assert.strictEqual(R.raschet(otvet({ company: { inn: '7707083893', okved: '64.19' } }), D), null);
   assert.strictEqual(R.raschet(otvet({ company: { inn: '7700000002', okved: '65.12' } }), D), null);
-  const mal = otvet(); mal.dossier.charts.balance = { year: 2025, equity: 1e5, long_liab: 0, short_liab: 2e5 };
+  const mal = otvet(); mal.dossier.charts.balance = { year: 2025, equity: 1e5, long_debt: 0, short_debt: 2e5 };
   assert.strictEqual(R.raschet(mal, D), null);
-  const g23 = otvet(); g23.dossier.charts.balance = { year: 2023, equity: 40e6, long_liab: 10e6, short_liab: 50e6 };
+  const g23 = otvet(); g23.dossier.charts.balance = { year: 2023, equity: 40e6, long_debt: 10e6, short_debt: 50e6 };
   g23.dossier.charts.profit = [{ year: 2023, value: 1e6 }];
   assert.strictEqual(R.raschet(g23, D), null);
   const np = otvet(); np.dossier.charts.profit = [{ year: 2024, value: 1e6 }];
   assert.strictEqual(R.raschet(np, D), null);
-  const pl = otvet(); pl.dossier.charts.balance = { year: 2025, equity: 40e6, long_liab: null, short_liab: 50e6 };
+  const pl = otvet(); pl.dossier.charts.balance = { year: 2025, equity: 40e6, long_debt: null, short_debt: 50e6 };
   assert.strictEqual(R.raschet(pl, D), null);
   assert.strictEqual(R.raschet(otvet(), null), null);
 });

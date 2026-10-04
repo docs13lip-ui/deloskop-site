@@ -77,7 +77,9 @@
     if (!b || typeof b !== 'object') return null;
     var god = parseInt(b.year, 10);
     if (!isFinite(god)) return null;
-    var kap = chislo(b.equity), dl = chislo(b.long_liab), kr = chislo(b.short_liab);
+    // ключи живого /api/check — long_debt / short_debt (как в js/dinamika.js и Паспорте); до zhivoj-otvet-v1 здесь стояли
+    // long_liab / short_liab, которых API не отдаёт, — блок «Рентабельность против отрасли» на живом не появлялся
+    var kap = chislo(b.equity), dl = chislo(b.long_debt != null ? b.long_debt : b.long_liab), kr = chislo(b.short_debt != null ? b.short_debt : b.short_liab);
     if (!isFinite(kap) || !isFinite(dl) || !isFinite(kr) || dl < 0 || kr < 0) return null;
     var aktivy = kap + dl + kr;
     if (!(aktivy >= MIN_AKTIVY)) return null;

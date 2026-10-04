@@ -6,8 +6,8 @@
   },
   "ssylki_s_sajta": {
     "_kak": "Входящие ссылки на разборы с живых страниц (SEO-обвязка [Маркетинга] 30.09): файл страницы → slug разборов или «hab:<раздел>». Сборщик ставит блок между метками <!--praktika-ssylki-->…<!--/praktika-ssylki--> (в статье — перед </article>). Тест: у каждого разбора ≥ 2 входящие ссылки вне /praktika/.",
-    "115-fz/zablokirovali-schet-chto-delat/index.html": ["otklyuchili-internet-bank", "zagraditelnye-komissii", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"],
-    "115-fz/zapros-banka-po-115-fz-kak-otvetit/index.html": ["otklyuchili-internet-bank"],
+    "115-fz/zablokirovali-schet-chto-delat/index.html": ["shtraf-banka-za-dokumenty-115-fz", "otklyuchili-internet-bank", "zagraditelnye-komissii", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"],
+    "115-fz/zapros-banka-po-115-fz-kak-otvetit/index.html": ["shtraf-banka-za-dokumenty-115-fz", "otklyuchili-internet-bank"],
     "115-fz/zsk-zony-riska/index.html": ["krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "zagraditelnye-komissii", "isklyuchili-iz-egryul-dolg-s-direktora"],
     "nalogi/statya-54-1-nk-prostymi-slovami/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke", "droblenie-uplachennaya-usn-zachityvaetsya"],
     "nalogi/nagruzka/index.html": ["droblenie-uplachennaya-usn-zachityvaetsya"],
@@ -22,6 +22,67 @@
     "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"]
   },
   "razbory": [
+    {
+      "razdel": "115-fz",
+      "slug": "shtraf-banka-za-dokumenty-115-fz",
+      "h1": "Банк оштрафовал за непредставление документов по 115-ФЗ. Можно вернуть?",
+      "title": "Штраф банка за документы по 115-ФЗ: что решил Верховный суд",
+      "description": "Банк списал 50 000 ₽ штрафа: клиент не дал документы по 115-ФЗ. Верховный суд: требовать документы банк вправе, штрафовать за их непредставление — нет.",
+      "zapros": "банк списал штраф за непредоставление документов по 115-фз",
+      "data": "2026-10-04",
+      "minut": 4,
+      "lid": "Банк счёл операции предпринимателя сомнительными, запросил документы и, не получив их, списал со счёта 50 000 ₽ штрафа по своим правилам обслуживания. Три суда встали на сторону банка. Верховный суд в сентябре 2024 года их решения отменил: требовать документы банк вправе, а брать за их непредставление штраф — нет.",
+      "dela": [
+        {
+          "sud": "Верховный суд РФ, Судебная коллегия по экономическим спорам",
+          "sud_kratko": "ВС",
+          "akt": "Определение",
+          "nomer": "№ 305-ЭС24-5195",
+          "data": "2024-09-04",
+          "delo": "А40-56514/2023 (предприниматель против АО КБ «Локо-Банк»)",
+          "na_konu": "50 000 ₽ штрафа, списанного банком за непредставление документов по 115-ФЗ",
+          "na_konu_kratko": "штраф 50 000 ₽",
+          "itog": "На новое рассмотрение",
+          "itog_nov": false,
+          "istochnik": "https://kad.arbitr.ru/",
+          "istochnik_podpis": "kad.arbitr.ru — поиск по номеру дела А40-56514/2023; текст определения сверен по PDF акта (consultant.ru)",
+          "sverka": "2026-10-04"
+        }
+      ],
+      "knopka": {
+        "zagolovok": "Ваша компания глазами банка",
+        "tekst": "Щит бесплатно: признаки, на которые смотрит банк, и что подготовить до запроса по 115-ФЗ.",
+        "knopka": "Посмотреть на себя в Щите",
+        "url": "/#shield",
+        "cel": "razbor10_shchit"
+      },
+      "zakon": [
+        [
+          "п. 14 ст. 7 Федерального закона от 07.08.2001 № 115-ФЗ — клиент обязан дать банку информацию, нужную для исполнения закона",
+          "ред. 04.08.2026 № 283-ФЗ",
+          "https://www.consultant.ru/document/cons_doc_LAW_32834/3e3e0d20d2919071b55ef95f26f849df6a4f11e8/"
+        ],
+        [
+          "пп. 10 и 11 ст. 7 115-ФЗ — приостановление операции и отказ в ней, кроме зачисления денег (так их называет Верховный суд вслед за п. 4 Обзора № 1 (2021))",
+          "ред. 04.08.2026 № 283-ФЗ",
+          "https://www.consultant.ru/document/cons_doc_LAW_32834/3e3e0d20d2919071b55ef95f26f849df6a4f11e8/"
+        ],
+        [
+          "ст. 1102 ГК РФ — неосновательное обогащение",
+          "",
+          "https://www.consultant.ru/document/cons_doc_LAW_9027/"
+        ],
+        [
+          "п. 4 Обзора судебной практики Верховного суда РФ № 1 (2021), утв. Президиумом ВС РФ 07.04.2021",
+          "",
+          "https://www.consultant.ru/document/cons_doc_LAW_381735/"
+        ]
+      ],
+      "pohozhie": [
+        "zagraditelnye-komissii",
+        "otklyuchili-internet-bank"
+      ]
+    },
     {
       "razdel": "nalogi",
       "slug": "isklyuchili-iz-egryul-dolg-s-direktora",

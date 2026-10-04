@@ -24,7 +24,7 @@ test('банк (ОКВЭД 64.19) без ГИР БО: «сдаёт в Банк �
   const f = S.fakty(otvet('64.19'));
   const b = f.spisok.find((x) => x.k === 'otchetnost');
   assert.ok(b, 'строка отчётности есть');
-  assert.strictEqual(b.znach, 'Организация сдаёт в' + NB + 'Банк России; в' + NB + 'ГИР' + NB + 'БО её передаёт Банк России, доступ может быть ограничен (ч.' + NB + '9' + NB + 'ст.' + NB + '18' + NB + '402-ФЗ)');
+  assert.strictEqual(b.znach, 'Организация сдаёт в' + NB + 'Банк России; в' + NB + 'ГИР' + NB + 'БО её передаёт Банк России, доступ может быть ограничен (ч.' + NB + '9 и' + NB + '12 ст.' + NB + '18' + NB + '402-ФЗ)');
   assert.strictEqual(b.ton, 'neutral');
   assert.strictEqual(b.ssylka, 'https://www.cbr.ru/finorg/foinfo/?ogrn=1027700000001');
   assert.match(b.ist, /ОКВЭД 64\.19/);

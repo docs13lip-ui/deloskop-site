@@ -203,7 +203,14 @@
     };
     zapolnit();
     var IO0 = modulIO();
-    if (IO0 && indeks(r) == null && IO0.gotov && !IO0.gotov() && IO0.gotovo) IO0.gotovo(zapolnit);
+    // gotovo() через 4 с зовёт и без методики — на медленной сети колонка оставалась «Индекс — считаем»; ждём ещё (до 4 раз, ~16 с)
+    if (IO0 && indeks(r) == null && IO0.gotov && !IO0.gotov() && IO0.gotovo) {
+      var popytki = 0, zhdat = function () {
+        if (!IO0.gotov() && ++popytki < 4) { IO0.gotovo(zhdat); return; }
+        if (IO0.gotov()) zapolnit();
+      };
+      IO0.gotovo(zhdat);
+    }
     var vt = el(doc, 'div', 'ot-vt');
     if (svoj) {
       var shKr = function () {

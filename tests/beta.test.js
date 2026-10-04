@@ -71,14 +71,14 @@ test('отзыв подключён на отчёте, Паспорте конт
     assert.ok(chitat(f).includes('<script src="/js/otzyv.js" defer></script>'), f);
 });
 
-test('полоса беты: одна строка, крестик прячет на неделю, хранилище — в try', () => {
+test('полоса беты: одна строка, крестик прячет на неделю (не дольше конца беты), хранилище — в try', () => {
   const p = chitat('partials/beta.html');
   assert.ok(p.includes('Открытая бета: всё бесплатно по&nbsp;13&nbsp;октября включительно.'), 'полоса беты: срок беты — решение владельца 30.09 (по 13.10 включительно; «до 13 октября» читается как «13-го уже платно» — [Право] 04.10 09:20)');
   assert.ok(p.includes('mailto:help@deloskop.ru'));
   assert.ok(p.includes('aria-label="Скрыть на неделю"'));
-  assert.ok(/try\{if\(\+localStorage\.getItem\("dlk_beta_skryt"\)>Date\.now\(\)\)/.test(p));
+  assert.ok(/try\{if\(\+localStorage\.getItem\("dlk_beta_skryt2"\)>Date\.now\(\)\)/.test(p));
   const js = chitat('js/shapka.js');
-  assert.ok(js.includes('try { localStorage.setItem("dlk_beta_skryt"'));
+  assert.ok(js.includes('try { localStorage.setItem(BETA_KLYUCH, String(srokSkrytiya(Date.now()))); }'));
   assert.ok(!/ИИ|нейросет/i.test(p));
 });
 

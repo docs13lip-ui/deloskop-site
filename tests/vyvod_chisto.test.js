@@ -20,11 +20,11 @@ function otvet(okved, o) {
   }, o || {});
 }
 
-test('банк (ОКВЭД 64.19): «Организация сдаёт отчётность в Банк России, а не в ГИР БО» и ссылка в ЦБ по ОГРН', () => {
+test('банк (ОКВЭД 64.19) без ГИР БО: «сдаёт в Банк России; в ГИР БО её передаёт Банк России…» (ч. 9 ст. 18 402-ФЗ) и ссылка в ЦБ по ОГРН', () => {
   const f = S.fakty(otvet('64.19'));
   const b = f.spisok.find((x) => x.k === 'otchetnost');
   assert.ok(b, 'строка отчётности есть');
-  assert.strictEqual(b.znach, 'Организация сдаёт отчётность в' + NB + 'Банк России, а не в' + NB + 'ГИР' + NB + 'БО');
+  assert.strictEqual(b.znach, 'Организация сдаёт в' + NB + 'Банк России; в' + NB + 'ГИР' + NB + 'БО её передаёт Банк России, доступ может быть ограничен (ч.' + NB + '9' + NB + 'ст.' + NB + '18' + NB + '402-ФЗ)');
   assert.strictEqual(b.ton, 'neutral');
   assert.strictEqual(b.ssylka, 'https://www.cbr.ru/finorg/foinfo/?ogrn=1027700000001');
   assert.match(b.ist, /ОКВЭД 64\.19/);

@@ -19,6 +19,7 @@
   /* ---------- пороги (менять только здесь; пересмотр 28.10 по бета-разборам) ---------- */
   var POROG = {
     okno: 2,              // «ушло дальше» не позже чем через 2 календарных дня после прихода
+    zapasDnej: 7,         // платёж, целиком покрытый остатком, пролежавшим на счёте 7 дней, — не транзит ([Данные] 04.10 22:37, ◐ ориентир)
     minPrihod: 1000000,   // меньше — «мало данных», без цвета
     minDnej: 28,          // период короче — «мало данных»
     warn: 0.8,            // ≥ 80 % — жёлтый
@@ -40,12 +41,30 @@
   /* ---------- «пришло — ушло»: последним пришло — первым ушло ---------- */
   // ev: [{d:'ГГГГ-ММ-ДД', acc, dir:'in'|'out', sum, cat}]. FIFO не берём: хвосты по 5 % копятся,
   // и честный транзит 95 % выходит как 60 % ([Данные] 04.10, разд. 3).
-  function schitat(ev, prihodCat, dalshe) {
+  // «Запас 7 дней»: если платёж целиком покрывает минимальный остаток на конец дня за 7 прошлых дней
+  // (минус уже взятое из запаса в этот день), слои приходов не трогаем. Остатки — по всем операциям,
+  // начало — НачальныйОстаток выписки (нет поля — 0, правило вырождается в чистый LIFO).
+  function addD(iso, k) { var t = new Date(Date.parse(iso) + k * 864e5); return t.toISOString().slice(0, 10); }
+  function ostatki(ev, nach) {
+    var kon = {}, ost = nach || 0;
+    if (!ev.length) return kon;
+    kon[addD(ev[0].d, -1)] = ost;
+    var izm = {};
+    ev.forEach(function (e) { izm[e.d] = (izm[e.d] || 0) + (e.dir === 'in' ? e.sum : -e.sum); });
+    for (var d = ev[0].d, last = ev[ev.length - 1].d; d <= last; d = addD(d, 1)) { ost += izm[d] || 0; kon[d] = ost; }
+    return kon;
+  }
+  function schitat(ev, prihodCat, dalshe, nach) {
     ev = ev.slice().sort(function (x, y) { return x.d < y.d ? -1 : x.d > y.d ? 1 : (x.dir === 'in' ? -1 : 1); });
-    var q = [], prihod = 0, bystro = 0;
+    var q = [], prihod = 0, bystro = 0, izZapasa = 0, vzyato = {};
+    var kon = ostatki(ev, nach);
     ev.forEach(function (e) {
       if (e.dir === 'in') { if (prihodCat[e.cat]) { q.push({ d: e.d, ost: e.sum }); prihod += e.sum; } return; }
       if (!dalshe[e.cat]) return;
+      var m = Infinity;
+      for (var k = 1; k <= POROG.zapasDnej; k++) { var dd = addD(e.d, -k); if (dd in kon) m = Math.min(m, kon[dd]); }
+      if (m === Infinity) m = 0;
+      if (m - (vzyato[e.d] || 0) >= e.sum) { vzyato[e.d] = (vzyato[e.d] || 0) + e.sum; izZapasa += e.sum; return; }
       var nado = e.sum;
       while (nado > 0 && q.length) {
         var h = q[q.length - 1], v = Math.min(h.ost, nado);
@@ -54,7 +73,7 @@
         if (h.ost <= 0.005) q.pop();
       }
     });
-    return { prihod: r2(prihod), bystro: r2(bystro), dolya: prihod ? bystro / prihod : 0 };
+    return { prihod: r2(prihod), bystro: r2(bystro), dolya: prihod ? bystro / prihod : 0, izZapasa: r2(izZapasa) };
   }
   function uroven(r, dnej) {
     if (r.prihod < POROG.minPrihod || dnej < POROG.minDnej) return 'malo';
@@ -65,15 +84,19 @@
     var ds = ev.map(function (e) { return e.d; }).sort();
     return dni(ds[0], ds[ds.length - 1]) + 1;
   }
-  function tranzit(ev) {
+  function tranzit(ev, nach) {
+    nach = nach || {};
     var dnej = dneyPerioda(ev);
-    var vse = schitat(ev, { ext: 1 }, DALSHE_VSE); vse.uroven = uroven(vse, dnej);
+    var nachVse = 0, est = {};
+    ev.forEach(function (e) { est[e.acc] = 1; });
+    Object.keys(est).forEach(function (a) { nachVse += nach[a] || 0; });
+    var vse = schitat(ev, { ext: 1 }, DALSHE_VSE, nachVse); vse.uroven = uroven(vse, dnej);
     var po = {};
     ev.forEach(function (e) { (po[e.acc] = po[e.acc] || []).push(e); });
     return {
       vse: vse, dnej: dnej,
       scheta: Object.keys(po).map(function (a) {
-        var r = schitat(po[a], { ext: 1, self: 1 }, DALSHE_SCHET); r.acc = a; r.uroven = uroven(r, dnej); return r;
+        var r = schitat(po[a], { ext: 1, self: 1 }, DALSHE_SCHET, nach[a] || 0); r.acc = a; r.uroven = uroven(r, dnej); return r;
       })
     };
   }
@@ -96,6 +119,14 @@
     });
     var self = E.detectSelf(merged);
     var accSet = {}; self.accounts.forEach(function (a) { accSet[a] = 1; });
+    // Начальный остаток счёта — из самой ранней СекцияРасчСчет (выписки могут пересекаться)
+    var nach = {}, nachOt = {};
+    merged.accounts.forEach(function (a) {
+      if (!a || !a.РасчСчет || !('НачальныйОстаток' in a)) return;
+      var v = numSum(a.НачальныйОстаток), ot = E.toIso(a.ДатаНачала) || '9999';
+      if (!isFinite(v)) return;
+      if (!(a.РасчСчет in nach) || ot < nachOt[a.РасчСчет]) { nach[a.РасчСчет] = v; nachOt[a.РасчСчет] = ot; }
+    });
     var seen = {}, docs = [];
     merged.docs.forEach(function (d) {
       var k = [d.Номер, d.Дата, d.Сумма, d.ПлательщикСчет, d.ПолучательСчет].join('|');
@@ -132,7 +163,7 @@
       ev.push({ d: dIn, acc: poluchSvoj ? d.ПолучательСчет : (self.accounts[0] || '?'), dir: 'in', sum: sum,
         cat: izSvoego ? 'self' : 'ext', cashIn: E.isCashIn(d) });
     });
-    return { ev: ev, self: self, banki: banki };
+    return { ev: ev, self: self, banki: banki, nach: nach };
   }
   function numSum(s) {
     var v = parseFloat(String(s || '').replace(/[\s ]/g, '').replace(',', '.'));
@@ -175,7 +206,7 @@
   /* ---------- сводка экрана ---------- */
   function svodka(parsedList) {
     var s = sobytiya(parsedList), ev = s.ev;
-    var tr = tranzit(ev);
+    var tr = tranzit(ev, s.nach);
     var vseT = dengi(ev), vseD = doli(vseT, true);
     var ds = ev.map(function (e) { return e.d; }).sort();
     var bankov = {};
@@ -265,14 +296,15 @@
       '<th>Банк · счёт</th><th>Пришло — ушло</th><th>Наличные</th><th>Налоги</th></tr></thead><tbody>' +
       s.scheta.map(function (sc) {
         return '<tr><td>' + (sc.bank ? esc(sc.bank) + ' · ' : '') + '<span class="fc-n">' + esc(sc.hvost) + '</span></td>' +
-          '<td>' + (sc.tranzit.uroven === 'malo' ? '<span class="fc-m">мало данных</span>' : E.pct(sc.tranzit.dolya)) + tochka(sc.huzhe.tranzit, NE_VIDIT) + '</td>' +
-          '<td>' + E.pct(sc.doli.nal) + tochka(sc.huzhe.nal, NE_VIDIT) + '</td>' +
-          '<td>' + E.pct(sc.doli.nalogi) + tochka(sc.huzhe.nalogi, NE_VIDIT) + '</td></tr>';
+          '<td data-k="Пришло — ушло">' + (sc.tranzit.uroven === 'malo' ? '<span class="fc-m">мало данных</span>' : E.pct(sc.tranzit.dolya)) + tochka(sc.huzhe.tranzit, NE_VIDIT) + '</td>' +
+          '<td data-k="Наличные">' + E.pct(sc.doli.nal) + tochka(sc.huzhe.nal, NE_VIDIT) + '</td>' +
+          '<td data-k="Налоги">' + E.pct(sc.doli.nalogi) + tochka(sc.huzhe.nalogi, NE_VIDIT) + '</td></tr>';
       }).join('') +
-      '<tr class="fc-vse"><td>Все счета вместе</td><td>' + (s.tranzit.uroven === 'malo' ? '<span class="fc-m">мало данных</span>' : E.pct(s.tranzit.dolya)) +
-      '</td><td>' + E.pct(s.doli.nal) + '</td><td>' + E.pct(s.doli.nalogi) + '</td></tr></tbody></table></div>' +
+      '<tr class="fc-vse"><td>Все счета вместе</td><td data-k="Пришло — ушло">' + (s.tranzit.uroven === 'malo' ? '<span class="fc-m">мало данных</span>' : E.pct(s.tranzit.dolya)) +
+      '</td><td data-k="Наличные">' + E.pct(s.doli.nal) + '</td><td data-k="Налоги">' + E.pct(s.doli.nalogi) + '</td></tr></tbody></table></div>' +
       '<p class="fc-pr">«Пришло — ушло» — какая доля поступлений ушла поставщикам, физлицам или наличными не позже чем через 2' + NB + 'дня. ' +
-      'Для одного банка перевод на ваш счёт в другом банке — тоже «ушло»: других ваших счетов он не видит.</p>';
+      'Для одного банка перевод на ваш счёт в другом банке — тоже «ушло»: других ваших счетов он не видит. ' +
+      'Платежи, которые покрывал остаток, пролежавший на счёте неделю, транзитом не считаем.</p>';
     var top = (r.suppliers || []).slice(0, 5);
     var komu = top.length ? '<ol class="fc-komu">' + top.map(function (x) {
       return '<li><span>' + esc(x.name || x.inn || 'без названия') + '</span><b>' + E.pct(x.share || 0) + '</b></li>';
@@ -311,6 +343,11 @@
     '.fc-dela li{padding:3px 0;color:#48484C}.fc-vse-pol{display:inline-block;font-size:14px;margin-top:6px}' +
     '.fc-akt{display:inline-flex;align-items:center;min-height:46px;margin:20px 0 0;padding:0 18px;border-radius:12px;background:#0B63E5;color:#fff!important;font-weight:600;font-size:16px}' +
     '.fc-akt:hover{background:#084BB0}.fc-og{font-size:12.5px;color:#6B6B70;margin:12px 0 0;line-height:1.45}' +
+    // 390 px — карточка на каждый банк вместо таблицы ([Продукт · Арт-директор] 04.10 22:55, разд. 2)
+    '@media (max-width:600px){.fc-tabl{overflow:visible}.fc-tabl thead{display:none}.fc-tabl table,.fc-tabl tbody{display:block}' +
+    '.fc-tabl tr{display:block;background:#FAFAF8;border-radius:14px;padding:10px 14px;margin:0 0 8px}.fc-tabl tr.fc-vse{background:#F0F0EC}' +
+    '.fc-tabl td,.fc-tabl td+td{display:flex;align-items:center;gap:4px;padding:5px 0;border:0;text-align:left;white-space:normal}' +
+    '.fc-tabl td:first-child{font-weight:600;padding-bottom:7px}.fc-tabl td[data-k]::before{content:attr(data-k);color:#6B6B70;font-weight:400;margin-right:auto}}' +
     '@media print{.fc-akt{display:none}}';
 
   /* ---------- браузер: показать лист, только если в data/fincentr.json `vklyuchen: true` ---------- */

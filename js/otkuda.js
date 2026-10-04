@@ -37,6 +37,12 @@
     return m10 === 1 && m100 !== 11 ? a : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? b : c;
   }
   function ip(r) { return String(((r || {}).company || {}).inn || '').length === 12; }
+  // банк — ОКВЭД 64.1x, та же проверка, что bank(c) в js/sushchestvennoe.js и js/indeks-otvet.js
+  function bank(c) { return /^64\.1(\.|\d|$)/.test(String((c || {}).okved || '')); }
+  var BANK_GIRBO = 'организация сдаёт её в' + NB + 'Банк России; в' + NB + 'ГИР' + NB + 'БО её передаёт Банк России, доступ может быть ограничен (ч.' + NB + '9 и' + NB + '12 ст.' + NB + '18' + NB + '402-ФЗ)';
+  var CBR_BANK = 'https://www.cbr.ru/finorg/foinfo/';
+  // «402-ФЗ)» на 390 px рвался по дефису — номер закона со скобкой одним куском (после esc), как в sushchestvennoe.js
+  function nw(h) { return String(h).replace(/(\d+-ФЗ\))/g, '<span style="white-space:nowrap">$1</span>'); }
   function chistyj(u) { return /^https:\/\/[^\s"<>]+$/.test(u || '') ? u : ''; }
 
   // «ЕГРЮЛ/ЕГРИП — на 29.09.2026; задолженность — на 01.09.2026» → [{metka, data}]
@@ -100,6 +106,12 @@
         var pos = gody[gody.length - 1];
         spisok.push({ k: 'girbo', znak: '●', nazv: 'ГИР БО (ФНС)', chto: 'бухотчётность: выручка, прибыль, налог на прибыль',
           data: gody.length > 1 ? 'за ' + gody[0] + '–' + pos + NB + 'гг.' : 'за ' + pos + NB + 'г.', status: 'ok' });
+      } else if (bank(c)) {
+        // bank-girbo-v2 [Ночные-3] 04.10: у банка пустой ответ ГИР БО — не «отчётности нет», а как устроено: сдаёт в Банк России,
+        // в ГИР БО передаёт Банк России, доступ может быть ограничен (ч. 9 и 12 ст. 18 402-ФЗ) — текст [Право · Налоговый]
+        // 04.10 11:30 разд. 1.4 + 12:30 разд. 1, как в «Существенных фактах»; «проверьте сами» — карточка банка на cbr.ru.
+        spisok.push({ k: 'girbo', znak: '○', nazv: 'ГИР БО (ФНС)', chto: 'бухотчётность', data: '', status: 'net',
+          prichina: BANK_GIRBO, ssylka: CBR_BANK + (/^\d{13}$/.test(String(c.ogrn || '')) ? '?ogrn=' + c.ogrn : '') });
       } else {
         spisok.push({ k: 'girbo', znak: '○', nazv: 'ГИР БО (ФНС)', chto: 'бухотчётность', data: '', status: 'net',
           prichina: 'отчётности в ответе нет', ssylka: 'https://bo.nalog.gov.ru/' });
@@ -131,7 +143,7 @@
   function stroka(x) {
     var st = x.status === 'ok' ? 'ответил' : x.status === 'net' ? 'не ответил' : 'рассчитано';
     var hvost = x.status === 'net'
-      ? (x.prichina ? esc(x.prichina) : '') + (x.ssylka ? (x.prichina ? ' · ' : '') + '<a href="' + esc(x.ssylka) + '" target="_blank" rel="noopener">проверьте сами</a>' : '') || 'не ответил'
+      ? (x.prichina ? nw(esc(x.prichina)) : '') + (x.ssylka ? (x.prichina ? ' · ' : '') + '<a href="' + esc(x.ssylka) + '" target="_blank" rel="noopener">проверьте сами</a>' : '') || 'не ответил'
       : x.status === 'raschet' ? '<a href="' + esc(x.ssylka) + '">методика</a>' : esc(x.data || '');
     return '<li class="otk__r otk__r--' + x.status + '" data-ist="' + esc(x.k) + '">' +
       '<span class="otk__z" aria-label="' + st + '">' + x.znak + '</span>' +
@@ -153,7 +165,7 @@
       '<span class="otk__s">ответили ' + o.otvetili + ' из ' + o.oprosheno + NB + skl(o.oprosheno, 'источника', 'источников', 'источников') +
       ' · проверка ' + o.dataPr + '</span><span class="otk__m" aria-hidden="true">' + tochki + '</span></summary>' +
       '<ul>' + o.spisok.map(stroka).join('') + '</ul>' +
-      (obshchaya ? '<p class="otk__p otk__p--net">Не ответили ' + net.length + ' из ' + o.oprosheno + ': ' + esc(obshchaya) + '.</p>' : '') +
+      (obshchaya ? '<p class="otk__p otk__p--net">Не ответили ' + net.length + ' из ' + o.oprosheno + ': ' + nw(esc(obshchaya)) + '.</p>' : '') +
       '<p class="otk__p">● ответил · ○ не ответил — не значит «не нашли» · ◆ рассчитано Делоскопом. Это оценка риска, а не решение банка.</p></details>';
   }
 

@@ -16,6 +16,7 @@
   else root.PasportKontragenta = api;
 })(typeof self !== 'undefined' ? self : this, function (root) {
   'use strict';
+  var NB = '\u00a0';
 
   var VERSIYA = 'Паспорт v2.9'; // v2.9 — раздел 6: полоса «На чём держится компания» (pasport-polosa-v1); v2.8 — баланс и расчёты на 31.12
   // Определение Индекса и подпись предела аванса — дословно [Юриста 115-ФЗ] 29.09 (222-ФЗ), разд. 3 пп. 1 и 4.
@@ -316,6 +317,14 @@
       fakt('finansy', 'Выручка по годам', rv, { ton: 'info', istochnik: 'ГИР БО' });
     }
     balansFakty(D, function (tekst, znachenie, s) { fakt('finansy', tekst, znachenie, s); }, U);
+    // bank-girbo-v2 [Ночные-3] 04.10: у банка без отчётности в ответе ГИР БО причина «могла её не сдавать» неверна —
+    // банк сдаёт её в Банк России, в ГИР БО её передаёт Банк России, доступ может быть ограничен (ч. 9 и 12 ст. 18 402-ФЗ).
+    // Текст — [Право · Налоговый] 04.10 11:30 разд. 1.4 + 12:30 разд. 1 (как в «Существенных фактах»); «проверьте сами» — cbr.ru.
+    if (map.finansy.status === 'not_checked' && /^64\.1(\.|\d|$)/.test(String(c.okved || ''))) {
+      map.finansy.prichina = 'Бухгалтерскую отчётность организация сдаёт в' + NB + 'Банк России; в' + NB + 'ГИР' + NB + 'БО её передаёт Банк России, доступ может быть ограничен (ч.' + NB + '9 и' + NB + '12 ст.' + NB + '18' + NB + '402-ФЗ).';
+      map.finansy.sam.unshift({ tekst: 'cbr.ru', url: 'https://www.cbr.ru/finorg/foinfo/' + (/^\d{13}$/.test(String(c.ogrn || '')) ? '?ogrn=' + c.ogrn : ''),
+        chto: 'Банк России: сведения о кредитной организации и её отчётность' });
+    }
 
     // 8–11. Блоки DaMIA по контракту Арт-директора 27.09 (status, itog, znachenie, prichina, istochnik, data_svedeniy)
     var dm = r.damia || {};

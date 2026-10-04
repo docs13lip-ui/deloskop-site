@@ -261,6 +261,7 @@ footer a{color:var(--muted)}
 <script src="/js/bez-nds.js"></script>
 <script src="/js/kommentarii.js"></script>
 <script src="/kontragenty-iz-vypiski/engine.js"></script>
+<script src="/kontragenty-iz-vypiski/fincentr.js"></script>
 <script>(function(){
 'use strict';
 var E=window.DeloVypiska;
@@ -338,6 +339,7 @@ function render(){
   out.innerHTML='<div class="stake">'+head+cta+'</div>'+facts+todo+flows+sup+og+
     '<p class="note">Суммы НДС взяты из назначений платежей; где НДС не указан, вычет не считаем. Пени в сумму на кону не входят. Это автоматический разбор, а не заключение налогового консультанта.</p>';
   out.hidden=false;
+  if(window.DeloFincentr&&!state.demo)DeloFincentr.pokazat(out,state.parsed,r);
   var c=$('check');if(c)c.onclick=checkRegistry;
   var a=$('all');if(a)a.onclick=function(){state.showAll=true;render()};
 }

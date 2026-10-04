@@ -24,9 +24,10 @@ function doc(o) {
     o.out ? 'ДатаСписано=' + o.date : 'ДатаПоступило=' + o.date,
     'НазначениеПлатежа=' + o.p, 'КонецДокумента'].filter(Boolean).join('\r\n');
 }
-function vypiska(acc, docs) {
+function vypiska(acc, docs, nach) {
   return E.parse(['1CClientBankExchange', 'ВерсияФормата=1.03', 'РасчСчет=' + acc,
-    'СекцияРасчСчет', 'РасчСчет=' + acc, 'КонецРасчСчет'].concat(docs).join('\r\n'));
+    'СекцияРасчСчет', 'ДатаНачала=' + data(0), 'РасчСчет=' + acc,
+    nach == null ? '' : 'НачальныйОстаток=' + nach, 'КонецРасчСчет'].filter(Boolean).concat(docs).join('\r\n'));
 }
 function data(day) { const d = new Date(Date.UTC(2026, 8, 1) + day * 864e5); return String(d.getUTCDate()).padStart(2, '0') + '.' + String(d.getUTCMonth() + 1).padStart(2, '0') + '.' + d.getUTCFullYear(); }
 const vyruchka = (acc, day, sum, bank) => doc({ date: data(day), sum, pa: '40702810100000000099', pi: KLIENT, pn: 'ООО «Покупатель»', ra: acc, ri: SELF, rn: 'ООО «Мы»', rbank: bank, p: 'Оплата по договору поставки, НДС 22%' });
@@ -133,4 +134,61 @@ test('8. флаг: в data/fincentr.json vklyuchen = false, без флага л
     assert.strictEqual(pokazal, false);
     assert.strictEqual(zvali, 1);
   } finally { global.fetch = staryj; }
+});
+
+// «Запас 7 дней» ([Продукт · Данные] 04.10 22:37, разд. 1): сценарии 1b, 5, 5а — ожидания из правой колонки таблицы
+test('1b. то же, что 1, но цикл 9 дней: Б и все вместе — ok (платёж из недельного остатка), А — warn', () => {
+  const a = [], b = [];
+  for (let i = 0; i < 4; i++) {
+    const day = i * 9;
+    a.push(vyruchka(ACC_A, day, 900000, 'АО «АЛЬФА-БАНК» г. Москва'));
+    const t = sebe(ACC_A, ACC_B, day, 880000, 'АО «АЛЬФА-БАНК» г. Москва', 'ПАО Бета г. Москва');
+    a.push(t); b.push(t);
+    b.push(postavshchiku(ACC_B, day + 10, 850000));
+  }
+  const s = F.svodka([vypiska(ACC_A, a), vypiska(ACC_B, b)]);
+  const scA = s.scheta.find(x => x.acc === ACC_A), scB = s.scheta.find(x => x.acc === ACC_B);
+  assert.strictEqual(s.tranzit.uroven, 'ok');
+  assert.strictEqual(s.tranzit.bystro, 0);
+  assert.strictEqual(scB.tranzit.uroven, 'ok');
+  assert.strictEqual(scA.tranzit.uroven, 'warn');
+  assert.ok(scA.tranzit.dolya > 0.95);
+});
+
+const cikl5 = () => { const a = []; for (let i = 0; i < 4; i++) { a.push(vyruchka(ACC_A, i * 9, 1000000)); a.push(postavshchiku(ACC_A, i * 9 + 1, 1000000)); } return a; };
+test('5. остаток 3 млн, приход 1 млн → назавтра поставщику 1 млн, ×4: ok, все платежи — из запаса', () => {
+  const s = F.svodka([vypiska(ACC_A, cikl5(), '3000000.00')]);
+  assert.strictEqual(s.tranzit.uroven, 'ok');
+  assert.strictEqual(s.tranzit.bystro, 0);
+  assert.strictEqual(s.tranzit.izZapasa, 4000000);
+  assert.strictEqual(s.scheta[0].tranzit.uroven, 'ok');
+});
+
+test('5а. то же при остатке 0 (или без поля НачальныйОстаток): warn 1,0 — как чистый LIFO', () => {
+  for (const nach of ['0.00', null]) {
+    const s = F.svodka([vypiska(ACC_A, cikl5(), nach)]);
+    assert.strictEqual(s.tranzit.uroven, 'warn', String(nach));
+    assert.strictEqual(s.tranzit.dolya, 1);
+  }
+});
+
+test('9. запас: без частичных списаний, взятое из запаса в тот же день вычитается', () => {
+  const ev = [
+    { d: '2026-09-01', acc: 'x', dir: 'in', sum: 1000000, cat: 'ext' },
+    { d: '2026-09-10', acc: 'x', dir: 'in', sum: 1000000, cat: 'ext' },
+    { d: '2026-09-10', acc: 'x', dir: 'out', sum: 700000, cat: 'supplier' },   // из запаса (1 млн)
+    { d: '2026-09-10', acc: 'x', dir: 'out', sum: 700000, cat: 'supplier' }    // запаса осталось 300 тыс. — весь по LIFO
+  ];
+  const r = F.schitat(ev, { ext: 1 }, { supplier: 1 });
+  assert.strictEqual(r.izZapasa, 700000);
+  assert.strictEqual(r.bystro, 700000);
+  assert.ok(F.html(F.svodka([vypiska(ACC_A, cikl5(), '3000000')]), null).includes('Платежи, которые покрывал остаток, пролежавший на счёте неделю, транзитом не считаем.'));
+});
+
+test('10. 390 px: «Глазами каждого банка» — карточка на банк (подписи ячеек в data-k, таблица скрывает шапку)', () => {
+  const h = F.html(F.svodka([vypiska(ACC_A, cikl5(), '3000000')]), null);
+  for (const k of ['Пришло — ушло', 'Наличные', 'Налоги']) assert.strictEqual((h.match(new RegExp('data-k="' + k + '"', 'g')) || []).length, 2, k);
+  const src = fs.readFileSync(path.join(__dirname, '..', 'kontragenty-iz-vypiski', 'fincentr.js'), 'utf8');
+  assert.match(src, /@media \(max-width:600px\)\{\.fc-tabl\{overflow:visible\}\.fc-tabl thead\{display:none\}/);
+  assert.match(src, /td\[data-k\]::before\{content:attr\(data-k\)/);
 });

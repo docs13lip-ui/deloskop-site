@@ -202,3 +202,19 @@ test('Разбор № 9: обзор ВС — без номера и без «�
   assert.ok(un(chitat('praktika/index.html')).includes('судебных решений и позиций ведомств'), 'обзор — не «решение»');
   assert.ok(s.includes('data-goal="razbor9_check"'));
 });
+
+// razbor10-v1 ([Ночные запуски] 04.10 15:05; текст [Право] 11:07 разд. 2, нормы и «Где грань» — отчёт [Ночные запуски] 14:05; акт сверен по PDF 04.10)
+test('Разбор № 10: ВС 305-ЭС24-5195 — штраф 50 000 ₽, без «резервного тарифа», ДБО — отдельная мера, кнопка — Щит', () => {
+  const s = un(chitat('praktika/115-fz/shtraf-banka-za-dokumenty-115-fz/index.html')).replace(/<span class="nw">([^<]*)<\/span>/g, '$1');
+  assert.ok(s.includes('№ 305-ЭС24-5195') && s.includes('А40-56514/2023'));
+  assert.ok(!/резервн\S* тариф|30 000 ₽\/мес/.test(s), 'в акте нет «резервного тарифа»');
+  assert.ok(!/ст\. 168|ст\. 845|ст\. 851/.test(s), 'нормы акта — не 168, 845, 851');
+  assert.ok(s.includes('пп. 10 и 11 ст. 7 115-ФЗ') && s.includes('п. 14 ст. 7 115-ФЗ'));
+  assert.ok(s.includes('это отдельная мера по договору'), 'интернет-банк — не мера ст. 7 по этому акту');
+  assert.ok(!/Отказ в операции, приостановление, отключение интернет-банка/.test(s));
+  assert.ok(!/взыщут|вернут(?!ь)/.test(s.replace(/вернуть сумму/g, '')), 'исход не обещаем');
+  assert.ok(s.includes('Итог нового рассмотрения мы не проверяли'));
+  assert.ok(s.includes('data-goal="razbor10_shchit"') && s.includes('href="/#shield"'));
+  assert.ok(!/Предприниматель [А-ЯЁ][а-яё]+ [А-ЯЁ]\./.test(s), 'имя ИП не публикуем');
+  assert.ok(un(chitat('praktika/115-fz/zagraditelnye-komissii/index.html')).includes('href="/praktika/115-fz/shtraf-banka-za-dokumenty-115-fz/"'));
+});

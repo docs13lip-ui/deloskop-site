@@ -44,6 +44,6 @@ test('«Сигналов мало» нигде не осталось; в каб�
 
 test('/indeks/: title по [Право] и [Маркетингу], без «надёжн»', () => {
   const t = chitat('indeks/index.html');
-  assert.ok(t.includes('<title>Индекс Делоскопа: признаки риска компании — методика v1.0</title>'));
+  assert.ok(t.includes('<title>Индекс Делоскопа: признаки риска компании — открытая методика</title>'));
   assert.ok(!/над[её]жн/i.test(t));
 });

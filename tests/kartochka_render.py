@@ -581,14 +581,16 @@ def iz_check(r):
     # charts.income_tax) — того же года, что последний год прибыли. Только расход (> 0): доход (обратный знак) не показываем
     # ([Право · Налоговый] 04.10 07:07 разд. 5.2 п. 3). «Уплатила» не пишем — это не сумма, уплаченная в бюджет.
     # ⚠ Знак в charts.income_tax не различает расход и доход: «Аэрофлот» 2020 — убыток 96,5 млрд ₽ и +26,6 млрд ₽ «налога»
-    # (по отчётности это доход по налогу). Пока [Продукт · Данные] не подтвердит знак — строку не показываем (NALOG_PRIB_ZNAK).
+    # (по отчётности это доход по налогу).
+    # kartochki-znak-naloga-v1 (Ночные-2, 05.10): вместо общего флага — знак по контракту [Продукт · Данные] 04.10 разд. 1
+    # (nalog_prib_znak): строка 2300 за год → налог = 2300 − 2400; иначе флаг ряда income_tax_znak / точки znak.
+    # Без этих полей (живой API сейчас) строки нет — как было. Правило «есть отрицательное → ряд со знаком» на публичной
+    # странице не берём: у прибыльной компании оно ничего не доказывает (тот же контракт).
     k["nalog_prib"] = None
     if NALOG_PRIB_ZNAK and k["pribyl_ryad"]:
         gn = max(k["pribyl_ryad"])
-        for p in ch.get("income_tax") or []:
-            if isinstance(p, dict) and _god(p.get("year")) == gn:
-                v = chislo(p.get("value"))
-                k["nalog_prib"] = {"god": gn, "znachenie": v} if (v is not None and v > 0) else None
+        v = nalog_prib_znak(ch, gn, k["pribyl_ryad"][gn])
+        k["nalog_prib"] = {"god": gn, "znachenie": v} if (v is not None and v > 0) else None
     b = ch.get("balance")
     if isinstance(b, dict) and _god(b.get("year")) and _god(b.get("year")) <= gp:
         chasti = [chislo(b.get(x)) for x in ("equity", "long_debt", "short_debt")]
@@ -637,8 +639,39 @@ def indeks_vid(k):
 
 
 # ---------------------------------------------------------------- выводы человеческим языком (Данные §2)
-# kartochki-ton-v1: True — когда API отдаст 2410 со знаком (расход > 0, доход < 0); до этого строки налога на прибыль нет
-NALOG_PRIB_ZNAK = False
+# kartochki-ton-v1 / kartochki-znak-naloga-v1: строка налога на прибыль на карточке — только когда знак известен
+# по году (nalog_prib_znak). False — аварийный выключатель: строки нет ни у кого.
+NALOG_PRIB_ZNAK = True
+
+
+def nalog_prib_znak(ch, god, pribyl):
+    """kartochki-znak-naloga-v1: налог на прибыль за год со знаком (расход > 0, доход < 0) или None — знак неизвестен.
+
+    Контракт /api/check ([Продукт · Данные] 04.10, разд. 1), тот же порядок, что js/rentabelnost.js (znak-naloga-v1.1):
+    1) charts.profit_before_tax за год (строка 2300) → 2300 − чистая прибыль (2400) — точно и со знаком;
+    2) charts.income_tax_znak is True → значение точки как есть;
+    3) у точки года есть znak (bool) → True — как есть, False — None;
+    иначе None (в том числе в смешанном ряду без znak у года и в ряду без флагов)."""
+    ch = ch if isinstance(ch, dict) else {}
+    if god is None or pribyl is None:
+        return None
+    for p in ch.get("profit_before_tax") or []:
+        if isinstance(p, dict) and _god(p.get("year")) == god:
+            pbt = chislo(p.get("value"))
+            if pbt is not None:
+                return pbt - pribyl
+    tochka = None
+    for p in ch.get("income_tax") or []:
+        if isinstance(p, dict) and _god(p.get("year")) == god:
+            tochka = p
+    if tochka is None:
+        return None
+    v = chislo(tochka.get("value"))
+    if v is None:
+        return None
+    if ch.get("income_tax_znak") is True:
+        return v
+    return v if tochka.get("znak") is True else None
 
 
 def _v(kod, ton, tekst, istochnik, data, s_chislom=True, status="podtverzhdeno"):

@@ -1,6 +1,6 @@
 /* Делоскоп — «Что ещё проверить самим» в свёрнутом разделе «Все данные из реестров» экрана проверки по ИНН
  * (эталон экрана 02.10, п. 6 «Глубина из баз»; полоса Ночных-3 «новые законные источники данных без API»).
- * Справочник — /data/reestry-sami.json: бесплатные государственные реестры, которые мы пока не опрашиваем сами,
+ * Справочник — /data/reestry-sami.json: открытые государственные реестры, которые мы пока не опрашиваем сами,
  * у каждого — кто ведёт, когда это важно, как обновляется, норма и дата сверки. Ничего не утверждаем о компании:
  * только «где посмотреть» — «не проверяли ≠ не нашли». Только организации (10-значный ИНН): данные ИП не трогаем.
  * Чистые функции (dlya, html) — без DOM и сети, их проверяет tests/reestry_sami.test.js. */
@@ -13,7 +13,7 @@
 
   var NB = '\u00a0';
   // только официальные сайты ведомств — ссылку на чужой домен справочник не выведет
-  var DOMENY = /^https:\/\/(www\.)?(reestr-zalogov\.ru|rmsp\.nalog\.ru|fips\.ru|[a-z0-9-]+\.nalog\.(ru|gov\.ru))\//;
+  var DOMENY = /^https:\/\/(www\.)?(reestr-zalogov\.ru|rmsp\.nalog\.ru|fips\.ru|fedresurs\.ru|pub\.fsa\.gov\.ru|[a-z0-9-]+\.nalog\.(ru|gov\.ru))\//;
 
   function esc(t) {
     return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) {
@@ -41,7 +41,7 @@
   function html(spisok, sprav) {
     if (!spisok || !spisok.length) return '';
     var d = dmy((sprav || {}).svereno);
-    return '<section class="sut__s rs" data-reestry-sami><h4>Что ещё проверить самим — бесплатно</h4><dl>' +
+    return '<section class="sut__s rs" data-reestry-sami><h4>Что ещё проверить самим в открытых реестрах</h4><dl>' +
       spisok.map(function (x) {
         return '<div data-reestr="' + esc(x.id) + '"><dt>' + esc(nb(x.nazv)) + '<small>' + esc(nb(x.kogda || '')) + '</small></dt>' +
           '<dd>' + esc(nb(x.chto)) + ' <a href="' + esc(x.ssylka) + '" target="_blank" rel="noopener"' +

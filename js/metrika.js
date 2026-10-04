@@ -3,7 +3,13 @@
    в баннере cookies; «Только необходимые» — не загружается. Выбор хранится в браузере 12 месяцев.
    Цели: window.dlkGoal("check_started" | "report_opened" | "invoice_created" | "registration" |
    "article_to_tool" | "whatsnew_open" | "pkg_view" | "pkg_cta" | "praktika_cta" |
-   "entry_pay" | "entry_watch" | "entry_bank" | "shchit_start" | "shchit_sled", {параметры}) — без согласия ничего не отправляет. */
+   "entry_pay" | "entry_watch" | "entry_bank" | "shchit_start" | "shchit_sled", {параметры}) — без согласия ничего не отправляет.
+   События дублируются в параметры визита `sobytie` — копятся и без заведённой цели (справка Метрики, visit-params-data).
+   Ключи параметров — только из KLYUCHI; значения с 10+ цифрами подряд или «@» и значения из полей ввода не передаём.
+   Просмотр отправляется вручную (init с defer: true + hit — справка Метрики «SPA-сайты»): в адресе и referer
+   остаются только рекламные метки utm_*, yclid, ysclid, значения остальных параметров заменены на *.
+   Если в адресе страницы 12 или 15 цифр подряд (ИНН ИП, ОГРНИП) — счётчик на этой странице не загружается вовсе:
+   данные ИП в Метрику не уходят (152-ФЗ; claude/Продукт_metrika-v1.2_адрес_белый_список_МСП_04.10.md). */
 (function () {
   "use strict";
   var ID = 113083788;
@@ -20,8 +26,46 @@
   }
   function zapisat(v) { try { localStorage.setItem(KEY, JSON.stringify({ v: v, t: Date.now() })); } catch (e) {} }
 
+  // Только служебные метки событий. Значения из полей ввода не передаём.
+  var KLYUCHI = { kuda: 1, produkt: 1, statya: 1, sposob: 1, sost: 1, otkuda: 1, mesto: 1, vid: 1, stranica: 1,
+    slug: 1, ocenka: 1, n: 1, kod: 1, inn_dlina: 1, beta: 1, otrasl: 1, tarif: 1, stupen: 1 };
+  var PLOHO = /\d{10,}|@/; // ИНН, ОГРН(ИП), почта — в любом месте строки
+  function chistye(p) {
+    var o = {}, k, v;
+    for (k in p) if (KLYUCHI[k] === 1 && Object.prototype.hasOwnProperty.call(p, k)) {
+      v = p[k];
+      if (typeof v === "number" || typeof v === "boolean") v = String(+v);
+      if (typeof v !== "string") continue;
+      v = v.split(/[?#]/)[0]; // у адресов — только путь
+      if (PLOHO.test(v)) continue;
+      o[k] = v.slice(0, 120);
+    }
+    return o;
+  }
+
+  // Адрес для Метрики: белый список рекламных меток, остальные значения → *; 12 и 15 цифр в пути → *
+  var METKI = /^(utm_[a-z0-9_]+|yclid|ysclid)$/i;
+  function adres(u) {
+    var s = String(u || "").split("#")[0], i = s.indexOf("?");
+    var put = (i < 0 ? s : s.slice(0, i)).replace(/\/(\d{12}|\d{15})(?=\/|$)/g, "/*");
+    if (i < 0) return put;
+    return put + "?" + s.slice(i + 1).split("&").map(function (p) {
+      if (!p) return p;
+      var j = p.indexOf("="), k = j < 0 ? p : p.slice(0, j);
+      if (METKI.test(k) && !(/^utm_/i.test(k) && PLOHO.test(p.slice(j + 1)))) return p;
+      return j < 0 ? "*" : k + "=*";
+    }).join("&");
+  }
+  // ИНН ИП (12 цифр) или ОГРНИП (15 цифр) где-либо в адресе, кроме yclid/ysclid: цели и клики Метрика
+  // подписывает адресом страницы, поэтому на такой странице счётчик не грузим совсем
+  function lichnoe(u) {
+    var s = String(u || "").replace(/([?&])(yclid|ysclid)=[^&#]*/gi, "$1");
+    return /(^|\D)(\d{12}|\d{15})(?!\d)/.test(s);
+  }
+
   function zagruzit() {
     if (zagruzhen) return;
+    if (lichnoe(location.href) || lichnoe(document.referrer)) return;
     zagruzhen = true;
     (function (m, e, t, r, i, k, a) {
       m[i] = m[i] || function () { (m[i].a = m[i].a || []).push(arguments); };
@@ -29,12 +73,15 @@
       k = e.createElement(t); a = e.getElementsByTagName(t)[0];
       k.async = 1; k.src = r; a.parentNode.insertBefore(k, a);
     })(window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
-    window.ym(ID, "init", { clickmap: true, trackLinks: true, accurateTrackBounce: true, webvisor: false });
+    window.ym(ID, "init", { clickmap: true, trackLinks: true, accurateTrackBounce: true, webvisor: false, defer: true });
+    window.ym(ID, "hit", adres(location.href), { referer: adres(document.referrer), title: document.title });
   }
 
   window.dlkGoal = function (cel, params) {
-    if (chitat() !== "all" || typeof window.ym !== "function") return;
-    try { window.ym(ID, "reachGoal", cel, params || {}); } catch (e) {}
+    if (chitat() !== "all" || !zagruzhen || typeof window.ym !== "function") return;
+    var p = chistye(params || {});
+    try { window.ym(ID, "reachGoal", cel, p); } catch (e) {}
+    try { var s = {}; s[cel] = Object.keys(p).length ? p : 1; window.ym(ID, "params", { sobytie: s }); } catch (e) {}
   };
 
   window.dlkCookies = {

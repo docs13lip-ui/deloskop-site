@@ -343,6 +343,22 @@ td b{font-weight:600}
   }
   function vremya(v){var d=new Date(v);if(isNaN(d))return '';return d.toLocaleDateString('ru-RU',{timeZone:'Europe/Moscow'})+' в '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Moscow'})+' МСК';}
   function fail(t){if(window.dlkLimit)dlkLimit.ubrat(msg);msg.innerHTML=t;}
+  // pasport-indeks-v1 [Ночные-3]: Паспорт ждёт методику Индекса. gotovo() через 4 с зовёт и без неё — раздел 13 и «Итог» оставались
+  // «Индекс — считаем» навсегда. Рисуем через 4 с, как раньше, а придёт методика (ждём до 4 раз, ~16 с) — перевыпускаем Паспорт
+  // (новый отпечаток), только если Индекс от этого меняется. Печать по ?print=1 — один раз и после ожидания методики.
+  var TEK=null, PECHAT=false;
+  function zhdatMetodiku(f,n){var IO=window.IndeksOtvet;if(!IO||typeof IO.gotovo!=='function'||typeof IO.gotov!=='function'||IO.gotov()){f();return;}
+    var k=0,g=function(){if(!IO.gotov()&&++k<n){IO.gotovo(g);return;}f();};IO.gotovo(g);}
+  function ixKlyuch(p){var z=(p.razdely||[]).filter(function(x){return x.id==='indeks'})[0]||{};return JSON.stringify([p.meta&&p.meta.indeks||null,z.prichina||'',(z.fakty||[]).length]);}
+  function perevypustit(){
+    if(!TEK||!window.IndeksOtvet||!IndeksOtvet.gotov())return;
+    var nov;try{nov=ixKlyuch(P.sobrat(TEK.r,TEK.opts));}catch(e){return;}
+    if(nov===TEK.ix)return;
+    // человек вводит сумму или заполняет «Решение о сделке» — не выдёргиваем поле из-под рук, перевыпускаем после ухода из поля
+    var a=document.activeElement;
+    if(a&&a!==document.body&&pk.contains(a)&&/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName)){a.addEventListener('blur',function(){setTimeout(perevypustit,0)},{once:true});return;}
+    rsZapomnit();render(TEK.r,TEK.opts);
+  }
   // «На кону» считаем по режиму ПОКУПАТЕЛЯ (Налоговый юрист 29.09); по умолчанию — организация на общей системе.
   var REZH_IMYA={osn:'Мы на общей системе',usn_dr:'Мы на УСН «доходы минус расходы»',usn_d:'Мы на УСН «доходы»'};
   var REZH={osn:'(для компании на общей системе, ставки 2026 года)',usn_dr:'(для УСН «доходы минус расходы», ставки 2026 года)',usn_d:'(для УСН «доходы»)'};
@@ -563,6 +579,7 @@ td b{font-weight:600}
   }
   function render(r,opts){
     var p=P.sobrat(r,opts), m=p.meta; INN=m.inn||"";
+    TEK={r:r,opts:opts,ix:ixKlyuch(p)};
     document.title='Паспорт контрагента: '+m.nazvanie+' — Делоскоп';
     // Ссылка «для коллеги» — по ИНН, не по номеру досье: получатель соберёт Паспорт заново, на день открытия,
     // а номер досье (ключ к сведениям этой проверки) из рук не уходит (Ночные 29.09 19:07, Прорыв «Я-2»).
@@ -624,7 +641,7 @@ td b{font-weight:600}
       pdf.hidden=share.hidden=false; pdf.onclick=function(){window.print()};
       if(pb&&K){pb.hidden=false;pb.onclick=papkaPechat;}
       share.onclick=function(){try{navigator.clipboard.writeText(link).then(function(){share.textContent='Ссылка скопирована';share.title='По ссылке Паспорт соберётся заново — со сведениями на день открытия'},function(){prompt('Ссылка на Паспорт:',link)})}catch(e){prompt('Ссылка на Паспорт:',link)}};
-      if(q.get('print')==='1')setTimeout(function(){window.print()},400);
+      if(q.get('print')==='1'&&!PECHAT){PECHAT=true;setTimeout(function(){window.print()},400);}
     });
   }
 
@@ -634,7 +651,7 @@ td b{font-weight:600}
     // Образец раздела 6 (pasport-balans-v1): вымышленные суммы баланса и расчётов — показать, как выглядят строки на 31.12.
     r.dossier={charts:{revenue:[{year:2023,value:48200000},{year:2024,value:56100000},{year:2025,value:61400000}],balance:{year:2025,equity:18600000,long_debt:4000000,short_debt:12900000},debts:{year:2025,receivables:9800000,payables:7400000,loans:5200000}}};
     document.getElementById('nazad').href='/pasport/';
-    render(r,{usloviya:U,indeksVorota:window.IndeksVorota,nomer:'ОБРАЗЕЦ',summa:summa});return;
+    render(r,{usloviya:U,indeksVorota:window.IndeksVorota,nomer:'ОБРАЗЕЦ',summa:summa});zhdatMetodiku(perevypustit,4);return;
   }
   // Паспорт по ссылке: /pasport/kontragent/?inn=… (карточка компании, письмо бухгалтера, «Ссылка для коллеги»).
   // Проверку тратим только по нажатию: ссылку могли открыть почтовый сканер или превью — без человека запросов нет.
@@ -669,7 +686,9 @@ td b{font-weight:600}
     };
   }
   fetch(API+'/api/report/'+encodeURIComponent(id)).then(function(x){if(!x.ok)throw x.status;return x.json()})
-    .then(function(r){var go=function(){render(r,{usloviya:U,indeksVorota:window.IndeksVorota,dostup:r.dostup||null,summa:summa,rezhim:q.get('rezhim')||'osn'});};if(window.IndeksOtvet)IndeksOtvet.gotovo(go);else go();})
+    .then(function(r){var go=function(){render(r,{usloviya:U,indeksVorota:window.IndeksVorota,dostup:r.dostup||null,summa:summa,rezhim:q.get('rezhim')||'osn'});};
+      if(q.get('print')==='1'){zhdatMetodiku(go,4);return;}
+      zhdatMetodiku(function(){go();zhdatMetodiku(perevypustit,3);},1);})
     .catch(function(s){fail(s===404||s===410?'Досье по этой ссылке не найдено. <a href="/">Проверить компанию заново</a>':'Не получилось загрузить сведения. Обычно это минута — <a href="">обновите страницу</a>.');});
 })();
 </script>

@@ -724,6 +724,39 @@
     return { s: a, izm: sravnit(a, b) };
   }
 
+  // pasport-izm-v1 [Ночные-3]: то же сравнение только для чтения — Паспорт снимков не сохраняет (его открывают и по старому досье).
+  // Берём самую позднюю проверку этой компании в браузере раньше досье больше чем на час. → { s, izm } | null
+  function sravnitSnimki(r, ls) {
+    var b = snimok(r);
+    if (!b || !ls) return null;
+    var vse = chitat(ls);
+    if (!vse) return null;
+    var a = null;
+    (Array.isArray(vse[b.inn]) ? vse[b.inn] : []).forEach(function (x) {
+      if (x && x.inn === b.inn && isFinite(x.t) && x.t <= b.t - CHAS && (!a || x.t > a.t)) a = x;
+    });
+    return a ? { s: a, izm: sravnit(a, b) } : null;
+  }
+  // Образец Паспорта (?demo=1): как выглядит блок при повторной проверке — прошлая проверка «за 35 дней до», три отличия.
+  function obrazecIzm(r) {
+    var b = snimok(r);
+    if (!b) return null;
+    var a = JSON.parse(JSON.stringify(b));
+    a.t = b.t - 35 * 24 * CHAS;
+    a.lvl = 'medium';
+    if (b.kpp) a.kpp = b.kpp.slice(0, 2) + '11' + b.kpp.slice(4);
+    if (b.vyr) { a.vyr = [b.vyr[0] - 1, Math.round(b.vyr[1] * 0.91)]; delete a.prib; }
+    return { s: a, izm: sravnit(a, b) };
+  }
+  // Блок для Паспорта: под «Итогом», только на экране — в PDF и в отпечаток SHA-256 не входит (класс noprint).
+  function htmlPasport(rez, obrazec) {
+    if (!rez || !rez.s || !Array.isArray(rez.izm)) return '';
+    return '<section class="pk-izm noprint" aria-label="Что изменилось с вашей прошлой проверки">' + htmlIzmeneniya(rez) +
+      '<p class="pk-izm__n">' + (obrazec ? 'Образец: так блок выглядит, когда вы проверяете компанию повторно. ' : '') +
+      (rez.izm.length ? '' : 'Сравнили с' + NB + 'вашей проверкой на' + NB + 'этом устройстве. ') +
+      'Блок только на экране: в' + NB + 'PDF Паспорта и в' + NB + 'его отпечаток не' + NB + 'входит.</p></section>';
+  }
+
   // rez.id — сравнение с досье проверки из кабинета (любое устройство); иначе — со снимком в этом браузере.
   function htmlIzmeneniya(rez) {
     if (!rez) return '';
@@ -953,5 +986,6 @@
 
   return { ryad: ryad, ryady: ryady, nalogBezZnaka: nalogBezZnaka, stroka: stroka, izmenenie: izmenenie, trendy: trendy, dengi: dengi, htmlDinamika: htmlDinamika, balans: balans, htmlBalans: htmlBalans,
     snimok: snimok, sravnit: sravnit, likvidnost: likvidnost, okved: okved, ustKapital: ustKapital, rubliTochno: rubliTochno, vRaz: vRaz, zapomnit: zapomnit, htmlIzmeneniya: htmlIzmeneniya, html: html, KEY: KEY, CSS: CSS,
-    iskl: iskl, isklyuchena: isklyuchena, ixChislo: ixChislo, plusMes: plusMes, kodSost: kodSost, predydushchaya: predydushchaya, nuzhenKabinet: nuzhenKabinet, dogruzit: dogruzit, dobavit: dobavit, sDop: sDop, ozhidatIndeks: ozhidatIndeks, dopisatIndeks: dopisatIndeks };
+    iskl: iskl, isklyuchena: isklyuchena, ixChislo: ixChislo, plusMes: plusMes, kodSost: kodSost, predydushchaya: predydushchaya, nuzhenKabinet: nuzhenKabinet, dogruzit: dogruzit, dobavit: dobavit, sDop: sDop, ozhidatIndeks: ozhidatIndeks, dopisatIndeks: dopisatIndeks,
+    sravnitSnimki: sravnitSnimki, obrazecIzm: obrazecIzm, htmlPasport: htmlPasport, stil: stil };
 });

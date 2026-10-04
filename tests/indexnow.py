@@ -72,7 +72,9 @@ def vybrat(izmenennye, v_sitemap, novye_kartochki=None):
         a = fajl_v_adres(f)
         if not a or a not in dopustimye or a in out:
             continue
-        if novye_kartochki is not None and a.startswith(hab) and a != hab and a not in novye_kartochki:
+        # kartochki-haby-v1: хабы отраслей и регионов (/company/otrasl/…, /company/region/…) — как хаб /company/
+        if (novye_kartochki is not None and a.startswith(hab) and a != hab and a not in novye_kartochki
+                and not a.startswith((hab + "otrasl/", hab + "region/"))):
             continue
         out.append(a)
     return out

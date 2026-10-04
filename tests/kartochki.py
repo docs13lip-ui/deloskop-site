@@ -8,7 +8,10 @@
     python3 tests/kartochki.py sobrat  --vhod kartochki.jsonl [--stupen 0] [--spros 800 --kontrol 200] [--dobavit]
         # --dobavit (v3.5): опубликованные карточки не трогать, новые — добавить; хаб и sitemap — по всем
     python3 tests/kartochki.py proverka --vhod kartochki.jsonl [--podrobno]  # только отчёт «сколько проходит ворота», файлы не трогает
-    python3 tests/kartochki.py iz-api  --inn spisok.txt --vyhod kartochki.jsonl [--pauza 6] [--maks 300]  # живой /api/check; 429 — стоп;
+    python3 tests/kartochki.py iz-api  --inn spisok.txt --vyhod kartochki.jsonl [--pauza 6] [--maks 300] [--zanovo]  # живой /api/check; 429 — стоп;
+        # опубликованные и отсев (tests/kartochki_otsev.txt) не спрашиваются (kartochki-vybor-v1)
+    python3 tests/kartochki.py vybor   --revexp data-….zip [--n 500] [--vyhod spisok.txt]  # кандидаты из набора ФНС revexp (ТЗ 3.1)
+    python3 tests/kartochki.py otsev   --vhod kartochki.jsonl  # отказы ворот публикации → отсев на 90 дней
         # служебный доступ — DELOSKOP_SERVICE_TOKEN в окружении запуска (заголовок X-Deloskop-Service; не в файлы)
 
 Правила (кто решил — в скобках):
@@ -40,6 +43,7 @@ KOREN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(KOREN, "tests"))
 import sobrat_shapku as ss  # noqa: E402
 import kommentarii  # noqa: E402
+import kartochki_vybor as kv  # noqa: E402  kartochki-vybor-v1: отбор ИНН, отсев, «не спрашивать опубликованные»
 # render-v1: отрисовка («сведения → HTML») — общий модуль сайта и API; здесь — отбор волны, файлы, sitemap, iz-api.
 # Имена — прежние (K.vyvody, K.html_kartochki, K.STUPENI …).
 from kartochka_render import *  # noqa: E402,F401,F403
@@ -262,6 +266,44 @@ def partiya_sitemap(lm, staryj_xml, segodnya, partiya=PARTIYA_V_SUTKI, dohod=Non
     return vybor, metka, len(novye) - len(berem)
 
 
+def sobrat_gruppy(gruppy, lm, koren, r, podval, shapka):
+    """kartochki-haby-v1: пишет хабы групп, убирает исчезнувшие → {адрес стр. 1: lastmod} хабов, идущих в sitemap.
+    В индекс — когда ≥ HAB_GRUPPY_OT карточек группы стоят в sitemap (lm); lastmod — самая свежая из них."""
+    v_sm = {}
+    nuzhnye = set()
+    for g in gruppy:
+        lms = [lm[adres_str(k)] for k in g["kart"] if adres_str(k) in lm]
+        index = len(lms) >= HAB_GRUPPY_OT
+        chasti = stranicy_gruppy(g, HAB_NA_STRANICE)
+        for n, chast in enumerate(chasti, 1):
+            a = adres_gruppy(g, n)
+            nuzhnye.add(a)
+            zapisat(os.path.join(koren, a.strip("/"), "index.html"),
+                    ss.sobrat_stranicu(html_gruppy(g, chast, index, n, len(chasti)), r, podval, shapka))
+        if index:
+            v_sm[adres_gruppy(g)] = max(lms)
+    # лишнее (группа ушла ниже порога, страниц стало меньше) — удаляем; пустые папки — тоже
+    for vid in GRUPPY_VIDY:
+        kor = os.path.join(koren, PAPKA, vid)
+        if not os.path.isdir(kor):
+            continue
+        for sl in sorted(os.listdir(kor)):
+            base = "/%s/%s/%s/" % (PAPKA, vid, sl)
+            if base not in nuzhnye:
+                shutil.rmtree(os.path.join(kor, sl))
+                continue
+            ps = os.path.join(kor, sl, HAB_STRANICA)
+            if os.path.isdir(ps):
+                for d in os.listdir(ps):
+                    if "%s%s/%s/" % (base, HAB_STRANICA, d) not in nuzhnye:
+                        shutil.rmtree(os.path.join(ps, d))
+                if not os.listdir(ps):
+                    os.rmdir(ps)
+        if not os.listdir(kor):
+            os.rmdir(kor)
+    return v_sm
+
+
 def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, dobavit=False,
            partiya=PARTIYA_V_SUTKI, segodnya=None):
     kart, otchet = otobrat(zapisi, limit, spros, kontrol)
@@ -288,9 +330,13 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
     shapka = ss.shapka_html()
     normy = zagruzit_normy()
     kom = kommentarii.zagruzit()  # «Комментарий команды» — data/kommentarii.json (только утверждённые [Право] тексты)
+    # kartochki-haby-v1: хабы отраслей и регионов (≥ HAB_GRUPPY_OT карточек) — до карточек: крошки ссылаются на них
+    gruppy = gruppy_haba(vse, HAB_GRUPPY_OT)
+    kg = karta_grupp(gruppy)
     izm = 0
     for k in kart:
         txt = ss.sobrat_stranicu(html_kartochki(k, k["_V"], pohozhie(k, vse), kom, normy), r, podval, shapka)
+        txt = ssylki_kroshek(txt, kg)
         k["_noindex"] = noindex_html(txt)
         izm += zapisat(os.path.join(koren, adres_str(k).strip("/"), "index.html"), txt)
     # v3.8b: у опубликованных — свежие «Похожие компании», остальное байт в байт
@@ -302,6 +348,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         t2 = pochinit_god_dvazhdy(t2)  # v3.10: «Выручка за 2021 — … за 2021» → год один раз, как у новых карточек
         t2 = pochinit_indeks_blok(t2)  # kartochki-okved-v1: «Индекс — считаем» → «Индекс — в полном отчёте», как у новых
         t2 = primenit_vorota_indeksa(t2)  # kartochki-indeks-v1: те же ворота индексации, что у новых карточек
+        t2 = ssylki_kroshek(t2, kg)  # kartochki-haby-v1: регион и раздел в крошках — ссылкой на хаб группы
         x["_noindex"] = noindex_html(t2)
         if BEZ_OBOLOCHKI in t2:
             # «голое» тело из комплекта — оболочка той же sobrat_stranicu
@@ -312,7 +359,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
     if vse:
         for n, chast in enumerate(str_haba, 1):
             put = os.path.join(koren, adres_stranicy_haba(n).strip("/"), "index.html")
-            zapisat(put, ss.sobrat_stranicu(html_haba(chast, hub_index, n, len(str_haba), vse), r, podval, shapka))
+            zapisat(put, ss.sobrat_stranicu(html_haba(chast, hub_index, n, len(str_haba), vse, kg), r, podval, shapka))
     elif os.path.exists(os.path.join(papka, "index.html")):
         os.remove(os.path.join(papka, "index.html"))
     papka_str = os.path.join(papka, HAB_STRANICA)
@@ -335,6 +382,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         staryj = open(sm, encoding="utf-8").read() if os.path.exists(sm) else ""
         dohod = {adres_str(k): ((k.get("fakty") or {}).get("dohod") or {}).get("znachenie") or 0 for k in vse}
         lm, metka, zhdut = partiya_sitemap(lm, staryj, segodnya or segodnya_msk(), partiya, dohod)
+        lm_grupp = sobrat_gruppy(gruppy, lm, koren, r, podval, shapka)
         otchet["sitemap_vsego"], otchet["sitemap_zhdut"] = len(lm), zhdut
         otchet["sitemap_novyh"] = metka[2] if metka else 0
         urls = []
@@ -344,6 +392,8 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
             urls.append("  <url><loc>%s/%s/</loc><lastmod>%s</lastmod></url>" % (SAJT, PAPKA, max(lm.values()).isoformat()))
         # v3.5: по адресу (= по ИНН) — полная сборка и добор дают один и тот же sitemap
         urls += ["  <url><loc>%s%s</loc><lastmod>%s</lastmod></url>" % (SAJT, a, lm[a].isoformat()) for a in sorted(lm)]
+        # kartochki-haby-v1: хабы групп за воротами — после карточек (адреса карточек и партия не меняются)
+        urls += ["  <url><loc>%s%s</loc><lastmod>%s</lastmod></url>" % (SAJT, a, lm_grupp[a].isoformat()) for a in sorted(lm_grupp)]
         kom_ = [u for u in urls if u.startswith("<!--")]
         urls = [u for u in urls if not u.startswith("<!--")]
         zapisat(sm, '<?xml version="1.0" encoding="UTF-8"?>\n' + "".join(x + "\n" for x in kom_) +
@@ -351,6 +401,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         if stroka not in robots:
             zapisat(rb, robots.rstrip("\n") + "\n" + stroka + "\n")
     else:
+        sobrat_gruppy([], {}, koren, r, podval, shapka)
         if os.path.exists(sm):
             os.remove(sm)
         if stroka in robots:
@@ -379,21 +430,33 @@ def zagolovki_dostupa(env=None):
     return zag
 
 
-def iz_api(spisok, vyhod, api="https://api.deloskop.ru", pauza=6.0, maks=MAKS_ZAPROSOV):
+def iz_api(spisok, vyhod, api="https://api.deloskop.ru", pauza=6.0, maks=MAKS_ZAPROSOV, zanovo=False):
     """Берёт ИНН из файла (по одному в строке), спрашивает /api/check и дописывает ответы в vyhod (.jsonl).
     Возобновляется с места обрыва. ИНН из 12 цифр не запрашиваются вовсе. Каждый запрос — это одна
     живая проверка (DaData findById + базы) — не больше 1 000 за ночь (Данные §1.4, бюджет DaData).
     kartochki-v2: пауза по умолчанию 6 с, не больше maks запросов за запуск, на HTTP 429 — сразу стоп
-    (лимит не обходим: продолжить — та же команда позже, готовые ИНН пропускаются)."""
+    (лимит не обходим: продолжить — та же команда позже, готовые ИНН пропускаются).
+    kartochki-vybor-v1: опубликованные на сайте и ИНН из отсева (tests/kartochki_otsev.txt) не спрашиваются —
+    запрос не тратится на известный ответ; zanovo=True (`--zanovo`) — спросить всё."""
     gotovo = set()
     if os.path.exists(vyhod):
         for r in chitat_jsonl(vyhod):
             gotovo.add(re.sub(r"\D", "", str((r.get("company") or {}).get("inn") or "")))
     inns = []
-    for s in open(spisok, encoding="utf-8"):
+    with open(spisok, encoding="utf-8") as fh:
+        stroki = fh.read().splitlines()
+    for s in stroki:
         s = re.sub(r"\D", "", s)
         if len(s) == 10 and inn_ok(s) and s not in gotovo and s not in inns:
             inns.append(s)
+    propusk = {"opub": 0, "otsev": 0}
+    if not zanovo:
+        opub, otsev = kv.ne_sprashivat(segodnya_msk(), KOREN)
+        propusk = {"opub": sum(1 for s in inns if s in opub), "otsev": sum(1 for s in inns if s in otsev and s not in opub)}
+        inns = [s for s in inns if s not in opub and s not in otsev]
+    if propusk["opub"] or propusk["otsev"]:
+        print("Пропущено: уже на сайте %d · в отсеве %d (не прошли ворота за последние %d дней; спросить всё — --zanovo)" % (
+            propusk["opub"], propusk["otsev"], kv.OTSEV_DNEJ))
     inns = inns[:max(0, int(maks))]
     zag = {"Accept": "application/json", "User-Agent": "Deloskop-kartochki/1"}
     zag.update(zagolovki_dostupa())
@@ -441,14 +504,42 @@ def _arg(argv, imya_, po_umolch=None):
     return argv[argv.index(imya_) + 1] if imya_ in argv else po_umolch
 
 
+def vorota_zapisi(r):
+    """kartochki-vybor-v1: ворота публикации одной записи /api/check — те же, что в otobrat."""
+    k = iz_check(r)
+    return vorota(k, vyvody(k))
+
+
+def otsev(vhod, segodnya=None, put=None):
+    """Дописывает в отсев ИНН из vhod (.jsonl), не прошедшие ворота публикации; прошедшие — из отсева убирает."""
+    put = put or kv.OTSEV
+    segodnya = segodnya or segodnya_msk()
+    staryj = kv.chitat_otsev(put)
+    zapisi = chitat_jsonl(vhod)
+    novye = kv.otsev_iz_otveta(zapisi, segodnya, vorota_zapisi)
+    proshli = {re.sub(r"\D", "", str((r.get("company") or {}).get("inn") or "")) for r in zapisi} - set(novye)
+    itog = {i: v for i, v in staryj.items() if i not in proshli}
+    itog.update(novye)
+    kv.zapisat_otsev(itog, put)
+    return novye, len(itog)
+
+
 def main(argv):
-    if not argv or argv[0] not in ("sobrat", "proverka", "iz-api"):
+    if not argv or argv[0] not in ("sobrat", "proverka", "iz-api", "vybor", "otsev"):
         print(__doc__)
         return 2
     if argv[0] == "iz-api":
         iz_api(_arg(argv, "--inn"), _arg(argv, "--vyhod", "tests/kartochki_dannye/kartochki.jsonl"),
                _arg(argv, "--api", "https://api.deloskop.ru"), max(6.0, float(_arg(argv, "--pauza", "6"))),
-               int(_arg(argv, "--maks", str(MAKS_ZAPROSOV))))
+               int(_arg(argv, "--maks", str(MAKS_ZAPROSOV))), zanovo="--zanovo" in argv)
+        return 0
+    if argv[0] == "vybor":
+        return kv.main_vybor(argv, _arg, segodnya_msk())
+    if argv[0] == "otsev":
+        novye, vsego = otsev(_arg(argv, "--vhod", "tests/kartochki_dannye/kartochki.jsonl"))
+        for inn, (_, pr) in sorted(novye.items()):
+            print("  %s — %s" % (inn, pr))
+        print("Отсев: новых %d · всего %d → %s (в git — только ИНН, дата и причина)" % (len(novye), vsego, kv.OTSEV))
         return 0
     vhod = _arg(argv, "--vhod", "tests/kartochki_dannye/kartochki.jsonl")
     zapisi = chitat_jsonl(vhod)

@@ -1098,7 +1098,9 @@ class TestPribylKapitalV1(unittest.TestCase):
         V = K.vyvody(K.iz_check(self._r(profit=[{"year": 2024, "value": 1e6}, {"year": 2025, "value": 3.4e6}])))
         x = [v for v in V if v["kod"] == "V24"]
         self.assertEqual([(v["ton"], v["tekst"], v["istochnik"], v["data"], v["s_chislom"]) for v in x],
-                         [("ok", "Чистая прибыль за" + NB + "2025 — 3,4" + NB + "млн" + NB + "₽", "ГИР БО, бухгалтерская отчётность",
+                         # kartochki-finansy-v1: + сравнение с прошлым годом ряда (3,4 к 1 млн — +240 %)
+                         [("ok", "Чистая прибыль за" + NB + "2025 — 3,4" + NB + "млн" + NB + "₽, на" + NB + "240" + NB + "% больше, чем годом раньше",
+                           "ГИР БО, бухгалтерская отчётность",
                            K.dt.date(2025, 12, 31), True)])
 
     def test_ubytok_i_minus_kapital(self):
@@ -1659,6 +1661,102 @@ class TestKartochkiOpf(unittest.TestCase):
     def test_finansy_ne_oslableny(self):
         r = O.zapis(3, name="БАНК ВТБ (ПАО)", dohod=None)
         self.assertEqual(K.vorota(K.iz_check(r))[1], "нет финансов (доход > 0 по ФНС / ГИР БО)")
+
+
+class TestKartochkiFinansyV1(unittest.TestCase):
+    """kartochki-finansy-v1 (Ночные-2, 04.10): ряд прибыли, баланс и расчёты ГИР БО из живого ответа («Аэрофлот» 04.10) —
+    на карточку фактами; ворота и предел «2 из одного источника» не меняются."""
+
+    def _r(self, profit=None, balance=None, debts=None, revenue=None):
+        r = _gazprom_kak_v_api()
+        ch = {"revenue": revenue or [{"year": 2024, "value": 712928484000}, {"year": 2025, "value": 760401133000}]}
+        if profit is not None:
+            ch["profit"] = profit
+        if balance is not None:
+            ch["balance"] = balance
+        if debts is not None:
+            ch["debts"] = debts
+        r["dossier"]["charts"] = ch
+        return r
+
+    def _v24(self, r):
+        return [(v["kod"], v["tekst"]) for v in K.vyvody(K.iz_check(r)) if v["kod"] in ("V24", "V24a")]
+
+    def test_pribyl_s_izmeneniem(self):
+        r = self._r(profit=[{"year": 2024, "value": 21958748000}, {"year": 2025, "value": 123037451000}])
+        self.assertEqual(self._v24(r), [("V24", "Чистая прибыль за" + NB + "2025 — 123" + NB + "млрд" + NB + "₽, на" + NB + "460" + NB + "% больше, чем годом раньше")])
+        r = self._r(profit=[{"year": 2024, "value": 10e6}, {"year": 2025, "value": 6e6}])
+        self.assertTrue(self._v24(r)[0][1].endswith("на" + NB + "40" + NB + "% меньше, чем годом раньше"))
+        r = self._r(profit=[{"year": 2024, "value": 10e6}, {"year": 2025, "value": 10.5e6}])
+        self.assertEqual(self._v24(r)[0][1], "Чистая прибыль за" + NB + "2025 — 10,5" + NB + "млн" + NB + "₽")   # +5 % — без сравнения
+
+    def test_pribyl_posle_ubytka(self):
+        r = self._r(profit=[{"year": 2024, "value": -1076270574000}, {"year": 2025, "value": 11284564000}])
+        self.assertEqual(self._v24(r)[0][1], "Чистая прибыль за" + NB + "2025 — 11,3" + NB + "млрд" + NB + "₽, годом раньше — убыток")
+
+    def test_ubytok_podryad(self):
+        r = self._r(profit=[{"year": 2022, "value": 5e6}, {"year": 2023, "value": -1e6}, {"year": 2024, "value": -2e6}, {"year": 2025, "value": -1.5e6}])
+        self.assertEqual(self._v24(r), [("V24a", "Убыток за" + NB + "2025 — 1,5" + NB + "млн" + NB + "₽, третий" + NB + "год подряд")])
+        r = self._r(profit=[{"year": 2023, "value": -1e6}, {"year": 2025, "value": -1.5e6}])   # 2024 нет в ряду — подряд не считаем
+        self.assertEqual(self._v24(r)[0][1], "Убыток за" + NB + "2025 — 1,5" + NB + "млн" + NB + "₽")
+
+    def test_kolonka_pribyli_v_tablice(self):
+        k = K.iz_check(self._r(profit=[{"year": 2024, "value": -29456385000}, {"year": 2025, "value": 123037451000}]))
+        h = chitat_html(K.html_kartochki(k, K.vyvody(k), []))
+        i = h.index('aria-labelledby="fin"')
+        f = h[i:h.index("</section>", i)]
+        self.assertIn("<th>Чистая прибыль</th>", f)
+        self.assertIn("убыток 29,5" + NB + "млрд" + NB + "₽", f)
+        # без ряда прибыли — колонки нет (как раньше)
+        k = K.iz_check(self._r())
+        self.assertNotIn("Чистая прибыль</th>", K.html_kartochki(k, K.vyvody(k), []))
+
+    def test_balans_i_raschety(self):
+        k = K.iz_check(self._r(balance={"year": 2025, "equity": 26745345000, "long_debt": 595284508000, "short_debt": 311968276000},
+                               debts={"year": 2025, "receivables": 135207149000, "payables": 240967255000, "loans": 176229912000}))
+        h = chitat_html(K.html_kartochki(k, K.vyvody(k), []))
+        i = h.index('aria-labelledby="bal"')
+        b = h[i:h.index("</section>", i)]
+        for t in ("На чём держится компания — баланс на" + NB + "31.12.2025", "Собственный капитал", "26,7" + NB + "млрд" + NB + "₽",
+                  ">3" + NB + "%<", ">64" + NB + "%<", ">33" + NB + "%<", "Кто кому должен — на" + NB + "31.12.2025",
+                  "Фирме должны покупатели", "Фирма должна поставщикам", "Кредиты и займы", "23" + NB + "% выручки за" + NB + "2025",
+                  "ГИР БО, бухгалтерская отчётность · сведения на 31.12.2025"):
+            self.assertIn(t, b)
+        self.assertIsNone(K.STOP_SLOVA.search(re.sub(r"<[^>]+>", " ", b)))
+        self.assertEqual(K.vorota(k), (True, "ок"))   # баланс выводов не добавляет и ворота не трогает
+
+    def test_doli_kak_na_ekrane(self):
+        # те же доли, что tests/balans_ekran.test.js («Газпром»: 64 / 25 / 11) — метод наибольшего остатка
+        self.assertEqual(K.doli_balansa([16432222886000, 6386347532000, 2917757718000]), ["64" + NB + "%", "25" + NB + "%", "11" + NB + "%"])
+        self.assertIsNone(K.doli_balansa([-1e6, 2e6, 3e6]))
+        self.assertIsNone(K.doli_balansa([1e6, None, 3e6]))
+
+    def test_kapital_minus_bez_dolej(self):
+        k = K.iz_check(self._r(balance={"year": 2025, "equity": -3e8, "long_debt": 1e8, "short_debt": 4e8}))
+        b = K.balans_html(k)
+        self.assertIn("−300" + NB + "млн" + NB + "₽", b)
+        self.assertIn("меньше нуля", b)
+        self.assertNotIn(NB + "%<", b)
+
+    def test_musor_i_budushchij_god_molchat(self):
+        k = K.iz_check(self._r(balance={"year": True, "equity": 1e6}, debts={"year": 2025, "receivables": "н/д", "loans": 0}))
+        self.assertEqual(K.balans_html(k), "")
+        k = K.iz_check(self._r(balance={"year": 2030, "equity": 1e6, "long_debt": 1e6, "short_debt": 1e6}))
+        self.assertIsNone(k["balans"])
+
+    def test_vorota_ne_oslableny(self):
+        r = self._r(profit=[{"year": 2025, "value": 3e6}], balance={"year": 2025, "equity": 1e6, "long_debt": 1e6, "short_debt": 1e6},
+                    debts={"year": 2025, "loans": 5e6})
+        r["dossier"]["charts"].pop("revenue")
+        k = K.iz_check(r)
+        self.assertEqual(K.vorota(k)[1], "нет финансов (доход > 0 по ФНС / ГИР БО)")
+        self.assertEqual(k["pribyl_ryad"], {})
+
+
+def chitat_html(t):
+    for z, (sush, _) in K.NEVIDIMYE.items():
+        t = t.replace(sush, z)
+    return t
 
 
 if __name__ == "__main__":

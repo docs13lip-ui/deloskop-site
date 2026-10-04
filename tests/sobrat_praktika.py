@@ -222,7 +222,7 @@ def razbor(r, D, po_slug, F=None):
 <article>
 %(telo)s
 </article>
-<section class="dl" aria-label="Что сделать в Делоскопе">
+<section class="dl" aria-label="Что сделать в Делоскопе"%(slezh)s>
 <h2>%(kz)s</h2>
 <p>%(kt)s</p>
 <a class="btn" href="%(ku)s"%(cel)s>%(kk)s</a>
@@ -240,14 +240,26 @@ def razbor(r, D, po_slug, F=None):
 </main>
 <script src="/obnovleniya.js" defer></script>
 <script src="/js/otzyv.js" defer></script>
-<!--podval--><!--/podval-->
+%(slezh_js)s<!--podval--><!--/podval-->
 </body>
 </html>
 """ % {"kr": kroshki_html(kr), "h1": e(r["h1"]), "data": r["data"], "data_ru": data_ru(r["data"]), "min": r["minut"],
        "lid": e(r["lid"]), "kart": kartochki, "telo": telo, "kz": e(k["zagolovok"]), "kt": e(k["tekst"]), "ku": e(k["url"]),
        "kk": e(k["knopka"]),
-       "cel": (' data-goal="%s"' % e(k["cel"])) if k.get("cel") else "", "zakon": zakon, "faq": faq, "sv": sverka, "sv_ru": data_ru(sverka), "sos": sos}
+       "cel": (' data-goal="%s"' % e(k["cel"])) if k.get("cel") else "", "slezh": slezh_attr(k), "slezh_js": '<script src="/js/slezh-knopka.js" defer></script>\n' if k.get("slezh") else "", "zakon": zakon, "faq": faq, "sv": sverka, "sv_ru": data_ru(sverka), "sos": sos}
     return url, stranica
+
+
+def slezh_attr(k):
+    """Вторая кнопка «Следить за …» (knopka.slezh в dela.json): в HTML — только атрибуты секции, текста кнопки на странице нет.
+    Кнопку ставит js/slezh-knopka.js, когда tarify.json → slezhenie_pisma: true (пока писем нет — обещания нет нигде)."""
+    sl = k.get("slezh")
+    if not sl:
+        return ""
+    if set(sl) - {"knopka", "url", "cel"} or not sl.get("knopka") or not str(sl.get("url", "")).startswith("/cabinet.html"):
+        raise SystemExit("knopka.slezh: нужны knopka и url /cabinet.html…, лишних полей нет: %r" % sl)
+    return ' data-slezh="%s" data-slezh-url="%s"%s' % (e(sl["knopka"]), e(sl["url"]),
+                                                   (' data-slezh-cel="%s"' % e(sl["cel"])) if sl.get("cel") else "")
 
 
 def norma(z):

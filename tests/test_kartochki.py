@@ -2,6 +2,7 @@
 """Проверки карточек компаний (karta-v1): ворота индексации, ИП, люди, Индекс, SEO-мета, детерминизм.
 Собирает вымышленные компании (регион «00») во временную папку — сайт не трогает.
 Запуск: python3 tests/test_kartochki.py"""
+import html
 import json
 import os
 import pathlib
@@ -322,6 +323,135 @@ class TestVolnaPartiiIStranicy(unittest.TestCase):
                          ["https://deloskop.ru/", "https://deloskop.ru/company/", "https://deloskop.ru/company/1234567891-b/"])
         self.assertEqual(ix.vybrat(izm, v_sm), v_sm)  # без списка новых — как раньше
         self.assertEqual(ix.locs_kart("<loc>x</loc><loc>y</loc>"), {"x", "y"})
+
+
+class TestHabyGrupp(unittest.TestCase):
+    """kartochki-haby-v1 (ТЗ [Продукт · Данные] 03.10 разд. 3.3, hab-v2): хабы отраслей и регионов — от HAB_GRUPPY_OT
+    карточек; в индекс и sitemap — когда столько же карточек группы за воротами индексации; ссылки из хаба и крошек."""
+    D1 = K.dt.date(2026, 10, 4)
+
+    def setUp(self):
+        self._ot, self._na = K.HAB_GRUPPY_OT, K.HAB_NA_STRANICE
+
+    def tearDown(self):
+        K.HAB_GRUPPY_OT, K.HAB_NA_STRANICE = self._ot, self._na
+
+    def haby(self, d):
+        return sorted(str(p.relative_to(d)) for p in pathlib.Path(d, "company").glob("*/*/index.html")
+                      if p.parts[-3] in K.GRUPPY_VIDY)
+
+    def test_po_umolchaniyu_net_hubov_i_ssylok(self):
+        d, _, _ = sobrat(O.nabor(30), segodnya=self.D1)  # в образце 10 на отрасль, 30 на регион — порог 30
+        self.assertEqual(self.haby(d), ["company/region/obrazcovskaya-oblast/index.html"])
+        K.HAB_GRUPPY_OT = 31
+        d2, _, _ = sobrat(O.nabor(30), segodnya=self.D1)
+        self.assertFalse(pathlib.Path(d2, "company", "region").exists())
+        self.assertFalse(pathlib.Path(d2, "company", "otrasl").exists())
+        for p in stranicy(d2) + [pathlib.Path(d2, "company", "index.html")]:
+            self.assertNotIn("/company/region/", chitat(p))
+            self.assertNotIn("/company/otrasl/", chitat(p))
+
+    def test_haby_ssylki_i_kroshki(self):
+        K.HAB_GRUPPY_OT = 10
+        d, kart, _ = sobrat(O.nabor(30), segodnya=self.D1)
+        haby = self.haby(d)
+        self.assertEqual(len(haby), 4, haby)  # 3 отрасли по 10 + регион 30
+        kg = K.karta_grupp(K.gruppy_haba(kart, K.HAB_GRUPPY_OT))
+        hab = chitat(pathlib.Path(d, "company", "index.html"))
+        for (vid, imya), a in kg.items():
+            self.assertTrue(pathlib.Path(d, a.strip("/"), "index.html").is_file(), a)
+            self.assertIn('href="%s"' % a, hab, "хаб /company/ не ссылается на %s" % a)
+        for k in kart:
+            t = chitat(pathlib.Path(d, K.adres_str(k).strip("/"), "index.html"))
+            kr = re.search(r'<nav class="co-krosh[^>]*>(.*?)</nav>', t).group(1)
+            self.assertIn('href="%s"' % kg[("region", k["region"])], kr)
+            self.assertIn('href="%s"' % kg[("otrasl", K.hab_otrasl(k))], kr)
+            # каждая карточка — на хабе своей отрасли и своего региона
+            for vid, imya in (("otrasl", K.hab_otrasl(k)), ("region", k["region"])):
+                self.assertIn('href="%s"' % K.adres_str(k), chitat(pathlib.Path(d, kg[(vid, imya)].strip("/"), "index.html")))
+        for h in haby:
+            t = chitat(pathlib.Path(d, h))
+            tt = html.unescape(re.search(r"<title>(.*?)</title>", t).group(1))
+            dd = html.unescape(re.search(r'name="description" content="([^"]*)"', t).group(1))
+            self.assertLessEqual(len(tt), 70, tt)
+            self.assertLessEqual(len(dd), 160, dd)
+            self.assertIn('rel="canonical" href="https://deloskop.ru/%s"' % h[:-len("index.html")], t)
+            self.assertIn('content="noindex, follow"', t)  # за воротами индексации в образце одна карточка
+        sm = pathlib.Path(d, "sitemap-companies.xml").read_text(encoding="utf-8")
+        self.assertNotIn("/company/otrasl/", sm)
+        self.assertNotIn("/company/region/", sm)
+        self.assertEqual(len(stranicy(d)), len(kart), "хабы групп не считаются карточками")
+
+    def test_v_indeks_kogda_kartochki_za_vorotami(self):
+        K.HAB_GRUPPY_OT = 1
+        d, kart, _ = sobrat(O.nabor(30), segodnya=self.D1)
+        sm = pathlib.Path(d, "sitemap-companies.xml").read_text(encoding="utf-8")
+        v_sm = re.findall(r"<loc>https://deloskop\.ru(/company/\d{10}-[^<]+)</loc>", sm)
+        self.assertEqual(len(v_sm), 1)
+        k = next(x for x in kart if K.adres_str(x) == v_sm[0])
+        kg = K.karta_grupp(K.gruppy_haba(kart, K.HAB_GRUPPY_OT))
+        for vid, imya in (("otrasl", K.hab_otrasl(k)), ("region", k["region"])):
+            a = kg[(vid, imya)]
+            self.assertIn("<loc>https://deloskop.ru%s</loc>" % a, sm)
+            self.assertNotIn('name="robots"', chitat(pathlib.Path(d, a.strip("/"), "index.html")))
+        drugie = [a for (vid, imya), a in kg.items() if vid == "otrasl" and imya != K.hab_otrasl(k)]
+        for a in drugie:
+            self.assertNotIn(a, sm)
+            self.assertIn('content="noindex, follow"', chitat(pathlib.Path(d, a.strip("/"), "index.html")))
+
+    def test_stranicy_gruppy_i_uborka(self):
+        K.HAB_GRUPPY_OT, K.HAB_NA_STRANICE = 10, 4
+        d, kart, _ = sobrat(O.nabor(30), segodnya=self.D1)
+        g = next(x for x in K.gruppy_haba(kart, K.HAB_GRUPPY_OT) if x["vid"] == "otrasl")
+        a1, a3 = K.adres_gruppy(g), K.adres_gruppy(g, 3)
+        self.assertTrue(a3.endswith("/stranica/3/"), a3)
+        s1 = chitat(pathlib.Path(d, a1.strip("/"), "index.html"))
+        s3 = chitat(pathlib.Path(d, a3.strip("/"), "index.html"))
+        self.assertIn('href="%s" rel="next"' % K.adres_gruppy(g, 2), s1)
+        self.assertIn('content="noindex, follow"', s3)
+        self.assertIn('rel="canonical" href="https://deloskop.ru%s"' % a3, s3)
+        self.assertFalse(pathlib.Path(d, K.adres_gruppy(g, 4).strip("/")).exists())
+        ssylki = [x for p in pathlib.Path(d, a1.strip("/")).rglob("index.html")
+                  for x in re.findall(r'<li><a href="(/company/\d{10}-[^"]+)"', chitat(p))]
+        self.assertEqual(sorted(ssylki), sorted(K.adres_str(k) for k in g["kart"]), "каждая карточка группы — ровно один раз")
+        K.HAB_NA_STRANICE = 100
+        K.sobrat(O.nabor(30), d, segodnya=self.D1)
+        self.assertFalse(pathlib.Path(d, a1.strip("/"), "stranica").exists(), "лишние страницы группы остались")
+        K.HAB_GRUPPY_OT = 31
+        K.sobrat(O.nabor(30), d, segodnya=self.D1)
+        self.assertEqual(self.haby(d), [])
+        self.assertFalse(pathlib.Path(d, "company", "otrasl").exists())
+        t = chitat(pathlib.Path(d, K.adres_str(kart[0]).strip("/"), "index.html"))
+        self.assertNotIn("/company/region/", t, "ссылка на исчезнувший хаб осталась в крошках")
+
+    def test_dobor_daet_te_zhe_haby(self):
+        K.HAB_GRUPPY_OT = 10
+        d, kart, _ = sobrat(O.nabor(30), segodnya=self.D1)
+        do = {h: chitat(pathlib.Path(d, h)) for h in self.haby(d)}
+        kart_do = {p.name: p.read_bytes() for p in stranicy(d)}
+        _, o = K.sobrat([], d, dobavit=True, segodnya=self.D1)
+        self.assertEqual({h: chitat(pathlib.Path(d, h)) for h in self.haby(d)}, do, "добор пересобрал хабы групп иначе")
+        self.assertEqual({p.name: p.read_bytes() for p in stranicy(d)}, kart_do)
+
+    def test_kroshki_idempotentny(self):
+        t = ('<nav class="co-krosh caption" aria-label="Навигация" data-okved="46.71"><a href="/">Делоскоп</a> › '
+             '<a href="/company/">Компании</a> › Краснодарский край › Торговля</nav>')
+        kg = {("otrasl", "Торговля"): "/company/otrasl/torgovlya/"}
+        t1 = K.ssylki_kroshek(t, kg)
+        self.assertIn('› <a href="/company/otrasl/torgovlya/">Торговля</a></nav>', t1)
+        self.assertIn("› Краснодарский край ›", t1)
+        self.assertEqual(K.ssylki_kroshek(t1, kg), t1)
+        self.assertEqual(K.ssylki_kroshek(t1, {}), t)
+
+    def test_indexnow_haby_grupp_kak_hab(self):
+        import indexnow as ix
+        a = "https://deloskop.ru/company/otrasl/torgovlya/"
+        self.assertEqual(ix.vybrat(["company/otrasl/torgovlya/index.html"], [a], set()), [a])
+
+    def test_region_polnyj(self):
+        self.assertEqual(K.region_polnyj("Челябинская обл"), "Челябинская область")
+        self.assertEqual(K.region_polnyj("Респ Татарстан"), "Республика Татарстан")
+        self.assertEqual(K.region_polnyj("Москва"), "Москва")
 
 
 class TestPasportNaKartochke(unittest.TestCase):
@@ -805,7 +935,7 @@ class TestIzApiLimit(unittest.TestCase):
             st_u, st_s = K.urllib.request.urlopen, K.time.sleep
             K.urllib.request.urlopen, K.time.sleep = urlopen, lambda x: None
             try:
-                K.iz_api(sp, os.path.join(d, "o.jsonl"), maks=maks)
+                K.iz_api(sp, os.path.join(d, "o.jsonl"), maks=maks, zanovo=True)  # механика лимитов; пропуски — test_kartochki_vybor
             finally:
                 K.urllib.request.urlopen, K.time.sleep = st_u, st_s
             return zvali, len(K.chitat_jsonl(os.path.join(d, "o.jsonl")))
@@ -858,7 +988,7 @@ class TestSluzhebnyjDostup(unittest.TestCase):
             K.urllib.request.urlopen, K.time.sleep = urlopen, lambda x: None
             vyvod = io.StringIO()
             with contextlib.redirect_stdout(vyvod):
-                K.iz_api(sp, vy)
+                K.iz_api(sp, vy, zanovo=True)
             self.assertEqual(videl, [self.TOKEN, self.TOKEN])
             self.assertIn("Служебный доступ: да", vyvod.getvalue())
             self.assertNotIn(self.TOKEN, vyvod.getvalue())

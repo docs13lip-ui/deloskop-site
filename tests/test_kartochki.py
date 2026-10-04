@@ -227,6 +227,21 @@ class TestStranica(unittest.TestCase):
         self.assertIn('content="noindex, follow"', hub)
         self.assertNotIn("<loc>https://deloskop.ru/company/</loc>", pathlib.Path(d, "sitemap-companies.xml").read_text(encoding="utf-8"))
 
+    def test_hab_ssylka_na_statyu_tolko_esli_est(self):
+        # kartochki-v4.5: «Почему отчётности может не быть» — только когда статья есть в сборке (иначе битая ссылка)
+        adr = K.STATYA_NET_OTCHETNOSTI
+        d, _, _ = sobrat(O.nabor(5))
+        self.assertNotIn('href="%s"' % adr, chitat(pathlib.Path(d, "company", "index.html")))
+        st = pathlib.Path(d, adr.strip("/"), "index.html")
+        st.parent.mkdir(parents=True)
+        st.write_text("<!doctype html>", encoding="utf-8")
+        K.sobrat(O.nabor(5), d)
+        hub = chitat(pathlib.Path(d, "company", "index.html"))
+        self.assertEqual(hub.count('href="%s"' % adr), 1)
+        li = re.search(r"<li><b>Дата сведений[^<]*</b>.*?</li>", hub).group(0)
+        self.assertIn('href="%s"' % adr, li)  # ссылка — в пункте об отчётности, текст [Право] перед ней не тронут
+        self.assertIn("Если свежей нет, показываем последнюю и пишем её год.", li)
+
     def test_determinirovano_i_chistka(self):
         d, _, o1 = sobrat(O.nabor(12))
         _, o2 = K.sobrat(O.nabor(12), d)

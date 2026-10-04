@@ -357,10 +357,13 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         izm += zapisat(put, t2)
     # kartochki-volna-v1: хаб — по HAB_NA_STRANICE карточек; лишние страницы прошлой сборки убираем
     str_haba = stranicy_haba(vse, HAB_NA_STRANICE) if vse else []
+    # kartochki-v4.5: ссылки «Как читать карточку» — только на статьи, которые уже есть в этой сборке сайта
+    statyi = frozenset(u for u in (STATYA_NET_OTCHETNOSTI,)
+                       if os.path.isfile(os.path.join(koren, u.strip("/"), "index.html")))
     if vse:
         for n, chast in enumerate(str_haba, 1):
             put = os.path.join(koren, adres_stranicy_haba(n).strip("/"), "index.html")
-            zapisat(put, ss.sobrat_stranicu(html_haba(chast, hub_index, n, len(str_haba), vse, kg), r, podval, shapka))
+            zapisat(put, ss.sobrat_stranicu(html_haba(chast, hub_index, n, len(str_haba), vse, kg, statyi), r, podval, shapka))
     elif os.path.exists(os.path.join(papka, "index.html")):
         os.remove(os.path.join(papka, "index.html"))
     papka_str = os.path.join(papka, HAB_STRANICA)

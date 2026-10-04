@@ -36,3 +36,22 @@ test('«402-ФЗ)» не рвётся по дефису: в html факта и �
   const k = IO.htmlKolonka(IO.vid(r));
   assert.ok(k.includes('<span class="nw">402-ФЗ).</span>'), 'колонка Индекса');
 });
+
+test('v1.1 ([Право] 04.10 12:30 разд. 1): «доступ может быть ограничен» — ч. 12, передача — ч. 9: «(ч. 9 и 12 ст. 18 402-ФЗ)» в обеих строках', () => {
+  const NB = '\u00a0';
+  const NORMA = '(ч.' + NB + '9 и' + NB + '12 ст.' + NB + '18' + NB + '402-ФЗ)';
+  const S = require(path.join(K, 'js', 'sushchestvennoe.js'));
+  const IO = require(path.join(K, 'js', 'indeks-otvet.js'));
+  const r = { company: { inn: '7707083893', ogrn: '1027700132195', kind: 'LEGAL', okved: '64.19', status: 'ACTIVE', name_short: 'ПАО «БАНК»', reg_date: '1991-06-20' },
+    signals: [{ id: 'tax', title: 'Долги по налогам', status: 'ok', detail: 'Нет в списке ФНС', source: 'ФНС, открытые данные', as_of: '2026-09-01' },
+      { id: 'status', title: 'Статус', status: 'ok', detail: 'Действующая', source: 'ЕГРЮЛ/ЕГРИП', as_of: null }],
+    checked_at: '2026-10-04', dossier: { kpi: [], charts: {} } };
+  const o = (S.fakty(r).spisok || []).find((x) => x.k === 'otchetnost');
+  assert.ok(o && o.znach.endsWith('доступ может быть ограничен ' + NORMA), 'факт: ' + (o && o.znach));
+  const k = IO.htmlKolonka(IO.vid(r));
+  assert.ok(k.includes('доступ может быть ограничен (ч.' + NB + '9 и' + NB + '12 ст.' + NB + '18' + NB + '<span class="nw">402-ФЗ).</span>'), 'колонка Индекса');
+  for (const f of ['sushchestvennoe.js', 'indeks-otvet.js']) {
+    const kod = bezKomm(fs.readFileSync(path.join(K, 'js', f), 'utf8'));
+    assert.ok(!/ограничен \(ч\.' \+ NB \+ '9' \+ NB \+ 'ст\./.test(kod), f + ': осталась «ч. 9 ст. 18» без ч. 12');
+  }
+});

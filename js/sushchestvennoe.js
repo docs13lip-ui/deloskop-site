@@ -15,7 +15,7 @@
 
   var NB = '\u00a0', MAKS = 7;
 
-  var BANK_GIRBO = 'Организация сдаёт в' + NB + 'Банк России; в' + NB + 'ГИР' + NB + 'БО её передаёт Банк России, доступ может быть ограничен (ч.' + NB + '9' + NB + 'ст.' + NB + '18' + NB + '402-ФЗ)';
+  var BANK_GIRBO = 'Организация сдаёт в' + NB + 'Банк России; в' + NB + 'ГИР' + NB + 'БО её передаёт Банк России, доступ может быть ограничен (ч.' + NB + '9 и' + NB + '12 ст.' + NB + '18' + NB + '402-ФЗ)';
   // «402-ФЗ)» на 390 px рвался по дефису («402-» / «ФЗ)») — номер закона со скобкой одним куском (после esc)
   function nwFz(h) { return String(h).replace(/(\d+-ФЗ\)?)/g, '<span class="nw">$1</span>'); }
   var VES = { bad: 0, warn: 1, ok: 2, neutral: 2 };
@@ -81,6 +81,7 @@
   // Кредитная организация — по основному ОКВЭД 64.1 (денежное посредничество): банки и НКО.
   var CBR_BANK = 'https://www.cbr.ru/finorg/foinfo/';
   var SPRAVKA_STATUSY = '/nalogi/kody-statusa-egryul/';
+  var SPRAVKA_GIRBO = '/nalogi/net-otchetnosti-v-otkrytyh-dannyh/';
   function bank(c) { return /^64\.1(\.|\d|$)/.test(String((c || {}).okved || '')); }
   function ip(r) { return String(((r || {}).company || {}).inn || '').length === 12; }
 
@@ -193,12 +194,15 @@
         add({ k: 'otchetnost', nazv: 'Выручка за ' + o.god, znach: dengi(o.vyruchka) + pr, ton: 'neutral', ist: 'ГИР БО ФНС', data: '31.12.' + o.god });
       } else if (bank(c)) {
         // банк сдаёт отчётность в Банк России; в ГИР БО её передаёт Банк России (ч. 9 ст. 18 402-ФЗ), доступ может быть
-        // ограничен. Есть она в ответе — считаем как у всех (ветка выше); нет — пишем, как устроено, без «её нет».
+        // ограничен (ч. 12; v1.1 — [Право] 04.10 12:30 разд. 1). Есть она в ответе — считаем как у всех (ветка выше); нет — пишем, как устроено, без «её нет».
         // Текст — [Право · Налоговый] 04.10 11:30 разд. 1.4 дословно.
         add({ k: 'otchetnost', nazv: 'Бухотчётность', znach: BANK_GIRBO, ton: 'neutral',
           ist: reestr + ', ОКВЭД ' + c.okved, data: dataPr, ssylka: CBR_BANK + (/^\d{13}$/.test(String(c.ogrn || '')) ? '?ogrn=' + c.ogrn : '') });
       } else {
-        add({ k: 'otchetnost', nazv: 'Бухотчётность', znach: 'Нет в ответе ГИР БО', ton: 'neutral', ist: 'ГИР БО ФНС', data: dataPr });
+        // «Почему так бывает» — статья о законных причинах (net-otchetnosti-v1, ТЗ [Продукт · Маркетинг] 04.10 10:50 разд. 2):
+        // пустое место у крупного поставщика ≠ «техническая» компания. Цель Метрики — girbo_pochemu.
+        add({ k: 'otchetnost', nazv: 'Бухотчётность', znach: 'Нет в ответе ГИР БО', ton: 'neutral', ist: 'ГИР БО ФНС', data: dataPr,
+          spravka: SPRAVKA_GIRBO, spravkaT: 'почему так бывает', spravkaCel: 'girbo_pochemu' });
       }
       // Собственный капитал (строка 1300 баланса) меньше нуля — обязательства больше активов. Показываем только минус:
       // плюс решения не меняет, а нулевая или пустая строка — не факт. У банков в ГИР БО баланса нет — сюда не попадут.
@@ -302,7 +306,7 @@
     var meta = [x.ist, x.data ? 'на' + NB + x.data : ''].filter(Boolean).join(' · ');
     return '<div class="row sut__r" data-fakt="' + esc(x.k) + '"><span>' + esc(x.nazv) +
       '<small>' + esc(meta) + (x.ssylka ? ' · <a href="' + esc(x.ssylka) + '" target="_blank" rel="noopener">проверить в' + NB + 'ЦБ</a>' : '') +
-      (x.spravka ? ' · <a href="' + esc(x.spravka) + '" data-goal="statusy_iz_proverki">' + esc(x.spravkaT) + '</a>' : '') + '</small></span>' +
+      (x.spravka ? ' · <a href="' + esc(x.spravka) + '" data-goal="' + esc(x.spravkaCel || 'statusy_iz_proverki') + '">' + esc(x.spravkaT) + '</a>' : '') + '</small></span>' +
       '<b class="d ' + x.ton + '">' + nwFz(esc(x.znach)) + '</b></div>';
   }
   function glubinaHtml(g, podpis, dop) {

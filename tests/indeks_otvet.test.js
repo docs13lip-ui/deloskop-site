@@ -273,7 +273,7 @@ test('v1.3 банк (ОКВЭД 64.19) без ГИР БО: «сдаёт в Ба�
   const v = IO.vid(r);
   assert.strictEqual(v.rezhim, 'sokr');
   const h = IO.htmlKolonka(v);
-  assert.ok(h.includes('Не хватает: бухотчётность — организация сдаёт в' + NB + 'Банк России, в' + NB + 'ГИР' + NB + 'БО её передаёт Банк России, доступ может быть ограничен (ч.' + NB + '9' + NB + 'ст.' + NB + '18' + NB + '<span class="nw">402-ФЗ).</span>'));
+  assert.ok(h.includes('Не хватает: бухотчётность — организация сдаёт в' + NB + 'Банк России, в' + NB + 'ГИР' + NB + 'БО её передаёт Банк России, доступ может быть ограничен (ч.' + NB + '9 и' + NB + '12 ст.' + NB + '18' + NB + '<span class="nw">402-ФЗ).</span>'));
   assert.ok(!h.includes('а не в' + NB + 'ГИР'));
   assert.ok(!h.includes('ответе её нет'));
   assert.ok(IO.strokaNe(v).includes('Банк России'));

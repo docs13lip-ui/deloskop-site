@@ -1996,7 +1996,11 @@ class TestDatyIzReestraV1(unittest.TestCase):
 
     def test_pasport_kazhdyj_fakt(self):
         with open(os.path.join(K.KOREN, "pasport", "index.html"), encoding="utf-8") as fh:
-            self.assertNotRegex(fh.read(), r"[Кк]аждая строка[^.<]{0,40}источник")  # [Право] 10:15: «каждый факт»
+            t = fh.read()
+        self.assertNotRegex(t, r"[Кк]аждая строка[^.<]{0,40}источник")  # [Право] 10:15: «каждый факт»
+        # [Право] 04.10 18:40 разд. 4: «у каждого факта из реестров — источник и дата» (мета, лид, таблица, FAQ)
+        self.assertNotRegex(t, r"[Кк]ажд(ой|ая|ую)(\s|&nbsp;|\u00a0)строк")
+        self.assertGreaterEqual(t.count("каждого факта из"), 6)
 
     def test_beta_poloviny_kak_beta_py(self):
         import beta as B

@@ -550,6 +550,7 @@ footer a{color:var(--ink2)}
 <script src="/js/sushchestvennoe.js" defer></script>
 <script src="/js/kommentarii.js" defer></script>
 <script src="/js/otkuda.js" defer></script>
+<script src="/js/reestry-sami.js" defer></script>
 <script src="/js/rekvizity-proverki.js" defer></script>
 <script src="/js/usloviya.js" defer></script>
 <script src="/js/shchit.js" defer></script>
@@ -640,6 +641,8 @@ footer a{color:var(--ink2)}
     if(!svoj&&window.Sushchestvennoe){try{Sushchestvennoe.mount(report.querySelector('.rows'),r)}catch(e){}}
     // «Комментарий команды Делоскопа» под существенными фактами — только утверждённые [Право] тексты (/data/kommentarii.json) + оговорка один раз; js/kommentarii.js
     if(!svoj&&window.Sushchestvennoe&&window.Kommentarii){var sutEl=report.querySelector('.rows.sut');if(sutEl)Kommentarii.zagruzit().then(function(K){try{Kommentarii.vstavitSut(sutEl,Kommentarii.dlyaSut(Sushchestvennoe.fakty(r).spisok,r.signals,K))}catch(e){}})}
+    // «Что ещё проверить самим» — бесплатные госреестры, которые мы пока не опрашиваем (залоги, МСП, товарные знаки): раздел в «Все данные из реестров»; /data/reestry-sami.json, js/reestry-sami.js
+    if(!svoj&&window.Sushchestvennoe&&window.ReestrySami){ReestrySami.zagruzit().then(function(D){try{ReestrySami.vstavit(report.querySelector('.sut__g'),D,r)}catch(e){}})}
     if(svoj&&ub){ub.className='';ub.removeAttribute('data-usl');try{shR=Shchit.mount(ub,r)}catch(e){ub.className='verdict';ub.textContent=r.verdict||''}}
     // Щит: строки светофора не повторяют разбор — свёрнуты в «Все данные из реестров» после него (js/sushchestvennoe.js)
     if(svoj&&shR&&window.Sushchestvennoe){try{Sushchestvennoe.mountSvoj(report.querySelector('.rows'),r,ub)}catch(e){}}

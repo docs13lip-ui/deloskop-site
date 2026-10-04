@@ -1680,7 +1680,7 @@ class TestKartochkiFinansyV1(unittest.TestCase):
         return r
 
     def _v24(self, r):
-        return [(v["kod"], v["tekst"]) for v in K.vyvody(K.iz_check(r)) if v["kod"] in ("V24", "V24a")]
+        return [(v["kod"], v["tekst"]) for v in K.vyvody(K.iz_check(r)) if v["kod"] in ("V24", "V24a", "V24b")]
 
     def test_pribyl_s_izmeneniem(self):
         r = self._r(profit=[{"year": 2024, "value": 21958748000}, {"year": 2025, "value": 123037451000}])
@@ -1758,6 +1758,68 @@ def chitat_html(t):
         t = t.replace(sush, z)
     return t
 
+
+
+
+class TestKartochkiTonV1(unittest.TestCase):
+    """kartochki-ton-v1 (Ночные-2, 04.10): [Право · Налоговый] 04.10 07:07 разд. 5.2 — падение прибыли ≥ 30 % «справочно»,
+    подпись «Баланса и расчётов» короче, налог на прибыль (2410) — расход по отчётности, не «уплатила»."""
+
+    def _r(self, **kw):
+        return TestKartochkiFinansyV1._r(TestKartochkiFinansyV1(), **kw)
+
+    def _v(self, r):
+        return [(v["kod"], v["ton"]) for v in K.vyvody(K.iz_check(r)) if v["kod"].startswith("V24")]
+
+    def test_padenie_pribyli_spravochno(self):
+        # «Вымпелком» 04.10: 6 млрд ₽ против 11,5 — −48 %: было зелёным «хорошо»
+        r = self._r(profit=[{"year": 2024, "value": 11.5e9}, {"year": 2025, "value": 6e9}])
+        self.assertEqual(self._v(r), [("V24b", "info")])
+        V = [v for v in K.vyvody(K.iz_check(r)) if v["kod"] == "V24b"]
+        self.assertEqual(V[0]["tekst"], "Чистая прибыль за" + NB + "2025 — 6" + NB + "млрд" + NB + "₽, на" + NB + "48" + NB + "% меньше, чем годом раньше")
+        self.assertEqual(K.ZNAK[V[0]["ton"]][1], "справочно")
+        # граница: −29 % — по-прежнему «хорошо» без сравнения, −30 % — «справочно»
+        self.assertEqual(self._v(self._r(profit=[{"year": 2024, "value": 10e6}, {"year": 2025, "value": 7.1e6}])), [("V24", "ok")])
+        self.assertEqual(self._v(self._r(profit=[{"year": 2024, "value": 10e6}, {"year": 2025, "value": 7e6}])), [("V24b", "info")])
+        # рост и «годом раньше — убыток» — как были
+        self.assertEqual(self._v(self._r(profit=[{"year": 2024, "value": 1e6}, {"year": 2025, "value": 3e6}])), [("V24", "ok")])
+        self.assertEqual(self._v(self._r(profit=[{"year": 2024, "value": -1e6}, {"year": 2025, "value": 3e6}])), [("V24", "ok")])
+
+    def test_podpis_balansa(self):
+        k = K.iz_check(self._r(profit=[{"year": 2025, "value": 1e9}], balance={"year": 2025, "equity": 5e9, "long_debt": 1e9, "short_debt": 2e9}))
+        h = K.html_kartochki(k, K.vyvody(k), [])
+        self.assertIn("Суммы из бухгалтерской отчётности на конец года, без оценок. Что они значат для сделки — в полном отчёте.", h)
+        self.assertNotIn("Только суммы", h)
+
+    def test_nalog_na_pribyl_vyklyuchen_poka_znak_ne_podtverzhden(self):
+        # «Аэрофлот» 04.10: 2020 — убыток и +26,6 млрд ₽ в income_tax (доход по налогу без знака) → строку не ставим
+        self.assertFalse(K.NALOG_PRIB_ZNAK)
+        r = self._r(profit=[{"year": 2024, "value": 9e10}, {"year": 2025, "value": 1.2e11}])
+        r["dossier"]["charts"]["income_tax"] = [{"year": 2025, "value": 37.1e9}]
+        k = K.iz_check(r)
+        self.assertNotIn("Налог на прибыль", K.html_kartochki(k, K.vyvody(k), []))
+
+    def test_nalog_na_pribyl(self):
+        import kartochka_render as KR
+        KR.NALOG_PRIB_ZNAK = True
+        self.addCleanup(setattr, KR, "NALOG_PRIB_ZNAK", False)
+        r = self._r(profit=[{"year": 2024, "value": 9e10}, {"year": 2025, "value": 1.2e11}])
+        r["dossier"]["charts"]["income_tax"] = [{"year": 2024, "value": 3e10}, {"year": 2025, "value": 37.1e9}]
+        k = K.iz_check(r)
+        h = K.html_kartochki(k, K.vyvody(k), [])
+        self.assertIn("Налог на прибыль по отчёту о финансовых результатах за" + NB + "2025 — 37,1" + NB + "млрд" + NB + "₽ (текущий и отложенный вместе). "
+                      "Это расход по отчётности, а не сумма, уплаченная в бюджет.", h)
+        self.assertNotRegex(h, r"[Уу]платил[аи]? налог на прибыль")
+        # доход (обратный знак), ноль, другой год, мусор — строки нет
+        for it in ([{"year": 2025, "value": -5e9}], [{"year": 2025, "value": 0}], [{"year": 2024, "value": 3e10}], [{"year": 2025, "value": "н/д"}], []):
+            r["dossier"]["charts"]["income_tax"] = it
+            k = K.iz_check(r)
+            self.assertNotIn("Налог на прибыль по отчёту", K.html_kartochki(k, K.vyvody(k), []), it)
+        # нет ряда прибыли — нет и строки налога
+        r = self._r()
+        r["dossier"]["charts"]["income_tax"] = [{"year": 2025, "value": 37.1e9}]
+        k = K.iz_check(r)
+        self.assertNotIn("Налог на прибыль по отчёту", K.html_kartochki(k, K.vyvody(k), []))
 
 if __name__ == "__main__":
     unittest.main(verbosity=1)

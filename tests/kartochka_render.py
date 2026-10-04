@@ -567,6 +567,18 @@ def iz_check(r):
                 g, v = _god(p.get("year")), chislo(p.get("value"))
                 if g and g <= gp and v is not None:
                     k["pribyl_ryad"][g] = v
+    # kartochki-ton-v1: налог на прибыль из отчёта о финансовых результатах (строка 2410 = 2411 текущий + 2412 отложенный,
+    # charts.income_tax) — того же года, что последний год прибыли. Только расход (> 0): доход (обратный знак) не показываем
+    # ([Право · Налоговый] 04.10 07:07 разд. 5.2 п. 3). «Уплатила» не пишем — это не сумма, уплаченная в бюджет.
+    # ⚠ Знак в charts.income_tax не различает расход и доход: «Аэрофлот» 2020 — убыток 96,5 млрд ₽ и +26,6 млрд ₽ «налога»
+    # (по отчётности это доход по налогу). Пока [Продукт · Данные] не подтвердит знак — строку не показываем (NALOG_PRIB_ZNAK).
+    k["nalog_prib"] = None
+    if NALOG_PRIB_ZNAK and k["pribyl_ryad"]:
+        gn = max(k["pribyl_ryad"])
+        for p in ch.get("income_tax") or []:
+            if isinstance(p, dict) and _god(p.get("year")) == gn:
+                v = chislo(p.get("value"))
+                k["nalog_prib"] = {"god": gn, "znachenie": v} if (v is not None and v > 0) else None
     b = ch.get("balance")
     if isinstance(b, dict) and _god(b.get("year")) and _god(b.get("year")) <= gp:
         chasti = [chislo(b.get(x)) for x in ("equity", "long_debt", "short_debt")]
@@ -615,6 +627,10 @@ def indeks_vid(k):
 
 
 # ---------------------------------------------------------------- выводы человеческим языком (Данные §2)
+# kartochki-ton-v1: True — когда API отдаст 2410 со знаком (расход > 0, доход < 0); до этого строки налога на прибыль нет
+NALOG_PRIB_ZNAK = False
+
+
 def _v(kod, ton, tekst, istochnik, data, s_chislom=True, status="podtverzhdeno"):
     return {"kod": kod, "ton": ton, "tekst": tekst, "istochnik": istochnik, "data": data, "s_chislom": s_chislom, "status": status}
 
@@ -717,7 +733,12 @@ def vyvody(k):
                     t += ", на%s%d%s%% больше, чем годом раньше" % (NB, round(dl), NB)
                 elif dl <= -30:
                     t += ", на%s%d%s%% меньше, чем годом раньше" % (NB, round(-dl), NB)
-            out.append(_v("V24", "ok", t, pb["istochnik"], pb["data"]))
+                    # kartochki-ton-v1: падение прибыли ≥ 30 % — «справочно», не «хорошо» ([Право · Налоговый] 04.10 07:07
+                    # разд. 5.2: зелёная точка у прибыли, упавшей вдвое, читается как оценка; методики для неё нет). Текст тот же.
+                    out.append(_v("V24b", "info", t, pb["istochnik"], pb["data"]))
+                    t = None
+            if t:
+                out.append(_v("V24", "ok", t, pb["istochnik"], pb["data"]))
         else:
             n = 1
             while (ryad.get(g - n) or 0) < 0:
@@ -1134,7 +1155,7 @@ def balans_html(k):
         return ""
     god = max(x["god"] for x in (b, r) if x)
     return ('<section class="co-sec" aria-labelledby="bal"><h2 id="bal">Баланс и расчёты</h2>%s'
-            '<p class="small">Только суммы из бухгалтерской отчётности на конец года, без оценок. Что они значат для сделки — в полном отчёте.</p>%s</section>' % (
+            '<p class="small">Суммы из бухгалтерской отчётности на конец года, без оценок. Что они значат для сделки — в полном отчёте.</p>%s</section>' % (
                 "".join(h), _istochnik_stroka("ГИР БО, бухгалтерская отчётность", dt.date(god, 12, 31))))
 
 
@@ -1246,9 +1267,12 @@ def html_kartochki(k, V, sosedi, kom=None, normy=None):
         s_pr = vyr and any(x["god"] in pr for x in fin)
         tab = "".join("<tr><td>%d</td><td class=\"num\">%s</td>%s</tr>" % (
             x["god"], dengi(x["dohod"]), ("<td class=\"num\">%s</td>" % pribyl_yachejka(pr.get(x["god"]))) if s_pr else "") for x in reversed(fin))
+        nl = k.get("nalog_prib")
+        nl_str = ('<p class="small">Налог на прибыль по отчёту о финансовых результатах за%s%d — %s (текущий и отложенный вместе). '
+                  'Это расход по отчётности, а не сумма, уплаченная в бюджет.</p>' % (NB, nl["god"], dengi(nl["znachenie"]))) if (s_pr and nl) else ""
         fin_blok = ('<section class="co-sec" aria-labelledby="fin"><h2 id="fin">%s</h2>%s<div class="table-wrap"><table class="table">'
-                    '<thead><tr><th>Год</th><th>%s</th>%s</tr></thead><tbody>%s</tbody></table></div>%s</section>' % (
-                        e(zag).replace("&nbsp;", NB), svg_stolbcy(fin, sl), sl, "<th>Чистая прибыль</th>" if s_pr else "", tab,
+                    '<thead><tr><th>Год</th><th>%s</th>%s</tr></thead><tbody>%s</tbody></table></div>%s%s</section>' % (
+                        e(zag).replace("&nbsp;", NB), svg_stolbcy(fin, sl), sl, "<th>Чистая прибыль</th>" if s_pr else "", tab, nl_str,
                         _istochnik_stroka(k.get("finansy_istochnik") or "ГИР БО", k.get("finansy_data"),
                                           "podtverzhdeno" if k.get("finansy_data") else "ne_provereno")))
     elif (k["fakty"].get("dohod") or {}).get("znachenie") is not None:

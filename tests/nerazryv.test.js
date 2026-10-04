@@ -36,3 +36,17 @@ test('стиль .nw есть в общей шапке (на всех стран
   assert.match(fs.readFileSync(path.join(KOREN, 'css/shapka.css'), 'utf8'), /\.nw\{white-space:nowrap\}/);
   assert.strictEqual(typeof N.obernut, 'function');
 });
+
+test('родитель flex/grid (вопрос FAQ в <summary>): куски в одной обёртке .nw-k, вопрос не распадается на колонки', () => {
+  const win = { getComputedStyle: el => ({ display: el.d }) };
+  const doc = { readyState: 'complete', querySelector: () => null, querySelectorAll: () => [], addEventListener() {} };
+  win.document = doc;
+  vm.runInNewContext(fs.readFileSync(path.join(KOREN, 'js/shapka.js'), 'utf8'),
+    { window: win, document: doc, location: { pathname: '/' }, localStorage: { getItem: () => null } });
+  const f = win.dlkNerazryv.vFlex;
+  for (const d of ['flex', 'inline-flex', 'grid', 'inline-grid']) assert.strictEqual(f({ nodeType: 1, d }), true, d);
+  for (const d of ['block', 'inline', 'list-item', 'table-cell', '']) assert.strictEqual(f({ nodeType: 1, d }), false, d);
+  assert.strictEqual(f(null), false);
+  assert.strictEqual(N.vFlex({ nodeType: 1 }), false); // без getComputedStyle — как раньше
+  assert.match(fs.readFileSync(path.join(KOREN, 'js/shapka.js'), 'utf8'), /className = "nw-k"/);
+});

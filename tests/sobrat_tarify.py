@@ -459,3 +459,16 @@ for _f in ('osnovatel/index.html', 'index.html', 'nalogi/kalkulyator-tehnicheski
     _t2 = _re3.sub(r'data-tarif-list="(\w+)"><!--tarif-list-->.*?<!--/tarif-list-->', _spisok, _t2, flags=_re3.S)
     if _t2 != _t:
         open(_sk, 'w', encoding='utf-8').write(_t2)
+
+# /partneram/ «Бухгалтерам и партнёрам» (partneram-v1, [Ночные-3] 04.10.2026; ТЗ [Продукт] 04.10 11:55, разд. 1):
+# ставки — <span data-partner="podpiska|razovo|mesyacev">, цифры тарифов — <span data-tarif="pro.otchetov"> и т. п.
+_pp = os.path.join(ROOT, 'partneram/index.html')
+if os.path.exists(_pp):
+    _t = open(_pp, encoding='utf-8').read()
+    _PS = D['partner_stavka']
+    _t2 = _re3.sub(r'(<span[^>]* data-partner="(podpiska|razovo|mesyacev)">)[^<]*(</span>)',
+                   lambda m: m.group(1) + str(_PS[m.group(2)]) + m.group(3), _t)
+    _t2 = _re3.sub(r'(<span[^>]* data-tarif="(\w+)\.(otchetov|slezhenie|polzovatelej)">)[^<]*(</span>)',
+                   lambda m: m.group(1) + str(_TAR[m.group(2)][m.group(3)]) + m.group(4), _t2)
+    if _t2 != _t:
+        open(_pp, 'w', encoding='utf-8').write(_t2)

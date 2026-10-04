@@ -206,10 +206,15 @@
     if (IO0 && indeks(r) == null && IO0.gotov && !IO0.gotov() && IO0.gotovo) IO0.gotovo(zapolnit);
     var vt = el(doc, 'div', 'ot-vt');
     if (svoj) {
-      var kr = '';
-      try { kr = o.shR && window.Shchit ? Shchit.kratko(o.shR) : ''; } catch (e) { kr = ''; }
-      kr = kr.replace(/^.*? — глазами банка и налоговой на [\d.]+\.\s*/, '').replace(/\s*Что сделать:.*$/, '');
-      vt.innerHTML = '<h2 class="ot-vt__h">Ваша компания глазами банка и налоговой</h2>' + (kr ? '<p class="ot-vt__p">' + esc(kr) + '</p>' : '');
+      var shKr = function () {
+        var kr = '';
+        try { kr = o.shR && window.Shchit ? Shchit.kratko(o.shR) : ''; } catch (e) { kr = ''; }
+        kr = kr.replace(/^.*? — глазами банка и налоговой на [\d.]+\.\s*/, '').replace(/\s*Что сделать:.*$/, '');
+        vt.innerHTML = '<h2 class="ot-vt__h">Ваша компания глазами банка и налоговой</h2>' + (kr ? '<p class="ot-vt__p">' + esc(kr) + '</p>' : '');
+      };
+      shKr();
+      // Щит v3: рентабельность против отрасли приходит после загрузки норм ФНС — «Признаков: N» пересчитываем (shchit-finansy-v1)
+      if (o.shR && o.shR.gotovo && typeof o.shR.gotovo.then === 'function') o.shR.gotovo.then(shKr, function () {});
     } else if (usl) {
       vt.appendChild(usl);
       vt.appendChild(el(doc, 'a', 'ot-vt__kak', 'Как посчитали предел')).setAttribute('href', '#ot-kak');

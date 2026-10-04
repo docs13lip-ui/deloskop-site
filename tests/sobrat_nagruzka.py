@@ -19,6 +19,11 @@ KOREN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DANNYE = os.path.join(KOREN, "data", "fns-normy-2025.json")
 STRANICA = os.path.join(KOREN, "nalogi", "nagruzka-po-otraslyam-2025", "index.html")
 METKI = re.compile(r"<!--normy-->.*?<!--/normy-->", re.S)
+# nagruzka-yakorya-v1: открытая по ссылке строка (#n-35-1) — подсвечена и не уезжает под липкую шапку
+CSS_POSLE = "table.normy td b{color:var(--ink)}\n"
+CSS_YAKOR = ("table.normy tr{scroll-margin-top:calc(var(--header-h,64px) + 24px)}"
+             "table.normy tr:target td{background:var(--accent-soft,#EAF1FD)}"
+             "table.normy tr:target td:first-child{box-shadow:inset 2px 0 0 var(--accent)}\n")
 
 
 def chislo(x):
@@ -38,6 +43,13 @@ def nazv(s):
     if s["kod"] == "ВСЕГО":
         n = "Всего по России"
     return html.escape(n[:1].upper() + n[1:])
+
+
+def yakor(kod, tablica="n"):
+    """nagruzka-yakorya-v1: якорь строки — «n-35-1» (нагрузка), «r-f» (рентабельность), «n-vsego».
+    Тот же расчёт — js/nagruzka.js yakor и tests/kartochka_render.py (ссылки карточек и калькулятора на строку)."""
+    k = "vsego" if kod == "ВСЕГО" else re.sub(r"[^0-9a-z]+", "-", str(kod).lower()).strip("-")
+    return tablica + "-" + k
 
 
 def klass(s):
@@ -64,8 +76,8 @@ def tablicy(d):
            '<thead><tr><th>Вид деятельности</th><th>ОКВЭД</th><th>2025</th><th>2024</th><th>Изменение</th><th>Взносы 2025, справочно</th></tr></thead><tbody>']
     for s in d["nagruzka"]:
         n = s["nagruzka"]
-        out.append('<tr%s><td>%s</td><td>%s</td><td><b>%s</b></td><td>%s</td><td>%s</td><td>%s</td></tr>' % (
-            klass(s), nazv(s), kod(s), chislo(n["2025"]), chislo(n["2024"]), izmenenie(n["2025"], n["2024"]), chislo(s["sv"]["2025"])))
+        out.append('<tr id="%s"%s><td>%s</td><td>%s</td><td><b>%s</b></td><td>%s</td><td>%s</td><td>%s</td></tr>' % (
+            yakor(s["kod"]), klass(s), nazv(s), kod(s), chislo(n["2025"]), chislo(n["2024"]), izmenenie(n["2025"], n["2024"]), chislo(s["sv"]["2025"])))
     out.append('</tbody></table></div>')
     r = d["rentabelnost"]
     z2 = (d.get("rentabelnost_2024") or {}).get("znacheniya") or {}
@@ -80,11 +92,11 @@ def tablicy(d):
             '<thead><tr><th>Вид деятельности</th><th>ОКВЭД</th><th>Рентабельность продаж</th><th>Рентабельность активов</th></tr></thead><tbody>']
     for s in r["stroki"]:
         if g2:
-            out.append('<tr%s><td>%s</td><td>%s</td><td><b>%s</b></td><td>%s</td><td><b>%s</b></td><td>%s</td></tr>' % (
-                klass(s), nazv(s), kod(s), chislo(s["prodazhi"]), chislo(z2[s["kod"]][0]), chislo(s["aktivy"]), chislo(z2[s["kod"]][1])))
+            out.append('<tr id="%s"%s><td>%s</td><td>%s</td><td><b>%s</b></td><td>%s</td><td><b>%s</b></td><td>%s</td></tr>' % (
+                yakor(s["kod"], "r"), klass(s), nazv(s), kod(s), chislo(s["prodazhi"]), chislo(z2[s["kod"]][0]), chislo(s["aktivy"]), chislo(z2[s["kod"]][1])))
         else:
-            out.append('<tr%s><td>%s</td><td>%s</td><td><b>%s</b></td><td>%s</td></tr>' % (
-                klass(s), nazv(s), kod(s), chislo(s["prodazhi"]), chislo(s["aktivy"])))
+            out.append('<tr id="%s"%s><td>%s</td><td>%s</td><td><b>%s</b></td><td>%s</td></tr>' % (
+                yakor(s["kod"], "r"), klass(s), nazv(s), kod(s), chislo(s["prodazhi"]), chislo(s["aktivy"])))
     out.append('</tbody></table></div>')
     out.append('<!--/normy-->')
     return "\n".join(out)
@@ -93,10 +105,14 @@ def tablicy(d):
 def sobrat(proverit=False):
     d = json.load(open(DANNYE, encoding="utf-8"))
     s = open(STRANICA, encoding="utf-8").read()
+    if CSS_YAKOR not in s and CSS_POSLE in s:
+        s_css = s.replace(CSS_POSLE, CSS_POSLE + CSS_YAKOR, 1)
+    else:
+        s_css = s
     if not METKI.search(s):
         print("нет меток <!--normy--> в " + STRANICA)
         return 1
-    novoe = METKI.sub(lambda m: tablicy(d), s, count=1)
+    novoe = METKI.sub(lambda m: tablicy(d), s_css, count=1)
     if novoe == s:
         print("nagruzka: таблицы собраны")
         return 0

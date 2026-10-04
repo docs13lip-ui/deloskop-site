@@ -1279,6 +1279,23 @@ class TestSosediV38b(unittest.TestCase):
             self.assertIn('href="/company/%s/"' % p.parent.name, vse.replace(chitat(p), ""), "нет входящих: " + p.parent.name)
 
 
+class TestOtraslYakor(unittest.TestCase):
+    """nagruzka-yakorya-v1: «Таблица ФНС по отраслям ›» ведёт на строку отрасли; старые карточки чинятся, повтор — без изменений."""
+
+    def test_novaya_i_staraya(self):
+        n = K.zagruzit_normy()
+        k = {"okved": "24.10.29"}
+        novaya = K.otrasl_html(k, n)
+        self.assertIn('href="/nalogi/nagruzka-po-otraslyam-2025/#n-24-25"', novaya)
+        staraya = novaya.replace("#n-24-25", "#nagruzka")
+        self.assertEqual(K.pochinit_otrasl_yakor(staraya, n), novaya)
+        self.assertEqual(K.pochinit_otrasl_yakor(novaya, n), novaya)
+        # название не нашлось — ссылку не трогаем
+        chuzhaya = staraya.replace("Производство металлургическое", "Неизвестная отрасль")
+        self.assertEqual(K.pochinit_otrasl_yakor(chuzhaya, n), chuzhaya)
+        self.assertEqual(K.yakor_normy("ВСЕГО"), "n-vsego")
+
+
 class TestOtraslV38b(unittest.TestCase):
     """kartochki-v3.8b: средняя нагрузка отрасли — самый длинный префикс ОКВЭД в data/fns-normy-2025.json."""
 
@@ -1302,7 +1319,7 @@ class TestOtraslV38b(unittest.TestCase):
         t = chitat(stranicy(d)[0])
         self.assertIn("Средняя налоговая нагрузка в отрасли «Производство металлургическое", t)
         self.assertIn("5,2" + NB + "% (данные ФНС, без страховых взносов)", t)
-        self.assertIn('href="/nalogi/nagruzka-po-otraslyam-2025/#nagruzka"', t)
+        self.assertIn('href="/nalogi/nagruzka-po-otraslyam-2025/#n-24-25"', t)
 
 
 class TestGolajaKartochkaV38b(unittest.TestCase):

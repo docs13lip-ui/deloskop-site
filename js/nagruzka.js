@@ -50,6 +50,13 @@
     return luchshaya;
   }
 
+  // nagruzka-yakorya-v1: якорь строки в справочнике — «n-35-1», «n-f», «n-vsego» (как tests/sobrat_nagruzka.py yakor).
+  var SPRAVOCHNIK = "/nalogi/nagruzka-po-otraslyam-2025/";
+  function yakor(kod, tablica) {
+    var k = kod === "ВСЕГО" ? "vsego" : String(kod || "").toLowerCase().replace(/[^0-9a-z]+/g, "-").replace(/^-+|-+$/g, "");
+    return (tablica || "n") + "-" + k;
+  }
+
   function pct(x) {
     var r = Math.round(x * 10) / 10;
     return String(r).replace(".", ",") + (String(r).indexOf(".") < 0 ? ",0" : "") + "%";
@@ -69,7 +76,7 @@
   function ocenka(vvod, dannye) {
     var god = String(vvod.god || 2025);
     var dohody = Number(vvod.dohody), nalogi = Number(vvod.nalogi);
-    var r = { st: "", n: null, norma: null, stroka: null, raz: null, zagolovok: "Налоговая нагрузка против отрасли", tekst: "", podpis: "" };
+    var r = { st: "", n: null, norma: null, stroka: null, ssylka: null, raz: null, zagolovok: "Налоговая нагрузка против отрасли", tekst: "", podpis: "" };
     r.podpis = "Оценка по методике калькулятора ФНС: уплаченные налоги без страховых взносов / доходы за " + god +
       " год. Норма — приложение 3 к приказу ФНС № ММ-3-06/333@, Информация ФНС от 05.05.2026. Страховые взносы не учитываются — как и в норме ФНС. Считается в вашем браузере, ничего не отправляем.";
 
@@ -97,6 +104,7 @@
       return r;
     }
     r.stroka = s;
+    r.ssylka = SPRAVOCHNIK + "#" + yakor(s.kod);
     r.norma = s.nagruzka[god];
     r.raz = Math.round((r.norma - r.n) * 10) / 10;
     var dolya = r.n / r.norma;
@@ -142,6 +150,11 @@
       vyhod.hidden = false;
       vyhod.querySelector("[data-tekst]").textContent = r.tekst;
       vyhod.querySelector("[data-podpis]").textContent = r.podpis;
+      var sp = vyhod.querySelector("[data-stroka-p]");
+      if (sp) {
+        sp.hidden = !r.ssylka;
+        if (r.ssylka) sp.querySelector("a").setAttribute("href", r.ssylka);
+      }
       var shkala = vyhod.querySelector("[data-shkala]");
       if (r.norma) {
         var max = Math.max(r.n, r.norma) * 1.1;
@@ -155,5 +168,5 @@
     f.addEventListener("submit", poschitat);
   }
 
-  return { najti: najti, ocenka: ocenka, okvedIzVvoda: okvedIzVvoda, pct: pct, podpisStroki: podpisStroki, init: init, chislo: chislo };
+  return { yakor: yakor, najti: najti, ocenka: ocenka, okvedIzVvoda: okvedIzVvoda, pct: pct, podpisStroki: podpisStroki, init: init, chislo: chislo };
 });

@@ -3,7 +3,8 @@
  * Данные — только из ответа /api/check: dossier.charts (ГИР БО ФНС, годовая бухотчётность), signals, company, zsk.
  * Снимки для «что изменилось» хранятся ТОЛЬКО в браузере (localStorage, ключ dlk_snimki): без ФИО, адресов и сумм,
  * кроме выручки, прибыли, собственного капитала, кредитов и займов, текущей ликвидности и оценки рентабельности активов из открытой отчётности (ГИР БО);
- * у организаций — ещё код и название основного вида деятельности из ЕГРЮЛ, число Индекса и коды факторов открытой методики (для «почему сдвинулся»). Нет доступа к хранилищу — блока «что изменилось» нет.
+ * у организаций — ещё код и название основного вида деятельности из ЕГРЮЛ, число Индекса и коды факторов открытой методики (для «почему сдвинулся»),
+ * уставный капитал, признак ООО и КПП из ЕГРЮЛ (izm-egryul-v1: «капитал уменьшился», «КПП сменился»). Нет доступа к хранилищу — блока «что изменилось» нет.
  * Чистые функции (ryady, trendy, snimok, sravnit, html) — без DOM и сети, их проверяет tests/dinamika.test.js. */
 (function (root, factory) {
   var api = factory();
@@ -381,6 +382,12 @@
       // основной вид деятельности (ЕГРЮЛ): код и название — для «основной вид деятельности сменился»
       var ok = okved(r);
       if (ok) { s.ok = ok.kod; if (ok.nazv) s.okn = ok.nazv; }
+      // уставный капитал (строка досье «Уставный капитал», ЕГРЮЛ) и ООО ли это — для «капитал уменьшился» и срока кредитора ООО
+      var ku = ustKapital(r);
+      if (ku !== null) { s.ku = ku; if (ooo(r)) s.ooo = 1; }
+      // КПП (ЕГРЮЛ): первые 4 цифры — код налоговой инспекции; для «КПП сменился — другая инспекция»
+      var kpp = String(c.kpp == null ? '' : c.kpp).replace(/\s+/g, '').toUpperCase();
+      if (/^\d{4}[0-9A-Z]{2}\d{3}$/.test(kpp)) s.kpp = kpp;
       // Индекс (сервер или браузер по открытой методике, js/indeks-otvet.js) — для «Индекс: 64 → 58 с проверки 01.10»
       var ix = ixChislo(r);
       if (ix != null) {
@@ -420,6 +427,48 @@
     nazv = nazv.replace(/\s+/g, ' ');
     return { kod: kod, nazv: nazv.length > 90 ? nazv.slice(0, 89).replace(/\s+\S*$/, '') + '…' : nazv };
   }
+
+  // Строка досье по названию (любой раздел): «Уставный капитал», «Организационно-правовая форма». → строка | ''
+  function strokaDosje(r, re) {
+    var D = (r && r.dossier) || {}, v = '';
+    (Array.isArray(D.sections) ? D.sections : []).forEach(function (sk) {
+      if (!sk || !Array.isArray(sk.rows)) return;
+      sk.rows.forEach(function (row) {
+        if (!v && Array.isArray(row) && re.test(String(row[0] || '').trim())) v = String(row[1] == null ? '' : row[1]);
+      });
+    });
+    return v;
+  }
+  // Уставный капитал из строки досье: «118 367 564 500 ₽», «10 000,00 ₽». Ноль — значение; «тыс.», текст, минус — не значение. → число | null
+  function ustKapital(r) {
+    var t = strokaDosje(r, /^Уставный капитал$/i).replace(/\s+/g, '').replace(/(₽|руб\.?)$/i, '');
+    if (!/^\d{1,15}(?:[.,]\d{1,2})?$/.test(t)) return null;
+    var v = Number(t.replace(',', '.'));
+    return isFinite(v) ? v : null;
+  }
+  // ООО: по строке «Организационно-правовая форма» или полному наименованию (у АО срок кредитора — другая норма, её не пишем)
+  function ooo(r) {
+    var c = (r && r.company) || {};
+    return /ограниченной\s+ответственностью/i.test(strokaDosje(r, /^Организационно-правовая форма$/i) + ' ' + String(c.name_full || ''));
+  }
+  // Сумма в рублях целиком: «10 000 ₽», «1 234 567,50 ₽» (капитал — не округляем до «млн»)
+  function rubliTochno(v) {
+    var z = Math.round(v * 100), cel = Math.floor(z / 100), kop = z % 100;
+    return String(cel).replace(/\B(?=(\d{3})+(?!\d))/g, NB) + (kop ? ',' + ('0' + kop).slice(-2) : '') + NB + '₽';
+  }
+  // Подстрочники izm-egryul-v1 — тексты [Право] 04.10 14:50 (claude/Право_изменения_ЕГРЮЛ_ответы_✎_КС_17-П_04.10.md), разд. 3 и 4,
+  // и [Продукт] 04.10 14:55 (ТЗ izmeneniya-egryul-v1, пп. 2 и 5, ✅). Реорганизация — без «вправе потребовать досрочно» ([Право] разд. 4).
+  // Неразрывные пробелы — только через NB; «\s» в JS ловит и неразрывный, и узкий пробел. В новых строках нет ни «сырых» невидимых символов,
+  // ни escape-последовательностей с «u» — патч переживает перепечатку текстом (v1.1).
+  var POD_KAP = 'Если ваше требование к' + NB + 'компании возникло до' + NB + 'первой публикации уведомления об' + NB + 'уменьшении, в' + NB + 'течение 30' + NB + 'дней ' +
+    'с' + NB + 'последней публикации в' + NB + '«Вестнике государственной регистрации» вы вправе потребовать досрочного исполнения, а' + NB + 'если это невозможно — ' +
+    'прекращения обязательства и' + NB + 'возмещения убытков (п.' + NB + '5 ст.' + NB + '20 14-ФЗ). Пропустили 30' + NB + 'дней — право требовать досрочно уходит; ' +
+    'обычные права по' + NB + 'договору остаются. В' + NB + 'суд с' + NB + 'таким требованием — не' + NB + 'позднее 6' + NB + 'месяцев с' + NB + 'последней публикации.';
+  var POD_KPP = 'Старый КПП в' + NB + 'вашей платёжке — частая причина уточнения платежа. Новые реквизиты возьмите письмом за' + NB + 'подписью ' +
+    'и' + NB + 'подтвердите звонком по' + NB + 'известному номеру.';
+  var POD_REORG = 'Обязательства перейдут к' + NB + 'правопреемнику — узнайте, к' + NB + 'какому, и' + NB + 'проверьте его по' + NB + 'ИНН так' + NB + 'же, как саму компанию. ' +
+    'Если ваше требование возникло до' + NB + 'первой публикации о' + NB + 'реорганизации, проверьте сроки: 30' + NB + 'дней с' + NB + 'последней публикации ' +
+    'в' + NB + '«Вестнике государственной регистрации» (п.' + NB + '2 ст.' + NB + '60 ГК' + NB + 'РФ).';
 
   // Во сколько раз: «в 2 раза», «в 2,4 раза», «в 12 раз» (k ≥ 2)
   function vRaz(k) {
@@ -562,7 +611,7 @@
       bezSt = true;
     }
     if (!bezSt && a.st && b.st && (a.st !== b.st || (a.kod && b.kod && iskl(a.kod) !== iskl(b.kod))) && nazvSt(a.st, a.kod) !== nazvSt(b.st, b.kod))
-      add(b.st === 'ACTIVE' ? 'luchshe' : 'huzhe', 'Статус в ЕГРЮЛ: ' + nazvSt(a.st, a.kod) + ' → ' + nazvSt(b.st, b.kod));
+      add(b.st === 'ACTIVE' ? 'luchshe' : 'huzhe', 'Статус в ЕГРЮЛ: ' + nazvSt(a.st, a.kod) + ' → ' + nazvSt(b.st, b.kod), b.st === 'REORGANIZING' ? POD_REORG : '');
     if (a.lvl && b.lvl && a.lvl !== b.lvl) {
       var o = ['low', 'medium', 'high'];
       add(o.indexOf(b.lvl) > o.indexOf(a.lvl) ? 'huzhe' : 'luchshe', 'Оценка риска: ' + LVL[a.lvl] + ' → ' + LVL[b.lvl]);
@@ -576,6 +625,12 @@
     if (a.nedost === false && b.nedost === true) add('huzhe', 'Появилась отметка о недостоверности сведений в ЕГРЮЛ');
     if (a.nedost === true && b.nedost === false) add('luchshe', 'Отметка о недостоверности сведений в ЕГРЮЛ снята');
     if (a.dir && b.dir && a.dir !== b.dir) add('info', 'Руководитель сменился: новая запись в ЕГРЮЛ с' + NB + dmy(b.dir));
+    // уставный капитал (ЕГРЮЛ): только уменьшение; срок кредитора — только у ООО (п. 5 ст. 20 14-ФЗ), у АО — без подстрочника
+    if (typeof a.ku === 'number' && typeof b.ku === 'number' && a.ku > 0 && b.ku < a.ku)
+      add('info', 'Уставный капитал уменьшился: ' + rubliTochno(a.ku) + ' → ' + rubliTochno(b.ku) + ' (ЕГРЮЛ)', b.ooo && a.ooo ? POD_KAP : '');
+    // КПП (ЕГРЮЛ): другой код инспекции (первые 4 цифры) — так и пишем; иначе — просто «сменился»
+    if (a.kpp && b.kpp && a.kpp !== b.kpp)
+      add('info', 'КПП сменился: ' + a.kpp + ' → ' + b.kpp + (a.kpp.slice(0, 4) !== b.kpp.slice(0, 4) ? ' — компания встала на' + NB + 'учёт в' + NB + 'другой налоговой инспекции' : '') + ' (ЕГРЮЛ)', POD_KPP);
     Object.keys(b.sig || {}).forEach(function (id) {
       if (bezSt && id === 'status') return;
       var x = (a.sig || {})[id], y = b.sig[id];
@@ -897,6 +952,6 @@
   }
 
   return { ryad: ryad, ryady: ryady, nalogBezZnaka: nalogBezZnaka, stroka: stroka, izmenenie: izmenenie, trendy: trendy, dengi: dengi, htmlDinamika: htmlDinamika, balans: balans, htmlBalans: htmlBalans,
-    snimok: snimok, sravnit: sravnit, likvidnost: likvidnost, okved: okved, vRaz: vRaz, zapomnit: zapomnit, htmlIzmeneniya: htmlIzmeneniya, html: html, KEY: KEY, CSS: CSS,
+    snimok: snimok, sravnit: sravnit, likvidnost: likvidnost, okved: okved, ustKapital: ustKapital, rubliTochno: rubliTochno, vRaz: vRaz, zapomnit: zapomnit, htmlIzmeneniya: htmlIzmeneniya, html: html, KEY: KEY, CSS: CSS,
     iskl: iskl, isklyuchena: isklyuchena, ixChislo: ixChislo, plusMes: plusMes, kodSost: kodSost, predydushchaya: predydushchaya, nuzhenKabinet: nuzhenKabinet, dogruzit: dogruzit, dobavit: dobavit, sDop: sDop, ozhidatIndeks: ozhidatIndeks, dopisatIndeks: dopisatIndeks };
 });

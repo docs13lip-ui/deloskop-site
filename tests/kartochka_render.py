@@ -1056,8 +1056,23 @@ def sosedi_html(k, sosedi):
 # в API налоги со взносами. Модуль без чтения файлов (его берёт API): строки передаёт сборщик (normy).
 
 
-def otrasl_nagruzka(okved, normy):
-    """→ (строка ФНС, % за 2025) по самому длинному префиксу ОКВЭД (при равенстве — узкая строка) или None."""
+def yakor_normy(kod, tablica="n"):
+    """nagruzka-yakorya-v1: якорь строки справочника /nalogi/nagruzka-po-otraslyam-2025/ — «n-35-1», «n-f», «n-vsego».
+    Тот же расчёт — tests/sobrat_nagruzka.py yakor и js/nagruzka.js yakor (tests/nagruzka_yakorya.test.js)."""
+    k = "vsego" if kod == "ВСЕГО" else re.sub(r"[^0-9a-z]+", "-", str(kod).lower()).strip("-")
+    return tablica + "-" + k
+
+
+SPRAVOCHNIK_NORM = "/nalogi/nagruzka-po-otraslyam-2025/"
+
+
+def _nazv_normy(r):
+    nz = re.sub(r"\s+-\s+всего$", "", r["nazvanie"]).strip()
+    return nz[:1].upper() + nz[1:]
+
+
+def otrasl_stroka(okved, normy):
+    """→ строка ФНС (dict) по самому длинному префиксу ОКВЭД (при равенстве — узкая строка) или None."""
     kod = re.sub(r"[^0-9.]", "", str(okved or ""))
     luchshij = None
     for r in normy or []:
@@ -1067,20 +1082,41 @@ def otrasl_nagruzka(okved, normy):
         for pr in r.get("okved") or []:
             klyuch = (len(pr), -len(r.get("okved") or []))
             if kod.startswith(pr) and (luchshij is None or klyuch > luchshij[0]):
-                luchshij = (klyuch, r, z)
-    if not luchshij:
-        return None
-    nz = re.sub(r"\s+-\s+всего$", "", luchshij[1]["nazvanie"]).strip()
-    return nz[:1].upper() + nz[1:], luchshij[2]
+                luchshij = (klyuch, r)
+    return luchshij[1] if luchshij else None
+
+
+def otrasl_nagruzka(okved, normy):
+    """→ (строка ФНС, % за 2025) по самому длинному префиксу ОКВЭД (при равенстве — узкая строка) или None."""
+    r = otrasl_stroka(okved, normy)
+    return (_nazv_normy(r), r["nagruzka"]["2025"]) if r else None
 
 
 def otrasl_html(k, normy):
-    o = otrasl_nagruzka(k.get("okved"), normy)
-    if not o:
+    r = otrasl_stroka(k.get("okved"), normy)
+    if not r:
         return ""
+    # nagruzka-yakorya-v1: ссылка — сразу на строку отрасли в таблице ФНС (ТЗ [Маркетинг] 03.10, разд. 2.1)
     return ('<p class="small co-otr">Средняя налоговая нагрузка в отрасли «%s» за%s2025%sгод — %s%s%% (данные ФНС, без страховых взносов). '
-            '<a href="/nalogi/nagruzka-po-otraslyam-2025/#nagruzka">Таблица ФНС по отраслям ›</a></p>' % (
-                e(o[0]), NB, NB, ("%.1f" % o[1]).replace(".", ","), NB))
+            '<a href="%s#%s">Таблица ФНС по отраслям ›</a></p>' % (
+                e(_nazv_normy(r)), NB, NB, ("%.1f" % r["nagruzka"]["2025"]).replace(".", ","), NB,
+                SPRAVOCHNIK_NORM, yakor_normy(r["kod"])))
+
+
+_OTR_STARYJ = re.compile(r'(<p class="small co-otr">Средняя налоговая нагрузка в отрасли «(.*?)» за.*?)'
+                         r'<a href="/nalogi/nagruzka-po-otraslyam-2025/#nagruzka">', re.S)
+
+
+def pochinit_otrasl_yakor(t, normy):
+    """nagruzka-yakorya-v1: опубликованные карточки — «Таблица ФНС по отраслям ›» ведёт на строку отрасли, как у новых.
+    Строку ищем по названию отрасли в тексте абзаца; не нашли одну — ссылку не трогаем. Повтор ничего не меняет."""
+    def zamena(m):
+        nz = html.unescape(m.group(2))
+        nabor = [r for r in normy or [] if _nazv_normy(r) == nz]
+        if len(nabor) != 1:
+            return m.group(0)
+        return m.group(1) + '<a href="%s#%s">' % (SPRAVOCHNIK_NORM, yakor_normy(nabor[0]["kod"]))
+    return _OTR_STARYJ.sub(zamena, t, count=1)
 
 
 def indeks_v_otchete_html(inn):

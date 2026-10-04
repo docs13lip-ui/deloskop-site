@@ -44,7 +44,10 @@ test('оферта п. 3.7 «Разовые покупки» — формули�
   // п. 3.7 — седьмой пункт раздела 3 (нумерация пунктов оферты — по порядку <li>, как п. 5.5, 6.6)
   const r3 = t.split('<h2 id="o3">')[1].split('<h2 id="o4">')[0];
   const verhnie = r3.replace(/<ol class="bukvy">[\s\S]*?<\/ol>/g, '').match(/<li[\s>]/g) || [];
-  assert.strictEqual(verhnie.length, 8, 'в разделе 3 должно быть 8 пунктов: «Разовые покупки» — седьмой, «Тариф основателя» — восьмой');
+  // start390-v1: после снятия беты — девятый пункт «Стартовая цена тарифа «Старт»» (tests/startovaya.py)
+  const p39 = r3.includes('<li id="start">');
+  assert.strictEqual(verhnie.length, p39 ? 9 : 8, 'в разделе 3 должно быть 8 пунктов (+ п. 3.9 после беты): «Разовые покупки» — седьмой, «Тариф основателя» — восьмой');
+  if (p39) assert.ok(/<li id="osnovatel">[\s\S]*<li id="start">/.test(r3), 'п. 3.9 — после п. 3.8');
   assert.ok(/<li id="razovye">[\s\S]*<li id="osnovatel">/.test(r3), 'п. 3.8 — после п. 3.7');
   assert.ok(/<li id="razovye"><strong>Разовые покупки\.<\/strong>/.test(r3));
   for (const f of [

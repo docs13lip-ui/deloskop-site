@@ -45,11 +45,11 @@ test('переход «не ниже → ниже на 10% и более» — �
   const a = D.snimok(otvet(RAN, 2024, vys(2024))), b = D.snimok(otvet(SEJ, 2025, niz(2025)));
   const h = R.izmenenie(a, b, OKVED, NORMY);
   assert.strictEqual(h.ton, 'huzhe');
-  assert.strictEqual(h.t, 'Рентабельность активов стала ниже средней по отрасли на 10% и более: за' + NB + '2025 — ' +
+  assert.strictEqual(h.t, 'Рентабельность активов стала ниже средней по отрасли на 10' + NB + '% и более: за' + NB + '2025 — ' +
     R.pct(b.rn[1]) + ' при средней ' + R.pct(norma(2025)) + ' (оценка; ГИР' + NB + 'БО и ФНС)');
   const l = R.izmenenie(D.snimok(otvet(RAN, 2024, niz(2024))), D.snimok(otvet(SEJ, 2025, vys(2025))), OKVED, NORMY);
   assert.strictEqual(l.ton, 'luchshe');
-  assert.match(l.t, /^Рентабельность активов больше не ниже средней по отрасли на 10% и более: за\u00a02025 — /);
+  assert.match(l.t, /^Рентабельность активов больше не ниже средней по отрасли на 10\u00a0% и более: за\u00a02025 — /);
   assert.strictEqual(R.izmenenie(D.snimok(otvet(RAN, 2024, vys(2024))), D.snimok(otvet(SEJ, 2025, vys(2025))), OKVED, NORMY), null, 'обе в норме');
   assert.strictEqual(R.izmenenie(D.snimok(otvet(RAN, 2024, niz(2024))), D.snimok(otvet(SEJ, 2025, niz(2025))), OKVED, NORMY), null, 'обе ниже');
   assert.strictEqual(R.izmenenie(D.snimok(otvet(RAN, 2025, vys(2025))), D.snimok(otvet(SEJ, 2025, niz(2025))), OKVED, NORMY), null, 'тот же год');

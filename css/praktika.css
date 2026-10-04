@@ -63,6 +63,10 @@ body{margin:0;background:#F5F5F2;-webkit-font-smoothing:antialiased}
 .pr .dl h2{margin:0 0 8px;color:#fff;font-size:26px}.pr .dl p{margin:0 0 18px;color:#B8B8BD}
 .pr .btn{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:0 22px;border-radius:14px;background:var(--accent);color:#fff!important;font:600 16px/1 var(--font);text-decoration:none!important}
 .pr .btn:hover{background:var(--accent-hover)}
+/* вторая кнопка блока действия (js/slezh-knopka.js): контур на тёмном, рядом с главной; на телефоне — под ней */
+.pr .btn--vtor{margin-left:12px;background:transparent;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.4)}
+.pr .btn--vtor:hover{background:rgba(255,255,255,.08)}
+@media (max-width:520px){.pr .btn--vtor{display:flex;width:max-content;max-width:100%;margin:12px 0 0}}
 /* «Где в законе» */
 .pr .zakon{list-style:none;margin:8px 0 0;padding:0}.pr .zakon li{margin:0;padding:10px 0;border-top:1px solid var(--line);color:var(--ink-2);font-size:16px}
 .pr .red{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);font-size:13px;white-space:nowrap}

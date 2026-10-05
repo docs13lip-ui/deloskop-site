@@ -9,11 +9,11 @@
     "115-fz/zablokirovali-schet-chto-delat/index.html": ["shtraf-banka-za-dokumenty-115-fz", "otklyuchili-internet-bank", "zagraditelnye-komissii", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"],
     "115-fz/zapros-banka-po-115-fz-kak-otvetit/index.html": ["shtraf-banka-za-dokumenty-115-fz", "otklyuchili-internet-bank"],
     "115-fz/zsk-zony-riska/index.html": ["krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "zagraditelnye-komissii", "isklyuchili-iz-egryul-dolg-s-direktora", "zsk-dolzhnika-sudebnyj-prikaz"],
-    "nalogi/statya-54-1-nk-prostymi-slovami/index.html": ["razryv-nds-v-cepochke-krascvetmet", "vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke", "droblenie-uplachennaya-usn-zachityvaetsya"],
+    "nalogi/statya-54-1-nk-prostymi-slovami/index.html": ["razryv-nds-v-cepochke-krascvetmet", "vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke", "droblenie-uplachennaya-usn-zachityvaetsya", "povtornaya-vyezdnaya-proverka-vs-2026"],
     "nalogi/nagruzka/index.html": ["droblenie-uplachennaya-usn-zachityvaetsya", "zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/nagruzka-po-otraslyam-2025/index.html": ["zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/priznaki-tehnicheskoj-kompanii/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke"],
-    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p"],
+    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026"],
     "pasport/index.html": ["proverka-kontragenta-na-datu-sdelki"],
     "nalogi/svezhest-dannyh-proverki-kontragenta/index.html": ["proverka-kontragenta-na-datu-sdelki"],
     "nalogi/pismo-o-smene-rekvizitov-kak-proverit/index.html": ["dvojnik-postavshchika-bank-poluchatelya"],
@@ -25,6 +25,62 @@
     "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"]
   },
   "razbory": [
+    {
+      "razdel": "nalogi",
+      "slug": "povtornaya-vyezdnaya-proverka-vs-2026",
+      "h1": "Налоговая уже проверила год, вы заплатили. Могут проверить его снова?",
+      "title": "Повторная выездная проверка за тот же год: ВС 2026 — Делоскоп",
+      "description": "ВС 18.03.2026 № 309-ЭС25-9697: Управление ФНС вправе заново проверить год после первой проверки. Кто может, за какой период и почему без штрафа.",
+      "zapros": "повторная выездная налоговая проверка за тот же период",
+      "data": "2026-10-05",
+      "minut": 4,
+      "lid": "Компания прошла выездную проверку за 2021 год, заплатила 34,7 млн ₽ НДС и закрыла вопрос. Через полтора года Управление ФНС проверило тот же год заново и насчитало 477,8 млн ₽. Три суда встали на сторону компании, Верховный суд — нет.",
+      "dela": [
+        {
+          "sud": "Верховный суд РФ",
+          "sud_kratko": "ВС",
+          "akt": "Определение СКЭС",
+          "nomer": "№ 309-ЭС25-9697",
+          "data": "2026-03-18",
+          "delo": "ООО «Нефтегазстрой» против Управления ФНС по Республике Башкортостан, дело № А07-18520/2024 — назначение повторной выездной проверки за 2021 год",
+          "na_konu": "477 758 186 ₽ недоимки по НДС и налогу на прибыль по повторной проверке",
+          "na_konu_kratko": "477,8 млн ₽",
+          "itog": "В пользу налоговой",
+          "itog_nov": false,
+          "istochnik": "https://kad.arbitr.ru/",
+          "istochnik_podpis": "kad.arbitr.ru — поиск по номеру дела А07-18520/2024; текст определения сверен по garant.ru",
+          "sverka": "2026-10-05"
+        }
+      ],
+      "knopka": {
+        "zagolovok": "Поставщики проверенных лет",
+        "tekst": "Проверка по ИНН: статус в ЕГРЮЛ, массовый адрес, отчётность и суды поставщика по открытым данным на дату проверки.",
+        "knopka": "Проверить контрагентов",
+        "url": "/",
+        "cel": "razbor19_check"
+      },
+      "zakon": [
+        [
+          "п. 4, 10 ст. 89 НК РФ — период выездной проверки; повторная проверка: кто назначает, за какой период, санкции",
+          "ред. на 05.10.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_19671/575046595bc7e01efd9a0a0d2f6c0ffb64442868/"
+        ],
+        [
+          "Постановление КС РФ от 17.03.2009 № 5-П — критерии повторной проверки",
+          "",
+          "https://www.consultant.ru/document/cons_doc_LAW_86087/"
+        ],
+        [
+          "Определение СКЭС ВС РФ от 18.03.2026 № 309-ЭС25-9697 — полный текст",
+          "",
+          "https://www.garant.ru/products/ipo/prime/doc/413828648/"
+        ]
+      ],
+      "pohozhie": [
+        "vokfors-rekonstrukciya",
+        "proverka-kontragenta-na-datu-sdelki"
+      ]
+    },
     {
       "razdel": "nalogi",
       "slug": "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p",

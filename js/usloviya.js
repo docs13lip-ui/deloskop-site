@@ -251,17 +251,18 @@
   function mesText(m) { return m < 12 ? m + '\u00a0мес.' : ageText(m); }
 
   // «Как посчитали» — открытая формула предела под суммой (Прорыв «Ф», тексты Маркетинга 28.09, раздел 3.3).
-  function kakPoschitali(f, t, pc, reasonsList, np) {
-    var R = pc.raschet || {}, kak = '';
+  function kakPoschitali(f, t, pc, reasonsList, np, napr) {
+    var R = pc.raschet || {}, kak = '', otg = napr === 'otgruzhaem';
     if (t === 'post' || t === 'stop') {
       var pr = f.status === 'LIQUIDATED' ? 'компания ликвидирована' : (reasonsList[0] || (t === 'stop' ? 'стоп-признак в данных' : 'серьёзное замечание в данных'));
-      kak = 'Вперёд — 0\u00a0₽: ' + pr + ' — ' + (t === 'stop' ? 'не платите вперёд.' : 'платите после поставки или акта.');
+      kak = otg ? 'В долг — 0\u00a0₽: ' + pr + ' — ' + (f.status === 'LIQUIDATED' ? 'сделку не заключать.' : 'отгружайте после оплаты.')
+        : 'Вперёд — 0\u00a0₽: ' + pr + ' — ' + (t === 'stop' ? 'не платите вперёд.' : 'платите после поставки или акта.');
     } else {
       var polovina = R.half ? ' · ' + (R.half === 'ostorozhno' ? 'долги не проверены' : zamechaniya(reasonsList)) + ' → половина: ' + money(R.itog) : '';
       if (R.base === 'nol') {
-        kak = 'Как посчитали: отчёт' + (R.otchetGod ? ' за ' + R.otchetGod : '') + ' в ГИР БО есть, но выручки в нём нет. Две недели нулевой выручки — 0 ₽, поэтому советуем платить по факту поставки.';
+        kak = 'Как посчитали: отчёт' + (R.otchetGod ? ' за ' + R.otchetGod : '') + ' в ГИР БО есть, но выручки в нём нет. Две недели нулевой выручки — 0 ₽, поэтому советуем ' + (otg ? 'отгружать после оплаты.' : 'платить по факту поставки.');
       } else if (R.malo) {
-        kak = 'Как посчитали: выручка' + (R.revenueYear ? ' за ' + R.revenueYear : '') + ' — ' + moneyKrupno(R.revenue) + ' ÷ ' + DELITEL + ' = ' + money(R.dveNedeli) + (R.half ? ', половина — ' + money(R.doPolovinu / 2) : '') + '. ' + MALO_TEKST(R.half);
+        kak = 'Как посчитали: выручка' + (R.revenueYear ? ' за ' + R.revenueYear : '') + ' — ' + moneyKrupno(R.revenue) + ' ÷ ' + DELITEL + ' = ' + money(R.dveNedeli) + (R.half ? ', половина — ' + money(R.doPolovinu / 2) : '') + '. ' + (otg ? MALO_OTG(R.half) : MALO_TEKST(R.half));
       } else if (R.base === 'revenue' && R.ageCapped) {
         kak = 'Как посчитали: две недели выручки — ' + moneyKrupno(R.dveNedeli) + ', но компании ' + mesText(R.ageMonths) + ' — не больше потолка для возраста до года: ' + money(R.byAge) + polovina + '.';
       } else if (R.base === 'revenue') {
@@ -274,16 +275,22 @@
     }
     var ne = '';
     if (np && np.spisok.length && (t === 'go' || t === 'cap')) {
-      ne = 'Не проверяли: ' + np.spisok.join(', ') + '. Если они есть — вперёд лучше не платить.' +
+      ne = 'Не проверяли: ' + np.spisok.join(', ') + '. Если они есть — ' + (otg ? 'в долг лучше не отгружать.' : 'вперёд лучше не платить.') +
         (np.nalogiNa ? ' Долги по налогам — нет в списке ФНС на\u00a0' + np.nalogiNa + '.' : '') +
         (np.provereno != null && np.iz ? ' Из внешних реестров ответили ' + np.provereno + ' из ' + np.iz + (np.data ? ' на ' + dataRu(np.data) : '') + '.' : '');
     }
+    if (otg) kak = OBA_NAPRAVLENIYA + ' ' + kak;
     return { kak: kak, ne: ne,
       podpis: 'Ориентир Делоскопа, не норма закона. Методика — в разборе «Сколько платить вперёд незнакомой компании».', url: STATYA };
   }
   // Текст [Продукт · Данные] 02.10 19:37 (разд. 0) — когда предел меньше 10 000 ₽.
   function MALO_TEKST(half) {
     return 'Вперёд — не больше ' + (half ? 'половины двух недель' : 'двух недель') + ' выручки компании, а это меньше ' + money(MINIMUM) + '. Советуем платить по факту поставки.';
+  }
+  // otsrochka-pokupatelyu-v1 (ТЗ [Продукт] 05.10, разд. 1): «Они платят мне» — тот же предел словами продавца.
+  var OBA_NAPRAVLENIYA = 'Предел — сколько денег разумно держать под риском у одной компании: и предоплатой, и отгрузкой в долг. Считаем одинаково.';
+  function MALO_OTG(half) {
+    return 'В долг — не больше ' + (half ? 'половины двух недель' : 'двух недель') + ' выручки компании, а это меньше ' + money(MINIMUM) + '. Советуем отгружать после оплаты.';
   }
   var STATYA = '/nalogi/skolko-platit-vpered-neznakomoj-kompanii/';
   var FORMULA = '/indeks/#predoplata';                     // та же формула словами и мини-расчёт этим кодом
@@ -292,7 +299,9 @@
   function reasonText(x) {
     var d = String(x.detail || '').trim();
     var generic = !d || /^(да|есть|внимание|нет данных|—)$/i.test(d);
-    return generic ? x.title : x.title + ': ' + d.charAt(0).toLowerCase() + d.slice(1);
+    // otsrochka-pokupatelyu-v1: «1 937 ₽» не рвём между числом и ₽ на 390 px (замена — дословно из ответа [Арт-директора] 05.10)
+    var s = generic ? x.title : x.title + ': ' + d.charAt(0).toLowerCase() + d.slice(1);
+    return s.replace(/(\d)\s(?=\d{3}(?!\d))/g, '$1\u00a0').replace(/(\d)\s(?=(₽|%|млн|млрд|тыс\.))/g, '$1\u00a0');
   }
   function reasons(f) {
     var out = [];
@@ -322,6 +331,24 @@
     if (t === 'cap' && malo) return 'Можно, оплата — по факту поставки';
     if (t === 'cap') return 'Можно, предоплата — до ' + money(cap);
     return 'Работать можно';
+  }
+  function headlineOtg(f, t, cap, malo) {
+    if (f.status === 'LIQUIDATED') return 'Сделку не заключать';
+    if (t === 'stop') return 'Отгружайте только после оплаты';
+    if (t === 'post') return 'Только по предоплате';
+    if (t === 'cap' && malo) return 'Можно, но без отсрочки';
+    if (t === 'cap') return 'Можно, отсрочка — до ' + money(cap);
+    return 'Работать можно';
+  }
+  function adviceOtg(f, t, malo) {
+    // ликвидированной — первые две фразы прежнего совета: «счёт не оплачивайте» продавцу не о том
+    if (f.status === 'LIQUIDATED') return 'Компания прекратила существование — в ЕГРЮЛ есть запись о прекращении. Новый договор с ней заключить нельзя.';
+    if (f.status === 'BANKRUPT') return 'Новые отгрузки — только после оплаты и по согласованию с арбитражным управляющим.';
+    if (f.status === 'LIQUIDATING') return 'В долг не отгружайте: новые обязательства компания может не исполнить.' + advice(f, t, malo).replace(/^[^.]*\./, '');
+    if (t === 'stop' || t === 'post') return 'Отсрочку не давайте: отгрузка — после оплаты. Если без отсрочки сделки не будет — только под банковскую гарантию платежа или аккредитив.';
+    if (malo) return 'Отсрочку — только под банковскую гарантию платежа или аккредитив.';
+    if (t === 'cap') return 'Больше предела — под банковскую гарантию или аккредитив. Держите долг покупателя в пределе: следующая отгрузка — после оплаты предыдущей.';
+    return 'Сохраните досье с датой проверки: если покупатель задержит оплату, оно покажет, на каких данных вы дали отсрочку.';
   }
   function advice(f, t, malo) {
     if (f.status === 'LIQUIDATED') return 'Компания прекратила существование — в ЕГРЮЛ есть запись о прекращении. Новый договор с ней заключить нельзя, платить по такому счёту некому: счёт не оплачивайте.';
@@ -354,6 +381,15 @@
     if (amount <= cap) return 'Сумма в пределах ориентира: предоплата допустима.';
     var p = Math.max(1, Math.floor(cap / amount * 100));
     return 'Вперёд — не больше ' + money(cap) + ' (' + p + '% суммы), остальное — после поставки.';
+  }
+
+  function otgruzkaAdvice(amount, cap, t) {
+    amount = parseAmount(amount);
+    if (!amount) return '';
+    if (t === 'stop' || t === 'post' || cap === 0) return 'В долг не отгружайте: ' + money(amount) + ' — после оплаты.';
+    if (amount <= cap) return 'Сумма в пределах ориентира — отсрочка допустима.';
+    var p = Math.max(1, Math.floor(cap / amount * 100));
+    return 'В долг — не больше ' + money(cap) + ' (' + p + '% суммы), остальное — предоплатой.';
   }
 
   // ---------- что запросить ----------
@@ -413,6 +449,19 @@
     opts = opts || {};
     var f = facts(r), t = tone(f), np = neProvereno(r, f), pc = prepayCap(f, t, np), amount = parseAmount(opts.amount), regime = opts.regime || 'osno';
     var list = docs(f, t, amount, regime);
+    if (opts.napravlenie === 'otgruzhaem') {
+      // «Они платят мне»: число то же (pc.cap), меняются слова; ст. 54.1 — про вычеты покупателя, «На кону» не считаем;
+      // реквизиты покупателя для отгрузки не нужны — без card
+      list = list.filter(function (d) { return d.id !== 'card'; });
+      return {
+        napravlenie: 'otgruzhaem',
+        facts: f, tone: t, cap: pc.cap, malo: !!pc.malo, capRule: pc.rule, raschet: pc.raschet, neProvereno: np,
+        kak: kakPoschitali(f, t, pc, reasons(f), np, 'otgruzhaem'),
+        headline: headlineOtg(f, t, pc.cap, pc.malo), reasons: reasons(f), advice: adviceOtg(f, t, pc.malo),
+        amount: amount, regime: regime, stake: null, prepay: otgruzkaAdvice(amount, pc.cap, t),
+        docs: list, letter: letter(f, list, amount)
+      };
+    }
     return {
       facts: f, tone: t, cap: pc.cap, malo: !!pc.malo, capRule: pc.rule, raschet: pc.raschet, neProvereno: np,
       kak: kakPoschitali(f, t, pc, reasons(f), np),
@@ -460,8 +509,15 @@
     '.usl-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}' +
     '.usl-btns button,.usl-btns a{border:1px solid #D9D9D4;background:#fff;font:inherit;font-size:14px;font-weight:600;border-radius:11px;padding:9px 14px;cursor:pointer;color:var(--ink,#1D1D1F);text-decoration:none}' +
     '.usl-btns button:hover,.usl-btns a:hover{border-color:var(--accent,#0B63E5);color:var(--accent,#0B63E5)}' +
+    '.usl-napr{display:flex;gap:0;padding:3px;margin:-2px 0 2px;background:rgba(0,0,0,.055);border-radius:12px;align-self:flex-start;max-width:100%}' +
+    '.usl-napr button{min-height:36px;padding:0 14px;border:0;border-radius:9px;background:transparent;font:inherit;font-size:14px;font-weight:500;line-height:1.15;color:var(--ink2,#48484C);cursor:pointer;white-space:nowrap}' +
+    '.usl-napr button[aria-pressed=true]{background:#fff;color:var(--ink,#1D1D1F);box-shadow:0 1px 3px rgba(0,0,0,.1)}' +
+    '.usl-napr button:focus-visible{outline:2px solid var(--accent,#0B63E5);outline-offset:1px}' +
+    '.usl-watch{align-self:flex-start;font-size:14px;line-height:1.35;color:var(--accent,#0B63E5);text-decoration:none;border:1px solid #D9D9D4;background:#fff;border-radius:11px;padding:8px 12px}' +
+    '.usl-watch:hover{border-color:var(--accent,#0B63E5)}' +
+    '@media (max-width:520px){.usl-napr{align-self:stretch}.usl-napr button{flex:1 1 0;padding:0 8px}}' +
     '@media (max-width:520px){.usl{padding:16px 14px}.usl-t{font-size:17.5px}.usl-sum{grid-template-columns:1fr}.usl select{max-width:none;width:100%}}' +
-    '@media print{.usl .usl-sum,.usl .usl-btns,.usl summary:after{display:none!important}.usl details>*{display:block}.usl{background:none;border:1px solid #E6E6E1}}';
+    '@media print{.usl .usl-napr,.usl .usl-watch,.usl .usl-sum,.usl .usl-btns,.usl summary:after{display:none!important}.usl details>*{display:block}.usl{background:none;border:1px solid #E6E6E1}}';
 
   function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function injectCss(doc) {
@@ -478,13 +534,18 @@
     return t.replace(/[.\s]+$/, '');
   }
 
-  // mount(el, r, {compact, open}) — рисует карточку в el, возвращает объект с методом update().
+  function cel(imya) { try { if (typeof window !== 'undefined' && window.dlkGoal) window.dlkGoal(imya); } catch (_) { /* Метрика не мешает */ } }
+  var NAPR = [{ id: 'platim', t: 'Я плачу им' }, { id: 'otgruzhaem', t: 'Они платят мне' }];
+
+  // mount(el, r, {compact, open, bezNapr}) — рисует карточку в el, возвращает объект с методом update().
+  // bezNapr — без переключателя «Я плачу им / Они платят мне» (PDF-досье): текст — в выбранном раньше режиме.
   function mount(el, r, o) {
     o = o || {};
     if (!r || !r.company || !r.company.inn) throw new Error('usloviya: нет данных о компании');
     var doc = el.ownerDocument; injectCss(doc);
     var uid = 'usl' + Math.random().toString(36).slice(2, 7);
-    var st = { amount: o.amount || 0, regime: store('usl.regime') || 'osno' };
+    var st = { amount: o.amount || 0, regime: store('usl.regime') || 'osno', napravlenie: store('usl.napr') === 'otgruzhaem' ? 'otgruzhaem' : 'platim' };
+    var celi = {};                                         // цели Метрики — один раз за проверку (за mount)
     var box = doc.createElement('section');
     box.setAttribute('aria-label', 'Условия сделки');
     el.innerHTML = ''; el.appendChild(box);
@@ -500,17 +561,21 @@
           : '<div>На кону при претензии налоговой: <b>' + (v.stake.soft ? money(v.stake.soft).replace(/\s₽$/, '') + '–' : 'до\u00a0') + money(v.stake.hard) + '</b> плюс пени. Досье Делоскопа — ваш довод, что поставщика проверили.</div>';
       }
       var sel = REGIMES.map(function (x) { return '<option value="' + x.id + '"' + (x.id === st.regime ? ' selected' : '') + '>' + esc(x.name) + '</option>'; }).join('');
-      var openAttr = o.open ? ' open' : '';
-      box.innerHTML =
+      var openAttr = o.open ? ' open' : '', otg = v.napravlenie === 'otgruzhaem';
+      var napr = (o.compact || o.bezNapr) ? '' : '<div class="usl-napr" role="group" aria-label="Кто кому платит">' + NAPR.map(function (x) {
+        return '<button type="button" data-napr="' + x.id + '" aria-pressed="' + (x.id === st.napravlenie) + '">' + esc(x.t) + '</button>'; }).join('') + '</div>';
+      var watch = otg && (v.tone === 'go' || v.tone === 'cap') && v.facts.status !== 'LIQUIDATED'
+        ? '<a class="usl-watch" href="/cabinet.html#watch">Поставьте покупателя на слежение, пока за ним долг: при следующей проверке отчёт покажет, что изменилось</a>' : '';
+      box.innerHTML = napr +
         '<div class="usl-h"><span class="usl-mark" aria-hidden="true"></span><div>' +
           '<div class="usl-t">' + esc(v.headline) + '</div>' +
           (why ? '<p class="usl-r">' + esc(why.charAt(0).toUpperCase() + why.slice(1)) + '.</p>' : '') +
         '</div></div>' +
-        '<p class="usl-a">' + esc(v.advice) + '</p>' +
+        '<p class="usl-a">' + esc(v.advice) + '</p>' + watch +
         (o.compact ? '' :
-        '<div class="usl-sum"><label for="' + uid + 'a">Сумма сделки — посчитаем предоплату и деньги на кону</label>' +
+        '<div class="usl-sum"><label for="' + uid + 'a">' + (otg ? 'Сумма отгрузки' : 'Сумма сделки — посчитаем предоплату и деньги на кону') + '</label>' +
           '<div class="usl-in"><input id="' + uid + 'a" inputmode="numeric" autocomplete="off" placeholder="например, 500 000" value="' + (st.amount ? esc(money(st.amount).replace(/ ₽$/, '')) : '') + '"><span>₽</span></div>' +
-          '<select aria-label="Ваш режим налогов">' + sel + '</select></div>' +
+          (otg ? '' : '<select aria-label="Ваш режим налогов">' + sel + '</select>') + '</div>' +
         (v.amount ? '<div class="usl-out" aria-live="polite"><div>' + esc(v.prepay) + '</div>' + stake + '</div>' : '')) +
         '<div class="usl-kak" data-u="kak"><p>' + esc(v.kak.kak) + '</p>' +
           (v.kak.ne ? '<p class="usl-ne">' + esc(v.kak.ne) + '</p>' : '') +
@@ -526,12 +591,23 @@
       if (inp) {
         inp.addEventListener('input', function () {
           var pos = inp.value.length; st.amount = parseAmount(inp.value);
+          if (st.napravlenie === 'otgruzhaem' && st.amount && !celi.summa) { celi.summa = 1; cel('usl_otgruzhaem_summa'); }
           clearTimeout(inp._t); inp._t = setTimeout(function () { draw(true); }, 350);
           void pos;
         });
         if (keepFocus) { inp.focus(); var L = inp.value.length; try { inp.setSelectionRange(L, L); } catch (_) {} }
       }
       if (s) s.addEventListener('change', function () { st.regime = s.value; store('usl.regime', s.value); draw(); });
+      Array.prototype.forEach.call(box.querySelectorAll('[data-napr]'), function (b) {
+        b.addEventListener('click', function () {
+          var n = b.getAttribute('data-napr');
+          if (n === st.napravlenie) return;
+          st.napravlenie = n; store('usl.napr', n);
+          if (n === 'otgruzhaem' && !celi.otg) { celi.otg = 1; cel('usl_otgruzhaem'); }
+          draw();
+          var nb = box.querySelector('[data-napr="' + n + '"]'); if (nb) nb.focus();
+        });
+      });
       var cp = box.querySelector('[data-u="copy"]');
       if (cp) cp.addEventListener('click', function () {
         var txt = 'Тема: ' + v.letter.subject + '\n\n' + v.letter.body;
@@ -547,7 +623,7 @@
   return {
     decide: decide, mount: mount, facts: facts, tone: tone, prepayCap: prepayCap, atStake: atStake,
     docs: docs, letter: letter, parseAmount: parseAmount, money: money, moneyKrupno: moneyKrupno, niceFloor: niceFloor, kindOf: kindOf,
-    neProvereno: neProvereno, kakPoschitali: kakPoschitali, bezPovtora: bezPovtora, STATYA: STATYA, FORMULA: FORMULA,
+    neProvereno: neProvereno, kakPoschitali: kakPoschitali, otgruzkaAdvice: otgruzkaAdvice, NAPR: NAPR, bezPovtora: bezPovtora, STATYA: STATYA, FORMULA: FORMULA,
     METODIKA: { DELITEL: DELITEL, POTOLKI: POTOLKI, OSTOROZHNO: OSTOROZHNO, MINIMUM: MINIMUM },
     RATES: { VAT: VAT, PROFIT: PROFIT, USN_DR: USN_DR }
   };

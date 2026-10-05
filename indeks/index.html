@@ -104,6 +104,7 @@ footer a{color:var(--muted)}
 .pk{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);margin:6px 0 8px;background:var(--card);border-radius:var(--r);box-shadow:0 1px 2px rgba(0,0,0,.04),0 16px 40px rgba(0,0,0,.05);overflow:clip}
 .pk-in{display:grid;gap:12px;padding:20px}.pk label{display:grid;gap:5px;font-size:13px;color:var(--muted)}
 .pk input,.pk select{min-height:46px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font:inherit;font-size:16px;color:var(--ink);background:#fff;width:100%;box-sizing:border-box}
+.pk label.pk-nol{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink2)}.pk .pk-nol input{width:18px;height:18px;min-height:0;margin:0;flex:none;accent-color:var(--accent)}.pk-nol[hidden]{display:none!important}
 .pk-out{padding:20px;background:#FAFAF8;border-left:1px solid var(--line)}.pk-out small{display:block;font-size:13px;color:var(--muted)}
 .pk-out b{display:block;font-size:34px;font-weight:600;letter-spacing:-.03em;line-height:1.15;margin:4px 0 10px;font-variant-numeric:tabular-nums}
 .pk-out ol{margin:0;padding-left:18px;font-size:13.5px;color:var(--ink2);line-height:1.45}.pk-out li{margin:3px 0}
@@ -217,10 +218,12 @@ footer a{color:var(--muted)}
 <li><b>Вывод «Можно с&nbsp;пределом»</b> — сумма делится пополам. Вывод «Только по&nbsp;факту» или «стоп» — вперёд не&nbsp;платить.</li>
 <li><b>Округляем вниз</b> до&nbsp;круглой суммы: до&nbsp;100&nbsp;000&nbsp;₽ — шагом 10&nbsp;000&nbsp;₽, до&nbsp;1&nbsp;млн&nbsp;₽ — шагом 50&nbsp;000&nbsp;₽, до&nbsp;10&nbsp;млн&nbsp;₽ — шагом 100&nbsp;000&nbsp;₽, дальше — шагом 1&nbsp;млн&nbsp;₽. Если предел выходит меньше 10&nbsp;000&nbsp;₽, ориентир не&nbsp;ставим: советуем платить по&nbsp;факту. Выручка — из&nbsp;бухгалтерской отчётности (ГИР&nbsp;БО) за&nbsp;год, который указан в&nbsp;строке «Как посчитали».</li>
 </ol></div>
+<p class="obratno">Тот же предел действует и&nbsp;в&nbsp;обратную сторону: столько разумно отгрузить покупателю в&nbsp;долг. В&nbsp;отчёте переключите «Они платят мне».</p>
 <p class="primer">Выручка за&nbsp;год — 12&nbsp;000&nbsp;000&nbsp;₽: 12&nbsp;000&nbsp;000 ÷&nbsp;26 = 461&nbsp;538&nbsp;₽ → <b>450&nbsp;000&nbsp;₽</b>. Вывод «Можно с&nbsp;пределом» — половина, 230&nbsp;769&nbsp;₽ → <b>200&nbsp;000&nbsp;₽</b>. Та&nbsp;же выручка, но&nbsp;компании 8&nbsp;месяцев — не&nbsp;больше <b>300&nbsp;000&nbsp;₽</b>, потолка для возраста до&nbsp;года.</p>
 <form class="pk" id="pk" aria-label="Посчитайте предел предоплаты">
   <div class="pk-in">
     <label>Выручка за&nbsp;год, ₽<input name="vyruchka" inputmode="numeric" autocomplete="off" placeholder="например, 12 000 000"></label>
+    <label class="pk-nol" data-pk="nol"><input type="checkbox" name="nol"> Отчёт за&nbsp;год сдан, но&nbsp;выручки в&nbsp;нём нет</label>
     <label>Возраст компании<select name="vozrast"><option value="do6">до&nbsp;6&nbsp;месяцев</option><option value="do12">до&nbsp;года</option><option value="do36">от&nbsp;года до&nbsp;3&nbsp;лет</option><option value="starshe" selected>старше 3&nbsp;лет</option><option value="net">неизвестен</option></select></label>
     <label>Вывод отчёта<select name="vyvod"><option value="go">Можно работать</option><option value="cap">Можно с&nbsp;пределом</option><option value="post">Только по&nbsp;факту</option></select></label>
   </div>

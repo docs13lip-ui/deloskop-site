@@ -17,14 +17,17 @@
 
   function rub(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, NB) + NB + '₽'; }
 
-  // vvod: { vyruchka: число или null, vozrast: ключ VOZRAST, vyvod: ключ VYVOD }
+  // vvod: { vyruchka: число или null, vozrast: ключ VOZRAST, vyvod: ключ VYVOD, nol: отчёт сдан, выручки нет }
   // → { itog, shagi: [строки «как посчитали»] }
   function raschet(vvod) {
     var v = vvod || {}, voz = VOZRAST[v.vozrast] || VOZRAST.net, t = VYVOD[v.vyvod] ? v.vyvod : 'go';
     var vyr = Number(v.vyruchka) > 0 ? Number(v.vyruchka) : null;
-    var pc = U.prepayCap({ revenue: vyr, ageMonths: voz.m }, t);
+    // галочка «Отчёт за год сдан, но выручки в нём нет» ([Данные] 05.10) — то же правило vyruchkaNol, что в отчёте
+    var nol = !vyr && !!v.nol;
+    var pc = U.prepayCap({ revenue: vyr, ageMonths: voz.m, vyruchkaNol: nol }, t);
     var R = pc.raschet || {}, shagi = [];
     if (t === 'post') return { itog: 0, shagi: ['Вывод «Только по факту» — вперёд не платить: оплата после поставки или акта.'] };
+    if (R.base === 'nol') return { itog: 0, nol: true, shagi: ['Отчёт за год сдан, а выручки в нём нет — выручку считаем нулевой.', '0' + NB + '₽ — советуем платить по факту поставки.'] };
     if (R.base === 'revenue') {
       shagi.push('Две недели выручки: ' + rub(R.revenue) + ' ÷ ' + U.METODIKA.DELITEL + ' = ' + rub(R.dveNedeli) + '.');
       if (R.ageCapped) shagi.push('Компании меньше года — не выше потолка для её возраста: ' + rub(R.byAge) + '.');
@@ -50,8 +53,11 @@
     var f = doc && doc.getElementById('pk');
     if (!f || !U) return;
     var out = f.querySelector('[data-pk=itog]'), kak = f.querySelector('[data-pk=kak]');
+    var nolBox = f.querySelector('[data-pk=nol]');
     function draw() {
-      var r = raschet({ vyruchka: chislo(f.elements.vyruchka.value), vozrast: f.elements.vozrast.value, vyvod: f.elements.vyvod.value });
+      var vyr = chislo(f.elements.vyruchka.value);
+      if (nolBox) nolBox.hidden = !!vyr;                  // галочка — только когда выручка пустая или 0
+      var r = raschet({ vyruchka: vyr, vozrast: f.elements.vozrast.value, vyvod: f.elements.vyvod.value, nol: !vyr && f.elements.nol && f.elements.nol.checked });
       out.textContent = r.itog ? rub(r.itog) : '0' + NB + '₽';
       kak.innerHTML = '';
       r.shagi.forEach(function (s) { var li = doc.createElement('li'); li.textContent = s; kak.appendChild(li); });

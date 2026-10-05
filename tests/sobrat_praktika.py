@@ -429,18 +429,17 @@ def ssylki_s_sajta(txt, f, spisok, D, po_slug):
 
 
 def tri_dlya_glavnoj(D):
-    """Три разбора для главной (glavnaya-v2, ТЗ [Продукт] 01.10, разд. 2.5): последние по дате; при равных датах —
-    сначала по одному из каждого раздела, затем по порядку в dela.json (новые — первыми)."""
+    """Три разбора для главной (glavnaya-v2, ТЗ [Продукт] 01.10, разд. 2.5): самые свежие, но по одному из каждого раздела
+    обязательно (тест glavnaya «обе рубрики»; 05.10 три налоговых разбора подряд вытеснили 115-ФЗ — правка [Ночные запуски]);
+    остальные места — по дате, при равных датах — по порядку в dela.json (новые — первыми)."""
     po_date = sorted(D["razbory"], key=lambda r: r["data"], reverse=True)  # sorted устойчив: порядок json сохраняется
-    top = [r for r in po_date if r["data"] == po_date[0]["data"]]
-    if len(top) >= 3:
-        vybor, est = [], set()
-        for r in top:
-            if r["razdel"] not in est:
-                vybor.append(r); est.add(r["razdel"])
-        vybor += [r for r in top if r not in vybor]
-        return vybor[:3]
-    return po_date[:3]
+    vybor, est = [], set()
+    for r in po_date:
+        if r["razdel"] not in est:
+            vybor.append(r); est.add(r["razdel"])
+    vybor = vybor[:3]
+    vybor += [r for r in po_date if r not in vybor][:3 - len(vybor)]
+    return sorted(vybor, key=lambda r: po_date.index(r))
 
 
 def glavnaya(txt, D):

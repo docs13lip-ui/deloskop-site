@@ -1,0 +1,27 @@
+{
+ "_kak": "sha256 от JSON.stringify(Usloviya.decide(...)) до комплекта (main c7bd42c + склейка NBSP в reasonText), по ответам tests/otsrochka_fixtures.js",
+ "go": {
+  "bez": "0efbc3c3eb9452f020f4e93112347352949c12f22f98df92f503f97429ae249d",
+  "summa": "5e2ebfbb8471ead36a6c2b07483c356f3c59c61126f354b65e6c0029a363a89a"
+ },
+ "cap": {
+  "bez": "d9dda37fcef7ec8603682a94472d32ac06ab990eba263d706b9c29b25df0e468",
+  "summa": "c3ee41e236032ccde29a56dc651adfc3e8b7bb24f367410c748367f22f4a16d9"
+ },
+ "capMalo": {
+  "bez": "43760d94b8c418bfdb153568ea644dbbc940ae0cfc70f67d7ba3ee97159d9858",
+  "summa": "2656c1a775b901fa301f13844214a6d3106a5185c2b5b66edbb6acbad470f902"
+ },
+ "post": {
+  "bez": "a030a544ae526826f75deda479c42d86356104425b8ddb32291019aad5c5c92b",
+  "summa": "f449469c4091a7683af71bf7bcbce5bae7d61088862bca4d11e60a48e47eac77"
+ },
+ "stop": {
+  "bez": "bab86fa5e0b8229af08a76ba0c97d741b60801e0fd9f96f192e96b1de425fc7d",
+  "summa": "e3fc1fdac23851d4b5178aaedc9b374e51de240d42cb29492c9a0c7b108143a7"
+ },
+ "liquidated": {
+  "bez": "5c30b6f7a3623dac945fcdcffc15d46c19adf1dc2e3204a4dda517b7976ac832",
+  "summa": "f6d13b3494a55277be37e4f1790f71a0299b5c3a307dfb1cac36a9cb6876ed50"
+ }
+}

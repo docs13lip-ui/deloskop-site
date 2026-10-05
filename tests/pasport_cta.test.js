@@ -9,7 +9,8 @@ const KOREN = path.join(__dirname, '..');
 const chitat = (f) => fs.readFileSync(path.join(KOREN, f), 'utf8');
 const TJ = JSON.parse(chitat('tarify/tarify.json'));
 const NB = '\u00a0';
-const T = Object.assign(P.iz(TJ), { beta: false });
+// startMes: null — прежние состояния ТЗ 02.10 без подсказки «Старта»; её проверяет tests/lestnica_390.test.js (и до, и после снятия беты)
+const T = Object.assign(P.iz(TJ), { beta: false, startMes: null });
 const INN = '7736050003';
 
 test('цены и названия — только из tarify.json', () => {
@@ -40,7 +41,7 @@ test('гость и бесплатный: цена в кнопке, строка
     assert.strictEqual(s.sost, 'gost');
     assert.strictEqual(s.knopka, 'Паспорт на дату сделки — 490' + NB + '₽');
     assert.strictEqual(s.stroka, 'Без подписки. PDF с QR-кодом, хранится в Кабинете.');
-    assert.deepStrictEqual(s.ssylka, { t: '3 проверки — 990' + NB + '₽', href: '/schet/?produkt=paket_pasportov' });
+    assert.deepStrictEqual(s.ssylka, { t: '3 проверки — 990' + NB + '₽', href: '/schet/?produkt=paket_pasportov', cel: 'paket' });
     assert.strictEqual(s.href, '/schet/?produkt=pasport_razovyj');
   }
 });

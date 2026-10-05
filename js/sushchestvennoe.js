@@ -20,7 +20,9 @@
   function nwFz(h) { return String(h).replace(/(\d+-ФЗ\)?)/g, '<span class="nw">$1</span>'); }
   var VES = { bad: 0, warn: 1, ok: 2, neutral: 2 };
   // порядок базовых фактов, когда замечаний нет
-  var PORYADOK = ['status', 'address', 'tax_debt', 'kapital', 'likvidnost', 'ubytki', 'otchetnost', 'rukovoditel', 'age', 'zsk'];
+  // poryadok-faktov-v1 [Ночные-3]: «Сотрудники» без замечаний — после прогноза ЗСК (живой ответ 05.10: «367 чел.» стояло первым
+  // и вытесняло прогноз ЗСК в «Все данные»). При «нет сотрудников» (warn) строка по-прежнему среди первых — её поднимает тон.
+  var PORYADOK = ['status', 'address', 'tax_debt', 'kapital', 'likvidnost', 'ubytki', 'otchetnost', 'rukovoditel', 'age', 'zsk', 'employees'];
   var NAZV = { status: 'Статус', address: 'Отметки о недостоверности', age: 'На рынке', tax_debt: 'Долги по налогам' };
   var SEKCII = { profile: 'reestr', history: 'reestr', management: 'reestr', activity: 'reestr', taxes: 'ФНС, открытые данные', dynamics: 'ГИР БО ФНС, годовая бухгалтерская отчётность' };
   var KRATKO = { sudy: 'арбитражные суды', bankrotstvo: 'банкротство', fssp: 'приставы', priostanovki: 'приостановки счетов', mery: 'обеспечительные меры ФНС', rnp: 'РНП', kontrakty: 'госконтракты' };
@@ -245,8 +247,11 @@
     vse.sort(function (a, b) {
       var d = VES[a.ton] - VES[b.ton];
       if (d) return d;
+      // незнакомый признак API с замечанием (bad/warn) — раньше базовых: его могли добавить как новый риск;
+      // без замечаний (ok/neutral) — после базовых: «всё хорошо» по новому признаку решения не меняет и не должно вытеснять статус или ЗСК
+      var nz = a.ton === 'bad' || a.ton === 'warn' ? -1 : PORYADOK.length;
       var pa = PORYADOK.indexOf(a.k), pb = PORYADOK.indexOf(b.k);
-      return (pa < 0 ? -1 : pa) - (pb < 0 ? -1 : pb); // незнакомые признаки API — раньше базовых
+      return (pa < 0 ? nz : pa) - (pb < 0 ? nz : pb);
     });
 
     var ne = [];

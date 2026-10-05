@@ -71,6 +71,15 @@ def minut_ru(n):
     return "%d минут" % n
 
 
+def sver_fraza(r, sverka):
+    """Строка «Сверено» внизу разбора. Если хоть один акт сверен только по тезису (sverka_vid «tezis») —
+    не пишем «по первоисточникам»: «не проверяли ≠ не нашли», и «прочитали тезис ≠ прочитали акт»."""
+    t = '<time datetime="%s">%s</time>' % (sverka, data_ru(sverka))
+    if any(d.get("sverka_vid") == "tezis" for d in r["dela"]):
+        return "Нормы сверены по первоисточникам %s; постановление суда — по тезису в правовой базе, полный текст акта ещё сверяем" % t
+    return "Сверено по первоисточникам %s" % t
+
+
 def izmeneno(r):
     """dateModified и lastmod: поле «izmeneno» (ГГГГ-ММ-ДД) — когда правили текст или пересверили; нет — дата публикации."""
     v = r.get("izmeneno") or r["data"]
@@ -178,11 +187,13 @@ def kartochka(d, n, vsego):
 <dt>%(delo_p)s</dt><dd>%(delo)s</dd>
 <dt>На кону</dt><dd>%(na_konu)s%(na_konu_2)s</dd>
 </dl>
-<p class="delo__src">Первоисточник: <a href="%(ist)s" rel="noopener" target="_blank">%(ist_p)s</a> · сверено <time datetime="%(sv)s">%(sv_ch)s</time></p>
+<p class="delo__src">Первоисточник: <a href="%(ist)s" rel="noopener" target="_blank">%(ist_p)s</a> · %(sv_slovo)s <time datetime="%(sv)s">%(sv_ch)s</time></p>
 </section>""" % {"t": t, "itog": itog, "sud": e(d["sud"]), "akt_nomer": e(akt_nomer(d)), "delo_p": e(d.get("delo_podpis") or "Дело"),
                   "data": d["data"], "data_ch": data_ch(d["data"]), "delo": e(d["delo"]), "na_konu": e(d["na_konu"]),
                   "na_konu_2": ('<br><small class="delo__dop">%s</small>' % e(d["na_konu_2"])) if d.get("na_konu_2") else "",  # [Право] 21:10 разд. 3 п. 6
-                  "ist": e(d["istochnik"]), "ist_p": e(d["istochnik_podpis"]), "sv": d["sverka"], "sv_ch": data_ch(d["sverka"])}
+                  "ist": e(d["istochnik"]), "ist_p": e(d["istochnik_podpis"]), "sv": d["sverka"], "sv_ch": data_ch(d["sverka"]),
+                  # sverka_vid «tezis»: акт сверен только по тезису в правовой базе, полный текст не читали — так и пишем ([Ночные запуски] 05.10 06:05)
+                  "sv_slovo": "тезис сверен по правовой базе" if d.get("sverka_vid") == "tezis" else "сверено"}
 
 
 CITATA = re.compile(r"^https://(www\.)?(vsrf\.ru/lk/practice/stor_pdf|ksrf\.ru/doc/|publication\.pravo\.gov\.ru/document/)")
@@ -271,7 +282,7 @@ def razbor(r, D, po_slug, F=None):
 %(zakon)s
 </ul>
 %(faq)s
-<p class="sver">Сверено по первоисточникам <time datetime="%(sv)s">%(sv_ru)s</time>. Материал носит информационный характер, исход спора не гарантирует и не заменяет консультацию юриста. Нашли неточность — <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>.</p>
+<p class="sver">%(sver_fraza)s. Материал носит информационный характер, исход спора не гарантирует и не заменяет консультацию юриста. Нашли неточность — <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>.</p>
 <h2>%(sos_z)s</h2>
 <div class="sos">
 %(sos)s
@@ -285,7 +296,7 @@ def razbor(r, D, po_slug, F=None):
 """ % {"kr": kroshki_html(kr), "h1": e(r["h1"]), "data": r["data"], "data_ru": data_ru(r["data"]), "min": minut_ru(r["minut"]),
        "lid": e(r["lid"]), "kart": kartochki, "telo": telo, "kz": e(k["zagolovok"]), "kt": e(k["tekst"]), "ku": e(k["url"]),
        "kk": e(k["knopka"]),
-       "cel": (' data-goal="%s"' % e(k["cel"])) if k.get("cel") else "", "slezh": slezh_attr(k), "slezh_js": '<script src="/js/slezh-knopka.js" defer></script>\n' if k.get("slezh") else "", "zakon": zakon, "faq": faq, "sv": sverka, "sv_ru": data_ru(sverka), "sos": sos,
+       "cel": (' data-goal="%s"' % e(k["cel"])) if k.get("cel") else "", "slezh": slezh_attr(k), "slezh_js": '<script src="/js/slezh-knopka.js" defer></script>\n' if k.get("slezh") else "", "zakon": zakon, "faq": faq, "sv": sverka, "sv_ru": data_ru(sverka), "sver_fraza": sver_fraza(r, sverka), "sos": sos,
        "sos_z": "Читайте также" if r.get("statyi") else "Похожие разборы"}
     return url, stranica
 

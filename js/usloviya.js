@@ -448,7 +448,10 @@
     if (f.zsk === 'medium' || f.zsk === 'high') add('bank');
     if (f.bad.nedost || f.warn.nedost) { add('fixRecord'); add('premises'); }
     if (f.bad.mass || f.warn.mass) add('premises');
-    if (!f.revenue && !f.vyruchkaNol) add('otchetnost');
+    // отчётность — только у действующей: при ликвидации, банкротстве, исключении вопрос другой —
+    // требование к ликвидатору или в деле о банкротстве (✎ ответ [Продукт] 05.10, разд. 4)
+    var neDejstvuet = f.status === 'LIQUIDATING' || f.status === 'LIQUIDATED' || f.status === 'BANKRUPT' || !!f.bad.exit;
+    if (!f.revenue && !f.vyruchkaNol && !neDejstvuet) add('otchetnost');
     // «стоп» — отгрузка только после оплаты, поручительство не помогает (решение потока, ✎ [Продукт])
     if (t !== 'stop' && (amount ? amount > (cap || 0) : t === 'cap')) add('poruchitel');
     return ids.slice(0, 7).map(docItem);

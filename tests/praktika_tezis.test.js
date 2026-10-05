@@ -25,13 +25,26 @@ test('разбор с актом «по тезису» не обещает св�
 });
 
 test('остальные разборы — прежняя строка «Сверено по первоисточникам»', () => {
-  for (const r of razbory.filter((r) => !r.dela.some((d) => d.sverka_vid === 'tezis'))) {
+  for (const r of razbory.filter((r) => !r.dela.some((d) => d.sverka_vid))) {
     assert.ok(str(r).includes('Сверено по первоисточникам'), r.slug);
   }
 });
 
 test('sverka_vid — только известное значение', () => {
   for (const r of razbory) for (const d of r.dela) {
-    if ('sverka_vid' in d) assert.strictEqual(d.sverka_vid, 'tezis', r.slug);
+    if ('sverka_vid' in d) assert.ok(['tezis', 'kopiya'].includes(d.sverka_vid), r.slug);
+  }
+});
+
+// [Ночные запуски] 05.10 11:05: «kopiya» — полный текст акта прочитан в копии правовой базы (klerk.ru/cdoc), PDF на vsrf.ru
+// из облака закрыт (403). Страница честно пишет «с сайтом Верховного суда ещё сверяем» и не обещает «по первоисточникам».
+test('разбор с актом «по копии» не обещает сверку по первоисточникам', () => {
+  const kop = razbory.filter((r) => r.dela.some((d) => d.sverka_vid === 'kopiya'));
+  assert.ok(kop.some((r) => r.slug === 'podryadchik-ne-vystavil-schet-fakturu'));
+  for (const r of kop) {
+    const t = str(r);
+    assert.ok(!t.includes('Сверено по первоисточникам'), r.slug);
+    assert.ok(t.includes('с сайтом Верховного суда ещё сверяем'), r.slug);
+    assert.ok(t.includes('текст сверен по копии в правовой базе'), r.slug);
   }
 });

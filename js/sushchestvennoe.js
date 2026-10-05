@@ -103,6 +103,30 @@
     return { god: v.year, vyruchka: v.value, pribyl: p };
   }
 
+  // ---- год сданной отчётности без выручки (otchet-bez-vyruchki-v1 [Ночные-3] 05.10) ----
+  // Живой ответ (ООО, 16 лет): dossier.charts.revenue пуст, «Выручка за 2025» = null, но прибыль и баланс за 2025 есть.
+  // Экран писал «Бухотчётность · Нет в ответе ГИР БО» рядом с «Собственным капиталом на 31.12.2025» из того же ГИР БО.
+  // Отчёт есть, если есть баланс с годом или ненулевая чистая прибыль за год (0 — чаще пустая строка, чем факт).
+  function godBezVyruchki(r) {
+    var D = (r && r.dossier) || {}, ch = D.charts || {}, g = null;
+    function vzyat(y) { y = parseInt(y, 10); if (isFinite(y) && y > 1990 && (g === null || y > g)) g = y; }
+    if (ch.balance && typeof ch.balance === 'object') vzyat(ch.balance.year);
+    (Array.isArray(ch.profit) ? ch.profit : []).forEach(function (x) {
+      if (x && x.value != null && x.value !== '' && isFinite(Number(x.value)) && Number(x.value) !== 0) vzyat(x.year);
+    });
+    (Array.isArray(D.kpi) ? D.kpi : []).forEach(function (k) {
+      var m = /^Чистая прибыль за (\d{4})$/.exec((k && k.label) || '');
+      if (m && k.value != null && isFinite(k.value) && Number(k.value) !== 0) vzyat(m[1]);
+    });
+    if (g === null) return null;
+    var p = null;
+    (Array.isArray(ch.profit) ? ch.profit : []).forEach(function (x) { if (x && +x.year === g && x.value != null && isFinite(Number(x.value))) p = Number(x.value); });
+    if (p === null) (Array.isArray(D.kpi) ? D.kpi : []).forEach(function (k) {
+      if (k && k.label === 'Чистая прибыль за ' + g && k.value != null && isFinite(k.value)) p = Number(k.value);
+    });
+    return { god: g, pribyl: p };
+  }
+
   // ---- собственный капитал: dossier.charts.balance (ГИР БО, строка 1300), без запроса к сети ----
   function kapital(r) {
     var b = r && r.dossier && r.dossier.charts && r.dossier.charts.balance;
@@ -208,6 +232,12 @@
         // Текст — [Право · Налоговый] 04.10 11:30 разд. 1.4 дословно.
         add({ k: 'otchetnost', nazv: 'Бухотчётность', znach: BANK_GIRBO, ton: 'neutral',
           ist: reestr + ', ОКВЭД ' + c.okved, data: dataPr, ssylka: CBR_BANK + (/^\d{13}$/.test(String(c.ogrn || '')) ? '?ogrn=' + c.ogrn : '') });
+      } else if (godBezVyruchki(r)) {
+        // Отчёт за год сдан, а выручки в нём нет (0 или строка 2110 не заполнена) — пишем это, а не «нет в ответе ГИР БО».
+        var bv = godBezVyruchki(r);
+        var pv = bv.pribyl == null || bv.pribyl === 0 ? '' : bv.pribyl < 0 ? ' · убыток ' + dengi(-bv.pribyl) : ' · прибыль ' + dengi(bv.pribyl);
+        add({ k: 'otchetnost', nazv: 'Выручка за ' + bv.god, znach: 'В' + NB + 'отчёте не' + NB + 'указана' + pv, ton: 'neutral',
+          ist: 'ГИР БО ФНС', data: '31.12.' + bv.god });
       } else {
         // «Почему так бывает» — статья о законных причинах (net-otchetnosti-v1, ТЗ [Продукт · Маркетинг] 04.10 10:50 разд. 2):
         // пустое место у крупного поставщика ≠ «техническая» компания. Цель Метрики — girbo_pochemu.

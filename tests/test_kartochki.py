@@ -1034,6 +1034,8 @@ class TestKartochkiV4Kod(unittest.TestCase):
         self.assertEqual(K.imya('ПАО "СИБУР ХОЛДИНГ"'), "ПАО «СИБУР Холдинг»")
         self.assertEqual(K.imya('ООО "АРНЕСТ ЮНИРУСЬ"'), "ООО «Арнест ЮниРусь»")
         self.assertEqual(K.imya('ПАО "МОЭК"'), "ПАО «МОЭК»")
+        self.assertEqual(K.imya('ПАО "ЛЭСК"'), "ПАО «ЛЭСК»")
+        self.assertEqual(K.imya('АО "РИР ЭНЕРГО"'), "АО «РИР Энерго»")
         self.assertEqual(K.imya('ПАО "НМТП"'), "ПАО «НМТП»")
         self.assertEqual(K.imya('ООО "ПИВОВАРЕННАЯ КОМПАНИЯ "БАЛТИКА"'), "ООО «Пивоваренная компания Балтика»")
         self.assertEqual(K.imya('ООО "ФОСАГРО-ТРАНС"'), "ООО «Фосагро-Транс»")  # только точное совпадение

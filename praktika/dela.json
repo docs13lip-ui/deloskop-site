@@ -13,16 +13,79 @@
     "nalogi/nagruzka/index.html": ["droblenie-uplachennaya-usn-zachityvaetsya", "zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/nagruzka-po-otraslyam-2025/index.html": ["zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/priznaki-tehnicheskoj-kompanii/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke"],
-    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki"],
+    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p"],
     "pasport/index.html": ["proverka-kontragenta-na-datu-sdelki"],
     "nalogi/svezhest-dannyh-proverki-kontragenta/index.html": ["proverka-kontragenta-na-datu-sdelki"],
     "nalogi/pismo-o-smene-rekvizitov-kak-proverit/index.html": ["dvojnik-postavshchika-bank-poluchatelya"],
     "nalogi/kak-proverit-schet-pered-oplatoj/index.html": ["dvojnik-postavshchika-bank-poluchatelya"],
+    "nalogi/izmeneniya-egryul-kontragenta/index.html": ["reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p"],
+    "nalogi/kody-statusa-egryul/index.html": ["reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p"],
     "nalogi/nedostovernyj-adres-egryul/index.html": ["isklyuchili-iz-egryul-dolg-s-direktora"],
     "nalogi/skolko-platit-vpered-neznakomoj-kompanii/index.html": ["isklyuchili-iz-egryul-dolg-s-direktora"],
     "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"]
   },
   "razbory": [
+    {
+      "razdel": "nalogi",
+      "slug": "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p",
+      "h1": "Реорганизация контрагента: досрочный возврат долга больше не автоматический",
+      "title": "Реорганизация контрагента: можно ли вернуть долг досрочно — КС 17-П",
+      "description": "Контрагент реорганизуется — 30 дней на требование о досрочном исполнении. После Постановления КС 17-П суд смотрит, ухудшилось ли положение должника.",
+      "zapros": "реорганизация контрагента досрочное исполнение обязательства",
+      "data": "2026-10-05",
+      "minut": 4,
+      "lid": "Если должник реорганизуется, закон даёт кредитору 30 дней, чтобы потребовать досрочного исполнения. 24 марта 2026 года Конституционный суд решил: по облигациям суд удовлетворит такое требование только после проверки, ухудшилось ли положение должника. Доказывать, что не ухудшилось, должен сам должник.",
+      "dela": [
+        {
+          "sud": "Конституционный суд РФ",
+          "sud_kratko": "КС",
+          "akt": "Постановление",
+          "nomer": "№ 17-П",
+          "data": "2026-03-24",
+          "delo": "жалобы ПАО «Россети» и владельца облигаций на п. 2 ст. 60 ГК РФ (досрочное погашение облигаций при реорганизации)",
+          "na_konu": "досрочное погашение облигаций при реорганизации эмитента; по одному из дел — 1 851 584 000 ₽",
+          "na_konu_kratko": "1,85 млрд ₽ по одному делу",
+          "itog": "В пользу компании",
+          "itog_nov": false,
+          "istochnik": "https://www.ksrf.ru/ru/Decision/Pages/default.aspx",
+          "istochnik_podpis": "ksrf.ru — решения Конституционного суда; текст постановления сверен по consultant.ru",
+          "sverka": "2026-10-05"
+        }
+      ],
+      "knopka": {
+        "zagolovok": "Кто станет вашим должником",
+        "tekst": "Проверка по ИНН: статус реорганизации в ЕГРЮЛ, выручка, долги и суды правопреемника по открытым данным на дату проверки.",
+        "knopka": "Проверить правопреемника по ИНН",
+        "url": "/",
+        "cel": "razbor14_check",
+        "slezh": {
+          "knopka": "Следить за контрагентом",
+          "url": "/cabinet.html#watch",
+          "cel": "razbor14_slezh"
+        }
+      },
+      "zakon": [
+        [
+          "п. 2 ст. 60 ГК РФ — право кредитора потребовать досрочного исполнения при реорганизации: 30 дней, исключения, обеспечение",
+          "ред. 10.06.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_5142/aab20beee392e12d8566e0fbe969e2f06a2f1dac/"
+        ],
+        [
+          "абз. 2 п. 5 ст. 58 ГК РФ — при преобразовании ст. 60 не применяется",
+          "ред. 10.06.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_5142/"
+        ],
+        [
+          "Постановление КС РФ от 24.03.2026 № 17-П — полный текст",
+          "",
+          "https://www.consultant.ru/document/cons_doc_LAW_529589/"
+        ]
+      ],
+      "pohozhie": [
+        "isklyuchili-iz-egryul-dolg-s-direktora",
+        "proverka-kontragenta-na-datu-sdelki"
+      ]
+    },
     {
       "razdel": "nalogi",
       "slug": "zemelnyj-nalog-izhs-koefficienty-ks-52-p",

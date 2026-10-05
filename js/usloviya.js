@@ -285,9 +285,12 @@
       return (a.status === b.status ? 0 : a.status === 'bad' ? -1 : 1) || order.indexOf(a.kind) - order.indexOf(b.kind);
     });
     if (f.zsk === 'high') out.push('высокий прогноз попадания в красную зону ЗСК');
-    pick.forEach(function (x) { if (out.length < 3 && x.kind !== 'young') out.push(reasonText(x).replace(/^./, function (c) { return c.toLowerCase(); })); });
+    var vzyali = {};
+    pick.forEach(function (x) { if (out.length < 3 && x.kind !== 'young') { vzyali[x.kind] = 1; out.push(reasonText(x).replace(/^./, function (c) { return c.toLowerCase(); })); } });
     if (f.ageMonths != null && f.ageMonths < 12 && out.length < 3) out.push('компании ' + ageText(f.ageMonths));
-    if (f.staff === 0 || f.staff === 1) { if (out.length < 3) out.push(f.staff ? 'в штате 1 человек' : 'в штате никого'); }
+    // otchet-bez-vyruchki-v1 [Ночные-3] 05.10: признак штата уже в причинах («сотрудники: среднесписочная численность: 0») —
+    // второй раз «в штате никого» не добавляем (на живом ответе стояло подряд)
+    if ((f.staff === 0 || f.staff === 1) && !vzyali.staff) { if (out.length < 3) out.push(f.staff ? 'в штате 1 человек' : 'в штате никого'); }
     if (f.zsk === 'medium' && out.length < 3) out.push('средний прогноз ЗСК');
     return out.slice(0, 3);
   }

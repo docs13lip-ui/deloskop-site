@@ -4,7 +4,10 @@
  *
  * Состояния (тексты — дословно из ТЗ; цены и названия — только из /tarify/tarify.json, в коде чисел нет):
  *   beta    — бета: «Паспорт контрагента» + «В бете — бесплатно. После 13.10 — 490 ₽ или в тарифе «Старт».» Кнопки оплаты нет.
- *   gost    — гость / бесплатный: «Паспорт на дату сделки — 490 ₽» + «Без подписки. PDF с QR-кодом, хранится в Кабинете.» + «3 проверки — 990 ₽».
+ *   gost    — гость / бесплатный: «Паспорт на дату сделки — 490 ₽» + «Без подписки. PDF с QR-кодом, хранится в Кабинете.» + «3 проверки — 990 ₽»;
+ *             пока «Старт» в месяц дешевле Паспорта — вместо пакета «или «Старт» — 390 ₽ в месяц, 3 Паспорта включены»
+ *             (lestnica-390-v1, ТЗ [Продукт · Стратег] 03.10 23:55, claude/Продукт_лестница_цен_Старт390_пакет990_03.10.md, разд. 2.3–2.4;
+ *             «Старт» дороже Паспорта — снова пакет: выгоды, которой нет, не обещаем, ч. 3 ст. 5 38-ФЗ).
  *   paket   — есть пакет: «Сформировать Паспорт» + «Осталось N из 3 · до ДД.ММ.ГГГГ».
  *   tarif   — «Старт» и выше: «Сформировать Паспорт» + «Входит в ваш тариф».
  *   gotov   — Паспорт на эту дату уже есть: «Открыть Паспорт № …» + «Сформирован ДД.ММ.ГГГГ в ЧЧ:ММ».
@@ -53,8 +56,33 @@
       cena: T.pasport_razovyj.cena_rub,
       paketShtuk: p.shtuk > 0 ? p.shtuk : null,
       paketCena: p.cena_rub > 0 ? p.cena_rub : null,
-      start: start ? start.nazvanie : null
+      start: start ? start.nazvanie : null,
+      startMes: start ? startMesyac(start, T.beta === true) : null,
+      startPasportov: start && start.otchetov > 0 ? start.otchetov : null
     };
+  }
+
+  /* Цена «Старта» в месяц, которую увидит покупатель после беты. После беты — как есть в tarify.json
+   * (сборщик tests/startovaya.py сам переписывает туда стартовую цену). В бете — стартовая цена, только если
+   * она точно включится: vklyuchit и «да» владельца на годовую цену (god_soglasovan); иначе обычная. */
+  function startMesyac(t, beta) {
+    var st = t.startovaya;
+    if (beta && st && st.vklyuchit === true && st.god_soglasovan === true && st.mesyac > 0) return st.mesyac;
+    return t.mesyac > 0 ? t.mesyac : null;
+  }
+  // 1 Паспорт включён / 3 Паспорта включены / 5 Паспортов включены
+  function pasportov(n) {
+    var d = n % 10, s = n % 100;
+    if (d === 1 && s !== 11) return n + NB + 'Паспорт включён';
+    if (d >= 2 && d <= 4 && (s < 12 || s > 14)) return n + NB + 'Паспорта включены';
+    return n + NB + 'Паспортов включены';
+  }
+  // «Старт» дешевле разового Паспорта — тогда и только тогда подсказываем подписку.
+  function startVygodnee(T) {
+    return !!(T && T.start && T.startMes && T.startPasportov && T.startMes < T.cena);
+  }
+  function startPodskazka(T) {
+    return rub(T.startMes) + ' в месяц, ' + pasportov(T.startPasportov);
   }
 
   /* sostoyanie({tarify, beta, user, gotov}) → {sost, knopka, stroka, ssylka?:{t, href}, href}
@@ -71,7 +99,7 @@
     }
     if (o.beta || (T && T.beta)) {
       var s = 'В бете — бесплатно.';
-      if (T && T.start) s += ' После ' + KONEC_BETY + ' — ' + rub(T.cena) + ' или в тарифе «' + T.start + '».';
+      if (T && T.start) s += ' После ' + KONEC_BETY + ' — ' + rub(T.cena) + ' или в тарифе «' + T.start + '»' + (startVygodnee(T) ? ': ' + startPodskazka(T) : '') + '.';
       return { sost: 'beta', knopka: 'Паспорт контрагента', stroka: s, href: put };
     }
     var plan = u && u.plan ? String(u.plan) : '';
@@ -84,7 +112,8 @@
     }
     if (!T) return { sost: 'nejzvestno', knopka: 'Паспорт контрагента', stroka: '', href: put };
     var r = { sost: 'gost', knopka: 'Паспорт на дату сделки — ' + rub(T.cena), stroka: 'Без подписки. PDF с QR-кодом, хранится в Кабинете.', href: '/schet/?produkt=pasport_razovyj' };
-    if (T.paketShtuk && T.paketCena) r.ssylka = { t: T.paketShtuk + ' проверки — ' + rub(T.paketCena), href: '/schet/?produkt=paket_pasportov' };
+    if (startVygodnee(T)) r.ssylka = { t: 'или «' + T.start + '» — ' + startPodskazka(T), href: '/tarify/#t-start', cel: 'start' };
+    else if (T.paketShtuk && T.paketCena) r.ssylka = { t: T.paketShtuk + ' проверки — ' + rub(T.paketCena), href: '/schet/?produkt=paket_pasportov', cel: 'paket' };
     return r;
   }
 
@@ -121,6 +150,10 @@
         if (s.stroka) box.appendChild(doc.createTextNode(' '));
         var l = doc.createElement('a');
         l.href = s.ssylka.href; l.textContent = s.ssylka.t;
+        if (s.ssylka.cel) {
+          l.setAttribute('data-ssylka', s.ssylka.cel);
+          l.addEventListener('click', function () { cel(w, 'pasport_cta_click', { mesto: mesto, sost: s.sost, ssylka: s.ssylka.cel }); });
+        }
         box.appendChild(l);
       }
       a.parentNode.insertBefore(box, a.nextSibling);
@@ -154,5 +187,5 @@
     }).catch(function () { return null; });
   }
 
-  return { sostoyanie: sostoyanie, iz: iz, rub: rub, dataRu: dataRu, vremyaRu: vremyaRu, mount: mount, primenit: primenit, KONEC_BETY: KONEC_BETY };
+  return { sostoyanie: sostoyanie, iz: iz, pasportov: pasportov, startVygodnee: startVygodnee, rub: rub, dataRu: dataRu, vremyaRu: vremyaRu, mount: mount, primenit: primenit, KONEC_BETY: KONEC_BETY };
 });

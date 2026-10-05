@@ -266,7 +266,8 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
   var id=new URLSearchParams(location.search).get('id')||'';
   var msg=document.getElementById('msg'), doc=document.getElementById('doc');
   function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
-  function d(v){if(!v)return '';var x=new Date(v);return isNaN(x)?esc(v):x.toLocaleDateString('ru-RU')}
+  // «01.09.2026» (as_of признаков) — уже по-русски: new Date читал бы его как 9 января (data-sveden-v1)
+  function d(v){if(!v)return '';var t=String(v).trim(),m=/^(\d{2})\.(\d{2})\.(\d{4})$/.exec(t);if(m)return t;m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(t);if(m)return m[3]+'.'+m[2]+'.'+m[1];var x=new Date(v);return isNaN(x)?esc(v):x.toLocaleDateString('ru-RU')}
   var ST={ACTIVE:'Действующая',LIQUIDATING:'Ликвидируется или исключается из ЕГРЮЛ',LIQUIDATED:'Ликвидирована',BANKRUPT:'Банкротство',REORGANIZING:'Реорганизация'};
   var STX={ok:'Норма',info:'Справочно',warn:'Внимание',bad:'Риск'};
   var LOGO='<svg width="26" height="23" viewBox="0 0 72 64" fill="none" aria-hidden="true"><path d="M36 18.1A16 16 0 0 1 36 45.9A16 16 0 0 1 36 18.1Z" fill="#0B63E5"/><circle cx="28" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/><circle cx="44" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/></svg>';
@@ -462,7 +463,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
     h+='<div class="sec"><h2>Что это значит для вашей сделки</h2><div class="eyes">'+
       '<div class="box"><h3>'+esc(D.bank.title)+'</h3>'+esc(D.bank.text)+'</div>'+
       '<div class="box"><h3>'+esc(D.tax.title)+'</h3>'+esc(D.tax.text)+'</div></div></div>';
-    var TD=window.IndeksVorota?IndeksVorota.triDaty(R,function(v){var x=new Date(v);return isNaN(x)?String(v):x.toLocaleDateString('ru-RU')}):[];
+    var TD=window.IndeksVorota?IndeksVorota.triDaty(R,function(v){var t=String(v).trim(),m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(t);if(/^\d{2}\.\d{2}\.\d{4}$/.test(t))return t;if(m)return m[3]+'.'+m[2]+'.'+m[1];var x=new Date(v);return isNaN(x)?String(v):x.toLocaleDateString('ru-RU')}):[];
     if(TD.length)h+='<div class="dates">'+TD.map(esc).join('<br>')+'</div>';
     else if(D.data_dates)h+='<div class="dates">Актуальность данных: '+esc(D.data_dates)+'.</div>';
     return h;

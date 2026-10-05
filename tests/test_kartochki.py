@@ -1029,6 +1029,13 @@ class TestKartochkiV4Kod(unittest.TestCase):
         # kartochki-v4.1: точные написания — латиница в кириллице и внутренняя прописная
         self.assertEqual(K.imya('ООО "МЕТРО КЭШ ЭНД КЕРРИ"'), "ООО «Метро Кэш энд Керри»")
         self.assertEqual(K.imya('ПАО "ФОСАГРО"'), "ПАО «ФосАгро»")
+        # kartochki-0510-v2: живые ответы 05.10
+        self.assertEqual(K.imya('ПАО "ГРУППА ЧЕРКИЗОВО"'), "ПАО «Группа Черкизово»")
+        self.assertEqual(K.imya('ПАО "СИБУР ХОЛДИНГ"'), "ПАО «СИБУР Холдинг»")
+        self.assertEqual(K.imya('ООО "АРНЕСТ ЮНИРУСЬ"'), "ООО «Арнест ЮниРусь»")
+        self.assertEqual(K.imya('ПАО "МОЭК"'), "ПАО «МОЭК»")
+        self.assertEqual(K.imya('ПАО "НМТП"'), "ПАО «НМТП»")
+        self.assertEqual(K.imya('ООО "ПИВОВАРЕННАЯ КОМПАНИЯ "БАЛТИКА"'), "ООО «Пивоваренная компания Балтика»")
         self.assertEqual(K.imya('ООО "ФОСАГРО-ТРАНС"'), "ООО «Фосагро-Транс»")  # только точное совпадение
         self.assertEqual(K.imya('ООО "ТОРГОВЫЙ ДОМ "ЛЕНТА"'), "ООО «Торговый дом Лента»")
         self.assertEqual(K.imya('ПАО "НК "РОСНЕФТЬ"'), "ПАО «НК Роснефть»")

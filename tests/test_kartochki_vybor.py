@@ -115,6 +115,16 @@ class TestVybrat(unittest.TestCase):
 
 
 class TestOtsev(unittest.TestCase):
+    def test_prichina_bez_form(self):
+        # kartochki-0510-v2: причина «не ООО/АО …» из ворот не должна попадать в файл с организационной формой
+        pr = kv.prichina_v_fajl("не ООО/АО (НКО, учреждения — вне волны)")
+        self.assertEqual(pr, "организационная форма (НКО, учреждения — вне волны)")
+        self.assertNotRegex(pr, r"(?i)ооо|пао|ао «")
+        self.assertEqual(kv.prichina_v_fajl("нет финансов (доход > 0 по ФНС / ГИР БО)"), "нет финансов (доход > 0 по ФНС / ГИР БО)")
+        o = kv.otsev_iz_otveta([{"company": {"inn": "3525144985"}}], dt.date(2026, 10, 5),
+                               lambda r: (False, "не ООО/АО (НКО, учреждения — вне волны)"))
+        self.assertEqual(o["3525144985"][1], "ворота публикации: организационная форма (НКО, учреждения — вне волны)")
+
     def test_fajl_v_repozitorii(self):
         o = kv.chitat_otsev()
         self.assertTrue(o, "tests/kartochki_otsev.txt пуст")

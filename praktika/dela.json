@@ -9,7 +9,8 @@
     "115-fz/zablokirovali-schet-chto-delat/index.html": ["shtraf-banka-za-dokumenty-115-fz", "otklyuchili-internet-bank", "zagraditelnye-komissii", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"],
     "115-fz/zapros-banka-po-115-fz-kak-otvetit/index.html": ["shtraf-banka-za-dokumenty-115-fz", "otklyuchili-internet-bank"],
     "115-fz/zsk-zony-riska/index.html": ["krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "zagraditelnye-komissii", "isklyuchili-iz-egryul-dolg-s-direktora", "zsk-dolzhnika-sudebnyj-prikaz"],
-    "nalogi/statya-54-1-nk-prostymi-slovami/index.html": ["razryv-nds-v-cepochke-krascvetmet", "vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke", "droblenie-uplachennaya-usn-zachityvaetsya", "povtornaya-vyezdnaya-proverka-vs-2026"],
+    "nalogi/statya-54-1-nk-prostymi-slovami/index.html": ["razryv-nds-v-cepochke-krascvetmet", "vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke", "droblenie-uplachennaya-usn-zachityvaetsya", "povtornaya-vyezdnaya-proverka-vs-2026", "podryadchik-ne-vystavil-schet-fakturu"],
+    "nalogi/nds-postavshchika-na-usn-po-inn/index.html": ["podryadchik-ne-vystavil-schet-fakturu"],
     "nalogi/nagruzka/index.html": ["droblenie-uplachennaya-usn-zachityvaetsya", "zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/nagruzka-po-otraslyam-2025/index.html": ["zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/priznaki-tehnicheskoj-kompanii/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke"],
@@ -25,6 +26,51 @@
     "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"]
   },
   "razbory": [
+    {
+      "razdel": "nalogi",
+      "slug": "podryadchik-ne-vystavil-schet-fakturu",
+      "h1": "Подрядчик не выставил счёт-фактуру. Верховный суд: заставить можно через суд",
+      "title": "Подрядчик не выставил счёт-фактуру: ВС разрешил требовать через суд",
+      "description": "Без счёта-фактуры нет вычета НДС. Верховный суд в 2026 году признал: заказчик вправе через суд обязать подрядчика выставить счёт-фактуру.",
+      "zapros": "подрядчик не выставил счет-фактуру можно ли обязать через суд",
+      "data": "2026-10-05",
+      "minut": 4,
+      "lid": "Работы приняты и оплачены, а счёта-фактуры нет — значит, нет и вычета НДС. Три суда сказали генподрядчику, что требовать документ через суд нельзя: это обязанность по налоговому закону, а не по договору. Верховный суд с ними не согласился.",
+      "dela": [
+        {
+          "sud": "Верховный суд РФ",
+          "sud_kratko": "ВС",
+          "akt": "Определение СКЭС",
+          "nomer": "№ 305-ЭС25-14104",
+          "data": "2026-04-03",
+          "delo": "Генподрядчик против подрядчика, дело № А40-217702/2024 — возврат аванса, долг за услуги и обязание выставить счета-фактуры (резолютивная часть — 25.03.2026)",
+          "na_konu": "вычет НДС по счетам-фактурам, которые подрядчик не выставил; деньги по делу — 39,8 млн ₽ аванса и 1,9 млн ₽ долга — суды взыскали",
+          "na_konu_kratko": "вычет НДС",
+          "itog": "На новое рассмотрение",
+          "itog_nov": false,
+          "istochnik": "https://kad.arbitr.ru/",
+          "istochnik_podpis": "kad.arbitr.ru — поиск по номеру дела А40-217702/2024; полный текст определения прочитан в копии правовой базы, с сайтом Верховного суда ещё сверяем",
+          "sverka": "2026-10-05",
+          "sverka_vid": "kopiya"
+        }
+      ],
+      "knopka": {
+        "zagolovok": "Плательщик ли НДС ваш подрядчик",
+        "tekst": "Проверка по ИНН: статус в ЕГРЮЛ, режим налогов, отчётность и суды подрядчика по открытым данным на дату проверки.",
+        "knopka": "Проверить подрядчика по ИНН",
+        "url": "/",
+        "cel": "razbor20_check",
+        "slezh": {"knopka": "Следить за контрагентом", "url": "/cabinet.html#watch", "cel": "razbor20_slezh"}
+      },
+      "zakon": [
+        ["п. 3 ст. 168 НК РФ — счёт-фактура не позднее пяти календарных дней со дня отгрузки, выполнения работ или получения аванса", "ред. на 05.10.2026", "https://www.consultant.ru/document/cons_doc_LAW_28165/b1f75c31d401275bbf644f8a636f523f2ead27aa/"],
+        ["п. 1 ст. 169 НК РФ — счёт-фактура как основание для вычета НДС", "ред. на 05.10.2026", "https://www.consultant.ru/document/cons_doc_LAW_28165/"],
+        ["пп. 15 п. 2 ст. 146 НК РФ — продажи должника, признанного банкротом, не облагаются НДС", "ред. 15.10.2020 № 320-ФЗ", "https://www.consultant.ru/document/cons_doc_LAW_28165/08c2f3c592f23af58538e4378ae625a583418fb0/"],
+        ["ст. 12 ГК РФ — способы защиты гражданских прав", "ред. на 05.10.2026", "https://www.consultant.ru/document/cons_doc_LAW_5142/"],
+        ["Определение СКЭС ВС РФ от 18.11.2025 № 305-ЭС25-6082 — арендатор против арендодателя-банкрота, в иске о счетах-фактурах отказано", "", "https://www.garant.ru/products/ipo/prime/doc/412991817/"]
+      ],
+      "pohozhie": ["vokfors-rekonstrukciya", "razryv-nds-v-cepochke-krascvetmet"]
+    },
     {
       "razdel": "nalogi",
       "slug": "povtornaya-vyezdnaya-proverka-vs-2026",
@@ -665,7 +711,7 @@
         ["Письмо ФНС России от 10.03.2021 № БВ-4-7/3060@, пп. 11, 17 — когда возможна реконструкция", "", "https://www.consultant.ru/document/cons_doc_LAW_352052/"],
         ["Обзор правовых позиций КС и ВС за I квартал 2026 года (ФНС России, 29.06.2026), п. 4", "", "https://www.garant.ru/products/ipo/prime/doc/414350683/"]
       ],
-      "pohozhie": ["proverka-kontragenta-na-datu-sdelki", "ks-12-p-svidetel-po-svoej-proverke"]
+      "pohozhie": ["proverka-kontragenta-na-datu-sdelki", "ks-12-p-svidetel-po-svoej-proverke", "podryadchik-ne-vystavil-schet-fakturu"]
     },
     {
       "razdel": "115-fz",

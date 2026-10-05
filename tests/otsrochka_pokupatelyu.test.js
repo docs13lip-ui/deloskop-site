@@ -203,3 +203,17 @@ test('(е) Chromium 390 и 1280: два сегмента в одну строк�
     }
   } finally { await b.close(); }
 });
+
+test('v1.2 «Отчётность» — только у действующей: LIQUIDATING / LIQUIDATED / BANKRUPT — без неё (✎ ответ [Продукт] 05.10, разд. 4)', () => {
+  assert.ok(otg(F.cap).docs.some((d) => d.id === 'otchetnost'), 'образец: действующая без выручки → otchetnost');
+  ['LIQUIDATING', 'LIQUIDATED', 'BANKRUPT'].forEach((st) => {
+    const r = Object.assign({}, F.cap, { company: Object.assign({}, F.cap.company, { status: st }) });
+    [0, 500000].forEach((a) => {
+      const ids = otg(r, { amount: a }).docs.map((d) => d.id);
+      assert.ok(!ids.includes('otchetnost'), st + ' ' + a + ': ' + ids);
+      assert.ok(!ids.includes('poruchitel'), st + ' ' + a + ': стоп — без поручительства');
+    });
+  });
+  assert.ok(!otg(F.liquidated).docs.some((d) => d.id === 'otchetnost'), 'liquidated');
+  // «Я плачу им» — без изменений: его сверяет снимок теста (г)
+});

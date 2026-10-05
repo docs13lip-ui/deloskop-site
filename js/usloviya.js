@@ -408,8 +408,12 @@
     fssp: { t: 'Пояснение по долгам у приставов', why: 'как и когда погасят: при аресте счёта ваша предоплата застрянет', ask: 'Информация о погашении исполнительных производств или план погашения' },
     unblock: { t: 'Решение ФНС об отмене приостановления операций по счёту', why: 'пока счёт заблокирован налоговой, компания не сможет тратить ваши деньги', ask: 'Решение налоговой об отмене приостановления операций по счёту' },
     bank: { t: 'Письмо о том, что счёт не ограничен банком, и реквизиты второго банка', why: 'прогноз ЗСК повышен — запасной счёт спасёт сделку, если банк остановит платёж', ask: 'Подтверждение, что расчётный счёт не ограничен, и реквизиты второго банка' },
-    license: { t: 'Лицензия или выписка из СРО, если работа этого требует', why: 'строительство, перевозки, медицина — без допуска сделку могут признать недействительной', ask: 'Лицензия или выписка из реестра СРО — если работы по договору этого требуют' }
+    license: { t: 'Лицензия или выписка из СРО, если работа этого требует', why: 'строительство, перевозки, медицина — без допуска сделку могут признать недействительной', ask: 'Лицензия или выписка из реестра СРО — если работы по договору этого требуют' },
+    // только «Они платят мне» (ТЗ [Продукт] 05.10, claude/Продукт_в_долг_продавцу_письмо_статья_05.10.md, п. 1.1)
+    otchetnost: { t: 'Бухгалтерская отчётность за последний год', why: 'в открытых данных её нет — без выручки предел отсрочки считается по возрасту компании, осторожно', ask: 'Бухгалтерская отчётность за последний год с квитанцией о сдаче в налоговую' },
+    poruchitel: { t: 'Поручительство директора или участника', why: 'если покупатель не оплатит, долг можно потребовать и с поручителя (ст. 361 ГК РФ) — работает, только если у поручителя есть имущество', ask: 'Согласие директора или участника подписать договор поручительства по оплате поставок' }
   };
+  function docItem(id) { return { id: id, title: DOCS[id].t, why: DOCS[id].why, ask: DOCS[id].ask || DOCS[id].t, links: DOCS[id].links || [] }; }
 
   function docs(f, t, amount, regime) {
     amount = parseAmount(amount);
@@ -428,7 +432,26 @@
     if (big || t === 'post' || t === 'stop') add('experience');
     if (regime !== 'usn_d' && (f.bad.nagruzka || f.warn.nagruzka || big)) add('regime');
     if (big) add('license');
-    return ids.slice(0, 7).map(function (id) { return { id: id, title: DOCS[id].t, why: DOCS[id].why, ask: DOCS[id].ask || DOCS[id].t, links: DOCS[id].links || [] }; });
+    return ids.slice(0, 7).map(docItem);
+  }
+
+  // «Они платят мне»: продавцу важно «заплатит ли и будет ли с кого взыскать», а не «реален ли исполнитель» —
+  // без regime, resources, license, card, experience; плюс otchetnost и poruchitel (ТЗ п. 1.1, порядок оттуда же)
+  function docsOtg(f, t, amount, cap) {
+    amount = parseAmount(amount);
+    var ids = [];
+    function add(id) { if (ids.indexOf(id) < 0) ids.push(id); }
+    add(f.bad.director || f.warn.director ? 'powerNew' : 'power');
+    if (f.bad.fssp || f.warn.fssp) add('fssp');
+    if (f.bad.dolg || f.warn.dolg) add('taxCert');
+    if (f.bad.block || f.warn.block) add('unblock');
+    if (f.zsk === 'medium' || f.zsk === 'high') add('bank');
+    if (f.bad.nedost || f.warn.nedost) { add('fixRecord'); add('premises'); }
+    if (f.bad.mass || f.warn.mass) add('premises');
+    if (!f.revenue && !f.vyruchkaNol) add('otchetnost');
+    // «стоп» — отгрузка только после оплаты, поручительство не помогает (решение потока, ✎ [Продукт])
+    if (t !== 'stop' && (amount ? amount > (cap || 0) : t === 'cap')) add('poruchitel');
+    return ids.slice(0, 7).map(docItem);
   }
 
   function letter(f, list, amount) {
@@ -445,21 +468,34 @@
     return { subject: subj, body: body };
   }
 
+  function letterOtg(f, list, amount) {
+    amount = parseAmount(amount);
+    var lines = list.map(function (d, i) { return (i + 1) + '. ' + (d.ask || d.title) + '.'; }).join('\n');
+    var subj = 'Документы для отгрузки с отсрочкой платежа — ' + f.name;
+    var body = 'Добрый день!\n\n' +
+      'Готовимся отгрузить ' + f.name + (f.inn ? ' (ИНН ' + f.inn + ')' : '') + ' с отсрочкой платежа' +
+      (amount ? ' на сумму ' + money(amount).replace(/\u00a0/g, ' ') : '') + '. ' +
+      'По нашим внутренним правилам работы с покупателями просим прислать скан-копии:\n\n' + lines + '\n\n' +
+      'Мы проходим эту процедуру со всеми покупателями, которым даём отсрочку. Будем благодарны за ответ в течение трёх рабочих дней.\n\n' +
+      'С уважением,\n[Имя, должность]\n[Компания, телефон]';
+    return { subject: subj, body: body };
+  }
+
   function decide(r, opts) {
     opts = opts || {};
     var f = facts(r), t = tone(f), np = neProvereno(r, f), pc = prepayCap(f, t, np), amount = parseAmount(opts.amount), regime = opts.regime || 'osno';
     var list = docs(f, t, amount, regime);
     if (opts.napravlenie === 'otgruzhaem') {
       // «Они платят мне»: число то же (pc.cap), меняются слова; ст. 54.1 — про вычеты покупателя, «На кону» не считаем;
-      // реквизиты покупателя для отгрузки не нужны — без card
-      list = list.filter(function (d) { return d.id !== 'card'; });
+      // список и письмо — свои (docsOtg, letterOtg): без card, regime, resources, license, experience и без ст. 54.1
+      list = docsOtg(f, t, amount, pc.cap);
       return {
         napravlenie: 'otgruzhaem',
         facts: f, tone: t, cap: pc.cap, malo: !!pc.malo, capRule: pc.rule, raschet: pc.raschet, neProvereno: np,
         kak: kakPoschitali(f, t, pc, reasons(f), np, 'otgruzhaem'),
         headline: headlineOtg(f, t, pc.cap, pc.malo), reasons: reasons(f), advice: adviceOtg(f, t, pc.malo),
         amount: amount, regime: regime, stake: null, prepay: otgruzkaAdvice(amount, pc.cap, t),
-        docs: list, letter: letter(f, list, amount)
+        docs: list, letter: letterOtg(f, list, amount)
       };
     }
     return {
@@ -583,7 +619,7 @@
         '</div>' +
         '<details' + openAttr + '><summary><span>Что запросить у них<small>' + v.docs.length + ' ' + plural(v.docs.length, 'документ', 'документа', 'документов') + '</small></span></summary>' +
           '<ol>' + v.docs.map(function (d) { return '<li>' + esc(d.title) + '<span>' + esc(d.why) + (d.links.length ? ' · ' + d.links.map(function (l) { return '<a href="' + esc(l.u) + '"' + (/^https?:/.test(l.u) ? ' target="_blank" rel="noopener"' : '') + '>' + esc(l.t) + '</a>'; }).join(', ') : '') + '</span></li>'; }).join('') + '</ol>' +
-          '<p class="usl-note">Список соразмерен сумме сделки — так требует п. 16 письма ФНС от 10.03.2021 № БВ-4-7/3060@.</p>' +
+          '<p class="usl-note">' + (otg ? 'Список зависит от суммы отгрузки и найденных признаков.' : 'Список соразмерен сумме сделки — так требует п. 16 письма ФНС от 10.03.2021 № БВ-4-7/3060@.') + '</p>' +
           '<div class="usl-btns"><button type="button" data-u="copy">Скопировать письмо</button>' +
           '<a data-u="mail" href="mailto:?subject=' + encodeURIComponent(v.letter.subject) + '&body=' + encodeURIComponent(v.letter.body) + '">Открыть в почте</a></div>' +
         '</details>';

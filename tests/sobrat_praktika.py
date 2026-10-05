@@ -62,6 +62,23 @@ def data_ru(iso):
     return "%d %s %s" % (int(d), MES[int(m) - 1], g)
 
 
+def minut_ru(n):
+    """«3 минуты», «5 минут», «21 минута» — согласование с числом (сверка 05.10: на 4 разборах стояло «4 минут чтения»)."""
+    if n % 10 == 1 and n % 100 != 11:
+        return "%d минута" % n
+    if n % 10 in (2, 3, 4) and n % 100 not in (12, 13, 14):
+        return "%d минуты" % n
+    return "%d минут" % n
+
+
+def izmeneno(r):
+    """dateModified и lastmod: поле «izmeneno» (ГГГГ-ММ-ДД) — когда правили текст или пересверили; нет — дата публикации."""
+    v = r.get("izmeneno") or r["data"]
+    if not re.match(r"^\d{4}-\d{2}-\d{2}$", v) or v < r["data"]:
+        raise SystemExit("izmeneno: %r у %s" % (v, r["slug"]))
+    return v
+
+
 def data_ch(iso):
     g, m, d = iso.split("-")
     return "%s.%s.%s" % (d, m, g)
@@ -182,7 +199,13 @@ def pk(r):
     itog = d["itog"][0].lower() + d["itog"][1:]
     meta = " · ".join(x for x in (d["sud_kratko"], data_ch(d["data"]), d["nomer"], itog) if x)
     if len(r["dela"]) > 1:
-        meta = "%s · %d дела · %s" % (d["sud_kratko"], len(r["dela"]), " и ".join(x["nomer"] for x in r["dela"]))
+        osnovy = {re.sub(r"\s*\(.*\)$", "", x["nomer"]) for x in r["dela"]}
+        if len(osnovy) == 1:
+            # Один номер на оба круга (ВС сохраняет номер производства): не повторяем его — показываем даты актов.
+            meta = "%s · %d акта · %s · %s" % (d["sud_kratko"], len(r["dela"]), osnovy.pop(),
+                                                " и ".join(data_ch(x["data"]) for x in r["dela"]))
+        else:
+            meta = "%s · %d дела · %s" % (d["sud_kratko"], len(r["dela"]), " и ".join(x["nomer"] for x in r["dela"]))
     kon = " и ".join(x.get("na_konu_kratko") or x["na_konu"] for x in r["dela"])
     return """<a class="pk" href="%s"><span class="pk__q">%s</span><span class="pk__m">%s</span><span class="pk__k">На кону — %s</span></a>""" % (
         url_razbora(r), e(r["h1"]), e(meta), e(kon))
@@ -209,7 +232,7 @@ def razbor(r, D, po_slug, F=None):
     url = url_razbora(r)
     kr = [("Делоскоп", "/"), ("Практика", "/praktika/"), (rz["kratko"], "/praktika/%s/" % r["razdel"]), (r["h1"], url)]
     ld = [{"@context": "https://schema.org", "@type": "Article", "headline": r["h1"][:110], "description": r["description"],
-           "datePublished": r["data"], "dateModified": r["data"], "inLanguage": "ru",
+           "datePublished": r["data"], "dateModified": izmeneno(r), "inLanguage": "ru",
            "author": {"@type": "Organization", "name": "Редакция Делоскопа", "url": SAJT},
            "publisher": {"@type": "Organization", "name": "Делоскоп", "url": SAJT + "/", "logo": {"@type": "ImageObject", "url": SAJT + "/ikonka-512.png"}},
            "mainEntityOfPage": SAJT + url, "articleSection": rz["kratko"],
@@ -232,7 +255,7 @@ def razbor(r, D, po_slug, F=None):
 %(kr)s
 <p class="rubr">Разбор дела</p>
 <h1>%(h1)s</h1>
-<p class="meta">Редакция Делоскопа · <time datetime="%(data)s">%(data_ru)s</time> · %(min)d минут чтения</p>
+<p class="meta">Редакция Делоскопа · <time datetime="%(data)s">%(data_ru)s</time> · %(min)s чтения</p>
 <p class="lid">%(lid)s</p>
 %(kart)s
 <article>
@@ -259,7 +282,7 @@ def razbor(r, D, po_slug, F=None):
 %(slezh_js)s<!--podval--><!--/podval-->
 </body>
 </html>
-""" % {"kr": kroshki_html(kr), "h1": e(r["h1"]), "data": r["data"], "data_ru": data_ru(r["data"]), "min": r["minut"],
+""" % {"kr": kroshki_html(kr), "h1": e(r["h1"]), "data": r["data"], "data_ru": data_ru(r["data"]), "min": minut_ru(r["minut"]),
        "lid": e(r["lid"]), "kart": kartochki, "telo": telo, "kz": e(k["zagolovok"]), "kt": e(k["tekst"]), "ku": e(k["url"]),
        "kk": e(k["knopka"]),
        "cel": (' data-goal="%s"' % e(k["cel"])) if k.get("cel") else "", "slezh": slezh_attr(k), "slezh_js": '<script src="/js/slezh-knopka.js" defer></script>\n' if k.get("slezh") else "", "zakon": zakon, "faq": faq, "sv": sverka, "sv_ru": data_ru(sverka), "sos": sos,
@@ -428,9 +451,9 @@ def sitemap(txt, D):
     txt = re.sub(r"\s*<url><loc>https://deloskop\.ru/praktika/[^<]*</loc>.*?</url>", "", txt)
     daty = {}
     for r in D["razbory"]:
-        daty[url_razbora(r)] = r["data"]
+        daty[url_razbora(r)] = izmeneno(r)
         for u in ("/praktika/", "/praktika/%s/" % r["razdel"]):
-            daty[u] = max(daty.get(u, ""), r["data"])
+            daty[u] = max(daty.get(u, ""), izmeneno(r))
     stroki = "".join("\n  <url><loc>%s%s</loc><lastmod>%s</lastmod></url>" % (SAJT, u, d) for u, d in daty.items())
     return txt.replace("\n</urlset>", stroki + "\n</urlset>", 1)
 

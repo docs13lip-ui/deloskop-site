@@ -668,19 +668,25 @@ footer a{color:var(--ink2)}
     // «НДС в 2027 году» — выручка 2025 года поставщика на упрощёнке рядом с порогом 20 млн ₽ (п. 1 ст. 145 НК), только к сведению; js/nds-porog.js
     if(!svoj&&window.NdsPorog){try{NdsPorog.mount(report,r)}catch(e){}}
   }
+  // moduli-do-otveta-v1 [Ночные-3]: модули отчёта (Usloviya, Otchet, Dinamika, IndeksOtvet…) подключены с defer и исполняются только
+  // перед DOMContentLoaded, а проверка по ?inn=… (карточки /company/, «Проверить снова» из кабинета) стартует раньше. Быстрый ответ API
+  // приходил до модулей — отчёт рисовался старой вёрсткой: без вывода, предела предоплаты, Индекса и Динамики. Запрос уходит сразу, рисуем — когда модули на месте.
+  // readyState не годится: «interactive» ставится до исполнения defer-скриптов — ждём само событие (этот скрипт исполняется раньше него).
+  var moduliGotovy=false;document.addEventListener('DOMContentLoaded',function(){moduliGotovy=true});
+  function kogdaModuli(f){if(moduliGotovy)f();else document.addEventListener('DOMContentLoaded',function(){f()},{once:true});}
   function runCheck(v,o){
     if(!CAPI){note.className='note ok';note.textContent='Проверка работает на deloskop.ru.';return;}
     if(window.dlkLimit)dlkLimit.ubrat(note);
     note.className='note';note.textContent='Проверяем по реестрам…';report.classList.add('loading');if(window.dlkGoal)dlkGoal('check_started');
     fetch(CAPI+'/api/check?q='+encodeURIComponent(v),{credentials:'include'})
       .then(function(res){return res.json().then(function(j){return {ok:res.ok,s:res.status,j:j}},function(){return {ok:false,s:res.status,j:{}}})})
-      .then(function(x){report.classList.remove('loading');
+      .then(function(x){kogdaModuli(function(){report.classList.remove('loading');
         // лимит бесплатных проверок — понятный экран вместо текста API (js/limit.js); `detail` не выводим
         if(x.s===429){note.className='note';note.textContent='';if(window.dlkLimit)dlkLimit.pokazat(note,{stranica:'glavnaya',inn:v});else note.textContent='На сегодня 3 бесплатные проверки закончились. Завтра — снова 3.';return;}
         if(!x.ok){note.className='note err';note.textContent=(x.j&&x.j.detail)||'Не получилось проверить. Попробуйте ещё раз.';return;}
         if(window.dlkLimit)dlkLimit.proveren((x.j.company&&x.j.company.inn)||v);
         render(x.j,o);note.className='note ok';note.textContent='Готово. Отчёт — рядом.';
-        if(window.Otchet&&report.classList.contains('ot'))Otchet.prokrutit(report);else if(window.innerWidth<980)report.scrollIntoView({behavior:'smooth',block:'start'});})
+        if(window.Otchet&&report.classList.contains('ot'))Otchet.prokrutit(report);else if(window.innerWidth<980)report.scrollIntoView({behavior:'smooth',block:'start'});});})
       .catch(function(){report.classList.remove('loading');note.className='note err';
         note.textContent='Сервис не ответил. Проверьте интернет и попробуйте ещё раз.';});
   }

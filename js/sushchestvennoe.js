@@ -126,6 +126,9 @@
     });
     return { god: g, pribyl: p };
   }
+  // Год сданного отчёта — для «Условий сделки» (predel-bez-vyruchki-v1 [Ночные-3] 05.10, ТЗ [Продукт · Данные] 05.10 разд. 1):
+  // тот же признак, что у строки «Выручка за … · В отчёте не указана», чтобы экран не расходился сам с собой.
+  function otchetGod(r) { var b = godBezVyruchki(r); return b ? b.god : null; }
 
   // ---- собственный капитал: dossier.charts.balance (ГИР БО, строка 1300), без запроса к сети ----
   function kapital(r) {
@@ -462,5 +465,5 @@
     return true;
   }
 
-  return { razryady: razryady, fakty: fakty, bank: bank, kapital: kapital, likvidnost: likvidnost, ubytki: ubytki, glubina: glubina, otchetnost: otchetnost, html: html, mount: mount, htmlSvoj: htmlSvoj, mountSvoj: mountSvoj, dengi: dengi, srok: srok, MAKS: MAKS, CSS: CSS };
+  return { razryady: razryady, fakty: fakty, godBezVyruchki: godBezVyruchki, otchetGod: otchetGod, bank: bank, kapital: kapital, likvidnost: likvidnost, ubytki: ubytki, glubina: glubina, otchetnost: otchetnost, html: html, mount: mount, htmlSvoj: htmlSvoj, mountSvoj: mountSvoj, dengi: dengi, srok: srok, MAKS: MAKS, CSS: CSS };
 });

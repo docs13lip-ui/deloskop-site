@@ -127,7 +127,21 @@
       if (/сотрудник|численност|штат/i.test(x.label || '') && typeof x.value === 'number') f.staff = x.value;
     });
     if (f.ageMonths != null && f.ageMonths < 12) f.warn.young = (f.warn.young || 0) + 1;
+    // predel-bez-vyruchki-v1 [Ночные-3] 05.10 (ТЗ [Продукт · Данные] 05.10 разд. 1): отчёт за год в ГИР БО сдан
+    // (признак — из js/sushchestvennoe.js, та же функция, что у строки «Выручка за … · В отчёте не указана»),
+    // а выручки в нём нет → выручка известна и равна 0, а не «неизвестна». Потолок по возрасту — только без отчёта.
+    var SU = modulSushch(), god = null, o = null;
+    try { god = SU && SU.otchetGod ? SU.otchetGod(r) : null; o = SU && SU.otchetnost ? SU.otchetnost(r) : null; } catch (e) { god = null; }
+    if (god != null) {
+      f.otchetGod = String(god);
+      f.vyruchkaNol = !(f.revenue > 0) && !(o && o.vyruchka > 0);
+    }
     return f;
+  }
+  function modulSushch() {
+    if (typeof Sushchestvennoe !== 'undefined') return Sushchestvennoe;
+    if (typeof module === 'object' && typeof require === 'function') { try { return require('./sushchestvennoe.js'); } catch (e) {} }
+    return null;
   }
 
   // ---------- вердикт ----------
@@ -163,6 +177,10 @@
     if (t === 'post' || t === 'stop') return { cap: 0, rule: t === 'stop' ? 'Вперёд не платить' : 'Оплата только по факту', raschet: { tone: t } };
     var byAge = potolok(f.ageMonths);
     var cap, rule, R = { tone: t, byAge: byAge, ageMonths: f.ageMonths, revenue: f.revenue || null, revenueYear: f.revenueYear || null };
+    if (f.vyruchkaNol) {                                   // отчёт сдан, выручки нет: две недели нулевой выручки — 0 ₽
+      R.base = 'nol'; R.otchetGod = f.otchetGod || null; R.malo = true; R.itog = 0;
+      return { cap: 0, malo: true, rule: 'отчёт сдан, выручки в нём нет — две недели нулевой выручки: 0 ₽, советуем платить по факту', raschet: R };
+    }
     if (f.revenue) {
       cap = f.revenue / DELITEL; rule = 'не больше двух недель выручки компании'; R.base = 'revenue'; R.dveNedeli = cap;
       if (f.ageMonths != null && f.ageMonths < 12 && byAge < cap) { cap = byAge; rule = 'потолок для компании младше года'; R.ageCapped = true; }
@@ -240,7 +258,9 @@
       kak = 'Вперёд — 0\u00a0₽: ' + pr + ' — ' + (t === 'stop' ? 'не платите вперёд.' : 'платите после поставки или акта.');
     } else {
       var polovina = R.half ? ' · ' + (R.half === 'ostorozhno' ? 'долги не проверены' : zamechaniya(reasonsList)) + ' → половина: ' + money(R.itog) : '';
-      if (R.malo) {
+      if (R.base === 'nol') {
+        kak = 'Как посчитали: отчёт' + (R.otchetGod ? ' за ' + R.otchetGod : '') + ' в ГИР БО есть, но выручки в нём нет. Две недели нулевой выручки — 0 ₽, поэтому советуем платить по факту поставки.';
+      } else if (R.malo) {
         kak = 'Как посчитали: выручка' + (R.revenueYear ? ' за ' + R.revenueYear : '') + ' — ' + moneyKrupno(R.revenue) + ' ÷ ' + DELITEL + ' = ' + money(R.dveNedeli) + (R.half ? ', половина — ' + money(R.doPolovinu / 2) : '') + '. ' + MALO_TEKST(R.half);
       } else if (R.base === 'revenue' && R.ageCapped) {
         kak = 'Как посчитали: две недели выручки — ' + moneyKrupno(R.dveNedeli) + ', но компании ' + mesText(R.ageMonths) + ' — не больше потолка для возраста до года: ' + money(R.byAge) + polovina + '.';

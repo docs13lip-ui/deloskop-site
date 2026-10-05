@@ -93,6 +93,48 @@ test('(г) по умолчанию «Я плачу им», и вывод поб�
   });
 });
 
+test('v1.1 «Что запросить» в «Они платят мне» — без regime/resources/license/card/experience; письмо без ст. 54.1 (ТЗ [Продукт] 05.10, п. 1.1–1.2)', () => {
+  const NELZYA = ['regime', 'resources', 'license', 'card', 'experience'];
+  Object.keys(F).forEach((k) => [0, 500000, 5000000].forEach((a) => {
+    const v = otg(F[k], { amount: a }), ids = v.docs.map((d) => d.id);
+    NELZYA.forEach((id) => assert.ok(!ids.includes(id), k + ' ' + a + ': ' + id));
+    assert.ok(ids.length <= 7, k);
+    assert.ok(!/54\.1|БВ-4-7/.test(v.letter.body + v.letter.subject), k + ': письмо продавца без ст. 54.1');
+    assert.ok(v.letter.body.includes('По нашим внутренним правилам работы с покупателями просим прислать скан-копии:'), k);
+    assert.ok(v.letter.body.includes('Мы проходим эту процедуру со всеми покупателями, которым даём отсрочку. Будем благодарны за ответ в течение трёх рабочих дней.'), k);
+    // при сумме больше предела — поручительство (кроме «стоп»: там только после оплаты)
+    if (a > v.cap && v.tone !== 'stop') assert.ok(ids.includes('poruchitel'), k + ' ' + a + ': нет poruchitel');
+    if (v.tone === 'stop') assert.ok(!ids.includes('poruchitel'), k + ': стоп — без поручительства');
+  }));
+  // сумма в пределах — без поручительства; сумма не введена и тон cap — с ним
+  assert.ok(!otg(F.go, { amount: 1500000 }).docs.some((d) => d.id === 'poruchitel'));
+  assert.ok(!otg(F.go).docs.some((d) => d.id === 'poruchitel'));
+  assert.ok(otg(F.cap).docs.some((d) => d.id === 'poruchitel'));
+  // отчётность — только когда в ответе нет выручки
+  assert.ok(otg(F.cap).docs.some((d) => d.id === 'otchetnost'), 'нет выручки → otchetnost');
+  assert.ok(!otg(F.go).docs.some((d) => d.id === 'otchetnost'), 'выручка есть → без otchetnost');
+  const p = otg(F.cap).docs.find((d) => d.id === 'poruchitel');
+  assert.strictEqual(p.title, 'Поручительство директора или участника');
+  assert.strictEqual(p.why, 'если покупатель не оплатит, долг можно потребовать и с поручителя (ст. 361 ГК РФ) — работает, только если у поручителя есть имущество');
+  // порядок ТЗ: power → fssp → taxCert → unblock → bank → fixRecord/premises → otchetnost → poruchitel
+  const PORYADOK = ['power', 'powerNew', 'fssp', 'taxCert', 'unblock', 'bank', 'fixRecord', 'premises', 'otchetnost', 'poruchitel'];
+  Object.keys(F).forEach((k) => {
+    const n = otg(F[k], { amount: 5000000 }).docs.map((d) => PORYADOK.indexOf(d.id));
+    assert.ok(n.every((x, i) => x >= 0 && (i === 0 || x > n[i - 1])), k + ': порядок ' + n);
+  });
+  const v = otg(F.cap, { amount: 500000 });
+  assert.strictEqual(v.letter.subject, 'Документы для отгрузки с отсрочкой платежа — ' + v.facts.name);
+  assert.ok(v.letter.body.includes(' с отсрочкой платежа на сумму 500 000 ₽. '), v.letter.body);
+  assert.ok(otg(F.cap).letter.body.includes(' с отсрочкой платежа. '), 'без суммы — без «на сумму»');
+  // «Я плачу им» — письмо по-прежнему со ст. 54.1
+  assert.ok(U.decide(F.cap, { amount: 500000 }).letter.body.includes('ст. 54.1 НК РФ'));
+});
+
+test('v1.1 подпись под списком: продавцу — «Список зависит от суммы отгрузки…», покупателю — п. 16 письма ФНС', () => {
+  const src = fs.readFileSync(path.join(KOREN, 'js/usloviya.js'), 'utf8');
+  assert.ok(src.includes("(otg ? 'Список зависит от суммы отгрузки и найденных признаков.' : 'Список соразмерен сумме сделки — так требует п. 16 письма ФНС от 10.03.2021 № БВ-4-7/3060@.')"));
+});
+
 test('reasonText склеивает число и ₽ неразрывным пробелом («1 937 ₽» не рвётся на 390 px)', () => {
   const r = Object.assign({}, F.post, { signals: [{ title: 'Долг', status: 'bad', detail: '1 937 ₽' }] });
   const pr = U.decide(r).reasons.join('|');
@@ -150,6 +192,8 @@ test('(е) Chromium 390 и 1280: два сегмента в одну строк�
       assert.strictEqual(t, 'Можно, отсрочка — до 150' + NB + '000' + NB + '₽');
       assert.ok(await p.$('a.usl-watch[href="/cabinet.html#watch"]'), 'ссылка на слежение');
       assert.strictEqual(await p.$('.usl select'), null, 'режим налогов скрыт');
+      assert.strictEqual(await p.$eval('.usl-note', (x) => x.textContent), 'Список зависит от суммы отгрузки и найденных признаков.');
+      assert.ok(!/54\.1/.test(decodeURIComponent(await p.$eval('[data-u=mail]', (x) => x.getAttribute('href')))), 'письмо продавца без ст. 54.1');
       await p.fill('.usl input', '500000'); await p.waitForTimeout(450);
       const celi = await p.evaluate(() => window.celi);
       assert.deepStrictEqual(celi, ['usl_otgruzhaem', 'usl_otgruzhaem_summa']);

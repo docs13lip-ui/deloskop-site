@@ -103,8 +103,18 @@
     'Кто на самом деле распоряжается счётом и подписывает документы, по реестрам не установить — сверьте подписанта по доверенности или решению о назначении.'
   ];
 
+  // Даты сведений API приходят двумя видами: «2026-09-01» и «01.09.2026» (as_of признаков /api/check).
+  // new Date('01.09.2026') читает «месяц.день» → 9 января: Паспорт и PDF писали «на 09.01.2026» вместо 1 сентября (data-sveden-v1).
+  function isoIz(v) {
+    var m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(v == null ? '' : v).trim());
+    return m ? m[3] + '-' + m[2] + '-' + m[1] : v;
+  }
   function dataRu(v) {
     if (!v) return '';
+    var t = String(v).trim(), m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(t);
+    if (m) return t;
+    m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(t);
+    if (m) return m[3] + '.' + m[2] + '.' + m[1];
     var d = new Date(v); if (isNaN(d)) return String(v);
     function z(n) { return (n < 10 ? '0' : '') + n; }
     return z(d.getDate()) + '.' + z(d.getMonth() + 1) + '.' + d.getFullYear();
@@ -249,6 +259,7 @@
     var polucheno = r.checked_at || null;
     function fakt(id, tekst, znachenie, s) {
       var x = map[id]; s = s || {};
+      if (s.data) s.data = isoIz(s.data);                      // сравнение дат ниже — строками ISO
       x.fakty.push({ tekst: tekst, znachenie: znachenie == null ? '' : String(znachenie), ton: s.ton || 'info', data: s.data || null, istochnik: s.istochnik || x.istochnik });
       x.status = 'found'; x.prichina = '';
       x.ton = hudshij(x.ton, s.ton || 'info');
@@ -288,6 +299,10 @@
         neProverili(id, '«' + String(s.title || '') + '» — источник ответил без даты сведений, проверкой не считаем'); return;
       }
       if (!persons && id === 'lyudi' && c.director_name) det = det.split(c.director_name).join('руководитель');
+      // Повтор реквизита без замечания (живой ответ: «Статус — Действующая» и «Возраст — С 14.09.2000» второй строкой) — не дублируем.
+      if (id === 'rekvizity' && tonIz(s.status) === 'ok' && map.rekvizity.fakty.some(function (f) {
+        return (f.tekst === String(s.title || '') && f.znachenie === det) || (f.tekst === 'Дата регистрации' && det === 'С ' + f.znachenie);
+      })) return;
       fakt(id, String(s.title || ''), det, { ton: tonIz(s.status), data: s.as_of || null, istochnik: s.source || null });
     });
 
@@ -661,5 +676,5 @@
     OPREDELENIE_INDEKSA: OPREDELENIE_INDEKSA, PODPIS_PREDELA: PODPIS_PREDELA,
     otmetka: otmetka, otmetkiSvodka: otmetkiSvodka, dataIzRu: dataIzRu, tuZheSajt: tuZheSajt, OTM_SNIMOK: OTM_SNIMOK, OTM_EP: OTM_EP, OTM_EP_HOST: OTM_EP_HOST, OTM_OGOVORKA: OTM_OGOVORKA, OTM_REZ: OTM_REZ, OTM_SVEZHEST_DNEJ: OTM_SVEZHEST_DNEJ, OTM_ZSK: OTM_ZSK, OTM_ZSK_SUD: OTM_ZSK_SUD, OTM_ZSK_SUD_URL: OTM_ZSK_SUD_URL, zskAdres: zskAdres, dnejTekst: dnejTekst,
     netBezDaty: netBezDaty, diskvalProveren: diskvalProveren, DISKVAL_SAM: DISKVAL_SAM,
-    kanon: kanon, otpechatok: otpechatok, otpechatokKratko: otpechatokKratko, dataRu: dataRu, isIp: isIp, VSEGDA_NE_ZNAEM: VSEGDA_NE_ZNAEM };
+    kanon: kanon, otpechatok: otpechatok, otpechatokKratko: otpechatokKratko, dataRu: dataRu, isoIz: isoIz, isIp: isIp, VSEGDA_NE_ZNAEM: VSEGDA_NE_ZNAEM };
 });

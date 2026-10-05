@@ -229,7 +229,7 @@
     return { spisok: net, dolgiVse: net.length === DOLGI.length, nalogiNa: nalogiNa, provereno: p && p.provereno != null ? p.provereno : null, iz: p && p.iz != null ? p.iz : null, data: r && (r.damia && r.damia.data_svedeniy || r.checked_at) || null };
   }
 
-  function dataRu(s) { var d = new Date(s); if (isNaN(d)) return ''; function z(n) { return (n < 10 ? '0' : '') + n; } return z(d.getDate()) + '.' + z(d.getMonth() + 1) + '.' + d.getFullYear(); }
+  function dataRu(s) { var t = String(s == null ? '' : s).trim(); if (/^\d{2}\.\d{2}\.\d{4}$/.test(t)) return t; var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(t); if (m) return m[3] + '.' + m[2] + '.' + m[1]; var d = new Date(s); if (isNaN(d)) return ''; function z(n) { return (n < 10 ? '0' : '') + n; } return z(d.getDate()) + '.' + z(d.getMonth() + 1) + '.' + d.getFullYear(); }
   function mesText(m) { return m < 12 ? m + '\u00a0мес.' : ageText(m); }
 
   // «Как посчитали» — открытая формула предела под суммой (Прорыв «Ф», тексты Маркетинга 28.09, раздел 3.3).

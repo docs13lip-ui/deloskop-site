@@ -349,6 +349,8 @@ footer a{color:var(--muted)}
 <script src="/pasport/qr.js"></script>
 <script src="/pasport/engine.js"></script>
 <script>
+// «01.09.2026» (as_of признаков /api/check) new Date читает как 9 января — разбираем сами (data-sveden-v1)
+function dataSvedenij(v){var t=String(v==null?'':v).trim(),m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(t);if(/^\d{2}\.\d{2}\.\d{4}$/.test(t))return t;if(m)return m[3]+'.'+m[2]+'.'+m[1];var x=new Date(v);return isNaN(x)?t:x.toLocaleDateString('ru-RU')}
 (function(){
   'use strict';
   var E=window.PasportEngine, Q=window.DeloQR;
@@ -433,7 +435,7 @@ footer a{color:var(--muted)}
 
   function item(cls,mark,x,withPrep){
     var p=withPrep?prep(x.title+' '+x.detail):'';
-    var src=[x.source,x.asOf?('на '+new Date(x.asOf).toLocaleDateString('ru-RU')):''].filter(Boolean).join(', ');
+    var src=[x.source,x.asOf?('на '+dataSvedenij(x.asOf)):''].filter(Boolean).join(', ');
     return '<div class="item '+cls+'"><i aria-hidden="true">'+mark+'</i><div><b>'+esc(x.title)+'</b>'+(x.detail?' <span class="d">— '+esc(x.detail)+'</span>':'')+
       (src?'<small>'+esc(src)+'</small>':'')+(p?'<div class="prep"><em>Если это ваша компания:</em> '+esc(p)+'</div>':'')+'</div></div>';
   }

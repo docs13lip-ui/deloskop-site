@@ -96,6 +96,13 @@ def zapisat_otsev(otsev, put=OTSEV):
         fh.write("\n".join(shapka + stroki) + "\n")
 
 
+def prichina_v_fajl(pr):
+    """Причина ворот → строка отсева без организационных форм и названий (файл в git; тест test_fajl_v_repozitorii).
+    kartochki-0510-v2: живой ответ 05.10 дал первую причину «не ООО/АО …» — она ломала проверку файла."""
+    pr = re.sub(r"(?i)не\s+ООО\s*/\s*АО", "организационная форма", pr)
+    return re.sub(r"(?i)\b(ООО|ПАО|АО|НАО|ОАО|ЗАО)\b", "", pr).replace("  ", " ").strip()
+
+
 def otsev_iz_otveta(zapisi, segodnya, vorota_fn):
     """Ответы /api/check → {ИНН: (дата, причина)} для тех, кто не прошёл ворота публикации. ИП (12 цифр) — не пишем вовсе.
     vorota_fn(запись) → (годится, причина) — та же функция, что у сборки (kartochki.otobrat)."""
@@ -108,7 +115,7 @@ def otsev_iz_otveta(zapisi, segodnya, vorota_fn):
         if ok:
             out.pop(inn, None)
             continue
-        out[inn] = (segodnya, "ворота публикации: " + pr)  # причина сборки, а не сведения о компании
+        out[inn] = (segodnya, "ворота публикации: " + prichina_v_fajl(pr))  # причина сборки, а не сведения о компании
     return out
 
 

@@ -231,6 +231,38 @@
     return s.fmt(x.value);
   }
 
+  // ---- staraya-otchetnost-v1 [Ночные-3] 10.10 (ТЗ [Продукт] 10.10 01:40, разд. 2.2 и 3 п. Б): последняя открытая отчётность
+  // старше (год проверки по Москве − 2) — показываем её как «последнюю открытую», а не как текущую. Живой ответ 10.10:
+  // у крупной торговой сети — «Выручка за 2021» рядом с «проверено 10.10.2026», строки о 2022–2025 не было.
+  // Последний год — наибольший по всем рядам ГИР БО ответа (выручка, прибыль, налог, баланс, расчёты, KPI «за ГГГГ»).
+  // Нет ни одного года — null (это другой случай: «Нет в ответе ГИР БО»). Причину не пишем — её не знаем, только факт.
+  // Та же функция — в js/sushchestvennoe.js, js/dinamika.js, js/pasport-kontragenta.js (tests/staraya_otchetnost.test.js сверяет).
+  function poslGodOtchetnosti(r) {
+    var D = (r && r.dossier) || {}, ch = D.charts || {}, g = null;
+    function vz(y) { y = parseInt(y, 10); if (isFinite(y) && y > 1990 && y < 2200 && (g === null || y > g)) g = y; }
+    ['revenue', 'profit', 'income_tax'].forEach(function (k) {
+      (Array.isArray(ch[k]) ? ch[k] : []).forEach(function (x) { if (x && x.value != null && x.value !== '' && isFinite(Number(x.value))) vz(x.year); });
+    });
+    ['balance', 'debts'].forEach(function (k) { if (ch[k] && typeof ch[k] === 'object' && !Array.isArray(ch[k])) vz(ch[k].year); });
+    (Array.isArray(D.kpi) ? D.kpi : []).forEach(function (k) {
+      var m = /за (\d{4})$/.exec((k && k.label) || '');
+      if (m && k.value != null && isFinite(Number(k.value))) vz(m[1]);
+    });
+    return g;
+  }
+  function godProverki(r, segodnya) {
+    var t = Date.parse((r && r.checked_at) || '');
+    var ms = isFinite(t) ? t : (segodnya || new Date()).getTime();
+    return new Date(ms + 3 * 3600 * 1000).getUTCFullYear();
+  }
+  // → { god, tekst } | null
+  function staraya(r, segodnya) {
+    var g = poslGodOtchetnosti(r);
+    if (g === null || g >= godProverki(r, segodnya) - 2) return null;
+    return { god: g, tekst: 'Последняя открытая отчётность — за' + NB + g + NB + 'год. Более свежей в' + NB + 'открытых данных ГИР' + NB + 'БО нет — запросите отчётность у' + NB + 'компании.' };
+  }
+  function starayaHtml(r) { var s = staraya(r); return s ? '<p class="din__star" data-blok="staraya">' + esc(s.tekst) + '</p>' : ''; }
+
   var STRELKA = { vverh: '▲', vniz: '▼', ro: '' };
 
   // Таблица «Показатель · спарклайн · прошлый год · последний год · Изм.» (блок E макета).
@@ -253,6 +285,7 @@
     }).join('');
     return '<section class="din" aria-label="Динамика по годам">' +
       '<div class="din__h"><b>Динамика за ' + g0 + '–' + g1 + '</b><span>' + (fns ? 'ГИР БО и наборы ФНС' : 'ГИР БО ФНС') + ' · ' + g0 + '–' + g1 + '</span></div>' +
+      starayaHtml(r) +
       '<div class="din__w"><table class="din__t"><caption class="din__cap">Показатели по годам, ' + g0 + '–' + g1 + '</caption>' +
       '<thead><tr><th scope="col">Показатель</th><th scope="col" class="din__g"><span class="din__cap">График </span>' + g0 + '–' + g1 + '</th>' +
       '<th scope="col" class="din__v din__p n">' + gp + '</th><th scope="col" class="din__v n">' + g1 + '</th><th scope="col" class="din__v">Изм.</th></tr></thead>' +
@@ -338,7 +371,7 @@
   function htmlBalansOtdelno(r) {
     var bh = htmlBalans(r);
     if (!bh) return '';
-    return '<section class="din" aria-label="Баланс по годовой отчётности">' + bh +
+    return '<section class="din" aria-label="Баланс по годовой отчётности">' + starayaHtml(r) + bh +
       '<p class="din__src">Источник: ГИР БО ФНС, годовая бухгалтерская отчётность (баланс).</p></section>';
   }
 
@@ -887,6 +920,7 @@
     '.din__k{font-size:13px;color:var(--muted,#6B6B70)}.din__r--vverh .din__k{color:var(--ok,#16723F)}.din__r--vniz .din__k{color:#B3261E}' +
     '.din__g{width:96px}.din__sv{display:block}.din__sv polyline{fill:none;stroke:var(--accent,#0B63E5);stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}' +
     '.din__sv .din__0{stroke:#C9C9C4;stroke-width:1;stroke-dasharray:2 2}' +
+    '.din__star{margin:0;padding:10px 12px;border-radius:10px;background:var(--warn-bg,#FBF3E2);color:var(--warn,#8A5A00);font-size:14px;line-height:1.45}' +
     '.din__tr{margin:0;font-size:14px;color:var(--ink2,#48484C)}.din__src{margin:0;font-size:12px;color:var(--muted,#6B6B70)}' +
     '.din__bal{display:grid;gap:8px;padding-top:6px;border-top:1px solid var(--line,#E6E6E1)}' +
     '.din__bh{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 10px;margin-top:6px}.din__bh b{font-size:14px;font-weight:600}.din__bh span{font-size:12px;color:var(--muted,#6B6B70)}' +
@@ -984,7 +1018,7 @@
     return izm + din;
   }
 
-  return { ryad: ryad, ryady: ryady, nalogBezZnaka: nalogBezZnaka, stroka: stroka, izmenenie: izmenenie, trendy: trendy, dengi: dengi, htmlDinamika: htmlDinamika, balans: balans, htmlBalans: htmlBalans,
+  return { ryad: ryad, ryady: ryady, nalogBezZnaka: nalogBezZnaka, stroka: stroka, izmenenie: izmenenie, trendy: trendy, dengi: dengi, htmlDinamika: htmlDinamika, poslGodOtchetnosti: poslGodOtchetnosti, staraya: staraya, balans: balans, htmlBalans: htmlBalans,
     snimok: snimok, sravnit: sravnit, likvidnost: likvidnost, okved: okved, ustKapital: ustKapital, rubliTochno: rubliTochno, vRaz: vRaz, zapomnit: zapomnit, htmlIzmeneniya: htmlIzmeneniya, html: html, KEY: KEY, CSS: CSS,
     iskl: iskl, isklyuchena: isklyuchena, ixChislo: ixChislo, plusMes: plusMes, kodSost: kodSost, predydushchaya: predydushchaya, nuzhenKabinet: nuzhenKabinet, dogruzit: dogruzit, dobavit: dobavit, sDop: sDop, ozhidatIndeks: ozhidatIndeks, dopisatIndeks: dopisatIndeks,
     sravnitSnimki: sravnitSnimki, obrazecIzm: obrazecIzm, htmlPasport: htmlPasport, stil: stil };

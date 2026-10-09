@@ -1,0 +1,87 @@
+# dobor-revexp-v1 (10.10.2026, [Ночные запуски]; ТЗ [Продукт · Данные] 05.10 — claude/Продукт_добор_ИНН_GitHub_revexp_05.10.md).
+# Кандидаты ИНН для карточек /company/ из набора ФНС revexp («доходы и расходы по бухотчётности»).
+# Облако набор не скачивает (nalog.gov.ru — 403 политикой сети), компьютер владельца есть не всегда — качает раннер GitHub.
+# Результат — ветка `dobor`: dobor.txt (только 10-значные ИНН юрлиц, без названий и сведений о людях) + dobor_meta.txt.
+# main не трогает: деплоя нет. Самый свежий файл набора берётся со страницы ФНС; не ответила — известный на 25.09.2026.
+# Отбор — правила kartochki-vybor-v1 (tests/kartochki_vybor.py): доход 60 млн – 50 млрд ₽, квоты Липецкая/ЦФО/другие,
+# без опубликованных карточек и отсева. Запуск вручную: Actions → «Добор ИНН из набора ФНС» → Run workflow.
+name: Добор ИНН из набора ФНС
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/dobor-revexp.yml'
+      - 'tests/kartochki.py'
+      - 'tests/kartochki_vybor.py'
+      - 'tests/kartochki_otsev.txt'
+  schedule:
+    - cron: '23 1 * * 1'
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'Файл набора (пусто — самый свежий со страницы ФНС)'
+        required: false
+        default: ''
+      n:
+        description: 'Сколько ИНН (до 2000)'
+        required: false
+        default: '2000'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dobor
+  cancel-in-progress: false
+
+jobs:
+  dobor:
+    name: Скачать revexp и собрать ветку dobor
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      STRANICA: https://www.nalog.gov.ru/opendata/7707329152-revexp/
+      IZVESTNYJ: https://file.nalog.ru/opendata/7707329152-revexp/data-20260925-structure-20180110.zip
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Найти и скачать набор ФНС
+        env:
+          URL_IN: ${{ inputs.url }}
+        run: |
+          URL="$URL_IN"
+          if [ -z "$URL" ]; then
+            # самый свежий data-ГГГГММДД-structure-….zip со страницы набора; страница не ответила — известный файл
+            SVEZH=$(curl -sS -L --retry 2 --max-time 60 "$STRANICA" 2>/dev/null \
+              | grep -oE 'data-[0-9]{8}-structure-[0-9]{8}\.zip' | sort -u | sort -r | head -1 || true)
+            if [ -n "$SVEZH" ]; then URL="https://file.nalog.ru/opendata/7707329152-revexp/$SVEZH"; else URL="$IZVESTNYJ"; fi
+          fi
+          echo "URL=$URL" >> "$GITHUB_ENV"
+          code=$(curl -sS -L --retry 3 --retry-delay 20 --max-time 1200 -o revexp.zip -w '%{http_code}' "$URL" || echo 000)
+          echo "Файл: $URL · ответ ФНС: $code · байт: $(stat -c%s revexp.zip 2>/dev/null || echo 0)" | tee -a "$GITHUB_STEP_SUMMARY"
+          if [ "$code" != "200" ] || ! unzip -tq revexp.zip >/dev/null 2>&1; then
+            echo "### ФНС не отдал набор раннеру GitHub (код $code) — запасной путь: КАК_ВЫЛОЖИТЬ_dobor-revexp-v1, разд. 3" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+      - name: Отбор (правила kartochki-vybor-v1)
+        env:
+          N_IN: ${{ inputs.n }}
+        run: |
+          mkdir -p /tmp/dobor
+          python3 tests/kartochki.py vybor --revexp revexp.zip --n "${N_IN:-2000}" --vyhod /tmp/dobor/dobor.txt | tee -a "$GITHUB_STEP_SUMMARY"
+          python3 -c "import sys; sys.path.insert(0,'tests'); import kartochki_vybor as k; s=open('/tmp/dobor/dobor.txt').read().split(); assert s and all(k.inn_yul_ok(x) for x in s), 'в dobor.txt не только ИНН юрлиц'; print(len(s), 'ИНН ✓')"
+      - name: Записать в ветку dobor
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd /tmp/dobor
+          N=$(wc -l < dobor.txt)
+          printf 'istochnik: %s\nsha256: %s\nsobrano_utc: %s\nsajt_main: %s\nstrok: %s\n' "$URL" "$(sha256sum "$GITHUB_WORKSPACE/revexp.zip" | cut -c1-16)" "$(date -u '+%F %H:%M')" "$GITHUB_SHA" "$N" > dobor_meta.txt
+          git init -q -b dobor
+          git add dobor.txt dobor_meta.txt
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -qm "dobor: $N ИНН из revexp"
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" dobor
+          echo "Ветка dobor: $N ИНН" >> "$GITHUB_STEP_SUMMARY"

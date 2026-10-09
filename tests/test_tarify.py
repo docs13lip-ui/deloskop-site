@@ -34,7 +34,13 @@ sys.path.insert(0, os.path.join(R, 'tests'))
 import beta as _B  # beta-v1: кнопки оплаты проверяем в «платном» виде — они спрятаны, а не потеряны
 _platnyj = lambda t: _B.vidimoe(_B.primenit(t, False, polosa=''))
 emb = re.search(r'<script type="application/json" id="tarify-data">(.*?)</script>', pg, re.S).group(1)
-ok('страница: встроенные данные = tarify.json', json.loads(emb) == D)
+import copy as _copy  # tarify-bez-karty-v1: сборщик ставит dlya_bez_karty вместо dlya при "karta": false и убирает поле
+_De = _copy.deepcopy(D)
+for _t in _De['tarify']:
+    _bk = _t.pop('dlya_bez_karty', None)
+    if _bk and _De.get('karta') is False:
+        _t['dlya'] = _bk
+ok('страница: встроенные данные = tarify.json', json.loads(emb) == _De)
 nb = ' '
 R_ = lambda x: f'{x:,}'.replace(',', nb) + nb + '₽'
 ok('страница: по умолчанию «Помесячно»', '<button type="button" data-period="mes" aria-pressed="true" class="on">Помесячно</button>' in pg)

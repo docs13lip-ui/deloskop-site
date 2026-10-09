@@ -73,8 +73,9 @@
       if (!a || !b || a.getAttribute("data-srok") === srok) return;
       var h = a.getAttribute("href"); a.setAttribute("href", b.getAttribute("href")); b.setAttribute("href", h);
       a.setAttribute("data-srok", srok); b.setAttribute("data-srok", srok === "god" ? "mes" : "god");
-      a.textContent = srok === "god" ? "Оплатить год" : "Оплачивать помесячно";
-      b.textContent = srok === "god" ? "Оплачивать помесячно — " + k.getAttribute("data-cena-m") : "Оплатить год — " + k.getAttribute("data-cena-g");
+      var mes = k.getAttribute("data-mes-tekst") || "Оплачивать помесячно";  // tarify-bez-karty-v1: без карты — «Счёт на месяц»
+      a.textContent = srok === "god" ? "Оплатить год" : mes;
+      b.textContent = srok === "god" ? mes + " — " + k.getAttribute("data-cena-m") : "Оплатить год — " + k.getAttribute("data-cena-g");
     });
   }
 

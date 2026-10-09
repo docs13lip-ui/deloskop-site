@@ -10,6 +10,14 @@ ROOT = sys.argv[1]
 D = json.load(open(os.path.join(ROOT, 'tarify/tarify.json'), encoding='utf-8'))
 import startovaya as STV  # noqa: E402  (start390-v1: стартовая цена «Старта» включается вместе с оплатами)
 D, _ = STV.vklyuchit(ROOT, D)
+# tarify-bez-karty-v1 (ТЗ [Продукт · Стратег] 03.10, тексты [Право] 03.10 разд. 4): "karta": false — оплата только по счёту,
+# на странице нет автосписаний, «карту не трогаем» и «частным лицам». true — подключён эквайер, прежние тексты.
+KARTA = D.get('karta', True) is not False
+for _t in D['tarify']:
+    _bk = _t.pop('dlya_bez_karty', None)
+    if _bk and not KARTA:
+        _t['dlya'] = _bk
+MES_TEKST = 'Оплачивать помесячно' if KARTA else 'Счёт на месяц'
 _ix = open(os.path.join(ROOT, 'indeks/index.html'), encoding='utf-8').read()
 _css = _ix[_ix.index('<style>') + 7:_ix.index('</style>')]
 _PFX = (':root', '*{', 'body{', 'a{', '.top', '.brand', '.btn', '@media (max-width:760px)', 'main{', '.crumbs', '.ver', 'h1{', '.sub{', '.meta{', '.lead', '.cap', 'article ', '.tw{', '.primer', '.status', 'details', '.check', '.src', '.disc', 'footer')
@@ -42,8 +50,9 @@ def cena_i_knopki(t, nb=NB):
     # кнопки ведут на форму «Получить счёт» (п. 23): с JS — окно поверх (js/schet.js), без JS — страница /schet/
     mail = lambda srok: f'/schet/?tarif={t["id"]}&amp;srok={srok}'
     vid = 'primary' if t.get('rekomenduem') else 'ghost'
-    cta = (f'<!--oplata--><div class="knopki" data-cena-m="{r(m)}" data-cena-g="{r(g)}">'
-           f'<a class="cta {vid}" data-tarif="{t["id"]}" data-srok="mes" href="{mail("mes")}">Оплачивать помесячно</a>'
+    mt = '' if KARTA else f' data-mes-tekst="{MES_TEKST}"'  # tarify.js берёт подпись отсюда при переключении периода
+    cta = (f'<!--oplata--><div class="knopki" data-cena-m="{r(m)}" data-cena-g="{r(g)}"{mt}>'
+           f'<a class="cta {vid}" data-tarif="{t["id"]}" data-srok="mes" href="{mail("mes")}">{MES_TEKST}</a>'
            f'<a class="cta2" data-tarif="{t["id"]}" data-srok="god" href="{mail("god")}">Оплатить год — {r(g)}</a>'
            f'</div><!--/oplata-->'
            # beta-v1: в открытой бете вместо оплаты — действие; цена остаётся как сведения «после беты»
@@ -61,11 +70,13 @@ def li(txt):
     return f'<li>{CHECK}<span>{html.escape(txt)}</span></li>'
 
 
+BESP_POD = 'Бесплатно — быстрая проверка. В тарифе — развёрнутая проверка (Паспорт контрагента) и PDF с датой проверки.'
 cards = []
 for t in D['tarify']:
     if t['mesyac'] == 0:
         price = f'<div class="price"><b>0{NB}₽</b></div><div class="per">навсегда</div>'
-        cta = '<a class="cta ghost" href="/">Проверить бесплатно</a>'
+        # при любом флаге; формулировка — по FAQ «Чем быстрая проверка отличается от развёрнутой?» ([Право] 03.10, разд. 4)
+        cta = f'<p class="plan-pod">{BESP_POD}</p><a class="cta ghost" href="/">Проверить бесплатно</a>'
     else:
         price, cta = cena_i_knopki(t)
     badge = ' <span class="badge">Рекомендуем</span>' if t.get('rekomenduem') else ''
@@ -76,6 +87,17 @@ for t in D['tarify']:
   {cta}
 </div>''')
 
+POD_MES = ('Помесячно — отменить можно в любой момент, следующий месяц просто не спишется.' if KARTA else
+           'Помесячно — счёт на каждый месяц: следующий месяц начнётся, только если вы оплатите новый счёт. Сами мы ничего не списываем.')
+if KARTA:
+    PRAVILA_OPL = ('<li><b>Не продлеваем молча</b>За 3 дня до каждого списания пришлём письмо: сумма, дата и ссылка на отмену.</li>\n'
+                   '<li><b>Отмена — одной кнопкой</b>В кабинете, без звонков и писем. Доступ сохраняется до конца оплаченного срока.</li>\n'
+                   '<li><b>Отказались — карту не трогаем</b>После отказа от автосписания карту больше не используем — ни для физлиц, ни для компаний.<small>Для физлиц это требование закона: ст. 16.1 Закона о защите прав потребителей в ред. № 376-ФЗ, с 1 марта 2026</small></li>\n')
+    SRC_376 = '<li><a href="https://www.consultant.ru/law/hotdocs/91121.html" rel="noopener" target="_blank">Федеральный закон от 15.10.2025 № 376-ФЗ — запрет автосписаний после отказа потребителя, с 1 марта 2026</a></li>\n'
+else:  # тексты [Право] 03.10, разд. 4 — дословно
+    PRAVILA_OPL = ('<li><b>Не продлеваем молча</b>Мы ничего не списываем сами: следующий период — только по новому счёту, который вы оплачиваете сами.</li>\n'
+                   '<li><b>Отменять нечего</b>Не оплатили следующий счёт — подписка просто закончится, долга нет. Отказаться можно и раньше: вернём деньги за неиспользованные дни (<a href="/oferta/#o6">раздел 6 оферты</a>).</li>\n')
+    SRC_376 = ''
 rows = []
 for t in D['tarify']:
     if t['mesyac'] == 0:
@@ -87,8 +109,9 @@ for t in D['tarify']:
 pak = D['paket_pasportov']  # владелец 30.09: «3 развёрнутые — 990 ₽» вместо «10 отчётов — 990 ₽»
 R = D['raschet']
 faq = [
-    ("Можно платить помесячно?", "Да. Помесячно — без обязательств на год: отменили в кабинете — следующий месяц не спишется, доступ сохранится до конца оплаченного месяца. За год — на 20% дешевле, цена зафиксирована на весь год."),
-    ("Почему за год дешевле на 20%?", "Оплата вперёд избавляет нас от двенадцати списаний и помогает планировать развитие. Этой экономией мы делимся с вами. Годовая цена округлена вниз до сотни рублей, поэтому скидка никогда не меньше 20%."),
+    ("Можно платить помесячно?", "Да. Помесячно — без обязательств на год: отменили в кабинете — следующий месяц не спишется, доступ сохранится до конца оплаченного месяца. За год — на 20% дешевле, цена зафиксирована на весь год."
+     if KARTA else "Да. Помесячно — по счёту на месяц, без обязательств на год: следующий месяц — только если вы сами оплатите новый счёт. За год — на 20% дешевле, цена зафиксирована на весь год."),
+    ("Почему за год дешевле на 20%?", f"Оплата вперёд избавляет нас от двенадцати {'списаний' if KARTA else 'отдельных платежей'} и помогает планировать развитие. Этой экономией мы делимся с вами. Годовая цена округлена вниз до сотни рублей, поэтому скидка никогда не меньше 20%."),
     ("Чем быстрая проверка отличается от развёрнутой?", "Быстрая — светофор рисков и главные факты о компании за секунды: статус, возраст, долги по налогам, отметки ФНС. Развёрнутая — Паспорт контрагента: у каждого раздела источник и дата сведений, честное «не проверяли» там, где источника нет, Индекс Делоскопа с причинами и PDF с датой проверки. Такой PDF — часть доказательств должной осмотрительности, если налоговая спросит о сделке через два года."),
     ("Что делать, если развёрнутых проверок не хватило?", f"Докупите пакет: {pak['tekst']} за {rub(pak['cena_rub'])} — {rub(pak['cena_rub'] // pak['shtuk'])} за проверку. Нужна одна компания без подписки — разовый Паспорт за {rub(D['pasport_razovyj']['cena_rub'])}. Калькулятор выше сам подскажет, когда выгоднее пакет, а когда — тариф выше."),
     ("Можно ли сменить тариф?", "Да, в любой момент. При переходе на тариф выше доплачиваете только разницу за оставшиеся дни."),
@@ -191,6 +214,8 @@ h2.big{font-size:clamp(28px,4vw,40px);letter-spacing:-.03em;line-height:1.1;marg
 .pravila li{background:var(--card);border-radius:20px;padding:20px 22px;color:var(--ink2);font-size:16px;line-height:1.5}
 .pravila li b{display:block;color:var(--ink);font-size:18px;margin-bottom:4px;letter-spacing:-.01em}
 .pravila small{display:block;color:var(--muted);font-size:13px;margin-top:6px}
+.pravila li:last-child:nth-child(odd){grid-column:1/-1}
+.plan-pod{margin:0;font-size:12.5px;line-height:1.45;color:var(--muted)}
 .besp{background:#E8F5EE;color:#0E4D2A;border-radius:20px;padding:18px 22px;font-size:17px;margin:20px 0 0}
 .besp a{color:#0E4D2A;text-decoration:underline}
 @media (max-width:1000px){.razovye{grid-template-columns:1fr}.plans{grid-template-columns:repeat(2,1fr)}.kalk{grid-template-columns:1fr}}
@@ -296,7 +321,7 @@ page = f'''<!doctype html>
 <div class="plans">
 {chr(10).join(cards)}
 </div>
-<p class="pod">Не хватило развёрнутых проверок? {pak['tekst'].capitalize()} — {rub(pak['cena_rub'])} к любому платному тарифу или без подписки. Помесячно — отменить можно в любой момент, следующий месяц просто не спишется. <!--oplata-->Компаниям и ИП — <a href="/schet/">по счёту</a> на месяц, квартал или год, с закрывающими документами. <!--/oplata--><!--v-bete--><!--/v-bete-->Цены указаны без НДС: исполнитель применяет УСН и освобождён от НДС (п. 1 ст. 145 НК РФ).<!--oplata--> Оплата картой на сайте — скоро.<!--/oplata--><!--v-bete--><!--/v-bete--></p>
+<p class="pod">Не хватило развёрнутых проверок? {pak['tekst'].capitalize()} — {rub(pak['cena_rub'])} к любому платному тарифу или без подписки. {POD_MES} <!--oplata-->Компаниям и ИП — <a href="/schet/">по счёту</a> на месяц, квартал или год, с закрывающими документами. <!--/oplata--><!--v-bete--><!--/v-bete-->Цены указаны без НДС: исполнитель применяет УСН и освобождён от НДС (п. 1 ст. 145 НК РФ).<!--oplata--> Оплата картой на сайте — скоро.<!--/oplata--><!--v-bete--><!--/v-bete--></p>
 
 {RAZOVYE_HTML}
 <h2 class="big" id="podbor">Подбор без переплаты</h2>
@@ -347,10 +372,7 @@ page = f'''<!doctype html>
 <h2 class="big" id="pravila">Честные правила подписки</h2>
 <p class="lid">Подписку должно быть легко не только оформить, но и отменить.</p>
 <ul class="pravila">
-<li><b>Не продлеваем молча</b>За 3 дня до каждого списания пришлём письмо: сумма, дата и ссылка на отмену.</li>
-<li><b>Отмена — одной кнопкой</b>В кабинете, без звонков и писем. Доступ сохраняется до конца оплаченного срока.</li>
-<li><b>Отказались — карту не трогаем</b>После отказа от автосписания карту больше не используем — ни для физлиц, ни для компаний.<small>Для физлиц это требование закона: ст. 16.1 Закона о защите прав потребителей в ред. № 376-ФЗ, с 1 марта 2026</small></li>
-<li><b>Цена года не меняется</b>Оплатили год — цена зафиксирована до его конца, даже если тарифы вырастут.</li>
+{PRAVILA_OPL}<li><b>Цена года не меняется</b>Оплатили год — цена зафиксирована до его конца, даже если тарифы вырастут.</li>
 <li><b>Переход выше — только разница</b>Доплачиваете за оставшиеся дни, а не полную цену нового тарифа.</li>
 <li><b>Индекс не продаётся</b>Подписка никак не влияет на оценку ни одной компании, включая вашу. <a href="/indeks/">Методика открыта →</a></li>
 </ul>
@@ -362,8 +384,7 @@ page = f'''<!doctype html>
 <div class="check"><h2>Начните с бесплатной проверки</h2><p>Проверьте свою компанию или поставщика по ИНН — без регистрации.</p><form action="/" method="get"><input name="inn" inputmode="numeric" maxlength="12" pattern="\d{10}|\d{12}" required placeholder="ИНН компании или ИП" aria-label="ИНН компании или ИП"><button type="submit">Проверить</button></form></div>
 
 <section class="src"><h2>Источники</h2><ol>
-<li><a href="https://www.consultant.ru/law/hotdocs/91121.html" rel="noopener" target="_blank">Федеральный закон от 15.10.2025 № 376-ФЗ — запрет автосписаний после отказа потребителя, с 1 марта 2026</a></li>
-<li><a href="https://www.consultant.ru/document/cons_doc_LAW_19671/" rel="noopener" target="_blank">Налоговый кодекс РФ: ст. 54.1, 75, 122, 171–172</a></li>
+{SRC_376}<li><a href="https://www.consultant.ru/document/cons_doc_LAW_19671/" rel="noopener" target="_blank">Налоговый кодекс РФ: ст. 54.1, 75, 122, 171–172</a></li>
 <li><a href="https://www.cbr.ru/hd_base/KeyRate/" rel="noopener" target="_blank">Банк России: ключевая ставка {round(R['klyuchevaya_stavka']*100, 2):g}% — {R['klyuchevaya_stavka_istochnik']}</a></li>
 <li><a href="https://www.consultant.ru/document/cons_doc_LAW_32834/" rel="noopener" target="_blank">Федеральный закон № 115-ФЗ, ст. 7 — отказ в операциях и реабилитация</a></li>
 </ol></section>

@@ -58,10 +58,36 @@ def chitat_jsonl(put):
             if not s:
                 continue
             try:
-                out.append(json.loads(s))
+                out.append(data_proverki_msk(json.loads(s)))
             except json.JSONDecodeError as ex:
                 raise SystemExit("Строка %d: не JSON (%s)" % (i, ex))
     return out
+
+
+def data_proverki_msk(r):
+    """kartochki-msk-v1 (Ночные-2, 10.10): API ставит checked_at по UTC — с 00:00 до 03:00 МСК проверка датируется
+    вчерашним днём (живой ответ 10.10 01:37 МСК: checked_at «2026-10-09»; [Продукт] 10.10 разд. 2.1). Момент запроса
+    по Москве iz-api пишет в `_poluchen_msk` — это наш факт, не догадка. Если его дата позже checked_at — дата проверки
+    карточки берётся по Москве, исходная остаётся в `_checked_at_api`. Раньше — не трогаем (сервер не «моложе» запроса)."""
+    if not isinstance(r, dict):
+        return r
+    m = re.match(r"^(\d{4})-(\d{2})-(\d{2})", str(r.get("_poluchen_msk") or ""))
+    c = re.match(r"^(\d{4})-(\d{2})-(\d{2})", str(r.get("checked_at") or ""))
+    if not (m and c):
+        return r
+    d_msk = dt.date(*map(int, m.groups()))
+    d_api = dt.date(*map(int, c.groups()))
+    if (d_msk - d_api).days == 1:  # только сдвиг поясов (UTC отстаёт от МСК на 3 ч) — больше дня не «чиним»
+        r = dict(r)
+        r["_checked_at_api"] = r.get("checked_at")
+        r["checked_at"] = d_msk.isoformat()
+    return r
+
+
+def poluchen_msk(seichas=None):
+    """Момент запроса по Москве, до минуты: «2026-10-10T01:37»."""
+    t = seichas or dt.datetime.now(dt.timezone.utc)
+    return (t.astimezone(dt.timezone.utc) + dt.timedelta(hours=3)).strftime("%Y-%m-%dT%H:%M")
 
 
 def otobrat(zapisi, limit, spros=None, kontrol=None):
@@ -496,6 +522,7 @@ def iz_api(spisok, vyhod, api="https://api.deloskop.ru", pauza=6.0, maks=MAKS_ZA
                         c.pop(pole, None)
                 for pole in ("phones", "emails", "phone", "email"):
                     c.pop(pole, None)
+                r["_poluchen_msk"] = poluchen_msk()  # kartochki-msk-v1: дата проверки по Москве, не по UTC сервера
                 fh.write(json.dumps(r, ensure_ascii=False) + "\n")
                 fh.flush()
                 ok += 1

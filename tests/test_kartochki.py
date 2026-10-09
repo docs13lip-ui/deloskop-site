@@ -2075,5 +2075,48 @@ class TestDatyIzReestraV1(unittest.TestCase):
         self.assertIn(".co-daty__sp dt,.co-daty__sp dd{display:inline;margin:0}", c)
 
 
+class TestDataProverkiMskV1(unittest.TestCase):
+    """kartochki-msk-v1 (Ночные-2, 10.10): API датирует проверку по UTC — с 00:00 до 03:00 МСК «вчерашним» днём
+    ([Продукт] 10.10 разд. 2.1). iz-api пишет момент запроса по Москве; дата проверки карточки — по Москве."""
+
+    def test_poluchen_msk(self):
+        t = K.dt.datetime(2026, 10, 9, 22, 37, tzinfo=K.dt.timezone.utc)
+        self.assertEqual(K.poluchen_msk(t), "2026-10-10T01:37")
+
+    def test_sdvig_na_den(self):
+        r = K.data_proverki_msk({"checked_at": "2026-10-09", "_poluchen_msk": "2026-10-10T01:37"})
+        self.assertEqual((r["checked_at"], r["_checked_at_api"]), ("2026-10-10", "2026-10-09"))
+        self.assertEqual(K.iz_check(r)["proverka"], K.dt.date(2026, 10, 10))
+
+    def test_ne_trogaem(self):
+        for z in ({"checked_at": "2026-10-10", "_poluchen_msk": "2026-10-10T09:00"},   # совпадает
+                  {"checked_at": "2026-10-01", "_poluchen_msk": "2026-10-10T01:00"},   # больше дня — не пояса
+                  {"checked_at": "2026-10-09"},                                        # старый ответ без метки
+                  {"checked_at": "2026-09-29T10:00:00+03:00", "_poluchen_msk": "2026-09-29T10:01"}):
+            r = K.data_proverki_msk(dict(z))
+            self.assertEqual(r["checked_at"], z["checked_at"])
+            self.assertNotIn("_checked_at_api", r)
+
+    def test_chitat_jsonl_i_iz_api(self):
+        import io
+        d = tempfile.mkdtemp()
+        try:
+            sp = os.path.join(d, "s.txt")
+            open(sp, "w").write("7736050003\n")
+            st_u, st_s, st_p = K.urllib.request.urlopen, K.time.sleep, K.poluchen_msk
+            K.urllib.request.urlopen = lambda req, timeout=0: io.BytesIO(json.dumps(
+                {"company": {"inn": "7736050003"}, "checked_at": "2026-10-09"}).encode())
+            K.time.sleep, K.poluchen_msk = (lambda x: None), (lambda: "2026-10-10T01:37")
+            try:
+                K.iz_api(sp, os.path.join(d, "o.jsonl"), zanovo=True)
+            finally:
+                K.urllib.request.urlopen, K.time.sleep, K.poluchen_msk = st_u, st_s, st_p
+            syroe = json.loads(open(os.path.join(d, "o.jsonl"), encoding="utf-8").readline())
+            self.assertEqual((syroe["checked_at"], syroe["_poluchen_msk"]), ("2026-10-09", "2026-10-10T01:37"))
+            self.assertEqual(K.chitat_jsonl(os.path.join(d, "o.jsonl"))[0]["checked_at"], "2026-10-10")
+        finally:
+            shutil.rmtree(d)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

@@ -3,18 +3,50 @@
    (окно открывается только по событию deloskop:whatsnew от кнопки в шапке). */
 (function () {
   "use strict";
-  // 0. Полоса «Открытая бета» (beta-v1; bez-dvusmyslennosti-v1.1 — 04.10.2026).
-  //    Крестик прячет полосу на неделю, но не дольше конца беты (14.10 00:00 МСК): после 14.10 полосы нет
-  //    вовсе, а новость «с 14 октября — тарифы» должен увидеть каждый — поэтому ключ новый (dlk_beta_skryt2),
-  //    старое «скрыть» (dlk_beta_skryt) больше не действует. Хранилище недоступно — просто прячем.
+  // 0. Полоса «Открытая бета» (beta-v1; bez-dvusmyslennosti-v1.1 — 04.10.2026; beta-data-v1 — 09.10.2026).
+  //    Дата конца беты — одно место: tarify.json → "beta_do"; сборщик пишет её в атрибут полосы data-beta-do
+  //    (ТЗ [Продукт] 05.10, claude/Продукт_14.10_без_ворот_бета_не_врёт_05.10.md, разд. 1). Режим — data-beta-rezhim:
+  //    a — дата есть (после конца дня по МСК инлайн-скрипт полосы сам ставит текст B — без выкладки в полночь);
+  //    b — «Открытая бета продолжается…»; c — «Бета завершилась…», 7 дней, без крестика.
+  //    Крестик прячет полосу на неделю, но в режиме a — не дольше конца беты: новость о тарифах должен увидеть каждый.
+  //    Ключ «скрыть» — свой для каждой даты (dlk_beta_skryt_ГГГГ-ММ-ДД / _net): дату назначили или сменили —
+  //    полосу снова видят все ([Право] 05.10 11:10, разд. 1, условие 2). Хранилище недоступно — просто прячем.
   //    Ссылка «Цена основателя» гаснет сама, когда все места заняты (п. 3.8 оферты; [Право] 04.10 10:15,
   //    пп. 3–4 ч. 3 ст. 5 38-ФЗ): GET /api/osnovatel {vsego, zanyato}. API молчит — ссылку не трогаем:
   //    место занимает только оплата, а в бете оплат нет.
   var NEDELYA = 7 * 24 * 3600 * 1000;
-  var KONEC_BETY = Date.UTC(2026, 9, 13, 21, 0, 0); // 14.10.2026 00:00 МСК
-  var BETA_KLYUCH = "dlk_beta_skryt2";
-  function srokSkrytiya(seichas) { return Math.min(seichas + NEDELYA, KONEC_BETY); }
-  function nadpisKrestika(seichas) { return KONEC_BETY - seichas < NEDELYA ? "Скрыть до конца беты" : "Скрыть на неделю"; }
+  var DEN = 24 * 3600 * 1000;
+  // «2026-10-13» → начало 14.10 по МСК (конец последнего бесплатного дня); нет даты или она кривая — 0
+  function konecDnya(d) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(d || ""))) return 0;
+    var t = Date.parse(d + "T00:00:00+03:00");
+    return isNaN(t) ? 0 : t + DEN;
+  }
+  // Какой текст полосы показывать сейчас: то же, что делает инлайн-скрипт полосы (partials/beta.html).
+  function rezhimSejchas(rezhim, d, seichas) {
+    var k = konecDnya(d);
+    if (rezhim === "a") return k && seichas >= k ? "b" : (k ? "a" : "b");
+    if (rezhim === "c") return k && seichas >= k + NEDELYA ? "net" : "c";
+    return "b";
+  }
+  function klyuch(d) { return "dlk_beta_skryt_" + (konecDnya(d) ? d : "net"); }
+  function srokSkrytiya(seichas, konec) {
+    return konec && konec > seichas ? Math.min(seichas + NEDELYA, konec) : seichas + NEDELYA;
+  }
+  function nadpisKrestika(seichas, konec) {
+    return konec && konec > seichas && konec - seichas < NEDELYA ? "Скрыть до конца беты" : "Скрыть на неделю";
+  }
+  // Сроки в текстах страниц (<span data-beta-srok="ГГГГ-ММ-ДД"> по 13 октября</span>): день прошёл — span убираем,
+  // «всё бесплатно по 13 октября» становится «всё бесплатно» (текст B без даты).
+  function srokiSnyat(root, seichas) {
+    var n = 0;
+    if (!root || !root.querySelectorAll) return 0;
+    Array.prototype.slice.call(root.querySelectorAll("[data-beta-srok]")).forEach(function (el) {
+      var k = konecDnya(el.getAttribute("data-beta-srok"));
+      if (k && seichas >= k && el.parentNode) { el.parentNode.removeChild(el); n++; }
+    });
+    return n;
+  }
   function osnSsylka(j) {
     if (!j || typeof j.vsego !== "number" || typeof j.zanyato !== "number") return true;
     return j.zanyato < j.vsego;
@@ -36,20 +68,24 @@
       .catch(function () {});
   }
   function betaPolosa() {
+    try { srokiSnyat(document, Date.now()); } catch (e) {}
     var bar = document.querySelector("[data-beta-bar]");
     if (!bar) return;
+    var d = bar.getAttribute("data-beta-do") || "";
     var x = bar.querySelector("[data-beta-x]");
     if (x) {
-      x.setAttribute("aria-label", nadpisKrestika(Date.now()));
+      var konec = bar.getAttribute("data-beta-rezhim") === "a" ? konecDnya(d) : 0;
+      x.setAttribute("aria-label", nadpisKrestika(Date.now(), konec));
       x.addEventListener("click", function () {
         bar.hidden = true;
-        try { localStorage.setItem(BETA_KLYUCH, String(srokSkrytiya(Date.now()))); } catch (e) {}
+        try { localStorage.setItem(klyuch(d), String(srokSkrytiya(Date.now(), konec))); } catch (e) {}
         if (window.dlkGoal) window.dlkGoal("beta_bar_close");
       });
     }
     osnProverit(bar);
   }
-  window.dlkBeta = { srokSkrytiya: srokSkrytiya, nadpisKrestika: nadpisKrestika, osnSsylka: osnSsylka, KLYUCH: BETA_KLYUCH, KONEC_BETY: KONEC_BETY };
+  window.dlkBeta = { srokSkrytiya: srokSkrytiya, nadpisKrestika: nadpisKrestika, osnSsylka: osnSsylka, klyuch: klyuch,
+    konecDnya: konecDnya, rezhimSejchas: rezhimSejchas, srokiSnyat: srokiSnyat };
   // 8. Типографика: номера дел, законов и писем не рвутся на переносе строки
   //    («А67-1408/2022», «304-ЭС23-9987», «115-ФЗ», «ММ-3-06/333@»). Текст не меняется —
   //    только обёртка <span class="nw"> (white-space:nowrap): копирование и поиск по номеру работают.

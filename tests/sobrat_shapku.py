@@ -96,6 +96,7 @@ def rekv_sajta():
     владельца 29.09.2026), даже если rekvizity.json заполнен. Этим пользуются main() и tests/kartochki.py."""
     r = rekv()
     r["_beta"] = BETA.vklyuchena(KOREN)
+    r["_beta_do"] = BETA.beta_do(KOREN)  # beta-data-v1: дата конца беты — одно место, tarify.json
     if r["_beta"]:
         r["_est"] = False
     return r
@@ -306,7 +307,7 @@ def sobrat_stranicu(txt, r, podval, shapka=None):
                  lambda m: "<!--r:gorod-->" + ((" (" + gorod(r) + ")") if r.get("_gorod") else "") + "<!--/r-->", txt, flags=re.S)
     txt = re.sub(r"<!--rekvizity-->.*?<!--/rekvizity-->", lambda m: "<!--rekvizity-->" + tablica(r) + "<!--/rekvizity-->", txt, flags=re.S)
     # 5) открытая бета: оплата ↔ «в бете бесплатно», метка режима, полоса под шапкой
-    txt = BETA.primenit(txt, r.get("_beta", False))
+    txt = BETA.primenit(txt, r.get("_beta", False), bdo=r.get("_beta_do"))
     return txt
 
 
@@ -332,7 +333,7 @@ def obolochka(r, podval, shapka):
     podv = s[c:s.rindex("</body>")]
     with open(put("tests", "kartochka_render.py"), "rb") as fh:
         otp = hashlib.sha256(fh.read().replace(b"\r\n", b"\n")).hexdigest()[:16]
-    ob = {"versiya": 1, "beta": bool(r.get("_beta")), "render": otp, "head": head, "shapka": shap, "podval": podv}
+    ob = {"versiya": 1, "beta": bool(r.get("_beta")), "beta_do": r.get("_beta_do"), "render": otp, "head": head, "shapka": shap, "podval": podv}
     return json.dumps(ob, ensure_ascii=False, indent=1, sort_keys=True) + "\n"
 
 

@@ -73,19 +73,22 @@ test('отзыв подключён на отчёте, Паспорте конт
 
 test('полоса беты: одна строка, крестик прячет на неделю (не дольше конца беты), хранилище — в try', () => {
   const p = chitat('partials/beta.html');
-  assert.ok(p.includes('Открытая бета: всё бесплатно по&nbsp;13&nbsp;октября включительно.'), 'полоса беты: срок беты — решение владельца 30.09 (по 13.10 включительно; «до 13 октября» читается как «13-го уже платно» — [Право] 04.10 09:20)');
-  assert.ok(p.includes('mailto:help@deloskop.ru'));
-  assert.ok(p.includes('aria-label="Скрыть на неделю"'));
-  assert.ok(/try\{if\(\+localStorage\.getItem\("dlk_beta_skryt2"\)>Date\.now\(\)\)/.test(p));
+  // beta-data-v1: каркас partials/beta.html + тексты partials/beta-a|b|c.html, дата — из tarify.json → beta_do
+  const a = chitat('partials/beta-a.html');
+  assert.ok(a.includes('Открытая бета: всё бесплатно по&nbsp;{{D}} включительно.'), 'полоса беты: «по … включительно» — решение владельца 30.09 («до 13 октября» читается как «13-го уже платно» — [Право] 04.10 09:20)');
+  assert.ok(a.includes('mailto:help@deloskop.ru') && chitat('partials/beta-b.html').includes('mailto:help@deloskop.ru'));
+  assert.ok(chitat('partials/beta-x.html').includes('aria-label="Скрыть на неделю"'));
+  assert.ok(/<script>try\{.*localStorage\.getItem\("dlk_beta_skryt_"\+\(d\|\|"net"\)\)>n\)b\.hidden=true.*\}catch\(e\)\{\}<\/script>$/.test(p.trim()));
   const js = chitat('js/shapka.js');
-  assert.ok(js.includes('try { localStorage.setItem(BETA_KLYUCH, String(srokSkrytiya(Date.now()))); }'));
+  assert.ok(js.includes('try { localStorage.setItem(klyuch(d), String(srokSkrytiya(Date.now(), konec))); }'));
   assert.ok(!/ИИ|нейросет/i.test(p));
 });
 
 test('живой режим: страницы собраны по флагу из tarify.json', () => {
   const glav = chitat('index.html');
   assert.strictEqual(glav.includes('<meta name="deloskop-rezhim" content="beta">'), BETA);
-  assert.strictEqual(/<!--beta-polosa-->/.test(glav), BETA);
+  // beta-data-v1: после беты полоса C («Бета завершилась…») остаётся, пока в tarify.json есть beta_do
+  assert.strictEqual(/<!--beta-polosa-->/.test(glav), BETA || !!D.beta_do);
   const v = vidimoe(glav);
   if (BETA) {
     assert.ok(!v.includes('href="/schet/'), 'на главной нет ссылок на счёт');

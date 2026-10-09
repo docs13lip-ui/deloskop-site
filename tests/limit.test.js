@@ -41,15 +41,19 @@ test('(1) при 429 текст `detail` из API нигде не выводит
 });
 
 test('(2) бета: без цен, «Старта» и «войдите»; «тариф» — только в «тарифы не продаём»; дата конца беты', () => {
-  for (const tarify of [L.iz(T), null, L.iz(Object.assign({}, T, { beta: false })), L.iz({})]) {
-    const r = L.tekst({ tarify, beta: true, inn: '7707083893', stranica: 'glavnaya', sohranen: true });
+  // beta-data-v1: дата — из tarify.json → beta_do; нет даты, нет файла или день прошёл — без даты (текст B)
+  const DO = Object.assign({}, T, { beta_do: '2026-10-13' }), DO_T = Date.parse('2026-10-13T23:59:00+03:00');
+  for (const [tarify, sejchas, sDatoj] of [[L.iz(DO), DO_T, true], [null, DO_T, false], [L.iz(Object.assign({}, DO, { beta: false })), DO_T, true],
+    [L.iz({}), DO_T, false], [L.iz(DO), Date.parse('2026-10-14T00:00:00+03:00'), false], [L.iz(Object.assign({}, DO, { beta_do: null })), DO_T, false]]) {
+    const r = L.tekst({ tarify, beta: true, inn: '7707083893', stranica: 'glavnaya', sohranen: true, sejchas });
     assert.strictEqual(r.beta, true);
     const t = vse(r);
     assert.ok(!/₽|Старт|войд|Войд/.test(t), t);
     assert.strictEqual((t.match(/тариф/gi) || []).length, 1, t);
     assert.ok(t.includes('тарифы не продаём и счета не выставляем'), t);
     assert.strictEqual(r.zag, 'На' + NB + 'сегодня 3' + NB + 'бесплатные проверки закончились');
-    assert.strictEqual(sp(r.stroka), 'Завтра — снова 3. Пока идёт бета (по 13 октября), тарифы не продаём и счета не выставляем.');
+    assert.strictEqual(sp(r.stroka), sDatoj ? 'Завтра — снова 3. Пока идёт бета (по 13 октября), тарифы не продаём и счета не выставляем.'
+      : 'Завтра — снова 3. Пока идёт бета, тарифы не продаём и счета не выставляем.');
     assert.strictEqual(r.ssylkiZag, 'Что можно сделать прямо сейчас:');
     assert.ok(!/без лимита/i.test(t), 'в бете «без лимита» не обещаем: ' + t);
     assert.strictEqual(r.knopki.length, 0);

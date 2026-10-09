@@ -33,6 +33,86 @@ def vklyuchena(koren=KOREN):
         return json.load(fh).get("beta") is True
 
 
+# ---------- beta-data-v1 (ТЗ [Продукт] 05.10, claude/Продукт_14.10_без_ворот_бета_не_врёт_05.10.md, разд. 1;
+#            тексты B и C — [Право] 05.10 11:10, разд. 1): дата конца беты — одно место, tarify.json → "beta_do".
+# Сборка от сегодняшнего дня НЕ зависит (иначе после 14.10 проверка «сборщики ничего не меняют» краснела бы сама):
+# дата → вариант A, null → B. Переход A → B в полночь МСК делает браузер (инлайн-скрипт полосы и js/shapka.js).
+MES = ("января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря")
+NBSP = "&nbsp;"
+DATA_RE = re.compile(r"^(\d{4})-(\d{2})-(\d{2})$")
+
+
+def beta_do(koren=KOREN):
+    """→ "ГГГГ-ММ-ДД" (последний бесплатный день, МСК) или None (дата не назначена)."""
+    with open(os.path.join(koren, "tarify", "tarify.json"), encoding="utf-8") as fh:
+        v = json.load(fh).get("beta_do")
+    if v is None:
+        return None
+    if not isinstance(v, str) or not DATA_RE.match(v):
+        raise ValueError('tarify.json: "beta_do" — дата ГГГГ-ММ-ДД или null, а не %r' % (v,))
+    return v
+
+
+def data_ru(iso):
+    """«2026-10-13» → «13&nbsp;октября»."""
+    g, m, d = (int(x) for x in DATA_RE.match(iso).groups())
+    return "%d%s%s" % (d, NBSP, MES[m - 1])
+
+
+def sleduyushij(iso):
+    import datetime
+    return (datetime.date(*(int(x) for x in DATA_RE.match(iso).groups())) + datetime.timedelta(days=1)).isoformat()
+
+
+def _chast(imya):
+    with open(os.path.join(KOREN, "partials", imya), encoding="utf-8") as fh:
+        return fh.read().strip("\n")
+
+
+def rezhim_polosy(beta, bdo):
+    """a — дата есть (браузер сам сменит на b после конца дня); b — даты нет; c — оплаты включены, дата была;
+    None — полосы нет (оплаты включены, даты нет)."""
+    if beta:
+        return "a" if bdo else "b"
+    return "c" if bdo else None
+
+
+def polosa_sobrat(beta, bdo):
+    """Полоса из partials/beta.html (каркас) и partials/beta-a|b|c.html (текст). Ключ «скрыть» — свой для каждой даты:
+    сменилась дата — полосу снова видят все, и те, кто нажал «×» ([Право] 05.10, условие 2)."""
+    r = rezhim_polosy(beta, bdo)
+    if r is None:
+        return ""
+    D = data_ru(bdo) if bdo else ""
+    D1 = data_ru(sleduyushij(bdo)) if bdo else ""
+    tekst = _chast("beta-%s.html" % r).replace("{{D}}", D).replace("{{D1}}", D1)
+    zapas = ('<template data-beta-b>' + _chast("beta-b.html") + '</template>') if r == "a" else ""
+    krestik = "" if r == "c" else _chast("beta-x.html")
+    return (_chast("beta.html").replace("{{REZHIM}}", r).replace("{{DO}}", bdo or "")
+            .replace("{{KLASS}}", " beta-bar--c" if r == "c" else "")
+            .replace("{{TEKST}}", tekst).replace("{{ZAPAS}}", zapas).replace("{{KRESTIK}}", krestik))
+
+
+# Сроки беты в текстах страниц: <span data-beta-srok…> по 13 октября[ включительно]</span>. Сборщик вписывает дату из
+# beta_do (или оставляет пусто, если даты нет); браузер убирает span, когда день прошёл (js/shapka.js) — фраза
+# «всё бесплатно по 13 октября» сама становится «всё бесплатно». data-beta-vkl — с «включительно».
+SROK = re.compile(r'<span data-beta-srok(?:="[^"]*")?( data-beta-vkl)?>[^<]*</span>')
+# Старые карточки (собраны до beta-data-v1, напр. комплект kartochki-0710-v1): дата текстом в ссылке входа в Паспорт.
+SROK_STARYJ = re.compile(r"(В&nbsp;бете бесплатно) по&nbsp;\d{1,2}&nbsp;(?:%s)(&nbsp;→)" % "|".join(MES))
+
+
+def srok_span(bdo, vkl=False):
+    if not bdo:
+        return '<span data-beta-srok%s></span>' % (" data-beta-vkl" if vkl else "")
+    return '<span data-beta-srok="%s"%s> по%s%s%s</span>' % (bdo, " data-beta-vkl" if vkl else "", NBSP, data_ru(bdo),
+                                                         " включительно" if vkl else "")
+
+
+def sroki(txt, bdo):
+    txt = SROK_STARYJ.sub(lambda m: m.group(1) + srok_span(None) + m.group(2), txt)
+    return SROK.sub(lambda m: srok_span(bdo, bool(m.group(1))), txt)
+
+
 def _snyat(s, t, spryatano):
     """Каноническая форма половины: без обёртки <template> и с настоящими href."""
     if s.startswith(t[0]) and s.endswith(t[1]):
@@ -56,13 +136,17 @@ def blok(oplata, v_bete, beta):
     return "<!--oplata-->" + oplata + "<!--/oplata--><!--v-bete-->" + _spryatat(v_bete, T_BET) + "<!--/v-bete-->"
 
 
-def polosa_html():
-    with open(os.path.join(KOREN, "partials", "beta.html"), encoding="utf-8") as fh:
-        return fh.read().strip("\n")
+def polosa_html(beta=True, bdo=None):
+    """Полоса для режима; bdo по умолчанию — из tarify.json."""
+    return polosa_sobrat(beta, beta_do() if bdo is None else (bdo or None))
 
 
-def primenit(txt, beta, polosa=None):
-    """Привести страницу к режиму. Идемпотентно: primenit(primenit(x, b), b) == primenit(x, b)."""
+def primenit(txt, beta, polosa=None, bdo=False):
+    """Привести страницу к режиму. Идемпотентно: primenit(primenit(x, b), b) == primenit(x, b).
+    bdo: False — взять beta_do из tarify.json; None или "ГГГГ-ММ-ДД" — задать явно (тесты)."""
+    if bdo is False:
+        bdo = beta_do()
+    txt = sroki(txt, bdo)
     txt = BLOK.sub(lambda m: blok(m.group(1), m.group(2), beta), txt)
     # метка режима в <head>
     txt = txt.replace(META + "\n", "").replace(META, "")
@@ -70,8 +154,8 @@ def primenit(txt, beta, polosa=None):
         txt = txt.replace("</head>", META + "\n</head>", 1)
     # полоса под шапкой — только на страницах с единой шапкой
     txt = POLOSA.sub("", txt)
-    if beta and "<!--/shapka-->" in txt:
-        p = polosa if polosa is not None else polosa_html()
+    p = polosa if polosa is not None else polosa_sobrat(beta, bdo)
+    if p and "<!--/shapka-->" in txt:
         txt = txt.replace("<!--/shapka-->", "<!--/shapka-->\n<!--beta-polosa-->" + p + "<!--/beta-polosa-->", 1)
     return txt
 

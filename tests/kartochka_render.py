@@ -161,6 +161,14 @@ IMENA_TOCHNO = {
     "ЛЭСК": "ЛЭСК",
     # kartochki-0510-v7: вторая часть — название бывшей компании (Ленэнерго), не нарицательное слово
     "РОССЕТИ ЛЕНЭНЕРГО": "Россети Ленэнерго",
+    # kartochki-0710-v1: «Россети» + регион — топоним с прописной; союз «и» — строчными; апостроф — типографский
+    "РОССЕТИ СИБИРЬ": "Россети Сибирь",
+    "РОССЕТИ УРАЛ": "Россети Урал",
+    "РОССЕТИ ВОЛГА": "Россети Волга",
+    "РОССЕТИ ЦЕНТР": "Россети Центр",
+    "РОССЕТИ ЦЕНТР И ПРИВОЛЖЬЕ": "Россети Центр и Приволжье",
+    "РОССЕТИ МОСКОВСКИЙ РЕГИОН": "Россети Московский регион",
+    "О`КЕЙ": "О’КЕЙ",
 }
 
 
@@ -169,6 +177,11 @@ def imya(short, full=""):
     s = re.sub(r"\s+", " ", str(short or full or "").strip())
     if not s:
         return ""
+    # kartochki-0710-v1: два кратких наименования через запятую ('ПАО "РОССЕТИ МОСКОВСКИЙ РЕГИОН", ПАО "РОССЕТИ МР"',
+    # ответ /api/check 07.10) — берём первое; иначе в кавычки уходило «…регион, ПАО Россети МР».
+    dva = re.match(r'^((?:ООО|АО|ПАО|НАО|ЗАО|ОАО)\s+["«].*?["»]),\s*(?:ООО|АО|ПАО|НАО|ЗАО|ОАО)\s+["«][^,]*$', s)
+    if dva:
+        s = dva.group(1)
     # kartochki-v3.7: хвост после закрывающей кавычки — 'ПАО "ТАТНЕФТЬ" ИМ. В.Д. ШАШИНА' →
     # 'ПАО «Татнефть» им. В.Д. Шашина' (было «Татнефть ИМ. В.Д. шашина» — хвост уходил внутрь кавычек).
     kav = re.findall(r'["«»“”„]', s)
@@ -1169,13 +1182,14 @@ def pochinit_otrasl_yakor(t, normy):
 # (claude/Право_полоса_беты_основатель_вход_Паспорт_ст48_04.10.md). Публично — только даты-факты о компании; «что менялось»
 # не пишем (истории с регистрации у нас нет). Строка о руководителе — без ФИО и только после «РКН отправлено»
 # (RKN_OTPRAVLENO=1 в окружении сборки): дата записи косвенно относится к человеку (п. 1 ст. 3 152-ФЗ).
-# Вход в Паспорт — две половины разметки беты (tests/beta.py): в бете — «бесплатно по 13 октября», после — цена из
+# Вход в Паспорт — две половины разметки беты (tests/beta.py): в бете — «бесплатно по {beta_do}», после — цена из
 # tarify/tarify.json. Переключили флаг беты → sobrat_shapku.py меняет половины на всех карточках сам.
 PASPORT_VHOD_GOAL = "kartochka_pasport_vhod"
 PASPORT_VHOD_TEKST = ("Полный Паспорт контрагента: руководитель и" + NB + "учредители, финансы и" + NB + "налоги, предел аванса "
                       "под вашу сумму и" + NB + "документы, которые стоит запросить. У" + NB + "каждого факта" + NB + "— источник и" + NB +
                       "дата, расчёты" + NB + "— по" + NB + "открытой методике.")
-PASPORT_VHOD_BETA = "В" + NB + "бете бесплатно по" + NB + "13" + NB + "октября" + NB + "→"
+# beta-data-v1: дату вписывает сборщик из tarify.json → beta_do (tests/beta.py, sroki), после конца беты span убирает браузер.
+PASPORT_VHOD_BETA = "В" + NB + "бете бесплатно<span data-beta-srok></span>" + NB + "→"
 
 
 def rkn_otpravleno():
@@ -1199,8 +1213,31 @@ def _beta_spryatat(s, t):
     return (t[0] + s.replace(" href=", " data-oplata-href=") + t[1]) if s else s
 
 
-def beta_poloviny(txt, beta):
-    """Привести половины беты к режиму (идемпотентно)."""
+# beta-data-v1: срок беты в тексте — <span data-beta-srok="ГГГГ-ММ-ДД"> по 13 октября</span>, дата — tarify.json → beta_do
+# (на сайте — из сборщика, в API — из partials/obolochka.json → "beta_do"). То же, что tests/beta.py → sroki;
+# совпадение проверяет tests/test_kartochki.py. После конца дня span убирает браузер (js/shapka.js).
+_SROK = re.compile(r'<span data-beta-srok(?:="[^"]*")?( data-beta-vkl)?>[^<]*</span>')
+_SROK_STARYJ = re.compile(r"(В&nbsp;бете бесплатно) по&nbsp;\d{1,2}&nbsp;(?:%s)(&nbsp;→)" % "|".join(MESYACY))
+_DATA_ISO = re.compile(r"^(\d{4})-(\d{2})-(\d{2})$")
+
+
+def _srok_span(bdo, vkl=False):
+    if not bdo or not _DATA_ISO.match(bdo):
+        return '<span data-beta-srok%s></span>' % (" data-beta-vkl" if vkl else "")
+    g, m, d = (int(x) for x in _DATA_ISO.match(bdo).groups())
+    return '<span data-beta-srok="%s"%s> по&nbsp;%d&nbsp;%s%s</span>' % (bdo, " data-beta-vkl" if vkl else "", d, MESYACY[m - 1],
+                                                                       " включительно" if vkl else "")
+
+
+def beta_sroki(txt, bdo=None):
+    txt = _SROK_STARYJ.sub(lambda m: m.group(1) + _srok_span(None) + m.group(2), txt)
+    return _SROK.sub(lambda m: _srok_span(bdo, bool(m.group(1))), txt)
+
+
+def beta_poloviny(txt, beta, bdo=None):
+    """Привести половины беты к режиму (идемпотентно); bdo — tarify.json → beta_do (None — даты нет)."""
+    txt = beta_sroki(txt, bdo)
+
     def blok(m):
         op, vb = _beta_snyat(m.group(1), _T_OPL), _beta_snyat(m.group(2) or "", _T_BET)
         if beta:
@@ -2199,7 +2236,7 @@ def nadet_obolochku(telo, ob):
     карточкой проверяет tests/test_kartochki.py. Нет метки или </head> — None (API отвечает 503, а не кривой страницей)."""
     if not telo or OBOLOCHKA_METKA not in telo or "</head>" not in telo or "</body>" not in telo:
         return None
-    t = beta_poloviny(telo, bool(ob.get("beta")))  # kartochki-daty-v1: вход в Паспорт — половина по режиму, как на сайте
+    t = beta_poloviny(telo, bool(ob.get("beta")), ob.get("beta_do"))  # kartochki-daty-v1: вход в Паспорт — половина по режиму, как на сайте
     t = t.replace("</head>", ob["head"] + "</head>", 1)
     t = t.replace(OBOLOCHKA_METKA, ob["shapka"], 1)
     i = t.rfind("</body>")

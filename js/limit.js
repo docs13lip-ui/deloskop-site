@@ -24,7 +24,16 @@
   var KEY = 'dlk_otlozhennye', MAX = 5, DNEJ = 30;
   var TARIFY_URL = '/tarify/tarify.json';
   var LIMIT = 3;
-  var KONEC_BETY = 'по' + NB + '13' + NB + 'октября';
+  // beta-data-v1: конец беты — из tarify.json → beta_do (последний бесплатный день, МСК). Нет даты или день прошёл —
+  // текст без даты (вариант B полосы, ТЗ [Продукт] 05.10, разд. 1; [Право] 05.10 11:10, разд. 1, условие 3).
+  var MES = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+  function srokBety(d, sejchas) {
+    var m = String(d || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return null;
+    var k = Date.parse(d + 'T00:00:00+03:00') + 864e5;
+    if (isNaN(k) || (sejchas || Date.now()) >= k) return null;
+    return { kratko: m[3] + '.' + m[2], slovami: (+m[3]) + NB + MES[+m[2] - 1] };
+  }
 
   var SSYLKI = [
     { kuda: 'schet', t: 'Проверить реквизиты счёта', href: '/proverit-schet/' },
@@ -50,12 +59,13 @@
     var p = T.pasport_razovyj || {};
     return {
       beta: T.beta === true,
+      betaDo: T.beta_do || null,
       start: start && start.mesyac > 0 ? { nazvanie: start.nazvanie || 'Старт', mesyac: start.mesyac } : null,
       pasport: p.cena_rub > 0 ? { nazvanie: p.nazvanie || 'Паспорт контрагента на дату сделки', cena: p.cena_rub } : null
     };
   }
 
-  /* tekst({tarify, beta, inn, stranica, sohranen}) → {beta, zag, stroka, sohr, ssylkiZag, ssylki[], knopki[]}
+  /* tekst({tarify, beta, inn, stranica, sohranen, sejchas}) → {beta, zag, stroka, sohr, ssylkiZag, ssylki[], knopki[]}
    * tarify — iz(tarify.json) или null; beta — режим страницы (главнее файла); inn — что ввёл человек;
    * sohranen — ИНН записан в отложенные. */
   function tekst(o) {
@@ -73,7 +83,8 @@
       knopki: []
     };
     if (beta) {
-      r.stroka = 'Завтра' + NB + '— снова ' + LIMIT + '. Пока идёт бета (' + KONEC_BETY + '), тарифы не' + NB + 'продаём и' + NB + 'счета не' + NB + 'выставляем.';
+      var srok = srokBety(T && T.betaDo, o.sejchas);
+      r.stroka = 'Завтра' + NB + '— снова ' + LIMIT + '. Пока идёт бета' + (srok ? ' (по' + NB + srok.slovami + ')' : '') + ', тарифы не' + NB + 'продаём и' + NB + 'счета не' + NB + 'выставляем.';
       return r;
     }
     r.stroka = 'Завтра' + NB + '— снова ' + LIMIT + '. Без лимита' + NB + '— в' + NB + 'тарифе «' + T.start.nazvanie + '» за' + NB + rub(T.start.mesyac) + ' в' + NB + 'месяц.';

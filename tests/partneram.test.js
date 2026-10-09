@@ -57,7 +57,8 @@ test('FAQ: ИП — без обещания о слежении (кабинет 
 
 test('бета-блок — только в бете (половина <!--v-bete-->)', () => {
   const m = main.match(/<!--oplata-->([\s\S]*?)<!--\/oplata--><!--v-bete-->([\s\S]*?)<!--\/v-bete-->/);
-  assert.ok(m && m[2].includes('всё бесплатно по&nbsp;13&nbsp;октября включительно'));
+  // beta-data-v1: дата — из tarify.json → beta_do (сборщик), после конца дня span убирает браузер
+  assert.ok(m && /всё бесплатно<span data-beta-srok(="\d{4}-\d{2}-\d{2}")? data-beta-vkl>( по&nbsp;\d{1,2}&nbsp;[а-я]+ включительно)?<\/span>\./.test(m[2]));
   if (T.beta) assert.ok(!m[2].startsWith('<template')); else assert.ok(m[2].startsWith('<template data-v-bete>'));
 });
 

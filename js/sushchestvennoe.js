@@ -103,6 +103,36 @@
     return { god: v.year, vyruchka: v.value, pribyl: p };
   }
 
+  // ---- staraya-otchetnost-v1 [Ночные-3] 10.10 (ТЗ [Продукт] 10.10 01:40, разд. 2.2 и 3 п. Б): последняя открытая отчётность
+  // старше (год проверки по Москве − 2) — показываем её как «последнюю открытую», а не как текущую. Живой ответ 10.10:
+  // у крупной торговой сети — «Выручка за 2021» рядом с «проверено 10.10.2026», строки о 2022–2025 не было.
+  // Последний год — наибольший по всем рядам ГИР БО ответа (выручка, прибыль, налог, баланс, расчёты, KPI «за ГГГГ»).
+  // Нет ни одного года — null (это другой случай: «Нет в ответе ГИР БО»). Причину не пишем — её не знаем, только факт.
+  // Та же функция — в js/sushchestvennoe.js, js/dinamika.js, js/pasport-kontragenta.js (tests/staraya_otchetnost.test.js сверяет).
+  function poslGodOtchetnosti(r) {
+    var D = (r && r.dossier) || {}, ch = D.charts || {}, g = null;
+    function vz(y) { y = parseInt(y, 10); if (isFinite(y) && y > 1990 && y < 2200 && (g === null || y > g)) g = y; }
+    ['revenue', 'profit', 'income_tax'].forEach(function (k) {
+      (Array.isArray(ch[k]) ? ch[k] : []).forEach(function (x) { if (x && x.value != null && x.value !== '' && isFinite(Number(x.value))) vz(x.year); });
+    });
+    ['balance', 'debts'].forEach(function (k) { if (ch[k] && typeof ch[k] === 'object' && !Array.isArray(ch[k])) vz(ch[k].year); });
+    (Array.isArray(D.kpi) ? D.kpi : []).forEach(function (k) {
+      var m = /за (\d{4})$/.exec((k && k.label) || '');
+      if (m && k.value != null && isFinite(Number(k.value))) vz(m[1]);
+    });
+    return g;
+  }
+  function godProverki(r, segodnya) {
+    var t = Date.parse((r && r.checked_at) || '');
+    var ms = isFinite(t) ? t : (segodnya || new Date()).getTime();
+    return new Date(ms + 3 * 3600 * 1000).getUTCFullYear();
+  }
+  // → { god, tekst } | null
+  function staraya(r, segodnya) {
+    var g = poslGodOtchetnosti(r);
+    if (g === null || g >= godProverki(r, segodnya) - 2) return null;
+    return { god: g, tekst: 'Последняя открытая отчётность — за' + NB + g + NB + 'год. Более свежей в' + NB + 'открытых данных ГИР' + NB + 'БО нет — запросите отчётность у' + NB + 'компании.' };
+  }
   // ---- год сданной отчётности без выручки (otchet-bez-vyruchki-v1 [Ночные-3] 05.10) ----
   // Живой ответ (ООО, 16 лет): dossier.charts.revenue пуст, «Выручка за 2025» = null, но прибыль и баланс за 2025 есть.
   // Экран писал «Бухотчётность · Нет в ответе ГИР БО» рядом с «Собственным капиталом на 31.12.2025» из того же ГИР БО.
@@ -224,11 +254,18 @@
       add(f);
     });
 
-    var o = otchetnost(r);
+    var o = otchetnost(r), st = fl ? null : staraya(r, opt.segodnya);
+    // строка отчётности за старый год: «· последняя открытая», тон «внимание» (поднимается к замечаниям) и подстрочник-факт
+    function starayaFakt(f, s) {
+      if (!s) return f;
+      f.nazv += ' · последняя открытая'; f.ton = 'warn'; f.pod = s.tekst.replace(/^.*?год\. /, ''); // год уже в названии строки — подстрочник без повтора
+      f.spravka = SPRAVKA_GIRBO; f.spravkaT = 'почему так бывает'; f.spravkaCel = 'girbo_pochemu';
+      return f;
+    }
     if (!fl) {
       if (o) {
         var pr = o.pribyl == null ? '' : o.pribyl < 0 ? ' · убыток ' + dengi(-o.pribyl) : ' · прибыль ' + dengi(o.pribyl);
-        add({ k: 'otchetnost', nazv: 'Выручка за ' + o.god, znach: dengi(o.vyruchka) + pr, ton: 'neutral', ist: 'ГИР БО ФНС', data: '31.12.' + o.god });
+        add(starayaFakt({ k: 'otchetnost', nazv: 'Выручка за ' + o.god, znach: dengi(o.vyruchka) + pr, ton: 'neutral', ist: 'ГИР БО ФНС', data: '31.12.' + o.god }, st));
       } else if (bank(c)) {
         // банк сдаёт отчётность в Банк России; в ГИР БО её передаёт Банк России (ч. 9 ст. 18 402-ФЗ), доступ может быть
         // ограничен (ч. 12; v1.1 — [Право] 04.10 12:30 разд. 1). Есть она в ответе — считаем как у всех (ветка выше); нет — пишем, как устроено, без «её нет».
@@ -239,8 +276,8 @@
         // Отчёт за год сдан, а выручки в нём нет (0 или строка 2110 не заполнена) — пишем это, а не «нет в ответе ГИР БО».
         var bv = godBezVyruchki(r);
         var pv = bv.pribyl == null || bv.pribyl === 0 ? '' : bv.pribyl < 0 ? ' · убыток ' + dengi(-bv.pribyl) : ' · прибыль ' + dengi(bv.pribyl);
-        add({ k: 'otchetnost', nazv: 'Выручка за ' + bv.god, znach: 'В' + NB + 'отчёте не' + NB + 'указана' + pv, ton: 'neutral',
-          ist: 'ГИР БО ФНС', data: '31.12.' + bv.god });
+        add(starayaFakt({ k: 'otchetnost', nazv: 'Выручка за ' + bv.god, znach: 'В' + NB + 'отчёте не' + NB + 'указана' + pv, ton: 'neutral',
+          ist: 'ГИР БО ФНС', data: '31.12.' + bv.god }, st));
       } else {
         // «Почему так бывает» — статья о законных причинах (net-otchetnosti-v1, ТЗ [Продукт · Маркетинг] 04.10 10:50 разд. 2):
         // пустое место у крупного поставщика ≠ «техническая» компания. Цель Метрики — girbo_pochemu.
@@ -352,7 +389,8 @@
     var meta = [x.ist, x.data ? 'на' + NB + x.data : ''].filter(Boolean).join(' · ');
     return '<div class="row sut__r" data-fakt="' + esc(x.k) + '"><span>' + esc(x.nazv) +
       '<small>' + esc(meta) + (x.ssylka ? ' · <a href="' + esc(x.ssylka) + '" target="_blank" rel="noopener">проверить в' + NB + 'ЦБ</a>' : '') +
-      (x.spravka ? ' · <a href="' + esc(x.spravka) + '" data-goal="' + esc(x.spravkaCel || 'statusy_iz_proverki') + '">' + esc(x.spravkaT) + '</a>' : '') + '</small></span>' +
+      (x.spravka ? ' · <a href="' + esc(x.spravka) + '" data-goal="' + esc(x.spravkaCel || 'statusy_iz_proverki') + '">' + esc(x.spravkaT) + '</a>' : '') + '</small>' +
+      (x.pod ? '<small class="sut__pod">' + esc(x.pod) + '</small>' : '') + '</span>' +
       '<b class="d ' + x.ton + '">' + nwFz(esc(x.znach)) + '</b></div>';
   }
   function glubinaHtml(g, podpis, dop) {
@@ -404,7 +442,7 @@
   var CSS = '.sut__h{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px;padding-bottom:10px}' +
     '.sut__h b{font-size:15px;font-weight:600}.sut__h span{font-size:13px;color:var(--muted,#6B6B70)}' +
     '.sut__r>span{display:block}.sut__r small{display:block;margin-top:2px;font-size:12px;color:var(--muted,#6B6B70);font-weight:400}' +
-    '.sut__r small a{color:inherit;text-decoration:underline}' +
+    '.sut__r small a{color:inherit;text-decoration:underline}.sut__r small.sut__pod{color:var(--warn,#8A5A00)}' +
     '.sut__ne{margin:0;padding:12px 0 0;border-top:1px solid #EFEFEA;font-size:13px;color:var(--ink2,#48484C)}' +
     '.sut__g{margin-top:12px;border:1px solid var(--line,#E6E6E1);border-radius:14px;padding:0 16px}' +
     '.sut__g summary{cursor:pointer;display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:14px 0;font-size:15px;font-weight:600;list-style:none}' +
@@ -465,5 +503,5 @@
     return true;
   }
 
-  return { razryady: razryady, fakty: fakty, godBezVyruchki: godBezVyruchki, otchetGod: otchetGod, bank: bank, kapital: kapital, likvidnost: likvidnost, ubytki: ubytki, glubina: glubina, otchetnost: otchetnost, html: html, mount: mount, htmlSvoj: htmlSvoj, mountSvoj: mountSvoj, dengi: dengi, srok: srok, MAKS: MAKS, CSS: CSS };
+  return { razryady: razryady, fakty: fakty, godBezVyruchki: godBezVyruchki, otchetGod: otchetGod, bank: bank, kapital: kapital, likvidnost: likvidnost, ubytki: ubytki, glubina: glubina, otchetnost: otchetnost, poslGodOtchetnosti: poslGodOtchetnosti, staraya: staraya, html: html, mount: mount, htmlSvoj: htmlSvoj, mountSvoj: mountSvoj, dengi: dengi, srok: srok, MAKS: MAKS, CSS: CSS };
 });

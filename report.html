@@ -454,6 +454,9 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
     if(ZSK)h+=zskHtml(ZSK);
     // «Что изменилось с вашей проверки» + «Динамика за 3–5 лет» (js/dinamika.js; нет модуля — блоков нет)
     if(window.Dinamika)h+=Dinamika.html(R,{balans:false});
+    // staraya-otchetnost-v1: KPI за старый год — с той же строкой, что на экране (если таблицы динамики нет, строки ещё не было)
+    var stO=window.Dinamika&&Dinamika.staraya?Dinamika.staraya(R):null;
+    if(stO&&D.kpi&&D.kpi.length&&h.indexOf('din__star')<0)h+='<p class="din__star" style="margin:20px 0 0;padding:10px 12px;border-radius:10px;background:#FFF4E0;color:#9A5B00;font-size:14px">'+esc(stO.tekst)+'</p>';
     if(D.kpi&&D.kpi.length)h+=kpiHtml(D.kpi);
     if(D.charts)h+=chartsHtml(D.charts);
     D.sections.forEach(function(sct){

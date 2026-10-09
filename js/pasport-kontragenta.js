@@ -171,6 +171,36 @@
       sam: (def.sam || []).map(function (a) { return { tekst: a[0], url: a[1], chto: a[2] || '' }; }) };
   }
 
+  // ---- staraya-otchetnost-v1 [Ночные-3] 10.10 (ТЗ [Продукт] 10.10 01:40, разд. 2.2 и 3 п. Б): последняя открытая отчётность
+  // старше (год проверки по Москве − 2) — показываем её как «последнюю открытую», а не как текущую. Живой ответ 10.10:
+  // у крупной торговой сети — «Выручка за 2021» рядом с «проверено 10.10.2026», строки о 2022–2025 не было.
+  // Последний год — наибольший по всем рядам ГИР БО ответа (выручка, прибыль, налог, баланс, расчёты, KPI «за ГГГГ»).
+  // Нет ни одного года — null (это другой случай: «Нет в ответе ГИР БО»). Причину не пишем — её не знаем, только факт.
+  // Та же функция — в js/sushchestvennoe.js, js/dinamika.js, js/pasport-kontragenta.js (tests/staraya_otchetnost.test.js сверяет).
+  function poslGodOtchetnosti(r) {
+    var D = (r && r.dossier) || {}, ch = D.charts || {}, g = null;
+    function vz(y) { y = parseInt(y, 10); if (isFinite(y) && y > 1990 && y < 2200 && (g === null || y > g)) g = y; }
+    ['revenue', 'profit', 'income_tax'].forEach(function (k) {
+      (Array.isArray(ch[k]) ? ch[k] : []).forEach(function (x) { if (x && x.value != null && x.value !== '' && isFinite(Number(x.value))) vz(x.year); });
+    });
+    ['balance', 'debts'].forEach(function (k) { if (ch[k] && typeof ch[k] === 'object' && !Array.isArray(ch[k])) vz(ch[k].year); });
+    (Array.isArray(D.kpi) ? D.kpi : []).forEach(function (k) {
+      var m = /за (\d{4})$/.exec((k && k.label) || '');
+      if (m && k.value != null && isFinite(Number(k.value))) vz(m[1]);
+    });
+    return g;
+  }
+  function godProverki(r, segodnya) {
+    var t = Date.parse((r && r.checked_at) || '');
+    var ms = isFinite(t) ? t : (segodnya || new Date()).getTime();
+    return new Date(ms + 3 * 3600 * 1000).getUTCFullYear();
+  }
+  // → { god, tekst } | null
+  function staraya(r, segodnya) {
+    var g = poslGodOtchetnosti(r);
+    if (g === null || g >= godProverki(r, segodnya) - 2) return null;
+    return { god: g, tekst: 'Последняя открытая отчётность — за' + NB + g + NB + 'год. Более свежей в' + NB + 'открытых данных ГИР' + NB + 'БО нет — запросите отчётность у' + NB + 'компании.' };
+  }
   // Раздел 6: баланс и расчёты на 31.12 последнего года (pasport-balans-v1; тот же источник, что «На чём держится компания»
   // и «Кто кому должен» на экране проверки — dossier.charts.balance / debts, ГИР БО). Только суммы первоисточника и доли,
   // без оценок. Доли «от баланса» — только когда известны все три части пассива и капитал не меньше нуля (иначе это не доля баланса).
@@ -321,11 +351,18 @@
 
     // 6. Финансы из досье (ГИР БО)
     var D = r.dossier || {};
+    // staraya-otchetnost-v1: последняя открытая отчётность старше (год проверки − 2) — первой строкой раздела, тоном «внимание»
+    var stO = staraya(r);
+    if (stO) fakt('finansy', 'Последняя открытая отчётность', stO.tekst.replace(/^Последняя открытая отчётность — /, ''), { ton: 'warn', data: stO.god + '-12-31', istochnik: 'ГИР БО, ФНС' });
+    var godBal = D.charts && D.charts.balance && typeof D.charts.balance === 'object' ? parseInt(D.charts.balance.year, 10) : NaN;
     (D.kpi || []).forEach(function (k) {
       if (!k || !k.label) return;
       var v = k.text || (typeof k.value === 'number' && U ? U.money(k.value) : k.value);
       if (v == null || v === '') return;
-      fakt(razdelDlya(k.label) === 'nalogi' ? 'nalogi' : 'finansy', k.label, v, { ton: 'info', istochnik: 'ГИР БО, ФНС' });
+      var nal = razdelDlya(k.label) === 'nalogi', mg = /за (\d{4})$/.exec(k.label);
+      // у финансовых KPI — дата отчётного года: «за ГГГГ» из подписи, у балансовых («Активы», «Собственный капитал») — год баланса
+      var dk = nal ? null : mg ? mg[1] + '-12-31' : isFinite(godBal) && godBal > 1990 ? godBal + '-12-31' : null;
+      fakt(nal ? 'nalogi' : 'finansy', k.label, v, { ton: 'info', istochnik: 'ГИР БО, ФНС', data: dk });
     });
     if (D.charts && D.charts.revenue && D.charts.revenue.length && U) {
       var rv = D.charts.revenue.slice(-5).map(function (x) { return x.year + ' — ' + U.money(x.value); }).join(' · ');
@@ -671,7 +708,7 @@
     return osh;
   }
 
-  return { VERSIYA: VERSIYA, RAZDELY: RAZDELY, sobrat: sobrat, strukturaBalansa: strukturaBalansa, polosaBalansaHtml: polosaBalansaHtml, proverit: proverit, razdelDlya: razdelDlya,
+  return { VERSIYA: VERSIYA, RAZDELY: RAZDELY, sobrat: sobrat, staraya: staraya, poslGodOtchetnosti: poslGodOtchetnosti, strukturaBalansa: strukturaBalansa, polosaBalansaHtml: polosaBalansaHtml, proverit: proverit, razdelDlya: razdelDlya,
     vypustit: vypustit, nomerIz: nomerIz, podpisant: podpisant, datuIz: datuIz, tuZheDolzhnost: tuZheDolzhnost, SSYLKI_PODPISANTA: SSYLKI_PODPISANTA, qrSsylka: qrSsylka, podval: podval, SLOVAR_222: SLOVAR_222,
     OPREDELENIE_INDEKSA: OPREDELENIE_INDEKSA, PODPIS_PREDELA: PODPIS_PREDELA,
     otmetka: otmetka, otmetkiSvodka: otmetkiSvodka, dataIzRu: dataIzRu, tuZheSajt: tuZheSajt, OTM_SNIMOK: OTM_SNIMOK, OTM_EP: OTM_EP, OTM_EP_HOST: OTM_EP_HOST, OTM_OGOVORKA: OTM_OGOVORKA, OTM_REZ: OTM_REZ, OTM_SVEZHEST_DNEJ: OTM_SVEZHEST_DNEJ, OTM_ZSK: OTM_ZSK, OTM_ZSK_SUD: OTM_ZSK_SUD, OTM_ZSK_SUD_URL: OTM_ZSK_SUD_URL, zskAdres: zskAdres, dnejTekst: dnejTekst,

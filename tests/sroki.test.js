@@ -53,3 +53,28 @@ test('sroki.json: логика дат — день срока зелёный, с
   assert.equal('2026-12-16' > '2026-12-15', true);
   assert.equal(segodnyaMsk(new Date('2026-12-15T21:30:00Z')), '2026-12-16');
 });
+
+// usn_limit_2027_deflyator (10.10.2026, [Ночные запуски]): цифры из проектов (приказ не принят) — в «ne_publikuem».
+// Краснеет, если такая цифра появилась на странице, в скрипте или данных сайта раньше, чем её разрешили [Право].
+test('sroki.json: цифры «не публикуем» не стоят на сайте', () => {
+  const zapret = S.sroki.flatMap((s) => (s.ne_publikuem || []).map((f) => [s.id, f]));
+  assert.ok(zapret.length >= 1);
+  const propusk = new Set(['.git', 'node_modules', 'tests', 'deploy', '.github']);
+  const fajly = [];
+  const obojti = (d) => {
+    for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+      if (propusk.has(e.name)) continue;
+      const p = path.join(d, e.name);
+      if (e.isDirectory()) obojti(p);
+      else if (/\.(html|js|json|xml|txt)$/.test(e.name) && !['sroki.json', 'obnovleniya.json'].includes(e.name)) fajly.push(p);
+    }
+  };
+  obojti(KOREN);
+  assert.ok(fajly.length > 100, 'обход сайта');
+  const najdeno = [];
+  for (const f of fajly) {
+    const t = norm(fs.readFileSync(f, 'utf8'));
+    for (const [id, fr] of zapret) if (t.includes(fr)) najdeno.push(`${path.relative(KOREN, f)}: «${fr}» (${id})`);
+  }
+  assert.deepEqual(najdeno, [], 'Цифра из проекта попала на сайт — до опубликования акта не ставим:\n' + najdeno.join('\n'));
+});

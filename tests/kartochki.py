@@ -364,7 +364,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         t2 = pochinit_ubytok(t2)  # kartochki-v4.2: «убыток» в таблице — подписью над числом, как у новых
         t2 = pochinit_otrasl_yakor(t2, normy)  # nagruzka-yakorya-v1: «Таблица ФНС» — на строку отрасли, как у новых
         t2 = pochinit_daty(t2, cena)  # kartochki-daty-v1: «Даты из реестра» и вход в Паспорт, как у новых
-        t2 = beta_poloviny(t2, r["_beta"])  # половины беты — по флагу, как sobrat_shapku
+        t2 = beta_poloviny(t2, r["_beta"], r.get("_beta_do"))  # половины беты — по флагу, как sobrat_shapku
         t2 = primenit_vorota_indeksa(t2)  # kartochki-indeks-v1: те же ворота индексации, что у новых карточек
         t2 = ssylki_kroshek(t2, kg)  # kartochki-haby-v1: регион и раздел в крошках — ссылкой на хаб группы
         x["_noindex"] = noindex_html(t2)

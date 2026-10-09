@@ -49,7 +49,16 @@ st = "<head>\n</head><body><!--shapka--><header></header><!--/shapka-->\n<main><
 sb = B.primenit(st, True, polosa="<div data-beta-bar></div>")
 ok("разметка: метка режима и полоса — только в бете, одна", sb.count(B.META) == 1 and sb.count("data-beta-bar") == 1
    and B.primenit(sb, True, polosa="<div data-beta-bar></div>") == sb)
-ok("разметка: без беты метка и полоса уходят без следа", B.primenit(sb, False) == st)
+ok("разметка: без беты (и без даты беты) метка и полоса уходят без следа", B.primenit(sb, False, bdo=None) == st)
+# beta-data-v1: полоса по beta_do — A (дата есть), B (даты нет), C (оплаты включены, дата была); сборка от «сегодня» не зависит
+pa, pb, pc = (B.primenit(st, True, bdo="2026-10-13"), B.primenit(st, True, bdo=None), B.primenit(st, False, bdo="2026-10-13"))
+ok("разметка: A — дата из beta_do и запасной текст B для браузера", 'data-beta-rezhim="a" data-beta-do="2026-10-13" data-beta-bar>' in pa
+   and "по&nbsp;13&nbsp;октября включительно" in pa and "<template data-beta-b>" in pa)
+ok("разметка: B — без даты", 'data-beta-rezhim="b" data-beta-do="" data-beta-bar>' in pb and "октябр" not in pb)
+ok("разметка: C — «Бета завершилась», без метки режима и без крестика", "Бета завершилась 13&nbsp;октября." in pc
+   and B.META not in pc and "data-beta-x" not in pc)
+ok("разметка: A, B, C — повторная сборка ничего не меняет", B.primenit(pa, True, bdo="2026-10-13") == pa
+   and B.primenit(pb, True, bdo=None) == pb and B.primenit(pc, False, bdo="2026-10-13") == pc)
 
 # ---------- 2. весь сайт на копии ----------
 tmp = tempfile.mkdtemp(prefix="beta-")
@@ -130,7 +139,8 @@ ok("без беты: кнопки оплаты вернулись (6 на /tarif
 ok("без беты: «Получить счёт на тариф основателя» и «Получить пакет» вернулись",
    ">Получить счёт на&nbsp;тариф основателя</a>" in B.vidimoe(platn["osnovatel/index.html"]) and
    B.vidimoe(platn["skoraya-115-fz/index.html"]).count(">Получить пакет</a>") == 2)
-ok("без беты: ни полосы, ни метки режима", all("data-beta-bar" not in t and B.META not in t for t in platn.values()))
+ok("без беты: метки режима нет; полоса — только «Бета завершилась» (C, пока в tarify.json есть beta_do)",
+   all(B.META not in t for t in platn.values()) and all(("data-beta-bar" not in t) or ('data-beta-rezhim="c"' in t) for t in platn.values()))
 ok("без беты: реквизиты из rekvizity.json — снова в подвале", "ОГРНИП 304500116000157" in platn["index.html"])
 ok("без беты: бета-тексты спрятаны", all("В бете — бесплатно" not in B.vidimoe(t) for t in platn.values()))
 

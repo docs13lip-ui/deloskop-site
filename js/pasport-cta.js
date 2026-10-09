@@ -3,7 +3,8 @@
  * (ТЗ [Продукт] 02.10.2026, claude/Продукт_Паспорт_490_в_один_шаг_однофамилец_02.10.md, разд. 1.1, 1.3, 1.4).
  *
  * Состояния (тексты — дословно из ТЗ; цены и названия — только из /tarify/tarify.json, в коде чисел нет):
- *   beta    — бета: «Паспорт контрагента» + «В бете — бесплатно. После 13.10 — 490 ₽ или в тарифе «Старт».» Кнопки оплаты нет.
+ *   beta    — бета: «Паспорт контрагента» + «В бете — бесплатно. После {beta_do ДД.ММ} — 490 ₽ или в тарифе «Старт».» Кнопки оплаты нет;
+ *             даты нет или день прошёл — только «В бете — бесплатно.» (beta-data-v1, [Право] 05.10 11:10, разд. 1, п. 3).
  *   gost    — гость / бесплатный: «Паспорт на дату сделки — 490 ₽» + «Без подписки. PDF с QR-кодом, хранится в Кабинете.» + «3 проверки — 990 ₽»;
  *             пока «Старт» в месяц дешевле Паспорта — вместо пакета «или «Старт» — 390 ₽ в месяц, 3 Паспорта включены»
  *             (lestnica-390-v1, ТЗ [Продукт · Стратег] 03.10 23:55, claude/Продукт_лестница_цен_Старт390_пакет990_03.10.md, разд. 2.3–2.4;
@@ -24,7 +25,16 @@
   var NB = '\u00a0';
   var TARIFY_URL = '/tarify/tarify.json';
   var PLATNYE = { start: 1, pro: 1, business: 1, biznes: 1, team: 1 };
-  var KONEC_BETY = '13.10';
+  // beta-data-v1: конец беты — из tarify.json → beta_do (последний бесплатный день, МСК). Нет даты или день прошёл —
+  // текст без даты (вариант B полосы, ТЗ [Продукт] 05.10, разд. 1; [Право] 05.10 11:10, разд. 1, условие 3).
+  var MES = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+  function srokBety(d, sejchas) {
+    var m = String(d || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return null;
+    var k = Date.parse(d + 'T00:00:00+03:00') + 864e5;
+    if (isNaN(k) || (sejchas || Date.now()) >= k) return null;
+    return { kratko: m[3] + '.' + m[2], slovami: (+m[3]) + NB + MES[+m[2] - 1] };
+  }
 
   function rub(n) {
     return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, NB) + NB + '₽';
@@ -53,6 +63,7 @@
     var start = (T.tarify || []).filter(function (t) { return t.id === 'start'; })[0];
     return {
       beta: T.beta === true,
+      betaDo: T.beta_do || null,
       cena: T.pasport_razovyj.cena_rub,
       paketShtuk: p.shtuk > 0 ? p.shtuk : null,
       paketCena: p.cena_rub > 0 ? p.cena_rub : null,
@@ -85,7 +96,7 @@
     return rub(T.startMes) + ' в месяц, ' + pasportov(T.startPasportov);
   }
 
-  /* sostoyanie({tarify, beta, user, gotov}) → {sost, knopka, stroka, ssylka?:{t, href}, href}
+  /* sostoyanie({tarify, beta, user, gotov, sejchas}) → {sost, knopka, stroka, ssylka?:{t, href}, href}
    * tarify — разобранный iz(tarify.json); beta — режим страницы (meta deloskop-rezhim), он главнее;
    * user — ответ /api/me .user (plan, paket:{ostalos, vsego, do}); gotov — {nomer, sformirovan, url}. */
   function sostoyanie(o) {
@@ -99,7 +110,8 @@
     }
     if (o.beta || (T && T.beta)) {
       var s = 'В бете — бесплатно.';
-      if (T && T.start) s += ' После ' + KONEC_BETY + ' — ' + rub(T.cena) + ' или в тарифе «' + T.start + '»' + (startVygodnee(T) ? ': ' + startPodskazka(T) : '') + '.';
+      var srok = srokBety(T && T.betaDo, o.sejchas);
+      if (T && T.start && srok) s += ' После ' + srok.kratko + ' — ' + rub(T.cena) + ' или в тарифе «' + T.start + '»' + (startVygodnee(T) ? ': ' + startPodskazka(T) : '') + '.';
       return { sost: 'beta', knopka: 'Паспорт контрагента', stroka: s, href: put };
     }
     var plan = u && u.plan ? String(u.plan) : '';
@@ -187,5 +199,5 @@
     }).catch(function () { return null; });
   }
 
-  return { sostoyanie: sostoyanie, iz: iz, pasportov: pasportov, startVygodnee: startVygodnee, rub: rub, dataRu: dataRu, vremyaRu: vremyaRu, mount: mount, primenit: primenit, KONEC_BETY: KONEC_BETY };
+  return { sostoyanie: sostoyanie, iz: iz, pasportov: pasportov, startVygodnee: startVygodnee, rub: rub, dataRu: dataRu, vremyaRu: vremyaRu, mount: mount, primenit: primenit, srokBety: srokBety };
 });

@@ -836,7 +836,7 @@ class TestObolochka(unittest.TestCase):
         fajl = (KOREN / "partials" / "obolochka.json").read_text(encoding="utf-8")
         self.assertEqual(fajl, ss.obolochka(r, ss.podval_html(r), ss.shapka_html()))
         ob = json.loads(fajl)
-        self.assertEqual(set(ob), {"versiya", "beta", "render", "head", "shapka", "podval"})
+        self.assertEqual(set(ob), {"versiya", "beta", "beta_do", "render", "head", "shapka", "podval"})
         self.assertRegex(ob["render"], r"^[0-9a-f]{16}$")
         self.assertNotRegex(fajl, r"fonts\.(googleapis|gstatic)")
         self.assertIn('<a class="skip" href="#main">', ob["shapka"])
@@ -1995,13 +1995,14 @@ class TestDatyIzReestraV1(unittest.TestCase):
     def test_vhod_dve_poloviny(self):
         h = K.pasport_vhod_html("0012345678", 490)
         self.assertIn("У" + NB + "каждого факта" + NB + "— источник и" + NB + "дата, расчёты" + NB + "— по" + NB + "открытой методике.", h)
-        self.assertIn("<!--v-bete--><a href=\"/pasport/kontragent/?inn=0012345678\" rel=\"nofollow\" data-goal=\"kartochka_pasport_vhod\">В" + NB + "бете бесплатно по" + NB + "13" + NB + "октября" + NB + "→</a><!--/v-bete-->", h)
+        # beta-data-v1: дату вписывает сборщик из tarify.json → beta_do (tests/beta.py, sroki)
+        self.assertIn("<!--v-bete--><a href=\"/pasport/kontragent/?inn=0012345678\" rel=\"nofollow\" data-goal=\"kartochka_pasport_vhod\">В" + NB + "бете бесплатно<span data-beta-srok></span>" + NB + "→</a><!--/v-bete-->", h)
         self.assertIn("Полный Паспорт на" + NB + "дату сделки" + NB + "— 490" + NB + "₽ или в" + NB + "тарифе «Старт»" + NB + "→", h)
         self.assertNotRegex(h, r"каждая строка|что менялось|истори|до(\s|\u00a0)13")
         # бета → видна только «по 13 октября»; после беты → только цена
         import beta as B
-        vb, vp = B.vidimoe(B.primenit(h, True, "")), B.vidimoe(B.primenit(h, False, ""))
-        self.assertIn("бесплатно по", vb)
+        vb, vp = B.vidimoe(B.primenit(h, True, "", bdo="2026-10-13")), B.vidimoe(B.primenit(h, False, "", bdo="2026-10-13"))
+        self.assertIn("бесплатно<span data-beta-srok=\"2026-10-13\"> по&nbsp;13&nbsp;октября</span>", vb)
         self.assertNotIn("490", vb)
         self.assertIn("490" + NB + "₽", vp)
         self.assertNotIn("бесплатно", vp)
@@ -2059,10 +2060,14 @@ class TestDatyIzReestraV1(unittest.TestCase):
         import beta as B
         h = K.pasport_vhod_html("0012345678", 490) + '<!--oplata--><a href="/schet/">Оплатить</a><!--/oplata-->'
         for b in (True, False):
-            x = B.primenit(h, b, "")
-            self.assertEqual(K.beta_poloviny(h, b), x, b)
-            self.assertEqual(K.beta_poloviny(x, b), x, b)  # идемпотентно
-            self.assertEqual(K.beta_poloviny(K.beta_poloviny(x, not b), b), x, b)  # туда и обратно — байт в байт
+            for d in ("2026-10-13", None):  # beta-data-v1: срок беты — из beta_do, как в tests/beta.py
+                x = B.primenit(h, b, "", bdo=d)
+                self.assertEqual(K.beta_poloviny(h, b, d), x, (b, d))
+                self.assertEqual(K.beta_poloviny(x, b, d), x, (b, d))  # идемпотентно
+                self.assertEqual(K.beta_poloviny(K.beta_poloviny(x, not b, d), b, d), x, (b, d))  # туда и обратно
+        # старая карточка (дата текстом, до beta-data-v1) приводится к тому же виду
+        star = "В&nbsp;бете бесплатно по&nbsp;13&nbsp;октября&nbsp;→"
+        self.assertEqual(K.beta_sroki(star, "2026-10-20"), B.sroki(star, "2026-10-20"))
 
     def test_css(self):
         with open(os.path.join(K.KOREN, "css", "co.css"), encoding="utf-8") as fh:

@@ -203,6 +203,26 @@ def stroka_tarify_beta(t, segodnya=None):
             + '</p><!--/v-bete-->')
 
 
+STROKA_GLAVNAYA_BETA = ('Стартовая цена «Старта» после беты&nbsp;— {m} в&nbsp;месяц или {g} за&nbsp;год, '
+                        'если первая оплата до&nbsp;{do}.')
+
+
+def stroka_glavnaya_beta(D, segodnya=None):
+    """start390-glavnaya-v1 ([Ночные запуски] 10.10 21:05): главная, «Сколько стоит», в бете — «Старт — 490 ₽», а отчёт
+    о проверке (js/pasport-cta.js) и /tarify/ (start390-beta-v1) — «Старт» 390 ₽. Та же строка, что на /tarify/, на тех же
+    условиях (stroka_tarify_beta). Пустая строка — строки нет (бета снята: цена «Старта» на главной уже 390 ₽ из tarify.json)."""
+    if D.get('beta') is not True:
+        return ''
+    t = start(D)
+    if not stroka_tarify_beta(t, segodnya):
+        return ''
+    st = t['startovaya']
+    r = lambda x: f'{x:,}'.replace(',', '&nbsp;') + '&nbsp;₽'
+    do = data_ru(st['pervaya_oplata_do']).replace(NB, '&nbsp;')
+    return ('<!--start-gl--><p class="startovaya-gl">' + STROKA_GLAVNAYA_BETA.format(m=r(st['mesyac']), g=r(st['god']), do=do)
+            + '</p><!--/start-gl-->')
+
+
 def stroka_tarify(t):
     """Строка под ценой карточки «Старта» на /tarify/ — только когда стартовая цена действует."""
     st = t.get('startovaya')

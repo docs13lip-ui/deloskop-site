@@ -65,6 +65,14 @@ if not STV.aktivna(D):
         ok('сейчас (бета): под «Стартом» — «Стартовая цена после беты — 390 ₽ … 3 700 ₽ за год», только в блоке беты',
            '<!--v-bete--><p class="startovaya startovaya-beta"><b>Стартовая цена после беты&nbsp;— 390&nbsp;₽ в&nbsp;месяц '
            'или 3&nbsp;700&nbsp;₽ за&nbsp;год</b>' in kb)
+        # start390-glavnaya-v1 ([Ночные запуски] 10.10 21:05): главная «Сколько стоит» — та же стартовая цена, один раз, сразу под строкой цен
+        gl = rd(R, 'index.html').replace(STV.NB, '&nbsp;')
+        ok('сейчас (бета): главная — под строкой цен «Стартовая цена «Старта» после беты — 390 ₽ … 3 700 ₽ за год, если первая оплата до 31 декабря 2026 года.»',
+           gl.count('<!--start-gl-->') == 1 and re.search(r'data-ceny-stroka>[^\n]*?</p><!--start-gl--><p class="startovaya-gl">Стартовая цена «Старта» после беты&nbsp;— '
+                                                         r'390&nbsp;₽ в&nbsp;месяц или 3&nbsp;700&nbsp;₽ за&nbsp;год, если первая оплата до&nbsp;31&nbsp;декабря 2026&nbsp;года\.</p>', gl))
+        ok('сейчас (бета): строка главной без «скидк», «было», таймеров (38-ФЗ)',
+           not re.search(r'скидк|было|осталось', re.search(r'<!--start-gl-->.*?<!--/start-gl-->', gl).group(0), re.I))
+        ok('сейчас (бета): после окна первой оплаты строки нет нигде', STV.stroka_glavnaya_beta(D, datetime.date(2027, 1, 1)) == '')
 else:
     ok('после включения: строка на /tarify/ и п. 3.9 в оферте', 'class="startovaya"' in pg and '<li id="start">' in of)
 
@@ -102,6 +110,7 @@ try:
         ok('репетиция: tarify.json изменился только в строке «Старта»',
            len([1 for a, b in zip(rd(R, 'tarify/tarify.json').split('\n'), rd(K, 'tarify/tarify.json').split('\n')) if a != b]) == 3)
         pg2, of2, gl2 = rd(K, 'tarify/index.html'), rd(K, 'oferta/index.html'), rd(K, 'index.html')
+        ok('репетиция: главная без строки «после беты» — цена «Старта» уже 390 ₽ в самой строке цен', '<!--start-gl-->' not in gl2)
         kar = kartochka_starta(pg2).replace(STV.NB, '&nbsp;')
         ok('репетиция: /tarify/ — 390 ₽ крупно, год 3 700 ₽, экономия 980 ₽',
            '<b data-m="390&nbsp;₽"' in kar and 'или 3&nbsp;700&nbsp;₽ за год — экономия 980&nbsp;₽' in kar

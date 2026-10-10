@@ -87,3 +87,41 @@ test('модуль без сырых неразрывных пробелов и 
   const kod = s.split('\n').filter((l) => !/^\s*(\/\*|\*|\/\/)/.test(l)).map((l) => l.replace(/\/\/.*$/, '')).join('\n');
   assert.ok(!/[\u00a0«»„“”]/.test(kod), 'в коде — только \\u-последовательности');
 });
+
+// kavychki-v1.1 (10.10.2026, [Ночные-3]): те же «ёлочки» везде, где показываем название компании —
+// кабинет (история и слежение), «Папка проверок», «Проверь счёт», Делопись, свой Паспорт,
+// «Кому вы платите» и Финцентр (названия из выписки 1С), «Скорая 115-ФЗ», «Наличные» (Щит).
+test('v1.1: модуль подключён и вызывается на остальных страницах с названиями', () => {
+  const nado = {
+    'proverit-schet/index.html': [/<script src="\/js\/imya\.js" defer><\/script>/, /DlkImya\.ispravitOtvet\(x\.j\);render\(r,sel,local,x\.j,null\)/],
+    'delopis/index.html': [/<script src="\/js\/imya\.js"><\/script>/, /DlkImya\.ispravitOtvet\(j\)/],
+    'pasport/index.html': [/<script src="\/js\/imya\.js"><\/script>/],
+    'kontragenty-iz-vypiski/index.html': [/<script src="\/js\/imya\.js"><\/script>/, /esc\(top\.name\?kav\(top\.name\)/, /var name=kav\(/],
+    'skoraya-115-fz/index.html': [/<script src="\/js\/imya\.js"><\/script>/],
+    'nalichnye/index.html': [/<script src="\/js\/imya\.js"><\/script>/],
+    'cabinet.html': [/esc\(r\.name\?\(window\.DlkImya\?DlkImya\.kavychki\(r\.name\)/],
+    'js/papka-proverok.js': [/esc\(g\.nm \? kav\(g\.nm\)/],
+    'kontragenty-iz-vypiski/engine.js': [/return kav\(s\.name\) \|\| s\.inn/],
+    'kontragenty-iz-vypiski/fincentr.js': [/esc\(kav\(x\.name\)/],
+    'skoraya-115-fz/app.js': [/esc\(kav\(r\.name\)\)/],
+    'nalichnye/shchit-ui.js': [/esc\(kav\(r\.client\.name\)/],
+  };
+  for (const [f, rx] of Object.entries(nado)) {
+    const s = chitat(f);
+    for (const r of rx) assert.ok(r.test(s), f + ': нет ' + r);
+  }
+  // свой Паспорт: оба ответа /api/check исправляются до показа
+  assert.strictEqual((chitat('pasport/index.html').match(/if\(x\.ok&&window\.DlkImya\)DlkImya\.ispravitOtvet\(x\.j\)/g) || []).length, 2);
+  // imya.js на странице раньше модулей, которые его зовут
+  for (const [f, mod] of [['skoraya-115-fz/index.html', '/skoraya-115-fz/app.js'], ['nalichnye/index.html', '/nalichnye/shchit-ui.js'], ['kontragenty-iz-vypiski/index.html', '/kontragenty-iz-vypiski/engine.js']]) {
+    const s = chitat(f);
+    assert.ok(s.indexOf('/js/imya.js') < s.indexOf(mod), f);
+  }
+});
+
+test('v1.1: без модуля в браузере (и в node) движки выписки отдают название как есть', () => {
+  const E = require('../kontragenty-iz-vypiski/engine.js');
+  assert.ok(E && typeof E === 'object');
+  const src = chitat('kontragenty-iz-vypiski/engine.js');
+  assert.ok(/typeof window !== 'undefined' && window\.DlkImya/.test(src));
+});

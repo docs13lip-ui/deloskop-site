@@ -274,6 +274,7 @@
   }
 
   /* ---------- HTML одного листа ---------- */
+  function kav(t) { var D = typeof window !== 'undefined' && window.DlkImya; return D && t ? D.kavychki(t) : t; } // kavychki-v1.1
   function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function rub(n) { return E.money(n) + NB + '₽'; }
   function ru(iso) { var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? m[3] + '.' + m[2] + '.' + m[1] : ''; }
@@ -307,7 +308,7 @@
       'Платежи, которые покрывал остаток, пролежавший на счёте неделю, транзитом не считаем.</p>';
     var top = (r.suppliers || []).slice(0, 5);
     var komu = top.length ? '<ol class="fc-komu">' + top.map(function (x) {
-      return '<li><span>' + esc(x.name || x.inn || 'без названия') + '</span><b>' + E.pct(x.share || 0) + '</b></li>';
+      return '<li><span>' + esc(kav(x.name) || x.inn || 'без названия') + '</span><b>' + E.pct(x.share || 0) + '</b></li>';
     }).join('') + '</ol><a class="fc-vse-pol" href="#postavshchiki">Все получатели' + NB + '→</a>' : '<p class="fc-m">Платежей поставщикам нет.</p>';
     var dela = (r.todo || []).length ? '<ol class="fc-dela">' + r.todo.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ol>' : '';
     return '<section class="fc" data-fincentr="' + esc(s.vyvod.kod) + '" aria-label="Все ваши счета глазами банка">' +

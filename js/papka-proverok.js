@@ -20,6 +20,8 @@
   var UR_POLN = { low: 'Без серьёзных сигналов', medium: 'Есть вопросы', high: 'Есть серьёзные сигналы' };
   var PORYADOK = ['high', 'medium', 'low'];
 
+  // kavychki-v1.1: название из истории проверок — «ёлочками» (js/imya.js); в CSV — как в ЕГРЮЛ
+  function kav(t) { var D = typeof window !== 'undefined' && window.DlkImya; return D ? D.kavychki(t) : t; }
   function esc(t) {
     return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -102,7 +104,7 @@
     var ist = n > 1 ? '<details class="pp__ist"><summary>Все проверки — ' + n + '</summary><ol>' + g.vse.map(function (x) {
       return '<li><span class="n">' + data(x.t) + '</span>' + pill(x.lvl) + (x.id ? dosje(x.id, 'Досье на' + NB + data(x.t)) : '<span class="pp__bez">досье не сохранено</span>') + '</li>';
     }).join('') + '</ol></details>' : '';
-    return '<li class="pp__r" data-inn="' + g.inn + '"><div class="nm"><b>' + esc(g.nm || ('ИНН ' + g.inn)) + '</b>' +
+    return '<li class="pp__r" data-inn="' + g.inn + '"><div class="nm"><b>' + esc(g.nm ? kav(g.nm) : ('ИНН ' + g.inn)) + '</b>' +
       '<span>ИНН' + NB + '<span class="n">' + g.inn + '</span> · ' + n + NB + mn(n, 'проверка', 'проверки', 'проверок') + ', ' +
       '<span class="n">' + k.t + '</span></span>' + (k.staryj ? '<p class="pp__star">' + k.pred + '</p>' : '') + izm + '</div>' + pill(p.lvl) +
       '<div class="acts">' + dosje(p.id, 'Досье') + '<a href="/?inn=' + encodeURIComponent(g.inn) + '">Проверить снова</a></div>' + ist + '</li>';

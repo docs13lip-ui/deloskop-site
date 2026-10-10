@@ -321,7 +321,7 @@ ul.list .nm span{color:var(--muted);font-size:13px}
     $('sChecks').textContent=rows.length;
     $('checksEmpty').hidden=!!rows.length;
     $('checks').innerHTML=rows.map(function(r){
-      return '<li><div class="nm"><b>'+esc(r.name||('ИНН '+r.inn))+'</b><span>ИНН '+esc(r.inn)+' · '+esc(fmtDate(r.created_at))+'</span></div>'+pill(r.risk_level)+
+      return '<li><div class="nm"><b>'+esc(r.name?(window.DlkImya?DlkImya.kavychki(r.name):r.name):('ИНН '+r.inn))+'</b><span>ИНН '+esc(r.inn)+' · '+esc(fmtDate(r.created_at))+'</span></div>'+pill(r.risk_level)+
         '<div class="acts">'+(r.report_id?'<a href="/report.html?id='+encodeURIComponent(r.report_id)+'">Досье</a>':'')+
         '<a href="/?inn='+encodeURIComponent(r.inn)+'">Проверить снова</a></div></li>'}).join('');
   }
@@ -330,7 +330,7 @@ ul.list .nm span{color:var(--muted);font-size:13px}
     $('sWatch').textContent=rows.length+' из '+(j.limit||1);
     $('watchEmpty').hidden=!!rows.length;
     $('watch').innerHTML=rows.map(function(r){
-      return '<li><div class="nm"><b>'+esc(r.name||('ИНН '+r.inn))+'</b><span>ИНН '+esc(r.inn)+(r.note?' · '+esc(r.note):'')+'</span></div>'+pill(r.last_level)+
+      return '<li><div class="nm"><b>'+esc(r.name?(window.DlkImya?DlkImya.kavychki(r.name):r.name):('ИНН '+r.inn))+'</b><span>ИНН '+esc(r.inn)+(r.note?' · '+esc(r.note):'')+'</span></div>'+pill(r.last_level)+
         '<div class="acts"><a href="/?inn='+encodeURIComponent(r.inn)+'">Проверить</a><button type="button" data-del="'+esc(r.inn)+'">Убрать</button></div></li>'}).join('');
   }
   function loadWatch(){return call('/api/me/watchlist').then(renderWatch)}

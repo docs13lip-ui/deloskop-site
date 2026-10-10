@@ -103,6 +103,7 @@ footer a{color:var(--muted)}
 <link rel="stylesheet" href="/css/podval.css">
 <link rel="stylesheet" href="/css/shapka.css">
 <link rel="stylesheet" href="/css/acc.css">
+<script src="/js/imya.js" defer></script>
 <script src="/js/acc.js" defer></script>
 <script src="/js/kpp-inn.js" defer></script>
 <script src="/js/smena.js" defer></script>
@@ -390,7 +391,7 @@ function run(r,sel){
   fetch(API+'/api/check?q='+sel.inn,{credentials:'include'})
     .then(function(res){return res.json().then(function(j){return {ok:res.ok,s:res.status,j:j}})})
     .then(function(x){msg.textContent='';
-      if(x.ok)render(r,sel,local,x.j,null);
+      if(x.ok){if(window.DlkImya)DlkImya.ispravitOtvet(x.j);render(r,sel,local,x.j,null);}
       else render(r,sel,local,null,x.s===429?{limit:true}:esc(x.j.detail||'Проверка поставщика не удалась.'));})
     .catch(function(){msg.textContent='';render(r,sel,local,null,'Нет связи с сервером. Реквизиты проверены, а поставщика проверьте позже.')});
 }

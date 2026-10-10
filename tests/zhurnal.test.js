@@ -169,3 +169,8 @@ test('v1.1 «Что нового в Делоскопе» берёт записи
     assert.deepStrictEqual(JSON.parse(out), ozhid, `${f}: «Что нового» не совпадает с лентой недели`);
   }
 });
+
+test('v1.3 «Вокруг компаний»: «Вестник государственной регистрации» — первоисточник; похожие домены — нет', () => {
+  const out = execFileSync('python3', ['-c', `import sys,json;sys.path.insert(0,'tests');import sobrat_zhurnal as Z;print(json.dumps([Z.domen_ok(u) for u in ['https://www.vestnik-gosreg.ru/publ/vgr/?id=1','https://vestnik-gosreg.ru/','https://vestnik-gosreg.ru.example.com/','https://fake-vestnik-gosreg.ru/','http://www.vestnik-gosreg.ru/']]))`], { cwd: KOREN, encoding: 'utf8' });
+  assert.deepStrictEqual(JSON.parse(out), [true, true, false, false, false]);
+});

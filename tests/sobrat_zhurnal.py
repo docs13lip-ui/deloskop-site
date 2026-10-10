@@ -45,7 +45,10 @@ KRATKO_MAKS = 220
 DOMENY = ("consultant.ru", "pravo.gov.ru", "vsrf.ru", "ksrf.ru", "nalog.gov.ru", "cbr.ru", "kad.arbitr.ru",
           "regulation.gov.ru", "sozd.duma.gov.ru", "minfin.gov.ru", "economy.gov.ru", "fedsfm.ru",
           "fedresurs.ru", "bankrot.fedresurs.ru", "egrul.nalog.ru", "zakupki.gov.ru", "fssp.gov.ru",
-          "garant.ru", "government.ru", "kremlin.ru")
+          "garant.ru", "government.ru", "kremlin.ru",
+          # «Вестник государственной регистрации» — издание для сведений ЕГРЮЛ (приказ ФНС от 16.06.2006 № САЭ-3-09/355@):
+          # ликвидация, реорганизация, уменьшение капитала. Учредители — ФНС России и ООО «Коммерсантъ КАРТОТЕКА».
+          "vestnik-gosreg.ru")
 STATUSY = {"prinyat": "", "proekt": "Проект — не принят", "sobytie": ""}
 
 # Рубрики устава (п. 3) — порядок постоянный. (ключ в JSON, якорь, заголовок, подпись под заголовком)

@@ -28,6 +28,17 @@
     if (st === 'LIQUIDATING' && LIKV[k]) return 'likvidaciya';
     return '';
   }
+  // pasport-reorg-v1 [Ночные-3] 10.10: форма реорганизации по коду СЮЛСТ (data/statusy-egryul.json, группа reorganizaciya) —
+  // короткий пересказ названия из справочника, без новых юридических формулировок. Название статуса (nazv) не меняем.
+  var REORG_FORMA = {
+    '121': 'преобразование', '122': 'слияние', '123': 'разделение', '124': 'присоединение к' + NB + 'другому юрлицу',
+    '125': 'разделение одновременно с' + NB + 'присоединением', '129': 'сочетание нескольких форм, после которого компания прекратит деятельность',
+    '131': 'выделение', '132': 'присоединение к' + NB + 'ней других юрлиц', '133': 'присоединение одновременно с' + NB + 'разделением',
+    '134': 'присоединение одновременно с' + NB + 'выделением', '136': 'выделение одновременно с' + NB + 'присоединением',
+    '139': 'сочетание нескольких форм, после которого компания продолжит деятельность'
+  };
+  // reorgForma('REORGANIZING', '124') → 'присоединение к другому юрлицу'; другой статус или неизвестный код — ''
+  function reorgForma(st, k) { k = kod(k); return st === 'REORGANIZING' && REORG_FORMA[k] ? REORG_FORMA[k] : ''; }
   function cap(t) { return t ? t.charAt(0).toUpperCase() + t.slice(1) : t; }
 
   // nazv('LIQUIDATING', '101') → 'ликвидируется'; {zaglavnaya: true} → с заглавной
@@ -45,5 +56,5 @@
   // По ответу /api/check: company → короткое название
   function izOtveta(c, o) { c = c || {}; return c.status ? nazv(c.status, c.state_code, o) : ''; }
 
-  return { nazv: nazv, fraza: fraza, izOtveta: izOtveta, vid: vid, kod: kod, LIKV: LIKV, ISKL: ISKL, ISKLYUCHENA: ISKLYUCHENA };
+  return { nazv: nazv, fraza: fraza, izOtveta: izOtveta, vid: vid, kod: kod, reorgForma: reorgForma, REORG_FORMA: REORG_FORMA, LIKV: LIKV, ISKL: ISKL, ISKLYUCHENA: ISKLYUCHENA };
 });

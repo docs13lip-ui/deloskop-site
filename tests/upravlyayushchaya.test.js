@@ -69,7 +69,7 @@ test('Паспорт: управляющая организация назван
   const f = lyudi.fakty.find((x) => x.tekst === 'Управляющая организация');
   assert.ok(f, 'факт в разделе «Руководитель и учредители»');
   assert.strictEqual(f.znachenie, UK_E, 'название организации — не персональные данные, показываем');
-  assert.strictEqual(P.VERSIYA, 'Паспорт v2.11');
+  assert.strictEqual(P.VERSIYA, 'Паспорт v2.12');
   const a = P.podpisant(r, p, { dolzhnost: 'Генеральный директор', osnovanie: 'ustav' });
   const t = a.map((x) => x.tekst).join(' | ');
   assert.match(t, /полномочия руководителя переданы управляющей организации — ПУБЛИЧНОЕ АКЦИОНЕРНОЕ ОБЩЕСТВО «ОБЪЕДИНЕННАЯ/);

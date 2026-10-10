@@ -683,7 +683,7 @@
   }
 
   return {
-    decide: decide, mount: mount, facts: facts, tone: tone, reorgPrekr: reorgPrekr, REORG_PREKRASHCHENIE: REORG_PREKRASHCHENIE, prepayCap: prepayCap, atStake: atStake,
+    decide: decide, mount: mount, facts: facts, tone: tone, reorgPrekr: reorgPrekr, REORG_PREKRASHCHENIE: REORG_PREKRASHCHENIE, REORG_SDELAT: REORG_SDELAT, REORG_DOLG: REORG_DOLG, prepayCap: prepayCap, atStake: atStake,
     docs: docs, letter: letter, parseAmount: parseAmount, money: money, moneyKrupno: moneyKrupno, niceFloor: niceFloor, kindOf: kindOf,
     neProvereno: neProvereno, kakPoschitali: kakPoschitali, otgruzkaAdvice: otgruzkaAdvice, NAPR: NAPR, bezPovtora: bezPovtora, STATYA: STATYA, FORMULA: FORMULA,
     METODIKA: { DELITEL: DELITEL, POTOLKI: POTOLKI, OSTOROZHNO: OSTOROZHNO, MINIMUM: MINIMUM },

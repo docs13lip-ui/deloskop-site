@@ -32,6 +32,41 @@ test('до «да» [Право] — noindex и адреса нет в sitemap',
   }
 });
 
+// reyting-v1.1: «да» [Право] 10.10 10:07, разд. 1 — страница в индексе
+test('после «да» [Право] — без noindex, одна строка в sitemap.xml, ссылка из хаба /company/, title ≤ 70, description ≤ 160', () => {
+  const D = dannye(), h = chitat();
+  if (!D.otkryt) return;
+  const golova = h.slice(0, h.indexOf('</head>'));
+  assert.doesNotMatch(golova, /noindex/);
+  assert.match(golova, /<link rel="canonical" href="https:\/\/deloskop\.ru\/reyting\/">/);
+  const sm = fs.readFileSync(path.join(KOREN, 'sitemap.xml'), 'utf8');
+  assert.strictEqual((sm.match(/<loc>https:\/\/deloskop\.ru\/reyting\/<\/loc><lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/g) || []).length, 1, 'sitemap.xml');
+  const smk = path.join(KOREN, 'sitemap-companies.xml');
+  if (fs.existsSync(smk)) assert.doesNotMatch(fs.readFileSync(smk, 'utf8'), /\/reyting\//, 'в sitemap-companies.xml — не дублировать');
+  const hab = fs.readFileSync(path.join(KOREN, 'company', 'index.html'), 'utf8');
+  assert.strictEqual((hab.match(/<!--reyting--><p class="co-reg caption"><a href="\/reyting\/">/g) || []).length, 1, 'ссылка из хаба');
+  const title = golova.match(/<title>([^<]*)<\/title>/)[1].replace(/&nbsp;/g, ' ');
+  const desc = golova.match(/<meta name="description" content="([^"]*)"/)[1].replace(/&nbsp;/g, ' ');
+  assert.ok(title.length <= 70, 'title ' + title.length);
+  assert.ok(desc.length <= 160, 'description ' + desc.length);
+});
+
+test('тексты [Право] 10.10 дословно: «не кредитный рейтинг» и канал исправления ошибки', () => {
+  const v = vidimyj(chitat()).replace(/\s+/g, ' ').replace(/ ([:.,])/g, '$1');
+  assert.ok(v.includes('Это не кредитный рейтинг, не оценка компании и не совет, с кем работать: только цифры из бухгалтерской отчётности (ГИР БО) и ЕГРЮЛ — с годом отчётности и датой сведений.'));
+  assert.ok(v.includes('Нашли ошибку в цифре — напишите на help@deloskop.ru: проверим по отчётности и исправим.'));
+});
+
+test('нет ИНН из 12 цифр и ФИО (152-ФЗ); у компаний без отчётности за год — не «0», их просто нет в таблице', () => {
+  const h = chitat(), v = vidimyj(h);
+  assert.doesNotMatch(h, /(^|[^\d])\d{12}([^\d]|$)/, '12 цифр подряд — похоже на ИНН ИП');
+  assert.doesNotMatch(v, /[А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+(ович|евич|ьич|овна|евна|ична|инична)(?![а-яё])/, 'ФИО');
+  assert.doesNotMatch(v, /[А-ЯЁ][а-яё]+\s+[А-ЯЁ]\.\s?[А-ЯЁ]\./, 'Фамилия И. О.');
+  for (const [, z] of h.matchAll(/<td class="num ry-z">([\s\S]*?)<\/td>/g)) {
+    assert.doesNotMatch(z.replace(/&nbsp;/g, ' '), /(^|[^\d,])0 (тыс\. |млн |млрд )?₽/, 'ноль в таблице: ' + z);
+  }
+});
+
 test('таблицы упорядочены по цифре, одна таблица — один год, только юрлица', () => {
   const D = dannye();
   assert.ok(D.vsego >= 10, 'мало карточек');

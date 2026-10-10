@@ -11,7 +11,10 @@
     (их число пишем под таблицей — «не проверяли ≠ не нашли»);
   * ранжируем только факты; слов «надёжн», «лучш», «рекоменд» на странице нет (222-ФЗ, ✎ [Право]);
   * отчётность — юрлица, а не группы: так и пишем;
-  * до «да» [Право] на формулировки — noindex и не в sitemap (флаг OTKRYT ниже).
+  * до «да» [Право] на формулировки — noindex и не в sitemap (флаг OTKRYT ниже);
+  * reyting-v1.1 (10.10): «да» [Право] получено — страница в индексе: строка в sitemap.xml (сразу после главной,
+    lastmod — самая свежая дата сведений) и ссылка в шапке хаба /company/ между метками <!--reyting-->…<!--/reyting-->;
+    компании без отчётности за год таблицы в список не входят и «0» не получают; ИП (12 цифр) и ФИО на странице нет (тест).
 
     python3 tests/sobrat_reyting.py           — собрать reyting/index.html
     python3 tests/sobrat_reyting.py --check   — только проверить (код 1, если страница устарела)
@@ -30,7 +33,7 @@ from sobrat_praktika import tipograf, nerazryv, kroshki_ld  # noqa: E402
 KOREN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SAJT = "https://deloskop.ru"
 URL = "/reyting/"
-OTKRYT = False  # True — после «да» [Право · Юрист 115-ФЗ] на тексты страницы: снимает noindex, адрес идёт в sitemap
+OTKRYT = True  # reyting-v1.1: «да» [Право] 10.10 10:07 (claude/Право_ответы_✎_рейтинг_…_10.10.md, разд. 1) — без noindex, адрес в sitemap.xml, ссылка из хаба /company/
 TOP = 15
 TOP_MALYJ = 10
 NB = "\u00a0"
@@ -249,9 +252,9 @@ def data_reg(iso):
 
 def stranica(D):
     g, gp = D["god"], D["god_pribyli"]
-    title = "Рейтинг компаний по открытой отчётности — выручка, прибыль, рост | Делоскоп"
-    desc = ("Компании из карточек Делоскопа по цифрам госреестров: выручка и прибыль за %s год, рост к прошлому году, "
-            "дата регистрации. У каждой цифры — источник и дата сведений." % g)
+    title = "Рейтинг компаний по отчётности: выручка, прибыль, рост | Делоскоп"  # ≤ 70 знаков (v1.1: страница идёт в индекс)
+    desc = ("Выручка за %s год и прибыль, рост к прошлому году, дата регистрации — компании из карточек Делоскопа. "
+            "У каждой цифры — источник и дата сведений." % g)  # ≤ 160 знаков
     ld = [kroshki_ld([("Делоскоп", "/"), ("Компании", "/company/"), ("Рейтинг по отчётности", URL)])]
     if D["vyruchka"]:
         ld.append({"@context": "https://schema.org", "@type": "ItemList",
@@ -357,14 +360,17 @@ def stranica(D):
                   '<ul class="ry-otrasli">%s</ul></section>' % (g, "".join(li)))
     # Как составлено
     ch.append('<section class="co-sec co-ogov ry-kak" aria-labelledby="ry-kak"><h2 id="ry-kak">Как составлено</h2>'
+              '<p>Это не кредитный рейтинг, не оценка компании и не совет, с кем работать: только цифры из бухгалтерской '
+              'отчётности (ГИР БО) и ЕГРЮЛ — с годом отчётности и датой сведений.</p>'
               '<p>Только компании, у которых есть карточка в Делоскопе: действующие коммерческие организации с открытой отчётностью. '
               'Индивидуальных предпринимателей здесь нет. Цифры — те же, что на карточке компании, с теми же датами сведений; '
               'суммы округлены, как на карточке.</p>'
               '<p>В таблицу года входят компании, у которых в открытых данных есть отчётность именно за этот год. '
               'Компании без неё не ниже и не выше остальных — по ним цифры нет, и мы так и пишем.</p>'
               '<p>Выручка и прибыль говорят о размере бизнеса, а не о том, безопасна ли сделка. Перед оплатой проверьте контрагента на сегодня: '
-              '<a href="/">проверка по ИНН</a> покажет реестры, долги и Индекс Делоскопа. Нашли ошибку — напишите на '
-              '<a href="mailto:help@deloskop.ru">help@deloskop.ru</a>, сверим с первоисточником.</p>'
+              '<a href="/">проверка по ИНН</a> покажет реестры, долги и Индекс Делоскопа.</p>'
+              '<p class="ry-oshibka">Нашли ошибку в цифре — напишите на <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>: '
+              'проверим по отчётности и исправим.</p>'
               '<p class="caption">Все компании — в разделе <a href="/company/">«Компании»</a>.</p></section>')
     ch.append("</main>\n<!--podval--><!--/podval-->\n</body>\n</html>\n")
     return "".join(ch)
@@ -379,27 +385,87 @@ def sobrat(koren=KOREN):
     return SH.sobrat_stranicu(txt, r_, SH.podval_html(r_), SH.shapka_html()), D
 
 
+SM_STROKA = re.compile(r"\n  <url><loc>https://deloskop\.ru/reyting/</loc>[^\n]*</url>")
+GLAVNAYA_SM = "<url><loc>https://deloskop.ru/</loc>"
+HAB_METKA = re.compile(r"<!--reyting-->.*?<!--/reyting-->", re.S)
+
+
+def lastmod(D, koren=KOREN):
+    """Самая свежая lastmod карточек страницы в sitemap-companies.xml: рейтинг меняется вместе с ними."""
+    p = os.path.join(koren, "sitemap-companies.xml")
+    if not os.path.exists(p):
+        return None
+    with open(p, encoding="utf-8") as fh:
+        sm = dict(re.findall(r"<loc>%s(/company/\d{10}-[^<]+)</loc><lastmod>(\d{4}-\d{2}-\d{2})</lastmod>" % re.escape(SAJT), fh.read()))
+    daty = [sm[k["url"]] for k in D["vyruchka"] if k["url"] in sm]
+    return max(daty) if daty else None
+
+
+def sitemap(txt, D, koren=KOREN):
+    """Строка /reyting/ — сразу после главной (место не зависит от сборщика практики, который пишет в конец)."""
+    txt = SM_STROKA.sub("", txt)
+    lm = lastmod(D, koren)
+    if not (OTKRYT and lm and D["vyruchka"]):
+        return txt
+    i = txt.find(GLAVNAYA_SM)
+    if i < 0:
+        return txt
+    j = txt.find("</url>", i) + len("</url>")
+    return txt[:j] + "\n  <url><loc>%s%s</loc><lastmod>%s</lastmod></url>" % (SAJT, URL, lm) + txt[j:]
+
+
+def ssylka_v_hab(txt, D):
+    """Хаб /company/ (стр. 1): строка-ссылка в шапке, перед </header>. Без OTKRYT — убрать."""
+    txt = HAB_METKA.sub("", txt)
+    if not (OTKRYT and D["vyruchka"]):
+        return txt
+    blok = ('<!--reyting--><p class="co-reg caption"><a href="%s">Рейтинг по открытой отчётности%s›</a> — '
+            'выручка, прибыль и рост компаний из карточек за %d год</p><!--/reyting-->' % (URL, "&nbsp;", D["god"]))
+    i = txt.find('<header class="co-head">')
+    j = txt.find("</header>", i) if i >= 0 else -1
+    if j < 0:
+        return txt
+    r = txt.find('<p class="co-reg caption">', i, j)  # сразу под лидом — выше длинной строки регионов
+    return txt[:r] + blok + txt[r:] if r >= 0 else txt[:j] + blok + txt[j:]
+
+
+def svyazannye(koren, D):
+    """{путь: новое содержимое} — sitemap.xml и хаб /company/ (если есть)."""
+    out = {}
+    for f, fn in (("sitemap.xml", sitemap), (os.path.join("company", "index.html"), ssylka_v_hab)):
+        p = os.path.join(koren, f)
+        if os.path.exists(p):
+            with open(p, encoding="utf-8") as fh:
+                out[p] = fn(fh.read(), D) if fn is ssylka_v_hab else fn(fh.read(), D, koren)
+    return out
+
+
 def zapisat_esli_est(koren=KOREN):
     """Для tests/kartochki.py: после сборки карточек — пересобрать рейтинг, если страница уже заведена."""
     p = os.path.join(koren, "reyting", "index.html")
     if not os.path.exists(p):
         return False
-    txt, _ = sobrat(koren)
-    with open(p, encoding="utf-8") as fh:
-        if fh.read() == txt:
-            return False
-    with open(p, "w", encoding="utf-8") as fh:
-        fh.write(txt)
-    return True
+    txt, D = sobrat(koren)
+    izm = False
+    for put_, t in [(p, txt)] + list(svyazannye(koren, D).items()):
+        with open(put_, encoding="utf-8") as fh:
+            if fh.read() == t:
+                continue
+        with open(put_, "w", encoding="utf-8") as fh:
+            fh.write(t)
+        izm = True
+    return izm
 
 
 def main():
     txt, D = sobrat()
     p = os.path.join(KOREN, "reyting", "index.html")
     stary = open(p, encoding="utf-8").read() if os.path.exists(p) else None
+    svyaz = svyazannye(KOREN, D)
+    rasn = [f for f, t in svyaz.items() if open(f, encoding="utf-8").read() != t]
     if "--check" in sys.argv:
-        if stary != txt:
-            print("Нужна сборка рейтинга: python3 tests/sobrat_reyting.py")
+        if stary != txt or rasn:
+            print("Нужна сборка рейтинга: python3 tests/sobrat_reyting.py" + ("" if not rasn else " (" + ", ".join(os.path.relpath(f, KOREN) for f in rasn) + ")"))
             sys.exit(1)
         print("Рейтинг собран")
         return
@@ -407,6 +473,9 @@ def main():
         os.makedirs(os.path.dirname(p), exist_ok=True)
         with open(p, "w", encoding="utf-8") as fh:
             fh.write(txt)
+    for f in rasn:
+        with open(f, "w", encoding="utf-8") as fh:
+            fh.write(svyaz[f])
     print("Рейтинг: %d компаний; выручка за %s — %d, рост — %d, прибыль — %d, убыток — %d%s" % (
         D["vsego"], D["god"], len(D["vyruchka"]), len(D["rost"]), len(D["pribyl"]), len(D["ubytok"]),
         "" if stary != txt else " (без изменений)"))

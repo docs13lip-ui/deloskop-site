@@ -50,7 +50,7 @@ ok('данные: обычная цена «Старта» до включени
 ok('данные: Про, Бизнес, разовый Паспорт — без изменений', [(t['mesyac'], t['god']) for t in D['tarify'] if t['id'] in ('pro', 'biznes')] == [(1490, 14300), (4990, 47900)]
    and D['pasport_razovyj']['cena_rub'] == 490)
 ok(f'срок: до {STV.SROK_RESHENIYA:%d.%m.%Y} владелец решает цену «Старта» с 2027 года (снять поле startovaya или новое решение)',
-   datetime.date.today() < STV.SROK_RESHENIYA)
+   STV.segodnya_msk() < STV.SROK_RESHENIYA)
 
 # ---------- сейчас ----------
 pg = rd(R, 'tarify/index.html')
@@ -106,7 +106,7 @@ try:
         T2 = STV.start(D2)
         ok('репетиция: tarify.json — «Старт» 390 / 3 700 ₽, прежняя цена и дата включения записаны',
            (T2['mesyac'], T2['god']) == (390, 3700) and T2['startovaya']['obychnaya'] == {'mesyac': 490, 'god': 4700}
-           and T2['startovaya']['primenena'] == datetime.date.today().isoformat())
+           and T2['startovaya']['primenena'] == STV.segodnya_msk().isoformat())
         ok('репетиция: tarify.json изменился только в строке «Старта»',
            len([1 for a, b in zip(rd(R, 'tarify/tarify.json').split('\n'), rd(K, 'tarify/tarify.json').split('\n')) if a != b]) == 3)
         pg2, of2, gl2 = rd(K, 'tarify/index.html'), rd(K, 'oferta/index.html'), rd(K, 'index.html')
@@ -127,7 +127,7 @@ try:
                                       'Если мы станем плательщиком НДС, стартовая цена будет включать налог.')))
         ok('репетиция: оферта — счета-фактуры «пока действует освобождение» ([Право] 1.4)', 'Пока действует освобождение, счета-фактуры не&nbsp;выставляются.' in of2
            and 'п.&nbsp;1 ст.&nbsp;145 НК РФ. Счета-фактуры' not in of2)
-        seg = datetime.date.today()
+        seg = STV.segodnya_msk()
         ok('репетиция: оферта — новая дата редакции и dateModified',
            f'Редакция от {seg.day} {STV.MES[seg.month - 1]} {seg.year}' in of2 and f'"dateModified": "{seg.isoformat()}"' in of2)
         snimok = {p: rd(K, p) for p in ('tarify/tarify.json', 'tarify/index.html', 'oferta/index.html', 'index.html')}

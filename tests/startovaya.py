@@ -28,6 +28,12 @@ import math
 import os
 import re
 
+
+def segodnya_msk():
+    """Сегодня по Москве: сборка идёт и на ПК, и на раннере GitHub (UTC) — с 00:00 до 03:00 МСК date.today() там ещё вчера,
+    а дата редакции оферты и окно первой оплаты считаются по московскому дню."""
+    return (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=3)).date()
+
 MES = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря']
 NB = ' '
 SROK_RESHENIYA = datetime.date(2026, 12, 28)  # за 3 дня до конца окна — решить цену «Старта» с 2027 года
@@ -79,7 +85,7 @@ def pora(D, segodnya=None):
     st = start(D).get('startovaya')
     if not st or D.get('beta') is not False or not st.get('vklyuchit') or aktivna(D):
         return False
-    segodnya = segodnya or datetime.date.today()
+    segodnya = segodnya or segodnya_msk()
     return segodnya <= datetime.date.fromisoformat(st['pervaya_oplata_do'])
 
 
@@ -137,7 +143,7 @@ def redakciya_pri_oplatah(koren, D, segodnya=None):
     s = open(p, encoding='utf-8').read()
     if not METKA_RED.search(s):
         return False
-    segodnya = segodnya or datetime.date.today()
+    segodnya = segodnya or segodnya_msk()
     s = METKA_RED.sub('', s, count=1)
     s, n = re.subn(r'(<p class="meta">Редакция от )\d{1,2} [а-я]+ \d{4}', lambda m: m.group(1) + f'{segodnya.day} {MES[segodnya.month - 1]} {segodnya.year}', s, count=1)
     s, n2 = re.subn(r'"dateModified": "\d{4}-\d{2}-\d{2}"', f'"dateModified": "{segodnya.isoformat()}"', s, count=1)
@@ -164,7 +170,7 @@ def vklyuchit(koren, D, segodnya=None):
     """Переход «Старт» → стартовая цена. Возвращает (D, izmeneno). Ошибка — если нет «да» на годовую цену."""
     if not pora(D, segodnya):
         return D, False
-    segodnya = segodnya or datetime.date.today()
+    segodnya = segodnya or segodnya_msk()
     t = start(D)
     st = t['startovaya']
     if not st.get('god_soglasovan'):
@@ -194,7 +200,7 @@ def stroka_tarify_beta(t, segodnya=None):
     st = t.get('startovaya')
     if not st or st.get('primenena') or st.get('vklyuchit') is not True or st.get('god_soglasovan') is not True:
         return ''
-    segodnya = segodnya or datetime.date.today()
+    segodnya = segodnya or segodnya_msk()
     if segodnya > datetime.date.fromisoformat(st['pervaya_oplata_do']):
         return ''
     r = lambda x: f'{x:,}'.replace(',', '&nbsp;') + '&nbsp;₽'

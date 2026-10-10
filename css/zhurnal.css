@@ -1,0 +1,113 @@
+/* Делоскоп — журнал «Делоскоп · Неделя» (zhurnal-v1, 10.10.2026). Токены ds.css, область .zh. Экран 1280/390 и печать A4 (PDF). */
+body{margin:0;background:#F5F5F2;-webkit-font-smoothing:antialiased}
+.zh{--bg:#F5F5F2;--surface:#fff;--surface-2:#EEEEEA;--ink:#1D1D1F;--ink-2:#48484C;--muted:#6B6B70;--line:#E6E6E1;--accent:#0B63E5;--accent-hover:#084BB0;--accent-soft:#EAF1FD;--warn:#9A5B00;--warn-bg:#FFF4E0;--r-m:16px;--r-l:24px;--font:Onest,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  max-width:760px;margin:0 auto;padding:28px clamp(16px,5vw,48px) 64px;font:400 17px/1.6 var(--font);color:var(--ink);box-sizing:border-box}
+.zh *,.zh *::before,.zh *::after{box-sizing:inherit}
+.zh p{margin:0}
+.zh a{color:var(--accent);text-decoration:none}.zh a:hover{color:var(--accent-hover);text-decoration:underline}
+.zh :focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+.zh .nw{white-space:nowrap}
+.zh .crumbs{display:flex;flex-wrap:wrap;gap:6px;font-size:15px;color:var(--muted)}.zh .crumbs a{color:var(--muted)}
+.zh-obrazec{margin:0 0 20px!important;padding:12px 16px;border-radius:var(--r-m);background:var(--warn-bg);color:var(--warn);font:600 15px/1.45 var(--font)}
+
+/* обложка: одна крупная цифра недели */
+.zh-obl{margin:28px 0 0;padding:clamp(28px,5vw,56px) clamp(20px,4vw,48px);background:var(--surface);border-radius:var(--r-l)}
+.zh-obl__nad{font:600 13px/1 var(--font);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.zh-obl__h{margin:12px 0 0;font:600 clamp(28px,4vw,40px)/1.1 var(--font);letter-spacing:-.02em;text-wrap:balance}
+.zh-obl__h span{display:block;margin-top:6px;font:400 17px/1.4 var(--font);letter-spacing:0;color:var(--muted)}
+.zh-obl__cifra{margin:clamp(32px,6vw,56px) 0 0!important;font:600 clamp(80px,17vw,168px)/.92 var(--font);letter-spacing:-.045em;font-variant-numeric:lining-nums proportional-nums;color:var(--ink)}
+.zh-obl__pod{margin:16px 0 0!important;max-width:560px;font-size:clamp(18px,2.2vw,21px);line-height:1.45;color:var(--ink-2);text-wrap:pretty}
+.zh-obl .zh-ist{margin-top:20px}
+.zh-obl--spisok .zh-obl__pod{margin-top:20px!important}
+
+/* оглавление */
+.zh-sod{margin:24px 0 0}
+.zh-sod ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 24px}
+.zh-sod li{border-top:1px solid var(--line)}
+.zh-sod a{display:flex;gap:10px;padding:10px 0;font-size:15px;line-height:1.35;color:var(--ink-2)}
+.zh-sod a span{color:var(--muted);font-variant-numeric:tabular-nums}
+.zh-sod a:hover{color:var(--accent);text-decoration:none}
+@media (max-width:640px){.zh-sod ol{grid-template-columns:1fr 1fr;gap:0 16px}}
+
+/* рубрики */
+.zh-r{margin:clamp(48px,8vw,80px) 0 0;scroll-margin-top:84px}
+.zh-r__shap{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;align-items:baseline;padding-bottom:16px;border-bottom:2px solid var(--ink)}
+.zh-r__n{grid-row:span 2;font:600 15px/1 var(--font);color:var(--muted);font-variant-numeric:tabular-nums}
+.zh-r h2{margin:0;font:600 clamp(26px,3.4vw,34px)/1.12 var(--font);letter-spacing:-.02em}
+.zh-r__pod{font-size:15px;color:var(--muted)}
+.zh-gl{margin:20px 0 0;padding:0 0 0 1.4em;font-size:19px;line-height:1.5}
+.zh-gl li{margin:0 0 12px;padding-left:4px}
+.zh-gl li::marker{color:var(--muted);font-weight:600}
+
+/* новость */
+.zh-n{padding:28px 0;border-bottom:1px solid var(--line)}
+.zh-n:last-child{border-bottom:0}
+.zh-n h3{margin:0 0 12px;font:600 clamp(21px,2.4vw,24px)/1.25 var(--font);letter-spacing:-.01em;text-wrap:balance}
+.zh-n p+p{margin-top:12px}
+.zh-proekt{display:inline-block;margin:0 0 10px!important;padding:4px 12px;border-radius:999px;background:var(--warn-bg);color:var(--warn);font:600 13px/1.4 var(--font)}
+.zh-znachit{margin:18px 0 0;padding:16px 20px;border-radius:var(--r-m);background:var(--accent-soft)}
+.zh-znachit__h{margin:0 0 4px!important;font:600 13px/1.3 var(--font);letter-spacing:.04em;text-transform:uppercase;color:var(--accent)}
+.zh-ist{margin-top:14px!important;font-size:13px;line-height:1.45;color:var(--muted)}
+.zh-ist a{color:var(--ink-2);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:.18em}
+.zh-lid{font-size:19px;line-height:1.5;color:var(--ink-2);margin-bottom:12px!important}
+.zh-dalee{font-weight:600}
+.zh-razbor p+p{margin-top:12px}
+
+/* сроки */
+.zh-sroki{width:100%;margin:16px 0 0;border-collapse:collapse;font-size:16px}
+.zh-sroki td{padding:16px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.zh-sroki__d{width:140px;padding-right:16px!important;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+.zh-sroki .zh-ist{display:inline-block;margin-top:4px!important}
+@media (max-width:640px){.zh-sroki__d{width:96px}}
+
+/* что нового, комментарий */
+.zh-novoe{list-style:none;margin:16px 0 12px;padding:0}
+.zh-novoe li{padding:14px 0;border-bottom:1px solid var(--line);color:var(--ink-2)}
+.zh-novoe b{display:block;color:var(--ink);font-weight:600}
+.zh-kom{margin:20px 0 0;padding:0 0 0 20px;border-left:3px solid var(--ink);font-size:20px;line-height:1.5}
+.zh-kom footer{margin-top:10px;font-size:14px;color:var(--muted)}
+.zh-pusto{margin:20px 0 0!important;color:var(--muted)}
+
+/* список выпусков */
+.zh-sp{list-style:none;margin:24px 0 0;padding:0}
+.zh-sp a{display:grid;grid-template-columns:auto 1fr;gap:4px 20px;padding:20px 0;border-bottom:1px solid var(--line);color:var(--ink)}
+.zh-sp a:hover{text-decoration:none}.zh-sp a:hover .zh-sp__t{color:var(--accent)}
+.zh-sp__n{grid-column:1/-1;font-size:14px;color:var(--muted)}
+.zh-sp__c{font:600 40px/1 var(--font);letter-spacing:-.03em}
+.zh-sp__t{align-self:center;font-size:16px;line-height:1.4}
+@media (max-width:640px){.zh-sp a{grid-template-columns:1fr}}
+
+/* низ */
+.zh-niz{margin:64px 0 0;padding:clamp(24px,4vw,40px);border-radius:var(--r-l);background:var(--surface)}
+.zh-niz>p:first-child{font:600 20px/1.35 var(--font)}
+.zh-btn{display:inline-flex;align-items:center;min-height:48px;margin:16px 0 0;padding:0 24px;border-radius:999px;background:var(--accent);color:#fff!important;font:600 16px/1 var(--font)}
+.zh-btn:hover{background:var(--accent-hover);text-decoration:none!important}
+.zh-niz__m{margin-top:16px!important;font-size:13px;line-height:1.5;color:var(--muted)}
+@media (max-width:640px){.zh-btn{min-height:52px;width:100%;justify-content:center}}
+
+/* печать A4 — PDF выпуска (макет [Арт-директор] 10.10, разд. 5): обложка + содержание + «Главное» на с. 1,
+   каждая рубрика — с новой страницы, новости — в 2 колонки, «Разбор» — в одну; «Что нового» и «Комментарий» — вместе на последней */
+@page{size:A4;margin:18mm 16mm}
+@media print{
+  body{background:#fff}
+  .shapka,.podval,.beta-bar,.wn-bar,.ck-bar,a.skip,.zh .crumbs,.zh-btn,dialog{display:none!important}
+  .zh{max-width:none;padding:0;font-size:10.5pt;line-height:1.5}
+  .zh-obl{padding:0;margin:0;border-radius:0}
+  .zh-obl__cifra{font-size:96pt;margin-top:10mm!important}
+  .zh-obl__pod{font-size:13pt}
+  .zh-gl{font-size:11pt}.zh-gl li{margin-bottom:6px}
+  #glavnoe{margin-top:6mm}
+  .zh-sod{margin-top:8mm}.zh-sod a{padding:5px 0;font-size:9.5pt}
+  .zh-sod a::after{content:none!important}
+  .zh-r{margin-top:10mm}
+  [id="115-fz"],#nalogi,#sudy,#vokrug,#razbor,#sroki,#novoe{break-before:page;margin-top:0}
+  .zh-r__shap{break-after:avoid}
+  [id="115-fz"] .zh-n,#nalogi .zh-n,#sudy .zh-n,#vokrug .zh-n{column-count:2;column-gap:8mm}
+  .zh-n h3,.zh-proekt{column-span:all}
+  .zh-n,.zh-gl li,.zh-sroki tr,.zh-kom,.zh-znachit{break-inside:avoid}
+  .zh-n h3{break-after:avoid;font-size:15pt}
+  .zh-znachit{background:#F2F6FD;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .zh-ist a::after{content:" — " attr(href);color:var(--muted);word-break:break-all}
+  .zh-niz{background:none;padding:0;margin-top:10mm;break-inside:avoid}
+  .zh a{color:var(--ink)}
+}

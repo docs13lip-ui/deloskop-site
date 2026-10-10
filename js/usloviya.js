@@ -146,6 +146,15 @@
     return null;
   }
 
+  // reorg-pravopreemnik-v1 (позиция [Право] 10.10 10:07 разд. 3): реорганизация, после которой компания прекратит
+  // существование, — коды СЮЛСТ 122–125, 129 (data/statusy-egryul.json). Обязательства перейдут к правопреемнику,
+  // а его мы не проверяли: предоплата «до N ₽» здесь вводит в заблуждение — тон post, пока не проверен правопреемник.
+  var REORG_PREKRASHCHENIE = ['122', '123', '124', '125', '129'];
+  function reorgPrekr(f) { return !!f && f.status === 'REORGANIZING' && f.kod != null && REORG_PREKRASHCHENIE.indexOf(String(f.kod)) >= 0; }
+  var REORG_PR = 'компания реорганизуется и прекратит существование, правопреемника мы не проверяли';
+  var REORG_SDELAT = 'Узнайте, кто правопреемник, и проверьте его по ИНН: договоры и долги перейдут к нему.';
+  var REORG_DOLG = 'Если долг перед вами возник до первой публикации о реорганизации, в течение 30 дней после последней публикации можно через суд потребовать досрочного исполнения (п. 2 ст. 60 ГК РФ). Права нет, если обеспечение уже достаточное; суд учтёт, ухудшилось ли положение должника.';
+
   // ---------- вердикт ----------
   // Четыре тона: go — работать можно; cap — можно с пределом предоплаты;
   // post — только оплата по факту; stop — не платить вперёд / сделку не заключать.
@@ -156,6 +165,7 @@
     if (b.diskv || b.nedost || b.block || b.exit || f.zsk === 'high') return 'stop';
     var heavy = (b.dolg || 0) + (b.mass || 0) + (b.fssp || 0) + (b.rnp || 0) + (b.other || 0) + (b.director || 0) + (b.staff || 0) + (b.report || 0);
     var warns = 0; for (var k in w) warns += w[k];
+    if (reorgPrekr(f)) return 'post';
     if (heavy || f.level === 'high' || warns >= 3) return 'post';
     if (warns || f.level === 'medium' || f.zsk === 'medium' || f.status === 'REORGANIZING') return 'cap';
     return 'go';
@@ -256,7 +266,7 @@
   function kakPoschitali(f, t, pc, reasonsList, np, napr) {
     var R = pc.raschet || {}, kak = '', otg = napr === 'otgruzhaem';
     if (t === 'post' || t === 'stop') {
-      var pr = f.status === 'LIQUIDATED' ? 'компания ликвидирована' : (reasonsList[0] || (t === 'stop' ? 'стоп-признак в данных' : 'серьёзное замечание в данных'));
+      var pr = f.status === 'LIQUIDATED' ? 'компания ликвидирована' : reorgPrekr(f) ? REORG_PR : (reasonsList[0] || (t === 'stop' ? 'стоп-признак в данных' : 'серьёзное замечание в данных'));
       kak = otg ? 'В долг — 0\u00a0₽: ' + pr + ' — ' + (f.status === 'LIQUIDATED' ? 'сделку не заключать.' : 'отгружайте после оплаты.')
         : 'Вперёд — 0\u00a0₽: ' + pr + ' — ' + (t === 'stop' ? 'не платите вперёд.' : 'платите после поставки или акта.');
     } else {
@@ -336,6 +346,7 @@
   function headline(f, t, cap, malo) {
     if (f.status === 'LIQUIDATED') return 'Сделку не заключать';
     if (t === 'stop') return 'Не платите вперёд';
+    if (t === 'post' && reorgPrekr(f)) return 'Только оплата по факту\u00a0— до проверки правопреемника';
     if (t === 'post') return 'Только оплата по факту';
     if (t === 'cap' && malo) return 'Можно, оплата — по факту поставки';
     if (t === 'cap') return 'Можно, предоплата — до ' + money(cap);
@@ -344,6 +355,7 @@
   function headlineOtg(f, t, cap, malo) {
     if (f.status === 'LIQUIDATED') return 'Сделку не заключать';
     if (t === 'stop') return 'Отгружайте только после оплаты';
+    if (t === 'post' && reorgPrekr(f)) return 'Только по предоплате\u00a0— до проверки правопреемника';
     if (t === 'post') return 'Только по предоплате';
     if (t === 'cap' && malo) return 'Можно, но без отсрочки';
     if (t === 'cap') return 'Можно, отсрочка — до ' + money(cap);
@@ -354,6 +366,7 @@
     if (f.status === 'LIQUIDATED') return 'Компания прекратила существование — в ЕГРЮЛ есть запись о прекращении. Новый договор с ней заключить нельзя.';
     if (f.status === 'BANKRUPT') return 'Новые отгрузки — только после оплаты и по согласованию с арбитражным управляющим.';
     if (f.status === 'LIQUIDATING') return 'В долг не отгружайте: новые обязательства компания может не исполнить.' + advice(f, t, malo).replace(/^[^.]*\./, '');
+    if (t === 'post' && reorgPrekr(f)) return 'Отсрочку не давайте: отгрузка — после оплаты. ' + REORG_SDELAT + ' ' + REORG_DOLG;
     if (t === 'stop' || t === 'post') return 'Отсрочку не давайте: отгрузка — после оплаты. Если без отсрочки сделки не будет — только под банковскую гарантию платежа или аккредитив.';
     if (malo) return 'Отсрочку — только под банковскую гарантию платежа или аккредитив.';
     if (t === 'cap') return 'Больше предела — под банковскую гарантию или аккредитив. Держите долг покупателя в пределе: следующая отгрузка — после оплаты предыдущей.';
@@ -364,6 +377,7 @@
     if (f.status === 'BANKRUPT') return 'Платежи по новым сделкам — только по согласованию с арбитражным управляющим и после поставки.';
     if (f.status === 'LIQUIDATING') return 'Вперёд не платите: новые обязательства компания может не исполнить. Если она вам должна — не ждите: при ликвидации заявите требование ликвидатору, при исключении из ЕГРЮЛ — подайте в налоговую возражение, пока не истёк срок: три месяца со дня публикации решения в «Вестнике государственной регистрации», а если основание — 115-ФЗ, шесть (п. 3, 4, 7 ст. 21.1, ст. 21.3 129-ФЗ). Возражение, поданное в срок, останавливает исключение.';
     if (t === 'stop') return 'Если сделка нужна — платите после поставки или через аккредитив и сохраните это досье.';
+    if (t === 'post' && reorgPrekr(f)) return 'Платите после поставки или акта. ' + REORG_SDELAT + ' ' + REORG_DOLG;
     if (t === 'post') return 'Платите после поставки или акта. Нужна предоплата — через аккредитив или под гарантию возврата аванса.';
     if (malo) return 'Нужна предоплата — через аккредитив или под гарантию возврата аванса.';
     if (t === 'cap') return 'Больше предела — частями по этапам, аккредитивом или под гарантию возврата аванса.';
@@ -669,7 +683,7 @@
   }
 
   return {
-    decide: decide, mount: mount, facts: facts, tone: tone, prepayCap: prepayCap, atStake: atStake,
+    decide: decide, mount: mount, facts: facts, tone: tone, reorgPrekr: reorgPrekr, REORG_PREKRASHCHENIE: REORG_PREKRASHCHENIE, prepayCap: prepayCap, atStake: atStake,
     docs: docs, letter: letter, parseAmount: parseAmount, money: money, moneyKrupno: moneyKrupno, niceFloor: niceFloor, kindOf: kindOf,
     neProvereno: neProvereno, kakPoschitali: kakPoschitali, otgruzkaAdvice: otgruzkaAdvice, NAPR: NAPR, bezPovtora: bezPovtora, STATYA: STATYA, FORMULA: FORMULA,
     METODIKA: { DELITEL: DELITEL, POTOLKI: POTOLKI, OSTOROZHNO: OSTOROZHNO, MINIMUM: MINIMUM },

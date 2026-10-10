@@ -455,6 +455,12 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
             zapisat(rb, robots.replace(stroka + "\n", "").replace(stroka, ""))
     otchet["izmeneno_stranic"] = izm
     otchet["s_diska"] = len(starye)
+    # reyting-v1: /reyting/ строится из опубликованных карточек — пересобрать вместе с ними (если страница заведена)
+    try:
+        import sobrat_reyting
+        otchet["reyting"] = sobrat_reyting.zapisat_esli_est(koren)
+    except Exception as oshibka:  # рейтинг не должен ронять сборку карточек; тест reyting.test.js покажет устаревшую страницу
+        otchet["reyting"] = "ошибка: %s" % oshibka
     return kart, otchet
 
 

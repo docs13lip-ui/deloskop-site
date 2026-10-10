@@ -97,7 +97,7 @@ for t in D['tarify']:
     badge = ' <span class="badge">Рекомендуем</span>' if t.get('rekomenduem') else ''
     cards.append(f'''<div class="plan{' pro' if t.get('rekomenduem') else ''}" id="t-{t['id']}">
   <div><div class="plan-name">{t['nazvanie']}{badge}</div><div class="plan-for">{html.escape(t['dlya'])}</div></div>
-  {price}{STV.stroka_tarify(t)}
+  {price}{STV.stroka_tarify(t)}{STV.stroka_tarify_beta(t) if D.get('beta') is True else ''}
   <ul>{''.join(li(x) for x in t['chto'])}</ul>
   {cta}
 </div>''')

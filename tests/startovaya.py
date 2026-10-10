@@ -181,6 +181,28 @@ def vklyuchit(koren, D, segodnya=None):
     return D, True
 
 
+STROKA_BETA = ('<b>Стартовая цена после беты&nbsp;— {m} в&nbsp;месяц или {g} за&nbsp;год</b>, если первая оплата '
+               'до&nbsp;{do}. Выше&nbsp;— обычная цена.')
+
+
+def stroka_tarify_beta(t, segodnya=None):
+    """start390-beta-v1 ([Тестировщик] 10.10): в бете карточка «Старта» показывала только обычную цену (490 ₽,
+    4 700 ₽ за год), а отчёт о проверке — «Старт» 390 ₽ (js/pasport-cta.js берёт стартовую, если она точно включится).
+    Два ценника на сайте — ч. 3 ст. 5 38-ФЗ. Теперь в бете под ценой — строка о стартовой цене на тех же условиях,
+    что js/pasport-cta.js: vklyuchit и «да» на годовую цену, окно первой оплаты не прошло. Снимается вместе с бетой
+    (блок v-bete); после снятия беты работает stroka_tarify()."""
+    st = t.get('startovaya')
+    if not st or st.get('primenena') or st.get('vklyuchit') is not True or st.get('god_soglasovan') is not True:
+        return ''
+    segodnya = segodnya or datetime.date.today()
+    if segodnya > datetime.date.fromisoformat(st['pervaya_oplata_do']):
+        return ''
+    r = lambda x: f'{x:,}'.replace(',', '&nbsp;') + '&nbsp;₽'
+    do = data_ru(st['pervaya_oplata_do']).replace(NB, '&nbsp;')
+    return ('<!--v-bete--><p class="startovaya startovaya-beta">' + STROKA_BETA.format(m=r(st['mesyac']), g=r(st['god']), do=do)
+            + '</p><!--/v-bete-->')
+
+
 def stroka_tarify(t):
     """Строка под ценой карточки «Старта» на /tarify/ — только когда стартовая цена действует."""
     st = t.get('startovaya')

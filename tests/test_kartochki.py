@@ -2133,5 +2133,52 @@ class TestDataProverkiMskV1(unittest.TestCase):
             shutil.rmtree(d)
 
 
+class TestRazborCifry(unittest.TestCase):
+    """razbor-cifry-v1 ([Тестировщик] 10.10): «Разбор по цифрам» — фразы только из цифр компании; у двух разных
+    компаний блок не совпадает, без ряда ГИР БО блока нет, стоп-слов нет, неразрывные пробелы на месте."""
+
+    def k(self, ryad, pribyl=None, shtat=None, dohod=None, nalogi=None):
+        return {"finansy": [{"god": 2021 + i, "dohod": v} for i, v in enumerate(ryad)],
+                "finansy_istochnik": "ГИР БО, бухгалтерская отчётность", "pribyl_ryad": pribyl or {},
+                "fakty": {"shtat": {"znachenie": shtat} if shtat else {}, "dohod": {"znachenie": dohod or ryad[-1]},
+                          "nalogi": {"znachenie": nalogi} if nalogi else {}}}
+
+    def test_rost_i_rentabelnost(self):
+        import kartochka_render as R
+        f = R.razbor_cifry(self.k([1e9, 1.3e9, 1.6e9, 2e9, 2.5e9], {2024: 2e8, 2025: 1e8}, shtat=120))
+        self.assertEqual(f[0], "За%s4%sгода выручка выросла в%s2,5%sраза: с%s1%sмлрд%s₽ в%s2021 до%s2,5%sмлрд%s₽ в%s2025; "
+                               "растёт%s4%sгода подряд." % ((NB,) * 14))
+        self.assertIn("Чистая рентабельность за%s2025 — 4%s%%, годом раньше — 10%s%%: выручка выросла, а прибыль на каждый "
+                      "рубль выручки — снизилась." % (NB, NB, NB), f)
+        self.assertIn("Выручка на одного сотрудника — 20,8%sмлн%s₽ в год (штат 120%sчеловек)." % (NB, NB, NB), f)
+
+    def test_padenie_i_ubytok(self):
+        import kartochka_render as R
+        f = R.razbor_cifry(self.k([3e8, 2.5e8, 2e8, 1.6e8, 1.07e8], {2024: 5e6, 2025: -2e6}))
+        self.assertTrue(f[0].startswith("За%s4%sгода выручка снизилась на%s64%s%%" % (NB, NB, NB, NB)), f[0])
+        self.assertIn("снижается%s4%sгода подряд" % (NB, NB), f[0])
+        self.assertTrue(any("−1,9%s%%" % NB in x for x in f), f)
+
+    def test_bez_ryada_bloka_net(self):
+        import kartochka_render as R
+        self.assertEqual(R.razbor_html(self.k([5e6])), "")
+        self.assertEqual(R.razbor_html({"finansy": [], "fakty": {}}), "")
+
+    def test_dve_kompanii_ne_sovpadayut(self):
+        import kartochka_render as R
+        a = R.razbor_cifry(self.k([1e9, 1.2e9, 1.5e9, 1.7e9, 2e9], {2024: 1e8, 2025: 1.5e8}, shtat=50, nalogi=1e8))
+        b = R.razbor_cifry(self.k([4e10, 4.1e10, 3.9e10, 4e10, 4.05e10], {2024: 2e9, 2025: 1e9}, shtat=900, nalogi=3e9))
+        self.assertFalse(set(a) & set(b))
+        for x in a + b:
+            self.assertIsNone(R.STOP_SLOVA.search(x))
+
+    def test_na_stranice_kartochki(self):
+        z = O.zapis(0, finansy=[8e6, 11e6, 14e6, 18e6, 24e6], dohod=24e6, delta=33)
+        d, kart, _ = sobrat([z] + [O.zapis(i) for i in range(1, 12)])
+        t = "".join(chitat(p) for p in stranicy(d))
+        self.assertIn('<h2 id="razbor">Разбор по цифрам</h2>', t)
+        self.assertIn("◆ рассчитано Делоскопом", t)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

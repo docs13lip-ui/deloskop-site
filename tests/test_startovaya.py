@@ -58,6 +58,13 @@ of = rd(R, 'oferta/index.html')
 if not STV.aktivna(D):
     ok('сейчас: стартовая цена не включена — на /tarify/ строки нет, «Старт» 490 ₽', 'class="startovaya"' not in pg and '<b data-m="490&nbsp;₽"' in kartochka_starta(pg).replace(STV.NB, '&nbsp;'))  # oplata-schet-v1: крупно — месяц или «за год», цена месяца — в data-m
     ok('сейчас: в оферте п. 3.9 ещё нет — появится вместе с ценой', 'id="start"' not in of)
+    # start390-beta-v1 ([Тестировщик] 10.10): в бете — та же стартовая цена, что в отчёте (js/pasport-cta.js), строкой «После беты»
+    st0 = STV.start(D).get('startovaya') or {}
+    if D.get('beta') is True and st0.get('vklyuchit') is True and st0.get('god_soglasovan') is True:
+        kb = kartochka_starta(pg).replace(STV.NB, '&nbsp;')
+        ok('сейчас (бета): под «Стартом» — «Стартовая цена после беты — 390 ₽ … 3 700 ₽ за год», только в блоке беты',
+           '<!--v-bete--><p class="startovaya startovaya-beta"><b>Стартовая цена после беты&nbsp;— 390&nbsp;₽ в&nbsp;месяц '
+           'или 3&nbsp;700&nbsp;₽ за&nbsp;год</b>' in kb)
 else:
     ok('после включения: строка на /tarify/ и п. 3.9 в оферте', 'class="startovaya"' in pg and '<li id="start">' in of)
 

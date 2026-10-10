@@ -28,6 +28,8 @@
   // 407, 414, 415, 418, 420 — уже исключена из ЕГРЮЛ (как ISKLYUCHENA в js/dinamika.js)
   var ISKLYUCHENA = { '407': 1, '414': 1, '415': 1, '418': 1, '420': 1 };
 
+  // kavychki-v1: снимки на устройстве хранят название как в ЕГРЮЛ — показываем «ёлочками» (js/imya.js)
+  function kav(t) { var D = typeof window !== 'undefined' && window.DlkImya; return D ? D.kavychki(t) : t; }
   function esc(t) {
     return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -117,7 +119,7 @@
 
   function stroka(r, now) {
     var k = kogda(r.t, now);
-    var imya = r.ip ? 'Индивидуальный предприниматель' : (r.nm || 'Компания');
+    var imya = r.ip ? 'Индивидуальный предприниматель' : (r.nm ? kav(r.nm) : 'Компания');
     return '<li class="pf__r" data-inn="' + r.inn + '">' +
       '<div class="pf__a"><b class="pf__nm">' + esc(imya) + '</b><span class="pf__pill pf__pill--' + r.ur + '">' + UR[r.ur].t + '</span>' +
       (r.isk ? '<span class="pf__isk">' + (ISKLYUCHENA[r.isk] ? 'Компания исключена из' + NB + 'ЕГРЮЛ' : 'ФНС готовит исключение из' + NB + 'ЕГРЮЛ' + (r.isk === '108' ? ' по' + NB + 'сведениям Банка России' : '')) + '</span>' : '') + '</div>' +

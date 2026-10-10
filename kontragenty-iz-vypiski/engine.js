@@ -400,7 +400,9 @@
     if (t.length < 3) t.push('Раз в месяц повторять разбор — новые поставщики появляются незаметно.');
     return t.slice(0, 3);
   }
-  function label(s) { return s.name || s.inn || 'без названия'; }
+  // kavychki-v1.1: ООО "РОМАШКА" из выписки 1С — «ёлочками» (js/imya.js, только в браузере)
+  function kav(t) { var D = typeof window !== 'undefined' && window.DlkImya; return D && t ? D.kavychki(t) : t; }
+  function label(s) { return kav(s.name) || s.inn || 'без названия'; }
 
   /* ---------- итог «деньги на кону» с учётом проверки по реестрам ---------- */
   // risk: { inn: 'high'|'medium'|'low' } — ответ API. Без ответа считаем «потенциал» по всем поставщикам.

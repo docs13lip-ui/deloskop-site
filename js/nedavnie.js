@@ -28,6 +28,8 @@
     write(a.slice(0, MAX));
   }
 
+  // kavychki-v1: старые записи на устройстве — с прямыми кавычками из ЕГРЮЛ; показываем «ёлочками» (js/imya.js)
+  function kav(t) { return w.DlkImya ? w.DlkImya.kavychki(t) : t; }
   function esc(t) {
     return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -46,7 +48,7 @@
     el.innerHTML = '<h2 class="ned__h">Недавние проверки на этом устройстве</h2><ul class="ned__list">' +
       a.map(function (x) {
         var href = x.id ? '/report.html?id=' + encodeURIComponent(x.id) : '/?inn=' + encodeURIComponent(x.inn);
-        return '<li><a href="' + href + '"><b>' + esc(x.name || ('ИНН ' + x.inn)) + '</b>' +
+        return '<li><a href="' + href + '"><b>' + esc(x.name ? kav(x.name) : ('ИНН ' + x.inn)) + '</b>' +
           '<span>ИНН ' + esc(x.inn) + (x.t ? ' · ' + esc(when(x.t)) : '') + '</span></a>' +
           (x.level ? '<i class="ned__lvl ned__lvl--' + x.level + '">' + LVL[x.level] + '</i>' : '') + '</li>';
       }).join('') + '</ul><button type="button" class="ned__clear">Очистить список</button>';

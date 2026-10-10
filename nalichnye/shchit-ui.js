@@ -9,6 +9,7 @@
   /* ---------- Типографика по «Ководству»: 41,5%, 1 265 000 ₽, неразрывные пробелы ---------- */
   var NB = ' ', TH = ' ';
   function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function kav(t) { var D = typeof window !== 'undefined' && window.DlkImya; return D && t ? D.kavychki(t) : t; } // kavychki-v1.1
   function grp(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, TH); }
   function rub(x) {
     x = Math.round(x || 0);
@@ -60,7 +61,7 @@
 
   function render(r, isDemo) {
     var L = TX.levels[r.level], h = [];
-    var who = isDemo ? 'Пример · вымышленная компания' : (esc(r.client.name || 'Ваша компания') + (r.client.inn ? ' · ИНН ' + esc(r.client.inn) : ''));
+    var who = isDemo ? 'Пример · вымышленная компания' : (esc(kav(r.client.name) || 'Ваша компания') + (r.client.inn ? ' · ИНН ' + esc(r.client.inn) : ''));
     h.push('<section class="verdict l' + r.level + '" aria-live="polite"><div class="who">' + who + ' · ' + dateRu(r.period.start) + ' — ' + dateRu(r.period.end) + '</div>' +
       '<div class="big">' + ICON[r.level] + esc(L.name) + '</div>' +
       '<p><b>Риск вопросов и блокировки со стороны банка: ' + L.block + '.</b> ' + esc(L.lead) + '</p></section>');

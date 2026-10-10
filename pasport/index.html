@@ -171,6 +171,7 @@ footer a{color:var(--muted)}
 <link rel="stylesheet" href="/css/fonts.css">
 <link rel="stylesheet" href="/css/podval.css">
 <link rel="stylesheet" href="/css/shapka.css">
+<script src="/js/imya.js"></script>
 <script src="/js/shapka.js" defer></script>
 <script src="/js/metrika.js" defer></script>
 <script src="/js/kopiya.js" defer></script>
@@ -389,7 +390,7 @@ function dataSvedenij(v){var t=String(v==null?'':v).trim(),m=/^(\d{4})-(\d{2})-(
     btn.disabled=true;tell('Сверяем с реестрами и собираем Паспорт…');
     fetch(API+'/api/check?q='+encodeURIComponent(v)+'&from=pasport',{credentials:'include'})
       .then(function(res){return res.json().then(function(j){return {ok:res.ok,status:res.status,j:j}},function(){return {ok:false,status:res.status,j:{}}})})
-      .then(function(x){btn.disabled=false;
+      .then(function(x){btn.disabled=false;if(x.ok&&window.DlkImya)DlkImya.ispravitOtvet(x.j);
         // лимит бесплатных проверок — общий экран js/limit.js, текст API не выводим
         if(x.status===429){tell('');if(window.dlkLimit)dlkLimit.pokazat(gde(),{stranica:'pasport',inn:v});else tell('На сегодня 3 бесплатные проверки закончились. Завтра — снова 3.');return;}
         if(!x.ok){tell((x.j&&x.j.detail)||'Не получилось собрать Паспорт. Попробуйте через минуту.',true);return;}
@@ -533,7 +534,7 @@ function dataSvedenij(v){var t=String(v==null?'':v).trim(),m=/^(\d{4})-(\d{2})-(
     view.innerHTML='<div class="skel" aria-hidden="true"></div>';say('Сверяем с реестрами…');
     fetch(API+'/api/check?q='+encodeURIComponent(inn)+'&from=pasport',{credentials:'include'})
       .then(function(res){return res.json().then(function(j){return {ok:res.ok,status:res.status,j:j}},function(){return {ok:false,status:res.status,j:{}}})})
-      .then(function(x){
+      .then(function(x){if(x.ok&&window.DlkImya)DlkImya.ispravitOtvet(x.j);
         if(!x.ok){view.innerHTML='';
           if(x.status===429){say('');if(window.dlkLimit)dlkLimit.pokazat(msg,{stranica:'pasport',inn:inn});else say('На сегодня 3 бесплатные проверки закончились. Завтра — снова 3.');return;}
           say((x.j&&x.j.detail)||'Не получилось собрать паспорт. Обновите страницу через минуту.',true);return;}

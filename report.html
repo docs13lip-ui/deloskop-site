@@ -157,6 +157,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
 <script src="/js/metrika.js" defer></script>
 <script src="/js/otzyv.js" defer></script>
 <script src="/js/kopiya.js" defer></script>
+<script src="/js/imya.js"></script>
 <script src="/js/dinamika.js"></script>
 <script src="/js/nagruzka.js"></script>
 <script src="/js/rentabelnost.js"></script>
@@ -295,7 +296,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
     document.getElementById('again').onclick=function(){msg.textContent='Загружаем отчёт…';load();};
   }
   function load(){
-    fetch(API+'/api/report/'+encodeURIComponent(id)).then(function(r){if(!r.ok)throw r.status;return r.json()}).then(function(d){if(window.dlkGoal)dlkGoal('report_opened');return render(d);})
+    fetch(API+'/api/report/'+encodeURIComponent(id)).then(function(r){if(!r.ok)throw r.status;return r.json()}).then(function(d){if(window.dlkGoal)dlkGoal('report_opened');if(window.DlkImya)DlkImya.ispravitOtvet(d);return render(d);})
       .catch(function(s){if(s===404||s===410)pusto('Отчёт по этой ссылке не найден: возможно, в ней опечатка. Проверьте компанию заново — это займёт несколько секунд.');else oshibka();});
   }
   // ссылка вида /report.html?inn=… — сразу запускаем проверку на главной (там поиск, отчёт и «Недавние»)

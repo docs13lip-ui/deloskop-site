@@ -4,6 +4,7 @@
   var S = window.Skoraya;
   var KEY = 'deloskop.skoraya.v1';
   var $ = function (id) { return document.getElementById(id); };
+  function kav(t) { var D = typeof window !== 'undefined' && window.DlkImya; return D && t ? D.kavychki(t) : t; } // kavychki-v1.1: названия из выписки — «ёлочками»
   function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function todayIso() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
   function money(v) { var n = parseFloat(String(v || '').replace(/[^\d,.]/g, '').replace(',', '.')); return isFinite(n) ? n : 0; }
@@ -158,7 +159,7 @@
   }
   function tbl(title, rows) {
     if (!rows.length) return '';
-    return '<table><tr><th>' + esc(title) + '</th><th>ИНН</th><th class="n">Сумма</th></tr>' + rows.map(function (r) { return '<tr><td>' + esc(r.name) + '</td><td>' + esc(r.inn || '—') + '</td><td class="n">' + esc(S.rub(r.sum)) + '</td></tr>'; }).join('') + '</table>';
+    return '<table><tr><th>' + esc(title) + '</th><th>ИНН</th><th class="n">Сумма</th></tr>' + rows.map(function (r) { return '<tr><td>' + esc(kav(r.name)) + '</td><td>' + esc(r.inn || '—') + '</td><td class="n">' + esc(S.rub(r.sum)) + '</td></tr>'; }).join('') + '</table>';
   }
   function letterTitle(sc) {
     return { zapros: 'Ответ на запрос банка', otkaz: 'Заявление в банк', dbo: 'Заявление в банк', rastorzhenie: 'Заявление об остатке', zsk: st.zskBank === 'net_mer' ? 'Заявление в Банк России' : 'Заявление в межведомственную комиссию', unknown: 'Заявление в банк' }[sc];

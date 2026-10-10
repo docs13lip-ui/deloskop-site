@@ -122,6 +122,7 @@ footer a{color:var(--muted)}
 <link rel="stylesheet" href="/css/fonts.css">
 <link rel="stylesheet" href="/css/podval.css">
 <link rel="stylesheet" href="/css/shapka.css">
+<script src="/js/imya.js"></script>
 <script src="/js/shapka.js" defer></script>
 <script src="/js/metrika.js" defer></script>
 <script src="/js/kopiya.js" defer></script>
@@ -453,7 +454,7 @@ footer a{color:var(--muted)}
   function check(inn) {
     return fetch(API + '/api/check?q=' + inn, {credentials: 'include'}).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (j) {
-        if (r.ok) return j;
+        if (r.ok) return window.DlkImya ? DlkImya.ispravitOtvet(j) : j; // kavychki-v1.1
         var e = new Error(j.detail || 'Ошибка проверки'); e.code = r.status; throw e;
       });
     });

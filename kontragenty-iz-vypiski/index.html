@@ -258,6 +258,7 @@ footer a{color:var(--muted)}
 </div></section>
 </main>
 
+<script src="/js/imya.js"></script>
 <script src="/js/bez-nds.js"></script>
 <script src="/js/kommentarii.js"></script>
 <script src="/kontragenty-iz-vypiski/engine.js"></script>
@@ -276,6 +277,8 @@ function klient(){var i=state.res&&state.res.self&&state.res.self.inn||'';return
 function kom(code){return K&&state.kom&&code?K.vypiskaHtml(state.kom,code,klient()):''}
 try{var saved=localStorage.getItem('deloskop.regime');if(saved&&E.REGIMES[saved])state.regime=saved}catch(e){}
 
+// kavychki-v1.1: ООО "РОМАШКА" из выписки и ответа API — «ёлочками» (js/imya.js)
+function kav(t){return window.DlkImya&&t?DlkImya.kavychki(t):t}
 function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 var rub=function(n){return E.money(n)+' ₽'};
 function dt(iso){if(!iso)return '';var p=iso.split('-');return p[2]+'.'+p[1]+'.'+p[0]}
@@ -312,7 +315,7 @@ function render(){
   }else{
     var top=r.suppliers[0];
     head='<div class="k">Поставщикам ушло</div><div class="v">'+rub(t.supplier)+'</div><p>'+n+' '+plural(n,'поставщик','поставщика','поставщиков')+
-      (r.period.from?' с '+dt(r.period.from)+' по '+dt(r.period.to):'')+'. Если главный из них — '+esc(top.name||top.inn)+' — окажется «технической» компанией, на кону от '+rub(top.stake.soft)+' до '+rub(top.stake.hard)+'.</p>';
+      (r.period.from?' с '+dt(r.period.from)+' по '+dt(r.period.to):'')+'. Если главный из них — '+esc(top.name?kav(top.name):top.inn)+' — окажется «технической» компанией, на кону от '+rub(top.stake.soft)+' до '+rub(top.stake.hard)+'.</p>';
   }
   var cta='';
   if(!state.demo){
@@ -349,7 +352,7 @@ var LVL={high:['high','серьёзные сигналы'],medium:['medium','е�
 function supCard(s){
   var rm=state.remote&&s.inn?state.remote[s.inn]:null, lvl=state.risk&&s.inn?state.risk[s.inn]:null;
   var badge=lvl&&LVL[lvl]?'<span class="badge '+LVL[lvl][0]+'">'+LVL[lvl][1]+'</span>':(state.risk&&s.inn&&s.innValid&&state.locked?'<span class="badge lock">в подписке</span>':'');
-  var name=(rm&&rm.name)||s.name||'Без названия';
+  var name=kav((rm&&rm.name)||s.name)||'Без названия';
   var sig=s.signals.map(function(x){return '<div class="sig '+x.level+'">'+esc(x.text)+(x.href?' <a href="'+esc(x.href)+'">Сверить реквизиты&nbsp;→</a>':'')+'</div>'+kom(x.code)}).join('');
   var rr=E.remoteReasons(rm,lvl),bn=rm&&window.DlkBezNds?DlkBezNds.strokaVypiski(s,rm):null;if(bn)rr.push(bn);
   if(rr.length)sig=rr.map(function(x){return '<div class="sig '+x.level+'">'+esc(x.text)+'</div>'}).join('')+sig;

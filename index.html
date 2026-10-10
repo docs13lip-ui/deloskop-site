@@ -547,6 +547,7 @@ footer a{color:var(--ink2)}
   <p class="fb-note" id="fbNote">Сообщение увидит только команда Делоскопа.</p>
 </div>
 
+<script src="/js/imya.js" defer></script>
 <script src="/js/sushchestvennoe.js" defer></script>
 <script src="/js/kommentarii.js" defer></script>
 <script src="/js/otkuda.js" defer></script>
@@ -685,6 +686,8 @@ footer a{color:var(--ink2)}
         if(x.s===429){note.className='note';note.textContent='';if(window.dlkLimit)dlkLimit.pokazat(note,{stranica:'glavnaya',inn:v});else note.textContent='На сегодня 3 бесплатные проверки закончились. Завтра — снова 3.';return;}
         if(!x.ok){note.className='note err';note.textContent=(x.j&&x.j.detail)||'Не получилось проверить. Попробуйте ещё раз.';return;}
         if(window.dlkLimit)dlkLimit.proveren((x.j.company&&x.j.company.inn)||v);
+        // kavychki-v1: ПАО "РОССЕТИ ЮГ" → ПАО «РОССЕТИ ЮГ» — до всех модулей отчёта (js/imya.js; буквы — как в ЕГРЮЛ)
+        if(window.DlkImya)DlkImya.ispravitOtvet(x.j);
         render(x.j,o);note.className='note ok';note.textContent='Готово. Отчёт — рядом.';
         if(window.Otchet&&report.classList.contains('ot'))Otchet.prokrutit(report);else if(window.innerWidth<980)report.scrollIntoView({behavior:'smooth',block:'start'});});})
       .catch(function(){report.classList.remove('loading');note.className='note err';
@@ -699,7 +702,7 @@ footer a{color:var(--ink2)}
   function pickItem(i){var it=items[i];if(!it)return;input.value=it.name;hide();runCheck(it.inn);}
   function show(arr){items=arr||[];sel=-1;
     if(!items.length){hide();return;}
-    list.innerHTML=items.map(function(it,i){return '<li role="option" data-i="'+i+'"><b>'+esc(it.name)+'</b><span>ИНН '+esc(it.inn)+(it.address?' · '+esc(it.address):'')+'</span></li>'}).join('');
+    list.innerHTML=items.map(function(it,i){return '<li role="option" data-i="'+i+'"><b>'+esc(window.DlkImya?DlkImya.kavychki(it.name):it.name)+'</b><span>ИНН '+esc(it.inn)+(it.address?' · '+esc(it.address):'')+'</span></li>'}).join('');
     list.hidden=false;}
   list.addEventListener('mousedown',function(e){var li=e.target.closest('li');if(li){e.preventDefault();pickItem(+li.dataset.i)}});
   input.addEventListener('input',function(){clearTimeout(tmr);var q=input.value.trim();

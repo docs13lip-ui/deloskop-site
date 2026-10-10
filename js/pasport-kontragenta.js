@@ -18,7 +18,7 @@
   'use strict';
   var NB = '\u00a0';
 
-  var VERSIYA = 'Паспорт v2.10'; // v2.10 — название с типографскими кавычками, буквы как в ЕГРЮЛ (kavychki-v1, js/imya.js); v2.9 — раздел 6: полоса «На чём держится компания» (pasport-polosa-v1); v2.8 — баланс и расчёты на 31.12
+  var VERSIYA = 'Паспорт v2.11'; // v2.11 — управляющая организация вместо «Руководителя» и подписант по ней (upravlyayushchaya-v1); v2.10 — название с типографскими кавычками, буквы как в ЕГРЮЛ (kavychki-v1, js/imya.js); v2.9 — раздел 6: полоса «На чём держится компания» (pasport-polosa-v1); v2.8 — баланс и расчёты на 31.12
   // Определение Индекса и подпись предела аванса — дословно [Юриста 115-ФЗ] 29.09 (222-ФЗ), разд. 3 пп. 1 и 4.
   var OPREDELENIE_INDEKSA = 'Индекс Делоскопа — оценка признаков риска для сделки по открытым и лицензированным данным: регистрационных, налоговых, признаков по 115-ФЗ и нарушений. Это не кредитный рейтинг и не мнение о способности компании исполнять финансовые обязательства.';
   var PODPIS_PREDELA = 'Сколько разумно платить вперёд с учётом найденных признаков — расчёт Делоскопа по открытой формуле. Это не оценка способности компании вернуть деньги.';
@@ -311,7 +311,7 @@
 
     // 3. Люди — ФИО только при persons (флаг PERSONS_PUBLIC, п. 92)
     if (c.director_post || c.director_name)
-      fakt('lyudi', c.director_post || 'Руководитель', persons ? (c.director_name || 'указан в ЕГРЮЛ') : 'указан в ЕГРЮЛ', { ton: 'info', istochnik: 'ЕГРЮЛ' });
+      fakt('lyudi', c.director_post || 'Руководитель', (persons || c.director_org) ? (c.director_name || 'указан в ЕГРЮЛ') : 'указан в ЕГРЮЛ', { ton: 'info', istochnik: 'ЕГРЮЛ' }); // название управляющей организации — не персональные данные
 
     // 5. Основной вид деятельности
     if (c.okved) fakt('deyatelnost', 'Основной вид деятельности', c.okved + (c.okved_name ? ' — ' + c.okved_name : ''), { ton: 'info', istochnik: 'ЕГРЮЛ' });
@@ -632,7 +632,13 @@
     var out = [];
     function s(ton, tekst, ssylki, vid) { out.push({ ton: ton, tekst: tekst, ssylki: ssylki || [], vid: vid || (ton === 'off' ? 'net' : 'raschet') }); }
     if (!p || p.ip) return out;
-    if (post) s('info', 'По ЕГРЮЛ на ' + naDatu + ' без доверенности действует: ' + post.toLowerCase() + '.', [], 'istochnik');
+    if (c.director_org) {
+      // upravlyayushchaya-v1: полномочия руководителя переданы другой компании — подписывает её руководитель или представитель
+      s('info', 'По ЕГРЮЛ на ' + naDatu + ' полномочия руководителя переданы управляющей организации — ' + (c.director_name || 'она указана в ЕГРЮЛ') +
+        '. Договор от имени компании подписывает руководитель управляющей организации или её представитель по доверенности.', [SSYLKI_PODPISANTA.egrul], 'istochnik');
+      s('info', 'Запросите договор о передаче полномочий управляющей организации и документ о назначении её руководителя; руководителя сверьте по выписке ЕГРЮЛ самой управляющей организации.', [SSYLKI_PODPISANTA.egrul]);
+    }
+    else if (post) s('info', 'По ЕГРЮЛ на ' + naDatu + ' без доверенности действует: ' + post.toLowerCase() + '.', [], 'istochnik');
     else s('off', 'Руководителя в полученных сведениях нет — кто вправе подписывать без доверенности, посмотрите в выписке ЕГРЮЛ.', [SSYLKI_PODPISANTA.egrul]);
 
     var lyudi = (p.razdely || []).filter(function (x) { return x.id === 'lyudi' || x.id === 'rekvizity'; });
@@ -644,7 +650,7 @@
     });
 
     var dolzh = String(vvod.dolzhnost || '').trim(), osn = vvod.osnovanie || '';
-    if (dolzh && osn === 'ustav' && post) {
+    if (dolzh && osn === 'ustav' && post && !c.director_org) {
       if (tuZheDolzhnost(dolzh, post)) s('ok', 'Должность подписанта совпадает с руководителем по ЕГРЮЛ. Сверьте подпись с документом о назначении.', []);
       else s('warn', 'Подписал «' + dolzh + '», а без доверенности действует ' + post.toLowerCase() + '. Запросите доверенность подписанта.', [SSYLKI_PODPISANTA.mchd, SSYLKI_PODPISANTA.notar]);
     }

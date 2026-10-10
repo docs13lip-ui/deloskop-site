@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Делоскоп в MAX и ВКонтакте — Делоскоп</title>
+<meta name="description" content="Бот Делоскопа: пришлите ИНН компании — короткая карточка с фактами, источниками и датами. Готовим к запуску.">
+<link rel="canonical" href="https://deloskop.ru/boty/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Делоскоп в MAX и ВКонтакте — Делоскоп">
+<meta property="og:description" content="Бот Делоскопа: пришлите ИНН компании — короткая карточка с фактами, источниками и датами. Готовим к запуску.">
+<meta property="og:url" content="https://deloskop.ru/boty/">
+<meta property="og:image" content="https://deloskop.ru/ikonka-512.png">
+<meta name="theme-color" content="#F5F5F2">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preload" href="/fonts/onest-cyrillic-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/onest-cyrillic-600.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/css/ds.css">
+<link rel="stylesheet" href="/css/fonts.css">
+<link rel="stylesheet" href="/css/podval.css">
+<link rel="stylesheet" href="/css/shapka.css">
+<script src="/js/shapka.js" defer></script>
+<script src="/obnovleniya.js" defer></script>
+<script src="/js/metrika.js" defer></script>
+<script src="/js/kopiya.js" defer></script>
+<meta name="robots" content="noindex, follow">
+<script src="/js/kanaly.js" defer></script>
+<style>[data-kanal][hidden],[data-kanaly-blok][hidden]{display:none!important}</style>
+<meta name="deloskop-rezhim" content="beta">
+</head>
+<body>
+<!--shapka-->
+<a class="skip" href="#main">Перейти к содержанию</a>
+<header class="shapka" data-shapka>
+ <div class="shapka__in">
+  <a class="shapka__logo" href="/" aria-label="Делоскоп — на главную"><svg width="36" height="32" viewBox="0 0 72 64" fill="none" aria-hidden="true"><path d="M36 18.1A16 16 0 0 1 36 45.9A16 16 0 0 1 36 18.1Z" fill="#0B63E5"/><circle cx="28" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/><circle cx="44" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/></svg><span class="shapka__word">делоскоп</span></a>
+  <nav class="shapka__nav" aria-label="Основное меню">
+   <ul class="shapka__list">
+    <li><a class="shapka__link" href="/" data-match="^/(index\.html|report\.html)?$">Проверка</a></li>
+    <li class="shapka__dd">
+     <button class="shapka__link" type="button" aria-expanded="false" aria-controls="dd-vypiska" data-match="^/(nalichnye|kontragenty-iz-vypiski|proverit-schet)/">Выписка<svg class="shapka__chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+     <ul class="shapka__menu" id="dd-vypiska">
+      <li><a href="/nalichnye/"><b>Наличные глазами банка</b><span>Как банк видит ваши операции с наличными</span></a></li>
+      <li><a href="/kontragenty-iz-vypiski/"><b>Кому вы платите</b><span>Проверка контрагентов из вашей выписки</span></a></li>
+      <li><a href="/proverit-schet/"><b>Проверь счёт</b><span>Проверить получателя до оплаты</span></a></li>
+     </ul>
+    </li>
+    <li class="shapka__dd">
+     <button class="shapka__link" type="button" aria-expanded="false" aria-controls="dd-115" data-match="^/(skoraya-115-fz|pasport|115-fz)/">115-ФЗ<svg class="shapka__chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+     <ul class="shapka__menu" id="dd-115">
+      <li><a href="/skoraya-115-fz/"><b>Скорая 115-ФЗ</b><span>Банк ограничил счёт: что делать сейчас</span></a></li>
+      <li><a href="/pasport/"><b>Паспорт компании</b><span>Страница о вашей компании для банка и партнёров</span></a></li>
+      <li><a href="/115-fz/"><b>Разборы 115-ФЗ</b><span>Простыми словами, с нормами и практикой</span></a></li>
+     </ul>
+    </li>
+    <li><a class="shapka__link" href="/indeks/" data-match="^/indeks/">Индекс</a></li>
+    <li><a class="shapka__link" href="/tarify/" data-match="^/tarify/">Тарифы</a></li>
+   </ul>
+  </nav>
+  <div class="shapka__right">
+   <button class="shapka__link shapka__new" type="button" data-whatsnew aria-haspopup="dialog"><span class="shapka__new-l">Что нового</span><span class="shapka__new-s" aria-hidden="true">Новое</span><span class="shapka__dot" data-whatsnew-dot hidden><span class="vh">есть непрочитанное</span></span><span class="shapka__cnt num" data-whatsnew-count hidden></span></button>
+   <a class="shapka__link shapka__login" href="/cabinet.html" data-auth-out>Войти</a>
+   <a class="shapka__link shapka__login" href="/cabinet.html" data-auth-in hidden>Кабинет</a>
+   <a class="shapka__btn" href="/#inn" data-check>Проверить</a>
+   <button class="shapka__burger" type="button" aria-expanded="false" aria-controls="mnav" aria-label="Открыть меню"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16M4 16h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+  </div>
+ </div>
+</header>
+<dialog class="mnav" id="mnav" aria-label="Меню">
+ <div class="mnav__top">
+  <a class="shapka__logo" href="/" aria-label="Делоскоп — на главную"><svg width="36" height="32" viewBox="0 0 72 64" fill="none" aria-hidden="true"><path d="M36 18.1A16 16 0 0 1 36 45.9A16 16 0 0 1 36 18.1Z" fill="#0B63E5"/><circle cx="28" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/><circle cx="44" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/></svg><span class="shapka__word">делоскоп</span></a>
+  <button class="shapka__burger" type="button" data-close aria-label="Закрыть меню"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+ </div>
+ <nav class="mnav__body" aria-label="Основное меню">
+  <ul class="mnav__list">
+   <li><a class="mnav__link" href="/" data-match="^/(index\.html|report\.html)?$">Проверка</a></li>
+   <li><span class="mnav__link mnav__group" data-match="^/(nalichnye|kontragenty-iz-vypiski|proverit-schet)/">Выписка</span>
+    <ul class="mnav__sub">
+     <li><a href="/nalichnye/">Наличные глазами банка</a></li>
+     <li><a href="/kontragenty-iz-vypiski/">Кому вы платите</a></li>
+     <li><a href="/proverit-schet/">Проверь счёт</a></li>
+    </ul></li>
+   <li><span class="mnav__link mnav__group" data-match="^/(skoraya-115-fz|pasport|115-fz)/">115-ФЗ</span>
+    <ul class="mnav__sub">
+     <li><a href="/skoraya-115-fz/">Скорая 115-ФЗ</a></li>
+     <li><a href="/pasport/">Паспорт компании</a></li>
+     <li><a href="/115-fz/">Разборы 115-ФЗ</a></li>
+    </ul></li>
+   <li><a class="mnav__link" href="/indeks/" data-match="^/indeks/">Индекс</a></li>
+   <li><a class="mnav__link" href="/tarify/" data-match="^/tarify/">Тарифы</a></li>
+  </ul>
+  <div class="mnav__extra">
+   <button class="mnav__row" type="button" data-whatsnew aria-haspopup="dialog">Что нового<span class="shapka__dot" data-whatsnew-dot hidden><span class="vh">есть непрочитанное</span></span></button>
+   <a class="mnav__row" href="/cabinet.html" data-auth-out>Войти</a>
+   <a class="mnav__row" href="/cabinet.html" data-auth-in hidden>Кабинет</a>
+  </div>
+  <a class="shapka__btn shapka__btn--lg mnav__cta" href="/#inn" data-check>Проверить компанию</a>
+ </nav>
+</dialog>
+<!--/shapka-->
+<!--beta-polosa--><div class="beta-bar" role="region" aria-label="Открытая бета" data-beta-rezhim="a" data-beta-do="2026-10-13" data-beta-bar><div class="beta-bar__in"><span class="beta-bar__metka">бета</span><p class="beta-bar__t"><b>Открытая бета: всё бесплатно по&nbsp;13&nbsp;октября включительно.</b> <span class="beta-bar__dop">С&nbsp;14&nbsp;октября&nbsp;— тарифы; быстрая проверка останется бесплатной, 3&nbsp;в&nbsp;день. <a href="/osnovatel/" data-goal="beta_osnovatel" data-beta-osn>Цена основателя для первых 300&nbsp;→</a> </span><a href="mailto:help@deloskop.ru?subject=%D0%91%D0%B5%D1%82%D0%B0%20%D0%94%D0%B5%D0%BB%D0%BE%D1%81%D0%BA%D0%BE%D0%BF%D0%B0">Нашли ошибку&nbsp;— напишите</a></p><template data-beta-b><b>Открытая бета продолжается:</b> <span class="beta-bar__dop">всё бесплатно. О&nbsp;начале тарифов скажем здесь не&nbsp;позже чем за&nbsp;3&nbsp;дня; быстрая проверка останется бесплатной, 3&nbsp;в&nbsp;день. <a href="/osnovatel/" data-goal="beta_osnovatel" data-beta-osn>Цена основателя для первых 300&nbsp;→</a> </span><a href="mailto:help@deloskop.ru?subject=%D0%91%D0%B5%D1%82%D0%B0%20%D0%94%D0%B5%D0%BB%D0%BE%D1%81%D0%BA%D0%BE%D0%BF%D0%B0">Нашли ошибку&nbsp;— напишите</a></template><button class="beta-bar__x" type="button" aria-label="Скрыть на неделю" data-beta-x><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div></div><script>try{(function(b){var r=b.getAttribute("data-beta-rezhim"),d=b.getAttribute("data-beta-do"),k=d?Date.parse(d+"T00:00:00+03:00")+864e5:0,n=Date.now();if(r==="c"){if(n>=k+6048e5)b.hidden=true;return}if(r==="a"&&n>=k){var t=b.querySelector("template[data-beta-b]");if(t){b.querySelector(".beta-bar__t").innerHTML=t.innerHTML;b.setAttribute("data-beta-rezhim","b")}}if(+localStorage.getItem("dlk_beta_skryt_"+(d||"net"))>n)b.hidden=true})(document.querySelector("[data-beta-bar]"))}catch(e){}</script><!--/beta-polosa-->
+<main id="main" class="doc wrap wrap--text">
+<nav class="crumbs" aria-label="Навигация"><a href="/">Делоскоп</a> › <span>Боты</span></nav>
+<h1>Делоскоп в&nbsp;MAX и&nbsp;ВКонтакте</h1>
+<p class="lead">Пришлите боту ИНН компании&nbsp;— он ответит короткой карточкой: статус, существенные факты с&nbsp;источником и&nbsp;датой и&nbsp;что это значит для вашего платежа. Полный отчёт, Паспорт контрагента и&nbsp;слежение&nbsp;— на&nbsp;сайте.</p>
+
+<div class="card" data-kanaly-net><p><strong>Бота готовим к&nbsp;запуску.</strong> Ссылка появится на&nbsp;этой странице. А&nbsp;пока проверить компанию можно <a href="/#inn">на&nbsp;главной</a>.</p></div>
+<div class="card" data-kanaly-blok hidden><p><strong>Написать боту</strong></p><p class="boty-knopki" style="display:flex;flex-wrap:wrap;gap:12px;margin:12px 0 0"><a class="btn btn--primary" data-kanal="max" hidden>Написать в&nbsp;MAX</a> <a class="btn btn--secondary" data-kanal="vk" hidden>Написать во&nbsp;ВКонтакте</a> <a class="btn btn--ghost" data-kanal="tg" hidden>Telegram</a></p></div>
+
+<h2>Что умеет бот</h2>
+<ul>
+<li><strong>Проверка по&nbsp;ИНН компании.</strong> Статус в&nbsp;ЕГРЮЛ, долги перед бюджетом, отчётность, признаки риска&nbsp;— у&nbsp;каждого факта источник и&nbsp;дата. Чего не&nbsp;проверили, так и&nbsp;пишем.</li>
+<li><strong>Справка.</strong> Ответы из&nbsp;«Частых вопросов» сайта&nbsp;— со&nbsp;ссылкой на&nbsp;статью, где написано подробнее.</li>
+<li><strong>Подсказки.</strong> Наличные глазами банка, «Скорая 115-ФЗ», тарифы&nbsp;— одной кнопкой.</li>
+<li>Предпринимателей (ИНН из&nbsp;12&nbsp;цифр) не&nbsp;проверяем: данные ИП мы не&nbsp;публикуем.</li>
+</ul>
+
+<h2>Сколько стоит</h2>
+<p>Короткая проверка в&nbsp;боте бесплатна. Полный отчёт и&nbsp;Паспорт контрагента&nbsp;— на&nbsp;сайте, <a href="/tarify/">по&nbsp;тарифам</a>.</p>
+
+<h2>Данные</h2>
+<p>Бот отвечает только в&nbsp;личных сообщениях. Как он обращается с&nbsp;данными, опишем в&nbsp;<a href="/politika/">Политике обработки персональных данных</a> до&nbsp;запуска.</p>
+</main>
+<!--podval--><div class="podval" role="contentinfo"><div class="podval__in"><div class="podval__cols"><nav class="podval__col" aria-label="Продукты"><p class="podval__h">Продукты</p><ul><li><a href="/">Проверка по ИНН</a></li><li><a href="/indeks/">Индекс Делоскопа</a></li><li><a href="/#shield">Щит</a></li><li><a href="/nalichnye/">Наличные глазами банка</a></li><li><a href="/kontragenty-iz-vypiski/">Кому вы платите</a></li><li><a href="/proverit-schet/">Проверь счёт</a></li><li><a href="/skoraya-115-fz/">Скорая 115-ФЗ</a></li><li><a href="/pasport/">Паспорт</a></li><li><a href="/delopis/">Делопись</a></li><li><a href="/tarify/">Тарифы</a></li></ul></nav><nav class="podval__col" aria-label="Знания"><p class="podval__h">Знания</p><ul><li><a href="/115-fz/">115-ФЗ простыми словами</a></li><li><a href="/nalogi/">Налоги</a></li><li><a href="/obnovleniya/">Что нового</a></li><li><a href="/company/">Компании</a></li></ul></nav><nav class="podval__col" aria-label="Компания"><p class="podval__h">Компания</p><ul><li><a href="/indeks/#metodika">Методика Индекса</a></li><li><a href="/tochnost/">Точность Индекса</a></li><li><a href="/cabinet.html">Кабинет</a></li><li><a href="/partneram/">Бухгалтерам и партнёрам</a></li><li><a href="/rekvizity/">Реквизиты и контакты</a></li><li><a href="mailto:help@deloskop.ru">help@deloskop.ru</a></li></ul></nav><nav class="podval__col" aria-label="Документы"><p class="podval__h">Документы</p><ul><li><a href="/oferta/">Публичная оферта</a></li><li><a href="/politika/">Политика обработки ПДн</a></li><li><a href="/soglasie/">Согласие на обработку ПДн</a></li><li><a href="/rassylki/">Согласие на рассылки</a></li><li><a href="/cookies/">Cookies и Метрика</a></li><li><a href="/vozvrat/">Возврат денег</a></li><li><a href="/partneram/usloviya/">Условия для партнёров</a></li><li><a href="/rekvizity/">Реквизиты</a></li></ul></nav></div><div class="podval__niz"><p>© 2026 Делоскоп</p><p>Сотрудничество, отзывы и предложения — <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>. Принимаем 24/7</p><p>Материалы носят информационный характер и не заменяют консультацию юриста</p></div></div></div><!--/podval-->
+</body>
+</html>

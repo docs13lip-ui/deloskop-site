@@ -17,8 +17,15 @@
 })(typeof self !== 'undefined' ? self : this, function (root) {
   'use strict';
   var NB = '\u00a0';
+  // pasport-skachok-v1: «выручка сократилась вдвое и больше» / «активы сократились…» / «выручка и активы сократились…» — только упавшие
+  function skVniz(fakty) {
+    var n = (fakty || []).filter(function (f) { return f && f.kRaz <= 0.5; }).map(function (f) { return f.k === 'revenue' ? 'выручка' : 'активы'; })
+      .filter(function (v, i, a) { return a.indexOf(v) === i; });
+    if (!n.length) return 'показатели отчётности сократились вдвое и больше';
+    return n.join(' и ') + (n.length === 1 && n[0] === 'выручка' ? ' сократилась' : ' сократились') + ' вдвое и больше';
+  }
 
-  var VERSIYA = 'Паспорт v2.13'; // v2.13 — «Что сделать» кредитору в пределе аванса при ликвидации и исключении из ЕГРЮЛ (pasport-likvidaciya-v1); v2.12 — форма реорганизации по коду ЕГРЮЛ и «Правопреемник» в пределе аванса (pasport-reorg-v1); v2.11 — управляющая организация вместо «Руководителя» и подписант по ней (upravlyayushchaya-v1); v2.10 — название с типографскими кавычками, буквы как в ЕГРЮЛ (kavychki-v1, js/imya.js); v2.9 — раздел 6: полоса «На чём держится компания» (pasport-polosa-v1); v2.8 — баланс и расчёты на 31.12
+  var VERSIYA = 'Паспорт v2.14'; // v2.14 — «Скачок в отчётности» в разделе 6, при падении — в «Главном» и «Что запросить» (pasport-skachok-v1); v2.13 — «Что сделать» кредитору в пределе аванса при ликвидации и исключении из ЕГРЮЛ (pasport-likvidaciya-v1); v2.12 — форма реорганизации по коду ЕГРЮЛ и «Правопреемник» в пределе аванса (pasport-reorg-v1); v2.11 — управляющая организация вместо «Руководителя» и подписант по ней (upravlyayushchaya-v1); v2.10 — название с типографскими кавычками, буквы как в ЕГРЮЛ (kavychki-v1, js/imya.js); v2.9 — раздел 6: полоса «На чём держится компания» (pasport-polosa-v1); v2.8 — баланс и расчёты на 31.12
   // Определение Индекса и подпись предела аванса — дословно [Юриста 115-ФЗ] 29.09 (222-ФЗ), разд. 3 пп. 1 и 4.
   var OPREDELENIE_INDEKSA = 'Индекс Делоскопа — оценка признаков риска для сделки по открытым и лицензированным данным: регистрационных, налоговых, признаков по 115-ФЗ и нарушений. Это не кредитный рейтинг и не мнение о способности компании исполнять финансовые обязательства.';
   var PODPIS_PREDELA = 'Сколько разумно платить вперёд с учётом найденных признаков — расчёт Делоскопа по открытой формуле. Это не оценка способности компании вернуть деньги.';
@@ -376,6 +383,18 @@
       fakt('finansy', 'Выручка по годам', rv, { ton: 'info', istochnik: 'ГИР БО' });
     }
     balansFakty(D, function (tekst, znachenie, s) { fakt('finansy', tekst, znachenie, s); }, U);
+    // pasport-skachok-v1 [Ночные-3] 10.10: «Скачок в отчётности» — тот же расчёт и текст, что в «Динамике» экрана проверки
+    // (js/dinamika.js skachok: выручка или активы за последний год ×2 и больше / −50 % и больше, база от 1 млн ₽).
+    // Рост — справка (info), падение — «внимание»: попадает в «Главное» и в «Что запросить». Причину не утверждаем.
+    var DN = opts.dinamika || (root && root.Dinamika) || (function () { try { return typeof require === 'function' ? require('./dinamika.js') : null; } catch (e) { return null; } })();
+    var sk = null;
+    try { sk = DN && DN.skachok ? DN.skachok(r) : null; } catch (e) { sk = null; }
+    if (sk) {
+      var skGod = sk.fakty.reduce(function (m, f) { return f.god && f.god > m ? f.god : m; }, 0);
+      // при падении совет «спросите компанию» — строкой в «Что запросить», здесь и в «Главном» — только факты (итог короче)
+      fakt('finansy', 'Скачок в отчётности', sk.ton === 'warn' ? sk.fakty.map(function (f) { return f.tekst; }).join(' ') : sk.tekst, { ton: sk.ton === 'warn' ? 'warn' : 'info', istochnik: 'ГИР БО, ФНС; расчёт Делоскопа', data: skGod ? skGod + '-12-31' : null });
+      if (sk.ton === 'warn') fakt('zaprosit', 'Пояснение к отчётности', 'Попросите письменно объяснить, что изменилось в' + NB + (skGod || 'последнем') + NB + 'году: почему ' + skVniz(sk.fakty) + '.', { ton: 'warn', istochnik: 'ГИР БО, ФНС; ориентир Делоскопа' });
+    }
     // bank-girbo-v2 [Ночные-3] 04.10: у банка без отчётности в ответе ГИР БО причина «могла её не сдавать» неверна —
     // банк сдаёт её в Банк России, в ГИР БО её передаёт Банк России, доступ может быть ограничен (ч. 9 и 12 ст. 18 402-ФЗ).
     // Текст — [Право · Налоговый] 04.10 11:30 разд. 1.4 + 12:30 разд. 1 (как в «Существенных фактах»); «проверьте сами» — cbr.ru.
@@ -729,7 +748,7 @@
     return osh;
   }
 
-  return { VERSIYA: VERSIYA, RAZDELY: RAZDELY, sobrat: sobrat, staraya: staraya, poslGodOtchetnosti: poslGodOtchetnosti, strukturaBalansa: strukturaBalansa, polosaBalansaHtml: polosaBalansaHtml, proverit: proverit, razdelDlya: razdelDlya,
+  return { skVniz: skVniz, VERSIYA: VERSIYA, RAZDELY: RAZDELY, sobrat: sobrat, staraya: staraya, poslGodOtchetnosti: poslGodOtchetnosti, strukturaBalansa: strukturaBalansa, polosaBalansaHtml: polosaBalansaHtml, proverit: proverit, razdelDlya: razdelDlya,
     vypustit: vypustit, nomerIz: nomerIz, podpisant: podpisant, datuIz: datuIz, tuZheDolzhnost: tuZheDolzhnost, SSYLKI_PODPISANTA: SSYLKI_PODPISANTA, qrSsylka: qrSsylka, podval: podval, SLOVAR_222: SLOVAR_222,
     OPREDELENIE_INDEKSA: OPREDELENIE_INDEKSA, PODPIS_PREDELA: PODPIS_PREDELA,
     otmetka: otmetka, otmetkiSvodka: otmetkiSvodka, dataIzRu: dataIzRu, tuZheSajt: tuZheSajt, OTM_SNIMOK: OTM_SNIMOK, OTM_EP: OTM_EP, OTM_EP_HOST: OTM_EP_HOST, OTM_OGOVORKA: OTM_OGOVORKA, OTM_REZ: OTM_REZ, OTM_SVEZHEST_DNEJ: OTM_SVEZHEST_DNEJ, OTM_ZSK: OTM_ZSK, OTM_ZSK_SUD: OTM_ZSK_SUD, OTM_ZSK_SUD_URL: OTM_ZSK_SUD_URL, zskAdres: zskAdres, dnejTekst: dnejTekst,

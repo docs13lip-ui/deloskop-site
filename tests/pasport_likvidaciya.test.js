@@ -65,10 +65,10 @@ test('без кода, у действующей и при реорганиза�
   }
 });
 
-test('бесплатный Паспорт: строка остаётся (раздел «Предел аванса» — бесплатный); версия v2.13', () => {
+test('бесплатный Паспорт: строка остаётся (раздел «Предел аванса» — бесплатный); версия не ниже v2.13', () => {
   const p = P.sobrat(otvet('LIQUIDATING', '101'), { usloviya: U, dostup: 'free' });
   assert.ok(fakt(p, 'predel', 'Что сделать'));
-  assert.match(fs.readFileSync(path.join(__dirname, '..', 'js/pasport-kontragenta.js'), 'utf8'), /var VERSIYA = 'Паспорт v2\.13'/);
+  assert.match(fs.readFileSync(path.join(__dirname, '..', 'js/pasport-kontragenta.js'), 'utf8'), /var VERSIYA = 'Паспорт v2\.(1[3-9]|[2-9]\d)'/);
 });
 
 test('в status-kod.js нет сырых неразрывных пробелов в новых текстах (патч переносится текстом)', () => {

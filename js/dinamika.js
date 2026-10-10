@@ -414,6 +414,36 @@
   }
 
   // ---- «Что изменилось»: снимок существенных фактов, без персональных данных ----
+  // zapis-egryul-v1 [Ночные-3]: дата последнего изменения записи в ЕГРЮЛ — company.state_actuality_date (DaData: дата последних
+  // изменений записи), иначе строка dossier.data_dates «последнее изменение записи ЕГРЮЛ/ЕГРИП — ДД.ММ.ГГГГ». Дата позже дня
+  // проверки — не значение (сбой источника). → 'ГГГГ-ММ-ДД' | null
+  function zapisEgryul(r) {
+    var c = (r && r.company) || {}, d = null;
+    var m = /^(\d{4}-\d{2}-\d{2})/.exec(String(c.state_actuality_date || ''));
+    if (m) d = m[1];
+    if (!d) {
+      var q = /последнее изменение записи ЕГРЮЛ[^—–-]*[—–-]\s*(\d{2})\.(\d{2})\.(\d{4})/i.exec(String(((r && r.dossier) || {}).data_dates || ''));
+      if (q) d = q[3] + '-' + q[2] + '-' + q[1];
+    }
+    if (!d || !isFinite(Date.parse(d))) return null;
+    var den = /^(\d{4}-\d{2}-\d{2})/.exec(String((r && r.checked_at) || ''));
+    if (den && d > den[1]) return null;
+    return d;
+  }
+  // Сколько прошло от даты записи до дня проверки: «сегодня», «12 дней назад», «2 месяца назад», «3 года назад». → {dn, t} | null
+  function davnost(iso, t) {
+    var a = Date.parse(iso), b = new Date(t + 3 * CHAS);
+    if (!isFinite(a) || !isFinite(t)) return null;
+    var dn = Math.round((Date.UTC(b.getUTCFullYear(), b.getUTCMonth(), b.getUTCDate()) - a) / (24 * CHAS));
+    if (dn < 0) return null;
+    if (dn === 0) return { dn: 0, t: 'сегодня' };
+    if (dn <= 60) return { dn: dn, t: dn + NB + skl(dn, 'день', 'дня', 'дней') + ' назад' };
+    if (dn < 730) { var ms = Math.floor(dn / 30.44); return { dn: dn, t: ms + NB + skl(ms, 'месяц', 'месяца', 'месяцев') + ' назад' }; }
+    var g = Math.floor(dn / 365.25);
+    return { dn: dn, t: g + NB + skl(g, 'год', 'года', 'лет') + ' назад' };
+  }
+  var VYPISKA = '<a href="https://egrul.nalog.ru/" target="_blank" rel="noopener">выписке ЕГРЮЛ</a>';
+
   function snimok(r) {
     if (!r || !r.company) return null;
     var c = r.company, inn = String(c.inn || '');
@@ -456,6 +486,9 @@
       // уставный капитал (строка досье «Уставный капитал», ЕГРЮЛ) и ООО ли это — для «капитал уменьшился» и срока кредитора ООО
       var ku = ustKapital(r);
       if (ku !== null) { s.ku = ku; if (ooo(r)) s.ooo = 1; }
+      // zapis-egryul-v1 [Ночные-3]: дата последнего изменения записи ЕГРЮЛ — для «запись обновлялась после вашей проверки»
+      var ez = zapisEgryul(r);
+      if (ez) s.egrd = ez;
       // КПП (ЕГРЮЛ): первые 4 цифры — код налоговой инспекции; для «КПП сменился — другая инспекция»
       var kpp = String(c.kpp == null ? '' : c.kpp).replace(/\s+/g, '').toUpperCase();
       if (/^\d{4}[0-9A-Z]{2}\d{3}$/.test(kpp)) s.kpp = kpp;
@@ -759,6 +792,12 @@
       else if (a.zm[1] > 0 && b.zm[1] >= 2 * a.zm[1]) add('info', 'Кредиты и займы выросли ' + vRaz(b.zm[1] / a.zm[1]) + ': ' + nd +
         ', на' + NB + '31.12.' + a.zm[0] + ' — ' + dengi(a.zm[1]) + ' (ГИР' + NB + 'БО)');
     }
+    // zapis-egryul-v1: запись в ЕГРЮЛ обновилась после прошлой проверки, а то, что мы сравниваем, не изменилось —
+    // одна справочная строка: что ещё изменилось (участники, адрес, лицензии), видно только в выписке. Старый снимок без даты — молчим.
+    if (a.egrd && b.egrd && b.egrd > a.egrd && !out.some(function (x) { return /ЕГРЮЛ/.test(x.t); }))
+      add('info', 'Запись в' + NB + 'ЕГРЮЛ обновлялась после вашей проверки: последнее изменение — ' + dmy(b.egrd),
+        'Из записи ЕГРЮЛ мы сравниваем статус, руководителя, капитал, КПП и' + NB + 'вид деятельности — они прежние. ' +
+        'Что ещё изменилось (например, участники или адрес), видно в' + NB + 'выписке ЕГРЮЛ.');
     if (typeof dop === 'function') { try { var dx = dop(a, b); if (dx && dx.t) add(dx.ton, dx.t); } catch (e) {} }
     var poryadok = { huzhe: 0, info: 1, luchshe: 2 };
     return out.sort(function (p, q) { return poryadok[p.ton] - poryadok[q.ton]; }).slice(0, 7);
@@ -791,7 +830,7 @@
       inns.slice(MAKS_INN).forEach(function (k) { delete vse[k]; });
       if (!zapisat(ls, vse)) return null;
     }
-    if (!a) return { pervyj: true };
+    if (!a) return b.egrd ? { pervyj: true, egrd: b.egrd, t: b.t } : { pervyj: true };
     return { s: a, izm: sravnit(a, b) };
   }
 
@@ -831,7 +870,16 @@
   // rez.id — сравнение с досье проверки из кабинета (любое устройство); иначе — со снимком в этом браузере.
   function htmlIzmeneniya(rez) {
     if (!rez) return '';
-    if (rez.pervyj) return '<p class="izm izm--0">Запомнили эту проверку на вашем устройстве. Проверите компанию снова — покажем, что изменилось.</p>';
+    var ZAPOMNILI = 'Запомнили эту проверку на' + NB + 'вашем устройстве. Проверите компанию снова — покажем, что изменилось.';
+    if (rez.pervyj) {
+      // zapis-egryul-v1: уже на первой проверке — когда запись в ЕГРЮЛ менялась последний раз (факт реестра, без оценки)
+      var dv = rez.egrd ? davnost(rez.egrd, rez.t) : null;
+      if (!dv) return '<p class="izm izm--0">' + ZAPOMNILI + '</p>';
+      if (dv.dn <= 30) return '<div class="izm izm--da izm--svezh" data-izm="egryul"><b>Запись в' + NB + 'ЕГРЮЛ менялась недавно: ' + dmy(rez.egrd) +
+        ', ' + dv.t + '</b><span>Что именно изменилось, видно в' + NB + VYPISKA + '. Перед оплатой сверьте с' + NB +
+        'ней подписанта и адрес в' + NB + 'договоре.</span></div><p class="izm izm--0">' + ZAPOMNILI + '</p>';
+      return '<p class="izm izm--0" data-izm="egryul">Последнее изменение записи в' + NB + 'ЕГРЮЛ — ' + dmy(rez.egrd) + ', ' + dv.t + '. ' + ZAPOMNILI + '</p>';
+    }
     var kogda = dataRu(rez.s.t);
     var dosje = rez.id ? '<a href="/report.html?id=' + encodeURIComponent(rez.id) + '" target="_blank" rel="noopener">досье от' + NB + dmyT(rez.s.t) + '</a>' : '';
     if (!rez.izm.length) return '<div class="izm"' + (rez.id ? ' data-izm="kabinet"' : '') + '><b>С вашей проверки ' + kogda + ' существенных изменений нет</b>' +
@@ -839,7 +887,7 @@
     return '<div class="izm izm--da"' + (rez.id ? ' data-izm="kabinet"' : '') + '><b>Что изменилось с вашей проверки ' + kogda + '</b><ul>' +
       rez.izm.map(function (x) {
         return '<li class="izm--' + x.ton + '">' + esc(x.t) + (x.pod ? '<small class="izm__pod">' + esc(x.pod).replace('vestnik-gosreg.ru',
-          '<a href="https://vestnik-gosreg.ru/" target="_blank" rel="noopener">vestnik-gosreg.ru</a>').replace('Разбор дела: что доказывать кредитору.',
+          '<a href="https://vestnik-gosreg.ru/" target="_blank" rel="noopener">vestnik-gosreg.ru</a>').replace('в' + NB + 'выписке ЕГРЮЛ.', 'в' + NB + VYPISKA + '.').replace('Разбор дела: что доказывать кредитору.',
           '<a href="' + RAZBOR_ISKL + '">Разбор дела: что доказывать кредитору.</a>') + '</small>' : '') + '</li>';
       }).join('') +
       '</ul><span>' + (rez.id ? 'Сравниваем с ' + dosje + ' из вашего кабинета — проверка с любого устройства.'
@@ -977,6 +1025,7 @@
     '.izm__pod{display:block;margin-top:2px;font-size:12.5px;line-height:1.45;color:var(--muted,#6B6B70)}.izm__pod a{white-space:nowrap;color:inherit;text-decoration:underline;text-underline-offset:2px}' +
     '.izm li.izm--huzhe::before{background:#E5484D}.izm li.izm--luchshe::before{background:#2FA36B}' +
     '.izm--0{margin:0;padding:0;border:0;font-size:13px;color:var(--muted,#6B6B70)}' +
+    '.izm--svezh{border-color:#E8D3A6;background:#FFFAF0}.izm--svezh+.izm--0{margin-top:8px}' +
     '#doc .izm,#doc .din{margin-top:14px}' +
     '@media (max-width:640px){.din__t .din__g{display:none}}' +
     '@media (max-width:520px){.din{padding:14px}.din__t{font-size:14px}.din__t th,.din__t td{padding-left:10px}.din__t .din__p{display:none}}' +

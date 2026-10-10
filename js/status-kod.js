@@ -39,6 +39,15 @@
   };
   // reorgForma('REORGANIZING', '124') → 'присоединение к другому юрлицу'; другой статус или неизвестный код — ''
   function reorgForma(st, k) { k = kod(k); return st === 'REORGANIZING' && REORG_FORMA[k] ? REORG_FORMA[k] : ''; }
+  // pasport-likvidaciya-v1 [Ночные-3] 10.10: что делать кредитору при ликвидации и исключении — тексты [Право]
+  // из data/statusy-egryul.json (поля sdelat и norma групп; тест сверяет дословно). Новых формулировок нет.
+  var KREDITORU = {
+    likvidaciya: { tekst: "Компания ликвидируется — после записи о ликвидации банк закроет счёт. Новые сделки — нет; по текущим — заявите требование ликвидатору в срок.", norma: "ст. 61–64 ГК РФ" },
+    isklyuchenie: { tekst: "Новых авансов не платите. Если компания вам должна — возражение в налоговую нужно подать в течение 3 месяцев со дня публикации в «Вестнике государственной регистрации», по коду 108 — 6 месяцев. Дату публикации проверьте на vestnik-gosreg.ru.", norma: "ст. 21.1 и 21.3 129-ФЗ" },
+    isklyuchena: { tekst: "Компания исключена из ЕГРЮЛ. Последствия — как при ликвидации (п. 2 ст. 64.2 ГК РФ): договор с ней не заключайте и не платите. Оспорить исключение в суде — в течение года (п. 8 ст. 22 129-ФЗ). Долг ООО можно требовать с директора или участников, если не оплачен по их вине (п. 3.1 ст. 3 14-ФЗ).", norma: "п. 2–3 ст. 64.2 ГК РФ; п. 3.1 ст. 3 14-ФЗ" }
+  };
+  // kreditoru('LIQUIDATING', '101') → { vid, tekst, norma }; без кода или при другом статусе — null
+  function kreditoru(st, k) { var v = vid(st, k); return v && KREDITORU[v] ? { vid: v, tekst: KREDITORU[v].tekst, norma: KREDITORU[v].norma } : null; }
   function cap(t) { return t ? t.charAt(0).toUpperCase() + t.slice(1) : t; }
 
   // nazv('LIQUIDATING', '101') → 'ликвидируется'; {zaglavnaya: true} → с заглавной
@@ -56,5 +65,5 @@
   // По ответу /api/check: company → короткое название
   function izOtveta(c, o) { c = c || {}; return c.status ? nazv(c.status, c.state_code, o) : ''; }
 
-  return { nazv: nazv, fraza: fraza, izOtveta: izOtveta, vid: vid, kod: kod, reorgForma: reorgForma, REORG_FORMA: REORG_FORMA, LIKV: LIKV, ISKL: ISKL, ISKLYUCHENA: ISKLYUCHENA };
+  return { nazv: nazv, fraza: fraza, izOtveta: izOtveta, vid: vid, kod: kod, reorgForma: reorgForma, REORG_FORMA: REORG_FORMA, kreditoru: kreditoru, KREDITORU: KREDITORU, LIKV: LIKV, ISKL: ISKL, ISKLYUCHENA: ISKLYUCHENA };
 });

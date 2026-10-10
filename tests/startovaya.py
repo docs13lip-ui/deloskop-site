@@ -121,6 +121,45 @@ def _oferta(koren, st, segodnya):
     return True
 
 
+METKA_RED = re.compile(r'<!--redakciya-pri-oplatah:[^>]*-->\n?')
+RED_RE = re.compile(r'<p class="meta">Редакция от (\d{1,2} [а-я]+ \d{4})')
+META_OF = re.compile(r'<meta name="deloskop-oferta" content="[^"]*">')
+
+
+def redakciya_pri_oplatah(koren, D, segodnya=None):
+    """oplata-schet-v1 ([Право] 10.10 01:20, О1–О3: редакция оферты к началу оплат). Правки оферты лежат
+    в половинах <!--oplata--> — их показывает tests/sobrat_shapku.py при "beta": false. Дата редакции должна
+    стать датой включения оплат: ОДИН раз — пока в оферте есть метка <!--redakciya-pri-oplatah…-->;
+    дата ставится, метка снимается, повторная сборка ничего не меняет. Обратно (beta снова true) — не откатываем."""
+    if D.get('beta') is not False:
+        return False
+    p = os.path.join(koren, 'oferta', 'index.html')
+    s = open(p, encoding='utf-8').read()
+    if not METKA_RED.search(s):
+        return False
+    segodnya = segodnya or datetime.date.today()
+    s = METKA_RED.sub('', s, count=1)
+    s, n = re.subn(r'(<p class="meta">Редакция от )\d{1,2} [а-я]+ \d{4}', lambda m: m.group(1) + f'{segodnya.day} {MES[segodnya.month - 1]} {segodnya.year}', s, count=1)
+    s, n2 = re.subn(r'"dateModified": "\d{4}-\d{2}-\d{2}"', f'"dateModified": "{segodnya.isoformat()}"', s, count=1)
+    assert n == 1 and n2 == 1, 'оферта: не нашёл строку редакции или dateModified'
+    open(p, 'w', encoding='utf-8').write(s)
+    return True
+
+
+def redakciya_v_schet(koren):
+    """О5: счёт пишет «акцепт оферты … в редакции от {дата}» — дату js/schet-dokument.js берёт из
+    <meta name="deloskop-oferta"> страницы счёта; сюда её кладёт сборщик из строки «Редакция от …» оферты."""
+    of = open(os.path.join(koren, 'oferta', 'index.html'), encoding='utf-8').read()
+    data = RED_RE.search(of).group(1)
+    p = os.path.join(koren, 'schet', 'dokument', 'index.html')
+    s = open(p, encoding='utf-8').read()
+    meta = f'<meta name="deloskop-oferta" content="{data}">'
+    s2 = META_OF.sub(meta, s, count=1) if META_OF.search(s) else s.replace('<meta name="robots" content="noindex">', '<meta name="robots" content="noindex">\n' + meta, 1)
+    if s2 != s:
+        open(p, 'w', encoding='utf-8').write(s2)
+    return data
+
+
 def vklyuchit(koren, D, segodnya=None):
     """Переход «Старт» → стартовая цена. Возвращает (D, izmeneno). Ошибка — если нет «да» на годовую цену."""
     if not pora(D, segodnya):

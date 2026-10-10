@@ -43,14 +43,28 @@ for _t in _De['tarify']:
 ok('страница: встроенные данные = tarify.json', json.loads(emb) == _De)
 nb = ' '
 R_ = lambda x: f'{x:,}'.replace(',', nb) + nb + '₽'
-ok('страница: по умолчанию «Помесячно»', '<button type="button" data-period="mes" aria-pressed="true" class="on">Помесячно</button>' in pg)
-ok('страница: tarify.js стартует с помесячно', 'var period = "mes"' in rd('tarify/tarify.js'))
+# oplata-schet-v1 (владелец 10.10.2026, п. 2): без карты по умолчанию «За год», с картой — «Помесячно» (владелец 26.09.2026)
+_god0 = D.get('karta', True) is False
+if _god0:
+    ok('страница: по счёту по умолчанию «За год»', '<button type="button" data-period="god" aria-pressed="true" class="on">За год <em>−20%</em></button>' in pg
+       and '<button type="button" data-period="mes" aria-pressed="false">Помесячно</button>' in pg)
+else:
+    ok('страница: по умолчанию «Помесячно»', '<button type="button" data-period="mes" aria-pressed="true" class="on">Помесячно</button>' in pg)
+ok('страница: tarify.js берёт начальный период с нажатой кнопки', '[data-period][aria-pressed="true"]' in rd('tarify/tarify.js') and 'var period = "mes"' not in rd('tarify/tarify.js'))
 for tid in ('start', 'pro', 'biznes'):
     t = T[tid]
     ek = t["mesyac"] * 12 - t["god"]
-    ok(f'страница: карточка {tid} — месяц крупно', f'>{R_(t["mesyac"])}</b><span data-m="в месяц" data-y="в месяц при оплате за год">в месяц</span>' in pg)
-    ok(f'страница: карточка {tid} — год и экономия', f'>или {R_(t["god"])} за год — экономия {R_(ek)}</div>' in pg)
-    ok(f'страница: карточка {tid} — две кнопки', f'data-tarif="{tid}" data-srok="mes"' in pg and f'>Оплатить год — {R_(t["god"])}</a>' in pg)
+    if _god0:
+        mg = -(-t["god"] // 12)
+        ok(f'страница: карточка {tid} — за год: месяц при оплате за год крупно', f'>{R_(mg)}</b><span data-m="в месяц" data-y="в месяц при оплате за год">в месяц при оплате за год</span>' in pg)
+        ok(f'страница: карточка {tid} — год одним платежом и экономия', f'>{R_(t["god"])} одним платежом — экономия {R_(ek)}</div>' in pg)
+        ok(f'страница: карточка {tid} — главная «Оплатить год», вторая «Счёт на месяц — цена»',
+           re.search(f'data-tarif="{tid}" data-srok="god" (data-oplata-)?href="/schet/\\?tarif={tid}&amp;srok=god">Оплатить год</a>', pg)
+           and re.search(f'data-tarif="{tid}" data-srok="mes" (data-oplata-)?href="/schet/\\?tarif={tid}&amp;srok=mes">Счёт на месяц — {R_(t["mesyac"])}</a>', pg))
+    else:
+        ok(f'страница: карточка {tid} — месяц крупно', f'>{R_(t["mesyac"])}</b><span data-m="в месяц" data-y="в месяц при оплате за год">в месяц</span>' in pg)
+        ok(f'страница: карточка {tid} — год и экономия', f'>или {R_(t["god"])} за год — экономия {R_(ek)}</div>' in pg)
+        ok(f'страница: карточка {tid} — две кнопки', f'data-tarif="{tid}" data-srok="mes"' in pg and f'>Оплатить год — {R_(t["god"])}</a>' in pg)
 ok('страница: цены месяца в описании для поиска', all(R_(T[x]["mesyac"]) in re.search(r'<meta name="description" content="([^"]+)"', pg).group(1) for x in ('start', 'pro', 'biznes')))
 ok('страница: FAQ «Можно платить помесячно?»', 'Можно платить помесячно?' in pg)
 ok('страница: по счёту — месяц, квартал или год', 'по счёту</a> на месяц, квартал или год' in pg)

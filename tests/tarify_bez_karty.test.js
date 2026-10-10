@@ -45,7 +45,8 @@ test('живой /tarify/ собран из tarify.json (karta:false): запр�
   for (const z of ZAPRET) assert.ok(!z.test(v), 'на странице: ' + z);
   for (const z of [/частным лицам/, /самозанят/, /спиш/]) assert.ok(!z.test(h), 'в данных страницы: ' + z);
   for (const s of OBYAZ) assert.ok(v.includes(s), 'нет строки: ' + s);
-  assert.strictEqual((v.match(/>Счёт на месяц</g) || []).length, 3, 'три кнопки «Счёт на месяц»');
+  // oplata-schet-v1: по счёту по умолчанию «За год» — «Счёт на месяц — цена» второй кнопкой (владелец 10.10.2026, п. 2)
+  assert.strictEqual((v.match(/>Счёт на месяц( — [^<]+)?</g) || []).length, 3, 'три кнопки «Счёт на месяц»');
   assert.strictEqual((v.match(/data-mes-tekst="Счёт на месяц"/g) || []).length, 3);
   assert.ok(v.includes(BESP));
   assert.ok(v.includes('href="/oferta/#o6"'), 'ссылка на разд. 6 оферты');

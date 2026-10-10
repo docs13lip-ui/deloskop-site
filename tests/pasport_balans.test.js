@@ -10,7 +10,7 @@ const P = require(path.join(ROOT, 'js', 'pasport-kontragenta.js'));
 const U = require(path.join(ROOT, 'js', 'usloviya.js'));
 const IV = require(path.join(ROOT, 'js', 'indeks-vorota.js'));
 const NB = '\u00a0';
-const M = (n) => U.money(n); // разряды — тем же пробелом, что у U.money
+const M = (n) => P.krupno(n, U.money(n)); // разряды — тем же пробелом, что у U.money; от 1 млрд — «5,85 трлн ₽ (точно)» (pasport-glubina-v1)
 
 // Суммы — форма живого ответа /api/check 03.10 (ПАО «Газпром», ИНН 7736050003)
 function otvet(o) {

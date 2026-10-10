@@ -1041,6 +1041,8 @@ class TestKartochkiV4Kod(unittest.TestCase):
         self.assertEqual(K.imya('ПАО "РОССЕТИ ЛЕНЭНЕРГО"'), "ПАО «Россети Ленэнерго»")  # kartochki-0510-v7
         self.assertEqual(K.imya('ПАО "РОССЕТИ ЮГ"'), "ПАО «Россети Юг»")  # kartochki-1010-v1
         self.assertEqual(K.imya('ПАО "РОССЕТИ СЕВЕРО-ЗАПАД"'), "ПАО «Россети Северо-Запад»")  # kartochki-1010-v1
+        self.assertEqual(K.imya('ПАО "РОССЕТИ СЕВЕРНЫЙ КАВКАЗ"'), "ПАО «Россети Северный Кавказ»")  # kartochki-1010b-n2
+        self.assertEqual(K.imya('ПАО "РОССЕТИ ТОМСК"'), "ПАО «Россети Томск»")  # kartochki-1010c-n2
         # kartochki-0710-v1: два кратких наименования через запятую, «и» строчными, апостроф
         self.assertEqual(K.imya('ПАО "РОССЕТИ МОСКОВСКИЙ РЕГИОН", ПАО "РОССЕТИ МР"'), "ПАО «Россети Московский регион»")
         self.assertEqual(K.imya('ПАО "РОССЕТИ ЦЕНТР И ПРИВОЛЖЬЕ"'), "ПАО «Россети Центр и Приволжье»")

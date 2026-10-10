@@ -207,6 +207,43 @@
     return out.slice(0, 2);
   }
 
+  // ---- skachok-v1 [Ночные-3] 10.10: резкий скачок в отчётности — выручка или активы за последний год изменились
+  // в 2 раза и больше (рост ×2 и больше, падение на 50 % и больше). Живой ответ 10.10: у сетевой компании активы
+  // на 31.12.2025 — в 3,9 раза больше, чем годом раньше, а таблица об этом молчит, и «рост выручки» читается как обычный.
+  // Только факт из ответа: выручка — dossier.charts.revenue (два последних соседних года, оба > 0, база от 1 млн ₽);
+  // активы — KPI «Активы» с delta (% к прошлому году, считает API). Причину не утверждаем: «так бывает при…».
+  // Рост — нейтрально (ton 'ro'), падение — «внимание» (ton 'warn'). → { ton, tekst, fakty: [...] } | null
+  var SKACHOK_BAZA = 1e6;
+  function skachok(r) {
+    var D = (r && r.dossier) || {}, ch = D.charts || {}, fakty = [], vverh = false, vniz = false;
+    var v = ryad(ch.revenue);
+    if (v.length >= 2) {
+      var a = v[v.length - 2], b = v[v.length - 1];
+      if (b.year - a.year === 1 && a.value >= SKACHOK_BAZA && b.value > 0) {
+        var k = b.value / a.value;
+        if (k >= 2) { vverh = true; fakty.push({ k: 'revenue', god: b.year, kRaz: k, tekst: 'Выручка за' + NB + b.year + NB + 'год — ' + vRaz(k) + ' больше, чем за' + NB + a.year + '.' }); }
+        else if (k <= 0.5) { vniz = true; fakty.push({ k: 'revenue', god: b.year, kRaz: k, tekst: 'Выручка за' + NB + b.year + NB + 'год — на' + NB + Math.round((1 - k) * 100) + NB + '% меньше, чем за' + NB + a.year + '.' }); }
+      }
+    }
+    var akt = (Array.isArray(D.kpi) ? D.kpi : []).filter(function (x) { return x && /^Активы(\s|$)/.test(String(x.label || '')); })[0];
+    var bg = ch.balance && typeof ch.balance === 'object' ? parseInt(ch.balance.year, 10) : NaN;
+    if (akt && typeof akt.delta === 'number' && isFinite(akt.delta) && typeof akt.value === 'number' && akt.value > 0) {
+      var na = isFinite(bg) ? 'Активы на' + NB + '31.12.' + bg : 'Активы';
+      var ka = 1 + akt.delta / 100;
+      if (ka >= 2 && akt.value / ka >= SKACHOK_BAZA) { vverh = true; fakty.push({ k: 'aktivy', god: isFinite(bg) ? bg : null, kRaz: ka, tekst: na + ' — ' + vRaz(ka) + ' больше, чем годом раньше.' }); }
+      else if (akt.delta <= -50) { vniz = true; fakty.push({ k: 'aktivy', god: isFinite(bg) ? bg : null, kRaz: ka, tekst: na + ' — на' + NB + Math.round(-akt.delta) + NB + '% меньше, чем годом раньше.' }); }
+    }
+    if (!fakty.length) return null;
+    var t = fakty.map(function (f) { return f.tekst; });
+    if (vverh) t.push('Так бывает при присоединении другой компании, крупной сделке или переоценке имущества — годы до' + NB + 'и' + NB + 'после скачка сравнивайте осторожно.');
+    if (vniz) t.push('Перед авансом спросите компанию, что изменилось.');
+    return { ton: vniz ? 'warn' : 'ro', tekst: t.join(' '), fakty: fakty };
+  }
+  function skachokHtml(r) {
+    var s = skachok(r);
+    return s ? '<p class="din__skachok din__skachok--' + s.ton + '" data-blok="skachok"><b>Скачок в' + NB + 'отчётности.</b> ' + esc(s.tekst) + '</p>' : '';
+  }
+
   // Спарклайн (макет [Арт-директора] 02.10, токены v1.1): линия 96 × 20, 1,5 px, без осей и точек.
   // Только визуальная подсказка — числа стоят рядом в таблице. Ряд с убытком — нулевая черта пунктиром.
   function sparklajn(a) {
@@ -291,6 +328,7 @@
       '<th scope="col" class="din__v din__p n">' + gp + '</th><th scope="col" class="din__v n">' + g1 + '</th><th scope="col" class="din__v">Изм.</th></tr></thead>' +
       '<tbody>' + rows + '</tbody></table></div>' +
       (tr.length ? '<p class="din__tr">' + tr.map(esc).join(' ') + '</p>' : '') +
+      skachokHtml(r) +
       (opt && opt.balans === false ? '' : htmlBalans(r)) +
       '<p class="din__src">Источник: ГИР БО ФНС, годовая бухгалтерская отчётность; последний год — ' + g1 + ' (на' + NB + '31.12.' + g1 + ').' +
       (fns ? ' Численность и уплаченные налоги — открытые наборы ФНС за год.' : '') + '</p>' +
@@ -921,7 +959,7 @@
     '.din__g{width:96px}.din__sv{display:block}.din__sv polyline{fill:none;stroke:var(--accent,#0B63E5);stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}' +
     '.din__sv .din__0{stroke:#C9C9C4;stroke-width:1;stroke-dasharray:2 2}' +
     '.din__star{margin:0;padding:10px 12px;border-radius:10px;background:var(--warn-bg,#FBF3E2);color:var(--warn,#8A5A00);font-size:14px;line-height:1.45}' +
-    '.din__tr{margin:0;font-size:14px;color:var(--ink2,#48484C)}.din__src{margin:0;font-size:12px;color:var(--muted,#6B6B70)}' +
+    '.din__tr{margin:0;font-size:14px;color:var(--ink2,#48484C)}.din__skachok{margin:0;padding:10px 12px;border-radius:10px;background:var(--surface-2,#F4F4F2);font-size:14px;line-height:1.45;color:var(--ink2,#48484C)}.din__skachok b{color:var(--ink,#1D1D1F)}.din__skachok--warn{background:var(--warn-bg,#FBF3E2);color:var(--warn,#8A5A00)}.din__skachok--warn b{color:inherit}.din__src{margin:0;font-size:12px;color:var(--muted,#6B6B70)}' +
     '.din__bal{display:grid;gap:8px;padding-top:6px;border-top:1px solid var(--line,#E6E6E1)}' +
     '.din__bh{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 10px;margin-top:6px}.din__bh b{font-size:14px;font-weight:600}.din__bh span{font-size:12px;color:var(--muted,#6B6B70)}' +
     '.din__bar{display:flex;gap:2px;height:10px;border-radius:5px;overflow:hidden;background:var(--surface-2,#EEEEEA)}.din__bar i{display:block;height:100%;min-width:2px}' +
@@ -1018,7 +1056,7 @@
     return izm + din;
   }
 
-  return { ryad: ryad, ryady: ryady, nalogBezZnaka: nalogBezZnaka, stroka: stroka, izmenenie: izmenenie, trendy: trendy, dengi: dengi, htmlDinamika: htmlDinamika, poslGodOtchetnosti: poslGodOtchetnosti, staraya: staraya, balans: balans, htmlBalans: htmlBalans,
+  return { skachok: skachok, skachokHtml: skachokHtml, ryad: ryad, ryady: ryady, nalogBezZnaka: nalogBezZnaka, stroka: stroka, izmenenie: izmenenie, trendy: trendy, dengi: dengi, htmlDinamika: htmlDinamika, poslGodOtchetnosti: poslGodOtchetnosti, staraya: staraya, balans: balans, htmlBalans: htmlBalans,
     snimok: snimok, sravnit: sravnit, likvidnost: likvidnost, okved: okved, ustKapital: ustKapital, rubliTochno: rubliTochno, vRaz: vRaz, zapomnit: zapomnit, htmlIzmeneniya: htmlIzmeneniya, html: html, KEY: KEY, CSS: CSS,
     iskl: iskl, isklyuchena: isklyuchena, ixChislo: ixChislo, plusMes: plusMes, kodSost: kodSost, predydushchaya: predydushchaya, nuzhenKabinet: nuzhenKabinet, dogruzit: dogruzit, dobavit: dobavit, sDop: sDop, ozhidatIndeks: ozhidatIndeks, dopisatIndeks: dopisatIndeks,
     sravnitSnimki: sravnitSnimki, obrazecIzm: obrazecIzm, htmlPasport: htmlPasport, stil: stil };

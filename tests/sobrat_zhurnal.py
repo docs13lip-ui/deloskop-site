@@ -13,8 +13,14 @@ claude/Решения_владельца_10.10_Журнал_Делоскопа_�
   python3 tests/sobrat_zhurnal.py --check           — только проверить (код 1, если нужна сборка)
   python3 tests/sobrat_zhurnal.py 2026-42 [--out DIR] [--pdf]
                                                     — собрать выпуск: страница, письмо, текст письма (+ PDF) в DIR
+  python3 tests/sobrat_zhurnal.py 2026-42 --v-sajt  — опубликовать PDF: напечатать выпуск в zhurnal/<nomer>/deloskop-nedelya-<nomer>.pdf
+                                                    и пересобрать страницы (ссылка «PDF для печати» появится сама)
 Выпуск с "obrazec": true на сайт НЕ попадает: его страница собирается только в DIR и с noindex.
 DIR по умолчанию — ../zhurnal-sborka/<nomer>/ рядом с папкой сайта (не в репозитории).
+
+zhurnal-v1.1 (10.10.2026, решение владельца 04:35 п. 2): рубрика «Делобух: бухгалтерия недели» — с № 1
+(поле "delobuh": 2–5 дел недели, у каждого — зачем, первоисточник и, если есть, инструмент сайта);
+на странице выпуска — ссылка «PDF для печати» (A4, страниц, размер), если PDF лежит рядом со страницей.
 """
 import datetime
 import html
@@ -51,10 +57,13 @@ RUBRIKI = [
     ("vokrug", "vokrug", "Вокруг компаний", "Банкротства, ликвидации, события недели"),
     ("razbor", "razbor", "Разбор дела", "Текст команды Делоскопа"),
     ("sroki", "sroki", "Сроки недели", "Что и до какого числа"),
+    ("delobuh", "delobuh", "Делобух: бухгалтерия недели", "Что сделать до следующей пятницы — по пунктам"),
     ("novoe", "novoe", "Что нового в Делоскопе", ""),
     ("kommentarij", "kommentarij", "Комментарий команды", ""),
 ]
 NOVOSTNYE = ("bank115", "nalogi", "sudy", "vokrug")
+DELOBUH_MIN, DELOBUH_MAKS = 2, 5
+DELO_MAKS = 120  # «что сделать» — одна строка чек-листа, в письме тоже
 
 
 def put(*p):
@@ -151,6 +160,7 @@ def oshibki(V):
     if not rz.get("zagolovok") or not rz.get("abzacy"):
         o.append("razbor: zagolovok и abzacy обязательны")
     o += oshibki_istochnika(rz.get("istochnik"), "razbor", d)
+    o += oshibki_delobuh(V.get("delobuh"), d)
     for i, s in enumerate(V.get("sroki") or []):
         try:
             datetime.date.fromisoformat(s.get("data", ""))
@@ -164,6 +174,44 @@ def oshibki(V):
     p = V.get("pismo") or {}
     if not p.get("tema"):
         o.append("pismo.tema обязательна")
+    return o
+
+
+def stranica_est(url):
+    """Инструмент из «Делобуха» — только своя страница сайта, которая есть в репозитории."""
+    if not isinstance(url, str) or not re.match(r"^/[a-z0-9\-/]*$", url):
+        return False
+    p = put(*[x for x in url.split("/") if x])
+    return os.path.isfile(os.path.join(p, "index.html")) if url.endswith("/") else os.path.isfile(p)
+
+
+def oshibki_delobuh(db, data_vypuska):
+    if not isinstance(db, dict):
+        return ["delobuh — рубрика «Делобух: бухгалтерия недели» обязательна с № 1 (решение владельца 10.10)"]
+    o = []
+    dela = db.get("dela")
+    if not isinstance(dela, list) or not DELOBUH_MIN <= len(dela) <= DELOBUH_MAKS:
+        return ["delobuh.dela — от %d до %d дел" % (DELOBUH_MIN, DELOBUH_MAKS)]
+    ids = set()
+    for i, x in enumerate(dela):
+        gde = "delobuh.dela[%d]" % i
+        for pole in ("id", "chto", "zachem"):
+            if not x.get(pole):
+                o.append("%s: нет %s" % (gde, pole))
+        if x.get("id") in ids:
+            o.append("%s: id повторяется" % gde)
+        ids.add(x.get("id"))
+        if len(x.get("chto", "")) > DELO_MAKS:
+            o.append("%s: chto длиннее %d знаков — это строка чек-листа" % (gde, DELO_MAKS))
+        if x.get("srok"):
+            try:
+                datetime.date.fromisoformat(x["srok"])
+            except ValueError:
+                o.append("%s: srok — ГГГГ-ММ-ДД" % gde)
+        ins = x.get("instrument")
+        if ins is not None and not (isinstance(ins, dict) and ins.get("nazvanie") and stranica_est(ins.get("url"))):
+            o.append("%s: instrument — nazvanie и адрес существующей страницы сайта (/...)" % gde)
+        o += oshibki_istochnika(x.get("istochnik"), gde, data_vypuska)
     return o
 
 
@@ -189,7 +237,31 @@ def novoe_za_nedelyu(V):
     with open(put("obnovleniya.json"), encoding="utf-8") as fh:
         L = json.load(fh)["obnovleniya"]
     s, po = V["nedelya"]["s"], V["nedelya"]["po"]
-    return [x for x in L if x.get("data") and s <= x["data"] <= po][:5]
+    return [x for x in L if s <= (data_zapisi(x) or "") <= po][:5]
+
+
+MESYACY = ("января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря")
+
+
+def fraza_lenty(x):
+    """Первый тезис «что нового» без прямых кавычек: в ленте они бывают примером из реестра (ПАО "…"),
+    а в журнале типографика строже — такой тезис пропускаем, остаётся заголовок."""
+    for f in x.get("chto_novogo") or []:
+        if '"' not in f:
+            return f
+    return ""
+
+
+def data_zapisi(x):
+    """ISO-дата записи ленты. В obnovleniya.json "data" — текстом («10 октября 2026»), id — «ГГГГ-ММ-ДД-N».
+    (v1.1: в v1 сравнивали текст с ISO — рубрика «Что нового» всегда была пустой.)"""
+    m = re.match(r"^(\d{4}-\d{2}-\d{2})-", x.get("id") or "")
+    if m:
+        return m.group(1)
+    m = re.match(r"^(\d{1,2}) ([а-я]+) (\d{4})$", (x.get("data") or "").replace("\u00a0", " ").strip())
+    if m and m.group(2) in MESYACY:
+        return "%s-%02d-%02d" % (m.group(3), MESYACY.index(m.group(2)) + 1, int(m.group(1)))
+    return None
 
 
 def url_vypuska(V):
@@ -199,6 +271,36 @@ def url_vypuska(V):
 def data_kratko(iso):
     g, m, d = iso.split("-")
     return "%s.%s.%s" % (d, m, g)
+
+
+def imya_pdf(V):
+    return "deloskop-nedelya-%s.pdf" % V["nomer"]
+
+
+def pdf_svedeniya(put_pdf):
+    """{'imya', 'bajt', 'stranic'} готового PDF или None — для ссылки «PDF для печати»."""
+    if not os.path.isfile(put_pdf):
+        return None
+    with open(put_pdf, "rb") as fh:
+        b = fh.read()
+    if not b.startswith(b"%PDF"):
+        return None
+    return {"imya": os.path.basename(put_pdf), "bajt": len(b), "stranic": len(re.findall(rb"/Type\s*/Page[^s]", b))}
+
+
+def razmer_ru(bajt):
+    if bajt >= 1024 * 1024:
+        return ("%.1f МБ" % (bajt / 1024 / 1024)).replace(".", ",")
+    return "%d КБ" % max(1, round(bajt / 1024))
+
+
+def pdf_html(pdf_):
+    if not pdf_:
+        return ""
+    st = pdf_["stranic"]
+    sl = "страница" if st % 10 == 1 and st % 100 != 11 else ("страницы" if 2 <= st % 10 <= 4 and not 12 <= st % 100 <= 14 else "страниц")
+    return ('<p class="zh-pdf"><a href="%s" download data-goal="zhurnal_pdf">PDF для печати</a>'
+            '<span>A4 · %d %s · %s</span></p>' % (e(pdf_["imya"]), st, sl, razmer_ru(pdf_["bajt"])))
 
 
 def nazv_nomera(V):
@@ -265,7 +367,7 @@ def razdel(yakor, zag, podpis, telo, nomer_rubriki):
             '<h2 id="%s-h">%s</h2>%s</header>%s</section>' % (yakor, yakor, nomer_rubriki, yakor, e(zag), pod, telo))
 
 
-def stranica_vypuska(V):
+def stranica_vypuska(V, pdf_=None):
     url = url_vypuska(V)
     obr = V.get("obrazec", True)
     data_p = data_ru(V["data"])
@@ -289,7 +391,7 @@ def stranica_vypuska(V):
     ch.append('<header class="zh-obl"><p class="zh-obl__nad">%s</p><h1 class="zh-obl__h">%s<span> № %d · %s</span></h1>'
               '<p class="zh-obl__cifra">%s</p><p class="zh-obl__pod">%s</p>%s</header>' % (
                   e(NADZAG), e(NAZVANIE), V["poryadkovyj"], e(data_p), t(ob["cifra"]), t(ob["podpis"]),
-                  istochnik_html(ob["istochnik"])))
+                  istochnik_html(ob["istochnik"]) + pdf_html(pdf_)))
     # оглавление — якоря рубрик
     li = "".join('<li><a href="#%s"><span>%02d</span>%s</a></li>' % (y, i + 1, e(z)) for i, (_, y, z, _p) in enumerate(RUBRIKI))
     ch.append('<nav class="zh-sod" aria-label="Рубрики выпуска"><ol>%s</ol></nav>' % li)
@@ -309,11 +411,22 @@ def stranica_vypuska(V):
                 '<tr><td class="zh-sroki__d"><time datetime="%s">%s</time></td><td>%s<br><span class="zh-ist">%s · <a href="%s" rel="noopener">первоисточник</a></span></td></tr>' % (
                     e(s["data"]), e(data_ru(s["data"])[:-5]), t(s["chto"]), t(s["istochnik"]["nazvanie"]), e(s["istochnik"]["url"]))
                 for s in V["sroki"]) + "</tbody></table>"
+        elif k == "delobuh":
+            db = V["delobuh"]
+            li = []
+            for x in db["dela"]:
+                srok = ('<time class="zh-delo__srok" datetime="%s">до %s</time>' % (e(x["srok"]), e(data_ru(x["srok"])[:-5]))) if x.get("srok") else ""
+                ins = ('<a class="zh-delo__ins" href="%s">%s →</a>' % (e(x["instrument"]["url"]), t(x["instrument"]["nazvanie"]))) if x.get("instrument") else ""
+                li.append('<li class="zh-delo" id="delo-%s"><span class="zh-delo__box" aria-hidden="true"></span><div>'
+                          '<p class="zh-delo__chto">%s%s</p><p class="zh-delo__zachem">%s</p>%s%s</div></li>' % (
+                              e(x["id"]), t(x["chto"]), srok, t(x["zachem"]), ins,
+                              '<p class="zh-ist">Норма: <a href="%s" rel="noopener">%s</a></p>' % (e(x["istochnik"]["url"]), t(x["istochnik"]["nazvanie"]))))
+            telo = (('<p class="zh-lid zh-delobuh__lid">%s</p>' % t(db["lid"])) if db.get("lid") else "") + '<ol class="zh-dela">' + "".join(li) + "</ol>"
         elif k == "novoe":
             nov = novoe_za_nedelyu(V)
             if nov:
                 telo = '<ul class="zh-novoe">' + "".join(
-                    "<li><b>%s</b>%s</li>" % (t(x["zagolovok"]), (" " + t(x["chto_novogo"][0])) if x.get("chto_novogo") else "")
+                    "<li><b>%s</b>%s</li>" % (t(x["zagolovok"]), (" " + t(fraza_lenty(x))) if fraza_lenty(x) else "")
                     for x in nov) + '</ul><p><a class="zh-dalee" href="/obnovleniya/">Вся лента обновлений →</a></p>'
             else:
                 telo = '<p class="zh-pusto">На этой неделе обновлений сайта не было. <a href="/obnovleniya/">Лента обновлений →</a></p>'
@@ -401,6 +514,13 @@ def pismo(V):
             tekst = "%s — %s%s%s" % (data_ru(s["data"])[:-5], s["chto"], "" if s["chto"].endswith((".", "!", "?")) else ".",
                                      (" Ещё сроков в выпуске: %d." % ost) if ost else "")
             bloki.append(blok(z, "Что и до какого числа", tekst, utm(url, V, y) + "#" + y))
+        elif k == "delobuh":
+            dela = "".join('<li style="margin:0 0 6px">%s</li>' % t(x["chto"]) for x in V["delobuh"]["dela"])
+            bloki.append(('<tr><td style="padding:24px 32px 0">'
+                          '<p style="margin:0 0 8px;font:600 12px/1 %s;letter-spacing:.06em;text-transform:uppercase;color:%s">%s</p>'
+                          '<ul style="margin:0 0 12px;padding:0 0 0 20px;font:400 16px/1.5 %s;color:%s;list-style:square">%s</ul>'
+                          '<a href="%s" style="font:600 15px/1 %s;color:%s;text-decoration:none">Зачем и где проверить →</a>'
+                          '</td></tr>') % (SHRIFT, C["muted"], e(z), SHRIFT, C["ink"], dela, e(utm(url, V, y) + "#" + y), SHRIFT, C["accent"]))
     ob = V["oblozhka"]
     gl = "".join('<li style="margin:0 0 8px">%s</li>' % t(x) for x in V["glavnoe"])
     pre = e((V.get("pismo") or {}).get("preheader", ""))
@@ -421,6 +541,7 @@ def pismo(V):
          '</td></tr>%(bloki)s'
          '<tr><td style="padding:32px">'
          '<a href="%(vse)s" style="display:inline-block;padding:14px 24px;border-radius:999px;background:%(accent)s;color:#FFFFFF;font:600 16px/1 %(f)s;text-decoration:none">Читать выпуск целиком</a>'
+         '<p style="margin:14px 0 0;font:400 14px/1.4 %(f)s;color:%(muted)s"><a href="%(pdf)s" style="color:%(muted)s">PDF для печати</a> — тот же выпуск на листах A4</p>'
          '</td></tr>'
          '<tr><td style="padding:0 32px 32px;border-top:1px solid %(line)s">'
          '<p style="margin:20px 0 6px;font:400 13px/1.5 %(f)s;color:%(muted)s">У каждой новости в выпуске — ссылка на первоисточник и дата. Материалы носят информационный характер и не заменяют консультацию юриста.</p>'
@@ -430,7 +551,7 @@ def pismo(V):
         "tema": e(V["pismo"]["tema"]), "bg": C["bg"], "card": C["card"], "ink": C["ink"], "muted": C["muted"], "line": C["line"],
         "accent": C["accent"], "f": SHRIFT, "P": P, "pre": pre, "nad": e(NADZAG), "naz": e(nazv_nomera(V)), "data": e(data_ru(V["data"])),
         "cifra": t(ob["cifra"]), "podpis": t(ob["podpis"]), "gl": gl, "bloki": "".join(bloki),
-        "vse": e(utm(url, V, "knopka")), "tar": e(utm("/tarify/", V, "podval"))}
+        "vse": e(utm(url, V, "knopka")), "pdf": e(utm(url + imya_pdf(V), V, "pdf")), "tar": e(utm("/tarify/", V, "podval"))}
     return tipograf(h)
 
 
@@ -525,7 +646,10 @@ def sobrat_sajt():
     u, txt = stranica_spiska(opubl)
     out["zhurnal/index.html"] = gotovo(txt, r_, podval, shapka)
     for V in opubl:
-        u, txt = stranica_vypuska(V)
+        pdf_ = pdf_svedeniya(put("zhurnal", V["nomer"], imya_pdf(V)))
+        if not pdf_:
+            raise SystemExit("sobrat_zhurnal: %s опубликован без PDF — python3 tests/sobrat_zhurnal.py %s --v-sajt" % (V["nomer"], V["nomer"]))
+        u, txt = stranica_vypuska(V, pdf_)
         out[u.strip("/") + "/index.html"] = gotovo(txt, r_, podval, shapka)
     with open(put("sitemap.xml"), encoding="utf-8") as fh:
         sm = fh.read()
@@ -562,17 +686,43 @@ def sobrat_vypusk(nomer, out_dir, s_pdf):
     meta = {"nomer": nomer, "tema": V["pismo"]["tema"], "obrazec": V.get("obrazec"), "znakov_v_pisme": n,
             "url": SAJT + url_vypuska(V)}
     if s_pdf:
-        imya = "deloskop-nedelya-%s.pdf" % nomer
+        imya = imya_pdf(V)
         meta["pdf"] = imya
         meta["pdf_bajt"] = pdf(sp, os.path.join(out_dir, imya), V)
+        # страница со ссылкой «PDF для печати» (в печати ссылка скрыта — PDF от этого не меняется)
+        u, txt = stranica_vypuska(V, pdf_svedeniya(os.path.join(out_dir, imya)))
+        with open(sp, "w", encoding="utf-8") as fh:
+            fh.write(gotovo(txt, r_, podval, shapka))
     with open(os.path.join(out_dir, "vypusk.json"), "w", encoding="utf-8") as fh:
         json.dump(meta, fh, ensure_ascii=False, indent=1)
     return meta
 
 
+def v_sajt(nomer):
+    """Публикация PDF выпуска: печать в zhurnal/<nomer>/ и пересборка страниц сайта. Образец — нельзя."""
+    V = vypusk(nomer)
+    if V.get("obrazec", True):
+        raise SystemExit("sobrat_zhurnal: %s — образец (obrazec: true), на сайт не публикуется" % nomer)
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        m = sobrat_vypusk(nomer, d, True)
+        cel = put("zhurnal", nomer, m["pdf"])
+        os.makedirs(os.path.dirname(cel), exist_ok=True)
+        with open(os.path.join(d, m["pdf"]), "rb") as fh, open(cel, "wb") as out:
+            out.write(fh.read())
+    for f, txt in sobrat_sajt().items():
+        with open(put(f), "w", encoding="utf-8") as fh:
+            fh.write(txt)
+    print("Опубликован PDF: zhurnal/%s/%s (%d байт); страницы пересобраны" % (nomer, m["pdf"], m["pdf_bajt"]))
+
+
 def main():
     argv = [a for a in sys.argv[1:]]
     nomera = [a for a in argv if re.match(r"^\d{4}-\d{2}$", a)]
+    if nomera and "--v-sajt" in argv:
+        for nomer in nomera:
+            v_sajt(nomer)
+        return
     if nomera:
         out = None
         if "--out" in argv:

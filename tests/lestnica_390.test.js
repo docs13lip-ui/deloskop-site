@@ -41,14 +41,17 @@ test('гость: «Старт» дешевле Паспорта — ссылк�
 
 test('гость: «Старт» не дешевле Паспорта — прежняя ссылка на пакет', () => {
   for (const mes of [cena, cena + 100]) {
-    const T = Object.assign(P.iz(sTsenoj(mes)), { beta: false });
+    // после беты: сборщик уже переписал цену «Старта» в tarify.json (beta: false в данных — startovaya не подставляется)
+    const T = Object.assign(P.iz(sTsenoj(mes, (D) => { D.beta = false; })), { beta: false });
     const s = P.sostoyanie({ tarify: T, inn: INN });
     assert.strictEqual(s.ssylka.href, '/schet/?produkt=paket_pasportov');
     assert.strictEqual(s.ssylka.t, TJ.paket_pasportov.shtuk + ' проверки — ' + P.rub(TJ.paket_pasportov.cena_rub));
   }
-  // и сейчас, в бете, tarify.json держит обычную цену — на живом до 14.10 ничего не меняется
+  // и сейчас, в бете, tarify.json держит обычную цену; стартовую подставляем, только если она точно включится
+  // (vklyuchit и «да» владельца на годовую — с 10.10.2026, oplata-schet-v1)
+  const st = start.startovaya;
   const T = Object.assign(P.iz(TJ), { beta: false });
-  assert.strictEqual(P.startVygodnee(T), start.mesyac < cena);
+  assert.strictEqual(P.startVygodnee(T), (TJ.beta === true && st.vklyuchit === true && st.god_soglasovan === true ? st.mesyac : start.mesyac) < cena);
 });
 
 test('бета: строка с ценой «Старта» — только если стартовая цена точно включится («да» на годовую)', () => {

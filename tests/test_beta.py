@@ -78,6 +78,11 @@ def sobrat(beta):
     # не переписываем) — её репетиция в tests/test_startovaya.py; здесь проверяем только сам переключатель беты
     s = re.sub(r'("startovaya": \{.*?"vklyuchit": )true', r'\1false', s, count=1)
     open(p, "w", encoding="utf-8").write(s)
+    # oplata-schet-v1: дата редакции оферты ставится один раз в день включения оплат — её репетиция в
+    # tests/oplata_schet.test.js; здесь метку снимаем, чтобы проверять только сам переключатель беты
+    po = os.path.join(kop, "oferta", "index.html")
+    so = open(po, encoding="utf-8").read()
+    open(po, "w", encoding="utf-8").write(re.sub(r"<!--redakciya-pri-oplatah:[^>]*-->\n?", "", so))
     for cmd in (["python3", "tests/sobrat_tarify.py", "."], ["python3", "tests/sobrat_shapku.py"]):
         subprocess.check_output(cmd, cwd=kop, stderr=subprocess.STDOUT)
     snimok = {}

@@ -1,0 +1,33 @@
+/* Рейтинг по открытой отчётности /reyting/ (reyting-v1, 10.10.2026). Только токены /css/ds.css; основа — /css/co.css.
+   Таблица в три колонки: № · компания (город и отрасль строкой ниже, тонкая полоса доли) · цифра (изменение строкой ниже).
+   На 390 — те же три колонки, без прокрутки вбок. */
+.ry-head{max-width:var(--text)}
+.ry-nad{color:var(--muted);margin-bottom:var(--s-2);letter-spacing:.02em}
+.ry-lead{margin-top:var(--s-3);color:var(--ink-2)}
+.ry .co-sec{max-width:880px}
+.ry-pod{color:var(--ink-2);font-size:var(--t-small);margin:calc(-1 * var(--s-2)) 0 var(--s-4);max-width:var(--text)}
+.ry-t{width:100%;table-layout:auto}
+.ry-t td{vertical-align:top;padding-top:12px;padding-bottom:12px}
+.ry-t th.ry-n,.ry-t td.ry-n{width:2.2em;color:var(--muted);text-align:left;padding-right:4px}
+.ry-t td.ry-n{font-variant-numeric:tabular-nums}
+.ry-t tbody tr:first-child td.ry-n{color:var(--ink);font-weight:600}
+.ry-k a{font-weight:500;color:var(--ink);text-decoration:none}.ry-k a:hover{color:var(--accent)}
+.ry-gde{display:block;margin-top:2px;font-size:var(--t-caption);color:var(--muted);line-height:1.35}
+.ry-bar{display:block;height:4px;margin-top:8px;border-radius:var(--r-pill);background:var(--surface-2);max-width:320px}
+.ry-bar i{display:block;height:100%;border-radius:var(--r-pill);background:var(--accent)}
+.ry-t tbody tr:not(:first-child) .ry-bar i{background:var(--muted);opacity:.45}
+.ry-t th.ry-z,.ry-t td.ry-z{text-align:right;white-space:nowrap}
+.ry-z{font-variant-numeric:tabular-nums;font-weight:500}
+.ry-big{font-weight:600}
+.ry-izm{display:block;white-space:nowrap;margin-top:2px;font-size:var(--t-caption);font-weight:400;color:var(--muted)}
+.ry-izm--plus{color:var(--ok)}.ry-izm--minus{color:var(--high)}
+.ry-src{margin-top:var(--s-4)}
+.ry-ub{margin-top:var(--s-4);padding-top:var(--s-4);border-top:1px solid var(--line);font-size:var(--t-small);color:var(--ink-2)}
+.ry-ub a{color:var(--ink)}
+.ry-otrasli{list-style:none;margin:0;padding:0}
+.ry-otrasli li{display:grid;grid-template-columns:1fr auto;gap:2px var(--s-3);padding:var(--s-3) 0;border-top:1px solid var(--line)}
+.ry-otrasli li:first-child{border-top:0;padding-top:0}
+.ry-otr{font-weight:500}.ry-otr__n{color:var(--muted);text-align:right}
+.ry-otr__l{grid-column:1 / -1;font-size:var(--t-caption);color:var(--muted)}.ry-otr__l a{color:var(--ink-2)}
+.ry-kak p+p{margin-top:var(--s-3)}
+@media (max-width:419px){.ry-t th,.ry-t td{padding-left:6px;padding-right:6px}.ry-t th:first-child,.ry-t td:first-child{padding-left:0}.ry-t th:last-child,.ry-t td:last-child{padding-right:0}}

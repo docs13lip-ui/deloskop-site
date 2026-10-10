@@ -88,7 +88,10 @@
   if (!el) return;
   var D = JSON.parse(el.textContent);
   var $ = function (id) { return document.getElementById(id); };
-  var period = "mes";  // по умолчанию помесячно (владелец, 26.09.2026)
+  // Начальный период — с нажатой кнопки страницы: с картой «Помесячно» (владелец, 26.09.2026), по счёту — «За год»
+  // (владелец, 10.10.2026; сборщик tests/sobrat_tarify.py рисует цены и кнопки сразу под этот период).
+  var nach = document.querySelector('[data-period][aria-pressed="true"]');
+  var period = nach && nach.getAttribute("data-period") === "god" ? "god" : "mes";
 
   function rub(x) { return Math.round(x).toLocaleString("ru-RU").replace(/ |,/g, " ") + " ₽"; }
   function chislo(inp) { var v = +String(inp.value).replace(/\D/g, ""); return isFinite(v) ? v : 0; }

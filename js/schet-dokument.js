@@ -10,6 +10,8 @@
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function den(x) { return String(Math.round(x)).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + ",00"; }
   function fioKorotko(f) { var p = String(f || "").trim().split(/\s+/); return p[0] + (p[1] ? " " + p[1][0] + "." : "") + (p[2] ? " " + p[2][0] + "." : ""); }
+  // О5 ([Право] 10.10): редакция оферты в счёте — из <meta name="deloskop-oferta"> (кладёт tests/sobrat_tarify.py из оферты)
+  function redakciya() { var m = document.querySelector('meta[name="deloskop-oferta"]'); return m && m.content ? " в редакции от " + m.content : ""; }
   function net(t) { box.innerHTML = '<div class="pust"><h1>Счёт не найден</h1><p>' + t + '</p><p><a href="/schet/">Получить новый счёт</a> · <a href="mailto:help@deloskop.ru">help@deloskop.ru</a></p></div>'; }
 
   if (!/^Д-\d{4}-\d{6}$/.test(n) || !k) { net("Ссылка неполная. Откройте её из письма целиком или скопируйте заново."); return; }
@@ -25,7 +27,7 @@
     if (d.status === "zayavka") plash = '<div class="plash">Заявка принята. Реквизиты для оплаты появятся на этой странице в течение рабочего дня — пришлём письмо на почту из заявки.</div>';
     else if (d.status === "oplachen") plash = '<div class="plash ok">' + oplachenTekst(d) + "</div>";
     else if (d.status === "annulirovan") plash = '<div class="plash net">Счёт аннулирован — оплачивать его не нужно. <a href="/schet/">Получить новый счёт</a></div>';
-    else plash = '<div class="plash">Оплатите до ' + S.ddmm(d.oplatit_do) + " с расчётного счёта компании или ИП. Номер счёта — в назначении платежа: так мы увидим оплату в тот же день.</div>";
+    else plash = '<div class="plash">Оплатите до ' + S.ddmm(d.oplatit_do) + " с расчётного счёта компании или ИП. Номер счёта — в назначении платежа: так мы найдём ваш платёж без уточнений.</div>";
 
     var akt = vid === "akt" && d.akt;
     var pan = '<div class="pan"><span class="gl">' + (akt ? "Акт" : "Счёт") + " № " + esc(d.nomer) + "</span>" +
@@ -67,8 +69,8 @@
       '<p class="prop">' + esc(d.nds_tekst) + ". Счёт действителен до " + S.ddmm(d.oplatit_do) + ".</p>" +
       (p ? '<div class="nazn"><b>Назначение платежа:</b> ' + esc(d.naznachenie) + "</div>" : "") +
       (p ? '<div class="podp"><div>Индивидуальный предприниматель</div><div>' + esc(fioKorotko(p.fio)) + "</div></div>" : "") +
-      '<p class="mel">Оплата только с расчётного счёта организации или ИП. Оплата счёта означает согласие с условиями оферты deloskop.ru/oferta/. ' +
-      (d.srok === "razovo" && d.vid === "usluga" ? "Пакет выдаём не позднее 1 рабочего дня после оплаты, анкеты и выписки (раздел 5 оферты)." : "Доступ открывается в день зачисления оплаты на срок тарифа.") + "</p></div>";
+      '<p class="mel">Оплата только с расчётного счёта организации или ИП. Оплата счёта — акцепт оферты deloskop.ru/oferta/' + esc(redakciya()) + ' (п. 3 ст. 438 ГК РФ). ' +
+      (d.srok === "razovo" && d.vid === "usluga" ? "Пакет выдаём не позднее 1 рабочего дня после оплаты, анкеты и выписки (раздел 5 оферты)." : "Доступ открывается не позднее рабочего дня, следующего за днём зачисления оплаты, на срок тарифа.") + "</p></div>";
   }
 
   // schet-v2: разовые продукты. Услуга («Скорая под ключ») — акт на дату выдачи пакета; лицензия — на дату оплаты.
@@ -83,7 +85,8 @@
 
   function aktHtml(d) {
     var p = d.prodavec, pk = d.pokupatel, a = d.akt;
-    var naim = a.naimenovanie || ("Предоставление доступа к сервису «Делоскоп» (deloskop.ru), тариф «" + d.tarif + "», на период с " + S.ddmm(a.period_s) + " по " + S.ddmm(a.period_po));
+    // О4 ([Право] 10.10): запасное наименование — как в оферте (лицензия, ст. 1235 ГК), а не «доступ к сервису»
+    var naim = a.naimenovanie || ("Предоставлено право использования программы для ЭВМ «Делоскоп» (простая неисключительная лицензия), тариф «" + d.tarif + "», на период с " + S.ddmm(a.period_s) + " по " + S.ddmm(a.period_po));
     return '<div class="list">' +
       "<h2>Акт № " + esc(d.nomer) + " от " + S.ddmm(a.data) + "</h2>" +
       '<div class="str"><span>Исполнитель:</span><span>' + prodavecStr(p) + "</span></div>" +
@@ -91,7 +94,7 @@
       '<div class="str"><span>Основание:</span><span>Счёт № ' + esc(d.nomer) + " от " + S.ddmm(d.data) + ", оферта deloskop.ru/oferta/</span></div>" +
       pozicii(d, naim) +
       '<p class="prop">Всего на сумму ' + den(d.itogo) + " руб.<br><b>" + esc(S.propis(d.itogo)) + "</b>. " + esc(d.nds_tekst) + ".</p>" +
-      '<p class="prop">' + esc(a.itog || "Доступ к сервису предоставлен Заказчику на указанный период.") + '</p>' +
+      '<p class="prop">' + esc(a.itog || "Право использования предоставлено Заказчику на указанный период.") + '</p>' +
       '<div class="podp"><div>Исполнитель: ИП ' + esc(fioKorotko(p.fio)) + '</div><div>Заказчик: ' + esc(pk.nazvanie) + "</div></div></div>";
   }
 })();

@@ -1,4 +1,4 @@
-/* Делоскоп — журнал «Делоскоп · Неделя» (zhurnal-v1, 10.10.2026). Токены ds.css, область .zh. Экран 1280/390 и печать A4 (PDF). */
+/* Делоскоп — журнал «Делоскоп · Неделя» (zhurnal-v1, 10.10.2026; v1.1 — «Делобух», PDF для печати). Токены ds.css, область .zh. Экран 1280/390 и печать A4 (PDF). */
 body{margin:0;background:#F5F5F2;-webkit-font-smoothing:antialiased}
 .zh{--bg:#F5F5F2;--surface:#fff;--surface-2:#EEEEEA;--ink:#1D1D1F;--ink-2:#48484C;--muted:#6B6B70;--line:#E6E6E1;--accent:#0B63E5;--accent-hover:#084BB0;--accent-soft:#EAF1FD;--warn:#9A5B00;--warn-bg:#FFF4E0;--r-m:16px;--r-l:24px;--font:Onest,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
   max-width:760px;margin:0 auto;padding:28px clamp(16px,5vw,48px) 64px;font:400 17px/1.6 var(--font);color:var(--ink);box-sizing:border-box}
@@ -85,12 +85,29 @@ body{margin:0;background:#F5F5F2;-webkit-font-smoothing:antialiased}
 .zh-niz__m{margin-top:16px!important;font-size:13px;line-height:1.5;color:var(--muted)}
 @media (max-width:640px){.zh-btn{min-height:52px;width:100%;justify-content:center}}
 
+/* «Делобух: бухгалтерия недели» (v1.1) — чек-лист: квадрат-галочка, дело, срок справа, зачем, инструмент, норма */
+.zh-delobuh__lid{margin-top:20px!important}
+.zh-dela{list-style:none;margin:12px 0 0;padding:0}
+.zh-delo{display:grid;grid-template-columns:22px 1fr;gap:0 16px;padding:20px 0;border-bottom:1px solid var(--line)}
+.zh-delo:last-child{border-bottom:0}
+.zh-delo__box{width:22px;height:22px;margin-top:3px;border:2px solid var(--ink);border-radius:6px}
+.zh-delo__chto{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 16px;font:600 19px/1.35 var(--font);text-wrap:pretty}
+.zh-delo__srok{flex:none;padding:2px 10px;border-radius:999px;background:var(--surface-2);font:600 14px/1.5 var(--font);color:var(--ink-2);font-variant-numeric:tabular-nums}
+.zh-delo__zachem{margin-top:6px!important;color:var(--ink-2)}
+.zh-delo__ins{display:inline-block;margin-top:8px;font-weight:600}
+.zh-delo .zh-ist{margin-top:8px!important}
+
+/* ссылка «PDF для печати» под обложкой (v1.1); в самом PDF не печатается */
+.zh-pdf{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin-top:20px!important;padding-top:16px;border-top:1px solid var(--line);font-size:15px}
+.zh-pdf a{font-weight:600}
+.zh-pdf span{color:var(--muted);font-variant-numeric:tabular-nums}
+
 /* печать A4 — PDF выпуска (макет [Арт-директор] 10.10, разд. 5): обложка + содержание + «Главное» на с. 1,
-   каждая рубрика — с новой страницы, новости — в 2 колонки, «Разбор» — в одну; «Что нового» и «Комментарий» — вместе на последней */
+   каждая рубрика — с новой страницы (v1.1: «Сроки» — под «Разбором», «Что нового» — под «Делобухом»), новости — в 2 колонки, «Разбор» — в одну; «Что нового» и «Комментарий» — вместе на последней */
 @page{size:A4;margin:18mm 16mm}
 @media print{
   body{background:#fff}
-  .shapka,.podval,.beta-bar,.wn-bar,.ck-bar,a.skip,.zh .crumbs,.zh-btn,dialog{display:none!important}
+  .shapka,.podval,.beta-bar,.wn-bar,.ck-bar,a.skip,.zh .crumbs,.zh-btn,.zh-pdf,dialog{display:none!important}
   .zh{max-width:none;padding:0;font-size:10.5pt;line-height:1.5}
   .zh-obl{padding:0;margin:0;border-radius:0}
   .zh-obl__cifra{font-size:96pt;margin-top:10mm!important}
@@ -100,11 +117,15 @@ body{margin:0;background:#F5F5F2;-webkit-font-smoothing:antialiased}
   .zh-sod{margin-top:8mm}.zh-sod a{padding:5px 0;font-size:9.5pt}
   .zh-sod a::after{content:none!important}
   .zh-r{margin-top:10mm}
-  [id="115-fz"],#nalogi,#sudy,#vokrug,#razbor,#sroki,#novoe{break-before:page;margin-top:0}
+  [id="115-fz"],#nalogi,#sudy,#vokrug,#razbor,#delobuh{break-before:page;margin-top:0}
+  /* v1.1: «Сроки» — под «Разбором»; «Делобух» с новой страницы, за ним «Что нового» и «Комментарий» */
   .zh-r__shap{break-after:avoid}
   [id="115-fz"] .zh-n,#nalogi .zh-n,#sudy .zh-n,#vokrug .zh-n{column-count:2;column-gap:8mm}
   .zh-n h3,.zh-proekt{column-span:all}
-  .zh-n,.zh-gl li,.zh-sroki tr,.zh-kom,.zh-znachit{break-inside:avoid}
+  .zh-n,.zh-gl li,.zh-sroki tr,.zh-kom,.zh-znachit,.zh-delo{break-inside:avoid}
+  .zh-delo{padding:10px 0}.zh-delo__chto{font-size:12pt}
+  .zh-delo__box{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .zh-delo__ins::after{content:" — deloskop.ru" attr(href);color:var(--muted)}
   .zh-n h3{break-after:avoid;font-size:15pt}
   .zh-znachit{background:#F2F6FD;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .zh-ist a::after{content:" — " attr(href);color:var(--muted);word-break:break-all}

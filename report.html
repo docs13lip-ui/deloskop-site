@@ -255,6 +255,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
 </section>
 <article class="doc" id="doc" hidden></article>
 <script src="/js/indeks-vorota.js"></script>
+<script src="/js/status-kod.js"></script>
 <script src="/js/pasport-kontragenta.js"></script>
 <script src="/js/chto-provereno.js"></script>
 <script src="/js/sushchestvennoe.js"></script>
@@ -479,7 +480,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
     var link=location.origin+'/report.html?id='+encodeURIComponent(id);
     document.title='Досье: '+(c.name_short||name)+' — Делоскоп';
     var rows=[['Полное наименование',c.name_full],['ИНН',c.inn],['КПП',c.kpp],[c.kind==='INDIVIDUAL'?'ОГРНИП':'ОГРН',c.ogrn],
-      ['Статус',ST[c.status]||c.status],['Дата регистрации',d(c.reg_date)],['Адрес',c.address],
+      ['Статус',window.StatusKod&&c.status?StatusKod.izOtveta(c,{zaglavnaya:true}):(ST[c.status]||c.status)],['Дата регистрации',d(c.reg_date)],['Адрес',c.address],
       [c.kind==='INDIVIDUAL'?'Предприниматель':(c.director_post||'Руководитель'),c.director_name],
       ['Основной вид деятельности',c.okved?(c.okved+(c.okved_name?' — '+c.okved_name:'')):'']]
       .filter(function(x){return x[1]}).map(function(x){return '<tr><th>'+esc(x[0])+'</th><td>'+esc(x[1])+'</td></tr>'}).join('');
@@ -490,7 +491,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
     var D=r.dossier; ZSK=r.zsk; R=r;
     doc.innerHTML=
       '<div class="dhead"><div class="brand">'+LOGO+'делоскоп</div><div class="dtitle"><b>Досье контрагента</b>№ '+esc(id)+'<br>Сформировано '+at.toLocaleDateString('ru-RU',{timeZone:'Europe/Moscow'})+' в '+at.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Moscow'})+' (МСК)</div></div>'+
-      '<h1>'+esc(c.name_short||name)+'</h1><div class="sub">ИНН '+esc(c.inn)+(c.status?' · '+esc((ST[c.status]||c.status).toLowerCase()):'')+'</div>'+
+      '<h1>'+esc(c.name_short||name)+'</h1><div class="sub">ИНН '+esc(c.inn)+(c.status?' · '+esc(window.StatusKod?StatusKod.izOtveta(c):(ST[c.status]||c.status).toLowerCase()):'')+'</div>'+
       '<div class="risk '+lvl+'"><b>'+esc({low:'Без серьёзных сигналов',medium:'Есть вопросы',high:'Есть серьёзные сигналы'}[r.risk_level]||'')+'</b><span>'+esc(r.verdict||'')+'</span></div>'+
       (D?dossierHtml(D):'<h2>Сведения о компании</h2><table>'+rows+'</table>')+
       '<h2>Светофор по признакам риска</h2><table class="sig">'+sig+'</table>'+

@@ -301,7 +301,9 @@
     var R1 = [['Полное наименование', c.name_full], ['ИНН', c.inn], ['КПП', c.kpp], ['ОГРН', c.ogrn],
       ['Дата регистрации', dataRu(c.reg_date)], ['Адрес юридического лица', c.address]];
     R1.forEach(function (x) { if (x[1]) fakt('rekvizity', x[0], x[1], { ton: 'info', istochnik: 'ЕГРЮЛ' }); });
-    if (c.status) fakt('rekvizity', 'Статус', ST[c.status] || c.status, { ton: c.status === 'ACTIVE' ? 'ok' : 'bad', istochnik: 'ЕГРЮЛ' });
+    // status-tochno-v1: код состояния ЕГРЮЛ → «Ликвидируется» / «Готовится исключение из ЕГРЮЛ» (js/status-kod.js)
+    var SK = (root && root.StatusKod) || (function () { try { return typeof require === 'function' ? require('./status-kod.js') : null; } catch (e) { return null; } })();
+    if (c.status) fakt('rekvizity', 'Статус', SK && SK.vid(c.status, c.state_code) ? SK.nazv(c.status, c.state_code, { zaglavnaya: true }) : (ST[c.status] || c.status), { ton: c.status === 'ACTIVE' ? 'ok' : 'bad', istochnik: 'ЕГРЮЛ' });
 
     // 8. Банкротство по ЕГРЮЛ (прочерки, 30.09): запись о банкротстве в ЕГРЮЛ — факт первоисточника.
     // Нет записи — раздел остаётся «не проверяли» (картотеку судов и Федресурс не смотрели), но говорим, что видно по ЕГРЮЛ.

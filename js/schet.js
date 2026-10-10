@@ -298,7 +298,7 @@
       if (window.dlkGoal) window.dlkGoal("invoice_created", { nomer: String(j.nomer || ""), produkt: z.produkt || z.tarif });
       var h = j.gotov ? "Счёт № " + j.nomer + " готов" : "Заявка № " + j.nomer + " принята";
       var tekst = j.gotov
-        ? "Откройте счёт, скачайте PDF и оплатите с расчётного счёта. В назначении платежа — номер счёта: так мы увидим оплату в тот же день." + (j.pismo ? " Копию отправили на " + esc(j.email) + ". Если письма нет 10 минут — проверьте «Спам»." : "")
+        ? "Откройте счёт, скачайте PDF и оплатите с расчётного счёта. В назначении платежа — номер счёта: так мы найдём ваш платёж без уточнений." + (j.pismo ? " Копию отправили на " + esc(j.email) + ". Если письма нет 10 минут — проверьте «Спам»." : "")
         : "Счёт с реквизитами пришлём на " + esc(j.email) + " в течение рабочего дня. Он появится и по ссылке ниже — сохраните её.";
       f.innerHTML = '<div class="sf-ok" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#16723F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>' +
         '<h3 tabindex="-1">' + esc(h) + "</h3>" +

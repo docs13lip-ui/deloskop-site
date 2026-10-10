@@ -112,6 +112,8 @@
       level: r.risk_level || 'low', zsk: r.zsk && r.zsk.level || null,
       revenue: null, staff: null, bad: {}, warn: {}, list: []
     };
+    // status-tochno-v1: код состояния ЕГРЮЛ — только если пришёл (без кода вывод побайтно прежний)
+    if (c.state_code != null && String(c.state_code).trim()) f.kod = String(c.state_code).trim();
     (r.signals || []).forEach(function (s) {
       if (s.status !== 'bad' && s.status !== 'warn') {
         if (/численност|сотрудник/i.test(s.title || '')) { var z = num(s.detail); if (z != null) f.staff = z; }
@@ -303,9 +305,16 @@
     var s = generic ? x.title : x.title + ': ' + d.charAt(0).toLowerCase() + d.slice(1);
     return s.replace(/(\d)\s(?=\d{3}(?!\d))/g, '$1\u00a0').replace(/(\d)\s(?=(₽|%|млн|млрд|тыс\.))/g, '$1\u00a0');
   }
+  function statusKod() {
+    if (typeof self !== 'undefined' && self.StatusKod) return self.StatusKod;
+    try { return typeof require === 'function' ? require('./status-kod.js') : null; } catch (e) { return null; }
+  }
   function reasons(f) {
     var out = [];
-    if (f.status === 'LIQUIDATED') out.push('компания ликвидирована');
+    // status-tochno-v1: код состояния ЕГРЮЛ в ответе — точное название (js/status-kod.js), без кода — как раньше
+    var SK = statusKod();
+    if (SK && SK.vid(f.status, f.kod)) out.push(SK.fraza(f.status, f.kod));
+    else if (f.status === 'LIQUIDATED') out.push('компания ликвидирована');
     else if (f.status === 'LIQUIDATING') out.push('компания ликвидируется или ФНС готовит её исключение из ЕГРЮЛ');
     else if (f.status === 'BANKRUPT') out.push('идёт банкротство');
     else if (f.status === 'REORGANIZING') out.push('идёт реорганизация');

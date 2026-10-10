@@ -1,6 +1,7 @@
 // Журнал «Делоскоп · Неделя» (zhurnal-v1, 10.10.2026): схема выпуска, первоисточники, типографика, запреты,
 // письмо ≤ 3 500 знаков, образец не публикуется, /zhurnal/ собран. Сборщик — tests/sobrat_zhurnal.py.
 // PDF проверяет tests/test_zhurnal.py (нужен Playwright; в CI не запускается).
+// v1.1: рубрика «Делобух: бухгалтерия недели» (с № 1) и ссылка «PDF для печати» на странице выпуска.
 const test = require('node:test');
 const assert = require('node:assert');
 const fs = require('fs');
@@ -71,7 +72,7 @@ test('сборка выпуска: страница, письмо ≤ 3 500 зн
     const txt = fs.readFileSync(path.join(out, 'pismo.txt'), 'utf8');
     const meta = JSON.parse(fs.readFileSync(path.join(out, 'vypusk.json'), 'utf8'));
     // страница
-    for (const y of ['glavnoe', '115-fz', 'nalogi', 'sudy', 'vokrug', 'razbor', 'sroki', 'novoe', 'kommentarij'])
+    for (const y of ['glavnoe', '115-fz', 'nalogi', 'sudy', 'vokrug', 'razbor', 'sroki', 'delobuh', 'novoe', 'kommentarij'])
       assert.ok(str.includes(`id="${y}"`) && str.includes(`href="#${y}"`), `${f}: нет рубрики/якоря ${y}`);
     assert.ok(str.includes('<!--podval-->') && str.includes('<!--shapka-->'), `${f}: шапка/подвал не собраны`);
     assert.ok(str.includes('/css/zhurnal.css'));
@@ -115,4 +116,56 @@ test('образец не публикуется: нет страницы, сс�
 test('лента: записи «Журнал Делоскопа» нет, пока нет настоящего выпуска', () => {
   const L = JSON.parse(chitat('obnovleniya.json')).obnovleniya;
   if (!vypuski().some(x => !x.V.obrazec)) assert.ok(!L.some(x => /Журнал Делоскопа|Делоскоп · Неделя/.test(x.zagolovok)));
+});
+
+test('v1.1 «Делобух: бухгалтерия недели»: 2–5 дел, у каждого — зачем и норма; инструмент — своя страница; в письме — чек-лист', () => {
+  for (const { f, V } of vypuski()) {
+    const dela = V.delobuh && V.delobuh.dela;
+    assert.ok(Array.isArray(dela) && dela.length >= 2 && dela.length <= 5, `${f}: delobuh.dela — 2–5 дел`);
+    for (const x of dela) {
+      assert.ok(x.chto && x.chto.length <= 120 && x.zachem, `${f} ${x.id}: chto ≤ 120 и zachem`);
+      assert.match(x.istochnik.url, /^https:\/\//, `${f} ${x.id}: норма — ссылкой`);
+      if (x.instrument) {
+        const u = x.instrument.url;
+        assert.ok(fs.existsSync(path.join(KOREN, u, u.endsWith('/') ? 'index.html' : '')), `${f} ${x.id}: нет страницы ${u}`);
+      }
+    }
+    const out = fs.mkdtempSync(path.join(os.tmpdir(), 'zh-'));
+    py(V.nomer, '--out', out);
+    const str = fs.readFileSync(path.join(out, 'stranica.html'), 'utf8');
+    const pis = fs.readFileSync(path.join(out, 'pismo.html'), 'utf8');
+    assert.ok(str.indexOf('id="sroki"') < str.indexOf('id="delobuh"') && str.indexOf('id="delobuh"') < str.indexOf('id="novoe"'), `${f}: «Делобух» — после «Сроков», до «Что нового»`);
+    assert.strictEqual((str.match(/class="zh-delo"/g) || []).length, dela.length);
+    assert.ok(pis.includes('Делобух: бухгалтерия недели'), `${f}: в письме нет «Делобуха»`);
+    for (const x of dela) assert.ok(vidimyj(pis).replace(/\u00a0/g, ' ').includes(x.chto), `${f}: в письме нет дела ${x.id}`);
+    assert.match(pis, /#delobuh"/);
+    assert.match(pis, /deloskop-nedelya-\d{4}-\d{2}\.pdf\?utm_source=zhurnal/, `${f}: в письме нет ссылки на PDF`);
+    // без собранного PDF ссылки на странице нет
+    assert.ok(!str.includes('class="zh-pdf"'), `${f}: ссылка на PDF без самого PDF`);
+    fs.rmSync(out, { recursive: true, force: true });
+  }
+});
+
+test('v1.1 ссылка «PDF для печати»: A4, страницы, размер, цель Метрики; в печати скрыта; опубликованный выпуск — только с PDF', () => {
+  const V = vypuski()[0].V;
+  const h = execFileSync('python3', ['-c', `import sys;sys.path.insert(0,'tests');import sobrat_zhurnal as Z;print(Z.stranica_vypuska(Z.vypusk('${V.nomer}'),{'imya':'deloskop-nedelya-${V.nomer}.pdf','bajt':140000,'stranic':8})[1])`], { cwd: KOREN, encoding: 'utf8' });
+  assert.match(h, new RegExp(`<p class="zh-pdf"><a href="deloskop-nedelya-${V.nomer}\\.pdf" download data-goal="zhurnal_pdf">PDF для печати</a><span>A4 · 8 страниц · 137 КБ</span></p>`));
+  const css = chitat('css/zhurnal.css');
+  const pechat = css.slice(css.indexOf('@media print'));
+  assert.match(pechat, /\.zh-pdf[,{]/, 'ссылка на PDF не скрыта в печати');
+  for (const { V: W } of vypuski().filter(x => !x.V.obrazec)) {
+    const pdf = path.join(KOREN, 'zhurnal', W.nomer, `deloskop-nedelya-${W.nomer}.pdf`);
+    assert.ok(fs.existsSync(pdf), `${W.nomer}: опубликован без PDF — python3 tests/sobrat_zhurnal.py ${W.nomer} --v-sajt`);
+    assert.ok(fs.statSync(pdf).size <= 2 * 1024 * 1024, `${W.nomer}: PDF больше 2 МБ`);
+    assert.ok(chitat(`zhurnal/${W.nomer}/index.html`).includes('data-goal="zhurnal_pdf"'));
+  }
+});
+
+test('v1.1 «Что нового в Делоскопе» берёт записи ленты за неделю выпуска (дата — из id «ГГГГ-ММ-ДД-N»)', () => {
+  const L = JSON.parse(chitat('obnovleniya.json')).obnovleniya;
+  for (const { f, V } of vypuski()) {
+    const ozhid = L.filter(x => /^\d{4}-\d{2}-\d{2}-/.test(x.id) && x.id.slice(0, 10) >= V.nedelya.s && x.id.slice(0, 10) <= V.nedelya.po).slice(0, 5).map(x => x.id);
+    const out = execFileSync('python3', ['-c', `import sys,json;sys.path.insert(0,'tests');import sobrat_zhurnal as Z;print(json.dumps([x['id'] for x in Z.novoe_za_nedelyu(Z.vypusk('${V.nomer}'))]))`], { cwd: KOREN, encoding: 'utf8' });
+    assert.deepStrictEqual(JSON.parse(out), ozhid, `${f}: «Что нового» не совпадает с лентой недели`);
+  }
 });

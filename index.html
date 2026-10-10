@@ -556,6 +556,7 @@ footer a{color:var(--ink2)}
 <script src="/js/otkuda.js" defer></script>
 <script src="/js/reestry-sami.js" defer></script>
 <script src="/js/rekvizity-proverki.js" defer></script>
+<script src="/js/status-kod.js" defer></script>
 <script src="/js/usloviya.js" defer></script>
 <script src="/js/shchit.js" defer></script>
 <script src="/js/dinamika.js" defer></script>
@@ -617,7 +618,7 @@ footer a{color:var(--ink2)}
     o=o||{};var svoj=!!(o.svoj&&window.Shchit);
     var c=r.company||{}, lvl=r.risk_level||'low';
     var name=c.name_short||c.name_full||('ИНН '+c.inn);
-    var sub='ИНН '+esc(c.inn)+(c.status?' · '+esc(ST[c.status]||c.status):'');
+    var sub='ИНН '+esc(c.inn)+(c.status?' · '+esc(window.StatusKod?StatusKod.izOtveta(c):(ST[c.status]||c.status)):'');
     var rows=(r.signals||[]).map(function(x){
       var cls=x.status==='bad'?'bad':x.status==='warn'?'warn':x.status==='ok'?'ok':'neutral';
       return '<div class="row"><span>'+esc(x.title)+'</span><b class="d '+cls+'">'+esc(x.detail||'')+'</b></div>';

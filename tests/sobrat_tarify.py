@@ -10,6 +10,8 @@ ROOT = sys.argv[1]
 D = json.load(open(os.path.join(ROOT, 'tarify/tarify.json'), encoding='utf-8'))
 import startovaya as STV  # noqa: E402  (start390-v1: стартовая цена «Старта» включается вместе с оплатами)
 D, _ = STV.vklyuchit(ROOT, D)
+STV.redakciya_pri_oplatah(ROOT, D)  # oplata-schet-v1: дата редакции оферты — день включения оплат (один раз)
+STV.redakciya_v_schet(ROOT)  # О5: дата редакции — в счёт
 # tarify-bez-karty-v1 (ТЗ [Продукт · Стратег] 03.10, тексты [Право] 03.10 разд. 4): "karta": false — оплата только по счёту,
 # на странице нет автосписаний, «карту не трогаем» и «частным лицам». true — подключён эквайер, прежние тексты.
 KARTA = D.get('karta', True) is not False
@@ -18,6 +20,13 @@ for _t in D['tarify']:
     if _bk and not KARTA:
         _t['dlya'] = _bk
 MES_TEKST = 'Оплачивать помесячно' if KARTA else 'Счёт на месяц'
+# oplata-schet-v1 (решение владельца 10.10.2026, п. 2): без карты переключатель стоит на «За год» — платёжка на месяц
+# для бухгалтера та же работа, что на год; с картой — «Помесячно», как решил владелец 26.09.2026. Вид «за год» отдаёт
+# сама страница (без JS и до его загрузки — то же), tarify.js берёт начальный период из нажатой кнопки.
+PERIOD0 = 'mes' if KARTA else 'god'
+_on = lambda p: 'aria-pressed="true" class="on"' if PERIOD0 == p else 'aria-pressed="false"'
+KNOPKA_MES = f'<button type="button" data-period="mes" {_on("mes")}>Помесячно</button>'
+KNOPKA_GOD = f'<button type="button" data-period="god" {_on("god")}>За год <em>−20%</em></button>'
 _ix = open(os.path.join(ROOT, 'indeks/index.html'), encoding='utf-8').read()
 _css = _ix[_ix.index('<style>') + 7:_ix.index('</style>')]
 _PFX = (':root', '*{', 'body{', 'a{', '.top', '.brand', '.btn', '@media (max-width:760px)', 'main{', '.crumbs', '.ver', 'h1{', '.sub{', '.meta{', '.lead', '.cap', 'article ', '.tw{', '.primer', '.status', 'details', '.check', '.src', '.disc', 'footer')
@@ -45,15 +54,21 @@ def cena_i_knopki(t, nb=NB):
     rn = lambda x: f'{x:,}'.replace(',', NB) + NB + '₽'  # в мелкой строке всегда неразрывные: «3 580 ₽» не рвётся
     per_m = f'или {rn(g)} за год — экономия {rn(ek)}'
     per_y = f'{rn(g)} одним платежом — экономия {rn(ek)}'
-    price = (f'<div class="price"><b data-m="{r(m)}" data-y="{r(mes_god(t))}">{r(m)}</b><span data-m="в месяц" data-y="в месяц при оплате за год">в месяц</span></div>'
-             f'<div class="per" data-m="{per_m}" data-y="{per_y}">{per_m}</div>')
+    g0 = PERIOD0 == 'god'
+    price = (f'<div class="price"><b data-m="{r(m)}" data-y="{r(mes_god(t))}">{r(mes_god(t)) if g0 else r(m)}</b>'
+             f'<span data-m="в месяц" data-y="в месяц при оплате за год">{"в месяц при оплате за год" if g0 else "в месяц"}</span></div>'
+             f'<div class="per" data-m="{per_m}" data-y="{per_y}">{per_y if g0 else per_m}</div>')
     # кнопки ведут на форму «Получить счёт» (п. 23): с JS — окно поверх (js/schet.js), без JS — страница /schet/
     mail = lambda srok: f'/schet/?tarif={t["id"]}&amp;srok={srok}'
     vid = 'primary' if t.get('rekomenduem') else 'ghost'
     mt = '' if KARTA else f' data-mes-tekst="{MES_TEKST}"'  # tarify.js берёт подпись отсюда при переключении периода
-    cta = (f'<!--oplata--><div class="knopki" data-cena-m="{r(m)}" data-cena-g="{r(g)}"{mt}>'
-           f'<a class="cta {vid}" data-tarif="{t["id"]}" data-srok="mes" href="{mail("mes")}">{MES_TEKST}</a>'
-           f'<a class="cta2" data-tarif="{t["id"]}" data-srok="god" href="{mail("god")}">Оплатить год — {r(g)}</a>'
+    if g0:  # то же, что делает tarify.js knopki('god'): главная — год, вторая — месяц с ценой
+        k1 = f'<a class="cta {vid}" data-tarif="{t["id"]}" data-srok="god" href="{mail("god")}">Оплатить год</a>'
+        k2 = f'<a class="cta2" data-tarif="{t["id"]}" data-srok="mes" href="{mail("mes")}">{MES_TEKST} — {r(m)}</a>'
+    else:
+        k1 = f'<a class="cta {vid}" data-tarif="{t["id"]}" data-srok="mes" href="{mail("mes")}">{MES_TEKST}</a>'
+        k2 = f'<a class="cta2" data-tarif="{t["id"]}" data-srok="god" href="{mail("god")}">Оплатить год — {r(g)}</a>'
+    cta = (f'<!--oplata--><div class="knopki" data-cena-m="{r(m)}" data-cena-g="{r(g)}"{mt}>{k1}{k2}'
            f'</div><!--/oplata-->'
            # beta-v1: в открытой бете вместо оплаты — действие; цена остаётся как сведения «после беты»
            f'<!--v-bete--><div class="knopki knopki--beta"><a class="cta {vid}" href="/#inn">В бете — бесплатно</a>'
@@ -315,8 +330,8 @@ page = f'''<!doctype html>
 <!--oplata--><!--/oplata--><!--v-bete--><p class="beta-note"><b>Идёт открытая бета — всё бесплатно.</b> Счета не выставляем, реквизиты и оплата появятся позже. Цены ниже — какими они станут после беты.</p><!--/v-bete-->
 
 {OSN_BAND}<div class="period" role="group" aria-label="Период оплаты">
-  <button type="button" data-period="mes" aria-pressed="true" class="on">Помесячно</button>
-  <button type="button" data-period="god" aria-pressed="false">За год <em>−20%</em></button>
+  {KNOPKA_MES}
+  {KNOPKA_GOD}
 </div>
 <div class="plans">
 {chr(10).join(cards)}

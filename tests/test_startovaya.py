@@ -56,7 +56,7 @@ ok(f'срок: до {STV.SROK_RESHENIYA:%d.%m.%Y} владелец решает 
 pg = rd(R, 'tarify/index.html')
 of = rd(R, 'oferta/index.html')
 if not STV.aktivna(D):
-    ok('сейчас: стартовая цена не включена — на /tarify/ строки нет, «Старт» 490 ₽', 'class="startovaya"' not in pg and '>490&nbsp;₽</b>' in kartochka_starta(pg).replace(STV.NB, '&nbsp;'))
+    ok('сейчас: стартовая цена не включена — на /tarify/ строки нет, «Старт» 490 ₽', 'class="startovaya"' not in pg and '<b data-m="490&nbsp;₽"' in kartochka_starta(pg).replace(STV.NB, '&nbsp;'))  # oplata-schet-v1: крупно — месяц или «за год», цена месяца — в data-m
     ok('сейчас: в оферте п. 3.9 ещё нет — появится вместе с ценой', 'id="start"' not in of)
 else:
     ok('после включения: строка на /tarify/ и п. 3.9 в оферте', 'class="startovaya"' in pg and '<li id="start">' in of)
@@ -97,7 +97,8 @@ try:
         pg2, of2, gl2 = rd(K, 'tarify/index.html'), rd(K, 'oferta/index.html'), rd(K, 'index.html')
         kar = kartochka_starta(pg2).replace(STV.NB, '&nbsp;')
         ok('репетиция: /tarify/ — 390 ₽ крупно, год 3 700 ₽, экономия 980 ₽',
-           '>390&nbsp;₽</b>' in kar and 'или 3&nbsp;700&nbsp;₽ за год — экономия 980&nbsp;₽' in kar)
+           '<b data-m="390&nbsp;₽"' in kar and 'или 3&nbsp;700&nbsp;₽ за год — экономия 980&nbsp;₽' in kar
+           and '3&nbsp;700&nbsp;₽ одним платежом — экономия 980&nbsp;₽' in kar)
         ok('репетиция: /tarify/ — строка [Право] 1.1 дословно, со ссылкой на п. 3.9',
            'Стартовая цена&nbsp;— при первой оплате до&nbsp;31&nbsp;декабря 2026&nbsp;года. Сохраняется 12&nbsp;месяцев '
            '(<a href="/oferta/#start">п.&nbsp;3.9 оферты</a>).' in kar)

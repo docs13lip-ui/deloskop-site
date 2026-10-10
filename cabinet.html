@@ -337,6 +337,8 @@ ul.list .nm span{color:var(--muted);font-size:13px}
   $('watch').addEventListener('click',function(e){var b=e.target.closest('[data-del]');if(!b)return;
     call('/api/me/watchlist/'+encodeURIComponent(b.dataset.del),{method:'DELETE'}).then(loadWatch)
       .catch(function(err){note($('wnote2'),err.message,'err')})});
+  // kanaly-v1: из бота приходят по ссылке «Следить» — /cabinet.html?inn=ИНН#watch: подставляем ИНН (только 10 цифр компании)
+  (function(){var m=/[?&]inn=(\d{10})(?:&|$)/.exec(location.search);if(m&&$('winn')&&!$('winn').value)$('winn').value=m[1];})();
   $('fWatch').onsubmit=function(e){e.preventDefault();
     var inn=$('winn').value.replace(/\D/g,'');
     if(!validInn(inn)){note($('wnote2'),'ИНН — 10 цифр у компании или 12 у ИП','err');return}

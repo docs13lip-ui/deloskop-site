@@ -303,11 +303,15 @@ footer a{color:var(--muted)}
     if (c.kind === 'INDIVIDUAL') {
       return '<b>' + esc(name) + '</b> (ОГРНИП ' + esc(c.ogrn || '________') + ', ИНН ' + esc(c.inn) + '), именуемый в дальнейшем «' + role + '»';
     }
+    // upravlyayushchaya-v1: полномочия руководителя у управляющей организации — её название не сокращаем как ФИО
+    if (c.director_org) return '<b>' + esc(name) + '</b> (ОГРН ' + esc(c.ogrn || '________') + ', ИНН ' + esc(c.inn) + '), именуемое в дальнейшем «' + role +
+      '» (договор подписывает управляющая организация ' + esc(c.director_name) + ' в лице ________________, действующего на основании договора о передаче полномочий)';
     return '<b>' + esc(name) + '</b> (ОГРН ' + esc(c.ogrn || '________') + ', ИНН ' + esc(c.inn) + '), именуемое в дальнейшем «' + role +
       '» (договор подписывает ' + esc((c.director_post || 'руководитель').toLowerCase()) + ' ' + esc(c.director_name || '________') + ', действующий на основании устава)';
   }
   function signer(c) {
     if (c.kind === 'INDIVIDUAL') return 'Индивидуальный предприниматель<br><br>_______________ / ' + esc(short(c.director_name || c.name_short)) + ' /';
+    if (c.director_org) return 'За управляющую организацию ' + esc(c.director_name) + '<br><br>_______________ / ________________ /<br>М. П. (при наличии)';
     return esc(cap(c.director_post || 'Руководитель')) + '<br><br>_______________ / ' + esc(short(c.director_name)) + ' /<br>М. П. (при наличии)';
   }
   function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }

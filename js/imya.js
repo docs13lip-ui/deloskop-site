@@ -6,7 +6,11 @@
  * на карточках /company/ (tests/kartochka_render.py, imya()), там своё правило и словарь.
  * Правило: внешние кавычки — «ёлочки», вложенные — „лапки“; незакрытые закрываем в конце; повторный вызов
  * ничего не меняет. Апостроф и обратный апостроф (О`КЕЙ) не трогаем.
- * Чистые функции, без DOM и сети — их проверяет tests/imya.test.js. */
+ * upravlyayushchaya-v1 ([Ночные-3] 10.10.2026): у части компаний полномочия руководителя переданы другой компании
+ * (п. 1 ст. 69 208-ФЗ, ст. 42 14-ФЗ). API кладёт её название в director_name, должность пустая — и сайт писал
+ * «Руководитель: ПУБЛИЧНОЕ АКЦИОНЕРНОЕ ОБЩЕСТВО "…"», а Делопись сокращала название как ФИО. Теперь ispravitOtvet
+ * ставит director_org = true и должность «Управляющая организация», название — в «ёлочках».
+ * Чистые функции, без DOM и сети — их проверяет tests/imya.test.js и tests/upravlyayushchaya.test.js. */
 (function (root, factory) {
   var api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
@@ -40,6 +44,20 @@
     return out;
   }
 
+  // Название организации, а не ФИО: организационно-правовая форма словом или сокращением, либо кавычки.
+  // В ФИО таких слов и кавычек не бывает; ИП-управляющего («Иванов Иван Иванович») не трогаем — это ФИО.
+  // Слова — целиком (фамилии «Фондов», «Компаниец» — не организации).
+  var OPF_SLOVA = ['ОБЩЕСТВО', 'ТОВАРИЩЕСТВО', 'КОРПОРАЦИЯ', 'КОМПАНИЯ', 'ПРЕДПРИЯТИЕ', 'УЧРЕЖДЕНИЕ', 'КООПЕРАТИВ',
+    'ПАРТНЕРСТВО', 'ПАРТНЁРСТВО', 'ОРГАНИЗАЦИЯ', 'ФОНД', 'ХОЛДИНГ', 'ГОСКОРПОРАЦИЯ'];
+  var OPF_SOKR = /^(ООО|ОАО|ЗАО|ПАО|НАО|АО|АНО|ГУП|МУП|ФГУП|УК)(\s|["\u00AB\u201E]|$)/;
+  function organizaciya(s) {
+    if (typeof s !== 'string') return false;
+    s = s.trim();
+    if (!s) return false;
+    if (OPF_SOKR.test(s) || KAV.test(s)) return true;
+    return s.toUpperCase().split(/[^А-ЯЁA-Z]+/).some(function (w) { return OPF_SLOVA.indexOf(w) >= 0; });
+  }
+
   // Ответ /api/check или /api/report/{id}: название в company и строки «…наименование» в разделах досье.
   // Меняет объект на месте и возвращает его же; чужие поля не трогает.
   function ispravitOtvet(r) {
@@ -48,15 +66,31 @@
     if (c && typeof c === 'object') {
       if (typeof c.name_short === 'string') c.name_short = kavychki(c.name_short);
       if (typeof c.name_full === 'string') c.name_full = kavychki(c.name_full);
+      if (c.kind !== 'INDIVIDUAL' && organizaciya(c.director_name)) {
+        c.director_org = true;
+        c.director_name = kavychki(c.director_name.trim());
+        if (!c.director_post || !String(c.director_post).trim()) c.director_post = 'Управляющая организация';
+      }
     }
     var sek = r.dossier && r.dossier.sections;
     if (Array.isArray(sek)) sek.forEach(function (x) {
       (x && Array.isArray(x.rows) ? x.rows : []).forEach(function (row) {
         if (Array.isArray(row) && typeof row[0] === 'string' && typeof row[1] === 'string' && /наименовани/i.test(row[0])) row[1] = kavychki(row[1]);
       });
+      // «Руководство и собственники»: «Руководитель — ПАО "…"» → «Управляющая организация — ПАО «…»», «Руководит с» → «Управляет с»
+      var rows = x && Array.isArray(x.rows) ? x.rows : [], org = false;
+      rows.forEach(function (row) {
+        if (Array.isArray(row) && row[0] === 'Руководитель' && organizaciya(row[1]) && !(c && c.kind === 'INDIVIDUAL')) {
+          row[0] = 'Управляющая организация'; row[1] = kavychki(row[1].trim()); org = true;
+        }
+      });
+      if (org) {
+        rows.forEach(function (row) { if (Array.isArray(row) && row[0] === 'Руководит с') row[0] = 'Управляет с'; });
+        if (x.comment === 'Руководитель стабилен.') x.comment = 'Управляющая организация не менялась.';
+      }
     });
     return r;
   }
 
-  return { kavychki: kavychki, ispravitOtvet: ispravitOtvet };
+  return { kavychki: kavychki, ispravitOtvet: ispravitOtvet, organizaciya: organizaciya };
 });

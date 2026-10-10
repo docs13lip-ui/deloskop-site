@@ -303,8 +303,10 @@
       var ot = dataIz(c.director_since);
       if (!estRuk && ot) {
         var mr = mesyacev(ot, na);
-        if (mr != null) add({ k: 'rukovoditel', nazv: 'Руководитель', ton: mr < 6 ? 'warn' : 'ok',
-          znach: (mr < 12 ? 'Сменился ' + srok(mr) + ' назад' : 'Не менялся ' + srok(mr)) + ' · с' + NB + dmy(c.director_since),
+        // upravlyayushchaya-v1: полномочия руководителя у другой компании — так и называем строку
+        if (mr != null) add({ k: 'rukovoditel', nazv: c.director_org ? 'Управляющая организация' : 'Руководитель', ton: mr < 6 ? 'warn' : 'ok',
+          znach: (c.director_org ? (mr < 12 ? 'Сменилась ' + srok(mr) + ' назад' : 'Не менялась ' + srok(mr))
+            : (mr < 12 ? 'Сменился ' + srok(mr) + ' назад' : 'Не менялся ' + srok(mr))) + ' · с' + NB + dmy(c.director_since),
           ist: 'ЕГРЮЛ', data: dataPr });
       }
     }

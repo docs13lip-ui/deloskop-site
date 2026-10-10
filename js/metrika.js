@@ -3,7 +3,8 @@
    в баннере cookies; «Только необходимые» — не загружается. Выбор хранится в браузере 12 месяцев.
    Цели: window.dlkGoal("check_started" | "report_opened" | "invoice_created" | "registration" |
    "article_to_tool" | "whatsnew_open" | "pkg_view" | "pkg_cta" | "praktika_cta" |
-   "entry_pay" | "entry_watch" | "entry_bank" | "shchit_start" | "shchit_sled", {параметры}) — без согласия ничего не отправляет.
+   "entry_pay" | "entry_watch" | "entry_bank" | "shchit_start" | "shchit_sled" |
+   "schet_zapros" | "schet_buhgalteru" | "schet_oplachen", {параметры}) — без согласия ничего не отправляет.
    События дублируются в параметры визита `sobytie` — копятся и без заведённой цели (справка Метрики, visit-params-data).
    Ключи параметров — только из KLYUCHI; значения с 10+ цифрами подряд или «@» и значения из полей ввода не передаём.
    Просмотр отправляется вручную (init с defer: true + hit — справка Метрики «SPA-сайты»): в адресе и referer

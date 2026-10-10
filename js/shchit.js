@@ -117,6 +117,11 @@
     return x.dop ? t + ' ' + x.dop : t;   // dop — второе предложение после нормы (убытки: «Проверка от этого не обязательна.»)
   }
   function reestr(t, ul) { return ul ? t : t.replace(/ЕГРЮЛ/g, 'ЕГРИП'); }   // у ИП свой реестр
+  function Sk(o) {
+    if (o && o.statusKod) return o.statusKod;
+    if (root && root.StatusKod) return root.StatusKod;
+    try { return typeof require === 'function' ? require('./status-kod.js') : null; } catch (e) { return null; }
+  }
   function Su(o) { return (o && o.sushchestvennoe) || (root && root.Sushchestvennoe) || (typeof require === 'function' ? require('./sushchestvennoe.js') : null); }
   function Rn(o) {
     if (o && o.rentabelnost) return o.rentabelnost;
@@ -171,7 +176,9 @@
     if (f.zsk === 'high' || f.zsk === 'medium') est.zsk = 'Прогноз ЗСК — ' + (f.zsk === 'high' ? 'высокий' : 'средний') + ' · наша оценка';
     if ((f.warn.young || f.bad.young) && !est.young) est.young = 'Компании меньше года';
     if ((f.staff === 0 || f.staff === 1) && !est.staff) est.staff = f.staff ? 'В штате 1 человек' : 'В штате никого';
-    if (ST[f.status] && !est.exit) est.exit = ST[f.status];
+    // status-tochno-v1: с кодом состояния ЕГРЮЛ — точнее (js/status-kod.js)
+    var SK = Sk(o);
+    if (ST[f.status] && !est.exit) est.exit = SK && SK.vid(f.status, f.kod) ? SK.fraza(f.status, f.kod, { zaglavnaya: true }) : ST[f.status];
     var fin = finansy(r, o);
     Object.keys(fin).forEach(function (k) { if (!est[k]) est[k] = fin[k]; });
 

@@ -22,7 +22,7 @@
   // порядок базовых фактов, когда замечаний нет
   // poryadok-faktov-v1 [Ночные-3]: «Сотрудники» без замечаний — после прогноза ЗСК (живой ответ 05.10: «367 чел.» стояло первым
   // и вытесняло прогноз ЗСК в «Все данные»). При «нет сотрудников» (warn) строка по-прежнему среди первых — её поднимает тон.
-  var PORYADOK = ['status', 'address', 'tax_debt', 'kapital', 'likvidnost', 'ubytki', 'otchetnost', 'rukovoditel', 'age', 'zsk', 'employees'];
+  var PORYADOK = ['status', 'address', 'tax_debt', 'kapital', 'likvidnost', 'ubytki', 'skachok', 'otchetnost', 'rukovoditel', 'age', 'zsk', 'employees'];
   var NAZV = { status: 'Статус', address: 'Отметки о недостоверности', age: 'На рынке', tax_debt: 'Долги по налогам' };
   var SEKCII = { profile: 'reestr', history: 'reestr', management: 'reestr', activity: 'reestr', taxes: 'ФНС, открытые данные', dynamics: 'ГИР БО ФНС, годовая бухгалтерская отчётность' };
   var KRATKO = { sudy: 'арбитражные суды', bankrotstvo: 'банкротство', fssp: 'приставы', priostanovki: 'приостановки счетов', mery: 'обеспечительные меры ФНС', rnp: 'РНП', kontrakty: 'госконтракты' };
@@ -202,6 +202,25 @@
     while (po.hasOwnProperty(g1 - n) && po[g1 - n] < 0) n++;
     return n >= 2 ? { god: g1, n: n, ot: g1 - n + 1 } : null;
   }
+  // ---- skachok-fakty-v1 [Ночные-3] 10.10: «Скачок в отчётности» — в существенные факты ТОЛЬКО падение ----
+  // Расчёт один на весь экран — Dinamika.skachok (js/dinamika.js, skachok-v1): выручка за соседние годы (база от 1 млн ₽)
+  // или KPI «Активы» за последний год −50 % и больше. Рост в факты не выносим: решения о предоплате он не меняет,
+  // он виден в «Динамике» с оговоркой о причинах. Нет модуля «Динамики» — нет строки (без своего второго расчёта).
+  function modDinamika(opt) {
+    if (opt && opt.Dinamika) return opt.Dinamika;
+    if (typeof self !== 'undefined' && self.Dinamika) return self.Dinamika;
+    if (typeof module === 'object' && module.exports && typeof require === 'function') { try { return require('./dinamika.js'); } catch (e) { return null; } }
+    return null;
+  }
+  function skachokVniz(r, opt) {
+    var D = modDinamika(opt), s = D && typeof D.skachok === 'function' ? D.skachok(r) : null;
+    if (!s) return null;
+    var vniz = (s.fakty || []).filter(function (f) { return f && f.kRaz <= 0.5; });
+    if (!vniz.length) return null;
+    var god = vniz.reduce(function (g, f) { return f.god > g ? f.god : g; }, 0);
+    return { god: god || null, tekst: vniz.map(function (f) { return f.tekst; }).join(' ') };
+  }
+
   function godySerii(u) { return u.n === 2 ? u.ot + ' и ' + u.god : u.ot + '–' + u.god; }
 
   // ---- существенные факты ----
@@ -299,6 +318,10 @@
       var ub = ubytki(r);
       if (ub) add({ k: 'ubytki', nazv: 'Убыток ' + ub.n + NB + skl(ub.n, 'год', 'года', 'лет') + ' подряд', ton: 'warn',
         znach: 'По годовой отчётности за ' + godySerii(ub), ist: 'ГИР БО ФНС, отчёт о финансовых результатах', data: '31.12.' + ub.god });
+      // Скачок вниз: выручка или активы за последний год упали вдвое и больше — вопрос до аванса (текст skachok-v1).
+      var sk = skachokVniz(r, opt);
+      if (sk) add({ k: 'skachok', nazv: 'Скачок в' + NB + 'отчётности', ton: 'warn', znach: sk.tekst,
+        pod: 'Перед авансом спросите компанию, что изменилось.', ist: 'ГИР БО ФНС', data: sk.god ? '31.12.' + sk.god : dataPr });
       var estRuk = (r.signals || []).some(function (s) { return s && /director|rukovod/i.test(s.id || ''); });
       var ot = dataIz(c.director_since);
       if (!estRuk && ot) {
@@ -505,5 +528,5 @@
     return true;
   }
 
-  return { razryady: razryady, fakty: fakty, godBezVyruchki: godBezVyruchki, otchetGod: otchetGod, bank: bank, kapital: kapital, likvidnost: likvidnost, ubytki: ubytki, glubina: glubina, otchetnost: otchetnost, poslGodOtchetnosti: poslGodOtchetnosti, staraya: staraya, html: html, mount: mount, htmlSvoj: htmlSvoj, mountSvoj: mountSvoj, dengi: dengi, srok: srok, MAKS: MAKS, CSS: CSS };
+  return { razryady: razryady, fakty: fakty, godBezVyruchki: godBezVyruchki, otchetGod: otchetGod, bank: bank, kapital: kapital, likvidnost: likvidnost, ubytki: ubytki, skachokVniz: skachokVniz, glubina: glubina, otchetnost: otchetnost, poslGodOtchetnosti: poslGodOtchetnosti, staraya: staraya, html: html, mount: mount, htmlSvoj: htmlSvoj, mountSvoj: mountSvoj, dengi: dengi, srok: srok, MAKS: MAKS, CSS: CSS };
 });

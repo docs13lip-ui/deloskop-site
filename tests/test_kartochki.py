@@ -1045,6 +1045,10 @@ class TestKartochkiV4Kod(unittest.TestCase):
         self.assertEqual(K.imya('ПАО "РОССЕТИ ТОМСК"'), "ПАО «Россети Томск»")  # kartochki-1010c-n2
         self.assertEqual(K.imya('АО "РОССЕТИ ЯНТАРЬ"'), "АО «Россети Янтарь»")  # kartochki-1010e-n2
         self.assertEqual(K.imya('ПАО "ТНС ЭНЕРГО РОСТОВ-НА-ДОНУ"'), "ПАО «ТНС энерго Ростов-на-Дону»")  # kartochki-1010e-n2
+        self.assertEqual(K.imya('ПАО "ТНС ЭНЕРГО ВОРОНЕЖ"'), "ПАО «ТНС энерго Воронеж»")  # kartochki-1010f-n2
+        self.assertEqual(K.imya('ПАО "ТНС ЭНЕРГО КУБАНЬ"'), "ПАО «ТНС энерго Кубань»")  # kartochki-1010f-n2
+        self.assertEqual(K.imya('АО "РОССЕТИ ТЮМЕНЬ"'), "АО «Россети Тюмень»")  # kartochki-1010f-n2
+        self.assertEqual(K.imya('ПАО "ДЭК"'), "ПАО «ДЭК»")  # kartochki-1010f-n2: аббревиатура с гласной из 3 букв
         self.assertEqual(K.imya('ООО "ГАЗПРОМ МЕЖРЕГИОНГАЗ ЯРОСЛАВЛЬ"'), "ООО «Газпром межрегионгаз Ярославль»")  # kartochki-1010e-n2
         self.assertEqual(K.imya('ПАО "ТГК-14"'), "ПАО «ТГК-14»")  # kartochki-1010e-n2: аббревиатура с номером — как есть
         # kartochki-0710-v1: два кратких наименования через запятую, «и» строчными, апостроф

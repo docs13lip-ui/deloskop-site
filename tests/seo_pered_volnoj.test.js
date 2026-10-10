@@ -88,7 +88,10 @@ test('2.5: каждый адрес sitemap-companies.xml существует ф
   for (const u of locs) {
     // kartochki-v4.1: хаб /company/ идёт в этот же sitemap, когда в индексе ≥ 20 карточек (HUB_INDEX_OT, Маркетинг §2.6)
     if (u === '/company/') { assert.ok(!/noindex/.test(chitat('company/index.html').slice(0, 4000)), 'хаб в sitemap, но noindex'); continue; }
-    assert.ok(/^\/company\/\d{10}-[a-z0-9-]+\/$/.test(u), u + ': только юрлица (10 цифр ИНН), slug латиницей');
+    // kartochki-1010f-n2: хаб отрасли или региона (kartochki-haby-v1, ≥ 30 карточек группы за воротами) — тоже в этом sitemap;
+    // проверки те же: файл есть и не noindex
+    const hab = /^\/company\/(otrasl|region)\/[a-z0-9-]+\/$/.test(u);
+    assert.ok(hab || /^\/company\/\d{10}-[a-z0-9-]+\/$/.test(u), u + ': только юрлица (10 цифр ИНН) или хаб группы, slug латиницей');
     const f = path.join(K, u, 'index.html');
     assert.ok(fs.existsSync(f), u + ' — нет файла');
     assert.ok(!/noindex/.test(fs.readFileSync(f, 'utf8').slice(0, 4000)), u + ' — в sitemap, но noindex');

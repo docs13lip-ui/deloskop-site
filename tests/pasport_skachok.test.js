@@ -65,10 +65,12 @@ test('без скачка, без модуля Динамики и у ИП — �
 
 test('PDF-досье: «Динамика» в report.html выводит строку скачка (Dinamika.html → htmlDinamika)', () => {
   const html = fs.readFileSync(path.join(KOREN, 'report.html'), 'utf8');
-  assert.match(html, /Dinamika\.html\(R,\{balans:false\}\)/);
+  // noch3 [Ночные-2]: ne-zaprashivali-v1 добавил dokument:true (давность записи ЕГРЮЛ от дня проверки) — скачок остаётся
+  assert.match(html, /Dinamika\.html\(R,\{balans:false(,dokument:true)?\}\)/);
   const r = otvet({ rev: [41e9, 42e9, 48e9, 51.26e9, 90.2e9], aktDelta: 294 });
   r.dossier.charts.profit = RYAD([1e9, 2e9, -5e8, 2.4e9, 2.7e9]);
   assert.match(D.html(r, { balans: false }), /data-blok="skachok"/);
+  assert.match(D.html(r, { balans: false, dokument: true }), /data-blok="skachok"/);
 });
 
 test('страница Паспорта подключает Динамику до Паспорта; тексты без превосходных степеней и обещаний', () => {

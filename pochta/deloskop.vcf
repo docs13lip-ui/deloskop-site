@@ -1,0 +1,12 @@
+BEGIN:VCARD
+VERSION:3.0
+N:;Команда Делоскопа;;;
+FN:Команда Делоскопа
+ORG:Делоскоп
+TITLE:Проверка контрагентов и 115-ФЗ
+EMAIL;TYPE=INTERNET,WORK:help@deloskop.ru
+URL:https://deloskop.ru/
+URL:https://vk.com/deloskop_ru
+PHOTO;VALUE=URI:https://deloskop.ru/ikonka-512.png
+NOTE:Компания глазами банка и налоговой: проверка по ИНН за минуту.
+END:VCARD

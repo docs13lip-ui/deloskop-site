@@ -149,9 +149,11 @@ def podval_html(r):
         cols.append('<nav class="podval__col" aria-label="%s"><p class="podval__h">%s</p><ul>%s</ul></nav>' % (e(zag), e(zag), li))
     stroka = "© 2026 Делоскоп"
     if r["_est"]:
-        stroka += " · ИП %s · ИНН %s · ОГРНИП %s" % (e(r["fio"]), e(r["inn"]), e(r["ogrnip"]))
+        # rekv-podval-v2 (владелец 11.10): в подвале — только ОГРНИП; ФИО и ИНН — на /oferta/ и /rekvizity/ (ссылка «Реквизиты»)
+        stroka += " · ОГРНИП %s" % e(r["ogrnip"])
         if r.get("_gorod"):
             stroka += " · " + gorod(r)
+        stroka += ' · <a href="/rekvizity/">Реквизиты</a>'
     return ('<!--podval--><div class="podval" role="contentinfo"><div class="podval__in">'
             '<div class="podval__cols">' + "".join(cols) + '</div>'
             '<div class="podval__niz"><p>' + stroka + '</p>'

@@ -50,7 +50,7 @@ ok('данные: обычная цена «Старта» до включени
 ok('данные: Про, Бизнес, разовый Паспорт — без изменений', [(t['mesyac'], t['god']) for t in D['tarify'] if t['id'] in ('pro', 'biznes')] == [(1490, 14300), (4990, 47900)]
    and D['pasport_razovyj']['cena_rub'] == 490)
 ok(f'срок: до {STV.SROK_RESHENIYA:%d.%m.%Y} владелец решает цену «Старта» с 2027 года (снять поле startovaya или новое решение)',
-   datetime.date.today() < STV.SROK_RESHENIYA)
+   STV.segodnya_msk() < STV.SROK_RESHENIYA)
 
 # ---------- сейчас ----------
 pg = rd(R, 'tarify/index.html')
@@ -58,6 +58,21 @@ of = rd(R, 'oferta/index.html')
 if not STV.aktivna(D):
     ok('сейчас: стартовая цена не включена — на /tarify/ строки нет, «Старт» 490 ₽', 'class="startovaya"' not in pg and '<b data-m="490&nbsp;₽"' in kartochka_starta(pg).replace(STV.NB, '&nbsp;'))  # oplata-schet-v1: крупно — месяц или «за год», цена месяца — в data-m
     ok('сейчас: в оферте п. 3.9 ещё нет — появится вместе с ценой', 'id="start"' not in of)
+    # start390-beta-v1 ([Тестировщик] 10.10): в бете — та же стартовая цена, что в отчёте (js/pasport-cta.js), строкой «После беты»
+    st0 = STV.start(D).get('startovaya') or {}
+    if D.get('beta') is True and st0.get('vklyuchit') is True and st0.get('god_soglasovan') is True:
+        kb = kartochka_starta(pg).replace(STV.NB, '&nbsp;')
+        ok('сейчас (бета): под «Стартом» — «Стартовая цена после беты — 390 ₽ … 3 700 ₽ за год», только в блоке беты',
+           '<!--v-bete--><p class="startovaya startovaya-beta"><b>Стартовая цена после беты&nbsp;— 390&nbsp;₽ в&nbsp;месяц '
+           'или 3&nbsp;700&nbsp;₽ за&nbsp;год</b>' in kb)
+        # start390-glavnaya-v1 ([Ночные запуски] 10.10 21:05): главная «Сколько стоит» — та же стартовая цена, один раз, сразу под строкой цен
+        gl = rd(R, 'index.html').replace(STV.NB, '&nbsp;')
+        ok('сейчас (бета): главная — под строкой цен «Стартовая цена «Старта» после беты — 390 ₽ … 3 700 ₽ за год, если первая оплата до 31 декабря 2026 года.»',
+           gl.count('<!--start-gl-->') == 1 and re.search(r'data-ceny-stroka>[^\n]*?</p><!--start-gl--><p class="startovaya-gl">Стартовая цена «Старта» после беты&nbsp;— '
+                                                         r'390&nbsp;₽ в&nbsp;месяц или 3&nbsp;700&nbsp;₽ за&nbsp;год, если первая оплата до&nbsp;31&nbsp;декабря 2026&nbsp;года\.</p>', gl))
+        ok('сейчас (бета): строка главной без «скидк», «было», таймеров (38-ФЗ)',
+           not re.search(r'скидк|было|осталось', re.search(r'<!--start-gl-->.*?<!--/start-gl-->', gl).group(0), re.I))
+        ok('сейчас (бета): после окна первой оплаты строки нет нигде', STV.stroka_glavnaya_beta(D, datetime.date(2027, 1, 1)) == '')
 else:
     ok('после включения: строка на /tarify/ и п. 3.9 в оферте', 'class="startovaya"' in pg and '<li id="start">' in of)
 
@@ -91,10 +106,11 @@ try:
         T2 = STV.start(D2)
         ok('репетиция: tarify.json — «Старт» 390 / 3 700 ₽, прежняя цена и дата включения записаны',
            (T2['mesyac'], T2['god']) == (390, 3700) and T2['startovaya']['obychnaya'] == {'mesyac': 490, 'god': 4700}
-           and T2['startovaya']['primenena'] == datetime.date.today().isoformat())
+           and T2['startovaya']['primenena'] == STV.segodnya_msk().isoformat())
         ok('репетиция: tarify.json изменился только в строке «Старта»',
            len([1 for a, b in zip(rd(R, 'tarify/tarify.json').split('\n'), rd(K, 'tarify/tarify.json').split('\n')) if a != b]) == 3)
         pg2, of2, gl2 = rd(K, 'tarify/index.html'), rd(K, 'oferta/index.html'), rd(K, 'index.html')
+        ok('репетиция: главная без строки «после беты» — цена «Старта» уже 390 ₽ в самой строке цен', '<!--start-gl-->' not in gl2)
         kar = kartochka_starta(pg2).replace(STV.NB, '&nbsp;')
         ok('репетиция: /tarify/ — 390 ₽ крупно, год 3 700 ₽, экономия 980 ₽',
            '<b data-m="390&nbsp;₽"' in kar and 'или 3&nbsp;700&nbsp;₽ за год — экономия 980&nbsp;₽' in kar
@@ -111,7 +127,7 @@ try:
                                       'Если мы станем плательщиком НДС, стартовая цена будет включать налог.')))
         ok('репетиция: оферта — счета-фактуры «пока действует освобождение» ([Право] 1.4)', 'Пока действует освобождение, счета-фактуры не&nbsp;выставляются.' in of2
            and 'п.&nbsp;1 ст.&nbsp;145 НК РФ. Счета-фактуры' not in of2)
-        seg = datetime.date.today()
+        seg = STV.segodnya_msk()
         ok('репетиция: оферта — новая дата редакции и dateModified',
            f'Редакция от {seg.day} {STV.MES[seg.month - 1]} {seg.year}' in of2 and f'"dateModified": "{seg.isoformat()}"' in of2)
         snimok = {p: rd(K, p) for p in ('tarify/tarify.json', 'tarify/index.html', 'oferta/index.html', 'index.html')}

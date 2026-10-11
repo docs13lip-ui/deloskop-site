@@ -13,8 +13,9 @@ const G = chitat('index.html');
 const MAIN = vidimoe(G.slice(G.indexOf('<main'), G.indexOf('</main>')));
 const tekst = (t) => t.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;|\u00a0/g, ' ');
 
-test('порядок блоков: hero → входы → Щит → разборы → ошибка → доверие → цены → вопросы', () => {
-  const ids = ['class="hero"', 'id="vhody"', 'id="shield"', 'id="praktika"', 'id="oshibka"', 'id="doverie"', 'id="price"', 'id="faq"'];
+test('порядок блоков: hero → входы → Щит → разборы → «платят позже» → ошибка → доверие → цены → вопросы', () => {
+  // platyat-pozzhe-v1: «Контрагенты стали платить позже» — между разборами и калькулятором; при устаревшей сверке сборщик его убирает
+  const ids = ['class="hero"', 'id="vhody"', 'id="shield"', 'id="praktika"'].concat(MAIN.includes('id="rynok"') ? ['id="rynok"'] : [], ['id="oshibka"', 'id="doverie"', 'id="price"', 'id="faq"']);
   const poz = ids.map((x) => MAIN.indexOf(x));
   assert.ok(poz.every((p) => p > 0), 'все блоки на месте: ' + ids.filter((x, i) => poz[i] < 0).join(', '));
   assert.deepStrictEqual([...poz].sort((a, b) => a - b), poz);

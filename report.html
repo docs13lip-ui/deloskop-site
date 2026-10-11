@@ -455,7 +455,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
          (D.concerns.length?'<div class="box minus"><h3>На что обратить внимание</h3>'+lst(D.concerns)+'</div>':'<div class="box minus"><h3>На что обратить внимание</h3><ul><li>Существенных замечаний нет</li></ul></div>')+'</div>';
     if(ZSK)h+=zskHtml(ZSK);
     // «Что изменилось с вашей проверки» + «Динамика за 3–5 лет» (js/dinamika.js; нет модуля — блоков нет)
-    if(window.Dinamika)h+=Dinamika.html(R,{balans:false});
+    if(window.Dinamika)h+=Dinamika.html(R,{balans:false,dokument:true});
     // staraya-otchetnost-v1: KPI за старый год — с той же строкой, что на экране (если таблицы динамики нет, строки ещё не было)
     var stO=window.Dinamika&&Dinamika.staraya?Dinamika.staraya(R):null;
     if(stO&&D.kpi&&D.kpi.length&&h.indexOf('din__star')<0)h+='<p class="din__star" style="margin:20px 0 0;padding:10px 12px;border-radius:10px;background:#FFF4E0;color:#9A5B00;font-size:14px">'+esc(stO.tekst)+'</p>';
@@ -480,7 +480,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
     var link=location.origin+'/report.html?id='+encodeURIComponent(id);
     document.title='Досье: '+(c.name_short||name)+' — Делоскоп';
     var rows=[['Полное наименование',c.name_full],['ИНН',c.inn],['КПП',c.kpp],[c.kind==='INDIVIDUAL'?'ОГРНИП':'ОГРН',c.ogrn],
-      ['Статус',window.StatusKod&&c.status?StatusKod.izOtveta(c,{zaglavnaya:true}):(ST[c.status]||c.status)],['Дата регистрации',d(c.reg_date)],['Адрес',c.address],
+      ['Статус',(window.StatusKod&&c.status?StatusKod.izOtveta(c,{zaglavnaya:true}):(ST[c.status]||c.status))+(window.StatusKod&&StatusKod.reorgForma&&StatusKod.reorgForma(c.status,c.state_code)?' — '+StatusKod.reorgForma(c.status,c.state_code):'')],['Дата регистрации',d(c.reg_date)],['Адрес',c.address],
       [c.kind==='INDIVIDUAL'?'Предприниматель':(c.director_post||'Руководитель'),c.director_name],
       ['Основной вид деятельности',c.okved?(c.okved+(c.okved_name?' — '+c.okved_name:'')):'']]
       .filter(function(x){return x[1]}).map(function(x){return '<tr><th>'+esc(x[0])+'</th><td>'+esc(x[1])+'</td></tr>'}).join('');
@@ -491,7 +491,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
     var D=r.dossier; ZSK=r.zsk; R=r;
     doc.innerHTML=
       '<div class="dhead"><div class="brand">'+LOGO+'делоскоп</div><div class="dtitle"><b>Досье контрагента</b>№ '+esc(id)+'<br>Сформировано '+at.toLocaleDateString('ru-RU',{timeZone:'Europe/Moscow'})+' в '+at.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Moscow'})+' (МСК)</div></div>'+
-      '<h1>'+esc(c.name_short||name)+'</h1><div class="sub">ИНН '+esc(c.inn)+(c.status?' · '+esc(window.StatusKod?StatusKod.izOtveta(c):(ST[c.status]||c.status).toLowerCase()):'')+'</div>'+
+      '<h1>'+esc(c.name_short||name)+'</h1><div class="sub">ИНН '+esc(c.inn)+(c.status?' · '+esc(window.StatusKod?StatusKod.izOtveta(c):(ST[c.status]||c.status).toLowerCase())+(window.StatusKod&&StatusKod.reorgForma&&StatusKod.reorgForma(c.status,c.state_code)?' ('+esc(StatusKod.reorgForma(c.status,c.state_code))+')':''):'')+'</div>'+
       '<div class="risk '+lvl+'"><b>'+esc({low:'Без серьёзных сигналов',medium:'Есть вопросы',high:'Есть серьёзные сигналы'}[r.risk_level]||'')+'</b><span>'+esc(r.verdict||'')+'</span></div>'+
       (D?dossierHtml(D):'<h2>Сведения о компании</h2><table>'+rows+'</table>')+
       '<h2>Светофор по признакам риска</h2><table class="sig">'+sig+'</table>'+

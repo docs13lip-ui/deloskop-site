@@ -35,7 +35,10 @@
       (p ? '<button class="b1" type="button" data-pdf>Скачать PDF</button>' : "") + "</div>";
     if (!p) { box.innerHTML = pan + plash + list(d, null); return; }
     box.innerHTML = pan + plash + (akt ? aktHtml(d) : list(d, b)) +
-      (akt || d.status === "annulirovan" ? "" : '<div class="kop"><button class="b2" type="button" data-kop="nazn">Скопировать назначение платежа</button> <button class="b2" type="button" data-kop="rekv">Скопировать реквизиты</button></div>');
+      (akt || d.status === "annulirovan" ? "" : '<div class="kop"><button class="b2" type="button" data-kop="nazn">Скопировать назначение платежа</button> <button class="b2" type="button" data-kop="rekv">Скопировать реквизиты</button></div>') +
+      (akt ? "" : buhHtml(d));
+    buhStart(d);
+    oplachenCel(d);
     var pdf = box.querySelector("[data-pdf]");
     if (pdf) pdf.onclick = function () { window.print(); };
     [].forEach.call(box.querySelectorAll("[data-kop]"), function (x) {
@@ -68,9 +71,80 @@
       '<p class="prop">Всего наименований ' + d.stroki.length + ", на сумму " + den(d.itogo) + " руб.<br><b>" + esc(S.propis(d.itogo)) + "</b></p>" +
       '<p class="prop">' + esc(d.nds_tekst) + ". Счёт действителен до " + S.ddmm(d.oplatit_do) + ".</p>" +
       (p ? '<div class="nazn"><b>Назначение платежа:</b> ' + esc(d.naznachenie) + "</div>" : "") +
+      (b ? qrHtml(d, p, b, pk) : "") +
       (p ? '<div class="podp"><div>Индивидуальный предприниматель</div><div>' + esc(fioKorotko(p.fio)) + "</div></div>" : "") +
       '<p class="mel">Оплата только с расчётного счёта организации или ИП. Оплата счёта — акцепт оферты deloskop.ru/oferta/' + esc(redakciya()) + ' (п. 3 ст. 438 ГК РФ). ' +
       (d.srok === "razovo" && d.vid === "usluga" ? "Пакет выдаём не позднее 1 рабочего дня после оплаты, анкеты и выписки (раздел 5 оферты)." : "Доступ открывается не позднее рабочего дня, следующего за днём зачисления оплаты, на срок тарифа.") + "</p></div>";
+  }
+
+  // schet-konversiya-v1 (решение владельца 10.10, п. 3): QR по ГОСТ Р 56042-2014 — на неоплаченном счёте, на экране и в PDF.
+  // Строку собирает js/qr-platezh.js только из данных самого счёта: сумма и назначение — те же, что в счёте (правило О1 [Право]).
+  function qrHtml(d, p, b, pk) {
+    if (d.status === "oplachen" || d.status === "annulirovan" || !window.DeloskopQR) return "";
+    var s = window.DeloskopQR.stroka({ name: "ИП " + p.fio, rs: b.rs, bank: b.bank, bik: b.bik, ks: b.ks, summa: d.itogo, naznachenie: d.naznachenie, inn: p.inn, inn_platelshchika: pk && pk.inn });
+    var kartinka = s && window.DeloskopQR.svg(s, "QR-код для оплаты счёта № " + esc(d.nomer));
+    if (!kartinka) return "";
+    return '<div class="qrp"><div class="qrp__k">' + kartinka + '</div><div class="qrp__t"><b>Оплата по QR-коду</b>' +
+      "В приложении банка выберите оплату по QR и наведите камеру: получатель, сумма и назначение платежа заполнятся сами. Перед отправкой сверьте их со счётом.</div></div>";
+  }
+
+  // «Отправить счёт бухгалтеру» — тексты [Право] 10.10 (разд. 7). Форма появляется, только когда API отдаёт buhgalteru: true:
+  // до выкладки API-части (письмо, хранение адреса 30 дней) кнопки нет — мёртвых кнопок на сайте не держим.
+  // Почта бухгалтера в Метрику не уходит: цель без параметров из поля (tests/schet_konversiya.test.js).
+  var BUH = {
+    zagolovok: "Отправить счёт бухгалтеру",
+    lid: "Пришлём бухгалтеру одно письмо: счёт в PDF с QR-кодом для оплаты. Без рассылок, адрес удалим через 30\u00a0дней.",
+    pole: "Почта бухгалтера",
+    soglasie: "Подтверждаю, что бухгалтер согласен получить счёт на этот адрес",
+    knopka: "Отправить счёт бухгалтеру",
+    idet: "Отправляем…",
+    ok: "Отправили на {email}. Если письма нет 10\u00a0минут — пусть бухгалтер проверит «Спам».",
+    net_pochty: "Введите почту бухгалтера",
+    plohaya_pochta: "Проверьте адрес почты",
+    net_soglasiya: "Отметьте, что бухгалтер согласен получить счёт",
+    mnogo: "Слишком много отправок подряд. Попробуйте позже.",
+    oshibka: "Не получилось отправить. Скачайте PDF и перешлите его сами — или напишите на help@deloskop.ru."
+  };
+  function buhHtml(d) {
+    if (d.buhgalteru !== true || d.status === "oplachen" || d.status === "annulirovan" || d.status === "zayavka" || !d.prodavec) return "";
+    return '<form class="buh" id="buhgalteru" data-buh novalidate><h2>' + BUH.zagolovok + '</h2><p class="buh__lid">' + BUH.lid + "</p>" +
+      '<label class="buh__pole"><span>' + BUH.pole + '</span><input type="email" name="email" inputmode="email" autocomplete="off" maxlength="254" spellcheck="false" required></label>' +
+      '<label class="buh__sogl"><input type="checkbox" name="soglasie" required><span>' + BUH.soglasie + "</span></label>" +
+      '<div class="buh__niz"><button class="b1" type="submit">' + BUH.knopka + '</button><p class="buh__st" role="status" aria-live="polite"></p></div></form>';
+  }
+  function buhStart(d) {
+    var f = box.querySelector("[data-buh]"); if (!f) return;
+    var em = f.elements.email, sg = f.elements.soglasie, go = f.querySelector("button"), st = f.querySelector(".buh__st");
+    function skazat(t, plokho) { st.textContent = t; st.className = "buh__st" + (plokho ? " buh__st--net" : ""); }
+    f.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var v = em.value.trim();
+      if (!v) { skazat(BUH.net_pochty, true); return em.focus(); }
+      if (!window.DeloskopSchet.api.emailOk(v)) { skazat(BUH.plohaya_pochta, true); return em.focus(); }
+      if (!sg.checked) { skazat(BUH.net_soglasiya, true); return sg.focus(); }
+      go.disabled = true; em.disabled = true; sg.disabled = true; skazat(BUH.idet);
+      fetch(API + "/api/schet/buhgalteru", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ n: n, k: k, email: v, soglasie: true }) })
+        .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { r: r, j: j }; }); })
+        .then(function (o) {
+          if (o.r.ok && o.j.ok) {
+            skazat(BUH.ok.replace("{email}", v));
+            if (window.dlkGoal) window.dlkGoal("schet_buhgalteru", { mesto: "schet" });
+            return;
+          }
+          go.disabled = false; em.disabled = false; sg.disabled = false;
+          if (o.r.status === 422 && o.j.pole === "email") { skazat(BUH.plohaya_pochta, true); return em.focus(); }
+          skazat(o.r.status === 429 ? (o.j.detail || BUH.mnogo) : BUH.oshibka, true);
+        })
+        .catch(function () { go.disabled = false; em.disabled = false; sg.disabled = false; skazat(BUH.oshibka, true); });
+    });
+    // ссылка «Отправить бухгалтеру ещё раз» из письма-напоминания ведёт на #buhgalteru
+    if (location.hash === "#buhgalteru") { f.scrollIntoView({ block: "center" }); try { em.focus({ preventScroll: true }); } catch (e) {} }
+  }
+  // цель «счёт оплачен» — один раз на счёт в этом браузере, без номера и сумм
+  function oplachenCel(d) {
+    if (d.status !== "oplachen" || !window.dlkGoal) return;
+    try { if (localStorage.getItem("dlk_oplachen_" + n)) return; localStorage.setItem("dlk_oplachen_" + n, "1"); } catch (e) { return; }
+    window.dlkGoal("schet_oplachen", { produkt: String(d.produkt || ""), vid: d.srok === "razovo" ? "razovo" : "tarif" });
   }
 
   // schet-v2: разовые продукты. Услуга («Скорая под ключ») — акт на дату выдачи пакета; лицензия — на дату оплаты.

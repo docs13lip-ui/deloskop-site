@@ -104,6 +104,7 @@
     if (!kak || !kak.kak) return '';
     return '<section class="ot-sc" id="ot-kak" aria-labelledby="ot-kak-h"><h3 id="ot-kak-h">Как посчитали предел</h3>' +
       '<p class="n">' + esc(kak.kak) + '</p>' + (kak.ne ? '<p class="ot-ne n">' + esc(kak.ne) + '</p>' : '') +
+      (kak.ssylka ? '<p class="n" data-ot="bank"><a href="' + esc(kak.ssylka.u) + '" target="_blank" rel="noopener">' + esc(kak.ssylka.t) + ' →</a></p>' : '') +
       '<p class="ot-cap">Ориентир Делоскопа, не норма закона. <a href="/indeks/#predoplata">Открытая формула предела</a>' + (statya ? '; пример — в разборе <a href="' + esc(statya) + '">«Сколько платить вперёд незнакомой компании»</a>' : '') + '.</p></section>';
   }
 

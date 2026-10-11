@@ -176,6 +176,40 @@ IMENA_TOCHNO = {
     "РОССЕТИ СЕВЕРНЫЙ КАВКАЗ": "Россети Северный Кавказ",
     # kartochki-1010c-n2: «Томск» — топоним (правило регистра давало «Россети томск»)
     "РОССЕТИ ТОМСК": "Россети Томск",
+    # kartochki-1010e-n2: топонимы с прописной — «Янтарь» (бренд Калининградской сети), «Ростов-на-Дону», «Ярославль»;
+    # «энерго» и «межрегионгаз» — строчными, как пишут сами компании
+    "РОССЕТИ ЯНТАРЬ": "Россети Янтарь",
+    "ТНС ЭНЕРГО РОСТОВ-НА-ДОНУ": "ТНС энерго Ростов-на-Дону",
+    "ГАЗПРОМ МЕЖРЕГИОНГАЗ ЯРОСЛАВЛЬ": "Газпром межрегионгаз Ярославль",
+    # kartochki-1010f-n2: топонимы с прописной — «Воронеж», «Кубань», «Тюмень»; «энерго» — строчными, как у ТНС энерго
+    "ТНС ЭНЕРГО ВОРОНЕЖ": "ТНС энерго Воронеж",
+    "ТНС ЭНЕРГО КУБАНЬ": "ТНС энерго Кубань",
+    "РОССЕТИ ТЮМЕНЬ": "Россети Тюмень",
+    # kartochki-1010g-n2: топоним «Санкт-Петербург» и имя собственное «Росэнергоатом» — с прописной; «Рус» — слово, не
+    # аббревиатура (правило «≤ 3 букв» давало «РУС»); СЭРК — аббревиатура с гласной (правило регистра давало «Сэрк»)
+    "ГАЗПРОМ ТРАНСГАЗ САНКТ-ПЕТЕРБУРГ": "Газпром трансгаз Санкт-Петербург",
+    "КОНЦЕРН РОСЭНЕРГОАТОМ": "Концерн Росэнергоатом",
+    "БУРГЕР РУС": "Бургер Рус",
+    "СЭРК": "СЭРК",
+    # kartochki-1110a-n2: внутренняя прописная («ТрансКонтейнер»), топоним «Москва» с прописной, аббревиатуры с гласной
+    # (ТВЭЛ, РАО — правило регистра давало «Твэл», «рао»); составное имя — через тире по типографике сайта
+    "ТРАНСКОНТЕЙНЕР": "ТрансКонтейнер",
+    "ГАЗПРОМ ТРАНСГАЗ МОСКВА": "Газпром трансгаз Москва",
+    "ТВЭЛ": "ТВЭЛ",
+    "ИНТЕР РАО-ЭЛЕКТРОГЕНЕРАЦИЯ": "Интер РАО — Электрогенерация",
+    # kartochki-1110b-n2: топонимы с прописной («Санкт-Петербург(а)», «Уренгой», «Ямбург», «Югорск», «Западная Сибирь»),
+    # часть после дефиса у дочерних «Лукойла» — с прописной (как «Лукойл» на карточке ПАО); СПб и СЗ — сокращения
+    "ГАЗПРОМ МЕЖРЕГИОНГАЗ САНКТ-ПЕТЕРБУРГ": "Газпром межрегионгаз Санкт-Петербург",
+    "ТЕПЛОСЕТЬ САНКТ-ПЕТЕРБУРГА": "Теплосеть Санкт-Петербурга",
+    "МОРПОРТ СПБ": "Морпорт СПб",
+    "ЛСР. НЕДВИЖИМОСТЬ-СЗ": "ЛСР. Недвижимость-СЗ",
+    "ЛУКОЙЛ-ЗАПАДНАЯ СИБИРЬ": "Лукойл-Западная Сибирь",
+    "ЛУКОЙЛ-ВОЛГОГРАДНЕФТЕПЕРЕРАБОТКА": "Лукойл-Волгограднефтепереработка",
+    "ГАЗПРОМ ДОБЫЧА УРЕНГОЙ": "Газпром добыча Уренгой",
+    "ГАЗПРОМ ДОБЫЧА ЯМБУРГ": "Газпром добыча Ямбург",
+    "ГАЗПРОМ ТРАНСГАЗ ЮГОРСК": "Газпром трансгаз Югорск",
+    # kartochki-1110c-n2: внутренние прописные — как пишет сама компания («ЛенСпецСМУ», СМУ — аббревиатура)
+    "ЭТАЛОН ЛЕНСПЕЦСМУ": "Эталон ЛенСпецСМУ",
 }
 
 
@@ -897,6 +931,96 @@ def vyvody(k):
     for x in itog:
         assert not STOP_SLOVA.search(x["tekst"]), x["tekst"]
     return itog[:6]
+
+
+# ---------------------------------------------------------------- «Разбор по цифрам» (razbor-cifry-v1, [Тестировщик] 10.10)
+# Находка 10.10: 5 случайных карточек совпадали по предложениям на 73–82 %, «Комментарий команды» — на 100 %
+# (общие тексты [Право] по типу признака). Здесь — 2–4 фразы только из цифр этой компании (ряд ГИР БО, прибыль,
+# штат, налоги): динамика за весь ряд, рентабельность год к году, выручка на сотрудника, налоги к выручке.
+# Это расчёт Делоскопа (◆), без оценок и советов: ни «хорошо», ни «плохо» — только что видно по отчётности.
+def _proc(x, znak=False):
+    """0.0072 → «0,7 %»; 0.153 → «15 %»; с неразрывным пробелом."""
+    v = x * 100
+    t = ("%.1f" % v) if abs(v) < 10 else ("%d" % round(v))
+    t = t.rstrip("0").rstrip(".") if "." in t else t
+    return ("+" if znak and v > 0 else "") + t.replace(".", ",").replace("-", "−") + NB + "%"
+
+
+def _raz(a, b):
+    """Во сколько раз b больше a: «2,3 раза», «2 раза», «5 раз», «22 раза»."""
+    r = b / a
+    if r < 10 and abs(r - round(r)) >= 0.05:
+        return ("%.1f" % r).replace(".", ",") + NB + "раза"
+    n = int(round(r))
+    return "%d%s%s" % (n, NB, plural(n, "раз", "раза", "раз"))
+
+
+def razbor_cifry(k):
+    """Список фраз (str, без HTML). Пусто — блока нет: на карточке без ряда ГИР БО не придумываем."""
+    out = []
+    ryad = [x for x in (k.get("finansy") or []) if x.get("dohod") and x["dohod"] > 0]
+    if len(ryad) >= 3 and str(k.get("finansy_istochnik") or "").startswith("ГИР БО"):
+        a, b = ryad[0], ryad[-1]
+        n = b["god"] - a["god"]
+        podryad, znak = 0, 0
+        for p0, p1 in zip(ryad[-2::-1], ryad[::-1]):          # с конца: сколько лет подряд в одну сторону
+            z = 1 if p1["dohod"] > p0["dohod"] else -1 if p1["dohod"] < p0["dohod"] else 0
+            if z == 0 or (znak and z != znak):
+                break
+            znak, podryad = z, podryad + 1
+        if b["dohod"] >= a["dohod"] * 1.05:
+            t = "За%s%d%s%s выручка выросла в%s%s: с%s%s в%s%d до%s%s в%s%d" % (
+                NB, n, NB, plural(n, "год", "года", "лет"), NB, _raz(a["dohod"], b["dohod"]), NB, dengi(a["dohod"]), NB,
+                a["god"], NB, dengi(b["dohod"]), NB, b["god"])
+        elif b["dohod"] <= a["dohod"] * 0.95:
+            t = "За%s%d%s%s выручка снизилась на%s%s: с%s%s в%s%d до%s%s в%s%d" % (
+                NB, n, NB, plural(n, "год", "года", "лет"), NB, _proc(1 - b["dohod"] / a["dohod"]), NB, dengi(a["dohod"]), NB,
+                a["god"], NB, dengi(b["dohod"]), NB, b["god"])
+        else:
+            t = "За%s%d%s%s выручка почти не изменилась: %s в%s%d и%s%s в%s%d" % (
+                NB, n, NB, plural(n, "год", "года", "лет"), dengi(a["dohod"]), NB, a["god"], NB, dengi(b["dohod"]), NB, b["god"])
+        if podryad >= 3:
+            t += "; %s%s%d%s%s подряд" % ("растёт" if znak > 0 else "снижается", NB, podryad, NB, plural(podryad, "год", "года", "лет"))
+        out.append(t + ".")
+    dohod = {x["god"]: x["dohod"] for x in ryad}
+    pr = k.get("pribyl_ryad") or {}
+    gody = sorted(g for g in pr if dohod.get(g))
+    if gody:
+        g1 = gody[-1]
+        m1 = pr[g1] / dohod[g1]
+        t = "Чистая рентабельность за%s%d — %s" % (NB, g1, _proc(m1))
+        if len(gody) >= 2 and gody[-2] == g1 - 1:
+            m0 = pr[g1 - 1] / dohod[g1 - 1]
+            t += ", годом раньше — %s" % _proc(m0)
+            if m0 > 0 and m1 < m0 * 0.7 and dohod[g1] > dohod[g1 - 1]:
+                t += ": выручка выросла, а прибыль на каждый рубль выручки — снизилась"
+            elif m0 > 0 and m1 > m0 * 1.3 and m1 > 0:
+                t += ": прибыль на каждый рубль выручки выросла"
+        out.append(t + ".")
+    F = k.get("fakty") or {}
+    sh = (F.get("shtat") or {}).get("znachenie")
+    d = (F.get("dohod") or {}).get("znachenie")
+    if sh and int(sh) >= 5 and d and d > 0:
+        out.append("Выручка на одного сотрудника — %s в год (штат %s%s%s)." % (dengi(d / int(sh)), f"{int(sh):,}".replace(",", NB), NB,
+                                                                               plural(int(sh), "человек", "человека", "человек")))
+    nl = (F.get("nalogi") or {}).get("znachenie")
+    if nl and nl > 0 and d and d > 0 and len(out) < 4:
+        out.append("Налоги и взносы — %s выручки за год." % _proc(nl / d))
+    for x in out:
+        assert not STOP_SLOVA.search(x), x
+    return out[:4]
+
+
+def razbor_html(k):
+    f = razbor_cifry(k)
+    if len(f) < 2:
+        return ""
+    src = k.get("finansy_istochnik") or "ГИР БО, бухгалтерская отчётность"
+    return ('<section class="co-sec co-razbor" aria-labelledby="razbor"><h2 id="razbor">Разбор по цифрам</h2>'
+            '<ul class="co-vv">%s</ul><p class="caption">◆ рассчитано Делоскопом по данным: %s и открытые данные ФНС — '
+            'без оценки компании.</p></section>' % (
+                "".join('<li class="co-v co-v--info"><span class="co-v__z" aria-label="расчёт"></span><div><p>%s</p></div></li>'
+                        % e(x).replace("&nbsp;", NB) for x in f), e(src)))
 
 
 # ---------------------------------------------------------------- ворота
@@ -1629,7 +1753,7 @@ def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None):
 <div class="co-main">
 {ind}
 <section class="co-sec" aria-labelledby="korotko"><h2 id="korotko">Коротко о компании</h2><ul class="co-vv">{vv}</ul></section>
-<section class="co-sec co-pered" aria-labelledby="pered"><h2 id="pered">Перед оплатой</h2><ul>{pered}</ul></section>
+{razbor}<section class="co-sec co-pered" aria-labelledby="pered"><h2 id="pered">Перед оплатой</h2><ul>{pered}</ul></section>
 {daty}{fin}
 <section class="co-sec" aria-labelledby="reestry"><h2 id="reestry">Проверка по реестрам</h2>{stroki}{ne_blok}</section>
 {lyudi}
@@ -1648,7 +1772,7 @@ def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None):
         title=e(title(k)), desc=e(description(k, V)).replace("&nbsp;", NB), url=url,
         ld=json.dumps(ld, ensure_ascii=False, sort_keys=True).replace("</", "<\\/"), papka=PAPKA,
         kr_reg=(" › " + e(k["region"])) if k.get("region") else "", kr_razd=(" › " + e(razdel)) if razdel else "",
-        h1=e(nm), podzag=podzag, nb=NB, daty=daty_blok, okved_attr=(' data-okved="%s"' % okk) if okk else "", okved_str=okved_str, inn=k["inn"], ind=ind, vv=vv, pered=pered, fin=fin_blok, stroki="".join(stroki),
+        h1=e(nm), podzag=podzag, nb=NB, daty=daty_blok, okved_attr=(' data-okved="%s"' % okk) if okk else "", okved_str=okved_str, inn=k["inn"], ind=ind, vv=vv, razbor=razbor_html(k), pered=pered, fin=fin_blok, stroki="".join(stroki),
         ne_blok=ne_blok, lyudi=lyudi, sos=sos, tema=urllib.parse.quote("Ошибка в карточке ИНН " + k["inn"]),
         sobrano=data_tekst(k.get("proverka")) if k.get("proverka") else ""))
 

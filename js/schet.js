@@ -296,6 +296,7 @@
 
     function uspeh(j, z) {
       if (window.dlkGoal) window.dlkGoal("invoice_created", { nomer: String(j.nomer || ""), produkt: z.produkt || z.tarif });
+      if (window.dlkGoal) window.dlkGoal("schet_zapros", { produkt: z.produkt || z.tarif, sost: j.gotov ? "gotov" : "zayavka" });
       var h = j.gotov ? "Счёт № " + j.nomer + " готов" : "Заявка № " + j.nomer + " принята";
       var tekst = j.gotov
         ? "Откройте счёт, скачайте PDF и оплатите с расчётного счёта. В назначении платежа — номер счёта: так мы найдём ваш платёж без уточнений." + (j.pismo ? " Копию отправили на " + esc(j.email) + ". Если письма нет 10 минут — проверьте «Спам»." : "")
@@ -305,6 +306,8 @@
         '<p class="sf-lead">' + esc(j.pokupatel || "") + (z.produkt ? " · «" + esc(j.tarif) + "», разово" : " · тариф «" + esc(j.tarif) + "» · " + esc(SROK_TEKST[j.mesyacev] || "")) + " · " + rub(j.summa) + "</p>" +
         '<p style="font-size:15px;margin:0 0 6px">' + tekst + "</p>" +
         (j.gotov ? '<a class="sf-go" href="' + esc(j.url) + '" target="_blank" rel="noopener">Открыть счёт и скачать PDF</a>' : "") +
+        // schet-konversiya-v1: «Отправить счёт бухгалтеру» — только когда API это умеет (j.buhgalteru)
+        (j.gotov && j.buhgalteru === true ? '<a class="sf-go2" href="' + esc(j.url) + '#buhgalteru" target="_blank" rel="noopener">Отправить счёт бухгалтеру</a>' : "") +
         '<button type="button" class="' + (j.gotov ? "sf-go2" : "sf-go") + '" data-copy>Скопировать ссылку на счёт</button>' +
         '<p class="sf-mel">Нужен договор или счёт на другую компанию — напишите на <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>.</p>';
       f.querySelector("h3").focus();

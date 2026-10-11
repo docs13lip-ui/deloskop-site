@@ -97,7 +97,7 @@ for t in D['tarify']:
     badge = ' <span class="badge">Рекомендуем</span>' if t.get('rekomenduem') else ''
     cards.append(f'''<div class="plan{' pro' if t.get('rekomenduem') else ''}" id="t-{t['id']}">
   <div><div class="plan-name">{t['nazvanie']}{badge}</div><div class="plan-for">{html.escape(t['dlya'])}</div></div>
-  {price}{STV.stroka_tarify(t)}
+  {price}{STV.stroka_tarify(t)}{STV.stroka_tarify_beta(t) if D.get('beta') is True else ''}
   <ul>{''.join(li(x) for x in t['chto'])}</ul>
   {cta}
 </div>''')
@@ -429,6 +429,13 @@ _m = open(_mp, encoding='utf-8').read()
 # glavnaya-v2 (01.10): на главной больше нет карточек тарифов — только строка «Сколько стоит» с ценами
 # в узлах <span data-cena="<тариф>.mesyac|god"> (их заполняет цикл ниже, как на /osnovatel/). Кнопок оплаты на главной нет.
 _m = BETA.primenit(_m, D.get('beta') is True)
+# start390-glavnaya-v1 (10.10): в бете под строкой цен — стартовая цена «Старта», как на /tarify/ и в отчёте о проверке
+_m = _re.sub(r'<!--start-gl-->.*?<!--/start-gl-->', '', _m, flags=_re.S)
+_sgl = STV.stroka_glavnaya_beta(D)
+if _sgl:
+    _i = _m.index('<p class="lead" data-ceny-stroka>')
+    _j = _m.index('</p>', _i) + len('</p>')
+    _m = _m[:_j] + _sgl + _m[_j:]
 # glavnaya-v2: JSON-LD главной (Organization + FAQPage) — по видимым вопросам в текущем режиме (бета / оплата)
 def _ld_glavnoj(txt):
     vid = BETA.vidimoe(txt)

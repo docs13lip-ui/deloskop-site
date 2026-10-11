@@ -89,7 +89,7 @@ test('найденное во внешнем реестре — среди су�
 
 test('«не проверяли ≠ не нашли»: непроверенные источники названы, со ссылками «проверьте сами»', () => {
   const h = S.html(otvet());
-  assert.match(h, /Не проверяли в этот раз: арбитражные суды, банкротство, приставы, приостановки счетов, обеспечительные меры ФНС, РНП, госконтракты — источник временно недоступен\./);
+  assert.match(h, /Не ответили в\u00a0этот раз: арбитражные суды, банкротство, приставы, приостановки счетов, обеспечительные меры ФНС, РНП, госконтракты — источник временно недоступен\./);
   assert.match(h, /Не проверено — не значит «не обнаружено»/);
   assert.match(h, /<a href="https:\/\/kad\.arbitr\.ru\/" target="_blank" rel="noopener">проверьте сами<\/a>/);
   const r = otvet(); for (const k of Object.keys(r.damia)) if (r.damia[k].status) r.damia[k].status = 'not_found';
@@ -153,7 +153,7 @@ test('Щит: строки проверки свёрнуты в «Все дан�
   assert.strictEqual((h.match(/<h4>/g) || []).length, 1 + S.glubina(r).razdely.filter((s) => s.zag !== 'Ещё признаки').length);
   assert.ok(!/Ещё признаки/.test(h), 'признаки — одним разделом');
   assert.match(h, /Массовый адрес<small>ФНС, открытые данные · на\u00a001\.09\.2026<\/small>/);
-  assert.match(h, /Не проверяли в этот раз: /);
+  assert.match(h, /Не ответили в\u00a0этот раз: /);
   assert.match(h, /проверьте сами/, 'ссылка на сервис ЦБ у прогноза ЗСК');
   assert.ok(!/однодневк|NaN|undefined|\[object/.test(h));
 });
@@ -172,4 +172,19 @@ test('главная: в режиме «Щит» строки сворачива
   const i1 = ind.indexOf('shR=Shchit.mount(ub,r)'), i2 = ind.indexOf("Sushchestvennoe.mountSvoj(report.querySelector('.rows'),r,ub)");
   assert.ok(i1 > 0 && i2 > i1, 'после Shchit.mount');
   assert.match(ind, /if\(svoj&&shR&&window\.Sushchestvennoe\)\{try\{Sushchestvennoe\.mountSvoj/);
+});
+
+// [Право · Юрист 115-ФЗ] 11.10, разд. 2: «в этот раз» — только о сбое или лимите; «пока не проверяем» — без него
+test('«Не проверяли»: не подключённые — без «в этот раз», не ответившие — «в этот раз», разные причины — две строки', () => {
+  const nep = (r, ks) => { for (const k of ks) Object.assign(r.damia[k], { sostoyanie: 'not_checked', prichina: 'в открытой бете не подключён' }); return r; };
+  const vse = Object.keys(otvet().damia).filter((k) => otvet().damia[k].status === 'ne_provereno');
+  const h1 = S.html(nep(otvet(), vse)).replace(/\u00a0/g, ' ');
+  assert.match(h1, /<p class="sut__ne">Не проверяли: арбитражные суды, [^<]* — в открытой бете не подключён\. Не проверено — не значит/);
+  assert.ok(!/в этот раз/.test(h1), 'у не подключённых нет «в этот раз»');
+  const h2 = S.html(nep(otvet(), vse.slice(0, 2))).replace(/\u00a0/g, ' ');
+  assert.match(h2, /<p class="sut__ne">Пока не проверяем: [^.<]*\. Не ответили в этот раз: [^.<]*\. Не проверено — не значит/);
+  assert.ok(!/<p class="sut__ne">Не проверяли/.test(h2));
+  const h3 = S.htmlSvoj(nep(otvet(), vse)).replace(/\u00a0/g, ' ');
+  assert.match(h3, /Не проверяли: [^<]*«Внешние реестры»/);
+  assert.ok(!/в этот раз/.test(h3));
 });

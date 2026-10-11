@@ -247,6 +247,20 @@ footer a{color:var(--ink2)}
 .pr-gl span{font-size:14px;color:var(--ink2)}
 .praktika-gl .vse{margin-top:24px;font-weight:600}
 @media (max-width:860px){.pr-gl{grid-template-columns:1fr}}
+/* platyat-pozzhe-v1: «Контрагенты стали платить позже» — цифра рынка рядом с формулой предоплаты (без цвета тревоги, без графика) */
+.rynok{padding-bottom:0}
+.rynok__nad{font-size:13px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.rynok__g{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:24px clamp(32px,5vw,80px);align-items:start;margin-top:clamp(28px,3.5vw,44px)}
+.rynok__ch{display:flex;flex-direction:column;gap:10px}
+.rynok__ch b{align-self:flex-start;font-size:clamp(64px,8.4vw,128px);font-weight:600;line-height:.95;letter-spacing:-.045em;white-space:nowrap;font-variant-numeric:lining-nums proportional-nums}
+.rynok__ch span{font-size:clamp(17px,1.5vw,19px);color:var(--ink2);max-width:300px;line-height:1.4}
+.rynok__t{display:flex;flex-direction:column;gap:16px;max-width:640px}
+.rynok__t p{font-size:clamp(17px,1.4vw,18px);line-height:1.55}
+.rynok__go{font-weight:600}
+.rynok__t .rynok__ist{font-size:12.5px;line-height:1.45;color:var(--muted);padding-top:12px;border-top:1px solid var(--line)}
+.rynok__ist a{color:inherit;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:2px}
+.rynok__ist a:hover{color:var(--accent)}
+@media (max-width:860px){.rynok__g{grid-template-columns:1fr;gap:20px}}
 .oshibka{padding-block:0}
 .oshibka__in{display:flex;align-items:center;justify-content:space-between;gap:20px 40px;flex-wrap:wrap;background:var(--dark);color:#F5F5F7;border-radius:var(--r-lg);padding:clamp(24px,3vw,36px) clamp(24px,3.5vw,44px);margin-block:var(--sect)}
 .oshibka__in p{font-size:clamp(18px,1.7vw,21px);line-height:1.45;max-width:760px}
@@ -261,6 +275,7 @@ footer a{color:var(--ink2)}
 @media (max-width:1100px){.doverie .chips{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .chip{padding:16px 18px;font-size:15px}
 .ceny .lead{max-width:820px;margin-top:16px}
+.ceny .startovaya-gl{max-width:820px;margin:10px 0 0;font-size:14px;line-height:1.5;color:var(--muted)}
 .ceny p a{display:inline-block;margin-top:18px;font-weight:600}
 .yakor{position:absolute}
 </style>
@@ -455,6 +470,8 @@ footer a{color:var(--ink2)}
     </div>
   </section>
 
+  <!--rynok-glavnaya--><section class="sect rynok" id="rynok" aria-labelledby="rynok-h" data-rynok-do="2027-02-09"><div class="wrap"><div class="rynok__in"><div class="rynok__nad">Рынок сейчас</div><h2 class="h2" id="rynok-h">Контрагенты стали платить позже</h2><div class="rynok__g"><p class="rynok__ch"><b>≈&nbsp;1 из&nbsp;4</b><span>счетов в&nbsp;2026 году оплачивают с&nbsp;опозданием</span></p><div class="rynok__t"><p>Вовремя оплачивают чуть больше 70&nbsp;% счетов. Примерно каждый пятый приходит с&nbsp;опозданием до&nbsp;60&nbsp;дней, ещё 5–8&nbsp;%&nbsp;— позже. У&nbsp;малого бизнеса во&nbsp;втором квартале просрочек стало больше, чем в&nbsp;первом: +2,6&nbsp;п.&nbsp;п. до&nbsp;60&nbsp;дней и&nbsp;+3,4&nbsp;п.&nbsp;п.&nbsp;— дольше.</p><p>Поэтому проверка заканчивается не&nbsp;только словами «можно работать». Мы считаем, какую сумму разумно заплатить вперёд,&nbsp;— по&nbsp;выручке компании, Индексу и&nbsp;сигналам из&nbsp;реестров. Методика открыта.</p><p class="rynok__go"><a href="#check" data-focus-inn data-goal="platyat_pozzhe_klik">Проверить, сколько платить вперёд&nbsp;→</a></p><p class="rynok__ist">Источник: СПАРК-Интерфакс (доли счетов&nbsp;— за&nbsp;2026&nbsp;год, рост просрочек у&nbsp;малого бизнеса&nbsp;— II&nbsp;квартал к&nbsp;I); публикация «<a href="https://www.interfax.ru/business/1113862" target="_blank" rel="nofollow noopener">Интерфакса</a>» от&nbsp;8&nbsp;сентября 2026&nbsp;г. «Около четверти»&nbsp;— наш пересчёт: 20&nbsp;% + 5–8&nbsp;%.</p></div></div></div></div></section><script>(function(){try{var s=document.getElementById('rynok'),R={"tekst": "Для сравнения, по рынку в целом: около четверти счетов в\u00a02026 году оплачивают с\u00a0опозданием (СПАРК-Интерфакс). О платёжной дисциплине этой компании эта цифра ничего не говорит.", "do": "2027-02-09"};if(Date.now()>=Date.parse(R['do']+'T00:00:00+03:00')){if(s)s.hidden=true;window.DLK_RYNOK=null}else window.DLK_RYNOK=R}catch(e){}})()</script><!--/rynok-glavnaya-->
+
   <section class="oshibka" id="oshibka" aria-label="Сколько стоит ошибка">
     <div class="wrap">
       <div class="oshibka__in">
@@ -502,7 +519,7 @@ footer a{color:var(--ink2)}
     <div class="wrap">
       <h2 class="h2" id="ceny-h">Сколько стоит</h2>
       <!--oplata--><!--/oplata--><!--v-bete--><p class="lead">Сейчас открытая бета: все возможности бесплатно<span data-beta-srok="2026-10-13" data-beta-vkl> по&nbsp;13&nbsp;октября включительно</span>, счета не&nbsp;выставляем.</p><!--/v-bete-->
-      <p class="lead" data-ceny-stroka>Бесплатно&nbsp;— 3&nbsp;быстрые проверки в&nbsp;день. Старт&nbsp;— <span data-cena="start.mesyac">490</span>&nbsp;₽ в&nbsp;месяц, Про&nbsp;— <span data-cena="pro.mesyac">1 490</span>&nbsp;₽, Бизнес&nbsp;— <span data-cena="biznes.mesyac">4 990</span>&nbsp;₽. При оплате за&nbsp;год&nbsp;— на&nbsp;20% дешевле.</p>
+      <p class="lead" data-ceny-stroka>Бесплатно&nbsp;— 3&nbsp;быстрые проверки в&nbsp;день. Старт&nbsp;— <span data-cena="start.mesyac">490</span>&nbsp;₽ в&nbsp;месяц, Про&nbsp;— <span data-cena="pro.mesyac">1 490</span>&nbsp;₽, Бизнес&nbsp;— <span data-cena="biznes.mesyac">4 990</span>&nbsp;₽. При оплате за&nbsp;год&nbsp;— на&nbsp;20% дешевле.</p><!--start-gl--><p class="startovaya-gl">Стартовая цена «Старта» после беты&nbsp;— 390&nbsp;₽ в&nbsp;месяц или 3&nbsp;700&nbsp;₽ за&nbsp;год, если первая оплата до&nbsp;31&nbsp;декабря 2026&nbsp;года.</p><!--/start-gl-->
       <p><a href="/tarify/">Что входит в&nbsp;тарифы&nbsp;→</a></p>
     </div>
   </section>
@@ -561,6 +578,7 @@ footer a{color:var(--ink2)}
 <script src="/js/shchit.js" defer></script>
 <script src="/js/dinamika.js" defer></script>
 <script src="/js/nagruzka.js" defer></script>
+<script src="/js/nagruzka-proverka.js" defer></script>
 <script src="/js/rentabelnost.js" defer></script>
 <script src="/js/bez-nds.js" defer></script>
 <script src="/js/nds-porog.js" defer></script>
@@ -651,7 +669,7 @@ footer a{color:var(--ink2)}
     if(svoj&&ub){ub.className='';ub.removeAttribute('data-usl');try{shR=Shchit.mount(ub,r)}catch(e){ub.className='verdict';ub.textContent=r.verdict||''}}
     // Щит: строки светофора не повторяют разбор — свёрнуты в «Все данные из реестров» после него (js/sushchestvennoe.js)
     if(svoj&&shR&&window.Sushchestvennoe){try{Sushchestvennoe.mountSvoj(report.querySelector('.rows'),r,ub)}catch(e){}}
-    else if(window.Usloviya&&ub){ub.className='';ub.removeAttribute('data-usl');try{Usloviya.mount(ub,r)}catch(e){ub.className='verdict';ub.textContent=r.verdict||''}}
+    else if(window.Usloviya&&ub){ub.className='';ub.removeAttribute('data-usl');try{Usloviya.mount(ub,r,{rynok:window.DLK_RYNOK})}catch(e){ub.className='verdict';ub.textContent=r.verdict||''}}
     // подсказки к терминам (ЗСК, 54.1 НК, недостоверность…) — определения дословно из статей сайта, js/terminy.js
     if(window.Terminy)Terminy.mount(report);
     report.querySelector('[data-act="again"]').onclick=function(){input.value='';focusInn({preventDefault:function(){}})};
@@ -669,6 +687,8 @@ footer a{color:var(--ink2)}
     // «Что изменилось» с прошлой проверки из кабинета — на любом устройстве (вошедшим; js/dinamika.js)
     if(window.Dinamika&&Dinamika.dogruzit&&CAPI){try{Dinamika.dogruzit(report,r,{api:CAPI})}catch(e){}}
     // «Рентабельность активов против отрасли» — оценка по ГИР БО против нормы ФНС (приложение 4 к ММ-3-06/333@), после «Динамики»; js/rentabelnost.js
+    // «Налоги и взносы против отрасли» — оценка по открытым данным ФНС против нормы приложения 3 к ММ-3-06/333@ (+ взносы той же таблицы); js/nagruzka-proverka.js
+    if(window.NagruzkaProverka){try{NagruzkaProverka.mount(report,r).catch(function(){})}catch(e){}}
     if(window.Rentabelnost){try{Rentabelnost.mount(report,r).catch(function(){})}catch(e){}}
     // «НДС в 2027 году» — выручка 2025 года поставщика на упрощёнке рядом с порогом 20 млн ₽ (п. 1 ст. 145 НК), только к сведению; js/nds-porog.js
     if(!svoj&&window.NdsPorog){try{NdsPorog.mount(report,r)}catch(e){}}

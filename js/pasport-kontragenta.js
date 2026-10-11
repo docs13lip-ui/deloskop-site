@@ -17,8 +17,15 @@
 })(typeof self !== 'undefined' ? self : this, function (root) {
   'use strict';
   var NB = '\u00a0';
+  // pasport-skachok-v1: «выручка сократилась вдвое или больше» / «активы сократились…» / «выручка и активы сократились…» — только упавшие
+  function skVniz(fakty) {
+    var n = (fakty || []).filter(function (f) { return f && f.kRaz <= 0.5; }).map(function (f) { return f.k === 'revenue' ? 'выручка' : 'активы'; })
+      .filter(function (v, i, a) { return a.indexOf(v) === i; });
+    if (!n.length) return 'показатели отчётности сократились вдвое или больше';
+    return n.join(' и ') + (n.length === 1 && n[0] === 'выручка' ? ' сократилась' : ' сократились') + ' вдвое или больше';
+  }
 
-  var VERSIYA = 'Паспорт v2.11'; // v2.11 — управляющая организация вместо «Руководителя» и подписант по ней (upravlyayushchaya-v1); v2.10 — название с типографскими кавычками, буквы как в ЕГРЮЛ (kavychki-v1, js/imya.js); v2.9 — раздел 6: полоса «На чём держится компания» (pasport-polosa-v1); v2.8 — баланс и расчёты на 31.12
+  var VERSIYA = 'Паспорт v2.15'; // v2.15 — глубина из досье без повторов: инспекция, филиалы, «Руководит с», уставный капитал, ОКВЭД с названием, дополнительные виды и лицензии; KPI не дублируют баланс, «Долг перед бюджетом» без даты не выводим, крупные суммы — «5,85 трлн ₽ (точно …)» (pasport-glubina-v1); v2.14 — «Скачок в отчётности» в разделе 6, при падении — в «Главном» и «Что запросить» (pasport-skachok-v1); v2.13 — «Что сделать» кредитору в пределе аванса при ликвидации и исключении из ЕГРЮЛ (pasport-likvidaciya-v1); v2.12 — форма реорганизации по коду ЕГРЮЛ и «Правопреемник» в пределе аванса (pasport-reorg-v1); v2.11 — управляющая организация вместо «Руководителя» и подписант по ней (upravlyayushchaya-v1); v2.10 — название с типографскими кавычками, буквы как в ЕГРЮЛ (kavychki-v1, js/imya.js); v2.9 — раздел 6: полоса «На чём держится компания» (pasport-polosa-v1); v2.8 — баланс и расчёты на 31.12
   // Определение Индекса и подпись предела аванса — дословно [Юриста 115-ФЗ] 29.09 (222-ФЗ), разд. 3 пп. 1 и 4.
   var OPREDELENIE_INDEKSA = 'Индекс Делоскопа — оценка признаков риска для сделки по открытым и лицензированным данным: регистрационных, налоговых, признаков по 115-ФЗ и нарушений. Это не кредитный рейтинг и не мнение о способности компании исполнять финансовые обязательства.';
   var PODPIS_PREDELA = 'Сколько разумно платить вперёд с учётом найденных признаков — расчёт Делоскопа по открытой формуле. Это не оценка способности компании вернуть деньги.';
@@ -210,8 +217,38 @@
   function rub(v, U) {
     var n = Math.round(Math.abs(v));
     var s = U && U.money ? U.money(n) : n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' ₽';
-    return (v < 0 ? 'минус ' : '') + s;
+    return (v < 0 ? 'минус ' : '') + krupno(n, s);
   }
+  // pasport-glubina-v1 [Ночные-3] 11.10: 13-значную сумму в документе не прочитать («5 846 351 786 000 ₽» — живой ответ, раздел 6).
+  // От 1 млрд ₽ — сначала словами, как на экране проверки (Usloviya.moneyKrupno), точная сумма остаётся в скобках: «5,85 трлн ₽ (5 846 351 786 000 ₽)».
+  // Меньше 1 млрд — как было. Отпечаток считает строки как есть, поэтому версия документа поднята (v2.15).
+  function krupno(n, tochno) {
+    if (!(n >= 1e9)) return tochno;
+    var ed = n >= 1e12 ? [1e12, 'трлн'] : [1e9, 'млрд'], v = n / ed[0], zn = v < 10 ? 2 : 1;
+    var t = v.toFixed(zn).replace(/0+$/, '').replace(/\.$/, '').replace('.', ',');
+    return t + NB + ed[1] + NB + '₽ (' + tochno + ')';
+  }
+  // В ряду «Выручка по годам» точные суммы стоят в строках выше — здесь только словами: «2025 — 5,85 трлн ₽».
+  function krupnoKratko(v, U) {
+    var n = Math.round(Math.abs(Number(v) || 0)), t = U && U.money ? U.money(n) : n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' ₽';
+    return (Number(v) < 0 ? 'минус ' : '') + krupno(n, t).replace(/ \(.*\)$/, '');
+  }
+  // Строки раздела досье (dossier.sections[id].rows — пары [подпись, значение]) → { подпись: значение }; пустые — пропускаем.
+  function strokiDosje(D, id) {
+    var o = {};
+    ((D && Array.isArray(D.sections)) ? D.sections : []).forEach(function (sec) {
+      if (!sec || sec.id !== id || !Array.isArray(sec.rows)) return;
+      sec.rows.forEach(function (rw) {
+        var k = Array.isArray(rw) ? rw[0] : rw && (rw.label || rw.name), v = Array.isArray(rw) ? rw[1] : rw && rw.value;
+        if (k == null || v == null || String(v).trim() === '') return;
+        o[String(k).trim()] = String(v).trim();
+      });
+    });
+    return o;
+  }
+  // KPI досье, которые раздел 6 и так показывает строками баланса (balansFakty), — второй раз не выводим.
+  var KPI_IZ_BALANSA = { 'Собственный капитал': 'Собственный капитал', 'Фирме должны': 'Дебиторская задолженность (должны компании)',
+    'Фирма должна поставщикам': 'Кредиторская задолженность (должна компания)', 'Кредиты и займы': 'Кредиты и займы' };
   var CHASTI_BALANSA = [['kap', 'Собственный капитал', 'equity'], ['dol', 'Долгосрочные обязательства', 'long_debt'], ['kor', 'Краткосрочные обязательства', 'short_debt']];
   // Доли пассива — методом наибольшего остатка: три доли дают ровно 100 %. Только когда известны все три части и ни одна не меньше нуля
   // (иначе это не доля баланса). Один расчёт на строки раздела 6 и на полосу «На чём держится компания» — числа не расходятся.
@@ -301,9 +338,18 @@
     var R1 = [['Полное наименование', c.name_full], ['ИНН', c.inn], ['КПП', c.kpp], ['ОГРН', c.ogrn],
       ['Дата регистрации', dataRu(c.reg_date)], ['Адрес юридического лица', c.address]];
     R1.forEach(function (x) { if (x[1]) fakt('rekvizity', x[0], x[1], { ton: 'info', istochnik: 'ЕГРЮЛ' }); });
+    // pasport-glubina-v1: что досье уже знает из ЕГРЮЛ, а Паспорт не показывал — инспекция (куда идут требования и где сверять расчёты) и филиалы
+    var D0 = r.dossier || {}, PR = strokiDosje(D0, 'profile'), MG = strokiDosje(D0, 'management'), AK = strokiDosje(D0, 'activity');
+    if (PR['Налоговая инспекция']) fakt('rekvizity', 'Налоговая инспекция', PR['Налоговая инспекция'], { ton: 'info', istochnik: 'ЕГРЮЛ' });
+    if (/^[1-9]\d*$/.test(PR['Филиалы и представительства'] || '')) fakt('rekvizity', 'Филиалы и представительства', PR['Филиалы и представительства'], { ton: 'info', istochnik: 'ЕГРЮЛ' });
     // status-tochno-v1: код состояния ЕГРЮЛ → «Ликвидируется» / «Готовится исключение из ЕГРЮЛ» (js/status-kod.js)
     var SK = (root && root.StatusKod) || (function () { try { return typeof require === 'function' ? require('./status-kod.js') : null; } catch (e) { return null; } })();
     if (c.status) fakt('rekvizity', 'Статус', SK && SK.vid(c.status, c.state_code) ? SK.nazv(c.status, c.state_code, { zaglavnaya: true }) : (ST[c.status] || c.status), { ton: c.status === 'ACTIVE' ? 'ok' : 'bad', istochnik: 'ЕГРЮЛ' });
+    // pasport-reorg-v1 [Ночные-3] 10.10: форма реорганизации — по коду состояния ЕГРЮЛ (СЮЛСТ); без кода строки нет
+    // Если сервер уже прислал признак с названием формы из ЕГРЮЛ («…реорганизации в форме …») — строку не дублируем.
+    var forma = SK && SK.reorgForma ? SK.reorgForma(c.status, c.state_code) : '';
+    if (forma && (r.signals || []).some(function (s) { return /реорганизаци/i.test(String(s.detail || '')) && /в\s+форме|сочетани/i.test(String(s.detail || '')); })) forma = '';
+    if (forma) fakt('rekvizity', 'Форма реорганизации', forma + ' (код ' + SK.kod(c.state_code) + ' по справочнику СЮЛСТ ФНС)', { ton: 'warn', istochnik: 'ЕГРЮЛ' });
 
     // 8. Банкротство по ЕГРЮЛ (прочерки, 30.09): запись о банкротстве в ЕГРЮЛ — факт первоисточника.
     // Нет записи — раздел остаётся «не проверяли» (картотеку судов и Федресурс не смотрели), но говорим, что видно по ЕГРЮЛ.
@@ -315,8 +361,17 @@
     if (c.director_post || c.director_name)
       fakt('lyudi', c.director_post || 'Руководитель', (persons || c.director_org) ? (c.director_name || 'указан в ЕГРЮЛ') : 'указан в ЕГРЮЛ', { ton: 'info', istochnik: 'ЕГРЮЛ' }); // название управляющей организации — не персональные данные
 
-    // 5. Основной вид деятельности
-    if (c.okved) fakt('deyatelnost', 'Основной вид деятельности', c.okved + (c.okved_name ? ' — ' + c.okved_name : ''), { ton: 'info', istochnik: 'ЕГРЮЛ' });
+    // pasport-glubina-v1: срок руководителя — дата и стаж без ФИО; уставный капитал. Только при найденном руководителе/капитале в досье.
+    if (MG['Руководит с'] && /^\d{2}\.\d{2}\.\d{4}/.test(MG['Руководит с'])) fakt('lyudi', 'Руководит с', MG['Руководит с'], { ton: 'info', istochnik: 'ЕГРЮЛ' });
+    if (/\d/.test(MG['Уставный капитал'] || '')) fakt('lyudi', 'Уставный капитал', MG['Уставный капитал'], { ton: 'info', istochnik: 'ЕГРЮЛ' });
+
+    // 5. Основной вид деятельности — с названием: у сервера c.okved_name бывает пустым, а строка досье «46.71.4 — Торговля…» его знает
+    var okvNazv = c.okved_name || '';
+    var okvDosje = AK['Основной вид деятельности'] || '';
+    if (!okvNazv && c.okved && okvDosje.indexOf(c.okved + ' — ') === 0) okvNazv = okvDosje.slice(c.okved.length + 3);
+    if (c.okved) fakt('deyatelnost', 'Основной вид деятельности', c.okved + (okvNazv ? ' — ' + okvNazv : ''), { ton: 'info', istochnik: 'ЕГРЮЛ' });
+    if (/^\d+$/.test(AK['Дополнительных видов деятельности'] || '')) fakt('deyatelnost', 'Дополнительных видов деятельности', AK['Дополнительных видов деятельности'], { ton: 'info', istochnik: 'ЕГРЮЛ' });
+    if (/^[1-9]\d*$/.test(AK['Лицензии'] || '')) fakt('deyatelnost', 'Лицензии', AK['Лицензии'] + ' — перечень в' + NB + 'выписке ЕГРЮЛ', { ton: 'info', istochnik: 'ЕГРЮЛ' });
 
     // Признаки из реестров → по разделам
     var diskvalEst = false, neProv = {};
@@ -356,21 +411,40 @@
     // staraya-otchetnost-v1: последняя открытая отчётность старше (год проверки − 2) — первой строкой раздела, тоном «внимание»
     var stO = staraya(r);
     if (stO) fakt('finansy', 'Последняя открытая отчётность', stO.tekst.replace(/^Последняя открытая отчётность — /, ''), { ton: 'warn', data: stO.god + '-12-31', istochnik: 'ГИР БО, ФНС' });
+    var balansImena = {};                                     // строки баланса будут ниже — KPI с той же суммой не дублируем
+    balansFakty(D, function (tekst) { balansImena[tekst] = true; }, U);
     var godBal = D.charts && D.charts.balance && typeof D.charts.balance === 'object' ? parseInt(D.charts.balance.year, 10) : NaN;
     (D.kpi || []).forEach(function (k) {
       if (!k || !k.label) return;
-      var v = k.text || (typeof k.value === 'number' && U ? U.money(k.value) : k.value);
+      // pasport-glubina-v1: U.money отрезает знак (Math.max(0, …)) — убыток «−1,08 трлн» выходил «0 ₽»; rub() пишет «минус …»
+      var v = k.text || (typeof k.value === 'number' ? rub(k.value, U) : k.value);
       if (v == null || v === '') return;
       var nal = razdelDlya(k.label) === 'nalogi', mg = /за (\d{4})$/.exec(k.label);
+      // pasport-glubina-v1: KPI «Долг перед бюджетом» приходит без даты и с подписью «ГИР БО» — это не отчётность и не проверка (Ф8);
+      // долг по налогам Паспорт показывает строкой «Задолженность по налогам» из набора ФНС с датой — второй раз не выводим
+      if (nal && netBezDaty(k.label, v, 'info', null, 'ГИР БО, ФНС')) return;
+      if (KPI_IZ_BALANSA[k.label] && balansImena[KPI_IZ_BALANSA[k.label]]) return;
       // у финансовых KPI — дата отчётного года: «за ГГГГ» из подписи, у балансовых («Активы», «Собственный капитал») — год баланса
       var dk = nal ? null : mg ? mg[1] + '-12-31' : isFinite(godBal) && godBal > 1990 ? godBal + '-12-31' : null;
       fakt(nal ? 'nalogi' : 'finansy', k.label, v, { ton: 'info', istochnik: 'ГИР БО, ФНС', data: dk });
     });
     if (D.charts && D.charts.revenue && D.charts.revenue.length && U) {
-      var rv = D.charts.revenue.slice(-5).map(function (x) { return x.year + ' — ' + U.money(x.value); }).join(' · ');
+      var rv = D.charts.revenue.slice(-5).map(function (x) { return x.year + ' — ' + krupnoKratko(x.value, U); }).join(' · ');
       fakt('finansy', 'Выручка по годам', rv, { ton: 'info', istochnik: 'ГИР БО' });
     }
     balansFakty(D, function (tekst, znachenie, s) { fakt('finansy', tekst, znachenie, s); }, U);
+    // pasport-skachok-v1 [Ночные-3] 10.10: «Скачок в отчётности» — тот же расчёт и текст, что в «Динамике» экрана проверки
+    // (js/dinamika.js skachok: выручка или активы за последний год ×2 и больше / −50 % и больше, база от 1 млн ₽).
+    // Рост — справка (info), падение — «внимание»: попадает в «Главное» и в «Что запросить». Причину не утверждаем.
+    var DN = opts.dinamika || (root && root.Dinamika) || (function () { try { return typeof require === 'function' ? require('./dinamika.js') : null; } catch (e) { return null; } })();
+    var sk = null;
+    try { sk = DN && DN.skachok ? DN.skachok(r) : null; } catch (e) { sk = null; }
+    if (sk) {
+      var skGod = sk.fakty.reduce(function (m, f) { return f.god && f.god > m ? f.god : m; }, 0);
+      // при падении совет «спросите компанию» — строкой в «Что запросить», здесь и в «Главном» — только факты (итог короче)
+      fakt('finansy', 'Скачок в отчётности', sk.ton === 'warn' ? sk.fakty.map(function (f) { return f.tekst; }).join(' ') : sk.tekst, { ton: sk.ton === 'warn' ? 'warn' : 'info', istochnik: 'ГИР БО, ФНС; расчёт Делоскопа', data: skGod ? skGod + '-12-31' : null });
+      if (sk.ton === 'warn') fakt('zaprosit', 'Пояснение к отчётности', 'Попросите письменно объяснить, что изменилось в' + NB + (skGod || 'последнем') + NB + 'году: почему ' + skVniz(sk.fakty) + '.', { ton: 'warn', istochnik: 'ГИР БО, ФНС; ориентир Делоскопа' });
+    }
     // bank-girbo-v2 [Ночные-3] 04.10: у банка без отчётности в ответе ГИР БО причина «могла её не сдавать» неверна —
     // банк сдаёт её в Банк России, в ГИР БО её передаёт Банк России, доступ может быть ограничен (ч. 9 и 12 ст. 18 402-ФЗ).
     // Текст — [Право · Налоговый] 04.10 11:30 разд. 1.4 + 12:30 разд. 1 (как в «Существенных фактах»); «проверьте сами» — cbr.ru.
@@ -437,6 +511,14 @@
       if (kk && kk.kak) fakt('predel', 'Как посчитали', kk.kak.replace(/^Как посчитали:\s*/, ''), { ton: 'info', istochnik: 'формула Делоскопа' });
       if (kk && kk.ne) fakt('predel', 'Оговорка', kk.ne, { ton: 'warn', istochnik: 'формула Делоскопа' });
       if (kk && kk.url) map.predel.ssylka = kk.url;
+      // pasport-reorg-v1: компания прекратит существование после реорганизации — предел 0 до проверки правопреемника;
+      // что сделать — тот же текст, что в совете «Условий сделки» (позиция [Право] 10.10, reorg-pravopreemnik-v1)
+      if (U.reorgPrekr && U.REORG_SDELAT && u.facts && U.reorgPrekr(u.facts))
+        fakt('predel', 'Правопреемник', U.REORG_SDELAT + (U.REORG_DOLG ? ' ' + U.REORG_DOLG : ''), { ton: 'warn', istochnik: 'ЕГРЮЛ; п. 2 ст. 60 ГК РФ' });
+      // pasport-likvidaciya-v1 [Ночные-3] 10.10: ликвидация, предстоящее или состоявшееся исключение из ЕГРЮЛ (по коду состояния) —
+      // что делать кредитору: текст [Право] из справочника кодов (data/statusy-egryul.json → js/status-kod.js KREDITORU)
+      var kr = SK && SK.kreditoru ? SK.kreditoru(c.status, c.state_code) : null;
+      if (kr) fakt('predel', 'Что сделать', kr.tekst, { ton: 'bad', istochnik: 'ЕГРЮЛ; ' + kr.norma });
       // Лестница по сумме (Ночные 30.09 21:05): ступень — из суммы и возраста компании по ЕГРЮЛ; закупки клиента и прочие признаки —
       // в «Решении о сделке» (там же, в браузере, вне отпечатка). Здесь — только то, что следует из сведений и суммы.
       var L = opts.lestnica || (root && root.Lestnica) || null;
@@ -716,10 +798,11 @@
     return osh;
   }
 
-  return { VERSIYA: VERSIYA, RAZDELY: RAZDELY, sobrat: sobrat, staraya: staraya, poslGodOtchetnosti: poslGodOtchetnosti, strukturaBalansa: strukturaBalansa, polosaBalansaHtml: polosaBalansaHtml, proverit: proverit, razdelDlya: razdelDlya,
+  return { skVniz: skVniz, VERSIYA: VERSIYA, RAZDELY: RAZDELY, sobrat: sobrat, staraya: staraya, poslGodOtchetnosti: poslGodOtchetnosti, strukturaBalansa: strukturaBalansa, polosaBalansaHtml: polosaBalansaHtml, proverit: proverit, razdelDlya: razdelDlya,
     vypustit: vypustit, nomerIz: nomerIz, podpisant: podpisant, datuIz: datuIz, tuZheDolzhnost: tuZheDolzhnost, SSYLKI_PODPISANTA: SSYLKI_PODPISANTA, qrSsylka: qrSsylka, podval: podval, SLOVAR_222: SLOVAR_222,
     OPREDELENIE_INDEKSA: OPREDELENIE_INDEKSA, PODPIS_PREDELA: PODPIS_PREDELA,
     otmetka: otmetka, otmetkiSvodka: otmetkiSvodka, dataIzRu: dataIzRu, tuZheSajt: tuZheSajt, OTM_SNIMOK: OTM_SNIMOK, OTM_EP: OTM_EP, OTM_EP_HOST: OTM_EP_HOST, OTM_OGOVORKA: OTM_OGOVORKA, OTM_REZ: OTM_REZ, OTM_SVEZHEST_DNEJ: OTM_SVEZHEST_DNEJ, OTM_ZSK: OTM_ZSK, OTM_ZSK_SUD: OTM_ZSK_SUD, OTM_ZSK_SUD_URL: OTM_ZSK_SUD_URL, zskAdres: zskAdres, dnejTekst: dnejTekst,
+    krupno: krupno, strokiDosje: strokiDosje, KPI_IZ_BALANSA: KPI_IZ_BALANSA,
     netBezDaty: netBezDaty, diskvalProveren: diskvalProveren, DISKVAL_SAM: DISKVAL_SAM,
     kanon: kanon, otpechatok: otpechatok, otpechatokKratko: otpechatokKratko, dataRu: dataRu, isoIz: isoIz, isIp: isIp, VSEGDA_NE_ZNAEM: VSEGDA_NE_ZNAEM };
 });

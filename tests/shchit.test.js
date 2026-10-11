@@ -159,7 +159,7 @@ test("главная: Щит подключён, обычная проверка
   assert.match(G, /<script src="\/js\/shchit\.js" defer><\/script>/);
   assert.match(G, /runCheck\(d,\{svoj:true\}\)/);
   assert.match(G, /dlkGoal\('shchit_start'\)/);
-  assert.match(G, /else if\(window\.Usloviya&&ub\)\{[^}]*Usloviya\.mount\(ub,r\)/);
+  assert.match(G, /else if\(window\.Usloviya&&ub\)\{[^}]*Usloviya\.mount\(ub,r(,\{rynok:window\.DLK_RYNOK\})?\)/);
   assert.match(chitat("js/metrika.js"), /"shchit_start" \| "shchit_sled"/);
   assert.match(chitat("js/shchit.js"), /dlkGoal\('shchit_sled'/);
   // ссылки шагов ведут на существующие страницы

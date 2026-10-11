@@ -22,7 +22,7 @@
   // порядок базовых фактов, когда замечаний нет
   // poryadok-faktov-v1 [Ночные-3]: «Сотрудники» без замечаний — после прогноза ЗСК (живой ответ 05.10: «367 чел.» стояло первым
   // и вытесняло прогноз ЗСК в «Все данные»). При «нет сотрудников» (warn) строка по-прежнему среди первых — её поднимает тон.
-  var PORYADOK = ['status', 'address', 'tax_debt', 'kapital', 'likvidnost', 'ubytki', 'otchetnost', 'rukovoditel', 'age', 'zsk', 'employees'];
+  var PORYADOK = ['status', 'address', 'tax_debt', 'kapital', 'likvidnost', 'ubytki', 'skachok', 'otchetnost', 'rukovoditel', 'age', 'zsk', 'employees'];
   var NAZV = { status: 'Статус', address: 'Отметки о недостоверности', age: 'На рынке', tax_debt: 'Долги по налогам' };
   var SEKCII = { profile: 'reestr', history: 'reestr', management: 'reestr', activity: 'reestr', taxes: 'ФНС, открытые данные', dynamics: 'ГИР БО ФНС, годовая бухгалтерская отчётность' };
   var KRATKO = { sudy: 'арбитражные суды', bankrotstvo: 'банкротство', fssp: 'приставы', priostanovki: 'приостановки счетов', mery: 'обеспечительные меры ФНС', rnp: 'РНП', kontrakty: 'госконтракты' };
@@ -202,6 +202,25 @@
     while (po.hasOwnProperty(g1 - n) && po[g1 - n] < 0) n++;
     return n >= 2 ? { god: g1, n: n, ot: g1 - n + 1 } : null;
   }
+  // ---- skachok-fakty-v1 [Ночные-3] 10.10: «Скачок в отчётности» — в существенные факты ТОЛЬКО падение ----
+  // Расчёт один на весь экран — Dinamika.skachok (js/dinamika.js, skachok-v1): выручка за соседние годы (база от 1 млн ₽)
+  // или KPI «Активы» за последний год −50 % и больше. Рост в факты не выносим: решения о предоплате он не меняет,
+  // он виден в «Динамике» с оговоркой о причинах. Нет модуля «Динамики» — нет строки (без своего второго расчёта).
+  function modDinamika(opt) {
+    if (opt && opt.Dinamika) return opt.Dinamika;
+    if (typeof self !== 'undefined' && self.Dinamika) return self.Dinamika;
+    if (typeof module === 'object' && module.exports && typeof require === 'function') { try { return require('./dinamika.js'); } catch (e) { return null; } }
+    return null;
+  }
+  function skachokVniz(r, opt) {
+    var D = modDinamika(opt), s = D && typeof D.skachok === 'function' ? D.skachok(r) : null;
+    if (!s) return null;
+    var vniz = (s.fakty || []).filter(function (f) { return f && f.kRaz <= 0.5; });
+    if (!vniz.length) return null;
+    var god = vniz.reduce(function (g, f) { return f.god > g ? f.god : g; }, 0);
+    return { god: god || null, tekst: vniz.map(function (f) { return f.tekst; }).join(' ') };
+  }
+
   function godySerii(u) { return u.n === 2 ? u.ot + ' и ' + u.god : u.ot + '–' + u.god; }
 
   // ---- существенные факты ----
@@ -299,6 +318,10 @@
       var ub = ubytki(r);
       if (ub) add({ k: 'ubytki', nazv: 'Убыток ' + ub.n + NB + skl(ub.n, 'год', 'года', 'лет') + ' подряд', ton: 'warn',
         znach: 'По годовой отчётности за ' + godySerii(ub), ist: 'ГИР БО ФНС, отчёт о финансовых результатах', data: '31.12.' + ub.god });
+      // Скачок вниз: выручка или активы за последний год упали вдвое и больше — вопрос до аванса (текст skachok-v1).
+      var sk = skachokVniz(r, opt);
+      if (sk) add({ k: 'skachok', nazv: 'Скачок в' + NB + 'отчётности', ton: 'warn', znach: sk.tekst,
+        pod: 'Перед авансом спросите компанию, что изменилось.', ist: 'ГИР БО ФНС', data: sk.god ? '31.12.' + sk.god : dataPr });
       var estRuk = (r.signals || []).some(function (s) { return s && /director|rukovod/i.test(s.id || ''); });
       var ot = dataIz(c.director_since);
       if (!estRuk && ot) {
@@ -338,7 +361,7 @@
         var i = 0; while (i < vse.length && VES[vse[i].ton] <= VES[f.ton]) i++;
         vse.splice(i, 0, f);
       } else if (b.status !== 'not_found' && b.status !== 'not_applicable') {
-        ne.push({ k: k, nazv: b.nazvanie, kratko: KRATKO[k] || b.nazvanie, prichina: b.prichina || '', sam: b.proverit_samim || '' });
+        ne.push({ k: k, nazv: b.nazvanie, kratko: KRATKO[k] || b.nazvanie, prichina: b.prichina || '', sam: b.proverit_samim || '', nep: b.sostoyanie === 'not_checked' });
       }
     });
     return { spisok: vse.slice(0, MAKS), eshche: vse.slice(MAKS), neProvereno: ne, dataPr: dataPr };
@@ -408,14 +431,26 @@
       }).join('') +
       (g.daty ? '<p class="sut__d">Даты наборов: ' + esc(g.daty) + '</p>' : '') + '</details>';
   }
+  // «Не проверяли» по причине ([Право · Юрист 115-ФЗ] 11.10, разд. 2): «в этот раз» — только о сбое или лимите.
+  // Все — «пока не проверяем» (API: sostoyanie = not_checked) → «Не проверяли: …»; все — не ответили → «Не ответили в этот раз: …»;
+  // причины разные → две строки: «Пока не проверяем: …» и «Не ответили в этот раз: …».
+  function neStroka(spisok, sPrichinoj, razdel) {
+    if (!spisok.length) return '';
+    function chast(xs) {
+      var pr = xs.map(function (x) { return x.prichina; });
+      var odna = sPrichinoj && pr[0] && pr.every(function (x) { return x === pr[0]; }) ? ' — ' + pr[0] : '';
+      return esc(xs.map(function (x) { return x.kratko; }).join(', ') + odna);
+    }
+    var poka = spisok.filter(function (x) { return x.nep; }), net = spisok.filter(function (x) { return !x.nep; });
+    var t = !net.length ? 'Не проверяли: ' + chast(poka) + '.'
+      : !poka.length ? 'Не ответили в' + NB + 'этот раз: ' + chast(net) + '.'
+      : 'Пока не проверяем: ' + chast(poka) + '. Не ответили в' + NB + 'этот раз: ' + chast(net) + '.';
+    return '<p class="sut__ne">' + t + ' Не проверено — не значит «не обнаружено»; ссылки, где проверить самим, — в разделе «' + razdel + '».</p>';
+  }
   function html(r) {
     var f = fakty(r);
     if (!f.spisok.length) return '';
-    var pr = f.neProvereno.map(function (x) { return x.prichina; });
-    var odna = pr[0] && pr.every(function (x) { return x === pr[0]; }) ? ' — ' + pr[0] : '';
-    var ne = f.neProvereno.length ? '<p class="sut__ne">Не проверяли в этот раз: ' +
-      esc(f.neProvereno.map(function (x) { return x.kratko; }).join(', ') + odna) +
-      '. Не проверено — не значит «не обнаружено»; ссылки, где проверить самим, — в разделе «Все данные из реестров».</p>' : '';
+    var ne = neStroka(f.neProvereno, true, 'Все данные из реестров');
     return '<div class="sut__h"><b>Существенные факты</b><span>' + (f.eshche.length ? 'ещё ' + f.eshche.length + ' — в' + NB + 'разделе «Все данные из реестров»' : 'у каждого — источник и дата') + '</span></div>' +
       f.spisok.map(rowHtml).join('') + ne + glubinaHtml(glubina(r, f));
   }
@@ -434,9 +469,7 @@
       }) };
     var razdely = [prizn].concat(g.razdely.filter(function (s) { return s.zag !== 'Ещё признаки'; }));
     var n = vse.length, m = razdely.length;
-    var ne = f.neProvereno.length ? '<p class="sut__ne">Не проверяли в этот раз: ' +
-      esc(f.neProvereno.map(function (x) { return x.kratko; }).join(', ')) +
-      '. Не проверено — не значит «не обнаружено»; ссылки, где проверить самим, — в разделе «Внешние реестры».</p>' : '';
+    var ne = neStroka(f.neProvereno, false, 'Внешние реестры');
     return glubinaHtml({ razdely: razdely, daty: g.daty },
       n + NB + skl(n, 'признак', 'признака', 'признаков') + ' · ' + m + NB + skl(m, 'раздел', 'раздела', 'разделов'), ne);
   }
@@ -505,5 +538,5 @@
     return true;
   }
 
-  return { razryady: razryady, fakty: fakty, godBezVyruchki: godBezVyruchki, otchetGod: otchetGod, bank: bank, kapital: kapital, likvidnost: likvidnost, ubytki: ubytki, glubina: glubina, otchetnost: otchetnost, poslGodOtchetnosti: poslGodOtchetnosti, staraya: staraya, html: html, mount: mount, htmlSvoj: htmlSvoj, mountSvoj: mountSvoj, dengi: dengi, srok: srok, MAKS: MAKS, CSS: CSS };
+  return { razryady: razryady, fakty: fakty, godBezVyruchki: godBezVyruchki, otchetGod: otchetGod, bank: bank, kapital: kapital, likvidnost: likvidnost, ubytki: ubytki, skachokVniz: skachokVniz, glubina: glubina, otchetnost: otchetnost, poslGodOtchetnosti: poslGodOtchetnosti, staraya: staraya, html: html, mount: mount, htmlSvoj: htmlSvoj, mountSvoj: mountSvoj, dengi: dengi, srok: srok, MAKS: MAKS, CSS: CSS };
 });

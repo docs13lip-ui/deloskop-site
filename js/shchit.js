@@ -13,6 +13,10 @@
  * «почему» — дословно утверждённые [Право] тексты «Комментария команды» (data/kommentarii.json, тон «жёлтый»: ubytok,
  * kapital, likvidnost) — tests/shchit_finansy.test.js сверяет их с файлом. Капитал и ликвидность — только «банк», без шага.
  * v3.1 (04.10, shchit-ubytki-v1): убыток 2+ года — и в «Как вас видит налоговая» (критерий 2 ММ-3-06/333@, текст [Право] 09:20).
+ * v4 (11.10, shchit-pokupateli-v1 [Ночные-3]): «Как вас видят покупатели» — что увидит тот, кто проверяет вас по ИНН перед оплатой,
+ *   если вашей бухотчётности в открытых данных ГИР БО нет или она старая. Живой ответ (ПАО, 11.10): Щит писал «заметных признаков нет»,
+ *   а у проверяющих покупателей — «Индекс — данных пока мало» и ни выручки, ни динамики. Строка ◐ (без нормы),
+ *   шаг — открыть свою организацию в ГИР БО. ИП, банков (сдают в Банк России), прекращающих работу и признак API «отчётность» — не трогаем.
  */
 (function (root, factory) {
   var api = factory(root);
@@ -100,6 +104,14 @@
       b: { t: 'Ликвидность ниже 1 — не признак по 115-ФЗ, но для кредита и лимитов банк на неё смотрит.', sver: true },
       s: null
     },
+    // v4: что увидит покупатель при проверке по ИНН (◐ — ждёт «да/правки» [Право · Юрист 115-ФЗ]; нормы нет — не выводится)
+    pokupateli: {
+      net: { t: 'Покупатель, который проверяет вас по ИНН перед оплатой, не увидит ни выручки, ни её динамики: о размере вашего бизнеса ему останется судить по возрасту компании и записям в реестрах.' },
+      staraya: { t: 'Покупатель, который проверяет вас по ИНН перед оплатой, увидит отчётность только за {g} год — по ней трудно судить о вашем сегодняшнем обороте.' },
+      sokr: 'Индекс Делоскопа в такой проверке — «данных пока мало».',
+      s: { t: 'Откройте свою организацию в ГИР БО и посмотрите, видна ли там отчётность за {g} год. Если нет — проверьте, принята ли она налоговой. Если доступ к ней ограничен, для крупных сделок держите копию с квитанцией о приёме.',
+           href: 'https://bo.nalog.gov.ru/', knopka: 'Открыть ГИР БО', ext: true }
+    },
     // block / diskv / exit / rnp / fines / other — строка признака как есть, шаг — «Скорая».
     skoraya: { t: 'Если банк уже прислал запрос или ограничил счёт — план по дням.', sver: true, href: '/skoraya-115-fz/', knopka: 'Открыть план по дням' },
     sled: { t: 'Следить за своей компанией: добавьте её в список слежения в кабинете и проверяйте раз в месяц.', href: '/cabinet.html', knopka: 'Следить за компанией', sled: true }
@@ -166,7 +178,28 @@
   function nbsp(t) { return String(t).replace(/(\d) (?=\d{3}(\D|$))/g, '$1\u00a0').replace(/ ₽/g, '\u00a0₽'); }
   function nazvanie(x) { var d = nbsp(String(x.detail || '').trim()); return /^(да|есть|внимание|нет данных|—|)$/i.test(d) ? x.title : x.title + ': ' + d.charAt(0).toLowerCase() + d.slice(1); }
 
-  // razbor(r) → { banki, nalogovaya, shagi, chisto, neProvereno, ul, data }
+  function Io(o) { return (o && o.indeksOtvet) || (root && root.IndeksOtvet) || null; }
+  // v4: видимость отчётности для покупателей. → { kind:'pokupateli', priznak, pochemu, god, staraya } | null.
+  // Год — тот, за который отчётность уже должна быть в ГИР БО: год проверки (МСК) минус 1. «Старая» — правило «Существенных фактов»
+  // (Sushchestvennoe.staraya: последняя отчётность старше года проверки − 2), без своего порога.
+  function vidimost(r, o) {
+    var c = r && r.company, S = null;
+    if (!c || !/^\d{10}$/.test(String(c.inn || ''))) return null;
+    if (!r.dossier || typeof r.dossier !== 'object') return null;   // досье в ответе нет — о ГИР БО ничего не знаем, молчим
+    try { S = Su(o); } catch (e) { S = null; }
+    if (!S || !S.poslGodOtchetnosti || (S.bank && S.bank(c))) return null;
+    var g = S.poslGodOtchetnosti(r), st = null;
+    var t0 = Date.parse(r.checked_at || ''), gp = new Date((isFinite(t0) ? t0 : Date.now()) + 3 * 3600 * 1000).getUTCFullYear();
+    if (g !== null) { try { st = S.staraya ? S.staraya(r) : null; } catch (e) { st = null; } if (!st) return null; }
+    var T4 = T.pokupateli, out = { kind: 'pokupateli', god: gp - 1, staraya: g !== null ? g : null };
+    out.priznak = g === null ? 'Бухотчётности в' + NB + 'открытых данных ГИР' + NB + 'БО нет' : 'Последняя открытая отчётность — за' + NB + g + NB + 'год';
+    out.pochemu = g === null ? T4.net.t : T4.staraya.t.replace('{g} ', g + NB);
+    try { var IO = Io(o), v = IO && IO.gotov && IO.gotov() ? IO.vid(r) : null; if (v && v.rezhim === 'sokr') out.pochemu += ' ' + T4.sokr; } catch (e) {}
+    out.kratko = g === null ? 'Покупатели при проверке по ИНН не увидят вашу отчётность' : 'Покупатели при проверке по ИНН увидят отчётность только за ' + g + ' год';
+    return out;
+  }
+
+  // razbor(r) → { banki, nalogovaya, pokupateli, shagi, chisto, neProvereno, ul, data }
   function razbor(r, o) {
     var Us = U(o); if (!Us) throw new Error('shchit: нет Usloviya');
     r = r || {};
@@ -200,6 +233,8 @@
       if (!vezde) banki.push({ kind: k, priznak: est[k], pochemu: '' });
     });
 
+    // v4: «Как вас видят покупатели» — не для ИП, банков, прекращающих работу и не дублируя признак API «отчётность» (у него свой шаг)
+    var pok = !est.exit && !est.report ? vidimost(r, o) : null, pokupateli = pok ? [pok] : [];
     var shagi = [], bylo = {};
     kinds.forEach(function (k) {
       if (shagi.length >= MAX_SHAGOV) return;
@@ -210,11 +245,15 @@
       if (bylo[key]) return; bylo[key] = 1;
       shagi.push({ kind: key, t: tekst(s), href: s.href || '', knopka: s.knopka || '', ext: !!s.ext, eshche: s.eshche || null });
     });
+    if (pok && shagi.length < MAX_SHAGOV) {
+      var ps = T.pokupateli.s;
+      shagi.push({ kind: 'pokupateli', t: ps.t.replace('{g} ', pok.god + NB), href: ps.href, knopka: ps.knopka, ext: !!ps.ext, eshche: null });
+    }
     shagi.push({ kind: 'sled', t: T.sled.t, href: T.sled.href, knopka: T.sled.knopka, sled: true });
 
     var sNormoj = banki.concat(nalogovaya).some(function (x) { return /\((п|пп|ст)\. [^)]+\)\.$/.test(x.pochemu); }) ||
       shagi.some(function (x) { return /\((п|пп|ст)\. [^)]+\)\.$/.test(x.t); });
-    return { banki: banki, nalogovaya: nalogovaya, shagi: shagi, chisto: !kinds.length, neProvereno: np, ul: ul, data: dataRu(r.checked_at), imya: f.name, sNormoj: sNormoj };
+    return { banki: banki, nalogovaya: nalogovaya, pokupateli: pokupateli, shagi: shagi, chisto: !kinds.length, neProvereno: np, ul: ul, data: dataRu(r.checked_at), imya: f.name, sNormoj: sNormoj };
   }
 
   // Главное действие — одна кнопка: первый шаг со ссылкой, иначе «Следить».
@@ -223,6 +262,7 @@
   // Короткий текст для «Скопировать разбор».
   function kratko(R) {
     var p = R.chisto ? 'Заметных признаков в открытых данных нет' : 'Признаков: ' + (R.banki.length + R.nalogovaya.length);
+    if (R.pokupateli && R.pokupateli.length) p += '. ' + R.pokupateli[0].kratko;
     var sh = R.shagi.filter(function (s) { return !s.sled; }).map(function (s, i) { return (i + 1) + '. ' + s.t; }).join(' ');
     return R.imya + ' — глазами банка и налоговой на ' + R.data + '. ' + p + '.' + (sh ? ' Что сделать: ' + sh : '');
   }
@@ -272,7 +312,8 @@
     return '<section class="shch" aria-label="Ваша компания глазами банка и налоговой">' +
       '<p class="shch-oh">Это наша оценка по открытым данным, а не решение банка или инспекции. Банк видит ваши операции — мы нет.</p>' +
       (R.chisto ? '<p class="shch-pusto">В открытых данных заметных признаков не нашли. Это не гарантия: банк смотрит и на ваши операции.</p>' : '') +
-      blok('Как вас видит банк', R.banki) + blok('Как вас видит налоговая', R.nalogovaya) + np + sh +
+      blok('Как вас видит банк', R.banki) + blok('Как вас видит налоговая', R.nalogovaya) +
+      blok('Как вас видят покупатели', R.pokupateli || []) + np + sh +
       ssylka(g.href, g.knopka, g.ext, 'shch-k') +
       (R.sNormoj ? '<p class="shch-sv">Ссылки на нормы в скобках сверены командой Делоскопа (115-ФЗ и налоги) с редакциями законов на ' + SVERENO_NA + '.</p>' : '') + '</section>';
   }
@@ -309,5 +350,5 @@
     return R;
   }
 
-  return { razbor: razbor, mount: mount, html: html, kratko: kratko, glavnyj: glavnyj, finansy: finansy, T: T, SVERENO: SVERENO, SVERENO_NA: SVERENO_NA, MAX_SHAGOV: MAX_SHAGOV, PORYADOK: PORYADOK };
+  return { razbor: razbor, mount: mount, html: html, kratko: kratko, glavnyj: glavnyj, finansy: finansy, vidimost: vidimost, T: T, SVERENO: SVERENO, SVERENO_NA: SVERENO_NA, MAX_SHAGOV: MAX_SHAGOV, PORYADOK: PORYADOK };
 });

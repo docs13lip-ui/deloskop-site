@@ -256,7 +256,7 @@
     if (!nov) return null;
     if (star) { star.parentNode.replaceChild(nov, star); return nov; }
     if (opts.vKonec) { opts.vKonec.appendChild(nov); return nov; }
-    var pos = null, sp = opts.posle || ['.din', '.izm', '.rows'];
+    var pos = null, sp = opts.posle || ['.ngo', '.din', '.izm', '.rows']; // .ngo — «Налоги и взносы против отрасли» (js/nagruzka-proverka.js), рентабельность — после неё
     for (var i = 0; i < sp.length && !pos; i++) pos = report.querySelector(sp[i]);
     if (pos && pos.parentNode) pos.parentNode.insertBefore(nov, pos.nextSibling);
     else return null;

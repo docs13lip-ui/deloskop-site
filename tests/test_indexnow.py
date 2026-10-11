@@ -39,5 +39,37 @@ class TestIndexNow(unittest.TestCase):
             self.assertTrue(a.startswith("https://deloskop.ru/"), a)
 
 
+    # indexnow-nadezhno-v1: сбой сети не роняет скрипт, есть повтор и запасная точка
+    def test_povtor_i_zapasnaya_tochka(self):
+        import http.client
+        vyzovy = []
+
+        def odin(tochka, telo):
+            vyzovy.append(tochka)
+            if tochka == ix.KONECHNAYA_TOCHKA:
+                raise http.client.RemoteDisconnected("Remote end closed connection without response")
+            return 202, ""
+        kod, _, tochka = ix.otpravit(["https://deloskop.ru/"], "0" * 32, odin=odin, spat=lambda s: None)
+        self.assertEqual(kod, 202)
+        self.assertEqual(tochka, ix.TOCHKI[1])
+        self.assertEqual(vyzovy.count(ix.KONECHNAYA_TOCHKA), len(ix.PAUZY))
+
+    def test_yandex_otvetil_srazu(self):
+        kod, _, tochka = ix.otpravit(["https://deloskop.ru/"], "0" * 32,
+                                      odin=lambda t, b: (200, ""), spat=lambda s: None)
+        self.assertEqual((kod, tochka), (200, ix.KONECHNAYA_TOCHKA))
+
+    def test_oshibka_klyucha_bez_povtorov(self):
+        vyzovy = []
+        kod, _, _ = ix.otpravit(["https://deloskop.ru/"], "0" * 32,
+                                odin=lambda t, b: vyzovy.append(t) or (403, ""), spat=lambda s: None)
+        self.assertEqual((kod, len(vyzovy)), (403, 1))
+
+    def test_nikto_ne_otvetil(self):
+        def odin(t, b):
+            raise TimeoutError()
+        kod, _, _ = ix.otpravit(["https://deloskop.ru/"], "0" * 32, odin=odin, spat=lambda s: None)
+        self.assertEqual(kod, 0)
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

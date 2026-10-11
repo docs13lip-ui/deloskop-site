@@ -112,15 +112,50 @@ def klyuch_na_zhivom(k):
         return False
 
 
-def otpravit(adresa, k):
-    telo = json.dumps({"host": HOST, "key": k, "keyLocation": f"{SAJT}/{k}.txt", "urlList": adresa}).encode()
-    zapros = urllib.request.Request(KONECHNAYA_TOCHKA, data=telo, method="POST",
+TOCHKI = (KONECHNAYA_TOCHKA, "https://api.indexnow.org/indexnow")
+# indexnow-nadezhno-v1 (11.10): 11.10 c 13:12 МСК Яндекс рвал соединение (RemoteDisconnected) — запуски #78–#80
+# падали с Traceback, а из-за `| tee` в workflow горели зелёными: 51 карточка и 77 страниц не ушли.
+# Теперь: 3 попытки на точку с паузой, запасная точка api.indexnow.org (протокол IndexNow делится адресами
+# со всеми участниками, Яндекс среди них), при неудаче — заметная ошибка ::error:: в сводке GitHub.
+PAUZY = (0, 20, 60)
+
+
+def otpravit_odin(tochka, telo):
+    zapros = urllib.request.Request(tochka, data=telo, method="POST",
                                     headers={"Content-Type": "application/json; charset=utf-8"})
     try:
         with urllib.request.urlopen(zapros, timeout=30) as r:
             return r.status, r.read().decode("utf-8", "replace")
     except urllib.error.HTTPError as e:
         return e.code, e.read().decode("utf-8", "replace")
+
+
+def otpravit(adresa, k, odin=None, spat=None):
+    """Возвращает (код, текст, точка). Сетевые сбои не роняют скрипт: пробуем ещё раз и через запасную точку.
+    Код 0 — ни одна точка не ответила."""
+    import http.client
+    import time
+    odin = odin or otpravit_odin
+    spat = spat if spat is not None else time.sleep
+    telo = json.dumps({"host": HOST, "key": k, "keyLocation": f"{SAJT}/{k}.txt", "urlList": adresa}).encode()
+    posled = (0, "нет ответа", TOCHKI[0])
+    for tochka in TOCHKI:
+        for pauza in PAUZY:
+            if pauza:
+                spat(pauza)
+            try:
+                kod, tekst = odin(tochka, telo)
+            except (urllib.error.URLError, http.client.HTTPException, TimeoutError, OSError) as e:
+                print(f"  {tochka}: сбой сети ({type(e).__name__}) — повторю")
+                posled = (0, type(e).__name__, tochka)
+                continue
+            if kod in (200, 202):
+                return kod, tekst, tochka
+            posled = (kod, tekst, tochka)
+            if kod in (400, 403, 422):
+                return posled  # ошибка в запросе или ключе — повтор не поможет
+            print(f"  {tochka}: ответ {kod} — повторю")
+    return posled
 
 
 OTVETY = {
@@ -153,9 +188,17 @@ def main(argv):
     if not klyuch_na_zhivom(k):
         print(f"Файл ключа {SAJT}/{k}.txt на живом сайте не найден — сначала деплой в Timeweb, потом IndexNow.")
         return 1
-    kod, tekst = otpravit(adresa[:10000], k)
-    print(f"Яндекс ответил {kod}: {OTVETY.get(kod, tekst[:200])}")
-    return 0 if kod in (200, 202) else 1
+    kod, tekst, tochka = otpravit(adresa[:10000], k)
+    kto = "Яндекс" if tochka == KONECHNAYA_TOCHKA else "IndexNow (" + tochka + ")"
+    if kod in (200, 202):
+        print(f"{kto} ответил {kod}: {OTVETY[kod]}")
+        return 0
+    ot = argv[argv.index("--ot") + 1] if "--ot" in argv else "HEAD^1"
+    prichina = OTVETY.get(kod, tekst[:200]) if kod else f"нет связи ({tekst})"
+    # строка ::error:: видна в сводке Actions даже при `| tee` в workflow
+    print(f"::error::IndexNow не доставлен: {prichina}. Адресов: {len(adresa)}. Повторить: Actions → "
+          f"«IndexNow — сообщить Яндексу» → Run workflow, поле «С какого коммита» = {ot}")
+    return 1
 
 
 if __name__ == "__main__":

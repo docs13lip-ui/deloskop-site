@@ -578,6 +578,7 @@ footer a{color:var(--ink2)}
 <script src="/js/shchit.js" defer></script>
 <script src="/js/dinamika.js" defer></script>
 <script src="/js/nagruzka.js" defer></script>
+<script src="/js/nagruzka-proverka.js" defer></script>
 <script src="/js/rentabelnost.js" defer></script>
 <script src="/js/bez-nds.js" defer></script>
 <script src="/js/nds-porog.js" defer></script>
@@ -686,6 +687,8 @@ footer a{color:var(--ink2)}
     // «Что изменилось» с прошлой проверки из кабинета — на любом устройстве (вошедшим; js/dinamika.js)
     if(window.Dinamika&&Dinamika.dogruzit&&CAPI){try{Dinamika.dogruzit(report,r,{api:CAPI})}catch(e){}}
     // «Рентабельность активов против отрасли» — оценка по ГИР БО против нормы ФНС (приложение 4 к ММ-3-06/333@), после «Динамики»; js/rentabelnost.js
+    // «Налоги и взносы против отрасли» — оценка по открытым данным ФНС против нормы приложения 3 к ММ-3-06/333@ (+ взносы той же таблицы); js/nagruzka-proverka.js
+    if(window.NagruzkaProverka){try{NagruzkaProverka.mount(report,r).catch(function(){})}catch(e){}}
     if(window.Rentabelnost){try{Rentabelnost.mount(report,r).catch(function(){})}catch(e){}}
     // «НДС в 2027 году» — выручка 2025 года поставщика на упрощёнке рядом с порогом 20 млн ₽ (п. 1 ст. 145 НК), только к сведению; js/nds-porog.js
     if(!svoj&&window.NdsPorog){try{NdsPorog.mount(report,r)}catch(e){}}

@@ -46,7 +46,7 @@
     try { stil(doc); } catch (e) {}
     if (star) star.parentNode.replaceChild(nov, star);
     else {
-      var pos = null, sp = [".rnt", ".din", ".izm", ".rows"];
+      var pos = null, sp = [".rnt", ".ngo", ".din", ".izm", ".rows"];
       for (var i = 0; i < sp.length && !pos; i++) pos = report.querySelector(sp[i]);
       if (!pos || !pos.parentNode) return null;
       pos.parentNode.insertBefore(nov, pos.nextSibling);

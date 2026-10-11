@@ -53,7 +53,7 @@ for (const kod of ['122', '123', '124', '125', '129']) {
     assert.strictEqual(f.ton, 'warn');
     assert.strictEqual(f.istochnik, 'ЕГРЮЛ');
     assert.ok(f.znachenie.startsWith(SK.REORG_FORMA[kod]));
-    assert.ok(f.znachenie.includes('(код ' + kod + ' по справочнику ФНС)'));
+    assert.ok(f.znachenie.includes('(код ' + kod + ' по справочнику СЮЛСТ ФНС)'));
     const pr = fakt(p, 'predel', 'Правопреемник');
     assert.ok(pr, 'есть «Правопреемник»');
     assert.strictEqual(pr.znachenie, U.REORG_SDELAT + ' ' + U.REORG_DOLG);

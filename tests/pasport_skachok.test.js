@@ -45,13 +45,13 @@ test('падение выручки на 58 % — «внимание», в «Г�
   assert.ok(p.itog.glavnoe.some((g) => /^Скачок в отчётности: /.test(g)), 'есть в «Главном»');
   const z = fakt(p, 'zaprosit', 'Пояснение к отчётности');
   assert.ok(z);
-  assert.strictEqual(z.znachenie.replace(/\u00a0/g, ' '), 'Попросите письменно объяснить, что изменилось в 2023 году: почему выручка сократилась вдвое и больше.');
+  assert.strictEqual(z.znachenie.replace(/\u00a0/g, ' '), 'Попросите письменно объяснить, что изменилось в 2023 году: почему выручка сократилась вдвое или больше.');
 });
 
 test('skVniz: называет только упавшие показатели, род глагола по смыслу', () => {
-  assert.strictEqual(P.skVniz([{ k: 'aktivy', kRaz: 0.38 }]), 'активы сократились вдвое и больше');
-  assert.strictEqual(P.skVniz([{ k: 'revenue', kRaz: 0.4 }, { k: 'aktivy', kRaz: 0.3 }]), 'выручка и активы сократились вдвое и больше');
-  assert.strictEqual(P.skVniz([{ k: 'revenue', kRaz: 2.5 }, { k: 'aktivy', kRaz: 0.3 }]), 'активы сократились вдвое и больше', 'выросшую выручку не называем');
+  assert.strictEqual(P.skVniz([{ k: 'aktivy', kRaz: 0.38 }]), 'активы сократились вдвое или больше');
+  assert.strictEqual(P.skVniz([{ k: 'revenue', kRaz: 0.4 }, { k: 'aktivy', kRaz: 0.3 }]), 'выручка и активы сократились вдвое или больше');
+  assert.strictEqual(P.skVniz([{ k: 'revenue', kRaz: 2.5 }, { k: 'aktivy', kRaz: 0.3 }]), 'активы сократились вдвое или больше', 'выросшую выручку не называем');
 });
 
 test('без скачка, без модуля Динамики и у ИП — строки нет, Паспорт как раньше', () => {

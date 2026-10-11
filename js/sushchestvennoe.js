@@ -361,7 +361,7 @@
         var i = 0; while (i < vse.length && VES[vse[i].ton] <= VES[f.ton]) i++;
         vse.splice(i, 0, f);
       } else if (b.status !== 'not_found' && b.status !== 'not_applicable') {
-        ne.push({ k: k, nazv: b.nazvanie, kratko: KRATKO[k] || b.nazvanie, prichina: b.prichina || '', sam: b.proverit_samim || '' });
+        ne.push({ k: k, nazv: b.nazvanie, kratko: KRATKO[k] || b.nazvanie, prichina: b.prichina || '', sam: b.proverit_samim || '', nep: b.sostoyanie === 'not_checked' });
       }
     });
     return { spisok: vse.slice(0, MAKS), eshche: vse.slice(MAKS), neProvereno: ne, dataPr: dataPr };
@@ -431,14 +431,26 @@
       }).join('') +
       (g.daty ? '<p class="sut__d">Даты наборов: ' + esc(g.daty) + '</p>' : '') + '</details>';
   }
+  // «Не проверяли» по причине ([Право · Юрист 115-ФЗ] 11.10, разд. 2): «в этот раз» — только о сбое или лимите.
+  // Все — «пока не проверяем» (API: sostoyanie = not_checked) → «Не проверяли: …»; все — не ответили → «Не ответили в этот раз: …»;
+  // причины разные → две строки: «Пока не проверяем: …» и «Не ответили в этот раз: …».
+  function neStroka(spisok, sPrichinoj, razdel) {
+    if (!spisok.length) return '';
+    function chast(xs) {
+      var pr = xs.map(function (x) { return x.prichina; });
+      var odna = sPrichinoj && pr[0] && pr.every(function (x) { return x === pr[0]; }) ? ' — ' + pr[0] : '';
+      return esc(xs.map(function (x) { return x.kratko; }).join(', ') + odna);
+    }
+    var poka = spisok.filter(function (x) { return x.nep; }), net = spisok.filter(function (x) { return !x.nep; });
+    var t = !net.length ? 'Не проверяли: ' + chast(poka) + '.'
+      : !poka.length ? 'Не ответили в' + NB + 'этот раз: ' + chast(net) + '.'
+      : 'Пока не проверяем: ' + chast(poka) + '. Не ответили в' + NB + 'этот раз: ' + chast(net) + '.';
+    return '<p class="sut__ne">' + t + ' Не проверено — не значит «не обнаружено»; ссылки, где проверить самим, — в разделе «' + razdel + '».</p>';
+  }
   function html(r) {
     var f = fakty(r);
     if (!f.spisok.length) return '';
-    var pr = f.neProvereno.map(function (x) { return x.prichina; });
-    var odna = pr[0] && pr.every(function (x) { return x === pr[0]; }) ? ' — ' + pr[0] : '';
-    var ne = f.neProvereno.length ? '<p class="sut__ne">Не проверяли в этот раз: ' +
-      esc(f.neProvereno.map(function (x) { return x.kratko; }).join(', ') + odna) +
-      '. Не проверено — не значит «не обнаружено»; ссылки, где проверить самим, — в разделе «Все данные из реестров».</p>' : '';
+    var ne = neStroka(f.neProvereno, true, 'Все данные из реестров');
     return '<div class="sut__h"><b>Существенные факты</b><span>' + (f.eshche.length ? 'ещё ' + f.eshche.length + ' — в' + NB + 'разделе «Все данные из реестров»' : 'у каждого — источник и дата') + '</span></div>' +
       f.spisok.map(rowHtml).join('') + ne + glubinaHtml(glubina(r, f));
   }
@@ -457,9 +469,7 @@
       }) };
     var razdely = [prizn].concat(g.razdely.filter(function (s) { return s.zag !== 'Ещё признаки'; }));
     var n = vse.length, m = razdely.length;
-    var ne = f.neProvereno.length ? '<p class="sut__ne">Не проверяли в этот раз: ' +
-      esc(f.neProvereno.map(function (x) { return x.kratko; }).join(', ')) +
-      '. Не проверено — не значит «не обнаружено»; ссылки, где проверить самим, — в разделе «Внешние реестры».</p>' : '';
+    var ne = neStroka(f.neProvereno, false, 'Внешние реестры');
     return glubinaHtml({ razdely: razdely, daty: g.daty },
       n + NB + skl(n, 'признак', 'признака', 'признаков') + ' · ' + m + NB + skl(m, 'раздел', 'раздела', 'разделов'), ne);
   }

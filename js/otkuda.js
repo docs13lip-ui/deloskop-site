@@ -134,6 +134,7 @@
       // (в бете не подключён). Это не «не ответил»: в счёт «запрошенных» не идёт, знак «–», причина — словами API.
       var nep = !otv && b.sostoyanie === 'not_checked';
       spisok.push({ k: 'damia:' + k, znak: otv ? '●' : nep ? '–' : '○', nazv: b.nazvanie, chto: DAMIA_CHTO[k] || '',
+        dop: otv && b.iz_egryul ? 'по отметке в' + NB + 'ЕГРЮЛ, ' + (b.ogovorka || 'сообщения ЕФРСБ не проверяли') : otv && b.tochnost && b.tochnost !== 'inn' ? 'сопоставили по' + NB + 'названию и' + NB + 'адресу' : '',
         data: otv ? 'на' + NB + (dmy(b.data_svedeniy) || dataPr) : '', status: otv ? 'ok' : nep ? 'nep' : 'net',
         prichina: otv ? '' : nep ? (b.prichina && !OBESHCHANIE.test(b.prichina) ? b.prichina : POKA_NE) : (String(b.prichina || '').replace(PLATNYJ, '').replace(/\s+$/, '') || 'ответа нет'), ssylka: otv ? '' : chistyj(b.proverit_samim) });
     });

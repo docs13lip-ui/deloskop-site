@@ -114,7 +114,10 @@
     dostupno.girbo = !!dostupno.girbo;
     var dm = r.damia || {};
     [['sudy', 'sudy'], ['fssp', 'fssp'], ['fedresurs', 'bankrotstvo'], ['eis', 'rnp']].forEach(function (p) {
-      dostupno[p[0]] = !!(dm[p[1]] && dm[p[1]].status === 'provereno');
+      // istochniki-v1: учтён — ответ самого реестра (provereno / found / not_found); банкротство, подставленное из ЕГРЮЛ
+      // (iz_egryul), полноту «Федресурс и ЕФРСБ» не даёт — сообщения ЕФРСБ не проверены
+      var b = dm[p[1]];
+      dostupno[p[0]] = !!(b && typeof b === 'object' && !b.iz_egryul && (b.status === 'provereno' || b.status === 'found' || b.status === 'not_found'));
     });
 
     // --- статус ЕГРЮЛ ---
@@ -203,6 +206,14 @@
       neizv.push(s);
     });
 
+    // --- приставы из блока API (istochniki-v1): остаток по открытым производствам без штрафов ГИБДД против выручки ---
+    var fs = dm.fssp;
+    if (dostupno.fssp && fs && fs.status === 'found') {
+      var ost = Number(fs.summa_ostatka);
+      if (isFinite(ost) && ost > 0 && vyr && ost > 0.05 * vyr) fakty.pristavy_krupnye = true;
+      else if (isFinite(ost) && ost > 0 && !vyr) neizv.push({ title: 'Долги у приставов', status: 'warn', faktor: 'pristavy_krupnye' });
+    }
+
     // --- бухотчётность по рядам ---
     var pr = ryad(ch.profit);
     if (pr.length >= 2) {
@@ -221,7 +232,7 @@
     if (M) M.faktory.forEach(function (f) {
       if (fakty[f.id] && f.vklad < 0 && !dostupno[f.istochnik]) neizv.push({ title: f.tekst, status: 'warn', faktor: f.id });
     });
-    return { fakty: fakty, dostupno: dostupno, neizvestnye: neizv, neUchli: neUchli };
+    return { fakty: fakty, dostupno: dostupno, neizvestnye: neizv, neUchli: neUchli, bankrIzEgryul: !!(dm.bankrotstvo && dm.bankrotstvo.iz_egryul) };
   }
 
   // ---------- что показать ----------
@@ -259,7 +270,8 @@
   }
   function neUchityvali(x, c) {
     var a = [], b = [];
-    Object.keys(NE_PODKL).forEach(function (k) { if (!x.dostupno[k]) a.push(NE_PODKL[k]); });
+    // istochniki-v1: статус банкротства из ЕГРЮЛ учли — не учли только сообщения ЕФРСБ (намерения кредиторов, ход процедуры)
+    Object.keys(NE_PODKL).forEach(function (k) { if (!x.dostupno[k]) a.push(k === 'fedresurs' && x.bankrIzEgryul ? 'сообщения ЕФРСБ' : NE_PODKL[k]); });
     if (a.length) b.push(a.join(', ') + ' — источник не' + NB + 'подключён');
     if (!x.dostupno.fns) b.push('налоги и штат — свежего набора ФНС в' + NB + 'ответе нет');
     // v1.2 ([Право] 16:07 разд. 1 п. 1): у банка «её нет» звучит как упрёк — пишем, куда он её сдаёт.

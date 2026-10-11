@@ -53,6 +53,24 @@ def beta_do(koren=KOREN):
     return v
 
 
+def gost_v_den(koren=KOREN):
+    """gost-limit-10-sait-v1: быстрых проверок в день без входа — tarify.json → "gost_v_den" (целое > 0)."""
+    with open(os.path.join(koren, "tarify", "tarify.json"), encoding="utf-8") as fh:
+        v = json.load(fh).get("gost_v_den")
+    if not isinstance(v, int) or isinstance(v, bool) or v <= 0:
+        raise ValueError('tarify.json: "gost_v_den" — целое число больше нуля, а не %r' % (v,))
+    return v
+
+
+def proverok(n):
+    """10 → «проверок», 3 → «проверки», 1 → «проверка» (для «N проверок в день»)."""
+    if n % 10 == 1 and n % 100 != 11:
+        return "проверка"
+    if 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14:
+        return "проверки"
+    return "проверок"
+
+
 def data_ru(iso):
     """«2026-10-13» → «13&nbsp;октября»."""
     g, m, d = (int(x) for x in DATA_RE.match(iso).groups())
@@ -85,8 +103,8 @@ def polosa_sobrat(beta, bdo):
         return ""
     D = data_ru(bdo) if bdo else ""
     D1 = data_ru(sleduyushij(bdo)) if bdo else ""
-    tekst = _chast("beta-%s.html" % r).replace("{{D}}", D).replace("{{D1}}", D1)
-    zapas = ('<template data-beta-b>' + _chast("beta-b.html") + '</template>') if r == "a" else ""
+    tekst = _chast("beta-%s.html" % r).replace("{{D}}", D).replace("{{D1}}", D1).replace("{{G}}", str(gost_v_den()))
+    zapas = ('<template data-beta-b>' + _chast("beta-b.html").replace("{{G}}", str(gost_v_den())) + '</template>') if r == "a" else ""
     krestik = "" if r == "c" else _chast("beta-x.html")
     return (_chast("beta.html").replace("{{REZHIM}}", r).replace("{{DO}}", bdo or "")
             .replace("{{KLASS}}", " beta-bar--c" if r == "c" else "")

@@ -8,6 +8,7 @@ const ROOT = path.join(__dirname, '..');
 const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 const L = require('../js/limit.js');
 const T = JSON.parse(read('tarify/tarify.json'));
+const G = T.gost_v_den; // gost-limit-10-sait-v1: число из tarify.json
 const NB = ' ';
 const sp = (s) => String(s).replace(/ /g, ' ');
 
@@ -51,9 +52,9 @@ test('(2) бета: без цен, «Старта» и «войдите»; «т�
     assert.ok(!/₽|Старт|войд|Войд/.test(t), t);
     assert.strictEqual((t.match(/тариф/gi) || []).length, 1, t);
     assert.ok(t.includes('тарифы не продаём и счета не выставляем'), t);
-    assert.strictEqual(r.zag, 'На' + NB + 'сегодня 3' + NB + 'бесплатные проверки закончились');
-    assert.strictEqual(sp(r.stroka), sDatoj ? 'Завтра — снова 3. Пока идёт бета (по 13 октября), тарифы не продаём и счета не выставляем.'
-      : 'Завтра — снова 3. Пока идёт бета, тарифы не продаём и счета не выставляем.');
+    assert.strictEqual(r.zag, 'На' + NB + 'сегодня бесплатные проверки закончились');
+    assert.strictEqual(sp(r.stroka), sDatoj ? 'Завтра — снова ' + G + '. Пока идёт бета (по 13 октября), тарифы не продаём и счета не выставляем.'
+      : 'Завтра — снова ' + (tarify && tarify.gost || 10) + '. Пока идёт бета, тарифы не продаём и счета не выставляем.');
     assert.strictEqual(r.ssylkiZag, 'Что можно сделать прямо сейчас:');
     assert.ok(!/без лимита/i.test(t), 'в бете «без лимита» не обещаем: ' + t);
     assert.strictEqual(r.knopki.length, 0);
@@ -67,7 +68,7 @@ test('(3) после беты: цены — из tarify.json; Паспорт —
   const start = T.tarify.find((x) => x.id === 'start');
   const r = L.tekst({ tarify: t, beta: false, inn: '7707083893', stranica: 'glavnaya' });
   assert.strictEqual(r.beta, false);
-  assert.strictEqual(sp(r.stroka), 'Завтра — снова 3. Без лимита — в тарифе «' + start.nazvanie + '» за ' + sp(L.rub(start.mesyac)) + ' в месяц.');
+  assert.strictEqual(sp(r.stroka), 'Завтра — снова ' + G + '. Без лимита — в тарифе «' + start.nazvanie + '» за ' + sp(L.rub(start.mesyac)) + ' в месяц.');
   assert.strictEqual(r.knopki.filter((k) => k.primary).length, 1);
   assert.deepStrictEqual(r.knopki[0], { kuda: 'tarify', t: 'Тарифы', href: '/tarify/#start', primary: true });
   assert.strictEqual(sp(r.knopki[1].t), T.pasport_razovyj.nazvanie + ' — ' + sp(L.rub(T.pasport_razovyj.cena_rub)));

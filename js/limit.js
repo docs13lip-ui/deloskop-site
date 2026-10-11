@@ -23,7 +23,8 @@
   var NB = ' ';
   var KEY = 'dlk_otlozhennye', MAX = 5, DNEJ = 30;
   var TARIFY_URL = '/tarify/tarify.json';
-  var LIMIT = 3;
+  // gost-limit-10-sait-v1: число — из tarify.json → gost_v_den (как в API, /api/health); нет файла — 10.
+  var LIMIT = 10;
   // beta-data-v1: конец беты — из tarify.json → beta_do (последний бесплатный день, МСК). Нет даты или день прошёл —
   // текст без даты (вариант B полосы, ТЗ [команда] 05.10, разд. 1; [команда] 05.10 11:10, разд. 1, условие 3).
   var MES = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
@@ -59,6 +60,7 @@
     var p = T.pasport_razovyj || {};
     return {
       beta: T.beta === true,
+      gost: T.gost_v_den > 0 ? Math.floor(T.gost_v_den) : null,
       betaDo: T.beta_do || null,
       start: start && start.mesyac > 0 ? { nazvanie: start.nazvanie || 'Старт', mesyac: start.mesyac } : null,
       pasport: p.cena_rub > 0 ? { nazvanie: p.nazvanie || 'Паспорт контрагента на дату сделки', cena: p.cena_rub } : null
@@ -73,9 +75,10 @@
     var T = o.tarify || null;
     var beta = !!(o.beta || !T || T.beta || !T.start);
     var inn = innOrg(o.inn);
+    var G = (T && T.gost) || LIMIT;
     var r = {
       beta: beta,
-      zag: 'На' + NB + 'сегодня ' + LIMIT + NB + 'бесплатные проверки закончились',
+      zag: 'На' + NB + 'сегодня бесплатные проверки закончились',
       stroka: '',
       sohr: o.sohranen && inn ? 'ИНН ' + inn + ' сохранили на' + NB + 'этом устройстве' + NB + '— завтра проверим одним нажатием.' : '',
       ssylkiZag: 'Что можно сделать прямо сейчас:',
@@ -84,10 +87,10 @@
     };
     if (beta) {
       var srok = srokBety(T && T.betaDo, o.sejchas);
-      r.stroka = 'Завтра' + NB + '— снова ' + LIMIT + '. Пока идёт бета' + (srok ? ' (по' + NB + srok.slovami + ')' : '') + ', тарифы не' + NB + 'продаём и' + NB + 'счета не' + NB + 'выставляем.';
+      r.stroka = 'Завтра' + NB + '— снова ' + G + '. Пока идёт бета' + (srok ? ' (по' + NB + srok.slovami + ')' : '') + ', тарифы не' + NB + 'продаём и' + NB + 'счета не' + NB + 'выставляем.';
       return r;
     }
-    r.stroka = 'Завтра' + NB + '— снова ' + LIMIT + '. Без лимита' + NB + '— в' + NB + 'тарифе «' + T.start.nazvanie + '» за' + NB + rub(T.start.mesyac) + ' в' + NB + 'месяц.';
+    r.stroka = 'Завтра' + NB + '— снова ' + G + '. Без лимита' + NB + '— в' + NB + 'тарифе «' + T.start.nazvanie + '» за' + NB + rub(T.start.mesyac) + ' в' + NB + 'месяц.';
     r.knopki.push({ kuda: 'tarify', t: 'Тарифы', href: '/tarify/#start', primary: true });
     if (inn && T.pasport) r.knopki.push({ kuda: 'pasport', t: T.pasport.nazvanie + NB + '— ' + rub(T.pasport.cena), href: '/schet/?produkt=pasport_razovyj', gost: true });
     return r;

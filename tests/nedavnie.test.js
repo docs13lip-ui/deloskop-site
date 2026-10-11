@@ -73,7 +73,7 @@ test('cabinet.html: «Проверить» — primary у вошедшего, п
   assert.match(s, /\$\('goCheck'\)\.className='btn primary'/);
   assert.match(s, /id="fCheck"[\s\S]{0,400}class="btn primary" type="submit">Проверить/);
   assert.match(s, /textContent='Повторить'/);
-  assert.match(s, /Без входа работают 3 проверки в день/);
+  assert.match(s, /Без входа работают 10 проверок в день/);
   // скрипт «Недавних» подключён до основного, иначе на тестовом адресе showLogin() его не увидит
   assert.ok(s.indexOf('/js/nedavnie.js') < s.indexOf("$('fCheck').onsubmit"));
 });

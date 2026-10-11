@@ -71,11 +71,45 @@
     return b;
   }
 
+  // sudy-v1 [Ночные запуски] 11.10: словарь API → словарь сайта. API (damia v1.4) отдаёт status «polucheno» / «ne_provereno»
+  // и отдельно sostoyanie found / not_found / not_checked / not_applicable, а модули отчёта (Паспорт, «Откуда данные»,
+  // «Существенные факты», Индекс) читают status как found / not_found. Без этого шага, когда ключ DaMIA заработает, найденные
+  // дела суда показались бы как «ответа нет». Прежнее слово API сохраняем в status_api.
+  var SLOVAR_API = { polucheno: 1, ne_provereno: 1 };
+  function privestiSlovar(dm) {
+    Object.keys(dm).forEach(function (k) {
+      var b = dm[k];
+      if (!b || typeof b !== 'object' || !SLOVAR_API[b.status]) return;
+      var s = b.sostoyanie;
+      b.status_api = b.status;
+      b.status = OTVETIL[s] ? s : 'not_checked';
+      if (!b.sostoyanie) b.sostoyanie = b.status;
+    });
+  }
+
+  // sudy-v1: «Арбитражные суды» — одна строка-вывод из analitika API (кто и сколько судится, доля выручки, тренд) вместо
+  // общего итога. Прежний итог — в itog_prezhnij. Советы «что сделать» — только согласованные [Право] (soglasovano: true).
+  function sudyItog(b) {
+    var a = b && b.analitika;
+    if (!a || typeof a !== 'object' || a.oshibka || !a.svodka || b.status !== 'found') return;
+    var t = [String(a.svodka)];
+    if (a.dolya_vyruchki && a.dolya_vyruchki.tekst) t.push(String(a.dolya_vyruchki.tekst));
+    if (a.trend && a.trend.rost && a.trend.tekst) t.push(String(a.trend.tekst));
+    if (!b.itog_prezhnij) b.itog_prezhnij = b.itog || '';
+    b.itog = t.join(' ');
+    if (a.dolya_vyruchki && a.dolya_vyruchki.ton === 'bad') b.uroven = 'bad';
+    b.chto_sdelat = (Array.isArray(a.chto_sdelat) ? a.chto_sdelat : []).filter(function (x) { return x && x.soglasovano === true && x.tekst; });
+  }
+
   function dopolnit(r) {
     if (!r || typeof r !== 'object' || !r.company) return r;
     var dm = r.damia && typeof r.damia === 'object' ? r.damia : null;
+    if (dm) { privestiSlovar(dm); sudyItog(dm.sudy); }
     var est = dm && dm.bankrotstvo && typeof dm.bankrotstvo === 'object' ? dm.bankrotstvo : null;
-    if (!est || !OTVETIL[est.status]) {
+    // ЕГРЮЛ говорит «банкротство», а картотека API — «дел, где компания должник, не нашли»: верим ЕГРЮЛ (запись о процедуре
+    // вносит налоговая по решению суда; картотека по роли «должник» могла не сопоставиться)
+    var bankrotEgryul = String((r.company || {}).status || '').toUpperCase() === 'BANKRUPT';
+    if (!est || !OTVETIL[est.status] || (bankrotEgryul && est.status === 'not_found')) {
       var b = bankrotstvoIzEgryul(r);
       if (b) {
         if (!dm) { dm = {}; r.damia = dm; }
@@ -98,5 +132,5 @@
     return b.status === 'provereno' || b.status === 'found' || b.status === 'not_found';
   }
 
-  return { dopolnit: dopolnit, bankrotstvoIzEgryul: bankrotstvoIzEgryul, uchten: uchten, OGOVORKA_EFRSB: OGOVORKA_EFRSB };
+  return { dopolnit: dopolnit, bankrotstvoIzEgryul: bankrotstvoIzEgryul, uchten: uchten, privestiSlovar: privestiSlovar, sudyItog: sudyItog, OGOVORKA_EFRSB: OGOVORKA_EFRSB };
 });

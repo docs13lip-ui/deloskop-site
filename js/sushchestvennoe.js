@@ -434,7 +434,11 @@
   // «Не проверяли» по причине ([Право · Юрист 115-ФЗ] 11.10, разд. 2): «в этот раз» — только о сбое или лимите.
   // Все — «пока не проверяем» (API: sostoyanie = not_checked) → «Не проверяли: …»; все — не ответили → «Не ответили в этот раз: …»;
   // причины разные → две строки: «Пока не проверяем: …» и «Не ответили в этот раз: …».
-  function neStroka(spisok, sPrichinoj, razdel) {
+  // ne-povtor-v1 [Ночные-3] 11.10: uzhe — ключи реестров, которые уже названы в выводе «Условий сделки» (Usloviya.vVyvode):
+  // их не повторяем, остальное — «Кроме того, …»; названы все — строки нет (ссылки «проверьте сами» остаются в глубине).
+  function neStroka(spisok, sPrichinoj, razdel, uzhe) {
+    var bylo = spisok.length;
+    if (uzhe && uzhe.length) spisok = spisok.filter(function (x) { return uzhe.indexOf(x.k) < 0; });
     if (!spisok.length) return '';
     function chast(xs) {
       var pr = xs.map(function (x) { return x.prichina; });
@@ -445,12 +449,13 @@
     var t = !net.length ? 'Не проверяли: ' + chast(poka) + '.'
       : !poka.length ? 'Не ответили в' + NB + 'этот раз: ' + chast(net) + '.'
       : 'Пока не проверяем: ' + chast(poka) + '. Не ответили в' + NB + 'этот раз: ' + chast(net) + '.';
+    if (spisok.length < bylo) t = 'Кроме того, ' + t.charAt(0).toLowerCase() + t.slice(1);
     return '<p class="sut__ne">' + t + ' Не проверено — не значит «не обнаружено»; ссылки, где проверить самим, — в разделе «' + razdel + '».</p>';
   }
-  function html(r) {
+  function html(r, opt) {
     var f = fakty(r);
     if (!f.spisok.length) return '';
-    var ne = neStroka(f.neProvereno, true, 'Все данные из реестров');
+    var ne = neStroka(f.neProvereno, true, 'Все данные из реестров', opt && opt.uzhe);
     return '<div class="sut__h"><b>Существенные факты</b><span>' + (f.eshche.length ? 'ещё ' + f.eshche.length + ' — в' + NB + 'разделе «Все данные из реестров»' : 'у каждого — источник и дата') + '</span></div>' +
       f.spisok.map(rowHtml).join('') + ne + glubinaHtml(glubina(r, f));
   }
@@ -501,10 +506,10 @@
 
   // Браузер: заменяет строки светофора в быстром отчёте на существенные факты + свёрнутую глубину.
   // Ошибка или пустой ответ — строки остаются как были.
-  function mount(el, r) {
+  function mount(el, r, opt) {
     if (!el) return false;
     var h = '';
-    try { h = html(r); } catch (e) { h = ''; }
+    try { h = html(r, opt); } catch (e) { h = ''; }
     if (!h) return false;
     try { stil(el.ownerDocument || document); } catch (e) {}
     el.innerHTML = h;

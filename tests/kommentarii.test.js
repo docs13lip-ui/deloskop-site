@@ -398,7 +398,7 @@ test("главная: модуль подключён после существ�
   const h = fs.readFileSync(path.join(KOREN, "index.html"), "utf8");
   const a = h.indexOf('<script src="/js/sushchestvennoe.js" defer></script>'), b = h.indexOf('<script src="/js/kommentarii.js" defer></script>');
   assert.ok(a > 0 && b > a, "kommentarii.js подключён после sushchestvennoe.js");
-  const m = h.indexOf("Sushchestvennoe.mount(report.querySelector('.rows'),r)"), v = h.indexOf("Kommentarii.vstavitSut(");
+  const m = h.indexOf("Sushchestvennoe.mount(report.querySelector('.rows'),r"), v = h.indexOf("Kommentarii.vstavitSut(");
   assert.ok(m > 0 && v > m, "вставка — после существенных фактов");
   assert.ok(/if\(!svoj&&window\.Sushchestvennoe&&window\.Kommentarii\)/.test(h), "в Щите комментариев к фактам нет — там свой разбор");
 });

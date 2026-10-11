@@ -447,7 +447,10 @@ def _ld_glavnoj(txt):
         qa.append({"@type": "Question", "name": html.unescape(q), "acceptedAnswer": {"@type": "Answer", "text": txt_a}})
     ld = [{"@context": "https://schema.org", "@type": "Organization", "name": "Делоскоп", "url": "https://deloskop.ru/",
            "logo": "https://deloskop.ru/ikonka-512.png", "email": "help@deloskop.ru"},
-          {"@context": "https://schema.org", "@type": "WebSite", "name": "Делоскоп", "url": "https://deloskop.ru/", "inLanguage": "ru"},
+          {"@context": "https://schema.org", "@type": "WebSite", "name": "Делоскоп", "url": "https://deloskop.ru/", "inLanguage": "ru",
+           # yandex-tehnika-v1: поиск по сайту = проверка по ИНН (/?inn=…; не ИНН — подставится в поле проверки)
+           "potentialAction": {"@type": "SearchAction", "target": "https://deloskop.ru/?inn={search_term_string}",
+                               "query-input": "required name=search_term_string"}},
           {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": qa}]
     return '<!--ld-glavnaya--><script type="application/ld+json">' + json.dumps(ld, ensure_ascii=False) + '</script><!--/ld-glavnaya-->'
 if '<!--ld-glavnaya-->' in _m:

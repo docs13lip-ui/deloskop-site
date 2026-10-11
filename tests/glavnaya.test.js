@@ -53,7 +53,10 @@ test('FAQ: 6 вопросов, FAQPage = видимым вопросам', () =>
   assert.deepStrictEqual(faq.mainEntity.map((q) => q.name), vidnye);
   const org = ld.find((x) => x['@type'] === 'Organization');
   assert.ok(org && !/ИНН|ОГРН/.test(JSON.stringify(org)), 'Organization без реквизитов ИП');
-  assert.ok(!ld.some((x) => x.potentialAction), 'SearchAction не ставим, пока главная не запускает проверку по ?inn= сама');
+  // yandex-tehnika-v1 (11.10): условие выполнено — главная сама запускает проверку по ?inn= (runCheck(qi)); SearchAction — только при нём
+  if (ld.some((x) => x.potentialAction)) {
+    assert.match(G, /get\('inn'\)[\s\S]{0,200}runCheck\(qi\)/, 'SearchAction только пока главная запускает проверку по ?inn= сама');
+  }
 });
 
 test('запретное на главной: «скоро», персональный разбор, Индекс, гарантии, «безопасно»', () => {

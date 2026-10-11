@@ -7,6 +7,7 @@
 
     python3 tests/kartochki.py sobrat  --vhod kartochki.jsonl [--stupen 0] [--spros 800 --kontrol 200] [--dobavit]
         # --dobavit (v3.5): опубликованные карточки не трогать, новые — добавить; хаб и sitemap — по всем
+    python3 tests/kartochki.py perepechatat  # опубликованные карточки — по текущему шаблону, без сведений (kartochki-shablon-v1)
     python3 tests/kartochki.py proverka --vhod kartochki.jsonl [--podrobno]  # только отчёт «сколько проходит ворота», файлы не трогает
     python3 tests/kartochki.py iz-api  --inn spisok.txt --vyhod kartochki.jsonl [--pauza 6] [--maks 300] [--zanovo]  # живой /api/check; 429 — стоп;
         # опубликованные и отсев (tests/kartochki_otsev.txt) не спрашиваются (kartochki-vybor-v1)
@@ -192,7 +193,9 @@ def zapisat(put, txt):
 # страницам: JSON-LD Organization (ИНН, название, регион, город), доход — из meta description, lastmod — самая
 # свежая «сведения на дд.мм.гггг» страницы (то же правило, что lastmod()). Новых данных не храним.
 _LD = re.compile(r'<script type="application/ld\+json">(.*?)</script>', re.S)
-_DOHOD = re.compile(r"доход ([0-9]+(?:,[0-9]+)?)(?:&nbsp;|\u00a0| )(трлн|млрд|млн|тыс\.)(?:&nbsp;|\u00a0| )₽")
+_DOHOD = re.compile(r"(?:доход|выручка) ([0-9]+(?:,[0-9]+)?)(?:&nbsp;|\u00a0| )(трлн|млрд|млн|тыс\.)(?:&nbsp;|\u00a0| )₽")
+# kartochki-shablon-v1: доход только из набора ФНС (без таблицы ГИР БО) — из заголовка блока «Доход за 2025 год — …»
+_DOHOD_H2 = re.compile(r'<h2 id="fin">Доход[^<]*? — ([0-9]+(?:,[0-9]+)?)(?:&nbsp;|\u00a0| )(трлн|млрд|млн|тыс\.)(?:&nbsp;|\u00a0| )₽</h2>')
 _DOHOD_TAB = re.compile(r'<tbody><tr><td>\d{4}</td><td class="num">([0-9]+(?:,[0-9]+)?)(?:&nbsp;|\u00a0| )(трлн|млрд|млн|тыс\.)(?:&nbsp;|\u00a0| )₽')
 _MNOZH = {"трлн": 1e12, "млрд": 1e9, "млн": 1e6, "тыс.": 1e3}
 _SVEDENIYA = re.compile(r"сведения на (\d\d)\.(\d\d)\.(\d{4})")
@@ -242,7 +245,7 @@ def kartochki_na_diske(koren=KOREN):
              "gorod": adr.get("addressLocality") or "", "okved": "", "fakty": {}, "_papka": d, "_s_diska": True}
         md = re.search(r'<meta name="description" content="([^"]*)"', t)
         z = _DOHOD.search(md.group(1)) if md else None
-        z = z or _DOHOD_TAB.search(t)  # kartochki-indeks-v1: старой выручки в description нет — берём строку таблицы
+        z = z or _DOHOD_TAB.search(t) or _DOHOD_H2.search(t)  # kartochki-indeks-v1: старой выручки в description нет — берём строку таблицы
         if z:
             k["fakty"]["dohod"] = {"znachenie": float(z.group(1).replace(",", ".")) * _MNOZH[z.group(2)]}
         daty = [dt.date(int(g), int(mm), int(dd)) for dd, mm, g in _SVEDENIYA.findall(t)]
@@ -375,7 +378,9 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
     kg = karta_grupp(gruppy)
     izm = 0
     for k in kart:
-        txt = ss.sobrat_stranicu(html_kartochki(k, k["_V"], pohozhie(k, vse), kom, normy, cena), r, podval, shapka)
+        sos_ = pohozhie(k, vse)
+        k["_eshche"] = eshche_kompanii(k, vse, sos_)  # kartochki-shablon-v1: всего ссылок на карточки — не меньше 5
+        txt = ss.sobrat_stranicu(html_kartochki(k, k["_V"], sos_, kom, normy, cena), r, podval, shapka)
         txt = ssylki_kroshek(txt, kg)
         k["_noindex"] = noindex_html(txt)
         izm += zapisat(os.path.join(koren, adres_str(k).strip("/"), "index.html"), txt)
@@ -384,7 +389,8 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         put = os.path.join(papka, x["_papka"], "index.html")
         with open(put, encoding="utf-8") as fh:
             t = fh.read()
-        t2 = _SOS.sub(lambda m: m.group(1) + sosedi_html(x, pohozhie(x, vse)) + m.group(3), t, count=1)
+        sos_ = pohozhie(x, vse)
+        t2 = _SOS.sub(lambda m: m.group(1) + sosedi_html(x, sos_, eshche_kompanii(x, vse, sos_)) + m.group(3), t, count=1)
         t2 = pochinit_god_dvazhdy(t2)  # v3.10: «Выручка за 2021 — … за 2021» → год один раз, как у новых карточек
         t2 = pochinit_indeks_blok(t2)  # kartochki-okved-v1: «Индекс — считаем» → «Индекс — в полном отчёте», как у новых
         t2 = pochinit_ubytok(t2)  # kartochki-v4.2: «убыток» в таблице — подписью над числом, как у новых
@@ -394,6 +400,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         t2 = beta_poloviny(t2, r["_beta"], r.get("_beta_do"))  # половины беты — по флагу, как sobrat_shapku
         t2 = primenit_vorota_indeksa(t2)  # kartochki-indeks-v1: те же ворота индексации, что у новых карточек
         t2 = ssylki_kroshek(t2, kg)  # kartochki-haby-v1: регион и раздел в крошках — ссылкой на хаб группы
+        t2 = shablon_v2(t2)  # kartochki-shablon-v1: H1 с ИНН, строка под H1, description — как у новых
         x["_noindex"] = noindex_html(t2)
         if BEZ_OBOLOCHKI in t2:
             # «голое» тело из комплекта — оболочка той же sobrat_stranicu
@@ -463,6 +470,46 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
     except Exception as oshibka:  # рейтинг не должен ронять сборку карточек; тест reyting.test.js покажет устаревшую страницу
         otchet["reyting"] = "ошибка: %s" % oshibka
     return kart, otchet
+
+
+# ---------------------------------------------------------------- kartochki-shablon-v1: совпадение текста с «Похожими»
+# ТЗ [Продукт · Яндекс] 11.10 п. 7: доля предложений карточки, которые дословно стоят и на соседней карточке («Похожие» и
+# «Ещё в регионе»), — максимум по соседям. Цель — < 60 %; пока это ОТЧЁТ, а не ворота: на 11.10 медиана ≈ 83 % — общие
+# тексты (оговорки [Право], «Перед оплатой», «Полный отчёт», «Паспорт»). Сделать воротами — решение [Продукт] (✎).
+SOVPADENIE_CEL = 0.60
+_SOS_SSYLKI = re.compile(r'<li><a href="/company/([^/"]+)/">')
+
+
+def predlozheniya(t):
+    m = re.search(r"<main.*?</main>", t, re.S)
+    t = re.sub(r"<(script|style)[^>]*>.*?</\1>", "", m.group(0) if m else t, flags=re.S)
+    t = html.unescape(re.sub(r"<[^>]+>", "\n", t)).replace("\u00a0", " ")
+    out = set()
+    for blok in t.split("\n"):
+        for s in re.split(r"(?<=[.!?…])\s+", blok):
+            s = re.sub(r"\s+", " ", s).strip()
+            if len(s) >= 20:
+                out.add(s)
+    return out
+
+
+def sovpadenie(koren=KOREN):
+    """→ [(доля, папка)] по опубликованным карточкам, по убыванию доли."""
+    papka = os.path.join(koren, PAPKA)
+    stranicy = {}
+    for d in sorted(os.listdir(papka)) if os.path.isdir(papka) else []:
+        put = os.path.join(papka, d, "index.html")
+        if re.match(r"^\d{10}-", d) and os.path.isfile(put):
+            with open(put, encoding="utf-8") as fh:
+                stranicy[d] = fh.read()
+    pr = {d: predlozheniya(t) for d, t in stranicy.items()}
+    out = []
+    for d, t in stranicy.items():
+        m = re.search(r'aria-labelledby="sos".*?</aside>', t, re.S)
+        sos = [x for x in _SOS_SSYLKI.findall(m.group(0)) if x in pr] if m else []
+        dolya = max([len(pr[d] & pr[x]) / max(1, len(pr[d])) for x in sos] or [0.0])
+        out.append((dolya, d))
+    return sorted(out, reverse=True)
 
 
 # ---------------------------------------------------------------- сведения из живого /api/check
@@ -580,9 +627,13 @@ def otsev(vhod, segodnya=None, put=None):
 
 
 def main(argv):
-    if not argv or argv[0] not in ("sobrat", "proverka", "iz-api", "vybor", "otsev"):
+    if not argv or argv[0] not in ("sobrat", "proverka", "iz-api", "vybor", "otsev", "perepechatat"):
         print(__doc__)
         return 2
+    if argv[0] == "perepechatat":
+        # kartochki-shablon-v1: опубликованные карточки — по текущему шаблону, без сведений и без API (= sobrat --dobavit
+        # с пустым входом): «Похожие», H1, строка под H1, description и прочие pochinit_* — как у новых карточек
+        argv = ["sobrat", "--dobavit", "--vhod", os.devnull]
     if argv[0] == "iz-api":
         iz_api(_arg(argv, "--inn"), _arg(argv, "--vyhod", "tests/kartochki_dannye/kartochki.jsonl"),
                _arg(argv, "--api", "https://api.deloskop.ru"), max(6.0, float(_arg(argv, "--pauza", "6"))),
@@ -619,6 +670,12 @@ def main(argv):
     if "sitemap_vsego" in o:
         print("Sitemap: %d адресов карточек · новых в этой сборке: %d · ждут следующей партии: %d (не больше %s в сутки)." % (
             o["sitemap_vsego"], o["sitemap_novyh"], o["sitemap_zhdut"], _arg(argv, "--partiya", str(PARTIYA_V_SUTKI))))
+    sv = sovpadenie(KOREN)
+    if sv:
+        dd = sorted(x for x, _ in sv)
+        print("Совпадение предложений с соседними карточками: медиана %d %% · максимум %d %% (%s) · ниже цели %d %%: %d из %d — отчёт, не ворота." % (
+            round(dd[len(dd) // 2] * 100), round(sv[0][0] * 100), sv[0][1], round(SOVPADENIE_CEL * 100),
+            sum(1 for x in dd if x < SOVPADENIE_CEL), len(dd)))
     print("Карточек изменено: %d. Дальше: node --test tests/*.test.* && python3 tests/test_kartochki.py → PR." % o["izmeneno_stranic"])
     return 0
 

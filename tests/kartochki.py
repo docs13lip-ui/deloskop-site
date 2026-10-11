@@ -377,11 +377,13 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
     gruppy = gruppy_haba(vse, HAB_GRUPPY_OT)
     kg = karta_grupp(gruppy)
     izm = 0
+    den = segodnya or segodnya_msk()  # vozrast-segodnya-v1: возраст компании — на день сборки по Москве
     for k in kart:
         sos_ = pohozhie(k, vse)
         k["_eshche"] = eshche_kompanii(k, vse, sos_)  # kartochki-shablon-v1: всего ссылок на карточки — не меньше 5
         txt = ss.sobrat_stranicu(html_kartochki(k, k["_V"], sos_, kom, normy, cena), r, podval, shapka)
         txt = ssylki_kroshek(txt, kg)
+        txt = pochinit_vozrast(txt, den)
         k["_noindex"] = noindex_html(txt)
         izm += zapisat(os.path.join(koren, adres_str(k).strip("/"), "index.html"), txt)
     # v3.8b: у опубликованных — свежие «Похожие компании», остальное байт в байт
@@ -401,6 +403,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         t2 = primenit_vorota_indeksa(t2)  # kartochki-indeks-v1: те же ворота индексации, что у новых карточек
         t2 = ssylki_kroshek(t2, kg)  # kartochki-haby-v1: регион и раздел в крошках — ссылкой на хаб группы
         t2 = shablon_v2(t2)  # kartochki-shablon-v1: H1 с ИНН, строка под H1, description — как у новых
+        t2 = pochinit_vozrast(t2, den)  # vozrast-segodnya-v1: возраст — на сегодня, число пересчитывает и браузер
         x["_noindex"] = noindex_html(t2)
         if BEZ_OBOLOCHKI in t2:
             # «голое» тело из комплекта — оболочка той же sobrat_stranicu

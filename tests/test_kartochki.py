@@ -2025,7 +2025,7 @@ class TestDatyIzReestraV1(unittest.TestCase):
         h = K.daty_html(k, 490)
         self.assertIn("<dt>Зарегистрирована</dt> <dd><span class=\"num\">14" + NB + "марта" + NB + "2011" + NB + "года</span>"
                       " <span class=\"co-daty__p\">— 15" + NB + "лет назад</span></dd>", h)
-        self.assertIn("<dt>Сведения в" + NB + "реестре актуальны на</dt> <dd><span class=\"num\">21" + NB + "сентября" + NB + "2026" + NB + "года</span>", h)
+        self.assertIn("<dt>Последнее изменение записи в" + NB + "ЕГРЮЛ</dt> <dd><span class=\"num\">21" + NB + "сентября" + NB + "2026" + NB + "года</span>", h)
         self.assertNotIn("нынешнем руководител", h)  # строка о руководителе — только после «РКН отправлено»
         os.environ["RKN_OTPRAVLENO"] = "1"
         self.addCleanup(os.environ.pop, "RKN_OTPRAVLENO", None)

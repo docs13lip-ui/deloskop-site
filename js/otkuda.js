@@ -13,6 +13,12 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
+  // prichina-nep-v1 [Ночные-3] 11.10: не запрошенный реестр (sostoyanie = not_checked) — причина словами сайта, а не текст
+  // лимита API («обновите отчёт завтра», «откройте его в платном тарифе»); те же правила — в js/sushchestvennoe.js (prichinaReestra).
+  var POKA_NE = 'эти реестры мы пока не проверяем';
+  var OBESHCHANIE = /завтра|тариф|сегодн|запас|временно|позже/i;
+  var PLATNYJ = /[\s,;—-]*(?:или\s+)?(?:откройте|откроется)[^.;]*тариф[^.;]*/gi;
+
   var NB = '\u00a0';
   var DAMIA_PORYADOK = ['sudy', 'bankrotstvo', 'fssp', 'priostanovki', 'mery', 'rnp', 'kontrakty'];
   // что из внешнего реестра берём — коротко, для строки описи
@@ -129,7 +135,7 @@
       var nep = !otv && b.sostoyanie === 'not_checked';
       spisok.push({ k: 'damia:' + k, znak: otv ? '●' : nep ? '–' : '○', nazv: b.nazvanie, chto: DAMIA_CHTO[k] || '',
         data: otv ? 'на' + NB + (dmy(b.data_svedeniy) || dataPr) : '', status: otv ? 'ok' : nep ? 'nep' : 'net',
-        prichina: otv ? '' : (b.prichina || (nep ? 'не проверяли' : 'ответа нет')), ssylka: otv ? '' : chistyj(b.proverit_samim) });
+        prichina: otv ? '' : nep ? (b.prichina && !OBESHCHANIE.test(b.prichina) ? b.prichina : POKA_NE) : (String(b.prichina || '').replace(PLATNYJ, '').replace(/\s+$/, '') || 'ответа нет'), ssylka: otv ? '' : chistyj(b.proverit_samim) });
     });
 
     var nep = spisok.filter(function (x) { return x.status === 'nep'; }).length;
@@ -177,7 +183,7 @@
       nepTekst + ' · проверка ' + o.dataPr + '</span><span class="otk__m" aria-hidden="true">' + tochki + '</span></summary>' +
       '<ul>' + o.spisok.map(stroka).join('') + '</ul>' +
       (obshchaya ? '<p class="otk__p otk__p--net">Не ответили ' + net.length + ' из ' + o.oprosheno + ': ' + nw(esc(obshchaya)) + '.</p>' : '') +
-      (obshchayaNep ? '<p class="otk__p otk__p--net">Не проверяли ' + nepS.length + NB + skl(nepS.length, 'реестр', 'реестра', 'реестров') + ': ' + nw(esc(obshchayaNep)) + '. Ссылки «проверьте сами» — в строках выше.</p>' : '') +
+      (obshchayaNep ? '<p class="otk__p otk__p--net">Не проверяли ' + nepS.length + NB + skl(nepS.length, 'реестр', 'реестра', 'реестров') + (obshchayaNep === POKA_NE ? ' — мы их пока не' + NB + 'проверяем' : ': ' + nw(esc(obshchayaNep))) + '. Ссылки «проверьте сами» — в строках выше.</p>' : '') +
       '<p class="otk__p">● ответил' + (net.length || !o.nep ? ' · ○ не ответил' : '') + (o.nep ? ' · – не проверяли' : '') + ' — не значит «не нашли» · ◆ рассчитано Делоскопом. Это оценка риска, а не решение банка.</p></details>';
   }
 

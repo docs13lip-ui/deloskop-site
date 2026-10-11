@@ -27,6 +27,19 @@
   var SEKCII = { profile: 'reestr', history: 'reestr', management: 'reestr', activity: 'reestr', taxes: 'ФНС, открытые данные', dynamics: 'ГИР БО ФНС, годовая бухгалтерская отчётность' };
   var KRATKO = { sudy: 'арбитражные суды', bankrotstvo: 'банкротство', fssp: 'приставы', priostanovki: 'приостановки счетов', mery: 'обеспечительные меры ФНС', rnp: 'РНП', kontrakty: 'госконтракты' };
   var DAMIA_PORYADOK = ['sudy', 'bankrotstvo', 'fssp', 'priostanovki', 'mery', 'rnp', 'kontrakty'];
+  // prichina-nep-v1 [Ночные-3] 11.10: реестр, который API пометил sostoyanie = not_checked («Не проверяли»), с причиной-обещанием
+  // из ответа API («сегодня источник недоступен — обновите отчёт завтра», «…или откройте его в платном тарифе») — на сайте
+  // словами [Право] 10.10: «эти реестры мы пока не проверяем» (как на главной и в ленте 2026-10-11-47). Суды, банкротство
+  // и приставов не включает ни один тариф — экран не обещает их ни завтра, ни за деньги (38-ФЗ). Причину без обещания
+  // («в открытой бете не подключён») оставляем как есть; у сбоя (не not_checked) — причина API без «платного тарифа».
+  var POKA_NE = 'эти реестры мы пока не проверяем';
+  var OBESHCHANIE = /завтра|тариф|сегодн|запас|временно|позже/i;
+  var PLATNYJ = /[\s,;—-]*(?:или\s+)?(?:откройте|откроется)[^.;]*тариф[^.;]*/gi;
+  function prichinaReestra(b) {
+    if (!b) return '';
+    if (b.sostoyanie === 'not_checked' && (!b.prichina || OBESHCHANIE.test(b.prichina))) return POKA_NE;
+    return String(b.prichina || '').replace(PLATNYJ, '').replace(/\s+$/, '');
+  }
 
   function esc(t) {
     return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) {
@@ -361,7 +374,7 @@
         var i = 0; while (i < vse.length && VES[vse[i].ton] <= VES[f.ton]) i++;
         vse.splice(i, 0, f);
       } else if (b.status !== 'not_found' && b.status !== 'not_applicable') {
-        ne.push({ k: k, nazv: b.nazvanie, kratko: KRATKO[k] || b.nazvanie, prichina: b.prichina || '', sam: b.proverit_samim || '', nep: b.sostoyanie === 'not_checked' });
+        ne.push({ k: k, nazv: b.nazvanie, kratko: KRATKO[k] || b.nazvanie, prichina: prichinaReestra(b), sam: b.proverit_samim || '', nep: b.sostoyanie === 'not_checked' });
       }
     });
     return { spisok: vse.slice(0, MAKS), eshche: vse.slice(MAKS), neProvereno: ne, dataPr: dataPr };
@@ -395,7 +408,8 @@
       if (b.status === 'found') { v = b.itog || b.znachenie || 'Сведения найдены'; t = b.uroven === 'bad' || b.uroven === 'high' ? 'bad' : 'warn'; }
       else if (b.status === 'not_found') { v = (b.itog || 'Сведений не найдено') + (b.data_svedeniy ? ' · на ' + dmy(b.data_svedeniy) : ''); t = 'ok'; }
       else if (b.status === 'not_applicable') v = b.prichina || 'Не применяется к этой компании';
-      else v = 'Не проверяли' + (b.prichina ? ': ' + b.prichina : '');
+      else if (b.sostoyanie === 'not_checked') v = 'Не проверяли: ' + prichinaReestra(b);
+      else v = 'Не ответили в' + NB + 'этот раз' + (prichinaReestra(b) ? ': ' + prichinaReestra(b) : '');
       reestry.push([b.nazvanie, v, t, b.status !== 'found' && b.status !== 'not_found' ? (b.proverit_samim || '') : '', b.istochnik || '']);
     });
     if (reestry.length) out.push({ zag: 'Внешние реестры', ist: 'источник — у каждой строки', stroki: reestry });
@@ -543,5 +557,5 @@
     return true;
   }
 
-  return { razryady: razryady, fakty: fakty, godBezVyruchki: godBezVyruchki, otchetGod: otchetGod, bank: bank, kapital: kapital, likvidnost: likvidnost, ubytki: ubytki, skachokVniz: skachokVniz, glubina: glubina, otchetnost: otchetnost, poslGodOtchetnosti: poslGodOtchetnosti, staraya: staraya, html: html, mount: mount, htmlSvoj: htmlSvoj, mountSvoj: mountSvoj, dengi: dengi, srok: srok, MAKS: MAKS, CSS: CSS };
+  return { prichinaReestra: prichinaReestra, POKA_NE: POKA_NE, razryady: razryady, fakty: fakty, godBezVyruchki: godBezVyruchki, otchetGod: otchetGod, bank: bank, kapital: kapital, likvidnost: likvidnost, ubytki: ubytki, skachokVniz: skachokVniz, glubina: glubina, otchetnost: otchetnost, poslGodOtchetnosti: poslGodOtchetnosti, staraya: staraya, html: html, mount: mount, htmlSvoj: htmlSvoj, mountSvoj: mountSvoj, dengi: dengi, srok: srok, MAKS: MAKS, CSS: CSS };
 });

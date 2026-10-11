@@ -114,6 +114,9 @@
     };
     // status-tochno-v1: код состояния ЕГРЮЛ — только если пришёл (без кода вывод побайтно прежний)
     if (c.state_code != null && String(c.state_code).trim()) f.kod = String(c.state_code).trim();
+    // predel-bank-v1 [Ночные-3] 11.10: кредитная организация (основной ОКВЭД 64.1 — банки и НКО, как в js/sushchestvennoe.js).
+    // Её отчётность раскрывает Банк России, в ГИР БО её может не быть → потолок по возрасту занижен; число не меняем, объясняем.
+    if (f.kind === 'LEGAL' && /^64\.1(\.|\d|$)/.test(String(c.okved || ''))) { f.kredit = true; f.okved = String(c.okved); if (/^\d{13}$/.test(String(c.ogrn || ''))) f.ogrn = String(c.ogrn); }
     (r.signals || []).forEach(function (s) {
       if (s.status !== 'bad' && s.status !== 'warn') {
         if (/численност|сотрудник/i.test(s.title || '')) { var z = num(s.detail); if (z != null) f.staff = z; }
@@ -268,8 +271,13 @@
   function mesText(m) { return m < 12 ? m + '\u00a0мес.' : ageText(m); }
 
   // «Как посчитали» — открытая формула предела под суммой (Прорыв «Ф», тексты Маркетинга 28.09, раздел 3.3).
+  var CBR_FOINFO = 'https://www.cbr.ru/finorg/foinfo/';
+  function bankSsylka(f) { return { t: 'Карточка организации на сайте Банка России', u: CBR_FOINFO + (f.ogrn ? '?ogrn=' + f.ogrn : '') }; }
+  function bankTekst(f) {
+    return 'Это кредитная организация (основной ОКВЭД ' + f.okved + '): её отчётность раскрывает Банк России, в ГИР БО её может не быть — поэтому потолок по возрасту здесь осторожнее, чем позволила бы выручка. Лицензию и отчётность сверьте на сайте Банка России.';
+  }
   function kakPoschitali(f, t, pc, reasonsList, np, napr) {
-    var R = pc.raschet || {}, kak = '', otg = napr === 'otgruzhaem';
+    var R = pc.raschet || {}, kak = '', otg = napr === 'otgruzhaem', bankR = false;
     if (t === 'post' || t === 'stop') {
       var pr = f.status === 'LIQUIDATED' ? 'компания ликвидирована' : reorgPrekr(f) ? REORG_PR : (reasonsList[0] || (t === 'stop' ? 'стоп-признак в данных' : 'серьёзное замечание в данных'));
       kak = otg ? 'В долг — 0\u00a0₽: ' + pr + ' — ' + (f.status === 'LIQUIDATED' ? 'сделку не заключать.' : 'отгружайте после оплаты.')
@@ -286,6 +294,7 @@
         kak = 'Как посчитали: выручка' + (R.revenueYear ? ' за ' + R.revenueYear : '') + ' — ' + moneyKrupno(R.revenue) + ' ÷ ' + DELITEL + ' = ' + moneyKrupno(R.dveNedeli) + ' (две недели выручки)' + polovina + ', округлили вниз.';
       } else if (R.base === 'age') {
         kak = 'Как посчитали: выручки в отчётности нет — берём потолок по возрасту (' + ageText(R.ageMonths) + '): ' + money(R.byAge) + polovina + '.';
+        if (f.kredit) { kak += ' ' + bankTekst(f); bankR = true; }
       } else {
         kak = 'Как посчитали: выручка и возраст неизвестны — берём осторожный потолок ' + money(R.byAge) + polovina + '.';
       }
@@ -297,8 +306,10 @@
         (np.provereno != null && np.iz ? ' Из внешних реестров ответили ' + np.provereno + ' из ' + np.iz + (np.data ? ' на ' + dataRu(np.data) : '') + '.' : '');
     }
     if (otg) kak = OBA_NAPRAVLENIYA + ' ' + kak;
-    return { kak: kak, ne: ne,
+    var out = { kak: kak, ne: ne,
       podpis: 'Ориентир Делоскопа, не норма закона. Методика — в разборе «Сколько платить вперёд незнакомой компании».', url: STATYA };
+    if (bankR) out.ssylka = bankSsylka(f);
+    return out;
   }
   // Текст [Продукт · Данные] 02.10 19:37 (разд. 0) — когда предел меньше 10 000 ₽.
   function MALO_TEKST(half) {
@@ -438,6 +449,7 @@
     bank: { t: 'Письмо о том, что счёт не ограничен банком, и реквизиты второго банка', why: 'прогноз ЗСК повышен — запасной счёт спасёт сделку, если банк остановит платёж', ask: 'Подтверждение, что расчётный счёт не ограничен, и реквизиты второго банка' },
     license: { t: 'Лицензия или выписка из СРО, если работа этого требует', why: 'строительство, перевозки, медицина — без допуска сделку могут признать недействительной', ask: 'Лицензия или выписка из реестра СРО — если работы по договору этого требуют' },
     // только «Они платят мне» (ТЗ [Продукт] 05.10, claude/Продукт_в_долг_продавцу_письмо_статья_05.10.md, п. 1.1)
+    otchetnostBank: { t: 'Бухгалтерская (финансовая) отчётность за последний год', why: 'у кредитной организации её раскрывает Банк России — в открытых данных ФНС её может не быть', ask: 'Ссылка на раскрытую бухгалтерскую (финансовую) отчётность за последний год — на сайте организации или Банка России', links: [{ t: 'cbr.ru', u: CBR_FOINFO }] },
     otchetnost: { t: 'Бухгалтерская отчётность за последний год', why: 'в открытых данных её нет — без выручки предел отсрочки считается по возрасту компании, осторожно', ask: 'Бухгалтерская отчётность за последний год с квитанцией о сдаче в налоговую' },
     poruchitel: { t: 'Поручительство директора или участника', why: 'если покупатель не оплатит, долг можно потребовать и с поручителя (ст. 361 ГК РФ) — работает, только если у поручителя есть имущество', ask: 'Согласие директора или участника подписать договор поручительства по оплате поставок' }
   };
@@ -479,7 +491,7 @@
     // отчётность — только у действующей: при ликвидации, банкротстве, исключении вопрос другой —
     // требование к ликвидатору или в деле о банкротстве (✎ ответ [Продукт] 05.10, разд. 4)
     var neDejstvuet = f.status === 'LIQUIDATING' || f.status === 'LIQUIDATED' || f.status === 'BANKRUPT' || !!f.bad.exit;
-    if (!f.revenue && !f.vyruchkaNol && !neDejstvuet) add('otchetnost');
+    if (!f.revenue && !f.vyruchkaNol && !neDejstvuet) add(f.kredit ? 'otchetnostBank' : 'otchetnost');
     // «стоп» — отгрузка только после оплаты, поручительство не помогает (решение потока, ✎ [Продукт])
     if (t !== 'stop' && (amount ? amount > (cap || 0) : t === 'cap')) add('poruchitel');
     return ids.slice(0, 7).map(docItem);
@@ -658,6 +670,7 @@
         (v.amount ? '<div class="usl-out" aria-live="polite"><div>' + esc(v.prepay) + '</div>' + stake + '</div>' : '')) +
         '<div class="usl-kak" data-u="kak"><p>' + esc(v.kak.kak) + '</p>' +
           (v.kak.ne ? '<p class="usl-ne">' + esc(v.kak.ne) + '</p>' : '') +
+          (v.kak.ssylka ? '<p class="usl-ne" data-u="bank"><a href="' + esc(v.kak.ssylka.u) + '" target="_blank" rel="noopener">' + esc(v.kak.ssylka.t) + ' →</a></p>' : '') +
           '<p class="usl-cap">Ориентир Делоскопа, не норма закона. <a href="' + FORMULA + '">Открытая формула предела</a>; пример — в разборе <a href="' + STATYA + '">«Сколько платить вперёд незнакомой компании»</a>.</p>' +
         '</div>' +
         '<details' + openAttr + '><summary><span>Что запросить у них<small>' + v.docs.length + ' ' + plural(v.docs.length, 'документ', 'документа', 'документов') + '</small></span></summary>' +

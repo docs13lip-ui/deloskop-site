@@ -7,7 +7,7 @@
   // Пени за 2 года по ст. 75 НК: 1–30 дней — 1/300 ставки, 31–90 — 1/150, с 91-го — 1/300.
   function doliPenej(stavka) { return stavka * (30 / 300 + 60 / 150 + 640 / 300); }
 
-  /* Пакет развёрнутых проверок (владелец, 30.09.2026: «3 развёрнутые — 990 ₽» вместо «10 отчётов — 990 ₽»). */
+  /* Пакет развёрнутых проверок (команда, 30.09.2026: «3 развёрнутые — 990 ₽» вместо «10 отчётов — 990 ₽»). */
   function paket(D) { return D.paket_pasportov; }
 
   function cenaGoda(t, period) { return period === "god" ? t.god : t.mesyac * 12; }
@@ -88,8 +88,8 @@
   if (!el) return;
   var D = JSON.parse(el.textContent);
   var $ = function (id) { return document.getElementById(id); };
-  // Начальный период — с нажатой кнопки страницы: с картой «Помесячно» (владелец, 26.09.2026), по счёту — «За год»
-  // (владелец, 10.10.2026; сборщик tests/sobrat_tarify.py рисует цены и кнопки сразу под этот период).
+  // Начальный период — с нажатой кнопки страницы: с картой «Помесячно» (команда, 26.09.2026), по счёту — «За год»
+  // (команда, 10.10.2026; сборщик tests/sobrat_tarify.py рисует цены и кнопки сразу под этот период).
   var nach = document.querySelector('[data-period][aria-pressed="true"]');
   var period = nach && nach.getAttribute("data-period") === "god" ? "god" : "mes";
 

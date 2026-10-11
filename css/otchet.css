@@ -1,4 +1,4 @@
-/* Делоскоп — лист «Отчёт о проверке» на всю ширину (js/otchet.js; макет claude/Продукт_макет_экрана_проверки_02.10.md, разд. 2.1–2.3).
+/* Делоскоп — лист «Отчёт о проверке» на всю ширину (js/otchet.js; макет документ команды, разд. 2.1–2.3).
    Токены v1.1 — дополнение к ds.css; названия совпадают с макетом. */
 :root{--r-doc:14px;--line-2:#D9D9D4;--ok-dot:#16723F;--warn-dot:#B86E00;--bad-dot:#B3261E;--na:#A1A1A6}
 .n{font-variant-numeric:tabular-nums}
@@ -68,7 +68,7 @@
 .ot-btn{display:inline-flex;justify-content:center;align-items:center;text-align:center;font-weight:600;font-size:15px;padding:12px 16px;border-radius:12px;text-decoration:none;min-height:44px}
 .ot-btn.p{background:var(--accent,#0B63E5);color:#fff}.ot-btn.p:hover{background:var(--accent-hover,#084BB0);color:#fff}
 .ot-btn.s{background:rgba(255,255,255,.6);box-shadow:inset 0 0 0 1px var(--line-2);color:var(--ink,#1D1D1F)}.ot-btn.s:hover{box-shadow:inset 0 0 0 1px var(--accent,#0B63E5);color:var(--accent,#0B63E5)}
-/* «Паспорт в один шаг» (js/pasport-cta.js): строка под кнопкой — 13 px серым (ТЗ [Продукт] 02.10, разд. 1.1) */
+/* «Паспорт в один шаг» (js/pasport-cta.js): строка под кнопкой — 13 px серым (ТЗ [команда] 02.10, разд. 1.1) */
 .pcta{margin:-2px 0 0;font-size:13px;line-height:1.4;color:var(--ink2,#48484C);text-align:center}.pcta a{color:var(--accent,#0B63E5);white-space:nowrap}
 /* lestnica-390-v1: подсказка «Старта» длиннее колонки действий (3 из 12) — своей строкой и с переносом */
 .pcta a[data-ssylka="start"]{display:block;white-space:normal;margin-top:2px}
@@ -109,7 +109,7 @@
  .ot-main>*{order:1}.ot-side>.ot-sc{order:2;padding-top:20px;margin-bottom:0}.ot-side>.otk{order:3;padding-top:12px}.ot-main>.ot-gl{order:4;border-top:1px solid var(--line,#E6E6E1)}
 }
 
-/* главная до проверки — карточка-пример тем же листом (ТЗ [Арт-директора] 02.10, разд. 2.5 п. 8):
+/* главная до проверки — карточка-пример тем же листом (ТЗ [команда] 02.10, разд. 2.5 п. 8):
    шапка-документ → полоса вывода (B) в уменьшенном виде → 3 существенных факта с источником и датой */
 .report.ex{padding:0;gap:0;overflow:hidden;border-radius:var(--r-doc)}
 .ex-hd{padding:24px 28px 18px;border-bottom:1px solid var(--line,#E6E6E1)}
@@ -142,7 +142,7 @@
  .ex-r{flex-direction:column;gap:4px}.ex-r b.d{text-align:left;max-width:none}
 }
 
-/* «Ваши контрагенты» — прошлые проверки из этого браузера на месте примера (ТЗ [Продукт] 02.10 19:37, разд. 1; js/portfel.js) */
+/* «Ваши контрагенты» — прошлые проверки из этого браузера на месте примера (ТЗ [команда] 02.10 19:37, разд. 1; js/portfel.js) */
 .hero.pf-on .report.ex{display:none}
 .pf{background:var(--card,#fff);border-radius:var(--r-doc,20px);box-shadow:0 1px 2px rgba(29,29,31,.04),0 12px 32px rgba(29,29,31,.06);padding:24px 28px 18px;min-width:0}
 .pf[hidden]{display:none}
@@ -193,7 +193,7 @@
  .ot-side{padding-top:8px}
 }
 
-/* «Паспорт 490 ₽ в один шаг» — лист оплаты (js/pasport-oplata.js; ТЗ [Продукт] 02.10, разд. 1.2):
+/* «Паспорт 490 ₽ в один шаг» — лист оплаты (js/pasport-oplata.js; ТЗ [команда] 02.10, разд. 1.2):
    справа поверх отчёта, на телефоне — снизу; цена крупно, одна главная кнопка */
 dialog.po{position:fixed;inset:0 0 0 auto;width:min(440px,100vw);max-width:none;height:100dvh;max-height:none;margin:0;padding:28px 28px calc(24px + env(safe-area-inset-bottom));border:0;border-radius:var(--r-doc,14px) 0 0 var(--r-doc,14px);background:var(--surface,#fff);color:var(--ink,#1D1D1F);font:400 15px/1.5 var(--font,Onest,-apple-system,"Segoe UI",Roboto,Arial,sans-serif);box-shadow:var(--shadow);overflow-y:auto;overscroll-behavior:contain}
 dialog.po::backdrop{background:rgba(17,17,19,.4)}

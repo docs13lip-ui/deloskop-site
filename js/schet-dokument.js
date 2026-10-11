@@ -10,7 +10,7 @@
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function den(x) { return String(Math.round(x)).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + ",00"; }
   function fioKorotko(f) { var p = String(f || "").trim().split(/\s+/); return p[0] + (p[1] ? " " + p[1][0] + "." : "") + (p[2] ? " " + p[2][0] + "." : ""); }
-  // О5 ([Право] 10.10): редакция оферты в счёте — из <meta name="deloskop-oferta"> (кладёт tests/sobrat_tarify.py из оферты)
+  // О5 ([команда] 10.10): редакция оферты в счёте — из <meta name="deloskop-oferta"> (кладёт tests/sobrat_tarify.py из оферты)
   function redakciya() { var m = document.querySelector('meta[name="deloskop-oferta"]'); return m && m.content ? " в редакции от " + m.content : ""; }
   function net(t) { box.innerHTML = '<div class="pust"><h1>Счёт не найден</h1><p>' + t + '</p><p><a href="/schet/">Получить новый счёт</a> · <a href="mailto:help@deloskop.ru">help@deloskop.ru</a></p></div>'; }
 
@@ -77,8 +77,8 @@
       (d.srok === "razovo" && d.vid === "usluga" ? "Пакет выдаём не позднее 1 рабочего дня после оплаты, анкеты и выписки (раздел 5 оферты)." : "Доступ открывается не позднее рабочего дня, следующего за днём зачисления оплаты, на срок тарифа.") + "</p></div>";
   }
 
-  // schet-konversiya-v1 (решение владельца 10.10, п. 3): QR по ГОСТ Р 56042-2014 — на неоплаченном счёте, на экране и в PDF.
-  // Строку собирает js/qr-platezh.js только из данных самого счёта: сумма и назначение — те же, что в счёте (правило О1 [Право]).
+  // schet-konversiya-v1 (решение команды 10.10, п. 3): QR по ГОСТ Р 56042-2014 — на неоплаченном счёте, на экране и в PDF.
+  // Строку собирает js/qr-platezh.js только из данных самого счёта: сумма и назначение — те же, что в счёте (правило О1 [команда]).
   function qrHtml(d, p, b, pk) {
     if (d.status === "oplachen" || d.status === "annulirovan" || !window.DeloskopQR) return "";
     var s = window.DeloskopQR.stroka({ name: "ИП " + p.fio, rs: b.rs, bank: b.bank, bik: b.bik, ks: b.ks, summa: d.itogo, naznachenie: d.naznachenie, inn: p.inn, inn_platelshchika: pk && pk.inn });
@@ -88,7 +88,7 @@
       "В приложении банка выберите оплату по QR и наведите камеру: получатель, сумма и назначение платежа заполнятся сами. Перед отправкой сверьте их со счётом.</div></div>";
   }
 
-  // «Отправить счёт бухгалтеру» — тексты [Право] 10.10 (разд. 7). Форма появляется, только когда API отдаёт buhgalteru: true:
+  // «Отправить счёт бухгалтеру» — тексты [команда] 10.10 (разд. 7). Форма появляется, только когда API отдаёт buhgalteru: true:
   // до выкладки API-части (письмо, хранение адреса 30 дней) кнопки нет — мёртвых кнопок на сайте не держим.
   // Почта бухгалтера в Метрику не уходит: цель без параметров из поля (tests/schet_konversiya.test.js).
   var BUH = {
@@ -159,7 +159,7 @@
 
   function aktHtml(d) {
     var p = d.prodavec, pk = d.pokupatel, a = d.akt;
-    // О4 ([Право] 10.10): запасное наименование — как в оферте (лицензия, ст. 1235 ГК), а не «доступ к сервису»
+    // О4 ([команда] 10.10): запасное наименование — как в оферте (лицензия, ст. 1235 ГК), а не «доступ к сервису»
     var naim = a.naimenovanie || ("Предоставлено право использования программы для ЭВМ «Делоскоп» (простая неисключительная лицензия), тариф «" + d.tarif + "», на период с " + S.ddmm(a.period_s) + " по " + S.ddmm(a.period_po));
     return '<div class="list">' +
       "<h2>Акт № " + esc(d.nomer) + " от " + S.ddmm(a.data) + "</h2>" +

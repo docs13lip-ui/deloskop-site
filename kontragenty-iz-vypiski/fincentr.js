@@ -1,8 +1,8 @@
-/*! Делоскоп · «Финцентр-лайт» — спайк за флагом `fincentr` (data/fincentr.json; решение владельца 03.10.2026, 0о:
+/*! Делоскоп · «Финцентр-лайт» — спайк за флагом `fincentr` (data/fincentr.json; решение команды 03.10.2026, 0о:
  *  до 14.10 — только спайк и тексты, MVP 15–28.10 в «Про»).
  *  Все ваши счета глазами банка: правило «пришло — ушло» по каждому счёту и по всем вместе, наличные и налоги
- *  от «расходов без переводов себе», экран одним листом (ТЗ [Продукт] 04.10 21:37,
- *  claude/Продукт_Финцентр_пришло-ушло_экран_ПП1277_04.10.md, разд. 3–4).
+ *  от «расходов без переводов себе», экран одним листом (ТЗ [команда] 04.10 21:37,
+ *  документ команды, разд. 3–4).
  *  Работает целиком в браузере на разборе движка «Кому вы платите» (engine.js) — выписки никуда не уходят.
  *  Пороги — ориентиры Делоскопа (публичных числовых порогов транзита у ЦБ нет), пересмотр 28.10.
  *  Чистые функции (sobytiya, tranzit, svodka, html) — без DOM и сети: tests/fincentr_tranzit.test.js.
@@ -26,7 +26,7 @@
     info: 0.6,            // 60–80 % — информационный
     cashShare: 0.15,      // наличные в расходах — как в «Наличных» и engine.js NORMS.cashShare
     depositShare: 0.30,   // взносы наличных в поступлениях — как NORMS.depositShare
-    taxShare: 0.009,      // доля налогов — внутренний ориентир, публично не называем ([Продукт] 04.10 разд. 2)
+    taxShare: 0.009,      // доля налогов — внутренний ориентир, публично не называем ([команда] 04.10 разд. 2)
     taxMinOut: 1000000    // долю налогов оцениваем при расходах от 1 млн ₽ (как lowtax в engine.js)
   };
   var RANG = { malo: 0, ok: 0, info: 1, warn: 2 };
@@ -344,7 +344,7 @@
     '.fc-dela li{padding:3px 0;color:#48484C}.fc-vse-pol{display:inline-block;font-size:14px;margin-top:6px}' +
     '.fc-akt{display:inline-flex;align-items:center;min-height:46px;margin:20px 0 0;padding:0 18px;border-radius:12px;background:#0B63E5;color:#fff!important;font-weight:600;font-size:16px}' +
     '.fc-akt:hover{background:#084BB0}.fc-og{font-size:12.5px;color:#6B6B70;margin:12px 0 0;line-height:1.45}' +
-    // 390 px — карточка на каждый банк вместо таблицы ([Продукт · Арт-директор] 04.10 22:55, разд. 2)
+    // 390 px — карточка на каждый банк вместо таблицы ([команда] 04.10 22:55, разд. 2)
     '@media (max-width:600px){.fc-tabl{overflow:visible}.fc-tabl thead{display:none}.fc-tabl table,.fc-tabl tbody{display:block}' +
     '.fc-tabl tr{display:block;background:#FAFAF8;border-radius:14px;padding:10px 14px;margin:0 0 8px}.fc-tabl tr.fc-vse{background:#F0F0EC}' +
     '.fc-tabl td,.fc-tabl td+td{display:flex;align-items:center;gap:4px;padding:5px 0;border:0;text-align:left;white-space:normal}' +

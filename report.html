@@ -516,7 +516,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
     // «Рентабельность активов против отрасли» (rentabelnost-v2) — тот же расчёт, что на экране проверки: после «Финансов в цифрах»,
     // «Как посчитали» раскрыто — на бумаге свёрнутое не прочесть; нет баланса, ИП, банк или нет нормы ФНС за год — блока нет
     if(window.Rentabelnost){try{Rentabelnost.mount(doc,r,{posle:['.sec.fin','.kpis','.din'],otkryto:true}).catch(function(){})}catch(e){}}
-    // «Комментарий команды Делоскопа» — только утверждённые [Право] тексты (/data/kommentarii.json); нет — ничего не меняется
+    // «Комментарий команды Делоскопа» — только утверждённые [команда] тексты (/data/kommentarii.json); нет — ничего не меняется
     if(window.Kommentarii)Kommentarii.zagruzit().then(function(K){try{Kommentarii.vstavit(doc.querySelector('table.sig'),r.signals,K)}catch(e){}});
     var pdf=document.getElementById('pdf'), share=document.getElementById('share');
     pdf.hidden=share.hidden=false;

@@ -25,7 +25,7 @@ test('тексты кредитору — дословно из справочн
   for (const v of ['likvidaciya', 'isklyuchenie', 'isklyuchena']) {
     assert.strictEqual(SK.KREDITORU[v].tekst, G[v].sdelat, v);
     assert.strictEqual(SK.KREDITORU[v].norma, G[v].norma, v);
-    assert.ok(G[v].otkuda_tekst && /\[Право\]/.test(G[v].otkuda_tekst), v + ': текст согласован [Право]');
+    assert.ok(G[v].otkuda_tekst && /\[команда\] \d\d\.\d\d/.test(G[v].otkuda_tekst), v + ': текст согласован командой (пометка с датой; chistka-v1 — отделы наружу не называем)');
   }
 });
 

@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- partiya 2026-10-10: 32 -->
+<!-- partiya 2026-10-11: 13 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://deloskop.ru/company/</loc><lastmod>2026-10-10</lastmod></url>
+  <url><loc>https://deloskop.ru/company/</loc><lastmod>2026-10-11</lastmod></url>
   <url><loc>https://deloskop.ru/company/0274110679-farmstandart/</loc><lastmod>2026-10-05</lastmod></url>
+  <url><loc>https://deloskop.ru/company/1102054991-gazprom-pererabotka/</loc><lastmod>2026-10-11</lastmod></url>
   <url><loc>https://deloskop.ru/company/1435028701-yakutskenergo/</loc><lastmod>2026-10-10</lastmod></url>
   <url><loc>https://deloskop.ru/company/1644003838-tatneft-im-v-d-shashina/</loc><lastmod>2026-10-03</lastmod></url>
   <url><loc>https://deloskop.ru/company/1651000010-nizhnekamskneftehim/</loc><lastmod>2026-10-07</lastmod></url>
@@ -28,6 +29,8 @@
   <url><loc>https://deloskop.ru/company/4823006703-nlmk/</loc><lastmod>2026-10-03</lastmod></url>
   <url><loc>https://deloskop.ru/company/4909047148-magadanenergo/</loc><lastmod>2026-10-10</lastmod></url>
   <url><loc>https://deloskop.ru/company/5003021311-gazprom-mezhregiongaz/</loc><lastmod>2026-10-05</lastmod></url>
+  <url><loc>https://deloskop.ru/company/5003028028-gazprom-transgaz-moskva/</loc><lastmod>2026-10-11</lastmod></url>
+  <url><loc>https://deloskop.ru/company/5003065767-gazprom-phg/</loc><lastmod>2026-10-11</lastmod></url>
   <url><loc>https://deloskop.ru/company/5032292612-mosoblgaz/</loc><lastmod>2026-10-05</lastmod></url>
   <url><loc>https://deloskop.ru/company/5036065113-rosseti-moskovskij-region/</loc><lastmod>2026-10-07</lastmod></url>
   <url><loc>https://deloskop.ru/company/5260200603-rosseti-centr-i-privolzhe/</loc><lastmod>2026-10-07</lastmod></url>
@@ -50,11 +53,18 @@
   <url><loc>https://deloskop.ru/company/7606053324-tgk-2/</loc><lastmod>2026-10-10</lastmod></url>
   <url><loc>https://deloskop.ru/company/7701885820-mosinzhproekt/</loc><lastmod>2026-10-05</lastmod></url>
   <url><loc>https://deloskop.ru/company/7701984274-mosvodokanal/</loc><lastmod>2026-10-05</lastmod></url>
+  <url><loc>https://deloskop.ru/company/7703651792-ats/</loc><lastmod>2026-10-11</lastmod></url>
   <url><loc>https://deloskop.ru/company/7704218694-metro-kesh-end-kerri/</loc><lastmod>2026-10-04</lastmod></url>
+  <url><loc>https://deloskop.ru/company/7704784450-inter-rao-elektrogeneraciya/</loc><lastmod>2026-10-11</lastmod></url>
   <url><loc>https://deloskop.ru/company/7705035012-mosenergo/</loc><lastmod>2026-10-04</lastmod></url>
   <url><loc>https://deloskop.ru/company/7705183476-arnest-yunirus/</loc><lastmod>2026-10-05</lastmod></url>
+  <url><loc>https://deloskop.ru/company/7706123550-tvel/</loc><lastmod>2026-10-11</lastmod></url>
   <url><loc>https://deloskop.ru/company/7707548740-mvm/</loc><lastmod>2026-10-04</lastmod></url>
   <url><loc>https://deloskop.ru/company/7708004767-lukojl/</loc><lastmod>2026-10-03</lastmod></url>
+  <url><loc>https://deloskop.ru/company/7708510731-ufs/</loc><lastmod>2026-10-11</lastmod></url>
+  <url><loc>https://deloskop.ru/company/7708591995-transkontejner/</loc><lastmod>2026-10-11</lastmod></url>
+  <url><loc>https://deloskop.ru/company/7709356049-rtk/</loc><lastmod>2026-10-11</lastmod></url>
+  <url><loc>https://deloskop.ru/company/7709919968-mosgaz/</loc><lastmod>2026-10-11</lastmod></url>
   <url><loc>https://deloskop.ru/company/7710044140-sistema-pbo/</loc><lastmod>2026-10-10</lastmod></url>
   <url><loc>https://deloskop.ru/company/7712040126-aeroflot/</loc><lastmod>2026-10-04</lastmod></url>
   <url><loc>https://deloskop.ru/company/7713076301-vympelkom/</loc><lastmod>2026-10-04</lastmod></url>
@@ -65,11 +75,13 @@
   <url><loc>https://deloskop.ru/company/7721546864-vajldberriz/</loc><lastmod>2026-10-03</lastmod></url>
   <url><loc>https://deloskop.ru/company/7721632827-koncern-rosenergoatom/</loc><lastmod>2026-10-10</lastmod></url>
   <url><loc>https://deloskop.ru/company/7724053916-cv-protek/</loc><lastmod>2026-10-05</lastmod></url>
+  <url><loc>https://deloskop.ru/company/7726311464-r-farm/</loc><lastmod>2026-10-11</lastmod></url>
   <url><loc>https://deloskop.ru/company/7727547261-sibur-holding/</loc><lastmod>2026-10-05</lastmod></url>
   <url><loc>https://deloskop.ru/company/7728029110-torgovyj-dom-perekrestok/</loc><lastmod>2026-10-04</lastmod></url>
   <url><loc>https://deloskop.ru/company/7728262893-gazpromtrans/</loc><lastmod>2026-10-10</lastmod></url>
   <url><loc>https://deloskop.ru/company/7728551528-sportmaster/</loc><lastmod>2026-10-10</lastmod></url>
   <url><loc>https://deloskop.ru/company/7736050003-gazprom/</loc><lastmod>2026-10-03</lastmod></url>
+  <url><loc>https://deloskop.ru/company/7736186950-gazprom-energo/</loc><lastmod>2026-10-11</lastmod></url>
   <url><loc>https://deloskop.ru/company/7736216869-fosagro/</loc><lastmod>2026-10-04</lastmod></url>
   <url><loc>https://deloskop.ru/company/7736520080-mosenergosbyt/</loc><lastmod>2026-10-04</lastmod></url>
   <url><loc>https://deloskop.ru/company/7740000076-mts/</loc><lastmod>2026-10-03</lastmod></url>
@@ -79,6 +91,7 @@
   <url><loc>https://deloskop.ru/company/7803002209-rosseti-lenenergo/</loc><lastmod>2026-10-05</lastmod></url>
   <url><loc>https://deloskop.ru/company/7805018099-gazprom-transgaz-sankt-peterburg/</loc><lastmod>2026-10-10</lastmod></url>
   <url><loc>https://deloskop.ru/company/7810258843-oek/</loc><lastmod>2026-10-10</lastmod></url>
+  <url><loc>https://deloskop.ru/company/7810483334-gazprom-invest/</loc><lastmod>2026-10-11</lastmod></url>
   <url><loc>https://deloskop.ru/company/7825706086-agrotorg/</loc><lastmod>2026-10-03</lastmod></url>
   <url><loc>https://deloskop.ru/company/7826087713-o-kej/</loc><lastmod>2026-10-07</lastmod></url>
   <url><loc>https://deloskop.ru/company/7838360491-gruppa-lsr/</loc><lastmod>2026-10-05</lastmod></url>
@@ -87,5 +100,6 @@
   <url><loc>https://deloskop.ru/company/8602060185-rosseti-tyumen/</loc><lastmod>2026-10-10</lastmod></url>
   <url><loc>https://deloskop.ru/company/8602067092-yunipro/</loc><lastmod>2026-10-05</lastmod></url>
   <url><loc>https://deloskop.ru/company/9731004688-gk-samolet/</loc><lastmod>2026-10-05</lastmod></url>
-  <url><loc>https://deloskop.ru/company/otrasl/energetika/</loc><lastmod>2026-10-10</lastmod></url>
+  <url><loc>https://deloskop.ru/company/otrasl/energetika/</loc><lastmod>2026-10-11</lastmod></url>
+  <url><loc>https://deloskop.ru/company/region/moskva/</loc><lastmod>2026-10-11</lastmod></url>
 </urlset>

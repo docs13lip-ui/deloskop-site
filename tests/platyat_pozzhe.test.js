@@ -51,7 +51,9 @@ test('все числа блока и строки «Для сравнения»
   });
   ['vovremya', 'svyshe60', 'msb_do60_pp', 'msb_svyshe60_pp'].forEach(k =>
     assert.ok(T.includes(P[k].replace(/^выше /, '')), k + ' = ' + P[k] + ' — нет в блоке'));
-  assert.ok(T.includes('Источник: ' + P.istochnik.replace(', ', ' и ') + ', ' + P.period));
+  assert.ok(T.includes('Источник: ' + P.istochnik + ' (доли счетов — за ' + P.period_doli + ', рост просрочек у малого бизнеса — II квартал к I)'));
+  // сверка 11.10: доли 70/20/5–8 % в публикации — «в текущем году», не за II квартал; РСПП на сайте не выводится — в источниках не называем
+  assert.ok(!/РСПП/.test(T) && !/II кв\./.test(R.tekst.replace(/\u00a0/g, ' ')), 'источник — только то, что выводим; «II кв.» у годовой доли — неточно');
   assert.match(T, /≈ 1 из 4/);
   assert.ok(R.tekst.replace(/\u00a0/g, ' ').startsWith('Для сравнения: ' + P.dolya_s_opozdaniem + ' счетов'));
 });

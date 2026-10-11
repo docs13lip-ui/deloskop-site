@@ -62,6 +62,9 @@ def proverit(p):
         raise StaryjTekst("do60: «примерно каждый пятый» написано под «примерно 20 %»")
     if not re.fullmatch(r"II квартал (\d{4}) года", p["period"]):
         raise StaryjTekst("period: «во втором квартале … чем в первом» написано под «II квартал ГГГГ года»")
+    m = re.fullmatch(r"(\d{4}) год", p.get("period_doli", ""))
+    if not m or m.group(1) != god(p):
+        raise StaryjTekst("period_doli: доли счетов («≈ 1 из 4 … в ГГГГ году») — за год, а не за квартал; нужно «ГГГГ год» того же года, что period")
     chislo(p["vovremya"], r"выше (\d+) %", "vovremya")
     chislo(p["svyshe60"], r"(\d+–\d+) %", "svyshe60")
     chislo(p["msb_do60_pp"], r"(\d+,\d)", "msb_do60_pp")
@@ -80,9 +83,9 @@ def istochnik_kratko(p):
 
 def stroka_usloviya(p):
     """Подстрочник «Условий сделки» — простой текст (Usloviya экранирует), неразрывные пробелы — \\u00a0."""
-    t = "Для сравнения: %s счетов в %s году оплачивают с опозданием (%s, II кв. %s)." % (
-        p["dolya_s_opozdaniem"], god(p), istochnik_kratko(p), god(p))
-    return t.replace("в 20", "в\u00a020").replace("с опозданием", "с\u00a0опозданием").replace("II кв. ", "II\u00a0кв.\u00a0")
+    t = "Для сравнения: %s счетов в %s году оплачивают с опозданием (%s)." % (
+        p["dolya_s_opozdaniem"], god(p), istochnik_kratko(p))
+    return t.replace("в 20", "в\u00a020").replace("с опозданием", "с\u00a0опозданием")
 
 
 def data_ru(iso):
@@ -122,8 +125,8 @@ def blok(p):
         'реестров. Методика открыта.</p>'
         '<p class="rynok__go"><a href="#check" data-focus-inn data-goal="platyat_pozzhe_klik">Проверить, сколько платить вперёд' +
         NB + '→</a></p>'
-        '<p class="rynok__ist">Источник: ' + ist + ', ' + e(p["period"]).replace("II квартал", "II" + NB + "квартал") +
-        '; публикация «<a href="' + e(p["url"]) + '" target="_blank" rel="nofollow noopener">Интерфакса</a>» от' + NB +
+        '<p class="rynok__ist">Источник: ' + ist + ' (доли счетов' + NB + '— за' + NB + G + NB + 'год, рост просрочек у' + NB +
+        'малого бизнеса' + NB + '— II' + NB + 'квартал к' + NB + 'I); публикация «<a href="' + e(p["url"]) + '" target="_blank" rel="nofollow noopener">Интерфакса</a>» от' + NB +
         data_ru(p["data_publikacii"]) + ' «Около четверти»' + NB + '— наш пересчёт: ' + do60 + NB + '% + ' + sv +
         NB + '%.</p>'
         '</div></div></div></div></section>' + skript + KON

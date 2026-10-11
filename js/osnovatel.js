@@ -27,7 +27,7 @@
       if (note) note.innerHTML = 'Все 300 мест заняты. Обычные тарифы — на&nbsp;<a href="/tarify/">странице тарифов</a>.';
     } else if (j.priem_oplat === true) {
       btn.textContent = 'Получить счёт на тариф основателя';
-      if (note) note.textContent = 'Счёт на ИП или компанию. Доступ и номер основателя — в день поступления денег.';
+      if (note) note.textContent = 'Счёт на ИП или компанию. Доступ и номер основателя — не позднее рабочего дня, следующего за днём зачисления денег.';
     }
   }
   window.DlkOsnovatel = { primenit: primenit, MIN_POKAZ: MIN_POKAZ };

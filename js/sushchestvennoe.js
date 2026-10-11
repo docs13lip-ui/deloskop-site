@@ -367,7 +367,9 @@
     DAMIA_PORYADOK.concat(Object.keys(dm).filter(function (k) { return DAMIA_PORYADOK.indexOf(k) < 0; })).forEach(function (k) {
       var b = dm[k];
       if (!b || typeof b !== 'object' || !b.nazvanie || !b.status) return;
-      if (b.status === 'found') {
+      if (b.status === 'found' && b.dubl_statusa && (r.company || {}).status === 'BANKRUPT') {
+        // istochniki-v1: банкротство из ЕГРЮЛ — строка «Статус» уже говорит об этом; второй раз не пишем (в «Все данные» — есть)
+      } else if (b.status === 'found') {
         add({ k: 'damia_' + k, nazv: b.nazvanie, znach: b.itog || b.znachenie || 'Сведения найдены',
           ton: b.uroven === 'bad' || b.uroven === 'high' ? 'bad' : 'warn', ist: b.istochnik || '', data: dmy(b.data_svedeniy) || dataPr });
         var f = vse.pop(); // найденное — среди первых
@@ -410,7 +412,11 @@
       else if (b.status === 'not_applicable') v = b.prichina || 'Не применяется к этой компании';
       else if (b.sostoyanie === 'not_checked') v = 'Не проверяли: ' + prichinaReestra(b);
       else v = 'Не ответили в' + NB + 'этот раз' + (prichinaReestra(b) ? ': ' + prichinaReestra(b) : '');
-      reestry.push([b.nazvanie, v, t, b.status !== 'found' && b.status !== 'not_found' ? (b.proverit_samim || '') : '', b.istochnik || '']);
+      // istochniki-v1: банкротство из ЕГРЮЛ — ссылка на ЕФРСБ остаётся (сообщения ЕФРСБ мы не проверяли);
+      // приставы, сопоставленные по названию и адресу (в наборе ФССП нет ИНН), — тоже со ссылкой и пометкой точности
+      var nePoInn = b.tochnost && b.tochnost !== 'inn';
+      if (nePoInn && (b.status === 'found' || b.status === 'not_found')) v += ' · сопоставили по' + NB + 'названию и' + NB + 'адресу';
+      reestry.push([b.nazvanie, v, t, (b.status !== 'found' && b.status !== 'not_found') || b.iz_egryul || nePoInn ? (b.proverit_samim || '') : '', b.istochnik || '']);
     });
     if (reestry.length) out.push({ zag: 'Внешние реестры', ist: 'источник — у каждой строки', stroki: reestry });
     var z = r && r.zsk;

@@ -89,6 +89,9 @@
         if (x.comment === 'Руководитель стабилен.') x.comment = 'Управляющая организация не менялась.';
       }
     });
+    // istochniki-v1: банкротство из ЕГРЮЛ и единый словарь приставов — здесь же, до всех модулей отчёта (js/istochniki.js)
+    var ist = typeof DlkIstochniki !== 'undefined' ? DlkIstochniki : (typeof require === 'function' ? (function () { try { return require('./istochniki.js'); } catch (e) { return null; } })() : null);
+    if (ist && ist.dopolnit) ist.dopolnit(r);
     return r;
   }
 

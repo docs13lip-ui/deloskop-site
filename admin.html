@@ -85,6 +85,27 @@ select:disabled,input:disabled{background:var(--bg);color:var(--muted)}
 .sch .ctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .sch .ctl .btn{min-height:36px;padding:6px 12px;font-size:14px}
 @media (max-width:560px){.rek,.rek fieldset{grid-template-columns:1fr}}
+/* «Базы» — pult-baz-v1 */
+.bz-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 16px;margin:0 0 4px}
+.bz-itog{font-size:22px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.bz-plohie{display:inline-block;margin-left:6px;font-size:15px;font-weight:600;color:var(--bad);background:var(--bad-bg);border-radius:999px;padding:2px 10px;vertical-align:3px;white-space:nowrap}
+.bz-gr h3{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:22px 0 10px}
+.bz-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.bz{background:var(--bg);border-radius:14px;padding:14px 16px;min-width:0}
+.bz-top{display:flex;gap:10px;align-items:flex-start}
+.bz-top b{font-weight:600;font-size:15px;line-height:1.35}
+.bz-dot{flex:0 0 10px;width:10px;height:10px;border-radius:50%;margin-top:6px;background:#B9B9B4}
+.bz.zelenyj .bz-dot{background:#1E9E57;box-shadow:0 0 0 4px var(--ok-bg)}
+.bz.zheltyj .bz-dot{background:#E39B00;box-shadow:0 0 0 4px var(--warn-bg)}
+.bz.krasnyj .bz-dot{background:var(--bad);box-shadow:0 0 0 4px var(--bad-bg)}
+.bz.krasnyj{background:var(--bad-bg)}
+.bz p{margin:4px 0 0 20px;font-size:13px;line-height:1.45;overflow-wrap:anywhere}
+.bz-src{color:var(--muted)}
+.bz-fakt{color:var(--ink2);font-variant-numeric:tabular-nums}
+.bz-why{color:var(--ink2)} .bz.zheltyj .bz-why{color:var(--warn)} .bz.krasnyj .bz-why{color:var(--bad);font-weight:600}
+.bz-err{color:var(--muted)}
+.bz-run{margin:8px 0 0 20px;border:0;background:none;padding:4px 0;font:inherit;font-size:13px;font-weight:600;color:var(--accent);cursor:pointer;min-height:32px}
+.bz-run:disabled{color:var(--muted);cursor:default}
 </style>
 </head>
 <body>
@@ -155,6 +176,13 @@ select:disabled,input:disabled{background:var(--bg);color:var(--muted)}
         <div class="w"><button class="btn primary" type="submit">Сохранить реквизиты</button></div>
       </form>
       <p class="note" id="rekNote" role="status" aria-live="polite"></p>
+    </section>
+    <section class="card" id="bzSek" hidden>
+      <div class="bz-head"><h2 style="margin:0">Базы</h2><span class="bz-itog" id="bzItog"></span></div>
+      <p class="sub" style="margin:0 0 4px" id="bzKogda">Каждый источник данных: работает, требует внимания или не подключён.</p>
+      <div class="field" style="margin-top:12px"><button class="btn" type="button" id="bzVse">Проверить все</button></div>
+      <p class="note" id="bzNote" role="status" aria-live="polite"></p>
+      <div id="bzGruppy"></div>
     </section>
     <section class="card">
       <h2>Данные ФНС</h2>
@@ -309,6 +337,7 @@ select:disabled,input:disabled{background:var(--bg);color:var(--muted)}
   loadSummary().then(function(){
     $('loading').hidden=true;$('adm').hidden=false;
     if(window.DlkScheta)DlkScheta.start(call,function(){return isAdmin},$('me').textContent);
+    if(window.DlkBazy)DlkBazy.start(call,function(){return isAdmin});
     return Promise.all([loadData(),loadUsers(),loadFeedback(),loadLog()]);
   }).catch(function(err){
     $('loading').hidden=true;$('deny').hidden=false;
@@ -318,6 +347,7 @@ select:disabled,input:disabled{background:var(--bg);color:var(--muted)}
 </script>
 <script src="/js/schet.js"></script>
 <script src="/js/admin-scheta.js"></script>
+<script src="/js/admin-bazy.js"></script>
 <script src="/obnovleniya.js" defer></script>
 </body>
 </html>

@@ -1076,6 +1076,14 @@ class TestKartochkiV4Kod(unittest.TestCase):
         self.assertEqual(K.imya('АО "ТРАНСНЕФТЬ - ВЕРХНЯЯ ВОЛГА"'), "АО «Транснефть — Верхняя Волга»")  # kartochki-1110f-n2: тире, топоним
         self.assertEqual(K.imya('ООО "ГАЗПРОМ ТРАНСГАЗ ЕКАТЕРИНБУРГ"'), "ООО «Газпром трансгаз Екатеринбург»")  # kartochki-1110f-n2
         self.assertEqual(K.imya('ООО "ПЕПСИКО ХОЛДИНГС"'), "ООО «ПепсиКо Холдингс»")  # kartochki-1110f-n2: внутренняя прописная
+        self.assertEqual(K.imya('ПАО "ГАЗПРОМ ГАЗОРАСПРЕДЕЛЕНИЕ УФА"'), "ПАО «Газпром газораспределение Уфа»")  # kartochki-1210-n2: топоним
+        self.assertEqual(K.imya('АО "ГАЗПРОМ ГАЗОРАСПРЕДЕЛЕНИЕ СЫКТЫВКАР"'), "АО «Газпром газораспределение Сыктывкар»")  # kartochki-1210-n2
+        self.assertEqual(K.imya('АО "ТРАНСНЕФТЬ - ПРИКАМЬЕ"'), "АО «Транснефть — Прикамье»")  # kartochki-1210-n2: тире, топоним
+        self.assertEqual(K.imya('ООО "РОЗА ХУТОР"'), "ООО «Роза Хутор»")  # kartochki-1210-n2
+        self.assertEqual(K.imya('ООО "ДЛ-ТРАНС"'), "ООО «ДЛ-Транс»")  # kartochki-1210-n2: аббревиатура
+        self.assertEqual(K.imya('ООО "ПРОММАШ ТЕСТ"'), "ООО «Проммаш Тест»")  # kartochki-1210-n2
+        self.assertEqual(K.imya('АО "СВЯЗЬТРАНСНЕФТЬ"'), "АО «Связьтранснефть»")  # kartochki-1210-n2: правило регистра
+        self.assertEqual(K.imya('АО "ТГК-11"'), "АО «ТГК-11»")  # kartochki-1210-n2: аббревиатура с номером
         self.assertEqual(K.imya('ПАО "ДЭК"'), "ПАО «ДЭК»")  # kartochki-1010f-n2: аббревиатура с гласной из 3 букв
         self.assertEqual(K.imya('ООО "ГАЗПРОМ МЕЖРЕГИОНГАЗ ЯРОСЛАВЛЬ"'), "ООО «Газпром межрегионгаз Ярославль»")  # kartochki-1010e-n2
         self.assertEqual(K.imya('ПАО "ТГК-14"'), "ПАО «ТГК-14»")  # kartochki-1010e-n2: аббревиатура с номером — как есть
@@ -2017,7 +2025,7 @@ class TestDatyIzReestraV1(unittest.TestCase):
         h = K.daty_html(k, 490)
         self.assertIn("<dt>Зарегистрирована</dt> <dd><span class=\"num\">14" + NB + "марта" + NB + "2011" + NB + "года</span>"
                       " <span class=\"co-daty__p\">— 15" + NB + "лет назад</span></dd>", h)
-        self.assertIn("<dt>Сведения в" + NB + "реестре актуальны на</dt> <dd><span class=\"num\">21" + NB + "сентября" + NB + "2026" + NB + "года</span>", h)
+        self.assertIn("<dt>Последнее изменение записи в" + NB + "ЕГРЮЛ</dt> <dd><span class=\"num\">21" + NB + "сентября" + NB + "2026" + NB + "года</span>", h)
         self.assertNotIn("нынешнем руководител", h)  # строка о руководителе — только после «РКН отправлено»
         os.environ["RKN_OTPRAVLENO"] = "1"
         self.addCleanup(os.environ.pop, "RKN_OTPRAVLENO", None)

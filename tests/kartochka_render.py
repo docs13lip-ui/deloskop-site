@@ -220,6 +220,14 @@ IMENA_TOCHNO = {
     "ТРАНСНЕФТЬ - ВЕРХНЯЯ ВОЛГА": "Транснефть — Верхняя Волга",
     "ГАЗПРОМ ТРАНСГАЗ ЕКАТЕРИНБУРГ": "Газпром трансгаз Екатеринбург",
     "ПЕПСИКО ХОЛДИНГС": "ПепсиКо Холдингс",
+    # kartochki-1210-n2: топонимы с прописной («Уфа», «Сыктывкар», «Прикамье», «Хутор»); ДЛ — аббревиатура
+    # («Деловые Линии»), второе слово — часть названия; составное имя — через тире по типографике сайта
+    "ГАЗПРОМ ГАЗОРАСПРЕДЕЛЕНИЕ УФА": "Газпром газораспределение Уфа",
+    "ГАЗПРОМ ГАЗОРАСПРЕДЕЛЕНИЕ СЫКТЫВКАР": "Газпром газораспределение Сыктывкар",
+    "ТРАНСНЕФТЬ - ПРИКАМЬЕ": "Транснефть — Прикамье",
+    "РОЗА ХУТОР": "Роза Хутор",
+    "ДЛ-ТРАНС": "ДЛ-Транс",
+    "ПРОММАШ ТЕСТ": "Проммаш Тест",
 }
 
 
@@ -1431,7 +1439,7 @@ def daty_html(k, cena=None):
         stroki.append(("Сведения о" + NB + "нынешнем руководителе внесены в" + NB + "ЕГРЮЛ", data_slovami(rs), ""))
     ak = k.get("egrul_aktualno")
     if ak and (not na or ak <= na):
-        stroki.append(("Сведения в" + NB + "реестре актуальны на", data_slovami(ak), ""))
+        stroki.append(("Последнее изменение записи в" + NB + "ЕГРЮЛ", data_slovami(ak), ""))  # vozrast-segodnya-v1
     if not stroki:
         return ""
     dl = "".join('<div><dt>%s</dt> <dd><span class="num">%s</span>%s</dd></div>' % (
@@ -2821,3 +2829,94 @@ def eshche_html(k, eshche):
             adres_str(x), e(x["name"]), e(", ".join(filter(None, [x.get("gorod") or x.get("region"),
                                                                     dengi(_dohod_kart(x)) if _dohod_kart(x) else ""]))).replace("&nbsp;", NB))
             for x in eshche))
+
+
+# ---------------------------------------------------------------- vozrast-segodnya-v1 (Очередь п. 287, Тестировщик 11.10)
+# Возраст компании на карточке — на день сборки по Москве, а не на дату сведений: иначе после годовщины регистрации
+# страница месяцами пишет «24 года» вместо «25 лет» (ФосАгро, «Газпром нефть» на 12.10). Четыре места — вывод
+# «Работает N — с …» (и «Молодая компания: N»), строка под H1 «с … года (N)», «в реестре с … года (N)» в «Что это значит»
+# и «— N назад» в «Даты из реестра». Число — в <span class="vozr" data-s="дата регистрации">: js/vozrast.js
+# пересчитывает его в браузере (только вперёд и не больше чем на 2 года — сбитые часы посетителя не портят страницу).
+# Дата регистрации — только из JSON-LD foundingDate самой страницы; меньше года — не трогаем (там месяцы).
+# Вторая дата «Даты из реестра» — state.actuality_date DaData, то есть дата последнего изменения записи, а не «актуальность».
+VOZR_KLASS = "vozr"
+VOZR_SKRIPT = '<script src="/js/vozrast.js" defer></script>'
+DATY_IZMENENIE = "Последнее изменение записи в" + NB + "ЕГРЮЛ"
+_VZ_NB = "(?:&nbsp;| )"
+_VZ_SLOVO = "(?:год|года|лет)"
+_VZ_SPAN = re.compile(r'<span class="vozr" data-s="\d{4}-\d{2}-\d{2}">(\d+%s%s)</span>' % (_VZ_NB, _VZ_SLOVO))
+_VZ_LD = re.compile(r'"foundingDate": "(\d{4}-\d{2}-\d{2})"')
+_VZ_MESTA = [
+    re.compile(r"(<p>Работает )\d+%s%s( — с%s\d{4} года)" % (_VZ_NB, _VZ_SLOVO, _VZ_NB)),
+    re.compile(r"(<p>Молодая компания: )\d+%s%s(\.)" % (_VZ_NB, _VZ_SLOVO)),
+    re.compile(r"(<p class=\"co-sub\">[^<]*?с%s\d{4} года \()\d+%s%s(\))" % (_VZ_NB, _VZ_NB, _VZ_SLOVO)),
+    re.compile(r"(в реестре с%s\d{4}%sгода \()\d+%s%s(\))" % (_VZ_NB, _VZ_NB, _VZ_NB, _VZ_SLOVO)),
+    re.compile(r"(<span class=\"co-daty__p\">— )(?:\d+%s%s|меньше года)( назад</span>)" % (_VZ_NB, _VZ_SLOVO)),
+]
+
+
+def vozrast_let(s, na):
+    """Полных лет от даты регистрации s на дату na; s позже na — None."""
+    if not s or not na or s > na:
+        return None
+    return na.year - s.year - ((na.month, na.day) < (s.month, s.day))
+
+
+def vozrast_span(s, let):
+    return '<span class="%s" data-s="%s">%d&nbsp;%s</span>' % (VOZR_KLASS, s.isoformat(), let, plural(let, "год", "года", "лет"))
+
+
+def pochinit_vozrast(t, na):
+    """Возраст компании — на дату na (день сборки по Москве) в четырёх местах карточки + подпись второй даты реестра
+    + подключение js/vozrast.js. Идемпотентна: повтор в тот же день ничего не меняет."""
+    t = t.replace("Сведения в" + NB + "реестре актуальны на", DATY_IZMENENIE).replace(
+        "Сведения в&nbsp;реестре актуальны на", DATY_IZMENENIE.replace(NB, "&nbsp;"))
+    m = _VZ_LD.search(t)
+    s = data_iz(m.group(1)) if m else None
+    let = vozrast_let(s, na)
+    if not let or let < 1:
+        return t
+    t = _VZ_SPAN.sub(lambda x: x.group(1), t)  # прежняя обёртка — снять, число посчитать заново
+    novoe = vozrast_span(s, let)
+    for rx in _VZ_MESTA:
+        t = rx.sub(lambda x: x.group(1) + novoe + x.group(2), t)
+    if 'class="%s"' % VOZR_KLASS in t and VOZR_SKRIPT not in t:
+        kuda = "</main>" if "</main>" in t else ("</body>" if "</body>" in t else None)
+        if kuda:  # внутри тела страницы: «голое» тело из комплекта и API получают тот же скрипт, что и сборка
+            i = t.rindex(kuda)
+            t = t[:i] + VOZR_SKRIPT + "\n" + t[i:]
+    return t
+
+
+def vozrast_kak_v(staraya, novaya):
+    """Тот же span возраста, что уже стоит на странице, — в пересобранный кусок (блок «Что это значит для вас»):
+    иначе vstavit_znachit видел бы разницу «(20 лет)» и «(<span…>20 лет</span>)» и считал блок устаревшим."""
+    m = re.search(r'<span class="vozr" data-s="\d{4}-\d{2}-\d{2}">\d+%s%s</span>' % (_VZ_NB, _VZ_SLOVO), staraya)
+    if not m:
+        return novaya
+    for rx in _VZ_MESTA:
+        novaya = rx.sub(lambda x: x.group(1) + m.group(0) + x.group(2), novaya)
+    return novaya
+
+
+def segodnya_msk_render():
+    return (dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=3)).date()
+
+
+_vstavit_znachit_bez_vozrasta = vstavit_znachit
+
+
+def vstavit_znachit(t):  # noqa: F811 — vozrast-segodnya-v1: возраст в новом блоке — тем же span, что на странице
+    novyj = _vstavit_znachit_bez_vozrasta(t)
+    if novyj == t:
+        return t
+    novyj = vozrast_kak_v(t, novyj)
+    return t if novyj == t else novyj
+
+
+_html_kartochki_bez_vozrasta = html_kartochki
+
+
+def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811
+    """vozrast-segodnya-v1: та же карточка, возраст — на день сборки по Москве (сайт и API — одна функция)."""
+    return pochinit_vozrast(_html_kartochki_bez_vozrasta(k, V, sosedi, kom, normy, cena), segodnya or segodnya_msk_render())

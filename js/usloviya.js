@@ -587,6 +587,7 @@
     '@media print{.usl .usl-napr,.usl .usl-watch,.usl .usl-sum,.usl .usl-btns,.usl summary:after{display:none!important}.usl details>*{display:block}.usl{background:none;border:1px solid #E6E6E1}}';
 
   function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  CSS += '.usl-rynok{margin:-4px 0 0;font-size:12.5px;line-height:1.45;color:var(--muted,#6B6B70)}';
   function injectCss(doc) {
     if (doc.getElementById('usl-css')) return;
     var s = doc.createElement('style'); s.id = 'usl-css'; s.textContent = CSS; doc.head.appendChild(s);
@@ -599,6 +600,16 @@
     var h = String(zag || '').trim();
     if (h && t.toLowerCase().indexOf(h.toLowerCase()) === 0) t = t.slice(h.length).replace(/^[\s.,:;!—–-]+/, '');
     return t.replace(/[.\s]+$/, '');
+  }
+
+  // platyat-pozzhe-v1: «Для сравнения: около четверти счетов… с опозданием» — только под выводом с пределом предоплаты
+  // (тон go/cap и предел > 0; не при «только по факту», «не платить» и «советуем платить по факту»). Текст и срок — из
+  // window.DLK_RYNOK (главная, tests/sobrat_rynok.py из data/rynok.json); PDF-досье и Паспорт его не передают — там только факты о компании.
+  function rynokStroka(rynok, v, seichas) {
+    if (!rynok || !rynok.tekst || !v || (v.tone !== 'go' && v.tone !== 'cap') || !(v.cap > 0) || v.malo) return '';
+    var konec = Date.parse(String(rynok['do'] || '') + 'T00:00:00+03:00');
+    if (!isFinite(konec) || (seichas == null ? Date.now() : seichas) >= konec) return '';
+    return String(rynok.tekst);
   }
 
   function cel(imya) { try { if (typeof window !== 'undefined' && window.dlkGoal) window.dlkGoal(imya); } catch (_) { /* Метрика не мешает */ } }
@@ -629,6 +640,7 @@
       }
       var sel = REGIMES.map(function (x) { return '<option value="' + x.id + '"' + (x.id === st.regime ? ' selected' : '') + '>' + esc(x.name) + '</option>'; }).join('');
       var openAttr = o.open ? ' open' : '', otg = v.napravlenie === 'otgruzhaem';
+      var rynok = o.compact ? '' : rynokStroka(o.rynok, v);
       var napr = (o.compact || o.bezNapr) ? '' : '<div class="usl-napr" role="group" aria-label="Кто кому платит">' + NAPR.map(function (x) {
         return '<button type="button" data-napr="' + x.id + '" aria-pressed="' + (x.id === st.napravlenie) + '">' + esc(x.t) + '</button>'; }).join('') + '</div>';
       var watch = otg && (v.tone === 'go' || v.tone === 'cap') && v.facts.status !== 'LIQUIDATED'
@@ -638,7 +650,7 @@
           '<div class="usl-t">' + esc(v.headline) + '</div>' +
           (why ? '<p class="usl-r">' + esc(why.charAt(0).toUpperCase() + why.slice(1)) + '.</p>' : '') +
         '</div></div>' +
-        '<p class="usl-a">' + esc(v.advice) + '</p>' + watch +
+        '<p class="usl-a">' + esc(v.advice) + '</p>' + (rynok ? '<p class="usl-rynok">' + esc(rynok) + '</p>' : '') + watch +
         (o.compact ? '' :
         '<div class="usl-sum"><label for="' + uid + 'a">' + (otg ? 'Сумма отгрузки' : 'Сумма сделки — посчитаем предоплату и деньги на кону') + '</label>' +
           '<div class="usl-in"><input id="' + uid + 'a" inputmode="numeric" autocomplete="off" placeholder="например, 500 000" value="' + (st.amount ? esc(money(st.amount).replace(/ ₽$/, '')) : '') + '"><span>₽</span></div>' +
@@ -688,7 +700,7 @@
   }
 
   return {
-    decide: decide, mount: mount, facts: facts, tone: tone, reorgPrekr: reorgPrekr, REORG_PREKRASHCHENIE: REORG_PREKRASHCHENIE, REORG_SDELAT: REORG_SDELAT, REORG_DOLG: REORG_DOLG, prepayCap: prepayCap, atStake: atStake,
+    decide: decide, mount: mount, rynokStroka: rynokStroka, facts: facts, tone: tone, reorgPrekr: reorgPrekr, REORG_PREKRASHCHENIE: REORG_PREKRASHCHENIE, REORG_SDELAT: REORG_SDELAT, REORG_DOLG: REORG_DOLG, prepayCap: prepayCap, atStake: atStake,
     docs: docs, letter: letter, parseAmount: parseAmount, money: money, moneyKrupno: moneyKrupno, niceFloor: niceFloor, kindOf: kindOf,
     neProvereno: neProvereno, kakPoschitali: kakPoschitali, otgruzkaAdvice: otgruzkaAdvice, NAPR: NAPR, bezPovtora: bezPovtora, STATYA: STATYA, FORMULA: FORMULA,
     METODIKA: { DELITEL: DELITEL, POTOLKI: POTOLKI, OSTOROZHNO: OSTOROZHNO, MINIMUM: MINIMUM },

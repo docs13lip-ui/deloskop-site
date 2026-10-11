@@ -82,5 +82,5 @@ test('тексты: только факты — без оценок, обеща�
   const h = tekst(D.htmlBalans(otvet()) + D.htmlBalans(otvet({ balance: { year: 2025, equity: -1, long_debt: 1, short_debt: 1 } })));
   for (const z of [/надёжн/i, /опасн/i, /устойчив/i, /зависит/i, /гарант/i, /лучш/i, /рекоменд/i, /плохо|хорошо/i]) assert.doesNotMatch(h, z);
   const rep = fs.readFileSync(path.join(__dirname, '..', 'report.html'), 'utf8');
-  assert.match(rep, /Dinamika\.html\(R,\{balans:false\}\)/);
+  assert.match(rep, /Dinamika\.html\(R,\{balans:false(,dokument:true)?\}\)/);
 });

@@ -124,12 +124,16 @@
       var b = dm[k];
       if (!b || typeof b !== 'object' || !b.nazvanie || !b.status || b.status === 'not_applicable') return;
       var otv = b.status === 'found' || b.status === 'not_found';
-      spisok.push({ k: 'damia:' + k, znak: otv ? '●' : '○', nazv: b.nazvanie, chto: DAMIA_CHTO[k] || '',
-        data: otv ? 'на' + NB + (dmy(b.data_svedeniy) || dataPr) : '', status: otv ? 'ok' : 'net',
-        prichina: otv ? '' : (b.prichina || 'ответа нет'), ssylka: otv ? '' : chistyj(b.proverit_samim) });
+      // ne-zaprashivali-v1 [Ночные-3]: API (damia v1.4) метит sostoyanie = not_checked — реестр мы в этот раз не запрашивали
+      // (в бете не подключён). Это не «не ответил»: в счёт «запрошенных» не идёт, знак «–», причина — словами API.
+      var nep = !otv && b.sostoyanie === 'not_checked';
+      spisok.push({ k: 'damia:' + k, znak: otv ? '●' : nep ? '–' : '○', nazv: b.nazvanie, chto: DAMIA_CHTO[k] || '',
+        data: otv ? 'на' + NB + (dmy(b.data_svedeniy) || dataPr) : '', status: otv ? 'ok' : nep ? 'nep' : 'net',
+        prichina: otv ? '' : (b.prichina || (nep ? 'не проверяли' : 'ответа нет')), ssylka: otv ? '' : chistyj(b.proverit_samim) });
     });
 
-    var oprosheno = spisok.length, otvetili = spisok.filter(function (x) { return x.status === 'ok'; }).length;
+    var nep = spisok.filter(function (x) { return x.status === 'nep'; }).length;
+    var oprosheno = spisok.length - nep, otvetili = spisok.filter(function (x) { return x.status === 'ok'; }).length;
 
     // 5. Рассчитано Делоскопом — не источник, в счёт не входит
     var rasch = [];
@@ -137,13 +141,13 @@
     if (r.zsk && r.zsk.title) rasch.push('прогноз ЗСК — наша оценка, не статус Банка России');
     if (rasch.length) spisok.push({ k: 'raschet', znak: '◆', nazv: 'Расчёт Делоскопа', chto: rasch.join('; '), data: dataPr, status: 'raschet', ssylka: '/indeks/' });
 
-    return { spisok: spisok, otvetili: otvetili, oprosheno: oprosheno, dataPr: dataPr };
+    return { spisok: spisok, otvetili: otvetili, oprosheno: oprosheno, nep: nep, dataPr: dataPr };
   }
 
   function stroka(x) {
-    var st = x.status === 'ok' ? 'ответил' : x.status === 'net' ? 'не ответил' : 'рассчитано';
-    var hvost = x.status === 'net'
-      ? (x.prichina ? nw(esc(x.prichina)) : '') + (x.ssylka ? (x.prichina ? ' · ' : '') + '<a href="' + esc(x.ssylka) + '" target="_blank" rel="noopener">проверьте сами</a>' : '') || 'не ответил'
+    var st = x.status === 'ok' ? 'ответил' : x.status === 'net' ? 'не ответил' : x.status === 'nep' ? 'не проверяли' : 'рассчитано';
+    var hvost = x.status === 'net' || x.status === 'nep'
+      ? (x.prichina ? nw(esc(x.prichina)) : '') + (x.ssylka ? (x.prichina ? ' · ' : '') + '<a href="' + esc(x.ssylka) + '" target="_blank" rel="noopener">проверьте сами</a>' : '') || (x.status === 'nep' ? 'не проверяли' : 'не ответил')
       : x.status === 'raschet' ? '<a href="' + esc(x.ssylka) + '">методика</a>' : esc(x.data || '');
     return '<li class="otk__r otk__r--' + x.status + '" data-ist="' + esc(x.k) + '">' +
       '<span class="otk__z" aria-label="' + st + '">' + x.znak + '</span>' +
@@ -160,13 +164,21 @@
       obshchaya = net[0].prichina;
       o.spisok = o.spisok.map(function (x) { return x.status === 'net' ? Object.assign({}, x, { prichina: '' }) : x; });
     }
+    // ne-zaprashivali-v1: у не запрошенных реестров общая причина — тоже один раз под списком
+    var nepS = o.spisok.filter(function (x) { return x.status === 'nep'; }), obshchayaNep = '';
+    if (nepS.length > 1 && nepS.every(function (x) { return x.prichina && x.prichina === nepS[0].prichina; })) {
+      obshchayaNep = nepS[0].prichina;
+      o.spisok = o.spisok.map(function (x) { return x.status === 'nep' ? Object.assign({}, x, { prichina: '' }) : x; });
+    }
     var tochki = o.spisok.filter(function (x) { return x.status !== 'raschet'; }).map(function (x) { return x.znak; }).join('');
+    var nepTekst = o.nep ? ' · ' + o.nep + NB + skl(o.nep, 'реестр', 'реестра', 'реестров') + ' не' + NB + 'проверяли' : '';
     return '<details class="otk"><summary><span class="otk__t">Откуда данные</span>' +
       '<span class="otk__s">' + skl(o.otvetili, 'ответил', 'ответили', 'ответили') + ' ' + o.otvetili + ' из ' + o.oprosheno + NB + skl(o.oprosheno, 'запрошенного', 'запрошенных', 'запрошенных') +
-      ' · проверка ' + o.dataPr + '</span><span class="otk__m" aria-hidden="true">' + tochki + '</span></summary>' +
+      nepTekst + ' · проверка ' + o.dataPr + '</span><span class="otk__m" aria-hidden="true">' + tochki + '</span></summary>' +
       '<ul>' + o.spisok.map(stroka).join('') + '</ul>' +
       (obshchaya ? '<p class="otk__p otk__p--net">Не ответили ' + net.length + ' из ' + o.oprosheno + ': ' + nw(esc(obshchaya)) + '.</p>' : '') +
-      '<p class="otk__p">● ответил · ○ не ответил — не значит «не нашли» · ◆ рассчитано Делоскопом. Это оценка риска, а не решение банка.</p></details>';
+      (obshchayaNep ? '<p class="otk__p otk__p--net">Не проверяли ' + nepS.length + NB + skl(nepS.length, 'реестр', 'реестра', 'реестров') + ': ' + nw(esc(obshchayaNep)) + '. Ссылки «проверьте сами» — в строках выше.</p>' : '') +
+      '<p class="otk__p">● ответил' + (net.length || !o.nep ? ' · ○ не ответил' : '') + (o.nep ? ' · – не проверяли' : '') + ' — не значит «не нашли» · ◆ рассчитано Делоскопом. Это оценка риска, а не решение банка.</p></details>';
   }
 
   var CSS = '.otk{margin-top:12px;border-top:1px solid var(--line,#E6E6E1);font-size:13px;color:var(--ink2,#48484C)}' +
@@ -179,10 +191,10 @@
     '.otk__m{margin-left:auto;letter-spacing:2px;color:var(--muted,#6B6B70);font-size:12px}' +
     '.otk ul{list-style:none;margin:0;padding:0}' +
     '.otk__r{display:grid;grid-template-columns:16px minmax(0,1fr) auto;gap:4px 10px;padding:8px 0;border-top:1px solid #EFEFEA;align-items:baseline}' +
-    '.otk__z{color:var(--ok,#16723F)}.otk__r--net .otk__z{color:var(--muted,#6B6B70)}.otk__r--raschet .otk__z{color:var(--ink2,#48484C)}' +
+    '.otk__z{color:var(--ok,#16723F)}.otk__r--net .otk__z,.otk__r--nep .otk__z{color:var(--muted,#6B6B70)}.otk__r--raschet .otk__z{color:var(--ink2,#48484C)}' +
     '.otk__n{display:grid;gap:2px;min-width:0}.otk__n b{font-weight:500;color:var(--ink,#1D1D1F)}.otk__n small{font-size:12px;color:var(--muted,#6B6B70)}' +
     '.otk__d{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}.otk__d a{color:var(--accent,#0B63E5)}' +
-    '.otk__r--net .otk__d{white-space:normal;max-width:220px}' +
+    '.otk__r--net .otk__d,.otk__r--nep .otk__d{white-space:normal;max-width:220px}' +
     '.otk__p{margin:8px 0 0;font-size:12px;color:var(--muted,#6B6B70)}' +
     '@media (max-width:520px){.otk__r{grid-template-columns:16px minmax(0,1fr)}.otk__d{grid-column:2;text-align:left;white-space:normal;max-width:none}.otk__m{display:none}}' +
     '@media print{.otk:not([open])>*:not(summary){display:block}.otk__m{display:none}}';

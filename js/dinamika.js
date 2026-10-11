@@ -868,9 +868,18 @@
   }
 
   // rez.id — сравнение с досье проверки из кабинета (любое устройство); иначе — со снимком в этом браузере.
-  function htmlIzmeneniya(rez) {
+  // opt.dokument — PDF-досье (report.html): документ читают позже и на бумаге — без «запомнили на устройстве»,
+  // давность — от дня проверки («за 2 месяца до проверки»), а не от сегодня (ne-zaprashivali-v1 [Ночные-3]).
+  function htmlIzmeneniya(rez, opt) {
     if (!rez) return '';
     var ZAPOMNILI = 'Запомнили эту проверку на' + NB + 'вашем устройстве. Проверите компанию снова — покажем, что изменилось.';
+    if (rez.pervyj && opt && opt.dokument) {
+      var dd = rez.egrd ? davnost(rez.egrd, rez.t) : null;
+      if (!dd) return '';
+      var kogdaD = dd.dn === 0 ? 'в' + NB + 'день проверки' : 'за ' + dd.t.replace(/ назад$/, '') + ' до' + NB + 'проверки';
+      return '<p class="izm izm--0" data-izm="egryul">Последнее изменение записи в' + NB + 'ЕГРЮЛ — ' + dmy(rez.egrd) + ', ' + kogdaD + '.' +
+        (dd.dn <= 30 ? ' Что именно изменилось, видно в' + NB + VYPISKA + '; перед оплатой сверьте с' + NB + 'ней подписанта и адрес в' + NB + 'договоре.' : '') + '</p>';
+    }
     if (rez.pervyj) {
       // zapis-egryul-v1: уже на первой проверке — когда запись в ЕГРЮЛ менялась последний раз (факт реестра, без оценки)
       var dv = rez.egrd ? davnost(rez.egrd, rez.t) : null;
@@ -1097,7 +1106,7 @@
       var rez = zapomnit(r, ls), b = snimok(r);
       poslednij = b ? { inn: b.inn, t: b.t, rez: rez } : null;
       pokazan = b ? { kl: b.inn + ':' + b.t, rez: rez, b: b } : null;
-      izm = htmlIzmeneniya(rez);
+      izm = htmlIzmeneniya(rez, { dokument: !!opt.dokument });
       ozhidatIndeks(r, ls, opt.doc);
     } catch (e) { izm = ''; }
     var din = '';

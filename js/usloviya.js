@@ -256,6 +256,11 @@
       net.push(d.title);
     });
     var p = r && r.damia && r.damia.polnota;
+    // ne-zaprashivali-v1 [Ночные-3]: все внешние реестры API пометил «не проверяли» (sostoyanie not_checked, damia v1.4) —
+    // «ответили 0 из 7» читалось бы как сбой источников; их не запрашивали. Счёт «ответили N из M» тогда не пишем.
+    var bl = [];
+    if (r && r.damia) for (var k in r.damia) if (Object.prototype.hasOwnProperty.call(r.damia, k) && r.damia[k] && typeof r.damia[k] === 'object' && r.damia[k].nazvanie) bl.push(r.damia[k]);
+    if (bl.length && bl.every(function (b) { return b.sostoyanie === 'not_checked'; })) p = null;
     return { spisok: net, dolgiVse: net.length === DOLGI.length, nalogiNa: nalogiNa, provereno: p && p.provereno != null ? p.provereno : null, iz: p && p.iz != null ? p.iz : null, data: r && (r.damia && r.damia.data_svedeniy || r.checked_at) || null };
   }
 

@@ -1066,6 +1066,9 @@ class TestKartochkiV4Kod(unittest.TestCase):
         self.assertEqual(K.imya('ООО "ГАЗПРОМ ДОБЫЧА УРЕНГОЙ"'), "ООО «Газпром добыча Уренгой»")  # kartochki-1110b-n2
         self.assertEqual(K.imya('ООО "ГАЗПРОМ ДОБЫЧА ЯМБУРГ"'), "ООО «Газпром добыча Ямбург»")  # kartochki-1110b-n2
         self.assertEqual(K.imya('ООО "ГАЗПРОМ ТРАНСГАЗ ЮГОРСК"'), "ООО «Газпром трансгаз Югорск»")  # kartochki-1110b-n2
+        self.assertEqual(K.imya('АО "ЭТАЛОН ЛЕНСПЕЦСМУ"'), "АО «Эталон ЛенСпецСМУ»")  # kartochki-1110c-n2
+        self.assertEqual(K.imya('ООО "ГАЗПРОМ ЭНЕРГОХОЛДИНГ"'), "ООО «Газпром энергохолдинг»")  # kartochki-1110c-n2: правило регистра
+        self.assertEqual(K.imya('ООО "ПЕТЕРБУРГТЕПЛОЭНЕРГО"'), "ООО «Петербургтеплоэнерго»")  # kartochki-1110c-n2: правило регистра
         self.assertEqual(K.imya('ПАО "ДЭК"'), "ПАО «ДЭК»")  # kartochki-1010f-n2: аббревиатура с гласной из 3 букв
         self.assertEqual(K.imya('ООО "ГАЗПРОМ МЕЖРЕГИОНГАЗ ЯРОСЛАВЛЬ"'), "ООО «Газпром межрегионгаз Ярославль»")  # kartochki-1010e-n2
         self.assertEqual(K.imya('ПАО "ТГК-14"'), "ПАО «ТГК-14»")  # kartochki-1010e-n2: аббревиатура с номером — как есть

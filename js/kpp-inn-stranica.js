@@ -1,4 +1,4 @@
-// [Ночные-3] kpp-inn-v1 — расшифровка ИНН или КПП на /nalogi/chto-oznachayut-cifry-inn-i-kpp/.
+// [команда] kpp-inn-v1 — расшифровка ИНН или КПП на /nalogi/chto-oznachayut-cifry-inn-i-kpp/.
 // Всё в браузере: номер на сервер не уходит; регионы — из /data/kpp-inn.json.
 (function () {
   var f = document.querySelector("[data-ras]"), rez = document.querySelector("[data-ras-rez]");

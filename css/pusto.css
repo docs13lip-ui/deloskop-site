@@ -1,4 +1,4 @@
-/* Делоскоп — пустые состояния и «Недавние проверки» (claude/Дизайн_система_v1.md §3.9).
+/* Делоскоп — пустые состояния и «Недавние проверки» (документ команды §3.9).
    Токены — те же имена, что в /css/ds.css; запасные значения — для страниц, ещё не переведённых на ds.css (п. 28). */
 .pusto{max-width:760px;margin:clamp(32px,8vh,88px) auto 48px;padding:0 16px}
 .pusto__h{font-size:clamp(32px,5vw,48px);line-height:1.08;letter-spacing:-.025em;font-weight:600;margin:0 0 12px;text-wrap:balance}

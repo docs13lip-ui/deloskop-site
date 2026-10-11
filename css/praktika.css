@@ -1,4 +1,4 @@
-/* Делоскоп — «Разбор дела» и хаб /praktika/ ([Арт-директор] 30.09.2026). Токены ds.css, область .pr — не конфликтует с inline-стилями статей. */
+/* Делоскоп — «Разбор дела» и хаб /praktika/ ([команда] 30.09.2026). Токены ds.css, область .pr — не конфликтует с inline-стилями статей. */
 body{margin:0;background:#F5F5F2;-webkit-font-smoothing:antialiased}
 .pr{--bg:#F5F5F2;--surface:#fff;--surface-2:#EEEEEA;--ink:#1D1D1F;--ink-2:#48484C;--muted:#6B6B70;--line:#E6E6E1;--accent:#0B63E5;--accent-hover:#084BB0;--accent-soft:#EAF1FD;--dark:#111113;--r-s:10px;--r-m:16px;--r-l:24px;--font:Onest,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
   max-width:760px;margin:0 auto;padding:28px clamp(16px,5vw,48px) 64px;font:400 17px/1.6 var(--font);color:var(--ink);box-sizing:border-box}
@@ -85,7 +85,7 @@ body{margin:0;background:#F5F5F2;-webkit-font-smoothing:antialiased}
 @media (max-width:420px){.pr .razd a{padding:0 12px}}
 @media (prefers-reduced-motion:reduce){.pr .pk{transition:none}}
 @media print{.pr .dl,.pr .razd{display:none}.pr .delo,.pr .kon{box-shadow:none;border:1px solid #ccc}}
-/* «Частые вопросы» разбора ([Ночные запуски] 02.10, faq-praktika-v1): линии, как «Где в законе», без плашек; плюс поворачивается в крестик */
+/* «Частые вопросы» разбора ([команда] 02.10, faq-praktika-v1): линии, как «Где в законе», без плашек; плюс поворачивается в крестик */
 .pr .faq details{border-top:1px solid var(--line);padding:0}
 .pr .faq details:last-child{border-bottom:1px solid var(--line)}
 .pr .faq summary{list-style:none;display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:14px 0;cursor:pointer;font-weight:600;color:var(--ink)}

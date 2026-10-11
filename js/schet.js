@@ -86,7 +86,7 @@
   }
   function ddmm(iso) { if (!iso) return ""; var p = String(iso).slice(0, 10).split("-"); return p[2] + "." + p[1] + "." + p[0]; }
 
-  // beta-v1: открытая бета — счета не выставляем (решение владельца 29.09.2026). Режим ставит сборщик:
+  // beta-v1: открытая бета — счета не выставляем (решение команды 29.09.2026). Режим ставит сборщик:
   // <meta name="deloskop-rezhim" content="beta"> (tests/beta.py). Форма остаётся в коде и вернётся флагом.
   function vBete(doc) {
     doc = doc || (typeof document !== "undefined" ? document : null);

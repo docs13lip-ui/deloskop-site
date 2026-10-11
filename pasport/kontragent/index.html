@@ -161,7 +161,7 @@ td b{font-weight:600}
 .pp .pp-i{margin-top:12px;font-size:14px;font-weight:600}
 .pp .pp-p{margin-top:6px;font-size:13px;color:var(--ink2)}
 @media (max-width:600px){.pp table{table-layout:auto}.pp thead{display:none}.pp tr{border-top:1px solid var(--line);padding:9px 0}.pp td{border:0;padding:2px 0}.pp td.u{max-width:none}.pp td[data-t]::before{content:attr(data-t) ": ";color:var(--muted);font-size:12.5px}}
-/* pasport-list-v2 ([Ночные-3] 02.10): Паспорт на токенах листа отчёта — реквизиты 2 × 2, строка 1 итога — полоса «Индекс · вердикт» цветом предела аванса, статусы — точка и слово */
+/* pasport-list-v2 ([команда] 02.10): Паспорт на токенах листа отчёта — реквизиты 2 × 2, строка 1 итога — полоса «Индекс · вердикт» цветом предела аванса, статусы — точка и слово */
 .rkv-ps{display:grid;grid-template-columns:1fr 1fr;margin:14px 0 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .rkv-ps>div{padding:10px 12px 10px 0;min-width:0}.rkv-ps>div:nth-child(even){border-left:1px solid #EFEFEA;padding-left:12px}.rkv-ps>div:nth-child(n+3){border-top:1px solid #EFEFEA}
 .rkv-ps dt{font-size:12px;color:var(--muted);letter-spacing:.02em;margin:0 0 2px}
@@ -352,7 +352,7 @@ td b{font-weight:600}
   }
   function vremya(v){var d=new Date(v);if(isNaN(d))return '';return d.toLocaleDateString('ru-RU',{timeZone:'Europe/Moscow'})+' в '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Moscow'})+' МСК';}
   function fail(t){if(window.dlkLimit)dlkLimit.ubrat(msg);msg.innerHTML=t;}
-  // pasport-indeks-v1 [Ночные-3]: Паспорт ждёт методику Индекса. gotovo() через 4 с зовёт и без неё — раздел 13 и «Итог» оставались
+  // pasport-indeks-v1 [команда]: Паспорт ждёт методику Индекса. gotovo() через 4 с зовёт и без неё — раздел 13 и «Итог» оставались
   // «Индекс — считаем» навсегда. Рисуем через 4 с, как раньше, а придёт методика (ждём до 4 раз, ~16 с) — перевыпускаем Паспорт
   // (новый отпечаток), только если Индекс от этого меняется. Печать по ?print=1 — один раз и после ожидания методики.
   var TEK=null, PECHAT=false;
@@ -571,7 +571,7 @@ td b{font-weight:600}
       '<div class="stroka">Заполнено заказчиком Паспорта, в отпечаток SHA-256 не входит. Ориентир Делоскопа по сведениям на дату Паспорта — «'+esc(sovet)+'» (разделы 14 и 15); решение принимает ваша компания.</div></form>';
   }
 
-  // pasport-list-v2 ([Ночные-3] 02.10): реквизиты 2 × 2 и полоса «Индекс · вердикт» — на токенах листа отчёта (css/otchet.css).
+  // pasport-list-v2 ([команда] 02.10): реквизиты 2 × 2 и полоса «Индекс · вердикт» — на токенах листа отчёта (css/otchet.css).
   // Только вид: сведения, отпечаток SHA-256 и номер Паспорта считаются как раньше (P.sobrat, P.vypustit).
   function fakt1(p,id,tekst){var x=(p.razdely||[]).filter(function(z){return z.id===id})[0];return x?(x.fakty||[]).filter(function(f){return f.tekst===tekst})[0]||null:null;}
   function rekvizity22(p,m){
@@ -633,7 +633,7 @@ td b{font-weight:600}
       if(window.Dinamika&&Dinamika.htmlPasport){try{var ls=null;try{ls=window.localStorage}catch(_){}
         var rz=m.demo?Dinamika.obrazecIzm(r):Dinamika.sravnitSnimki(r,ls),hz=Dinamika.htmlPasport(rz,!!m.demo),ig=pk.querySelector('.itog');
         if(hz&&ig){Dinamika.stil(document);ig.insertAdjacentHTML('afterend',hz);}}catch(e){}}
-      // «Комментарий команды Делоскопа» под строками признаков — только утверждённые [Право] тексты (/data/kommentarii.json).
+      // «Комментарий команды Делоскопа» под строками признаков — только утверждённые [команда] тексты (/data/kommentarii.json).
       // Вставляется в страницу после выпуска: в отпечаток SHA-256 не входит, нет библиотеки — Паспорт как раньше.
       if(window.Kommentarii)Kommentarii.zagruzit().then(function(K){try{Kommentarii.vstavitFakty(pk,Kommentarii.dlyaFaktov(p.razdely,r.signals,K))}catch(e){}});
       // «Рентабельность активов против отрасли» (rentabelnost-v2) — в конце раздела 6 «Финансы и штат», если раздел открыт.

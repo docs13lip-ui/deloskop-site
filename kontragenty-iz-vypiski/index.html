@@ -273,7 +273,7 @@ var API=(location.hostname.endsWith('deloskop.ru')?'https://api.deloskop.ru':'')
 var $=function(id){return document.getElementById(id)};
 var drop=$('drop'),file=$('file'),out=$('out'),msg=$('msg'),seg=$('regime');
 var state={parsed:null,regime:'osn',res:null,risk:null,remote:null,locked:0,showAll:false,demo:false,kom:null};
-/* «Комментарий команды»: только утверждённые [Право] тексты; нет текстов или файла — страница как раньше */
+/* «Комментарий команды»: только утверждённые [команда] тексты; нет текстов или файла — страница как раньше */
 var K=window.Kommentarii;
 if(K)K.zagruzit().then(function(s){state.kom=s;if(state.res&&K.estVypiska(s))render()});
 function klient(){var i=state.res&&state.res.self&&state.res.self.inn||'';return i.length===10?'org':i.length===12?'ip':''}

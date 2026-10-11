@@ -231,7 +231,7 @@ footer a{color:var(--ink2)}
 .vhod__dop a{color:var(--ink2);text-decoration:underline;text-decoration-color:#CFCFC9;text-underline-offset:3px}
 .vhod__dop a:hover{color:var(--accent);text-decoration-color:currentColor}
 @media (prefers-reduced-motion:reduce){.vhod,.vhod__go span{transition:none}.vhod:hover{transform:none}}
-/* glavnaya-v2: новая главная (ТЗ [Продукт] 01.10) */
+/* glavnaya-v2: новая главная (ТЗ [команда] 01.10) */
 .doverie-str{font-size:14px;color:var(--ink2);margin-top:-14px}
 .doverie-str a{white-space:nowrap}
 @media (max-width:640px){.report .row--m{display:none}}
@@ -665,7 +665,7 @@ footer a{color:var(--ink2)}
     var shR=null;
     // «Только существенные факты» (≤ 7, источник и дата) + свёрнутая «Все данные из реестров» — js/sushchestvennoe.js; нет модуля — строки светофора как были
     if(!svoj&&window.Sushchestvennoe){try{Sushchestvennoe.mount(report.querySelector('.rows'),r,{uzhe:window.Usloviya&&Usloviya.vVyvode?Usloviya.vVyvode(r):[]})}catch(e){}}
-    // «Комментарий команды Делоскопа» под существенными фактами — только утверждённые [Право] тексты (/data/kommentarii.json) + оговорка один раз; js/kommentarii.js
+    // «Комментарий команды Делоскопа» под существенными фактами — только утверждённые [команда] тексты (/data/kommentarii.json) + оговорка один раз; js/kommentarii.js
     if(!svoj&&window.Sushchestvennoe&&window.Kommentarii){var sutEl=report.querySelector('.rows.sut');if(sutEl)Kommentarii.zagruzit().then(function(K){try{Kommentarii.vstavitSut(sutEl,Kommentarii.dlyaSut(Sushchestvennoe.fakty(r).spisok,r.signals,K))}catch(e){}})}
     // «Что ещё проверить самим» — открытые госреестры, которые мы пока не опрашиваем (Федресурс, залоги, МСП, товарные знаки, сертификаты и декларации): раздел в «Все данные из реестров»; /data/reestry-sami.json, js/reestry-sami.js
     if(!svoj&&window.Sushchestvennoe&&window.ReestrySami){ReestrySami.zagruzit().then(function(D){try{ReestrySami.vstavit(report.querySelector('.sut__g'),D,r)}catch(e){}})}
@@ -696,7 +696,7 @@ footer a{color:var(--ink2)}
     // «НДС в 2027 году» — выручка 2025 года поставщика на упрощёнке рядом с порогом 20 млн ₽ (п. 1 ст. 145 НК), только к сведению; js/nds-porog.js
     if(!svoj&&window.NdsPorog){try{NdsPorog.mount(report,r)}catch(e){}}
   }
-  // moduli-do-otveta-v1 [Ночные-3]: модули отчёта (Usloviya, Otchet, Dinamika, IndeksOtvet…) подключены с defer и исполняются только
+  // moduli-do-otveta-v1 [команда]: модули отчёта (Usloviya, Otchet, Dinamika, IndeksOtvet…) подключены с defer и исполняются только
   // перед DOMContentLoaded, а проверка по ?inn=… (карточки /company/, «Проверить снова» из кабинета) стартует раньше. Быстрый ответ API
   // приходил до модулей — отчёт рисовался старой вёрсткой: без вывода, предела предоплаты, Индекса и Динамики. Запрос уходит сразу, рисуем — когда модули на месте.
   // readyState не годится: «interactive» ставится до исполнения defer-скриптов — ждём само событие (этот скрипт исполняется раньше него).

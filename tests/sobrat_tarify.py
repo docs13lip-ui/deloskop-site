@@ -8,6 +8,9 @@ import beta as BETA  # noqa: E402  (beta-v1: открытая бета — фл�
 
 ROOT = sys.argv[1]
 D = json.load(open(os.path.join(ROOT, 'tarify/tarify.json'), encoding='utf-8'))
+# gost-limit-10-sait-v1: «Бесплатно навсегда: N проверок в день» — число из tarify.json → gost_v_den
+_G = BETA.gost_v_den(ROOT)
+GOST = f'{_G} {BETA.proverok(_G)}'
 import startovaya as STV  # noqa: E402  (start390-v1: стартовая цена «Старта» включается вместе с оплатами)
 D, _ = STV.vklyuchit(ROOT, D)
 STV.redakciya_pri_oplatah(ROOT, D)  # oplata-schet-v1: дата редакции оферты — день включения оплат (один раз)
@@ -391,7 +394,7 @@ page = f'''<!doctype html>
 <li><b>Переход выше — только разница</b>Доплачиваете за оставшиеся дни, а не полную цену нового тарифа.</li>
 <li><b>Индекс не продаётся</b>Подписка никак не влияет на оценку ни одной компании, включая вашу. <a href="/indeks/">Методика открыта →</a></li>
 </ul>
-<p class="besp"><b>Бесплатно навсегда:</b> 3 проверки в день, <a href="/proverit-schet/">«Проверь счёт»</a> перед оплатой, статьи <a href="/delopis/">«Делописи»</a> по 115-ФЗ и налогам и <a href="/indeks/">открытая методика Индекса</a>.</p>
+<p class="besp"><b>Бесплатно навсегда:</b> {GOST} в день, <a href="/proverit-schet/">«Проверь счёт»</a> перед оплатой, статьи <a href="/delopis/">«Делописи»</a> по 115-ФЗ и налогам и <a href="/indeks/">открытая методика Индекса</a>.</p>
 
 <h2 class="big" id="voprosy">Вопросы</h2>
 {faq_html}

@@ -63,10 +63,10 @@ test('(а) дат беты текстом нет нигде, кроме выво
   assert.deepStrictEqual(plohie, [], 'дату конца беты берите из tarify.json → beta_do (tests/beta.py / js: srokBety)');
 });
 test('полоса: каркас и тексты A/B/C — дословно ([Право] 05.10 11:10, разд. 1)', () => {
-  assert.ok(chast('beta-a.html').includes('<b>Открытая бета: всё бесплатно по&nbsp;{{D}} включительно.</b> <span class="beta-bar__dop">С&nbsp;{{D1}}&nbsp;— тарифы; быстрая проверка останется бесплатной, 3&nbsp;в&nbsp;день.'));
+  assert.ok(chast('beta-a.html').includes('<b>Открытая бета: всё бесплатно по&nbsp;{{D}} включительно.</b> <span class="beta-bar__dop">С&nbsp;{{D1}}&nbsp;— тарифы; быстрая проверка останется бесплатной, {{G}}&nbsp;в&nbsp;день.'));
   // текст B дословно; жирным — только «Открытая бета продолжается:» (на 390 px заголовок в одну строку, полоса ≤ 125 px)
-  assert.ok(chast('beta-b.html').includes('<b>Открытая бета продолжается:</b> <span class="beta-bar__dop">всё бесплатно. О&nbsp;начале тарифов скажем здесь не&nbsp;позже чем за&nbsp;3&nbsp;дня; быстрая проверка останется бесплатной, 3&nbsp;в&nbsp;день.'));
-  assert.ok(chast('beta-c.html').startsWith('<b>Бета завершилась {{D}}.</b> Быстрая проверка&nbsp;— бесплатно, 3&nbsp;в&nbsp;день. <a href="/tarify/"'));
+  assert.ok(chast('beta-b.html').includes('<b>Открытая бета продолжается:</b> <span class="beta-bar__dop">всё бесплатно. О&nbsp;начале тарифов скажем здесь не&nbsp;позже чем за&nbsp;3&nbsp;дня; быстрая проверка останется бесплатной, {{G}}&nbsp;в&nbsp;день.'));
+  assert.ok(chast('beta-c.html').startsWith('<b>Бета завершилась {{D}}.</b> Быстрая проверка&nbsp;— бесплатно, {{G}}&nbsp;в&nbsp;день. <a href="/tarify/"'));
   for (const f of ['beta-a.html', 'beta-b.html'])
     assert.ok(/<a href="\/osnovatel\/" data-goal="beta_osnovatel" data-beta-osn>Цена основателя для первых 300&nbsp;→<\/a>/.test(chast(f)), f);
   for (const f of ['beta-a.html', 'beta-b.html', 'beta-c.html']) assert.ok(!/успе|последн|только сегодня|ИИ|нейросет/i.test(chast(f)), f);

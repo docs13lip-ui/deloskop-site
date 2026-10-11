@@ -562,7 +562,7 @@ def iz_api(spisok, vyhod, api="https://api.deloskop.ru", pauza=6.0, maks=MAKS_ZA
     zag = {"Accept": "application/json", "User-Agent": "Deloskop-kartochki/1"}
     zag.update(zagolovki_dostupa())
     sluzhebnyj = "X-Deloskop-Service" in zag or "Cookie" in zag
-    print("Служебный доступ: %s · к запросу: %d ИНН (не больше %d за запуск)" % ("да" if sluzhebnyj else "нет — анонимно, 3 проверки в день", len(inns), maks))
+    print("Служебный доступ: %s · к запросу: %d ИНН (не больше %d за запуск)" % ("да" if sluzhebnyj else "нет — анонимно, 10 проверок в день", len(inns), maks))
     ok = oshibki = 0
     with open(vyhod, "a", encoding="utf-8") as fh:
         for i, inn in enumerate(inns, 1):

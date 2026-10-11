@@ -126,8 +126,11 @@
 
   /* → null (блока нет) | { st, god, n, norma, normaN, normaSv, stroka, nalogi, dohody, vid, sVznosami, rezhim }.
    * st: 'nizhe-vdvoe' (меньше половины средней) | 'nizhe' | 'ne-nizhe' | 'usn' | 'spec' | 'net-normy'. */
+  // rentabelnost-status-v1 [Ночные-3] 11.10: компания в банкротстве или ликвидации (и ликвидированная) — блока нет, как у рентабельности
+  function neDejstvuet(c) { return !!c && ['BANKRUPT', 'LIQUIDATING', 'LIQUIDATED'].indexOf(String(c.status || '').toUpperCase()) >= 0; }
   function raschet(r, normy) {
     if (!normy || !N) return null;
+    if (neDejstvuet(r && r.company)) return null;
     var x = dannye(r);
     if (!x) return null;
     var g = String(x.god);

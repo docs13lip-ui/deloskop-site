@@ -330,7 +330,16 @@
   function faktor(id) {
     if (!M || !Array.isArray(M.faktory)) return null;
     var f = M.faktory.filter(function (x) { return x.id === id; })[0];
-    return f ? { id: f.id, tekst: f.tekst, vklad: f.vklad } : null;
+    if (!f) return null;
+    var o = { id: f.id, tekst: f.tekst, vklad: f.vklad };
+    // indeks-pochemu-v1.1 [Ночные-3]: потолок фактора — «Что изменилось» объясняет сдвиг, который не равен сумме вкладов
+    if (typeof f.potolok === 'number') o.potolok = f.potolok;
+    return o;
+  }
+  // границы шкалы и предел плюсов методики — для «итог не равен сумме вкладов»
+  function shkala() {
+    if (!M || !M.shkala) return null;
+    return { min: M.shkala.min, max: M.shkala.max, plyusyMaks: M.plyusy_maksimum };
   }
   function versiya() { return M ? String(M.versiya || '') : ''; }
 
@@ -346,6 +355,6 @@
     }).catch(function () {});
   }
 
-  return { izOtveta: izOtveta, vid: vid, ball: ball, htmlKolonka: htmlKolonka, gotov: gotov, gotovo: gotovo, ustanovit: ustanovit, faktor: faktor, versiya: versiya,
+  return { izOtveta: izOtveta, vid: vid, ball: ball, htmlKolonka: htmlKolonka, gotov: gotov, gotovo: gotovo, ustanovit: ustanovit, faktor: faktor, shkala: shkala, versiya: versiya,
     rubli: rubli, TXT_NEIZV: TXT_NEIZV, ZAG_SOKR: ZAG_SOKR, txtSokr: txtSokr, neHvataet: neHvataet, strokaNe: strokaNe, podpis: podpis };
 });

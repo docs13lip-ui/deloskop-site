@@ -136,7 +136,7 @@ test('тексты модуля — без запрещённых слов и о
 test('главная: модуль подключён, вызывается после отрисовки, не в режиме «Щит»', () => {
   const ind = fs.readFileSync(path.join(KOREN, 'index.html'), 'utf8');
   assert.match(ind, /<script src="\/js\/sushchestvennoe\.js" defer><\/script>/);
-  assert.match(ind, /if\(!svoj&&window\.Sushchestvennoe\)\{try\{Sushchestvennoe\.mount\(report\.querySelector\('\.rows'\),r\)\}catch\(e\)\{\}\}/);
+  assert.match(ind, /if\(!svoj&&window\.Sushchestvennoe\)\{try\{Sushchestvennoe\.mount\(report\.querySelector\('\.rows'\),r(,\{uzhe:[^}]*\})?\)\}catch\(e\)\{\}\}/);
   assert.match(ind, /Прогноз ЗСК · наша оценка/, 'запасная строка без модуля осталась');
 });
 

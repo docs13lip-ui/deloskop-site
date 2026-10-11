@@ -635,8 +635,8 @@
     KLYUCHEVYE.forEach(function (x) {
       var b = dm[x.k];
       if (!b || typeof b !== 'object') return;
-      if (b.sostoyanie) { if (b.sostoyanie === 'not_checked') out.push({ t: x.t, nep: true }); return; }
-      if (['found', 'not_found', 'not_applicable'].indexOf(b.status) < 0) out.push({ t: x.t, nep: false });
+      if (b.sostoyanie) { if (b.sostoyanie === 'not_checked') out.push({ k: x.k, t: x.t, nep: true }); return; }
+      if (['found', 'not_found', 'not_applicable'].indexOf(b.status) < 0) out.push({ k: x.k, t: x.t, nep: false });
     });
     return out;
   }
@@ -652,6 +652,18 @@
       : 'Пока не проверяем: ' + sp(poka) + '. Не ответили в\u00a0этот раз: ' + sp(net);
     // «В найденных данных серьёзных сигналов нет» уже стоит рядом, в блоке Индекса, — здесь не повторяем
     return nach + ' — перед крупной оплатой посмотрите их сами';
+  }
+
+  // ne-povtor-v1 [Ночные-3] 11.10: какие реестры уже названы в выводе («Не проверяли: …») — ключи damia (sudy, bankrotstvo, fssp).
+  // Нужны «Существенным фактам», чтобы строка под ними не повторяла вывод. Причины в выводе есть — строки «Не проверяли» нет → [].
+  function vVyvode(r) {
+    try {
+      var v = decide(r, {});
+      if (v.reasons.length) return [];
+      var baza = bezPovtora(r && r.verdict, v.headline);
+      if (chestnoPoyasnenie(r, baza) === String(baza == null ? '' : baza)) return [];
+      return neProverenyPodrobno(r).map(function (x) { return x.k; });
+    } catch (e) { return []; }
   }
 
   function cel(imya) { try { if (typeof window !== 'undefined' && window.dlkGoal) window.dlkGoal(imya); } catch (_) { /* Метрика не мешает */ } }
@@ -745,7 +757,7 @@
   return {
     decide: decide, mount: mount, rynokStroka: rynokStroka, facts: facts, tone: tone, reorgPrekr: reorgPrekr, REORG_PREKRASHCHENIE: REORG_PREKRASHCHENIE, REORG_SDELAT: REORG_SDELAT, REORG_DOLG: REORG_DOLG, prepayCap: prepayCap, atStake: atStake,
     docs: docs, letter: letter, parseAmount: parseAmount, money: money, moneyKrupno: moneyKrupno, niceFloor: niceFloor, kindOf: kindOf,
-    neProvereno: neProvereno, kakPoschitali: kakPoschitali, otgruzkaAdvice: otgruzkaAdvice, NAPR: NAPR, bezPovtora: bezPovtora, chestnoPoyasnenie: chestnoPoyasnenie, neProverenyKlyuchevye: neProverenyKlyuchevye, STATYA: STATYA, FORMULA: FORMULA,
+    neProvereno: neProvereno, kakPoschitali: kakPoschitali, otgruzkaAdvice: otgruzkaAdvice, NAPR: NAPR, bezPovtora: bezPovtora, chestnoPoyasnenie: chestnoPoyasnenie, neProverenyKlyuchevye: neProverenyKlyuchevye, vVyvode: vVyvode, STATYA: STATYA, FORMULA: FORMULA,
     METODIKA: { DELITEL: DELITEL, POTOLKI: POTOLKI, OSTOROZHNO: OSTOROZHNO, MINIMUM: MINIMUM },
     RATES: { VAT: VAT, PROFIT: PROFIT, USN_DR: USN_DR }
   };

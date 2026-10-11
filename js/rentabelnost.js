@@ -36,8 +36,11 @@
     var x = (Array.isArray(arr) ? arr : []).filter(function (q) { return q && parseInt(q.year, 10) === g; })[0];
     return x ? chislo(x.value) : NaN;
   }
+  // rentabelnost-status-v1: от 100 % по модулю (капитал меньше нуля — активов мало) десятые не нужны: «−851 %», а не «−851,1 … −850,7 %»
+  function okr(x) { return Math.abs(x) >= 100 ? Math.round(x) : Math.round(x * 10) / 10; }
   function pct(x) {
-    var r = Math.round(x * 10) / 10, s = String(Math.abs(r)).replace('.', ',');
+    var r = okr(x), s = String(Math.abs(r)).replace('.', ',');
+    if (Math.abs(r) >= 100) return (r < 0 ? '−' : '') + s + NB + '%';
     if (s.indexOf(',') < 0) s += ',0';
     return (r < 0 ? '−' : '') + s + NB + '%';
   }
@@ -68,10 +71,17 @@
 
   // Оценка без норм: только организации (не банки и не страховщики), баланс и прибыль того же года, активы ≥ 1 млн ₽.
   // → null | { god, n, pribyl, nalog, rez, aktivy, sNalogom }. Её же хранит снимок «Что изменилось» (js/dinamika.js).
+  // rentabelnost-status-v1 [Ночные-3] 11.10: у компании в банкротстве или ликвидации (и уже ликвидированной) сравнение
+  // с отраслью не показываем — экран уже говорит «Не платите вперёд», а «признак отбора на выездную проверку» здесь только
+  // отвлекает. Найдено на ответе API банкрота-холдинга: «−851,1 … −850,7 %, ниже средней по отрасли». Тот же список — в js/usloviya.js.
+  var NE_DEJSTVUET = ['BANKRUPT', 'LIQUIDATING', 'LIQUIDATED'];
+  function neDejstvuet(c) { return !!c && NE_DEJSTVUET.indexOf(String(c.status || '').toUpperCase()) >= 0; }
+
   function ocenka(r) {
     if (!r || !r.company) return null;
     var c = r.company, inn = String(c.inn || ''), okved = String(c.okved || '');
     if (!/^\d{10}$/.test(inn)) return null;
+    if (neDejstvuet(c)) return null;
     if (/^64\.1(\.|\d|$)/.test(okved) || /^65(\.|$)/.test(okved)) return null;
     var ch = (r.dossier && r.dossier.charts) || {}, b = ch.balance;
     if (!b || typeof b !== 'object') return null;
@@ -189,7 +199,7 @@
   var BEZ_ZNAKA = 'В открытых данных у налога на прибыль нет знака: по ним не видно, расход это или доход по налогу (доход бывает, например, из-за отложенного налога).';
   // «2,1–4,3 %» — диапазон двух вариантов; один вариант — одно число
   function diapazon(a, b) {
-    var x = Math.round(Math.min(a, b) * 10) / 10, y = Math.round(Math.max(a, b) * 10) / 10;
+    var x = okr(Math.min(a, b)), y = okr(Math.max(a, b));
     if (x === y) return pct(x);
     return pct(x).replace(NB + '%', '') + (x < 0 || y < 0 ? ' … ' : '–') + pct(y);
   }
@@ -295,7 +305,7 @@
 
   var PRIMECHANIE_PASPORT = 'Рассчитано Делоскопом по бухотчётности этого раздела и нормам ФНС; в отпечаток SHA-256 не входит.';
 
-  return { raschet: raschet, ocenka: ocenka, sravnenie: sravnenie, sravnenieDvuh: sravnenieDvuh, izmenenie: izmenenie, znachenie: znachenie,
+  return { raschet: raschet, ocenka: ocenka, neDejstvuet: neDejstvuet, NE_DEJSTVUET: NE_DEJSTVUET, sravnenie: sravnenie, sravnenieDvuh: sravnenieDvuh, izmenenie: izmenenie, znachenie: znachenie,
     diapazon: diapazon, nalogSoZnakom: nalogSoZnakom, BEZ_ZNAKA: BEZ_ZNAKA, html: html, mount: mount, vstavit: vstavit, zagruzit: zagruzit, norma: norma, pct: pct, CSS: CSS, VYVOD: VYVOD, PRIZNAK: PRIZNAK,
     PRIMECHANIE_PASPORT: PRIMECHANIE_PASPORT };
 });

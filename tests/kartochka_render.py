@@ -214,6 +214,8 @@ IMENA_TOCHNO = {
     "ГАЗПРОМ ГАЗОРАСПРЕДЕЛЕНИЕ ЛЕНИНГРАДСКАЯ ОБЛАСТЬ": "Газпром газораспределение Ленинградская область",
     "ЛОЭСК": "ЛОЭСК",
     "ВОЗДУШНЫЕ ВОРОТА СЕВЕРНОЙ СТОЛИЦЫ": "Воздушные Ворота Северной Столицы",
+    # kartochki-1110e-n2: второе слово — часть названия, как пишет сама компания
+    "ФОРВАРД ЭНЕРГО": "Форвард Энерго",
 }
 
 
@@ -2380,3 +2382,252 @@ def nadet_obolochku(telo, ob):
     t = t.replace(OBOLOCHKA_METKA, ob["shapka"], 1)
     i = t.rfind("</body>")
     return t[:i] + ob["podval"] + t[i:]
+
+
+# ---------------------------------------------------------------- «Что это значит для вас» (kartochki-znachit-v1, [Ночные-2] 11.10)
+# П. 6 шаблона карточки [Продукт · Яндекс] 11.10 14:40 и идея 2 [Тестировщика] 10.10: блок ≥ 60 слов из фактов ЭТОЙ компании
+# (динамика, прибыль, капитал, налоги, смена руководителя, давность отчётности), а не из общих фраз. Тела карточек совпадали
+# с соседями по предложениям на 73–92 % (общие оговорки и «Перед оплатой») — «шаблон без содержания» для Яндекса.
+# Источник фактов — сама собранная страница (выводы «Коротко», таблица выручки и прибыли, JSON-LD), а не сведения API:
+# блок одинаково встаёт на новые карточки (обёртка html_kartochki ниже) и на опубликованные (kartochki.py, добор и
+# perepechatat) без повторного запроса к API. Повторный вызов ничего не меняет. Без оценок компании (STOP_SLOVA), без норм
+# права и обещаний исхода; советы — о порядке оплаты и документах, как в «Перед оплатой». ✎ [Право] — формулировки.
+ZN_MIN_SLOV = 60
+ZN_MNOZH = {"трлн": 1e12, "млрд": 1e9, "млн": 1e6, "тыс.": 1e3}
+
+_ZN_BLOK = re.compile(r'<section class="co-sec co-znachit"[^>]*>.*?</section>\n?', re.S)
+_ZN_KUDA = '<section class="co-sec co-pered"'
+_ZN_LD = re.compile(r'<script type="application/ld\+json">(.*?)</script>', re.S)
+_ZN_V = re.compile(r'<li class="co-v co-v--(ok|warn|info)">.*?<p>(.*?)</p>', re.S)
+_ZN_KOROTKO = re.compile(r'<section class="co-sec" aria-labelledby="korotko">.*?</section>', re.S)
+_ZN_FIN = re.compile(r'<section class="co-sec" aria-labelledby="fin">.*?</section>', re.S)
+_ZN_STROKA = re.compile(r"<tr><td>(\d{4})</td><td class=\"num\">([^<]*)</td>(?:<td class=\"num\">(.*?)</td>)?</tr>", re.S)
+_ZN_DOHOD_H2 = re.compile(r'<h2 id="fin">Доход(?: за[ \u00a0](\d{4})[ \u00a0]год)? — ([^<]*)</h2>')
+_ZN_SVEDENIYA = re.compile(r"ЕГРЮЛ · сведения на (\d{2})\.(\d{2})\.(\d{4})")
+_ZN_SUMMA = re.compile(r"(\d+(?:,\d+)?)\s*(трлн|млрд|млн|тыс\.)?\s*₽")
+_ZN_OTRASL = re.compile(r'<p class="small co-otr">Средняя налоговая нагрузка в отрасли «(.*?)» за\s*(\d{4})\s*год — (\d+(?:,\d+)?)')
+
+
+def _zn_txt(s):
+    """Фрагмент разметки → текст с обычными пробелами."""
+    return re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", s or "")).replace(NB, " ")).strip()
+
+
+def zn_summa(s):
+    """«36,6 млрд ₽» → 36 600 000 000.0; «убыток 9,8 млрд ₽» → −9 800 000 000.0; нет числа → None."""
+    t = _zn_txt(s)
+    m = _ZN_SUMMA.search(t)
+    if not m:
+        return None
+    v = float(m.group(1).replace(",", ".")) * ZN_MNOZH.get(m.group(2), 1)
+    return -v if "убыток" in t else v
+
+
+def _zn_proc(x):
+    v = abs(x) * 100
+    t = ("%.1f" % v).rstrip("0").rstrip(".") if v < 10 else "%d" % round(v)
+    return t.replace(".", ",") + NB + "%"
+
+
+def _zn_let(n):
+    return "%d%s%s" % (n, NB, plural(n, "год", "года", "лет"))
+
+
+def zn_fakty(t):
+    """Факты со страницы карточки → dict (пустой — не карточка)."""
+    t = t.replace("&nbsp;", NB)
+    f = {"imya": "", "osnovana": None, "na": None, "V": [], "ryad": [], "otrasl": None}
+    for blok in _ZN_LD.findall(t):
+        if '"@type": "Organization"' in blok:
+            org = blok[blok.index('"@type": "Organization"'):]
+            n = re.search(r'"name": "([^"]*)"', org)
+            d = re.search(r'"foundingDate": "(\d{4})-(\d{2})-(\d{2})"', org)
+            f["imya"] = n.group(1).replace('\\"', '"') if n else ""
+            f["osnovana"] = dt.date(*map(int, d.groups())) if d else None
+            i = re.search(r'"taxID": "(\d{10})"', org)
+            f["inn"] = i.group(1) if i else ""
+    sv = [dt.date(int(g), int(mm), int(dd)) for dd, mm, g in _ZN_SVEDENIYA.findall(t)]
+    f["na"] = max(sv) if sv else None
+    k = _ZN_KOROTKO.search(t)
+    if k:
+        f["V"] = [(ton, _zn_txt(p)) for ton, p in _ZN_V.findall(k.group(0))]
+    fin = _ZN_FIN.search(t)
+    if fin:
+        ryad = []
+        for g, d, p in _ZN_STROKA.findall(fin.group(0)):
+            dv = zn_summa(d)
+            if dv:
+                ryad.append({"god": int(g), "dohod": dv, "pribyl": zn_summa(p) if p and _zn_txt(p) != "—" else None})
+        if not ryad:
+            h = _ZN_DOHOD_H2.search(fin.group(0))
+            if h and zn_summa(h.group(2)):
+                ryad = [{"god": int(h.group(1)) if h.group(1) else None, "dohod": zn_summa(h.group(2)), "pribyl": None, "fns": True}]
+        f["ryad"] = sorted(ryad, key=lambda x: x["god"] or 0)
+        o = _ZN_OTRASL.search(fin.group(0))
+        if o:
+            f["otrasl"] = (_zn_txt(o.group(1)), int(o.group(2)), o.group(3))
+    return f
+
+
+def _zn_v(f, ton, nachalo):
+    """Первый вывод «Коротко» с тоном ton, текст которого начинается с nachalo, или None."""
+    return next((x for t, x in f["V"] if t == ton and x.startswith(nachalo)), None)
+
+
+def _zn_nb(s):
+    """Числа с единицами и «за 2025» — неразрывно, как в остальной карточке."""
+    s = re.sub(r"(\d) (трлн|млрд|млн|тыс\.|%|₽|год|года|лет)", lambda m: m.group(1) + NB + m.group(2), s)
+    s = re.sub(r"(трлн|млрд|млн|тыс\.) ₽", lambda m: m.group(1) + NB + "₽", s)
+    return re.sub(r"\b(за|с|на|в|до) (\d)", lambda m: m.group(1) + NB + m.group(2), s, flags=re.I)
+
+
+def zn_frazy(f):
+    """Список предложений блока (без HTML). Пусто — блока нет: на странице нет выручки или имени."""
+    ryad = [x for x in f["ryad"] if x.get("dohod") and x["dohod"] > 0]
+    if not f["imya"] or not ryad:
+        return []
+    out = []
+    na = f["na"]
+    p1 = ryad[-1]
+    g1, r1, pr1 = p1["god"], p1["dohod"], p1.get("pribyl")
+    p0 = ryad[-2] if len(ryad) >= 2 and ryad[-2]["god"] == (g1 or 0) - 1 else None
+    za = ("за %d год" % g1) if g1 else "за последний год"
+
+    # 1. История в реестре — с какого года и сколько лет открытой отчётности на странице
+    if f["osnovana"] and na:
+        mes = (na.year - f["osnovana"].year) * 12 + na.month - f["osnovana"].month - (na.day < f["osnovana"].day)
+        let = mes // 12
+        ruk = _zn_v(f, "ok", "Руководитель тот же")
+        ruk_s = re.search(r"с (\d{4}) года", ruk or "")
+        t = "%s — в реестре с %d года" % (f["imya"], f["osnovana"].year)
+        if let >= 1:
+            t += " (%s)" % _zn_let(let)
+        if ruk_s:
+            t += ", руководитель не менялся с %s года" % ruk_s.group(1)
+        if len(ryad) >= 3 and not p1.get("fns"):
+            t += "; в открытых данных — отчётность за %s, с %d по %d год" % (_zn_let(len(ryad)), ryad[0]["god"], g1)
+            t += ": по ней видно, как компания прошла последние годы, а не один удачный или неудачный год."
+        elif let < 3:
+            t += ": история короткая, поэтому оплату вперёд лучше ограничить и платить частями по факту поставки."
+        else:
+            t += "."
+        out.append(t)
+
+    # 2. Деньги: убыток / капитал / падение прибыли или выручки / прибыль — что это меняет в условиях оплаты
+    kap = re.search(r"минус ([^:]+):", _zn_v(f, "warn", "Собственный капитал") or "")
+    ub = _zn_v(f, "warn", "Убыток за")
+    podryad = re.search(r"(\S+) год подряд", ub or "")
+    dl = (r1 / p0["dohod"] - 1) if p0 else None
+    if pr1 is not None and pr1 < 0:
+        t = "%s компания получила убыток %s" % (za.capitalize(), dengi(-pr1))
+        if podryad:
+            t += " (%s год подряд)" % podryad.group(1)
+        t += " при выручке %s" % dengi(r1)
+        if kap:
+            t += ", а её обязательства больше активов на %s" % kap.group(1).strip()
+        t += (": если платите вперёд, привяжите оплату к поставке или этапам работ — по отчётности у компании нет "
+              "запаса, из которого она вернула бы аванс без новых денег." if kap else
+              ": крупный аванс лучше разбить на этапы и платить по факту поставки, а в договоре прописать срок возврата "
+              "предоплаты.")
+        out.append(t)
+    elif kap:
+        out.append("Обязательства компании больше её активов на %s (баланс на 31.12.%s): если платите вперёд, привяжите "
+                   "оплату к поставке или этапам работ." % (kap.group(1).strip(), g1))
+    elif pr1 is not None and p0 and p0.get("pribyl") and p0["pribyl"] > 0 and pr1 <= p0["pribyl"] * 0.7:
+        t = "Прибыль %s — %s, на %s меньше, чем годом раньше" % (za, dengi(pr1), _zn_proc(1 - pr1 / p0["pribyl"]))
+        if dl is not None and abs(dl) >= 0.05:
+            t += ", при выручке, %s на %s" % ("выросшей" if dl > 0 else "снизившейся", _zn_proc(dl))
+        t += ": для крупного аванса попросите обеспечение — поэтапную оплату или аккредитив."
+        out.append(t)
+    elif dl is not None and dl <= -0.3:
+        out.append("Выручка %s — %s, на %s меньше, чем годом раньше: спросите компанию о причине и уточните, хватит ли "
+                   "ей людей и мощностей на ваш объём." % (za, dengi(r1), _zn_proc(dl)))
+    elif pr1 is not None and pr1 > 0:
+        m1 = pr1 / r1
+        t = "%s компания заработала %s чистой прибыли при выручке %s — %s выручки" % (
+            za.capitalize(), dengi(pr1), dengi(r1), _zn_proc(m1))
+        if p0 and p0.get("pribyl") and p0["pribyl"] > 0:
+            m0 = p0["pribyl"] / p0["dohod"]
+            t += " (годом раньше — %s)" % _zn_proc(m0)
+        t += ": условия оплаты можно обсуждать обычные — по списку ниже."
+        out.append(t)
+    else:
+        t = "Выручка %s — %s" % (za, dengi(r1))
+        if dl is not None and abs(dl) >= 0.05:
+            t += ", на %s %s, чем годом раньше" % (_zn_proc(dl), "больше" if dl > 0 else "меньше")
+        t += (". Чистой прибыли в открытой отчётности на этой странице нет — до крупной оплаты попросите у компании отчёт "
+              "о финансовых результатах за %d год." % g1 if g1 else
+              ". До крупной оплаты попросите у компании отчёт о финансовых результатах за последний год.")
+        out.append(t)
+
+    # 3. Давность отчётности
+    if g1 and na and na.year - g1 >= 2:
+        out.append("У %s последняя открытая отчётность — за %d год, о %d годе она ничего не говорит: до подписания "
+                   "договора попросите у компании бухгалтерскую отчётность за %d год." % (f["imya"], g1, na.year - 1, na.year - 1))
+
+    # 4. Налоги и руководитель — по выводам «Коротко»
+    nd = _zn_v(f, "warn", "Задолженность перед бюджетом")
+    if nd:
+        m = re.search(r"— (.*?) на (\d.*?\d{4})", nd)
+        if m:
+            out.append("В данных ФНС на %s у компании была задолженность перед бюджетом — %s: попросите у неё справку "
+                       "об исполнении обязанности по уплате налогов на свежую дату." % (m.group(2), m.group(1)))
+    else:
+        up = _zn_v(f, "ok", "Уплатила налогов и взносов")
+        bez = _zn_v(f, "ok", "Налоговой задолженности")
+        m = re.search(r"— (.*?)(?: за (\d{4}))?$", up or "")
+        d = re.search(r"\(на (.*?)\)", bez or "")
+        if m and d:
+            out.append("%s компания уплатила налогов и взносов на %s, а задолженности перед бюджетом в данных ФНС на %s "
+                       "у неё не было." % (("За %s год" % m.group(2)) if m.group(2) else "За год", m.group(1), d.group(1)))
+    sm = _zn_v(f, "warn", "Руководитель сменился")
+    if sm:
+        out.append("У %s %s — убедитесь, что договор подписывает действующий руководитель или представитель по "
+                   "доверенности от него." % (f["imya"], sm[0].lower() + sm[1:]))
+
+    # 5. Масштаб: средняя выручка в месяц — чтобы соотнести с суммой своей сделки
+    out.append("Для масштаба: %s компания получала в среднем %s выручки в месяц. Если ваша сделка сопоставима с этой "
+               "суммой или больше, для компании она крупная — запросите свежую отчётность и проверьте, кто подписывает договор."
+               % (za, dengi(r1 / 12)))
+
+    # 6. Мало слов — строка отрасли (ФНС), если она есть на странице
+    if sum(len(x.split()) for x in out) < ZN_MIN_SLOV and f["otrasl"]:
+        nz, god, proc = f["otrasl"]
+        out.append("Средняя налоговая нагрузка в отрасли «%s» за %d год — %s %% по данным ФНС: с ней можно сравнить "
+                   "налоги компании в полном отчёте." % (nz, god, proc))
+    out = [_zn_nb(x) for x in out]
+    for x in out:
+        assert not STOP_SLOVA.search(x), x
+    return out
+
+
+def zn_blok_html(fr, inn=""):
+    if not fr:
+        return ""
+    e = lambda s: html.escape(s, quote=False)
+    return ('<section class="co-sec co-znachit" aria-labelledby="znachit"><h2 id="znachit">Что это значит для вас</h2>%s'
+            '<p class="caption">◆ рассчитано Делоскопом по сведениям этой страницы. Условия сделки решаете вы — '
+            'полная проверка на сегодня — <a href="/?inn=%s">в отчёте</a>.</p></section>\n' % (
+                "".join("<p>%s</p>" % e(x) for x in fr), inn))
+
+
+def vstavit_znachit(t):
+    """Ставит (или обновляет) блок перед «Перед оплатой». Нет «Перед оплатой» или фактов — страница без изменений,
+    кроме снятия устаревшего блока. Повтор — без изменений."""
+    bez = _ZN_BLOK.sub("", t)
+    if _ZN_KUDA not in bez:
+        return bez if _ZN_BLOK.search(t) else t
+    f = zn_fakty(bez)
+    b = zn_blok_html(zn_frazy(f), f.get("inn", ""))
+    if not b:
+        return bez
+    i = bez.index(_ZN_KUDA)
+    novyj = bez[:i] + b + bez[i:]
+    return t if novyj == t else novyj
+
+
+_html_kartochki_bez_znachit = html_kartochki
+
+
+def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None):  # noqa: F811 — та же подпись, + «Что это значит для вас»
+    return vstavit_znachit(_html_kartochki_bez_znachit(k, V, sosedi, kom, normy, cena))

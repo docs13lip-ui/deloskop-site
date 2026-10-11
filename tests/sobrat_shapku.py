@@ -51,6 +51,9 @@ SHAPKA_JS = '<script src="/js/shapka.js" defer></script>'
 OBNOV_JS = '<script src="/obnovleniya.js" defer></script>'
 METRIKA_JS = '<script src="/js/metrika.js" defer></script>'
 KOPIYA_JS = '<script src="/js/kopiya.js" defer></script>'  # kopiya-v1: подпись-источник при копировании
+# yandex-tehnika-v1 (11.10): PNG-значок 120×120 для сниппета Яндекса и лента «Разборов дел» (RSS) — на всех страницах
+IKONKA_120 = '<link rel="icon" type="image/png" sizes="120x120" href="/favicon-120.png">'
+RSS_LINK = '<link rel="alternate" type="application/rss+xml" title="Разборы дел — Делоскоп" href="/praktika/rss.xml">'
 STARAYA_SHAPKA = re.compile(r'<header(?: class="(?:top|hdr)")?>.*?</header>\n?', re.S)
 
 
@@ -203,6 +206,10 @@ def vstavit_shapku(txt, shapka):
         txt = txt.replace("</head>", METRIKA_JS + "\n</head>", 1)
     if KOPIYA_JS not in txt:
         txt = txt.replace("</head>", KOPIYA_JS + "\n</head>", 1)
+    if IKONKA_120 not in txt:
+        txt = txt.replace("</head>", IKONKA_120 + "\n</head>", 1)
+    if RSS_LINK not in txt:
+        txt = txt.replace("</head>", RSS_LINK + "\n</head>", 1)
     # цель ссылки «Перейти к содержанию»
     if 'id="main"' not in txt:
         mm = re.search(r"<main(?=[\s>])([^>]*)>", txt)

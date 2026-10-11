@@ -653,7 +653,10 @@
       return '';
     }
     vse.sort(function (p, q) { return Math.abs(q.d) - Math.abs(p.d); });
+    // indeks-pochemu-v1.1 [Ночные-3]: сдвиг не всегда равен сумме вкладов — у части факторов есть потолок
+    // (недостоверность: «не выше 45»), плюсы учитываются не больше чем на +N, шкала — от 1 до 99. Объясняем, а не молчим.
     var est = vse.length > 3 ? vse.length - 3 : 0;
+    var dop = dopPochemu(a, b, nov, ush, vse, IO, est);
     vse = vse.slice(0, 3);
     var zn = function (n) { return (n > 0 ? '+' : '−') + Math.abs(n); };
     // название фактора — в ёлочках, внутренние кавычки — „лапками“
@@ -663,7 +666,36 @@
     };
     var t = [chast(vse.filter(function (x) { return x.n; }), 'появилось'), chast(vse.filter(function (x) { return !x.n; }), 'ушло')]
       .filter(Boolean).join('; ');
-    return 'Почему: ' + t + (est ? '; и' + NB + 'ещё ' + est : '') + '. Вклады — по' + NB + 'открытой методике' + (b.ixv ? ' v' + b.ixv : '') + '.';
+    return 'Почему: ' + t + (est ? '; и' + NB + 'ещё ' + est : '') + '.' + (dop ? ' ' + dop : '') +
+      ' Вклады — по' + NB + 'открытой методике' + (b.ixv ? ' v' + b.ixv : '') + '.';
+  }
+  // Пояснение, когда «Индекс: A → B» не равен сумме вкладов появившихся и ушедших факторов.
+  // Потолок берём из методики (IO.faktor(id).potolok), а не из снимка: старые снимки остаются понятными.
+  // Потолок «включился» — у нового фактора с потолком P и B === наименьшему такому P; «снят» — ушёл фактор с потолком P и A === P.
+  // Часть факторов скрыта («и ещё N») — сумму вкладов читатель не сверит, общую оговорку не ставим.
+  function dopPochemu(a, b, nov, ush, vse, IO, est) {
+    if (typeof a.ix !== 'number' || typeof b.ix !== 'number') return '';
+    var kav = function (t) { return '«' + String(t).replace(/«/g, '„').replace(/»/g, '“') + '»'; };
+    var minP = function (sp) {
+      var m = null;
+      sp.forEach(function (f) { if (typeof f.potolok === 'number' && (!m || f.potolok < m.potolok)) m = f; });
+      return m;
+    };
+    var pn = minP(nov), pu = minP(ush);
+    if (pn && b.ix === pn.potolok)
+      return (nov.length === 1 && !ush.length ? 'С' + NB + 'этим признаком' : 'При' + NB + 'признаке ' + kav(pn.tekst)) +
+        ' Индекс не' + NB + 'выше ' + pn.potolok + ' — потолок методики.';
+    if (pu && a.ix === pu.potolok)
+      return 'Потолок методики «не' + NB + 'выше ' + pu.potolok + '» ушёл вместе с' + NB + 'признаком.';
+    if (est) return '';
+    var summa = 0;
+    vse.forEach(function (x) { summa += x.d; });
+    if (summa === b.ix - a.ix) return '';
+    var sh = null;
+    try { sh = IO && IO.shkala ? IO.shkala() : null; } catch (e) { sh = null; }
+    var pl = sh && typeof sh.plyusyMaks === 'number' ? ' (не' + NB + 'больше +' + sh.plyusyMaks + ')' : '';
+    var gr = sh && typeof sh.min === 'number' && typeof sh.max === 'number' ? 'шкала — от' + NB + sh.min + ' до' + NB + sh.max : 'шкала ограничена';
+    return 'Итог не' + NB + 'равен сумме вкладов: у' + NB + 'плюсов есть предел' + pl + ', у' + NB + 'части признаков — потолок, ' + gr + '.';
   }
   function ddmm(t) { var q = new Date(t + 3 * 3600 * 1000); return ('0' + q.getUTCDate()).slice(-2) + '.' + ('0' + (q.getUTCMonth() + 1)).slice(-2); }
 

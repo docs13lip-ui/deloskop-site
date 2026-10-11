@@ -7,7 +7,7 @@
   praktika/index.html, praktika/115-fz/index.html, praktika/nalogi/index.html — хабы (новые сверху);
   praktika/<раздел>/<slug>/index.html — разборы: крошки → H1 → карточка дела → текст автора → одно действие →
   «Где в законе» → «Частые вопросы» (praktika/faq.json, ответы дословно из текста автора) → «Сверено» → «Похожие разборы» (с полем statyi — «Читайте также») → «Полезно?» (js/otzyv.js);
-  строки /praktika/… в sitemap.xml; ссылку «Практика судов» в хабах /115-fz/ и /nalogi/ (между метками).
+  строки /praktika/… в sitemap.xml; ленту RSS /praktika/rss.xml; ссылку «Практика судов» в хабах /115-fz/ и /nalogi/ (между метками).
 Шапку и подвал ставит sobrat_shapku.sobrat_stranicu — после этого сборщика sobrat_shapku.py ничего не меняет.
 Запуск: python3 tests/sobrat_praktika.py [--check]
 """
@@ -471,6 +471,58 @@ def sitemap(txt, D):
     return txt.replace("\n</urlset>", stroki + "\n</urlset>", 1)
 
 
+# yandex-tehnika-v1 (11.10): лента RSS 2.0 «Разборы дел» — /praktika/rss.xml (автоимпорт в Дзен, подписка, Вебмастер).
+# Из тех же данных, что страницы: новые сверху; полный текст автора — content:encoded со ссылками от корня сайта.
+# Дата сборки ленты — самая поздняя правка разбора (не «сейчас»): иначе --check краснел бы на каждом запуске.
+DNI = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+MES_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+
+def rfc822(iso):
+    import datetime
+    d = datetime.date(*map(int, iso.split("-")))
+    return "%s, %02d %s %d 09:00:00 +0300" % (DNI[d.weekday()], d.day, MES_EN[d.month - 1], d.year)
+
+
+def cdata(txt):
+    return "<![CDATA[" + txt.replace("]]>", "]]]]><![CDATA[>") + "]]>"
+
+
+def rss(D):
+    po_date = sorted(D["razbory"], key=lambda r: (r["data"], r["slug"]), reverse=True)
+    items = []
+    for r in po_date:
+        url = SAJT + url_razbora(r)
+        with open(put("tests", "praktika", r["slug"] + ".html"), encoding="utf-8") as fh:
+            telo = nerazryv(tipograf(fh.read().strip()))
+        telo = re.sub(r'(href|src)="/(?!/)', lambda m: '%s="%s/' % (m.group(1), SAJT), telo)
+        items.append("""  <item>
+    <title>%s</title>
+    <link>%s</link>
+    <guid isPermaLink="true">%s</guid>
+    <pubDate>%s</pubDate>
+    <category>%s</category>
+    <description>%s</description>
+    <content:encoded>%s</content:encoded>
+  </item>""" % (e(nerazryv(tipograf(r["h1"]))), url, url, rfc822(r["data"]), e(D["razdely"][r["razdel"]]["kratko"]),
+               e(nerazryv(tipograf(r["lid"]))), cdata("<p>" + nerazryv(tipograf(r["lid"])) + "</p>\n" + telo)))
+    posl = max(izmeneno(r) for r in D["razbory"])
+    return """<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+  <title>Разборы дел — Делоскоп</title>
+  <link>%(s)s/praktika/</link>
+  <atom:link href="%(s)s/praktika/rss.xml" rel="self" type="application/rss+xml"/>
+  <description>Как решают суды по 115-ФЗ и налогам: что случилось, что решил суд и что это значит для вас — с номером дела и первоисточником.</description>
+  <language>ru</language>
+  <lastBuildDate>%(d)s</lastBuildDate>
+  <image><url>%(s)s/ikonka-512.png</url><title>Разборы дел — Делоскоп</title><link>%(s)s/praktika/</link></image>
+%(i)s
+</channel>
+</rss>
+""" % {"s": SAJT, "d": rfc822(posl), "i": "\n".join(items)}
+
+
 def sobrat():
     """Словарь {путь файла: новое содержимое} — всё, что должен дать сборщик."""
     D = dannye()
@@ -498,6 +550,7 @@ def sobrat():
         out["index.html"] = glavnaya(fh.read(), D)
     with open(put("sitemap.xml"), encoding="utf-8") as fh:
         out["sitemap.xml"] = sitemap(fh.read(), D)
+    out["praktika/rss.xml"] = rss(D)
     return out
 
 

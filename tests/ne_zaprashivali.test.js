@@ -44,7 +44,8 @@ test('опись: not_checked — «не проверяли», в счёт за�
   assert.strictEqual(o.oprosheno, o.otvetili, 'запрошенные = ответившие');
   const h = O.html(otvet('not_checked')), t = txt(h);
   assert.match(t, /ответили (\d+) из \1 запрошенных · 7 реестров не проверяли · проверка 11\.10\.2026/);
-  assert.ok(t.includes('Не проверяли 7 реестров: ' + PRICH + '.'));
+  // prichina-nep-v1: общая строка без повтора «Не проверяли … : эти реестры мы пока не проверяем»
+  assert.ok(t.includes('Не проверяли 7 реестров — мы их пока не проверяем.'));
   assert.ok(!/Не ответили \d/.test(t) && !/ не ответил/.test(h.replace(/aria-label="[^"]*"/g, '')), 'нет «не ответил»');
   assert.strictEqual((h.match(/otk__r--nep/g) || []).length, 7);
   assert.ok(h.includes('href="https://kad.arbitr.ru/"'), 'ссылка «проверьте сами» осталась');

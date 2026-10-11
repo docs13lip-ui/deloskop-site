@@ -624,6 +624,36 @@
     return String(rynok.tekst);
   }
 
+  // chestnyj-vyvod-v1 [Ночные-3] 11.10 (v1.1 — по словам [Право] 11.10 разд. 2): «Серьёзных признаков риска не найдено»
+  // из r.verdict честно только тогда, когда суды, банкротство и приставы проверены. Не подключены (sostoyanie = not_checked) —
+  // «Не проверяли: …»; не ответили — «Не ответили в этот раз: …»; разные причины — «Пока не проверяем: … Не ответили в этот раз: …».
+  var KLYUCHEVYE = [{ k: 'sudy', t: 'арбитражные суды' }, { k: 'bankrotstvo', t: 'банкротство' }, { k: 'fssp', t: 'приставы' }];
+  function neProverenyPodrobno(r) {
+    var dm = r && r.damia;
+    if (!dm || typeof dm !== 'object') return [];
+    var out = [];
+    KLYUCHEVYE.forEach(function (x) {
+      var b = dm[x.k];
+      if (!b || typeof b !== 'object') return;
+      if (b.sostoyanie) { if (b.sostoyanie === 'not_checked') out.push({ t: x.t, nep: true }); return; }
+      if (['found', 'not_found', 'not_applicable'].indexOf(b.status) < 0) out.push({ t: x.t, nep: false });
+    });
+    return out;
+  }
+  function neProverenyKlyuchevye(r) { return neProverenyPodrobno(r).map(function (x) { return x.t; }); }
+  // poyasnenie — уже без повтора вывода (bezPovtora); меняем только «не найдено/нет» без найденных причин
+  function chestnoPoyasnenie(r, poyasnenie) {
+    var t = String(poyasnenie == null ? '' : poyasnenie), np = neProverenyPodrobno(r);
+    if (!np.length || !/(не\s+найден|не\s+обнаружен|признаков\s+(риска\s+)?нет|сигналов\s+нет)/i.test(t)) return t;
+    function sp(xs) { return xs.map(function (x) { return x.t; }).join(', '); }
+    var poka = np.filter(function (x) { return x.nep; }), net = np.filter(function (x) { return !x.nep; });
+    var nach = !net.length ? 'Не проверяли: ' + sp(poka)
+      : !poka.length ? 'Не ответили в\u00a0этот раз: ' + sp(net)
+      : 'Пока не проверяем: ' + sp(poka) + '. Не ответили в\u00a0этот раз: ' + sp(net);
+    // «В найденных данных серьёзных сигналов нет» уже стоит рядом, в блоке Индекса, — здесь не повторяем
+    return nach + ' — перед крупной оплатой посмотрите их сами';
+  }
+
   function cel(imya) { try { if (typeof window !== 'undefined' && window.dlkGoal) window.dlkGoal(imya); } catch (_) { /* Метрика не мешает */ } }
   var NAPR = [{ id: 'platim', t: 'Я плачу им' }, { id: 'otgruzhaem', t: 'Они платят мне' }];
 
@@ -643,7 +673,7 @@
     function draw(keepFocus) {
       var v = decide(r, st), f = v.facts;
       box.className = 'usl ' + v.tone;
-      var why = v.reasons.length ? v.reasons.join(', ') : bezPovtora(r && r.verdict, v.headline); // точку ставит строка ниже — без «найдено..»
+      var why = v.reasons.length ? v.reasons.join(', ') : chestnoPoyasnenie(r, bezPovtora(r && r.verdict, v.headline)); // точку ставит строка ниже — без «найдено..»
       var stake = '';
       if (v.stake) {
         stake = v.stake.zero
@@ -715,7 +745,7 @@
   return {
     decide: decide, mount: mount, rynokStroka: rynokStroka, facts: facts, tone: tone, reorgPrekr: reorgPrekr, REORG_PREKRASHCHENIE: REORG_PREKRASHCHENIE, REORG_SDELAT: REORG_SDELAT, REORG_DOLG: REORG_DOLG, prepayCap: prepayCap, atStake: atStake,
     docs: docs, letter: letter, parseAmount: parseAmount, money: money, moneyKrupno: moneyKrupno, niceFloor: niceFloor, kindOf: kindOf,
-    neProvereno: neProvereno, kakPoschitali: kakPoschitali, otgruzkaAdvice: otgruzkaAdvice, NAPR: NAPR, bezPovtora: bezPovtora, STATYA: STATYA, FORMULA: FORMULA,
+    neProvereno: neProvereno, kakPoschitali: kakPoschitali, otgruzkaAdvice: otgruzkaAdvice, NAPR: NAPR, bezPovtora: bezPovtora, chestnoPoyasnenie: chestnoPoyasnenie, neProverenyKlyuchevye: neProverenyKlyuchevye, STATYA: STATYA, FORMULA: FORMULA,
     METODIKA: { DELITEL: DELITEL, POTOLKI: POTOLKI, OSTOROZHNO: OSTOROZHNO, MINIMUM: MINIMUM },
     RATES: { VAT: VAT, PROFIT: PROFIT, USN_DR: USN_DR }
   };

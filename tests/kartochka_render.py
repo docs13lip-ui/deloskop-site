@@ -1236,8 +1236,9 @@ def pohozhie(k, vse):
     return out
 
 
-def sosedi_html(k, sosedi):
-    """Блок «Похожие компании»; добор обновляет им и опубликованные карточки."""
+def sosedi_html(k, sosedi, eshche=None):
+    """Блок «Похожие компании»; добор обновляет им и опубликованные карточки. eshche — добор до 5 ссылок
+    (kartochki-shablon-v1, eshche_kompanii): отдельным списком под своим заголовком, «похожими» не называем."""
     if not sosedi:
         return ""
     # kartochki-okved-v1: «Похожие» — только если у всех тот же класс ОКВЭД (2 цифры); регион или раздел — не похожесть
@@ -1247,11 +1248,11 @@ def sosedi_html(k, sosedi):
             else "Похожие компании"
     else:
         zag = "Ещё компании в Делоскопе"
-    return '<aside class="co-side card" aria-labelledby="sos"><h2 id="sos" class="co-h3">%s</h2><ul class="co-sos">%s</ul></aside>' % (
+    return '<aside class="co-side card" aria-labelledby="sos"><h2 id="sos" class="co-h3">%s</h2><ul class="co-sos">%s</ul>%s</aside>' % (
         zag, "".join('<li><a href="%s">%s</a><span class="caption">%s</span></li>' % (
             adres_str(x), e(x["name"]), e(", ".join(filter(None, [x.get("gorod") or x.get("region"),
                                                                     dengi(_dohod_kart(x)) if _dohod_kart(x) else ""]))).replace("&nbsp;", NB))
-            for x in sosedi))
+            for x in sosedi), eshche_html(k, eshche or []))
 
 
 # v3.8b: средняя нагрузка отрасли (data/fns-normy-2025.json, прил. 3 ММ-3-06/333@); свою нагрузку не сравниваем —
@@ -1714,7 +1715,7 @@ def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None):
         fin_blok = fin_blok[:-len("</section>")] + otrasl_html(k, normy) + "</section>"
     if fin_blok:
         fin_blok += balans_html(k)
-    sos = sosedi_html(k, sosedi)
+    sos = sosedi_html(k, sosedi, k.get("_eshche"))
     # kartochki-okved-v1 (ТЗ 16:50, разд. 2): строка основного ОКВЭД под заголовком; код — ещё и в крошках (data-okved),
     # чтобы добор опубликованных карточек знал класс для «Похожих» и хаба без пересборки из сведений
     okk = okved_kod(k.get("okved"))
@@ -1728,7 +1729,7 @@ def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None):
         daty_blok += "\n"
     podzag = " · ".join(filter(None, ["Действующая", ("работает " + vozr) if mes else "", e(mesto) if mesto else "",
                                       "ИНН " + k["inn"], ("ОГРН " + k["ogrn"]) if k.get("ogrn") else ""]))
-    return primenit_vorota_indeksa("""<!doctype html>
+    return shablon_v2(primenit_vorota_indeksa("""<!doctype html>
 <html lang="ru">
 <head>
 <meta charset="utf-8">
@@ -1784,7 +1785,7 @@ def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None):
         kr_reg=(" › " + e(k["region"])) if k.get("region") else "", kr_razd=(" › " + e(razdel)) if razdel else "",
         h1=e(nm), podzag=podzag, nb=NB, daty=daty_blok, okved_attr=(' data-okved="%s"' % okk) if okk else "", okved_str=okved_str, inn=k["inn"], ind=ind, vv=vv, razbor=razbor_html(k), pered=pered, fin=fin_blok, stroki="".join(stroki),
         ne_blok=ne_blok, lyudi=lyudi, sos=sos, tema=urllib.parse.quote("Ошибка в карточке ИНН " + k["inn"]),
-        sobrano=data_tekst(k.get("proverka")) if k.get("proverka") else ""))
+        sobrano=data_tekst(k.get("proverka")) if k.get("proverka") else "")))
 
 
 # ---------------------------------------------------------------- ворота индексации (kartochki-indeks-v1)
@@ -2366,7 +2367,10 @@ def kartochka_iz_check(zapis, sosedi=(), kom=None, normy=None, cena=None):
     ok, pr = vorota(k, V)
     if not ok:
         return False, pr, None, None
-    return True, pr, adres_str(k), html_kartochki(k, V, pohozhie(k, list(sosedi)), kom, normy, cena)
+    vse_ = list(sosedi)
+    sos_ = pohozhie(k, vse_)
+    k["_eshche"] = eshche_kompanii(k, vse_, sos_)  # kartochki-shablon-v1: как у статичной волны — не меньше 5 ссылок
+    return True, pr, adres_str(k), html_kartochki(k, V, sos_, kom, normy, cena)
 
 
 # ---------------------------------------------------------------- оболочка для API (obolochka-v1)
@@ -2635,3 +2639,185 @@ _html_kartochki_bez_znachit = html_kartochki
 
 def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None):  # noqa: F811 — та же подпись, + «Что это значит для вас»
     return vstavit_znachit(_html_kartochki_bez_znachit(k, V, sosedi, kom, normy, cena))
+
+
+# ---------------------------------------------------------------- kartochki-shablon-v1 ([Ночные-2] 11.10, ТЗ [Продукт · Яндекс] 11.10 14:40 пп. 2, 3, 5)
+# Шаблон карточки для волн (3 млн юрлиц): у соседей по отрасли сниппеты и заголовки были почти одинаковыми.
+#  * H1 — «{Форма} «{Имя}», ИНН {ИНН}» (основной запрос карточки — «ИНН + название»); ИНН — тише имени (span, запятая —
+#    снаружи: на 390 px строка не начинается с запятой);
+#  * под H1 — «Действующая · {город} · {отрасль словами} · с {год} года ({возраст}) · ОГРН …» (ИНН уже в H1);
+#  * description — «{Имя} ({город}), {отрасль}: с {год} года, выручка {X} за {год} ({±N %}). {Главный факт}.» —
+#    главный факт = первый вывод «Коротко о компании» (порядок выводов уже по весу: 🟡 → 🟢 → ⚪), без вывода о возрасте;
+#  * всё — из готовой страницы (одна функция для новых карточек, добора опубликованных и API): добор = полная сборка.
+# Ничего не додумываем: нет отрасли / года / выручки на странице — нет и в сниппете. Выручка старше GOD_INDEKSA_OT —
+# не в сниппете (как и раньше, kartochki-indeks-v1).
+SHABLON_DESC_MAX = 160
+SHABLON_OTRASL_MAX = 45
+_SH_H1 = re.compile(r'(<header class="co-head">\n<h1>)(.*?)(</h1>)', re.S)
+_SH_SUB = re.compile(r'(<p class="co-sub">)(.*?)(</p>)', re.S)
+_SH_DESC = re.compile(r'(<meta (?:name|property)="(?:og:)?description" content=")([^"]*)(")')
+_SH_OKVED = re.compile(r'<p class="caption co-okved">Основной вид деятельности — <span class="num">[0-9.]+</span>(?: ([^·<]+?))? ·')
+_SH_KROSH = re.compile(r'<nav class="co-krosh[^>]*>(.*?)</nav>', re.S)
+_SH_FIN_H2 = re.compile(r'<h2 id="fin">([^<]*)</h2>')
+_SH_TAB = re.compile(r'<tbody><tr><td>(\d{4})</td><td class="num">([^<]+)</td>')
+_SH_FIN_FNS = re.compile(r"^Доход за(?:&nbsp;| | )(\d{4})(?:&nbsp;| | )год — (.+)$")
+_SH_V = re.compile(r'<li class="co-v co-v--(\w+)">.*?<p>(.*?)</p>', re.S)
+_SH_IZM = re.compile("(выросл?а?|снизил(?:ся|ась)) на (\\d+)(?:&nbsp;| | )%")
+_SH_VOZRAST_V = re.compile(r"^(Работает|Компании) ")
+
+
+def _sh_txt(s):
+    return html.unescape(re.sub(r"<[^>]+>", "", s or "")).replace(" ", " ").strip()
+
+
+def _sh_org(t):
+    for blok in re.findall(r'<script type="application/ld\+json">(.*?)</script>', t, re.S):
+        try:
+            graf = json.loads(blok.replace("<\\/", "</")).get("@graph") or []
+        except ValueError:
+            continue
+        for x in graf:
+            if isinstance(x, dict) and x.get("@type") == "Organization":
+                return x
+    return {}
+
+
+def _sh_mal(s):
+    """Первая буква — строчная, если это не аббревиатура («Передача электроэнергии» → «передача…», «ЖКХ» — как есть)."""
+    return s[:1].lower() + s[1:] if len(s) > 1 and s[1:2].islower() else s
+
+
+def shablon_otrasl(t):
+    """Отрасль словами: название основного ОКВЭД со страницы (если короткое), иначе раздел из крошек; нет — ""."""
+    m = _SH_OKVED.search(t)
+    nz = re.sub(r"\s+", " ", _sh_txt(m.group(1))) if (m and m.group(1)) else ""
+    if nz and len(nz) <= SHABLON_OTRASL_MAX:
+        return _sh_mal(nz)
+    kr = _SH_KROSH.search(t)
+    razd = {t_ for _, _, t_ in OKVED_RAZDELY}
+    if kr:
+        for zv in reversed([_sh_txt(x) for x in kr.group(1).split(" › ")]):
+            if zv in razd:
+                return _sh_mal(zv)
+    return ""
+
+
+def shablon_glavnyj_fakt(t):
+    """Выводы «Коротко о компании» по весу, кроме возраста (год уже в сниппете) и выручки/дохода (уже в сниппете)."""
+    out = []
+    for ton, p in _SH_V.findall(t):
+        s = re.sub(r"\s+", " ", _sh_txt(p)).rstrip(".")
+        if s and not _SH_VOZRAST_V.match(s) and not re.match(r"^(Выручка|Доход)\b", s):
+            out.append(s)
+            kor = re.sub(r" \((?:на|по состоянию на) [^)]*\)$", "", s)  # «(на 1 сентября 2026)» — дата есть на странице
+            if kor != s:
+                out.append(kor)
+    return out
+
+
+def shablon_dannye(t):
+    org = _sh_org(t)
+    adr = org.get("address") or {}
+    d = {"name": org.get("name") or "", "inn": org.get("taxID") or "",
+         "mesto": adr.get("addressLocality") or adr.get("addressRegion") or "",
+         "god": int(org["foundingDate"][:4]) if re.match(r"^\d{4}", str(org.get("foundingDate") or "")) else None,
+         "otrasl": shablon_otrasl(t), "fakty": shablon_glavnyj_fakt(t), "vyruchka": ""}
+    tab, h2 = _SH_TAB.search(t), _SH_FIN_H2.search(t)
+    fns = _SH_FIN_FNS.search(h2.group(1)) if (h2 and not tab) else None  # доход только из набора ФНС — без таблицы
+    god_v, summa = (tab.group(1), tab.group(2)) if tab else ((fns.group(1), fns.group(2)) if fns else (None, None))
+    d["staraya"] = not (god_v and int(god_v) >= GOD_INDEKSA_OT)
+    if god_v and not d["staraya"]:
+        sl = "выручка" if (h2 and h2.group(1).startswith("Выручка")) else "доход"
+        v = "%s %s за %s" % (sl, _sh_txt(summa), god_v)
+        iz = _SH_IZM.search(h2.group(1)) if h2 else None
+        if iz:
+            v += " (%s%s %%)" % ("+" if iz.group(1).startswith("выр") else "−", iz.group(2))
+        d["vyruchka"] = v
+    return d
+
+
+def shablon_description(d):
+    golova = d["name"] + ((" (%s)" % d["mesto"]) if d["mesto"] else "")
+    if d["otrasl"]:
+        golova += ", " + d["otrasl"]
+    chasti = []
+    if d["god"]:
+        chasti.append("с %d года" % d["god"])
+    vyr = [d["vyruchka"], re.sub(r" \([+−]\d+ %\)$", "", d["vyruchka"]), ""] if d["vyruchka"] else [""]
+    osn = [golova + (": " + ", ".join(chasti + ([v] if v else [])) if (chasti or v) else "") for v in vyr]
+    fakty = [f for f in d["fakty"] if not (d.get("staraya") and "₽" in f)]  # старая отчётность — без денег в сниппете
+    # порядок: факт + выручка (с процентом, без него) → факт без выручки → без факта; главный факт важнее процента
+    s_vyr, bez_vyr = (osn[:-1], osn[-1:]) if len(osn) > 1 else (osn, [])
+    varianty = [o + ". " + f + "." for f in fakty for o in s_vyr] + [o + ". " + f + "." for f in fakty for o in bez_vyr]
+    varianty += [o + ". Налоги, долги и реестры ФНС с датой сведений." for o in osn] + [o + "." for o in osn]
+    for s in varianty:
+        if len(s) <= SHABLON_DESC_MAX:
+            return s.replace(" ₽", NB + "₽")
+    s = varianty[-1]
+    return (s[:SHABLON_DESC_MAX - 1].rsplit(" ", 1)[0] + "…").replace(" ₽", NB + "₽")
+
+
+def _sh_vozrast(god, t):
+    m = re.search("работает ([0-9]+)(?:&nbsp;| | )(года|год|лет|месяцев|месяца|месяц)", t)
+    return ("%s%s%s" % (m.group(1), NB, m.group(2))) if m else ""
+
+
+def shablon_v2(t):
+    """kartochki-shablon-v1: H1 с ИНН, строка под H1 и description по шаблону [Продукт · Яндекс] 11.10. Идемпотентна."""
+    d = shablon_dannye(t)
+    if not (d["name"] and d["inn"]):
+        return t
+    h1 = _SH_H1.search(t)
+    if h1 and "co-h1-inn" not in h1.group(2):
+        t = t[:h1.start(2)] + h1.group(2) + ',<span class="co-h1-inn"> ИНН&nbsp;%s</span>' % d["inn"] + t[h1.end(2):]
+    sub = _SH_SUB.search(t)
+    if sub and "ИНН " + d["inn"] in sub.group(2):
+        chasti = [x.strip() for x in sub.group(2).split(" · ")]
+        st = chasti[0] if chasti and not chasti[0].startswith(("работает", "ИНН", "ОГРН")) and chasti[0] != e(d["mesto"]) else ""
+        ogrn = next((x for x in chasti if x.startswith("ОГРН ")), "").replace("ОГРН ", "ОГРН&nbsp;")
+        voz = _sh_vozrast(d["god"], sub.group(2))
+        s_goda = ("с%s%d года" % (NB, d["god"]) + ((" (%s)" % voz) if voz else "")) if d["god"] else (("работает " + voz) if voz else "")
+        nov = " · ".join(filter(None, [st, e(d["mesto"]), e(d["otrasl"]), s_goda, ogrn]))
+        t = t[:sub.start(2)] + nov + t[sub.end(2):]
+    desc = e(shablon_description(d)).replace("&nbsp;", NB)
+    t = _SH_DESC.sub(lambda m: m.group(1) + desc + m.group(3), t)
+    return t
+
+
+# ---------------------------------------------------------------- kartochki-shablon-v1: ≥ 5 ссылок на другие карточки (п. 5 ТЗ)
+# «Похожие компании» — по-прежнему только тот же класс ОКВЭД (решение [Данные] 03.10: регион — не похожесть). Если их
+# меньше 5, ниже — «Ещё в регионе …» (тот же регион, ближе по выручке), затем тот же раздел ОКВЭД, затем любые.
+# Всего ссылок — не меньше SOSEDEJ_MIN (если карточек хватает). Только напечатанное на страницах: добор = полная сборка.
+SOSEDEJ_MIN = 5
+
+
+def eshche_kompanii(k, vse, sosedi):
+    nado = SOSEDEJ_MIN - len(sosedi)
+    if nado <= 0:
+        return []
+    zanyato = {k["inn"]} | {x["inn"] for x in sosedi}
+    moi_d, rz = _dohod_kart(k), _razdel(k)
+    out = []
+    for f in (lambda x: k.get("region") and x.get("region") == k["region"],
+              lambda x: rz and _razdel(x) == rz,
+              lambda x: True):
+        kand = [x for x in vse if x["inn"] not in zanyato and f(x)]
+        kand.sort(key=lambda x: (abs(math.log1p(_dohod_kart(x)) - math.log1p(moi_d)), x["inn"]))
+        for x in kand[:nado - len(out)]:
+            out.append(x)
+            zanyato.add(x["inn"])
+        if len(out) >= nado:
+            break
+    return out
+
+
+def eshche_html(k, eshche):
+    if not eshche:
+        return ""
+    zag = ("Ещё в регионе: " + e(k["region"])) if (k.get("region") and all(x.get("region") == k["region"] for x in eshche)) \
+        else "Ещё компании в Делоскопе"
+    return '<p class="co-sos__h caption">%s</p><ul class="co-sos co-sos--eshche">%s</ul>' % (
+        zag, "".join('<li><a href="%s">%s</a><span class="caption">%s</span></li>' % (
+            adres_str(x), e(x["name"]), e(", ".join(filter(None, [x.get("gorod") or x.get("region"),
+                                                                    dengi(_dohod_kart(x)) if _dohod_kart(x) else ""]))).replace("&nbsp;", NB))
+            for x in eshche))

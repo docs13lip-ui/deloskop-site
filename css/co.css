@@ -75,3 +75,6 @@
 .co-daty__vhod{margin-top:var(--s-4);max-width:720px;font-size:var(--t-small);color:var(--ink-2)}
 .co-daty__vhod a{white-space:normal}
 @media print{.co-daty__vhod{display:none}}
+/* kartochki-shablon-v1: ИНН в H1 — тише имени; «Ещё в регионе» — второй список под «Похожими» */
+.co-h1-inn{font-weight:400;color:var(--ink-2);white-space:nowrap}
+.co-sos__h{margin:var(--s-4) 0 var(--s-1)}

@@ -69,11 +69,13 @@ test('ответ API с проверкой ЕФРСБ не перетираем;
   r1.damia.bankrotstvo = { nazvanie: 'Банкротство', status: 'not_found', istochnik: 'ЕФРСБ', data_svedeniy: '2026-10-11' };
   assert.strictEqual(I.dopolnit(r1).damia.bankrotstvo.istochnik, 'ЕФРСБ');
   const ip = otvet('ACTIVE', 'Действующий'); ip.company.kind = 'INDIVIDUAL'; ip.company.inn = '770000000012';
-  assert.strictEqual(I.dopolnit(ip).damia.bankrotstvo.status, 'ne_provereno');
+  assert.strictEqual(I.dopolnit(ip).damia.bankrotstvo.status_api, 'ne_provereno'); // sudy-v1: словарь сайта — not_checked, без подстановки из ЕГРЮЛ
+  assert.strictEqual(ip.damia.bankrotstvo.status, 'not_checked');
   const lq = I.dopolnit(otvet('LIQUIDATED', 'Ликвидирована'));
   assert.strictEqual(lq.damia.bankrotstvo.status, 'not_applicable');
   const pust = otvet('', ''); pust.signals = [];
-  assert.strictEqual(I.dopolnit(pust).damia.bankrotstvo.status, 'ne_provereno');
+  assert.strictEqual(I.dopolnit(pust).damia.bankrotstvo.status_api, 'ne_provereno');
+  assert.strictEqual(pust.damia.bankrotstvo.iz_egryul, undefined);
 });
 
 test('общая точка: DlkImya.ispravitOtvet дополняет ответ (главная, Паспорт, PDF — один путь)', () => {

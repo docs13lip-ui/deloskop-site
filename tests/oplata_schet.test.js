@@ -38,7 +38,23 @@ test('tarify.json: «да» владельца на годовой «Старт�
   assert.match(st.soglasovano, /10\.10\.2026/);
 });
 
-test('оферта в бете: на странице — действующая редакция, новые пункты лежат скрытыми до оплат', () => {
+// prohod-1410-v1 (11.10, [Ночные запуски]): тест знает оба состояния. В бете — как было; после "beta": false (прогон 14.10 00:30 МСК)
+// прежняя проверка требовала бы бета-строку и «4 октября» — и остановила бы выкладку дня включения оплат.
+const BETA = JSON.parse(chitat('tarify/tarify.json')).beta;
+test('оферта после беты ("beta": false): видны О1–О3, бета-строки скрыты, редакция — день включения оплат', { skip: BETA && 'сейчас бета' }, () => {
+  const of = chitat('oferta/index.html');
+  const v = tekst(vidimoe(of));
+  assert.ok(!v.includes(STARYJ_DOSTUP), 'видна бета-строка о доступе');
+  assert.ok(v.includes(O1) && v.includes(O2), 'О1 и О2 видны');
+  O3.forEach((a, i) => assert.ok(v.includes(a), 'О3 абзац ' + (i + 1)));
+  assert.doesNotMatch(of, /<!--redakciya-pri-oplatah:/);
+  const m = of.match(/<p class="meta">Редакция от (\d{1,2}) ([а-я]+) (\d{4}) /);
+  assert.ok(m, 'строка «Редакция от …»');
+  assert.notStrictEqual(m[1] + ' ' + m[2] + ' ' + m[3], '4 октября 2026', 'дата редакции не сменилась при включении оплат');
+  assert.ok(chitat('schet/dokument/index.html').includes('<meta name="deloskop-oferta" content="' + m[1] + ' ' + m[2] + ' ' + m[3] + '">'), 'счёт — та же редакция');
+});
+
+test('оферта в бете: на странице — действующая редакция, новые пункты лежат скрытыми до оплат', { skip: !BETA && 'бета снята' }, () => {
   const of = chitat('oferta/index.html');
   const v = tekst(vidimoe(of));
   const vse = tekst(of.replace(/<!--v-bete-->[\s\S]*?<!--\/v-bete-->/g, '').replace(/<\/?template[^>]*>/g, ''));  // как будет при оплатах

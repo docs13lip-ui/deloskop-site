@@ -42,6 +42,13 @@ test('(а) дат беты текстом нет нигде, кроме выво
     .replace(/<!--beta-polosa-->[\s\S]*?<!--\/beta-polosa-->/g, '')
     .replace(/<span data-beta-srok="[^"]*"( data-beta-vkl)?>[^<]*<\/span>/g, '')
     .replace(/<script type="application\/json" id="tarify-data">[\s\S]*?<\/script>/g, '')
+    // prohod-1410-v1: дата редакции оферты — не срок беты. При "beta": false 14.10 сборщик ставит «Редакция от 14 октября 2026»
+    // (tests/startovaya.py → redakciya_pri_oplatah) — без этого исключения выкладка дня включения оплат краснела.
+    .replace(/<p class="meta">Редакция от [^<]*<\/p>/g, '')
+    .replace(/<meta name="deloskop-oferta" content="[^"]*">/g, '')
+    // п. 3.9 оферты «Стартовая цена»: окно первой оплаты «с 14 октября по 31 декабря» — из tarify.json → startovaya.pervaya_oplata_s
+    // (tests/startovaya.py), это не срок беты; блок появляется только при "beta": false.
+    .replace(/<!--start-->[\s\S]*?<!--\/start-->/g, '')
     .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '').replace(/<!--[\s\S]*?-->/g, '');
   const plohie = [];
   for (const f of obojti(KOREN, []).concat([path.join(KOREN, 'tests', 'kartochka_render.py')])) {

@@ -1758,6 +1758,10 @@ class TestKartochkiOpf(unittest.TestCase):
         self.assertEqual(K.imya("БАНК ВТБ (ПАО)"), "Банк ВТБ (ПАО)")
         self.assertEqual(K.imya("БАНК ГПБ (АО)"), "Банк ГПБ (АО)")
         self.assertEqual(K.imya('АКБ "ПЕРЕСВЕТ" (АО)'), "АКБ «Пересвет» (АО)")
+        self.assertEqual(K.imya('АО "ДИКСИ ЮГ"'), "АО «Дикси Юг»")  # kartochki-1210-n2b
+        self.assertEqual(K.imya('ООО "МУЛТОН ПАРТНЕРС"'), "ООО «Мултон Партнерс»")  # kartochki-1210-n2b
+        self.assertEqual(K.imya('ООО "ДЖОНСОН & ДЖОНСОН"'), "ООО «Джонсон & Джонсон»")  # kartochki-1210-n2b
+        self.assertEqual(K.imya('АО "РУССКИЙ ЧАЙ"'), "АО «Русский чай»")  # kartochki-1210-n2b
         self.assertEqual(K.slug("Банк ВТБ (ПАО)"), "bank-vtb")
         self.assertEqual(K.slug("ПАО «Татнефть» им. В.Д. Шашина"), "tatneft-im-v-d-shashina")  # опубликованные адреса не меняются
 

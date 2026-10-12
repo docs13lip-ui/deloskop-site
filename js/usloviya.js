@@ -117,6 +117,10 @@
     // predel-bank-v1 [команда] 11.10: кредитная организация (основной ОКВЭД 64.1 — банки и НКО, как в js/sushchestvennoe.js).
     // Её отчётность раскрывает Банк России, в ГИР БО её может не быть → потолок по возрасту занижен; число не меняем, объясняем.
     if (f.kind === 'LEGAL' && /^64\.1(\.|\d|$)/.test(String(c.okved || ''))) { f.kredit = true; f.okved = String(c.okved); if (/^\d{13}$/.test(String(c.ogrn || ''))) f.ogrn = String(c.ogrn); }
+    // predel-finorg-v1 (ТЗ [команда] 12.10, pokupka-chestno п. 5): банк (64.1x) или страховая организация (65.1x, 65.2x) —
+    // предел предоплаты не считаем: потолок по возрасту для них ничего не говорит, за устойчивостью следит Банк России.
+    // 65.3 (пенсионные фонды) и 64.9 (МФО, лизинг) — не сюда: текст говорит только о банках и страховых.
+    if (f.kind === 'LEGAL' && (f.kredit || /^65\.[12](\.|\d|$)/.test(String(c.okved || '')))) { f.finorg = true; f.okved = String(c.okved); if (/^\d{13}$/.test(String(c.ogrn || ''))) f.ogrn = String(c.ogrn); }
     (r.signals || []).forEach(function (s) {
       if (s.status !== 'bad' && s.status !== 'warn') {
         if (/численност|сотрудник/i.test(s.title || '')) { var z = num(s.detail); if (z != null) f.staff = z; }
@@ -190,6 +194,7 @@
 
   function prepayCap(f, t, np) {
     if (t === 'post' || t === 'stop') return { cap: 0, rule: t === 'stop' ? 'Вперёд не платить' : 'Оплата только по факту', raschet: { tone: t } };
+    if (f.finorg) return { cap: null, finorg: true, rule: 'предел не считаем — банк или страховая организация', raschet: { tone: t, base: 'finorg' } };
     var byAge = potolok(f.ageMonths);
     var cap, rule, R = { tone: t, byAge: byAge, ageMonths: f.ageMonths, revenue: f.revenue || null, revenueYear: f.revenueYear || null };
     if (f.vyruchkaNol) {                                   // отчёт сдан, выручки нет: две недели нулевой выручки — 0 ₽
@@ -273,9 +278,11 @@
   // «Как посчитали» — открытая формула предела под суммой (Прорыв «Ф», тексты Маркетинга 28.09, раздел 3.3).
   var CBR_FOINFO = 'https://www.cbr.ru/finorg/foinfo/';
   function bankSsylka(f) { return { t: 'Карточка организации на сайте Банка России', u: CBR_FOINFO + (f.ogrn ? '?ogrn=' + f.ogrn : '') }; }
-  function bankTekst(f) {
-    return 'Это кредитная организация (основной ОКВЭД ' + f.okved + '): её отчётность раскрывает Банк России, в ГИР БО её может не быть — поэтому потолок по возрасту здесь осторожнее, чем позволила бы выручка. Лицензию и отчётность сверьте на сайте Банка России.';
+  // predel-finorg-v1: текст — дословно из ТЗ [команда] 12.10 (pokupka-chestno п. 5); «Они платят мне» — то же словами продавца.
+  function FINORG_TEKST(otg) {
+    return 'Для банков и страховых организаций предел ' + (otg ? 'отсрочки' : 'предоплаты') + ' не считаем: за их устойчивостью следит Банк России.';
   }
+  var FINORG_SSYLKA = 'Лицензию и отчётность — на сайте Банка России';
   function kakPoschitali(f, t, pc, reasonsList, np, napr) {
     var R = pc.raschet || {}, kak = '', otg = napr === 'otgruzhaem', bankR = false;
     if (t === 'post' || t === 'stop') {
@@ -284,7 +291,9 @@
         : 'Вперёд — 0\u00a0₽: ' + pr + ' — ' + (t === 'stop' ? 'не платите вперёд.' : 'платите после поставки или акта.');
     } else {
       var polovina = R.half ? ' · ' + (R.half === 'ostorozhno' ? 'долги не проверены' : zamechaniya(reasonsList)) + ' → половина: ' + money(R.itog) : '';
-      if (R.base === 'nol') {
+      if (R.base === 'finorg') {
+        kak = FINORG_TEKST(otg); bankR = true;
+      } else if (R.base === 'nol') {
         kak = 'Как посчитали: отчёт' + (R.otchetGod ? ' за ' + R.otchetGod : '') + ' в ГИР БО есть, но выручки в нём нет. Две недели нулевой выручки — 0 ₽, поэтому советуем ' + (otg ? 'отгружать после оплаты.' : 'платить по факту поставки.');
       } else if (R.malo) {
         kak = 'Как посчитали: выручка' + (R.revenueYear ? ' за ' + R.revenueYear : '') + ' — ' + moneyKrupno(R.revenue) + ' ÷ ' + DELITEL + ' = ' + money(R.dveNedeli) + (R.half ? ', половина — ' + money(R.doPolovinu / 2) : '') + '. ' + (otg ? MALO_OTG(R.half) : MALO_TEKST(R.half));
@@ -294,7 +303,6 @@
         kak = 'Как посчитали: выручка' + (R.revenueYear ? ' за ' + R.revenueYear : '') + ' — ' + moneyKrupno(R.revenue) + ' ÷ ' + DELITEL + ' = ' + moneyKrupno(R.dveNedeli) + ' (две недели выручки)' + polovina + ', округлили вниз.';
       } else if (R.base === 'age') {
         kak = 'Как посчитали: выручки в отчётности нет — берём потолок по возрасту (' + ageText(R.ageMonths) + '): ' + money(R.byAge) + polovina + '.';
-        if (f.kredit) { kak += ' ' + bankTekst(f); bankR = true; }
       } else {
         kak = 'Как посчитали: выручка и возраст неизвестны — берём осторожный потолок ' + money(R.byAge) + polovina + '.';
       }
@@ -305,10 +313,10 @@
         (np.nalogiNa ? ' Долги по налогам — нет в списке ФНС на\u00a0' + np.nalogiNa + '.' : '') +
         (np.provereno != null && np.iz ? ' Из внешних реестров ответили ' + np.provereno + ' из ' + np.iz + (np.data ? ' на ' + dataRu(np.data) : '') + '.' : '');
     }
-    if (otg) kak = OBA_NAPRAVLENIYA + ' ' + kak;
+    if (otg && R.base !== 'finorg') kak = OBA_NAPRAVLENIYA + ' ' + kak;
     var out = { kak: kak, ne: ne,
       podpis: 'Ориентир Делоскопа, не норма закона. Методика — в разборе «Сколько платить вперёд незнакомой компании».', url: STATYA };
-    if (bankR) out.ssylka = bankSsylka(f);
+    if (bankR) out.ssylka = R.base === 'finorg' ? { t: FINORG_SSYLKA, u: bankSsylka(f).u } : bankSsylka(f);
     return out;
   }
   // Текст [команда] 02.10 19:37 (разд. 0) — когда предел меньше 10 000 ₽.
@@ -374,6 +382,7 @@
     if (t === 'post' && reorgPrekr(f)) return 'Только по предоплате\u00a0— до проверки правопреемника';
     if (t === 'post') return 'Только по предоплате';
     if (t === 'cap' && malo) return 'Можно, но без отсрочки';
+    if (t === 'cap' && cap == null) return 'Можно, но есть замечания';
     if (t === 'cap') return 'Можно, отсрочка — до ' + money(cap);
     return 'Работать можно';
   }
@@ -385,7 +394,7 @@
     if (t === 'post' && reorgPrekr(f)) return 'Отсрочку не давайте: отгрузка — после оплаты. ' + REORG_SDELAT + ' ' + REORG_DOLG;
     if (t === 'stop' || t === 'post') return 'Отсрочку не давайте: отгрузка — после оплаты. Если без отсрочки сделки не будет — только под банковскую гарантию платежа или аккредитив.';
     if (malo) return 'Отсрочку — только под банковскую гарантию платежа или аккредитив.';
-    if (t === 'cap') return 'Больше предела — под банковскую гарантию или аккредитив. Держите долг покупателя в пределе: следующая отгрузка — после оплаты предыдущей.';
+    if (t === 'cap' && !f.finorg) return 'Больше предела — под банковскую гарантию или аккредитив. Держите долг покупателя в пределе: следующая отгрузка — после оплаты предыдущей.';
     return 'Сохраните досье с датой проверки: если покупатель задержит оплату, оно покажет, на каких данных вы дали отсрочку.';
   }
   function advice(f, t, malo) {
@@ -396,7 +405,7 @@
     if (t === 'post' && reorgPrekr(f)) return 'Платите после поставки или акта. ' + REORG_SDELAT + ' ' + REORG_DOLG;
     if (t === 'post') return 'Платите после поставки или акта. Нужна предоплата — через аккредитив или под гарантию возврата аванса.';
     if (malo) return 'Нужна предоплата — через аккредитив или под гарантию возврата аванса.';
-    if (t === 'cap') return 'Больше предела — частями по этапам, аккредитивом или под гарантию возврата аванса.';
+    if (t === 'cap' && !f.finorg) return 'Больше предела — частями по этапам, аккредитивом или под гарантию возврата аванса.';
     return 'Сохраните досье с датой проверки — оно может стать частью доказательств должной осмотрительности.';
   }
 
@@ -415,6 +424,7 @@
   function prepayAdvice(amount, cap, t) {
     amount = parseAmount(amount);
     if (!amount) return '';
+    if (cap == null && (t === 'go' || t === 'cap')) return '';
     if (t === 'stop' || t === 'post' || cap === 0) return 'Предоплату не вносите: ' + money(amount) + ' — после поставки или через аккредитив.';
     if (t === 'go' && amount <= cap) return 'Сумма в пределах ориентира — обычные условия подойдут.';
     if (amount <= cap) return 'Сумма в пределах ориентира: предоплата допустима.';
@@ -425,6 +435,7 @@
   function otgruzkaAdvice(amount, cap, t) {
     amount = parseAmount(amount);
     if (!amount) return '';
+    if (cap == null && (t === 'go' || t === 'cap')) return '';
     if (t === 'stop' || t === 'post' || cap === 0) return 'В долг не отгружайте: ' + money(amount) + ' — после оплаты.';
     if (amount <= cap) return 'Сумма в пределах ориентира — отсрочка допустима.';
     var p = Math.max(1, Math.floor(cap / amount * 100));
@@ -493,7 +504,7 @@
     var neDejstvuet = f.status === 'LIQUIDATING' || f.status === 'LIQUIDATED' || f.status === 'BANKRUPT' || !!f.bad.exit;
     if (!f.revenue && !f.vyruchkaNol && !neDejstvuet) add(f.kredit ? 'otchetnostBank' : 'otchetnost');
     // «стоп» — отгрузка только после оплаты, поручительство не помогает (решение потока, ✎ [команда])
-    if (t !== 'stop' && (amount ? amount > (cap || 0) : t === 'cap')) add('poruchitel');
+    if (t !== 'stop' && cap !== null && (amount ? amount > (cap || 0) : t === 'cap')) add('poruchitel');
     return ids.slice(0, 7).map(docItem);
   }
 
@@ -532,23 +543,25 @@
       // «Они платят мне»: число то же (pc.cap), меняются слова; ст. 54.1 — про вычеты покупателя, «На кону» не считаем;
       // список и письмо — свои (docsOtg, letterOtg): без card, regime, resources, license, experience и без ст. 54.1
       list = docsOtg(f, t, amount, pc.cap);
-      return {
+      return sFinorg(pc, {
         napravlenie: 'otgruzhaem',
         facts: f, tone: t, cap: pc.cap, malo: !!pc.malo, capRule: pc.rule, raschet: pc.raschet, neProvereno: np,
         kak: kakPoschitali(f, t, pc, reasons(f), np, 'otgruzhaem'),
         headline: headlineOtg(f, t, pc.cap, pc.malo), reasons: reasons(f), advice: adviceOtg(f, t, pc.malo),
         amount: amount, regime: regime, stake: null, prepay: otgruzkaAdvice(amount, pc.cap, t),
         docs: list, letter: letterOtg(f, list, amount)
-      };
+      });
     }
-    return {
+    return sFinorg(pc, {
       facts: f, tone: t, cap: pc.cap, malo: !!pc.malo, capRule: pc.rule, raschet: pc.raschet, neProvereno: np,
       kak: kakPoschitali(f, t, pc, reasons(f), np),
       headline: headline(f, t, pc.cap, pc.malo), reasons: reasons(f), advice: advice(f, t, pc.malo),
       amount: amount, regime: regime, stake: atStake(amount, regime), prepay: prepayAdvice(amount, pc.cap, t),
       docs: list, letter: letter(f, list, amount)
-    };
+    });
   }
+  // finorg — только у банка или страховой: у остальных вывод побайтно прежний (снимок tests/otsrochka_pokupatelyu.test.js)
+  function sFinorg(pc, v) { if (pc.finorg) v.finorg = true; return v; }
 
   // ---------- интерфейс ----------
   var CSS = '' +
@@ -711,7 +724,7 @@
         '<div class="usl-sum"><label for="' + uid + 'a">' + (otg ? 'Сумма отгрузки' : 'Сумма сделки — посчитаем предоплату и деньги на кону') + '</label>' +
           '<div class="usl-in"><input id="' + uid + 'a" inputmode="numeric" autocomplete="off" placeholder="например, 500 000" value="' + (st.amount ? esc(money(st.amount).replace(/ ₽$/, '')) : '') + '"><span>₽</span></div>' +
           (otg ? '' : '<select aria-label="Ваш режим налогов">' + sel + '</select>') + '</div>' +
-        (v.amount ? '<div class="usl-out" aria-live="polite"><div>' + esc(v.prepay) + '</div>' + stake + '</div>' : '')) +
+        (v.amount && (v.prepay || stake) ? '<div class="usl-out" aria-live="polite">' + (v.prepay ? '<div>' + esc(v.prepay) + '</div>' : '') + stake + '</div>' : '')) +
         '<div class="usl-kak" data-u="kak"><p>' + esc(v.kak.kak) + '</p>' +
           (v.kak.ne ? '<p class="usl-ne">' + esc(v.kak.ne) + '</p>' : '') +
           (v.kak.ssylka ? '<p class="usl-ne" data-u="bank"><a href="' + esc(v.kak.ssylka.u) + '" target="_blank" rel="noopener">' + esc(v.kak.ssylka.t) + ' →</a></p>' : '') +

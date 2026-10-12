@@ -1,5 +1,5 @@
 // predel-bank-v1 [Ночные-3] 11.10: «Как посчитали предел» у кредитной организации (ОКВЭД 64.1) без отчётности в ГИР БО.
-// Число предела не меняется — добавляется объяснение и ссылка на карточку в Банке России. Запуск: node --test tests/predel_bank.test.js
+// ↑ 12.10 predel-finorg-v1: число предела у банка больше не считается — текст и ссылка на Банк России. Запуск: node --test tests/predel_bank.test.js
 'use strict';
 const test = require('node:test');
 const assert = require('assert');
@@ -12,13 +12,11 @@ function resp(c, o) {
     company: Object.assign({ inn: '7707083893', ogrn: '1027700132195', kind: 'LEGAL', name_short: 'ПАО «Банк»', status: 'ACTIVE', reg_date: '1991-06-20', okved: '64.19' }, c || {}) }, o || {});
 }
 
-test('банк без отчётности: предел прежний, в «Как посчитали» — объяснение и ссылка на cbr.ru с ОГРН', () => {
+test('банк без отчётности: с 12.10 предел не считаем (predel-finorg-v1, tests/predel_finorg.test.js) — ссылка на cbr.ru с ОГРН', () => {
   const v = U.decide(resp());
-  assert.strictEqual(v.cap, 3000000);
-  assert.match(v.kak.kak, /потолок по возрасту/);
-  assert.match(v.kak.kak, /Это кредитная организация \(основной ОКВЭД 64\.19\): её отчётность раскрывает Банк России, в ГИР БО её может не быть/);
-  assert.match(v.kak.kak, /Лицензию и отчётность сверьте на сайте Банка России\.$/);
-  assert.deepStrictEqual(v.kak.ssylka, { t: 'Карточка организации на сайте Банка России', u: 'https://www.cbr.ru/finorg/foinfo/?ogrn=1027700132195' });
+  assert.strictEqual(v.cap, null);
+  assert.match(v.kak.kak, /^Для банков и страховых организаций предел предоплаты не считаем/);
+  assert.deepStrictEqual(v.kak.ssylka, { t: 'Лицензию и отчётность — на сайте Банка России', u: 'https://www.cbr.ru/finorg/foinfo/?ogrn=1027700132195' });
 });
 
 test('без ОГРН — ссылка на поиск без параметра', () => {
@@ -30,7 +28,7 @@ test('обычная компания и компания с выручкой �
   const a = U.decide(resp({ okved: '46.90' }));
   assert.ok(!/кредитная организация/.test(a.kak.kak));
   assert.strictEqual(a.kak.ssylka, undefined);
-  const b = U.decide(resp({}, { dossier: { kpi: [{ label: 'Выручка', value: 52000000 }] } }));
+  const b = U.decide(resp({ okved: '46.90' }, { dossier: { kpi: [{ label: 'Выручка', value: 52000000 }] } }));
   assert.strictEqual(b.cap, 2000000);
   assert.ok(!/кредитная организация/.test(b.kak.kak));
   assert.strictEqual(b.kak.ssylka, undefined);

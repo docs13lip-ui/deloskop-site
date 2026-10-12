@@ -331,9 +331,11 @@ ul.list .nm span{color:var(--muted);font-size:13px}
         '<div class="acts">'+(r.report_id?'<a href="/report.html?id='+encodeURIComponent(r.report_id)+'">Досье</a>':'')+
         '<a href="/?inn='+encodeURIComponent(r.inn)+'">Проверить снова</a></div></li>'}).join('');
   }
+  var SLEZH_MAX=50; // больше всех тарифов: «Бизнес» — 50 компаний (tarify.json → tarify[].slezhenie; тест tests/predel_finorg.test.js)
   function renderWatch(j){
     var rows=j.watchlist||[];
-    $('sWatch').textContent=rows.length+' из '+(j.limit||1);
+    // slezh-limit-v1 (Тестировщик 12.10): «0 из 1000» спорило с тарифами (3 / 10 / 50) — «из N» только при числе, которое есть в тарифах
+    $('sWatch').textContent=rows.length+(j.limit>0&&j.limit<=SLEZH_MAX?' из '+j.limit:'');
     $('watchEmpty').hidden=!!rows.length;
     $('watch').innerHTML=rows.map(function(r){
       return '<li><div class="nm"><b>'+esc(r.name?(window.DlkImya?DlkImya.kavychki(r.name):r.name):('ИНН '+r.inn))+'</b><span>ИНН '+esc(r.inn)+(r.note?' · '+esc(r.note):'')+'</span></div>'+pill(r.last_level)+

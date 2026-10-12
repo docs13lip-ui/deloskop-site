@@ -33,7 +33,7 @@ test('гость: «Старт» дешевле Паспорта — ссылк�
   assert.strictEqual(s.stroka, 'Без подписки. PDF с QR-кодом, хранится в Кабинете.');
   assert.strictEqual(s.ssylka.href, '/tarify/#t-start');
   assert.strictEqual(s.ssylka.cel, 'start');
-  assert.strictEqual(s.ssylka.t, 'или «' + start.nazvanie + '» — ' + mes + NB + '₽ в месяц, ' + start.otchetov + NB + 'Паспорта включены');
+  assert.strictEqual(s.ssylka.t, 'или «' + start.nazvanie + '» — ' + mes + NB + '₽ в месяц: дешевле одного Паспорта, и ' + start.otchetov + NB + 'Паспорта включены');
   assert.doesNotMatch(s.ssylka.t, /проверки —/);
   // якорь существует на /tarify/
   assert.ok(chitat('tarify/index.html').includes('id="t-start"'));

@@ -125,7 +125,8 @@
     if (!T) return { sost: 'nejzvestno', knopka: 'Паспорт контрагента', stroka: '', href: put };
     // pokupka-chestno-v1: ИНН проверенной компании — в ссылку на счёт: Паспорт покупают на неё (Метрика адрес с ИНН не видит — js/metrika.js)
     var r = { sost: 'gost', knopka: 'Паспорт на дату сделки — ' + rub(T.cena), stroka: 'Без подписки. PDF с QR-кодом, хранится в Кабинете.', href: '/schet/?produkt=pasport_razovyj' + (/^(\d{10}|\d{12})$/.test(inn) ? '&inn=' + inn : '') };
-    if (startVygodnee(T)) r.ssylka = { t: 'или «' + T.start + '» — ' + startPodskazka(T), href: '/tarify/#t-start', cel: 'start' };
+    // pokupka-chestno п. 6 (ТЗ [команда] 12.10): «дешевле одного Паспорта» — только пока это правда (startVygodnee); цены — из tarify.json
+    if (startVygodnee(T)) r.ssylka = { t: 'или «' + T.start + '» — ' + rub(T.startMes) + ' в месяц: дешевле одного Паспорта, и ' + pasportov(T.startPasportov), href: '/tarify/#t-start', cel: 'start' };
     else if (T.paketShtuk && T.paketCena) r.ssylka = { t: T.paketShtuk + ' проверки — ' + rub(T.paketCena), href: '/schet/?produkt=paket_pasportov', cel: 'paket' };
     return r;
   }

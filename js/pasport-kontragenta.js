@@ -506,7 +506,9 @@
       var u = U.decide(r, { amount: opts.summa, regime: opts.rezhim });
       itog.vyvod = u.headline && (u.headline.title || u.headline) || '';
       itog.predel_avansa_rub = typeof u.cap === 'number' ? u.cap : null;
-      fakt('predel', 'Предел аванса', typeof u.cap === 'number' ? U.money(u.cap) : '—', { ton: u.malo ? 'warn' : u.tone === 'go' ? 'ok' : u.tone === 'cap' ? 'warn' : 'bad', istochnik: 'формула Делоскопа' });
+      // predel-finorg-v1: банк или страховая организация — предел не считаем (ТЗ [команда] 12.10), строка «не считаем» без тона
+      if (u.finorg) fakt('predel', 'Предел аванса', 'не считаем — банк или страховая организация', { ton: 'info', istochnik: 'формула Делоскопа' });
+      else fakt('predel', 'Предел аванса', typeof u.cap === 'number' ? U.money(u.cap) : '—', { ton: u.malo ? 'warn' : u.tone === 'go' ? 'ok' : u.tone === 'cap' ? 'warn' : 'bad', istochnik: 'формула Делоскопа' });
       var kk = u.kak && (typeof u.kak === 'string' ? { kak: u.kak } : u.kak);
       if (kk && kk.kak) fakt('predel', 'Как посчитали', kk.kak.replace(/^Как посчитали:\s*/, ''), { ton: 'info', istochnik: 'формула Делоскопа' });
       if (kk && kk.ne) fakt('predel', 'Оговорка', kk.ne, { ton: 'warn', istochnik: 'формула Делоскопа' });

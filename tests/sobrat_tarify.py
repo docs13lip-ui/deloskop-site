@@ -352,7 +352,7 @@ def sbp_html(D, root):
     summa0 = f"{perv[3]:,}".replace(",", NB) + NB + '₽'
     return ('<!--oplata--><section class="sbp-t" id="sbp" aria-labelledby="sbp-h" data-sbp-tarify>\n'
             '<h2 class="big" id="sbp-h">Гражданам — по&nbsp;СБП</h2>\n'
-            '<p class="lid">Без счёта и&nbsp;без ИНН: перевод по&nbsp;QR-коду из&nbsp;приложения вашего банка. Без комиссии, деньги приходят сразу.</p>\n'
+            '<p class="lid">Без счёта и&nbsp;без ИНН: перевод по&nbsp;QR-коду из&nbsp;приложения вашего банка. Без комиссии.</p>\n'
             '<div class="sbp-t__k">\n <div class="sbp-t__l">\n'
             '  <div class="sbp-t__e">1. Что оплачиваете</div>\n'
             '  <div class="sbp-t__v" role="radiogroup" aria-label="Что оплачиваете">' + ''.join(knopki) + '</div>\n'

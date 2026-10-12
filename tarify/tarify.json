@@ -3,7 +3,7 @@
   "versiya": "2026-09-30",
   "beta": false,
   "_beta": "Открытая бета (решение команды 29.09.2026): true — кнопки оплаты, счета и реквизиты скрыты, всё бесплатно; false — всё возвращается как было. После смены: python3 tests/sobrat_tarify.py . && python3 tests/sobrat_shapku.py",
-  "beta_do": "2026-10-13",
+  "beta_do": "2026-10-12",
   "karta": false,
   "gost_v_den": 10,
   "_gost_v_den": "Быстрая проверка без входа: сколько проверок в день (решение 10.10; сброс в полночь МСК — так считает API, /api/health → gost_v_den). Число на сайте берут отсюда: полоса беты (partials/beta-a|b|c.html), /tarify/, экран лимита js/limit.js; в остальных текстах его сверяет тест tests/gost_limit.test.js.",

@@ -11,7 +11,7 @@ const DOKI = ['oferta', 'vozvrat', 'politika', 'soglasie', 'rekvizity'];
 const stranicy = () => {
   const vse = execSync('git ls-files "*.html"', { cwd: KOREN, encoding: 'utf8' }).split('\n')
     .concat(DOKI.map(d => d + '/index.html'))
-    .filter(f => f && !f.startsWith('"') && !f.startsWith('сайт/') && f !== 'admin.html' && !/^(yandex_[0-9a-f]+|google[0-9a-f]+)\.html$/.test(f) && !f.includes('tests/') && !f.startsWith('partials/'))
+    .filter(f => f && !f.startsWith('"') && !f.startsWith('сайт/') && !['admin.html', 'offline.html'].includes(f) && !/^(yandex_[0-9a-f]+|google[0-9a-f]+)\.html$/.test(f) && !f.includes('tests/') && !f.startsWith('partials/'))
     .filter(f => fs.existsSync(path.join(KOREN, f)));
   return [...new Set(vse)];
 };

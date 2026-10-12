@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Нет сети — Делоскоп</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#F5F5F2">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/favicon.ico">
+<style>
+/* pwa-v1: экран без сети. Самодостаточный — стили и скрипт внутри, чтобы открываться из кэша приложения.
+   Токены — из дизайн-системы v1 (ds.css), копия значений. */
+@font-face{font-family:Onest;font-weight:400;font-display:swap;src:url(/fonts/onest-cyrillic-400.woff2) format("woff2");unicode-range:U+0400-045F,U+2116}
+@font-face{font-family:Onest;font-weight:600;font-display:swap;src:url(/fonts/onest-cyrillic-600.woff2) format("woff2");unicode-range:U+0400-045F,U+2116}
+:root{--bg:#F5F5F2;--surface:#FFFFFF;--surface-2:#EEEEEA;--ink:#1D1D1F;--ink-2:#48484C;--muted:#6B6B70;--line:#E6E6E1;
+ --accent:#0B63E5;--accent-hover:#084BB0;--on-accent:#FFFFFF;--ok:#16723F;--ok-bg:#E8F5EE;--warn:#9A5B00;--warn-bg:#FFF4E0;--bad:#B3261E;--bad-bg:#FDECEA;
+ --font:Onest,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--r-l:24px;--r-m:16px;--gutter:clamp(16px,5vw,48px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font:400 17px/1.55 var(--font);-webkit-font-smoothing:antialiased;
+ padding:calc(env(safe-area-inset-top) + 32px) var(--gutter) calc(env(safe-area-inset-bottom) + 32px)}
+main{max-width:560px;margin:0 auto}
+.logo{display:inline-flex;align-items:center;gap:10px;color:var(--ink);font-weight:600;font-size:20px;text-decoration:none;margin-bottom:48px}
+.eyebrow{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+h1{font-size:clamp(32px,8vw,44px);line-height:1.06;letter-spacing:-.02em;margin:0 0 16px;font-weight:600;text-wrap:balance}
+.lead{color:var(--ink-2);margin:0 0 24px;max-width:480px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 28px;border-radius:999px;border:0;background:var(--accent);color:var(--on-accent);font:600 16px/1 var(--font);cursor:pointer}
+.btn:hover{background:var(--accent-hover)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.card{margin-top:40px;background:var(--surface);border-radius:var(--r-l);padding:24px}
+.card h2{font-size:22px;line-height:1.25;margin:0 0 4px;font-weight:600}
+.card .sub{font-size:15px;color:var(--muted);margin:0 0 8px}
+ul{list-style:none;margin:0;padding:0}
+li{padding:14px 0;border-top:1px solid var(--line)}
+li b{display:block;font-weight:600;font-size:16px;line-height:1.35}
+li span{display:block;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.lvl{display:inline-block;margin-top:8px;font-style:normal;font:600 13px/1 var(--font);padding:7px 10px;border-radius:999px;white-space:nowrap}
+.lvl--low{color:var(--ok);background:var(--ok-bg)}.lvl--medium{color:var(--warn);background:var(--warn-bg)}.lvl--high{color:var(--bad);background:var(--bad-bg)}
+.pusto{font-size:15px;color:var(--ink-2)}
+.note{margin-top:24px;font-size:13px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+ <a class="logo" href="/" aria-label="Делоскоп — на главную"><svg width="36" height="32" viewBox="0 0 72 64" fill="none" aria-hidden="true"><path d="M36 18.1A16 16 0 0 1 36 45.9A16 16 0 0 1 36 18.1Z" fill="#0B63E5"/><circle cx="28" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/><circle cx="44" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/></svg>делоскоп</a>
+ <p class="eyebrow">Нет сети</p>
+ <h1>Нет сети&nbsp;— последние проверки ниже</h1>
+ <p class="lead">Свежие данные ФНС и&nbsp;Индекс подгрузим, как только появится интернет. Обычно это минута.</p>
+ <button class="btn" type="button" id="snova">Повторить</button>
+
+ <section class="card" aria-labelledby="ned-h">
+  <h2 id="ned-h">Последние проверки</h2>
+  <p class="sub">Сохранены только на&nbsp;этом устройстве. Уровень&nbsp;— на&nbsp;момент проверки.</p>
+  <ul id="ned"></ul>
+  <p class="pusto" id="pusto" hidden>На этом устройстве проверок пока не&nbsp;было.</p>
+ </section>
+ <p class="note">Без сети Делоскоп не&nbsp;показывает новые данные о&nbsp;компаниях: «не проверяли»&nbsp;— не&nbsp;значит «не нашли».</p>
+</main>
+<script>
+(function () {
+  'use strict';
+  var LVL = { low: 'Без серьёзных сигналов', medium: 'Есть вопросы', high: 'Есть серьёзные сигналы' };
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function kogda(t) {
+    try { return new Date(t).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' }); } catch (e) { return ''; }
+  }
+  var a = [];
+  try { a = JSON.parse(localStorage.getItem('dlk_nedavnie') || '[]'); } catch (e) {}
+  if (!Array.isArray(a)) a = [];
+  a = a.filter(function (x) { return x && /^\d{10}(\d{2})?$/.test(x.inn); }).slice(0, 5);
+  var ul = document.getElementById('ned');
+  if (!a.length) document.getElementById('pusto').hidden = false;
+  ul.innerHTML = a.map(function (x) {
+    var lvl = LVL[x.level] ? '<i class="lvl lvl--' + x.level + '">' + LVL[x.level] + '</i>' : '';
+    return '<li><div><b>' + esc(x.name || ('ИНН ' + x.inn)) + '</b><span>ИНН ' + esc(x.inn) +
+      (x.t ? ' · ' + esc(kogda(x.t)) : '') + '</span></div>' + lvl + '</li>';
+  }).join('');
+  function snova() { location.reload(); }
+  document.getElementById('snova').addEventListener('click', snova);
+  window.addEventListener('online', snova);
+})();
+</script>
+</body>
+</html>

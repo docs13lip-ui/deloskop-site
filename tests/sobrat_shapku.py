@@ -19,6 +19,8 @@
      (ссылка «Перейти к содержанию»).
      kopiya-v1 (01.10): в <head> ещё /js/kopiya.js (defer) — подпись «Источник: … deloskop.ru · делоскоп.рф»
      при копировании длинного текста.
+     pwa-v1 (12.10): в <head> — /manifest.webmanifest, имя для iPhone и /js/pwa.js
+     (service worker /sw.js + тихая подсказка «Установить»). offline.html — вне сборки, самодостаточный.
 
   6. ОТКРЫТАЯ БЕТА (beta-v1, решение владельца 29.09.2026) — флаг tarify/tarify.json → "beta". В бете:
      блоки <!--oplata-->…<!--/oplata--> уходят в <template>, показываются <!--v-bete-->…<!--/v-bete-->;
@@ -39,7 +41,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import beta as BETA  # noqa: E402
 
 KOREN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ISKLYUCHIT = {"admin.html"}  # служебная страница — без публичного подвала
+ISKLYUCHIT = {"admin.html", "offline.html"}  # служебная — без подвала; offline.html (pwa-v1) самодостаточный экран «Нет сети»
 # Файлы подтверждения прав (Яндекс Вебмастер, Google) — НЕ трогать: любая правка ломает подтверждение.
 PODTVERZHDENIE = re.compile(r"^(yandex_[0-9a-f]+|google[0-9a-f]+)\.html$")
 GOOGLE_FONTS = re.compile(
@@ -54,6 +56,10 @@ KOPIYA_JS = '<script src="/js/kopiya.js" defer></script>'  # kopiya-v1: подп
 # yandex-tehnika-v1 (11.10): PNG-значок 120×120 для сниппета Яндекса и лента «Разборов дел» (RSS) — на всех страницах
 IKONKA_120 = '<link rel="icon" type="image/png" sizes="120x120" href="/favicon-120.png">'
 RSS_LINK = '<link rel="alternate" type="application/rss+xml" title="Разборы дел — Делоскоп" href="/praktika/rss.xml">'
+# pwa-v1 (12.10): сайт ставится на телефон как приложение — манифест, иконка iPhone, цвет панели, service worker
+MANIFEST_LINK = '<link rel="manifest" href="/manifest.webmanifest">'
+APPLE_IMYA = '<meta name="apple-mobile-web-app-title" content="Делоскоп">'
+PWA_JS = '<script src="/js/pwa.js" defer></script>'
 STARAYA_SHAPKA = re.compile(r'<header(?: class="(?:top|hdr)")?>.*?</header>\n?', re.S)
 
 
@@ -213,6 +219,14 @@ def vstavit_shapku(txt, shapka):
         txt = txt.replace("</head>", IKONKA_120 + "\n</head>", 1)
     if RSS_LINK not in txt:
         txt = txt.replace("</head>", RSS_LINK + "\n</head>", 1)
+    # pwa-v1: apple-touch-icon и theme-color — в <head> самих страниц (у карточек из API они свои; условная
+    # вставка сломала бы равенство оболочки API и сборщика — tests/test_kartochki.py, TestObolochka)
+    if MANIFEST_LINK not in txt:
+        txt = txt.replace("</head>", MANIFEST_LINK + "\n</head>", 1)
+    if APPLE_IMYA not in txt:
+        txt = txt.replace("</head>", APPLE_IMYA + "\n</head>", 1)
+    if PWA_JS not in txt:
+        txt = txt.replace("</head>", PWA_JS + "\n</head>", 1)
     # цель ссылки «Перейти к содержанию»
     if 'id="main"' not in txt:
         mm = re.search(r"<main(?=[\s>])([^>]*)>", txt)

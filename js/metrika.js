@@ -29,7 +29,7 @@
 
   // Только служебные метки событий. Значения из полей ввода не передаём.
   var KLYUCHI = { kuda: 1, produkt: 1, statya: 1, sposob: 1, sost: 1, otkuda: 1, mesto: 1, vid: 1, stranica: 1,
-    slug: 1, ocenka: 1, n: 1, kod: 1, inn_dlina: 1, beta: 1, otrasl: 1, tarif: 1, stupen: 1 };
+    slug: 1, ocenka: 1, n: 1, kod: 1, inn_dlina: 1, beta: 1, otrasl: 1, tarif: 1, stupen: 1, tema: 1 };
   var PLOHO = /\d{10,}|@/; // ИНН, ОГРН(ИП), почта — в любом месте строки
   function chistye(p) {
     var o = {}, k, v;

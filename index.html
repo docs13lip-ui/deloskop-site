@@ -582,6 +582,7 @@ footer a{color:var(--ink2)}
 <script src="/js/usloviya.js" defer></script>
 <script src="/js/shchit.js" defer></script>
 <script src="/js/dinamika.js" defer></script>
+<script src="/js/golos.js" defer></script>
 <script src="/js/nagruzka.js" defer></script>
 <script src="/js/nagruzka-proverka.js" defer></script>
 <script src="/js/rentabelnost.js" defer></script>
@@ -697,6 +698,8 @@ footer a{color:var(--ink2)}
     if(window.Rentabelnost){try{Rentabelnost.mount(report,r).catch(function(){})}catch(e){}}
     // «НДС в 2027 году» — выручка 2025 года поставщика на упрощёнке рядом с порогом 20 млн ₽ (п. 1 ст. 145 НК), только к сведению; js/nds-porog.js
     if(!svoj&&window.NdsPorog){try{NdsPorog.mount(report,r)}catch(e){}}
+    // golos-klienta-v1: «Что добавить в отчёт?» — вошедшим, после 3-й разной компании, не чаще раза в 30 дней (js/golos.js)
+    if(window.DlkGolos){try{DlkGolos.posleProverki(report,r,{api:CAPI})}catch(e){}}
   }
   // moduli-do-otveta-v1 [команда]: модули отчёта (Usloviya, Otchet, Dinamika, IndeksOtvet…) подключены с defer и исполняются только
   // перед DOMContentLoaded, а проверка по ?inn=… (карточки /company/, «Проверить снова» из кабинета) стартует раньше. Быстрый ответ API

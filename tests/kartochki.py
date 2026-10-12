@@ -346,9 +346,22 @@ def sobrat_gruppy(gruppy, lm, koren, r, podval, shapka):
     return v_sm
 
 
+def un_zagruzit(koren=KOREN):
+    """kartochki-unik-v2: опубликованные карточки → контекст «На фоне других компаний Делоскопа» (render файлов не читает)."""
+    papka = os.path.join(koren, PAPKA)
+    stranicy = []
+    for d in sorted(os.listdir(papka)) if os.path.isdir(papka) else []:
+        put = os.path.join(papka, d, "index.html")
+        if re.match(r"^\d{10}-", d) and os.path.isfile(put):
+            with open(put, encoding="utf-8") as fh:
+                stranicy.append(fh.read())
+    return un_ustanovit(stranicy)
+
+
 def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, dobavit=False,
            partiya=PARTIYA_V_SUTKI, segodnya=None):
     kart, otchet = otobrat(zapisi, limit, spros, kontrol)
+    un_zagruzit(koren)  # kartochki-unik-v2: сравнение с уже опубликованными (после записи — ещё раз, по свежему составу)
     r = ss.rekv_sajta()  # beta-v1: режим сайта (в бете — без реквизитов ИП и с полосой беты)
     papka = os.path.join(koren, PAPKA)
     nuzhnye = {adres_str(k).strip("/").split("/", 1)[1] for k in kart}
@@ -404,12 +417,22 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         t2 = ssylki_kroshek(t2, kg)  # kartochki-haby-v1: регион и раздел в крошках — ссылкой на хаб группы
         t2 = shablon_v2(t2)  # kartochki-shablon-v1: H1 с ИНН, строка под H1, description — как у новых
         t2 = pochinit_imya(t2)  # kartochki-imya-v1: советы и заголовок реестров — с названием, как у новых
+        t2 = pochinit_pered(t2)  # kartochki-unik-v2: «Перед оплатой» — по признакам страницы, как у новых
+        t2 = pochinit_razbor(t2)  # kartochki-unik-v2: «… в цифрах» — с названием, как у новых
         t2 = pochinit_vozrast(t2, den)  # vozrast-segodnya-v1: возраст — на сегодня, число пересчитывает и браузер
         x["_noindex"] = noindex_html(t2)
         if BEZ_OBOLOCHKI in t2:
             # «голое» тело из комплекта — оболочка той же sobrat_stranicu
             t2 = ss.sobrat_stranicu(t2, r, podval, shapka)
         izm += zapisat(put, t2)
+    # kartochki-unik-v2: «Чем {Имя} отличается» сравнивает карточку с остальными — после записи всех карточек
+    # пересобираем блок «Что это значит для вас» по свежему составу (новые карточки получают абзац, у старых — места)
+    un_zagruzit(koren)
+    for k_ in sorted(kartochki_na_diske(koren).values(), key=lambda x: x["_papka"]):
+        put = os.path.join(papka, k_["_papka"], "index.html")
+        with open(put, encoding="utf-8") as fh:
+            t = fh.read()
+        izm += zapisat(put, vstavit_znachit(t))
     # kartochki-volna-v1: хаб — по HAB_NA_STRANICE карточек; лишние страницы прошлой сборки убираем
     str_haba = stranicy_haba(vse, HAB_NA_STRANICE) if vse else []
     # kartochki-v4.5: ссылки «Как читать карточку» — только на статьи, которые уже есть в этой сборке сайта

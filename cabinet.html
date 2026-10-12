@@ -224,6 +224,9 @@ ul.list .nm span{color:var(--muted);font-size:13px}
       <p class="empty" id="checksEmpty" hidden>Проверок пока нет. <a href="/">Проверить первую компанию →</a></p>
     </section>
 
+    <!-- golos-klienta-v1: «Чего не хватает в Делоскопе?» — карточку рисует js/golos.js после входа -->
+    <section class="card" id="golos" hidden></section>
+
     <section class="card" id="pisma" hidden>
       <h2>Письма Делоскопа</h2>
       <div id="pismaTelo"></div>
@@ -236,6 +239,7 @@ ul.list .nm span{color:var(--muted);font-size:13px}
 <script src="/js/imya.js"></script>
 <script src="/js/nedavnie.js"></script>
 <script src="/js/papka-proverok.js"></script>
+<script src="/js/golos.js"></script>
 <script>
 (function(){
   var API=(location.hostname.endsWith('deloskop.ru')?'https://api.deloskop.ru':'');
@@ -379,6 +383,7 @@ ul.list .nm span{color:var(--muted);font-size:13px}
       $('uplan').textContent='Тариф: '+(PLANS[u.plan]||u.plan)+(u.plan_until?' · до '+fmtDate(u.plan_until):'');
       $('sLeft').textContent=u.plan==='free'?'—':(u.plan==='team'?'∞':u.full_reports_left);
       renderPisma(u);
+      if(window.DlkGolos){try{DlkGolos.kabinet($('golos'),{api:API})}catch(e){}}
       return Promise.all([call('/api/me/checks').then(function(c){renderChecks(c.checks||[])}),loadWatch()]);
     }).catch(function(err){
       $('loading').hidden=false;$('loading').textContent='Не получилось загрузить кабинет: '+err.message+' ';

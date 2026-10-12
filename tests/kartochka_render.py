@@ -2570,7 +2570,7 @@ def zn_frazy(f):
             t += " (%s год подряд)" % podryad.group(1)
         t += " при выручке %s" % dengi(r1)
         if kap:
-            t += ", а её обязательства больше активов на %s" % kap.group(1).strip()
+            t += ", а обязательства больше активов на %s" % kap.group(1).strip()
         t += (": если платите вперёд, привяжите оплату к поставке или этапам работ — по отчётности у компании нет "
               "запаса, из которого она вернула бы аванс без новых денег." if kap else
               ": крупный аванс лучше разбить на этапы и платить по факту поставки, а в договоре прописать срок возврата "
@@ -2583,7 +2583,7 @@ def zn_frazy(f):
         t = "Прибыль %s — %s, на %s меньше, чем годом раньше" % (za, dengi(pr1), _zn_proc(1 - pr1 / p0["pribyl"]))
         if dl is not None and abs(dl) >= 0.05:
             t += ", при выручке, %s на %s" % ("выросшей" if dl > 0 else "снизившейся", _zn_proc(dl))
-        t += ": для крупного аванса попросите обеспечение — поэтапную оплату или аккредитив."
+        t += ": под крупный аванс попросите поэтапную оплату или аккредитив и спросите у %s, с чем связано падение." % im
         out.append(t)
     elif dl is not None and dl <= -0.3:
         out.append("Выручка %s — %s, на %s меньше, чем годом раньше: спросите компанию о причине и уточните, хватит ли "
@@ -2616,7 +2616,7 @@ def zn_frazy(f):
     if nd:
         m = re.search(r"— (.*?) на (\d.*?\d{4})", nd)
         if m:
-            out.append("В данных ФНС на %s у компании была задолженность перед бюджетом — %s: попросите у неё справку "
+            out.append("В данных ФНС на %s у компании была задолженность перед бюджетом — %s: попросите справку "
                        "об исполнении обязанности по уплате налогов на свежую дату." % (m.group(2), m.group(1)))
     else:
         up = _zn_v(f, "ok", "Уплатила налогов и взносов")
@@ -2983,3 +2983,477 @@ _html_kartochki_bez_imeni = html_kartochki
 def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811
     """kartochki-imya-v1: та же карточка, служебные советы и заголовок реестров — с названием компании."""
     return pochinit_imya(_html_kartochki_bez_imeni(k, V, sosedi, kom, normy, cena, segodnya))
+
+
+# ---------------------------------------------------------------- kartochki-unik-v2 ([Ночные-2] 12.10)
+# ТЗ «Штаба» 12.10 18:55 (claude/Штаб_уникальность_замер_и_ТЗ_12.10.md, пп. 1–3, 6): медиана повтора текста карточек — 52 %
+# (5-словные фрагменты), цель ≤ 35 %. Шаблон сидел в «Что это значит для вас» и «Перед оплатой»: одни и те же связки на
+# 50–66 карточках. Здесь:
+#  1. фразы — из фактов, а не из каркаса: вариант выбирает возраст, ход выручки и прибыли, размер, а не хеш;
+#  2. абзац «Чем {Имя} отличается» — 1–2 самых необычных факта на фоне ДРУГИХ карточек Делоскопа (место по выручке
+#     в разделе и в регионе, рентабельность, рост за период, возврат к прибыли, давность регистрации) с годом отчётности;
+#  3. «Перед оплатой» — советы по найденным признакам; признаков нет — один совет (сверить счёт), а не общий список.
+# Всё — из готовых страниц (как kartochki-znachit-v1): одинаково для новых и опубликованных карточек, без API. Сравнение
+# берёт опубликованные карточки (kartochki.un_zagruzit → un_ustanovit); новая — получает абзац на финальном проходе sobrat.
+# Тексты [Право] («Комментарий команды», оговорки) не трогаем. Стоп-слова (STOP_SLOVA) — те же ворота. ✎ [Право] — тон советов.
+UN_GRUPPA_OT = 5          # место в разделе / регионе — только если в группе не меньше 5 карточек с выручкой того же года
+_UN = {"dannye": None}
+_UN_KROSH = re.compile(r'<nav class="co-krosh[^>]*>(.*?)</nav>', re.S)
+_UN_RAZDELY = {t for _, _, t in OKVED_RAZDELY}
+_UN_PRIB_V = re.compile(r"^Чистая прибыль за (\d{4}) — (.+?₽)")
+_UN_UB_V = re.compile(r"^Убыток за (\d{4}) — (.+?₽)")
+_UN_SHTAT = re.compile(r"^В штате ([\d  ]+) человек")
+_UN_PERED = re.compile(r'(<section class="co-sec co-pered" aria-labelledby="pered"><h2 id="pered">Перед оплатой</h2><ul>)(.*?)(</ul></section>)', re.S)
+PORYADK_ZH = {1: "первая", 2: "вторая", 3: "третья", 4: "четвёртая", 5: "пятая"}
+
+
+def un_kratkoe(imya):
+    """«ПАО «НЛМК»» → «НЛМК» в кавычках: форма — отдельное слово, и перед ней общий текст давал одинаковые
+    5-словные фрагменты на всех ПАО (или всех ООО). Без формы — как есть."""
+    ch = (imya or "").split(" ", 1)
+    return ch[1] if len(ch) == 2 and ch[0] in IMYA_FORMY and ch[1].startswith("«") else (imya or "")
+
+
+def un_fakty(t):
+    """zn_fakty + прибыль из «Коротко» (если в таблице её нет), регион, город, раздел ОКВЭД, штат."""
+    f = zn_fakty(t)
+    if not f.get("imya"):
+        return f
+    po_godu = {x["god"]: x for x in f["ryad"] if x.get("god")}
+    for ton, x in f["V"]:
+        m = _UN_PRIB_V.match(x) or _UN_UB_V.match(x)
+        if m and int(m.group(1)) in po_godu and po_godu[int(m.group(1))].get("pribyl") is None:
+            v = zn_summa(m.group(2))
+            if v:
+                po_godu[int(m.group(1))]["pribyl"] = -abs(v) if x.startswith("Убыток") else v
+        s = _UN_SHTAT.match(x)
+        if s:
+            f["shtat"] = int(re.sub(r"\D", "", s.group(1)) or 0)
+    org = _sh_org(t)
+    adr = org.get("address") or {}
+    f["region"], f["gorod"] = adr.get("addressRegion") or "", adr.get("addressLocality") or ""
+    kr = _UN_KROSH.search(t)
+    zv = [z.strip() for z in _zn_txt(kr.group(1)).split("›")] if kr else []
+    f["razdel"] = zv[-1] if zv and zv[-1] in _UN_RAZDELY else ""
+    return f
+
+
+def _un_kratko(f):
+    """Факты одной карточки для сравнения с другими (без HTML)."""
+    ryad = [x for x in f.get("ryad") or [] if x.get("dohod") and x["dohod"] > 0 and x.get("god") and not x.get("fns")]
+    if not f.get("imya") or not ryad:
+        return None
+    p1 = ryad[-1]
+    p0 = ryad[-2] if len(ryad) >= 2 and ryad[-2]["god"] == p1["god"] - 1 else None
+    return {"inn": f.get("inn", ""), "imya": f["imya"], "razdel": f.get("razdel", ""), "region": f.get("region", ""),
+            "osnovana": f.get("osnovana"), "g1": p1["god"], "r1": p1["dohod"], "pr1": p1.get("pribyl"),
+            "pr0": p0.get("pribyl") if p0 else None, "y0": ryad[0]["god"], "r0": ryad[0]["dohod"], "let_ryada": len(ryad)}
+
+
+def un_kontekst():
+    """{ИНН: факты} карточек для сравнения. Модуль файлов не читает (его подключает и API): заполняет вызывающий —
+    un_ustanovit(...) (сайт: kartochki.un_zagruzit с диска). Не заполнено — абзаца «На фоне других» нет."""
+    return _UN["dannye"] or {}
+
+
+def un_ustanovit(stranicy):
+    """stranicy — тексты карточек (index.html) → контекст сравнения."""
+    d = {}
+    for t in stranicy:
+        k = _un_kratko(un_fakty(t.replace("&nbsp;", NB)))
+        if k and k["inn"]:
+            d[k["inn"]] = k
+    _UN["dannye"] = d
+    return d
+
+
+def _un_mesto(k, vse, klyuch, obratno=False):
+    """Место k среди vse по значению klyuch (1 — наибольшее; obratno — наименьшее) и размер группы."""
+    ryad = sorted(vse, key=lambda x: (-klyuch(x) if not obratno else klyuch(x), x["inn"]))
+    return 1 + [x["inn"] for x in ryad].index(k["inn"]), len(ryad)
+
+
+def _un_poryadk(n):
+    return "%d-я" % n
+
+
+def _un_kompanij(n):
+    return "%d%s%s" % (n, NB, plural(n, "компании", "компаний", "компаний"))
+
+
+def un_otlichie(k, vse):
+    """1–2 самых необычных факта компании на фоне других карточек → (текст, год отчётности) или None."""
+    if not k:
+        return None
+    g1 = k["g1"]
+    svoi = [x for x in vse.values() if x["g1"] == g1]
+    if k["inn"] not in {x["inn"] for x in svoi}:
+        svoi.append(k)
+    kand = []  # (вес, вид, текст)
+    rz = [x for x in svoi if k["razdel"] and x["razdel"] == k["razdel"]]
+    if len(rz) >= UN_GRUPPA_OT:
+        por = sorted(rz, key=lambda x: (-x["r1"], x["inn"]))
+        m, n = 1 + [x["inn"] for x in por].index(k["inn"]), len(por)
+        sos = lambda x: "%s (%s)" % (un_kratkoe(x["imya"]), dengi(x["r1"]))
+        if m == 1:
+            kand.append((6, "razdel", "%s выручки за%s%d год — больше, чем у остальных %d в разделе «%s» на Делоскопе; "
+                         "следом — %s" % (dengi(k["r1"]), NB, g1, n - 1, k["razdel"], sos(por[1]))))
+        elif m == n:
+            kand.append((2, "razdel", "ближе всех по выручке — %s; это %d-е место из%s%d за%s%d год в разделе «%s»"
+                         % (sos(por[m - 2]), m, NB, n, NB, g1, k["razdel"])))
+        else:
+            kand.append((4 if m <= 3 else 1, "razdel", "между %s и %s по выручке за%s%d год (%s) в разделе «%s»"
+                         % (sos(por[m - 2]), sos(por[m]), NB, g1, dengi(k["r1"]), k["razdel"])))
+        mr = [x for x in rz if x["pr1"] is not None]
+        if k["pr1"] is not None and len(mr) >= UN_GRUPPA_OT:
+            m, n = _un_mesto(k, mr, lambda x: x["pr1"] / x["r1"])
+            if m == 1 and k["pr1"] > 0:
+                kand.append((5, "rent", "самая высокая в разделе чистая рентабельность за%s%d год — %s выручки (у %s раздела с прибылью)"
+                             % (NB, g1, _zn_proc(k["pr1"] / k["r1"]), _un_kompanij(n))))
+            elif m == n and k["pr1"] < 0:
+                kand.append((4, "rent", "самый глубокий убыток к выручке в разделе за%s%d год — %s выручки (из %s раздела)"
+                             % (NB, g1, _zn_proc(k["pr1"] / k["r1"]), _un_kompanij(n))))
+    rg = [x for x in svoi if k["region"] and x["region"] == k["region"]]
+    if len(rg) >= UN_GRUPPA_OT:
+        m, n = _un_mesto(k, rg, lambda x: x["r1"])
+        if m <= 3:
+            kand.append((5 if m == 1 else 3, "region", "%d-е место по выручке за%s%d год среди %s региона «%s» на Делоскопе"
+                         % (m, NB, g1, _un_kompanij(n), k["region"]) +
+                         ("" if m == 1 else " — после %s" % ", ".join(un_kratkoe(x["imya"]) for x in sorted(
+                             rg, key=lambda x: (-x["r1"], x["inn"]))[:m - 1]))))
+        sv = [x for x in rg if x["osnovana"]]
+        if k["osnovana"] and len(sv) >= UN_GRUPPA_OT:
+            m, n = _un_mesto(k, sv, lambda x: x["osnovana"].toordinal(), obratno=True)
+            if m == 1:
+                kand.append((4, "vozrast", "самая ранняя дата регистрации среди %s региона «%s» на Делоскопе — %s"
+                             % (_un_kompanij(n), k["region"], data_slovami(k["osnovana"]))))
+    # рост выручки за период — среди всех карточек с тем же первым и последним годом отчётности
+    if k["let_ryada"] >= 3:
+        per = [x for x in svoi if x["y0"] == k["y0"] and x["let_ryada"] >= 3]
+        if len(per) >= UN_GRUPPA_OT * 2:
+            m, n = _un_mesto(k, per, lambda x: x["r1"] / x["r0"])
+            raz = k["r1"] / k["r0"]
+            if m <= max(3, n // 10) and raz >= 1.3:
+                kand.append((5 if m <= 3 else 3, "rost", "выручка с%s%d по%s%d год выросла в%s%s — %s результат из %s на Делоскопе с отчётностью за эти годы"
+                             % (NB, k["y0"], NB, g1, NB, _raz(k["r0"], k["r1"]), _un_poryadk(m), _un_kompanij(n))))
+            elif m >= n - max(2, n // 10) + 1 and raz <= 0.8:
+                kand.append((3, "rost", "выручка с%s%d по%s%d год сократилась на%s%s — сильнее, чем у %d из %s на Делоскопе с отчётностью за эти годы"
+                             % (NB, k["y0"], NB, g1, NB, _zn_proc(1 - raz), m - 1, _un_kompanij(n))))
+    if k["pr0"] is not None and k["pr1"] is not None:
+        if k["pr0"] < 0 < k["pr1"]:
+            kand.append((5, "povorot", "за%s%d год — снова прибыль, %s, после убытка %s годом раньше"
+                         % (NB, g1, dengi(k["pr1"]), dengi(-k["pr0"]))))
+        elif k["pr1"] < 0 < k["pr0"]:
+            kand.append((5, "povorot", "за%s%d год — убыток %s, хотя годом раньше была прибыль %s"
+                         % (NB, g1, dengi(-k["pr1"]), dengi(k["pr0"]))))
+    if not kand:  # группа мала — ближайшие по выручке среди всех карточек этого года
+        por = sorted(svoi, key=lambda x: (-x["r1"], x["inn"]))
+        m = [x["inn"] for x in por].index(k["inn"])
+        ryadom = [por[i] for i in (m - 1, m + 1) if 0 <= i < len(por)]
+        if not ryadom:
+            return None
+        kand.append((0, "vse", "%s выручки за%s%d год — по этой цифре рядом на Делоскопе %s"
+                     % (dengi(k["r1"]), NB, g1, " и ".join("%s (%s)" % (un_kratkoe(x["imya"]), dengi(x["r1"])) for x in ryadom))))
+    kand.sort(key=lambda x: -x[0])
+    vybor, vidy = [], set()
+    for ves, vid, tx in kand:
+        if vid not in vidy and len(vybor) < 2:
+            vybor.append(tx)
+            vidy.add(vid)
+    return "; ".join(vybor), g1
+
+
+def un_otlichie_html(f):
+    k = _un_kratko(f)
+    if not k or not k["inn"]:
+        return ""
+    vse = un_kontekst()
+    if k["inn"] not in vse:
+        return ""
+    r = un_otlichie(k, vse)
+    if not r:
+        return ""
+    tx = r[0]
+    if STOP_SLOVA.search(tx):
+        return ""
+    return "<p><b>На фоне других компаний Делоскопа.</b> %s.</p>" % (html.escape(_zn_nb(tx[0].upper() + tx[1:]), quote=False))
+
+
+def _un_let(n):
+    return _zn_let(n)
+
+
+def un_frazy(f):
+    """«Что это значит для вас» — варианты по фактам (замена zn_frazy). Пусто — блока нет.
+    Правило текста: общие связки — короткие, между ними — название компании и её числа (иначе 5-словные фрагменты
+    повторяются на десятках карточек; замер «Штаба» 12.10)."""
+    ryad = [x for x in f["ryad"] if x.get("dohod") and x["dohod"] > 0]
+    if not f["imya"] or not ryad:
+        return []
+    out = []
+    na, im = f["na"], un_kratkoe(f["imya"])
+    p1 = ryad[-1]
+    g1, r1, pr1 = p1["god"], p1["dohod"], p1.get("pribyl")
+    p0 = ryad[-2] if len(ryad) >= 2 and ryad[-2]["god"] == (g1 or 0) - 1 else None
+    za = ("за %d год" % g1) if g1 else "за последний год"
+    dl = (r1 / p0["dohod"] - 1) if p0 else None
+
+    # 1. История: возраст × глубина открытой отчётности × руководитель
+    if f["osnovana"] and na:
+        mes = (na.year - f["osnovana"].year) * 12 + na.month - f["osnovana"].month - (na.day < f["osnovana"].day)
+        let = mes // 12
+        ruk = _zn_v(f, "ok", "Руководитель тот же")
+        ruk_s = re.search(r"с (\d{4}) года", ruk or "")
+        reestr = "в реестре с %d года" % f["osnovana"].year + (" (%s)" % _zn_let(let) if let >= 1 else "")
+        glub = len(ryad) >= 3 and not p1.get("fns")
+        a0 = ryad[0]
+        if let < 3:
+            out.append("%s %s: история короткая, поэтому оплату вперёд лучше ограничить и платить частями по факту "
+                       "поставки." % (im, reestr))
+        elif glub:
+            out.append("%s %s%s: выручка %s в %d году — с него начинается открытая отчётность на странице." % (
+                im, reestr, (", руководитель тот же с %s года" % ruk_s.group(1)) if ruk_s else "",
+                dengi(a0["dohod"]), a0["god"]))
+        else:
+            out.append("%s %s%s; %s." % (
+                im, reestr, (", руководитель не менялся с %s года" % ruk_s.group(1)) if ruk_s else "",
+                ("открытой отчётности на странице — %s" % _zn_let(len(ryad))) if not p1.get("fns")
+                else "на странице — только доход за год по данным ФНС"))
+
+    # 2. Деньги: что это меняет в условиях оплаты
+    kap = re.search(r"минус ([^:]+):", _zn_v(f, "warn", "Собственный капитал") or "")
+    ub = _zn_v(f, "warn", "Убыток за")
+    podryad = re.search(r"(\S+) год подряд", ub or "")
+    if pr1 is not None and pr1 < 0:
+        t = "У %s %s убыток %s" % (im, za, dengi(-pr1))
+        if podryad:
+            t += " (%s год подряд)" % podryad.group(1)
+        t += " при выручке %s" % dengi(r1)
+        if kap:
+            t += ", а обязательства больше активов на %s" % kap.group(1).strip()
+            t += (": если платите вперёд, привяжите оплату к поставке или этапам работ — по отчётности у компании нет "
+                  "запаса, из которого она вернула бы аванс без новых денег.")
+        elif p0 and p0.get("pribyl") and p0["pribyl"] > 0:
+            t += (", а годом раньше, в %d, у %s была прибыль %s. Крупный аванс — этапами, срок возврата предоплаты — "
+                  "в договоре." % (g1 - 1, im, dengi(p0["pribyl"])))
+        else:
+            t += (". Аванс %s лучше разбить на этапы и платить по факту поставки, а в договоре прописать срок возврата "
+                  "предоплаты." % im)
+        out.append(t)
+    elif kap:
+        out.append("Обязательства %s больше активов на %s (баланс на 31.12.%s): если платите вперёд, привяжите "
+                   "оплату к поставке или этапам работ." % (im, kap.group(1).strip(), g1))
+    elif pr1 is not None and p0 and p0.get("pribyl") and p0["pribyl"] > 0 and pr1 <= p0["pribyl"] * 0.7:
+        t = "Прибыль %s %s — %s, на %s меньше, чем годом раньше" % (im, za, dengi(pr1), _zn_proc(1 - pr1 / p0["pribyl"]))
+        if dl is not None and abs(dl) >= 0.05:
+            t += ", при выручке, %s на %s" % ("выросшей" if dl > 0 else "снизившейся", _zn_proc(dl))
+        t += ": под крупный аванс попросите поэтапную оплату или аккредитив и спросите у %s, с чем связано падение." % im
+        out.append(t)
+    elif dl is not None and dl <= -0.3:
+        out.append("Выручка %s %s — %s, на %s меньше, чем годом раньше: спросите у %s о причине и уточните, хватит ли "
+                   "людей и мощностей на ваш объём." % (im, za, dengi(r1), _zn_proc(dl), im))
+    elif pr1 is not None and pr1 > 0:
+        m1 = pr1 / r1
+        m0 = p0["pribyl"] / p0["dohod"] if p0 and p0.get("pribyl") and p0["pribyl"] > 0 else None
+        if p0 and p0.get("pribyl") is not None and p0["pribyl"] < 0:
+            out.append("%s %s снова в плюсе: %s чистой прибыли при выручке %s, а за %d год был убыток %s." % (
+                za.capitalize(), im, dengi(pr1), dengi(r1), g1 - 1, dengi(-p0["pribyl"])))
+        elif m0 is not None and m1 >= m0 * 1.3:
+            out.append("Каждый рубль выручки %s приносит больше: чистая прибыль %s за%s%d год — %s, это %s от %s (годом раньше — %s)." % (
+                im, im, NB, g1, dengi(pr1), _zn_proc(m1), dengi(r1), _zn_proc(m0)))
+        elif m1 >= 0.15:
+            out.append("С каждых 100" + NB + "₽ выручки %s у %s остаётся %d" % (za, im, round(m1 * 100)) + NB +
+                       "₽ чистой прибыли: %s при выручке %s%s." % (
+                           dengi(pr1), dengi(r1), (" (годом раньше — %s)" % _zn_proc(m0)) if m0 else ""))
+        elif m1 < 0.03:
+            out.append("У %s %s чистая прибыль %s при выручке %s — %s: запас прочности тонкий, крупный аванс лучше "
+                       "привязать к поставке." % (im, za, dengi(pr1), dengi(r1), _zn_proc(m1)))
+        else:
+            t = "У %s %s — %s чистой прибыли при выручке %s, это %s выручки" % (
+                im, za, dengi(pr1), dengi(r1), _zn_proc(m1))
+            if m0 is not None:
+                t += " (годом раньше — %s)" % _zn_proc(m0)
+            out.append(t + ".")
+    else:
+        t = "Выручка %s %s — %s" % (im, za, dengi(r1))
+        if dl is not None and abs(dl) >= 0.05:
+            t += ", на %s %s, чем годом раньше" % (_zn_proc(dl), "больше" if dl > 0 else "меньше")
+        t += (". Прибыли в открытых данных на этой странице нет — до крупной оплаты попросите у %s отчёт "
+              "о финансовых результатах за %d год." % (im, g1) if g1 else
+              ". До крупной оплаты попросите у %s отчёт о финансовых результатах за последний год." % im)
+        out.append(t)
+
+    # 2б. Лучший год по выручке и по прибыли из открытых (≥ 3 лет ГИР БО) — если это не последний год
+    gl = [x for x in ryad if x.get("god") and not x.get("fns")]
+    if len(gl) >= 3:
+        mx = max(gl, key=lambda x: (x["dohod"], x["god"]))
+        pp = [x for x in gl if x.get("pribyl") is not None]
+        mp = max(pp, key=lambda x: (x["pribyl"], x["god"])) if len(pp) >= 3 else None
+        chasti = []
+        if mx["god"] != g1:
+            chasti.append("по выручке лучшим у %s из открытых лет был %d год — %s" % (im, mx["god"], dengi(mx["dohod"])))
+        if mp and mp["pribyl"] > 0 and mp["god"] != g1:
+            chasti.append("по прибыли — %d год, %s" % (mp["god"], dengi(mp["pribyl"])))
+        elif mp and mp["pribyl"] > 0 and mp["god"] == g1 and len(pp) >= 3:
+            chasti.append("прибыль %s за %d год — самая высокая за %s открытой отчётности" % (im, g1, _zn_let(len(pp))))
+        if chasti:
+            t = "; ".join(chasti)
+            out.append(t[0].upper() + t[1:] + ".")
+
+    # 3. Давность отчётности
+    if g1 and na and na.year - g1 >= 2:
+        out.append("У %s последняя открытая отчётность — за %d год, о %d годе она ничего не говорит: до подписания "
+                   "договора попросите у компании бухгалтерскую отчётность за %d год." % (im, g1, na.year - 1, na.year - 1))
+
+    # 4. Налоги и руководитель — по выводам «Коротко»
+    nd = _zn_v(f, "warn", "Задолженность перед бюджетом")
+    if nd:
+        m = re.search(r"— (.*?) на (\d.*?\d{4})", nd)
+        if m:
+            out.append("В данных ФНС на %s у %s была задолженность перед бюджетом — %s: попросите справку "
+                       "об исполнении обязанности по уплате налогов на свежую дату." % (m.group(2), im, m.group(1)))
+    else:
+        up = _zn_v(f, "ok", "Уплатила налогов и взносов")
+        bez = _zn_v(f, "ok", "Налоговой задолженности")
+        m = re.search(r"— (.*?)(?: за (\d{4}))?$", up or "")
+        d = re.search(r"\(на (.*?)\)", bez or "")
+        if m and d:
+            out.append("%s от %s в бюджет поступило %s налогов и взносов; на %s долга перед бюджетом в данных ФНС не было." % (
+                ("За %s год" % m.group(2)) if m.group(2) else "За год", im, m.group(1), d.group(1)))
+    sm = _zn_v(f, "warn", "Руководитель сменился")
+    if sm:
+        out.append("У %s %s — убедитесь, что договор подписывает действующий руководитель или представитель по "
+                   "доверенности от него." % (im, sm[0].lower() + sm[1:]))
+
+    # 5. Масштаб: средняя выручка в месяц — одна формулировка для всех (меняются только имя и числа)
+    out.append("Средняя месячная выручка %s %s — %s, и для %s сделка на такую сумму или больше крупная — под неё "
+               "запросите свежую отчётность и проверьте, кто подписывает договор." % (im, za, dengi(r1 / 12), im))
+
+    # 6. Мало слов — строка отрасли (ФНС), если она есть на странице
+    if sum(len(x.split()) for x in out) < ZN_MIN_SLOV and f["otrasl"]:
+        nz, god, proc = f["otrasl"]
+        out.append("Средняя налоговая нагрузка в отрасли «%s» за %d год — %s %% по данным ФНС: с ней можно сравнить "
+                   "налоги %s в полном отчёте." % (nz, god, proc, im))
+    out = [_zn_nb(x) for x in out]
+    for x in out:
+        assert not STOP_SLOVA.search(x), x
+    return out
+
+
+def un_blok_html(f):
+    fr = un_frazy(f)
+    if not fr:
+        return ""
+    e_ = lambda s: html.escape(s, quote=False)
+    otl = un_otlichie_html(f)
+    return ('<section class="co-sec co-znachit" aria-labelledby="znachit"><h2 id="znachit">Что это значит для вас</h2>%s%s'
+            '<p class="caption">◆ рассчитано Делоскопом по сведениям этой страницы%s. Условия сделки решаете вы — '
+            'полная проверка на сегодня — <a href="/?inn=%s">в отчёте</a>.</p></section>\n' % (
+                otl, "".join("<p>%s</p>" % e_(x) for x in fr),
+                " и других карточек Делоскопа" if otl else "", f.get("inn", "")))
+
+
+def _un_vstavit(t):
+    bez = _ZN_BLOK.sub("", t)
+    if _ZN_KUDA not in bez:
+        return bez if _ZN_BLOK.search(t) else t
+    f = un_fakty(bez.replace("&nbsp;", NB))
+    b = un_blok_html(f)
+    if not b:
+        return bez
+    i = bez.index(_ZN_KUDA)
+    novyj = bez[:i] + b + bez[i:]
+    return t if novyj == t else novyj
+
+
+def un_pered(f):
+    """Советы «Перед оплатой» по признакам страницы → список HTML-строк (1–3)."""
+    im = html.escape(un_kratkoe(f["imya"]), quote=False)
+    inn = f.get("inn", "")
+    ryad = [x for x in f["ryad"] if x.get("dohod") and x["dohod"] > 0]
+    p1 = ryad[-1] if ryad else {}
+    p0 = ryad[-2] if len(ryad) >= 2 and ryad[-2].get("god") == (p1.get("god") or 0) - 1 else None
+    s = []
+    nd = _zn_v(f, "warn", "Задолженность перед бюджетом")
+    if nd:
+        m = re.search(r"— (.*?) на (\d.*?\d{4})", nd)
+        s.append("Попросите у %s справку об исполнении обязанности по уплате налогов (КНД 1120101): на %s в данных ФНС "
+                 "был долг %s." % (im, m.group(2), m.group(1)) if m else
+                 "Попросите у %s справку об исполнении обязанности по уплате налогов (КНД 1120101)." % im)
+    sm = _zn_v(f, "warn", "Руководитель сменился")
+    if sm:
+        s.append("Руководитель %s %s — попросите решение о его назначении или доверенность того, кто подписывает." % (
+            im, sm[len("Руководитель "):]))
+    kap = re.search(r"минус ([^:]+):", _zn_v(f, "warn", "Собственный капитал") or "")
+    if (p1.get("pribyl") is not None and p1["pribyl"] < 0) or kap:
+        prichina = ("убыток %s за %d год" % (dengi(-p1["pribyl"]), p1["god"]) if p1.get("pribyl") is not None and p1["pribyl"] < 0
+                    else "обязательства больше активов на %s" % kap.group(1).strip())
+        s.append('Аванс — частями, по факту поставки или этапов работ: у %s %s. '
+                 '<a href="/nalogi/skolko-platit-vpered-neznakomoj-kompanii/">Сколько можно платить вперёд</a>' % (im, prichina))
+    elif p0 and p1.get("dohod") and p1["dohod"] <= p0["dohod"] * 0.7:
+        s.append("Выручка %s за %d год упала на %s — спросите о причине и о том, хватит ли мощностей на ваш заказ." % (
+            im, p1["god"], _zn_proc(1 - p1["dohod"] / p0["dohod"])))
+    if f["osnovana"] and f["na"] and (f["na"] - f["osnovana"]).days < 3 * 365:
+        s.append('%s моложе трёх лет — оплату частями или по факту поставки. '
+                 '<a href="/nalogi/skolko-platit-vpered-neznakomoj-kompanii/">Сколько можно платить вперёд</a>' % im)
+    schet = ('Счёт от %s: сверьте ИНН%s%s, название и банк. <a href="/proverit-schet/">Проверить счёт</a>'
+             % (im, NB, inn))
+    if not s:
+        return ['В сведениях этой страницы у %s замечаний нет — перед оплатой остаётся сверить счёт: ИНН%s%s, '
+                'название и банк. <a href="/proverit-schet/">Проверить счёт</a>' % (im, NB, inn)]
+    return (s + [schet])[:3]
+
+
+def pochinit_pered(t):
+    """«Перед оплатой» — по признакам страницы (kartochki-unik-v2). Идемпотентна; без имени или ИНН — без изменений."""
+    m = _UN_PERED.search(t)
+    if not m:
+        return t
+    f = un_fakty(t.replace("&nbsp;", NB))
+    if not f.get("imya") or not re.match(r"^\d{10}$", f.get("inn") or ""):
+        return t
+    novoe = "".join("<li>%s</li>" % x for x in un_pered(f))
+    if html.unescape(m.group(2)).replace("&nbsp;", NB) == html.unescape(novoe):
+        return t
+    return t[:m.start(2)] + novoe + t[m.end(2):]
+
+
+_vstavit_znachit_do_unik = vstavit_znachit
+
+
+def vstavit_znachit(t):  # noqa: F811 — kartochki-unik-v2: блок по вариантам + «Чем отличается»; возраст — тем же span
+    novyj = _un_vstavit(t)
+    if novyj == t:
+        return t
+    novyj = vozrast_kak_v(t, novyj)
+    return t if novyj == t else novyj
+
+
+_html_kartochki_do_unik = html_kartochki
+
+
+def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811
+    """kartochki-unik-v2: «Перед оплатой» — по признакам; «Что это значит для вас» — по вариантам (через vstavit_znachit)."""
+    return pochinit_pered(vstavit_znachit(_html_kartochki_do_unik(k, V, sosedi, kom, normy, cena, segodnya)))
+
+
+# kartochki-unik-v2: «Разбор по цифрам» — с названием компании (заголовок и первая строка; 64 карточки начинались одинаково)
+_UN_RZ_H2 = '<h2 id="razbor">Разбор по цифрам</h2>'
+_UN_RZ_ZA = re.compile(r"<p>За(?:&nbsp;|\u00a0)(\d+)(?:&nbsp;|\u00a0)(год|года|лет) выручка (?=выросла|снизилась|почти)")
+
+
+def pochinit_razbor(t):
+    if 'class="co-sec co-razbor"' not in t:
+        return t
+    imya = str(_sh_org(t).get("name") or "")
+    if not imya:
+        return t
+    im = html.escape(un_kratkoe(imya), quote=False)
+    return _UN_RZ_ZA.sub(lambda m: "<p>Выручка %s за%s%s%s%s " % (im, NB, m.group(1), NB, m.group(2)), t, count=1)
+
+
+_html_kartochki_do_razbora = html_kartochki
+
+
+def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811
+    return pochinit_razbor(_html_kartochki_do_razbora(k, V, sosedi, kom, normy, cena, segodnya))

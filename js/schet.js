@@ -29,6 +29,15 @@
   // разовые продукты (сейчас — «Скорая под ключ»): цена в tarify.json → <id>.cena_rub, срок не выбирается
   function produktIz(D, id) { var p = D && id && D[id]; return p && p.razovo && p.cena_rub > 0 ? p : null; }
   function tarifIz(D, id) { return (D && D.tarify || []).filter(function (t) { return t.id === id && t.mesyac > 0; })[0] || null; }
+  // pokupka-chestno-v1 (ТЗ [команда] 12.10, разд. 2, п. 1): Паспорт покупается на конкретную компанию — её ИНН идёт в заявку,
+  // назначение платежа и комментарий СБП. ИП (12 цифр) — без ФИО: «индивидуального предпринимателя, ИНН …».
+  function innKontragenta(v) { v = String(v == null ? "" : v).replace(/\D/g, ""); return innOk(v) ? v : ""; }
+  function pasportNa(inn, nazvanie) {
+    inn = innKontragenta(inn); if (!inn) return "";
+    var kto = inn.length === 12 ? "индивидуального предпринимателя" : (String(nazvanie || "").trim() || "компанию");
+    return "Паспорт на " + kto + ", ИНН " + inn + " — сведения на день открытия.";
+  }
+  function sbpKommentarij(email, inn) { return [String(email || "").trim(), innKontragenta(inn)].filter(Boolean).join(" "); }
   function summa(D, tarif, srok) {
     var p = produktIz(D, tarif); if (p) return p.cena_rub;
     var t = tarifIz(D, tarif); if (!t || !SROKI[srok]) return null;
@@ -69,7 +78,9 @@
     if (z.produkt) {
       var p = produktIz(D, z.produkt);
       return "Прошу выставить счёт.\nУслуга: " + (p ? p.nazvanie : z.produkt) + ", разовый платёж" +
-        (p ? " — " + rub(p.cena_rub).replace(/ /g, " ") : "") + "\nИНН плательщика: " + (z.inn || "") +
+        (p ? " — " + rub(p.cena_rub).replace(/ /g, " ") : "") +
+        (z.inn_kontragenta ? "\nПаспорт на компанию: ИНН " + z.inn_kontragenta + (z.nazvanie_kontragenta ? " (" + z.nazvanie_kontragenta + ")" : "") : "") +
+        "\nИНН плательщика: " + (z.inn || "") +
         (z.nazvanie ? " (" + z.nazvanie + ")" : "") + "\nE-mail для счёта, анкеты и документов: " + (z.email || "");
     }
     var t = tarifIz(D, z.tarif), s = summa(D, z.tarif, z.srok);
@@ -94,7 +105,7 @@
     return !!(m && m.getAttribute("content") === "beta");
   }
   var api = { vBete: vBete, innOk: innOk, emailOk: emailOk, bikOk: bikOk, rsOk: rsOk, ksOk: ksOk, ogrnipOk: ogrnipOk, summa: summa,
-    rub: rub, produktIz: produktIz, propis: propis, podpisSummy: podpisSummy, tekstZayavki: tekstZayavki, mailtoZayavki: mailtoZayavki, ddmm: ddmm,
+    rub: rub, produktIz: produktIz, propis: propis, podpisSummy: podpisSummy, tekstZayavki: tekstZayavki, mailtoZayavki: mailtoZayavki, ddmm: ddmm, innKontragenta: innKontragenta, pasportNa: pasportNa, sbpKommentarij: sbpKommentarij,
     SROKI: SROKI, SROK_TEKST: SROK_TEKST, NDS: NDS };
   if (typeof module !== "undefined" && module.exports) { module.exports = api; }
   if (typeof document === "undefined") return;
@@ -136,6 +147,7 @@
     ".sf{--sf-ink:var(--ink,#1D1D1F);--sf-ink2:var(--ink2,#48484C);--sf-muted:var(--muted,#6B6B70);--sf-line:var(--line,#E6E6E1);--sf-acc:var(--accent,#0B63E5);--sf-ok:var(--ok,#16723F);--sf-bad:var(--bad,#B3261E);color:var(--sf-ink);font-size:16px;line-height:1.45}" +
     ".sf h3{font-size:24px;letter-spacing:-.02em;line-height:1.2;margin:0 0 6px;font-weight:600;outline:0}" +
     ".sf .sf-lead{color:var(--sf-ink2);font-size:15px;margin:0 0 18px}" +
+    ".sf .sf-na{font-size:15px;font-weight:600;color:var(--sf-ink);margin:0 0 8px;padding:10px 12px;border-radius:12px;background:#EEF3FC}.sf .sf-na[hidden]{display:none}" +
     ".sf .sf-seg{display:flex;gap:4px;background:#EBEBE6;border-radius:999px;padding:4px;margin:0 0 10px;width:max-content;max-width:100%}" +
     ".sf .sf-seg button{border:0;background:transparent;font:inherit;font-size:15px;font-weight:500;color:var(--sf-ink2);padding:8px 16px;border-radius:999px;cursor:pointer;min-height:40px}" +
     ".sf .sf-seg button[aria-checked=true]{background:#fff;color:var(--sf-ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}" +
@@ -195,13 +207,21 @@
     if (sbpZagruzka === true) return cb();
     sbpZagruzka.push(cb);
   }
-  function sbpRisovat(f, summaRub, chto) {
+  // pokupka-chestno-v1: kInn — ИНН компании, на которую покупают Паспорт (или ""); тогда в комментарии — e-mail и этот ИНН,
+  // рядом кнопка «Скопировать» строки «{e-mail} {ИНН}» (e-mail — из поля формы на момент нажатия).
+  function sbpRisovat(f, summaRub, chto, kInn) {
     var box = f.querySelector("[data-sbp-box]"), str = f.querySelector("[data-grazhdane]");
     if (!box) return;
+    kInn = innKontragenta(kInn);
     sbpGotov(function () {
-      var h = window.DeloskopSBP && summaRub ? window.DeloskopSBP.html({ summa: summaRub, zagolovok: "Гражданам — по СБП, без ИНН",
-        kommentarij: "<b>ваш e-mail</b>: на него откроем «" + esc(chto || "Делоскоп") + "» не позднее рабочего дня после оплаты" }) : "";
+      var kom = kInn
+        ? "<b>ваш e-mail и ИНН компании: " + kInn + "</b>. На e-mail откроем «" + esc(chto || "Делоскоп") + "» не позднее рабочего дня после оплаты"
+        : "<b>ваш e-mail</b>: на него откроем «" + esc(chto || "Делоскоп") + "» не позднее рабочего дня после оплаты";
+      var h = window.DeloskopSBP && summaRub ? window.DeloskopSBP.html({ summa: summaRub, zagolovok: "Гражданам — по СБП, без счёта", kommentarij: kom }) : "";
+      if (h && kInn) h += '<button type="button" class="sf-go2" data-sbp-kop>Скопировать комментарий</button>';
       box.innerHTML = h; box.hidden = !h;
+      var kb = box.querySelector("[data-sbp-kop]");
+      if (kb) kb.onclick = function () { var em = f.querySelector("[data-p=email]"); kopirovat(sbpKommentarij(em && em.value, kInn), kb, "Скопировано"); };
       if (str) str.textContent = h ? "Счёт — для компаний и ИП, без НДС. Гражданам счёт не нужен — оплата по СБП ниже." :
         "Счёт — для компаний и ИП, без НДС. Для граждан оплата откроется позже — напишите на help@deloskop.ru, сообщим.";
     });
@@ -212,15 +232,21 @@
     stili();
     var st = { tarif: nach.tarif || "pro", srok: SROKI[nach.srok] ? nach.srok : "mes", nazvanie: null, poisk: 0,
       produkt: /^[a-z_]{3,40}$/.test(nach.produkt || "") ? nach.produkt : null };
+    // pokupka-chestno-v1: Паспорт — на компанию с экрана проверки (nach.inn) или из поля «ИНН компании, которую проверяем»
+    var nuzhenK = st.produkt === "pasport_razovyj";
+    st.kInn = nuzhenK ? innKontragenta(nach.inn) : ""; st.kNaz = st.kInn.length === 10 ? String(nach.nazvanie || "").trim() : "";
+    var poleK = nuzhenK && !st.kInn;
     var id = "sf" + (++nomerFormy);
     box.innerHTML = '<form class="sf" novalidate>' +
       '<h3 id="' + id + '-h" tabindex="-1"></h3>' +
       (st.produkt
-        ? '<p class="sf-lead">' + (LID_PRODUKTA[st.produkt] || LID_PRODUKTA.skoraya_pod_klyuch) + '</p>'
+        ? (nuzhenK ? '<p class="sf-na" data-pasport-na' + (st.kInn ? '' : ' hidden') + '></p>' : '') +
+          '<p class="sf-lead">' + (LID_PRODUKTA[st.produkt] || LID_PRODUKTA.skoraya_pod_klyuch) + '</p>'
         : '<p class="sf-lead">Оплата с расчётного счёта компании или ИП. Доступ откроем не позднее рабочего дня, следующего за днём зачисления денег.</p>' +
           '<div class="sf-seg" role="radiogroup" aria-label="Тариф" data-seg="tarif"></div>' +
           '<div class="sf-seg" role="radiogroup" aria-label="Срок" data-seg="srok"></div>') +
       '<div class="sf-sum" aria-live="polite"><b data-sum>—</b><span><span data-pod></span><br>' + NDS + '</span></div>' +
+      (poleK ? '<label class="sf-f"><span>ИНН компании, которую проверяем</span><input type="text" inputmode="numeric" autocomplete="off" maxlength="14" data-p="kinn" aria-describedby="' + id + '-kinn" placeholder="10 цифр у компании, 12 у ИП"><div class="sf-h" id="' + id + '-kinn" aria-live="polite"></div></label>' : '') +
       '<label class="sf-f"><span>ИНН плательщика</span><input type="text" inputmode="numeric" autocomplete="off" maxlength="14" data-p="inn" aria-describedby="' + id + '-inn" placeholder="10 цифр у компании, 12 у ИП"><div class="sf-h" id="' + id + '-inn" aria-live="polite"></div></label>' +
       '<label class="sf-f"><span>E-mail для счёта и закрывающих документов</span><input type="email" inputmode="email" autocomplete="email" maxlength="254" data-p="email" aria-describedby="' + id + '-email" placeholder="buh@company.ru"><div class="sf-h" id="' + id + '-email"></div></label>' +
       '<input class="sf-hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" data-p="website">' +
@@ -234,6 +260,40 @@
     var f = box.querySelector("form"), $ = function (s) { return f.querySelector(s); };
     var pInn = $('[data-p=inn]'), pEm = $('[data-p=email]');
     var hInn = document.getElementById(id + "-inn"), hEm = document.getElementById(id + "-email");
+    var pK = $('[data-p=kinn]'), hK = document.getElementById(id + "-kinn"), elNa = $('[data-pasport-na]');
+    function pokazatNa() {
+      if (!elNa) return;
+      var t = pasportNa(st.kInn, st.kNaz); elNa.textContent = t; elNa.hidden = !t;
+    }
+    // название — из подсказки ЕГРЮЛ (/api/suggest), только у компаний (10 цифр); у ИП имя не показываем
+    function nazvanieK(inn, cb) {
+      if (inn.length !== 10 || (!API && location.protocol === "file:")) return cb("");
+      fetch(API + "/api/suggest?q=" + inn).then(function (r) { return r.ok ? r.json() : { items: [] }; }).then(function (j) {
+        var it = (j.items || []).filter(function (x) { return x.inn === inn; })[0];
+        var n = it ? it.name : "";
+        try { if (n && window.DlkImya && window.DlkImya.kavychki) n = window.DlkImya.kavychki(n); } catch (e) {}
+        cb(n);
+      }).catch(function () { cb(""); });
+    }
+    if (st.kInn && !st.kNaz) nazvanieK(st.kInn, function (n) { st.kNaz = n; pokazatNa(); });
+    if (pK) {
+      pK.addEventListener("input", function () {
+        var v = pK.value.replace(/\D/g, ""); st.kInn = ""; st.kNaz = ""; pokazatNa();
+        if (v.length === 10 || v.length === 12) {
+          if (!innOk(v)) { pole(pK, hK, "ИНН с опечаткой: контрольные цифры не сходятся"); return; }
+          st.kInn = v; pole(pK, hK, v.length === 12 ? "Индивидуальный предприниматель" : "", v.length === 12 ? true : undefined);
+          if (v.length === 10) { pole(pK, hK, ""); nazvanieK(v, function (n) { if (st.kInn !== v) return; st.kNaz = n; if (n) pole(pK, hK, n, true); pokazatNa(); }); }
+        } else pole(pK, hK, "");
+        pokazatNa(); risovat();
+      });
+    }
+    function proveritK() {
+      if (!pK) return true;
+      if (st.kInn) return true;
+      var v = pK.value.replace(/\D/g, "");
+      pole(pK, hK, !v ? "Впишите ИНН компании — Паспорт делаем на неё" : v.length !== 10 && v.length !== 12 ? "В ИНН 10 цифр у компании и 12 у ИП" : "ИНН с опечаткой: контрольные цифры не сходятся");
+      return false;
+    }
 
     function seg(el, vals, cur, name) {
       el.innerHTML = vals.map(function (v) { return '<button type="button" role="radio" aria-checked="' + (v[0] === cur) + '" data-v="' + v[0] + '">' + esc(v[1]) + "</button>"; }).join("");
@@ -246,7 +306,7 @@
           $("h3").textContent = "Счёт на «" + (p ? p.nazvanie : "Скорую под ключ").replace(/^Скорая/, "Скорую") + "»";
           $("[data-sum]").textContent = p ? rub(p.cena_rub) : "—";
           $("[data-pod]").textContent = p ? "разово" + (p.podarok ? " · " + p.podarok + " в подарок" : "") : "";
-          sbpRisovat(f, p && p.cena_rub, p && p.nazvanie);
+          sbpRisovat(f, p && p.cena_rub, p && p.nazvanie, st.kInn);
           return;
         }
         var platnye = (DD && DD.tarify || []).filter(function (t) { return t.mesyac > 0; });
@@ -258,7 +318,7 @@
         var s = summa(DD, st.tarif, st.srok);
         $("[data-sum]").textContent = s ? rub(s) : "—";
         $("[data-pod]").textContent = s ? podpisSummy(DD, st.tarif, st.srok) : "";
-        sbpRisovat(f, s, t.nazvanie);
+        sbpRisovat(f, s, t.nazvanie, "");
       });
     }
     risovat();
@@ -302,14 +362,16 @@
 
     f.addEventListener("submit", function (e) {
       e.preventDefault();
-      var a = proveritInn(true), b = proveritEm();
-      if (!a) return pInn.focus(); if (!b) return pEm.focus();
+      var k = proveritK(), a = proveritInn(true), b = proveritEm();
+      if (!k) return pK.focus(); if (!a) return pInn.focus(); if (!b) return pEm.focus();
       var z = { tarif: st.produkt || st.tarif, srok: st.produkt ? "razovo" : st.srok, produkt: st.produkt || undefined, inn: innChist(), email: pEm.value.trim(), soglasie_pd: true,
-        nazvanie: st.nazvanie, ref: ref(), website: $('[data-p=website]').value };
+        nazvanie: st.nazvanie, ref: ref(), website: $('[data-p=website]').value,
+        // pokupka-chestno-v1: на чью компанию Паспорт — сервер вписывает в назначение платежа (ТЗ API в КАК_ВЫЛОЖИТЬ); прежний сервер поле не читает
+        inn_kontragenta: st.kInn || undefined, nazvanie_kontragenta: st.kNaz || undefined };
       var go = $("[data-go]"), err = $("[data-err]"); err.textContent = "";
       go.disabled = true; go.innerHTML = '<span class="sf-spin" aria-hidden="true"></span><span>Выставляем счёт…</span>';
-      [pInn, pEm].forEach(function (x) { x.disabled = true; });
-      function vernut() { go.disabled = false; go.textContent = "Получить счёт"; [pInn, pEm].forEach(function (x) { x.disabled = false; }); }
+      [pInn, pEm, pK].forEach(function (x) { if (x) x.disabled = true; });
+      function vernut() { go.disabled = false; go.textContent = "Получить счёт"; [pInn, pEm, pK].forEach(function (x) { if (x) x.disabled = false; }); }
       fetch(API + "/api/schet", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(z) })
         .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { r: r, j: j }; }); })
         .then(function (o) {
@@ -338,6 +400,7 @@
       f.innerHTML = '<div class="sf-ok" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#16723F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>' +
         '<h3 tabindex="-1">' + esc(h) + "</h3>" +
         '<p class="sf-lead">' + esc(j.pokupatel || "") + (z.produkt ? " · «" + esc(j.tarif) + "», разово" : " · тариф «" + esc(j.tarif) + "» · " + esc(SROK_TEKST[j.mesyacev] || "")) + " · " + rub(j.summa) + "</p>" +
+        (z.inn_kontragenta ? '<p class="sf-na">' + esc(pasportNa(z.inn_kontragenta, z.nazvanie_kontragenta)) + "</p>" : "") +
         '<p style="font-size:15px;margin:0 0 6px">' + tekst + "</p>" +
         (j.gotov ? '<a class="sf-go" href="' + esc(j.url) + '" target="_blank" rel="noopener">Открыть счёт и скачать PDF</a>' : "") +
         // schet-konversiya-v1: «Отправить счёт бухгалтеру» — только когда API это умеет (j.buhgalteru)
@@ -361,8 +424,9 @@
       err.parentNode.insertBefore(box2, err.nextSibling);
       box2.querySelector("[data-copy2]").onclick = function () { kopirovat(tekstZayavki(z, D), this, "Текст скопирован — вставьте в письмо на help@deloskop.ru"); };
     }
-    if (!vDialoge) setTimeout(function () { try { pInn.focus({ preventScroll: true }); } catch (e) {} }, 0);
-    return { fokus: function () { pInn.focus(); } };
+    pokazatNa();
+    if (!vDialoge) setTimeout(function () { try { (pK || pInn).focus({ preventScroll: true }); } catch (e) {} }, 0);
+    return { fokus: function () { (pK || pInn).focus(); } };
   }
 
   function kopirovat(t, btn, ok) {
@@ -374,7 +438,7 @@
   var dlg = null;
   function otkryt(nach) {
     stili();
-    if (!window.HTMLDialogElement) { location.href = nach.produkt ? "/schet/?produkt=" + encodeURIComponent(nach.produkt) : "/schet/?tarif=" + encodeURIComponent(nach.tarif || "") + "&srok=" + encodeURIComponent(nach.srok || ""); return; }
+    if (!window.HTMLDialogElement) { location.href = nach.produkt ? "/schet/?produkt=" + encodeURIComponent(nach.produkt) + (innKontragenta(nach.inn) ? "&inn=" + innKontragenta(nach.inn) : "") : "/schet/?tarif=" + encodeURIComponent(nach.tarif || "") + "&srok=" + encodeURIComponent(nach.srok || ""); return; }
     if (!dlg) {
       dlg = document.createElement("dialog"); dlg.className = "sf-dlg"; dlg.setAttribute("aria-label", "Получить счёт");
       document.body.appendChild(dlg);
@@ -404,7 +468,7 @@
     if (!a || e.ctrlKey || e.metaKey || e.shiftKey || e.button > 0) return;
     e.preventDefault();
     if (window.dlkGoal) window.dlkGoal("pkg_cta", { produkt: a.dataset.produkt });
-    otkryt({ produkt: a.dataset.produkt });
+    otkryt({ produkt: a.dataset.produkt, inn: a.dataset.inn || (/[?&]inn=(\d{10,12})/.exec(a.getAttribute("href") || "") || [])[1], nazvanie: a.dataset.naz });
   });
 
   root.DeloskopSchet = { otkryt: otkryt, forma: forma, api: api, vBete: vBete, BETA_HTML: BETA_HTML };

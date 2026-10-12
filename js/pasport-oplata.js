@@ -54,6 +54,8 @@
       produkt: 'pasport_razovyj',
       zag: 'Паспорт контрагента на' + NB + segodnya(o.now),
       nazvanie: String(o.nazvanie || '').trim(),
+      // pokupka-chestno-v1: ИНН компании, на которую покупают Паспорт (с экрана проверки) — уходит в форму счёта
+      inn: /^(\d{10}|\d{12})$/.test(String(o.inn || '')) ? String(o.inn) : '',
       vnutri: VNUTRI.slice(),
       cena: rub(p.cena_rub),
       nds: 'без НДС',
@@ -108,7 +110,7 @@
     if (!doc || !doc.defaultView || !doc.defaultView.HTMLDialogElement) return Promise.resolve(false);
     var w = doc.defaultView;
     return tarify(doc).then(function (T) {
-      var m = model(T, { nazvanie: o.nazvanie });
+      var m = model(T, { nazvanie: o.nazvanie, inn: o.inn });
       if (!m) return false;
       if (!dlg) {
         dlg = doc.createElement('dialog'); dlg.className = 'po';
@@ -130,9 +132,9 @@
         b.setAttribute('aria-expanded', 'true');
         schet(doc).then(function (S) {
           box.hidden = false; b.hidden = true; dlg.classList.add('po--schet');   // сумма — в форме счёта, без повтора
-          var f = S.forma(box, { produkt: m.produkt }, true);
+          var f = S.forma(box, { produkt: m.produkt, inn: m.inn, nazvanie: m.nazvanie }, true);
           try { f.fokus(); } catch (e) { /* фокус не обязателен */ }
-        }).catch(function () { w.location.href = '/schet/?produkt=' + m.produkt; });
+        }).catch(function () { w.location.href = '/schet/?produkt=' + m.produkt + (m.inn ? '&inn=' + m.inn : ''); });
       };
       doc.documentElement.style.overflow = 'hidden';
       dlg.showModal();

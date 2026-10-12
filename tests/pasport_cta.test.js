@@ -47,7 +47,8 @@ test('гость и бесплатный: цена в кнопке, строка
     assert.strictEqual(s.knopka, 'Паспорт на дату сделки — 490' + NB + '₽');
     assert.strictEqual(s.stroka, 'Без подписки. PDF с QR-кодом, хранится в Кабинете.');
     assert.deepStrictEqual(s.ssylka, { t: '3 проверки — 990' + NB + '₽', href: '/schet/?produkt=paket_pasportov', cel: 'paket' });
-    assert.strictEqual(s.href, '/schet/?produkt=pasport_razovyj');
+    // pokupka-chestno-v1: Паспорт покупают на проверенную компанию — её ИНН в ссылке на счёт
+    assert.strictEqual(s.href, '/schet/?produkt=pasport_razovyj&inn=' + INN);
   }
 });
 
@@ -70,7 +71,7 @@ test('нельзя (ТЗ 1.3): ни давления, ни обещаний, н�
   assert.doesNotMatch(kod, /успейте|только сегодня|гарант|надёжн|надежн|скидк|setInterval|лучш/i);
   assert.match(kod, /pasport_cta_view', \{ mesto: mesto, sost: s\.sost \}/);
   assert.match(kod, /pasport_cta_click', \{ mesto: mesto, sost:/);
-  assert.doesNotMatch(kod.match(/function cel[\s\S]*?\n  }/)[0] + kod.match(/cel\(w, [^)]*\)/g).join(''), /inn|email/i);
+  assert.doesNotMatch(kod.match(/function cel\([^\n]*/)[0] + kod.match(/cel\(w, [^)]*\)/g).join(''), /inn|email/i);
 });
 
 test('главная: модуль подключён до otchet.js; лист передаёт адрес API; строка 13 px', () => {

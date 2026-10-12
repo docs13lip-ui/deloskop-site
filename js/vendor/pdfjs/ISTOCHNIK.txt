@@ -1,0 +1,6 @@
+pdf.js 3.11.174 — из пакета npm pdfjs-dist@3.11.174 (каталог build/), без изменений.
+Лицензия — Apache License 2.0, текст рядом в LICENSE.
+Зачем у себя: сайт не грузит скрипты с зарубежных CDN (требования реестра российского ПО, ПП РФ № 1236).
+SHA-256:
+5b5799e6f8c680663207ac5b42ee14eed2a406fa7af48f50c154f0c0b1566946  pdf.min.js
+feabdf309770ed24bba31a5467836cdc8cf639c705af27d52b585b041bb8527b  pdf.worker.min.js

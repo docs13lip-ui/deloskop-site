@@ -98,7 +98,7 @@ footer a{color:var(--muted)}
 .smena__r.is-bad .smena__t{color:#B42318}.smena__r.is-warn .smena__t{color:#8A5A00}.smena__r.is-ok .smena__t{color:#137A3E}
 .smena__dalee{margin:14px 0 0;font-size:16px}.smena__shagi{padding-left:22px;color:var(--ink2)}.smena__shagi li{margin:8px 0}
 @media (max-width:560px){.smena__forma{grid-template-columns:1fr}.smena__r{grid-template-columns:1fr 1fr}.smena__h .smena__pole,.smena__h span:first-child{display:none}.smena__pole{grid-column:1/-1}.smena__t{grid-column:1/-1}}
-</style><script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
+</style><script src="/js/vendor/pdfjs/pdf.min.js" defer></script>
 <link rel="stylesheet" href="/css/fonts.css">
 <link rel="stylesheet" href="/css/podval.css">
 <link rel="stylesheet" href="/css/shapka.css">
@@ -412,7 +412,7 @@ function check(text){
 /* ---------- PDF ---------- */
 function pdfText(f){
   if(!window.pdfjsLib)return Promise.reject(new Error('nolib'));
-  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  pdfjsLib.GlobalWorkerOptions.workerSrc='/js/vendor/pdfjs/pdf.worker.min.js';
   return f.arrayBuffer().then(function(b){return pdfjsLib.getDocument({data:b}).promise}).then(function(doc){
     var ps=[];for(var i=1;i<=Math.min(doc.numPages,5);i++)ps.push(doc.getPage(i).then(function(p){return p.getTextContent()}).then(function(tc){
       var lines=[],last=null;tc.items.forEach(function(it){var y=Math.round(it.transform[5]);if(last!==null&&Math.abs(y-last)>2)lines.push('\n');else if(last!==null)lines.push(' ');lines.push(it.str);last=y});

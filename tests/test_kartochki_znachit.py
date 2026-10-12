@@ -56,35 +56,35 @@ class TestPravila(unittest.TestCase):
             ryad=[(2023, "37,3 млрд ₽", "убыток 1 млрд ₽"), (2024, "36,2 млрд ₽", "убыток 9,4 млрд ₽"),
                   (2025, "36,6 млрд ₽", '<span class="co-ub">убыток</span> 9,8 млрд ₽')]))
         f = " ".join(frazy_bloka(t)).replace(NB, " ")
-        self.assertIn("убыток 9,8 млрд ₽ (шестой год подряд) при выручке 36,6 млрд ₽", f)
+        self.assertIn("У «Ромашка» за 2025 год убыток 9,8 млрд ₽ (шестой год подряд) при выручке 36,6 млрд ₽", f)
         self.assertIn("обязательства больше активов на 12,6 млрд ₽", f)
         self.assertIn("привяжите оплату к поставке или этапам работ", f)
-        self.assertIn("в среднем 3 млрд ₽ выручки в месяц", f)
+        self.assertIn("Средняя месячная выручка «Ромашка» за 2025 год — 3 млрд ₽", f)
         self.assertLess(t.index("co-znachit"), t.index("co-pered"))  # перед «Перед оплатой»
 
     def test_padenie_pribyli(self):
         f = " ".join(frazy_bloka(K.vstavit_znachit(stranica(
             ryad=[(2023, "10 млрд ₽", "1 млрд ₽"), (2024, "10 млрд ₽", "1 млрд ₽"), (2025, "11 млрд ₽", "200 млн ₽")])))).replace(NB, " ")
-        self.assertIn("Прибыль за 2025 год — 200 млн ₽, на 80 % меньше, чем годом раньше, при выручке, выросшей на 10 %", f)
+        self.assertIn("Прибыль «Ромашка» за 2025 год — 200 млн ₽, на 80 % меньше, чем годом раньше, при выручке, выросшей на 10 %", f)
         self.assertIn("аккредитив", f)
 
     def test_padenie_vyruchki_i_staraya_otchetnost(self):
         f = " ".join(frazy_bloka(K.vstavit_znachit(stranica(V=[("ok", "Работает 16 лет — с 2010 года")], ryad=[(2021, "10 млрд ₽", None), (2022, "6 млрд ₽", None)])))).replace(NB, " ")
-        self.assertIn("Выручка за 2022 год — 6 млрд ₽, на 40 % меньше, чем годом раньше", f)
-        self.assertIn("У ООО «Ромашка» последняя открытая отчётность — за 2022 год, о 2025 годе она ничего не говорит", f)
+        self.assertIn("Выручка «Ромашка» за 2022 год — 6 млрд ₽, на 40 % меньше, чем годом раньше", f)
+        self.assertIn("У «Ромашка» последняя открытая отчётность — за 2022 год, о 2025 годе она ничего не говорит", f)
 
     def test_pribyl_rentabelnost(self):
         f = " ".join(frazy_bloka(K.vstavit_znachit(stranica(
             ryad=[(2024, "100 млн ₽", "5 млн ₽"), (2025, "120 млн ₽", "12 млн ₽")])))).replace(NB, " ")
-        self.assertIn("За 2025 год компания заработала 12 млн ₽ чистой прибыли при выручке 120 млн ₽ — 10 % выручки (годом раньше — 5 %)", f)
+        self.assertIn("Каждый рубль выручки «Ромашка» приносит больше: чистая прибыль «Ромашка» за 2025 год — 12 млн ₽, это 10 % от 120 млн ₽ (годом раньше — 5 %)", f)
 
     def test_dolg_rukovoditel_molodaya(self):
         f = " ".join(frazy_bloka(K.vstavit_znachit(stranica(osnovana="2024-05-01", V=[
             ("warn", "Задолженность перед бюджетом — 1,2 млн ₽ на 1 сентября 2026. Могла быть погашена после этой даты"),
             ("warn", "Руководитель сменился 2 месяца назад")], fns="40 млн ₽")))).replace(NB, " ")
         self.assertIn("в реестре с 2024 года (2 года): история короткая", f)
-        self.assertIn("задолженность перед бюджетом — 1,2 млн ₽: попросите у неё справку", f)
-        self.assertIn("У ООО «Ромашка» руководитель сменился 2 месяца назад — убедитесь", f)
+        self.assertIn("задолженность перед бюджетом — 1,2 млн ₽: попросите справку", f)
+        self.assertIn("У «Ромашка» руководитель сменился 2 месяца назад — убедитесь", f)
 
     def test_bez_vyruchki_bloka_net(self):
         s = stranica(ryad=[])
@@ -106,12 +106,76 @@ class TestNovayaKartochka(unittest.TestCase):
         self.assertEqual(K.vstavit_znachit(t), t)
 
 
+class TestUnikV2(unittest.TestCase):
+    """kartochki-unik-v2: варианты по фактам, «На фоне других компаний Делоскопа», «Перед оплатой» по признакам."""
+
+    def test_pribyl_iz_korotko(self):
+        # прибыли нет в таблице, но есть в «Коротко» — блок не пишет «прибыли нет» (было у «НЛМК» 12.10)
+        f = " ".join(frazy_bloka(K.vstavit_znachit(stranica(
+            V=[("ok", "Чистая прибыль за 2025 — 86,7 млрд ₽")],
+            ryad=[(2023, "699 млрд ₽", None), (2024, "738 млрд ₽", None), (2025, "606 млрд ₽", None)])))).replace(NB, " ")
+        self.assertIn("86,7 млрд ₽ чистой прибыли при выручке 606 млрд ₽", f)
+        self.assertNotIn("Прибыли в открытых данных", f)
+
+    def test_povorot_k_pribyli(self):
+        f = " ".join(frazy_bloka(K.vstavit_znachit(stranica(
+            ryad=[(2023, "10 млрд ₽", "1 млрд ₽"), (2024, "11 млрд ₽", "убыток 2 млрд ₽"), (2025, "12 млрд ₽", "1,5 млрд ₽")])))).replace(NB, " ")
+        self.assertIn("снова в плюсе: 1,5 млрд ₽ чистой прибыли при выручке 12 млрд ₽, а за 2024 год был убыток 2 млрд ₽", f)
+
+    def test_otlichie(self):
+        vse = {}
+        for i in range(6):
+            vse["77000000%02d" % i] = {"inn": "77000000%02d" % i, "imya": "ООО «Р%d»" % i, "razdel": "Энергетика",
+                                      "region": "Москва", "osnovana": R.dt.date(2000 + i, 1, 1), "g1": 2025,
+                                      "r1": (10 - i) * 1e9, "pr1": 1e8, "pr0": 1e8, "y0": 2021, "r0": 1e9, "let_ryada": 5}
+        tx, god = R.un_otlichie(vse["7700000000"], vse)
+        self.assertEqual(god, 2025)
+        self.assertIn("больше, чем у остальных 5 в разделе «Энергетика»", tx)
+        self.assertIn("«Р1» (9 млрд ₽)", tx.replace(NB, " "))
+        tx = R.un_otlichie(vse["7700000003"], vse)[0].replace(NB, " ")
+        self.assertIn("между «Р2» (8 млрд ₽) и «Р4» (6 млрд ₽)", tx)
+        self.assertFalse(K.STOP_SLOVA.search(tx))
+
+    def test_pered_po_priznakam(self):
+        bez = R.un_pered(R.un_fakty(stranica(ryad=[(2024, "100 млн ₽", "5 млн ₽"), (2025, "120 млн ₽", "12 млн ₽")])))
+        self.assertEqual(len(bez), 1)
+        self.assertIn("замечаний нет", bez[0])
+        self.assertIn("7700000000", bez[0])
+        s = R.un_pered(R.un_fakty(stranica(V=[("warn", "Руководитель сменился 2 месяца назад")],
+                                          ryad=[(2024, "100 млн ₽", "5 млн ₽"), (2025, "120 млн ₽", "убыток 12 млн ₽")])))
+        self.assertTrue(any("сменился 2 месяца назад" in x for x in s))
+        self.assertTrue(any("убыток 12" in x.replace(NB, " ") for x in s))
+        self.assertTrue(s[-1].startswith("Счёт от «Ромашка»"))
+
+    def test_pered_idempotentno(self):
+        t = ('<script type="application/ld+json">{"@graph": [{"@type": "Organization", "name": "ООО «Ромашка»", '
+             '"taxID": "7700000000"}]}</script><section class="co-sec co-pered" aria-labelledby="pered"><h2 id="pered">'
+             'Перед оплатой</h2><ul><li>старое</li></ul></section>')
+        t2 = R.pochinit_pered(t)
+        self.assertNotIn("старое", t2)
+        self.assertEqual(R.pochinit_pered(t2), t2)
+
+    def test_razbor_s_imenem(self):
+        t = ('<script type="application/ld+json">{"@graph": [{"@type": "Organization", "name": "ПАО «Ромашка»", '
+             '"taxID": "7700000000"}]}</script><section class="co-sec co-razbor"><h2 id="razbor">Разбор по цифрам</h2>'
+             '<p>За&nbsp;5&nbsp;лет выручка выросла в&nbsp;2&nbsp;раза</p></section>')
+        t2 = R.pochinit_razbor(t)
+        self.assertIn("<p>Выручка «Ромашка» за" + NB + "5" + NB + "лет выросла", t2)
+        self.assertIn('<h2 id="razbor">Разбор по цифрам</h2>', t2)
+        self.assertEqual(R.pochinit_razbor(t2), t2)
+
+    def test_kratkoe_imya(self):
+        self.assertEqual(R.un_kratkoe("ПАО «НЛМК»"), "«НЛМК»")
+        self.assertEqual(R.un_kratkoe("Банк ВТБ (ПАО)"), "Банк ВТБ (ПАО)")
+
+
 class TestOpublikovannye(unittest.TestCase):
     """Все карточки сайта: блок есть, ≥ 60 слов, без стоп-слов, свой у каждой компании."""
 
     @classmethod
     def setUpClass(cls):
         cls.str = {p.parent.name: chitat(p) for p in sorted((KOREN / "company").glob("[0-9]*-*/index.html"))}
+        K.un_zagruzit(str(KOREN))  # kartochki-unik-v2: контекст «На фоне других» — как при сборке
 
     def test_blok_na_kazhdoj(self):
         self.assertGreater(len(self.str), 0)

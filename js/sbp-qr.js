@@ -31,7 +31,7 @@
     return '<div class="sbp" data-sbp><div class="sbp__k">' + kartinka + '</div><div class="sbp__t">' +
       "<b>" + esc(o.zagolovok || "Оплата по СБП") + "</b>" +
       "Наведите камеру телефона на код или откройте приложение банка → «Оплата по QR». " + shagi +
-      " Без комиссии, деньги приходят сразу." +
+      " Без комиссии." +
       '<a class="sbp__a" href="' + esc(s) + '" rel="noopener" data-goal="oplata_sbp">Оплатить по СБП с телефона</a></div></div>';
   }
 

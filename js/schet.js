@@ -104,7 +104,18 @@
     var m = doc && doc.querySelector && doc.querySelector('meta[name="deloskop-rezhim"]');
     return !!(m && m.getAttribute("content") === "beta");
   }
-  var api = { vBete: vBete, innOk: innOk, emailOk: emailOk, bikOk: bikOk, rsOk: rsOk, ksOk: ksOk, ogrnipOk: ogrnipOk, summa: summa,
+  // oplata-alfa-v1 (12.10.2026): оплата картой и по СБП через банк — только при tarify.json → oplata_kartoj: true
+  // (ставится, когда банк выдал ключи и в оферте есть раздел об оплате картой; тест tests/oplata_kartoj.test.js) и не в бете.
+  var TEKST_KARTA = "Оплатить картой или по СБП";
+  var GRAZHDANE_DO = "Счёт — для компаний и ИП, без НДС. Для граждан оплата откроется позже — напишите на help@deloskop.ru, сообщим.";
+  var GRAZHDANE_KARTA = "Счёт — для компаний и ИП, без НДС. Гражданам ИНН не нужен: оплатите картой или по СБП — чек придёт на e-mail.";
+  function kartojMozhno(D) { return !!(D && D.oplata_kartoj === true && D.beta !== true); }
+  function teloKartoj(st, email) {
+    return st.produkt ? { produkt: st.produkt, email: email } : { tarif: st.tarif, srok: st.srok, email: email };
+  }
+  function bankovskayaSsylka(u) { return typeof u === "string" && /^https:\/\/[^\/\s"'<>]+\//.test(u); }
+  var api = { vBete: vBete, kartojMozhno: kartojMozhno, teloKartoj: teloKartoj, bankovskayaSsylka: bankovskayaSsylka,
+    TEKST_KARTA: TEKST_KARTA, GRAZHDANE_DO: GRAZHDANE_DO, GRAZHDANE_KARTA: GRAZHDANE_KARTA, innOk: innOk, emailOk: emailOk, bikOk: bikOk, rsOk: rsOk, ksOk: ksOk, ogrnipOk: ogrnipOk, summa: summa,
     rub: rub, produktIz: produktIz, propis: propis, podpisSummy: podpisSummy, tekstZayavki: tekstZayavki, mailtoZayavki: mailtoZayavki, ddmm: ddmm, innKontragenta: innKontragenta, pasportNa: pasportNa, sbpKommentarij: sbpKommentarij,
     SROKI: SROKI, SROK_TEKST: SROK_TEKST, NDS: NDS };
   if (typeof module !== "undefined" && module.exports) { module.exports = api; }
@@ -252,9 +263,10 @@
       '<input class="sf-hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" data-p="website">' +
       '<button class="sf-go" type="submit" data-go>Получить счёт</button>' +
       '<p class="sf-err" role="alert" data-err></p>' +
+      '<div data-karta hidden><button type="button" class="sf-go2" data-karta-go>' + TEKST_KARTA + '</button></div>' +
       // п. 57: для счёта основание обработки — договор (п. 5 ч. 1 ст. 6 152-ФЗ), галочка согласия не нужна (правовой пакет, разд. 4)
       '<p class="sf-mel" data-oferta>Нажимая кнопку, вы принимаете <a href="/oferta/" target="_blank" rel="noopener">оферту</a>; как мы обрабатываем данные — в <a href="/politika/" target="_blank" rel="noopener">Политике</a>.</p>' +
-      '<p class="sf-mel" data-grazhdane>Счёт — для компаний и ИП, без НДС. Для граждан оплата откроется позже — напишите на help@deloskop.ru, сообщим.</p>' +
+      '<p class="sf-mel" data-grazhdane>' + GRAZHDANE_DO + '</p>' +
       '<div class="sf-sbp" data-sbp-box hidden></div>' +
       '</form>';
     var f = box.querySelector("form"), $ = function (s) { return f.querySelector(s); };
@@ -301,6 +313,9 @@
     }
     function risovat() {
       sTarifami(function (DD) {
+        var k = kartojMozhno(DD), mk = $("[data-karta]");
+        if (mk) mk.hidden = !k;
+        $("[data-grazhdane]").textContent = k ? GRAZHDANE_KARTA : GRAZHDANE_DO;
         if (st.produkt) {
           var p = produktIz(DD, st.produkt);
           $("h3").textContent = "Счёт на «" + (p ? p.nazvanie : "Скорую под ключ").replace(/^Скорая/, "Скорую") + "»";
@@ -360,6 +375,27 @@
       pole(pEm, hEm, ""); return true;
     }
 
+    // Оплата картой/СБП сразу, без счёта: нужен только e-mail для чека (54-ФЗ). Карту вводят на странице банка.
+    function kartoj(telo, btn, err) {
+      var tekstKnopki = btn.textContent;
+      btn.disabled = true; btn.textContent = "Переходим в банк…"; err.textContent = "";
+      if (window.dlkGoal) window.dlkGoal("oplata_karta_start", { produkt: telo.produkt || telo.tarif || "schet" });
+      fetch(API + "/api/oplata/alfa/zakaz", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(telo) })
+        .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { r: r, j: j }; }); })
+        .then(function (o) {
+          if (o.r.ok && o.j.ok && bankovskayaSsylka(o.j.form_url)) { location.href = o.j.form_url; return; }
+          btn.disabled = false; btn.textContent = tekstKnopki;
+          if (o.j.pole === "email" && pEm) { pole(pEm, hEm, o.j.detail); pEm.focus(); return; }
+          err.textContent = o.j.detail || "Банк сейчас не ответил. Попробуйте через минуту или получите счёт.";
+        })
+        .catch(function () { btn.disabled = false; btn.textContent = tekstKnopki; err.textContent = "Банк сейчас не ответил. Попробуйте через минуту или получите счёт."; });
+    }
+    $("[data-karta-go]").addEventListener("click", function () {
+      if (!proveritEm()) return pEm.focus();
+      var t = teloKartoj(st, pEm.value.trim()); t.website = $('[data-p=website]').value;
+      kartoj(t, this, $("[data-err]"));
+    });
+
     f.addEventListener("submit", function (e) {
       e.preventDefault();
       var k = proveritK(), a = proveritInn(true), b = proveritEm();
@@ -404,11 +440,14 @@
         '<p style="font-size:15px;margin:0 0 6px">' + tekst + "</p>" +
         (j.gotov ? '<a class="sf-go" href="' + esc(j.url) + '" target="_blank" rel="noopener">Открыть счёт и скачать PDF</a>' : "") +
         // schet-konversiya-v1: «Отправить счёт бухгалтеру» — только когда API это умеет (j.buhgalteru)
+        (j.gotov && kartojMozhno(D) ? '<button type="button" class="sf-go2" data-karta-schet>' + TEKST_KARTA + '</button><p class="sf-err" role="alert" data-err2></p>' : "") +
         (j.gotov && j.buhgalteru === true ? '<a class="sf-go2" href="' + esc(j.url) + '#buhgalteru" target="_blank" rel="noopener">Отправить счёт бухгалтеру</a>' : "") +
         '<button type="button" class="' + (j.gotov ? "sf-go2" : "sf-go") + '" data-copy>Скопировать ссылку на счёт</button>' +
         '<p class="sf-mel">Нужен договор или счёт на другую компанию — напишите на <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>.</p>';
       f.querySelector("h3").focus();
       f.querySelector("[data-copy]").onclick = function () { kopirovat(j.url, this, "Ссылка скопирована"); };
+      var ks = f.querySelector("[data-karta-schet]");
+      if (ks) ks.onclick = function () { kartoj({ schet_nomer: String(j.nomer), email: j.email }, this, f.querySelector("[data-err2]")); };
       try { if (window.ym && window.DLK_METRIKA) window.ym(window.DLK_METRIKA, "reachGoal", "invoice_created"); } catch (e) {}
     }
     function zapasnoj(z, pismom) {

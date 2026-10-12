@@ -73,7 +73,7 @@ test('отменённое Указание 3073-У нигде на сайте �
   const koren = path.join(__dirname, '..'), plohie = [];
   (function obhod(d) {
     for (const f of fs.readdirSync(d, { withFileTypes: true })) {
-      if (/^(\.git|node_modules|tests)$/.test(f.name)) continue;
+      if (/^(\.git|node_modules|tests|vendor)$/.test(f.name)) continue; // vendor — чужой минифицированный код (is-v1)
       const p = path.join(d, f.name);
       if (f.isDirectory()) obhod(p);
       else if (/\.(html|js|json|mjs)$/.test(f.name) && f.name !== 'obnovleniya.json' && /3073/.test(fs.readFileSync(p, 'utf8'))) plohie.push(path.relative(koren, p));

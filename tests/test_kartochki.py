@@ -1087,6 +1087,12 @@ class TestKartochkiV4Kod(unittest.TestCase):
         self.assertEqual(K.imya('АО "ЛАБОРАТОРИЯ КАСПЕРСКОГО"'), "АО «Лаборатория Касперского»")  # kartochki-1210-n3: фамилия
         self.assertEqual(K.imya('АО "ПФ "СКБ КОНТУР"'), "АО «ПФ СКБ Контур»")  # kartochki-1210-n3: вложенные кавычки
         self.assertEqual(K.imya('ООО "ХЭДХАНТЕР"'), "ООО «Хэдхантер»")  # kartochki-1210-n3: правило регистра
+        self.assertEqual(K.imya('ЗАО "КРОК ИНКОРПОРЕЙТЕД"'), "ЗАО «Крок Инкорпорейтед»")  # kartochki-1210-n4
+        self.assertEqual(K.imya('ООО "ЯНДЕКС.ВЕРТИКАЛИ"'), "ООО «Яндекс.Вертикали»")  # kartochki-1210-n4: точка внутри
+        self.assertEqual(K.imya('ПАО "НОВАБЕВ ГРУПП"'), "ПАО «Новабев Групп»")  # kartochki-1210-n4
+        self.assertEqual(K.imya('ПАО "М.ВИДЕО"'), "ПАО «М.Видео»")  # kartochki-1210-n4: точка внутри
+        self.assertEqual(K.imya('ООО "ИНСТАМАРТ СЕРВИС"'), "ООО «Инстамарт Сервис»")  # kartochki-1210-n4
+        self.assertEqual(K.imya('ООО "СТД "ПЕТРОВИЧ"'), "ООО «СТД Петрович»")  # kartochki-1210-n4: вложенные кавычки
         self.assertEqual(K.imya('ПАО "ДЭК"'), "ПАО «ДЭК»")  # kartochki-1010f-n2: аббревиатура с гласной из 3 букв
         self.assertEqual(K.imya('ООО "ГАЗПРОМ МЕЖРЕГИОНГАЗ ЯРОСЛАВЛЬ"'), "ООО «Газпром межрегионгаз Ярославль»")  # kartochki-1010e-n2
         self.assertEqual(K.imya('ПАО "ТГК-14"'), "ПАО «ТГК-14»")  # kartochki-1010e-n2: аббревиатура с номером — как есть

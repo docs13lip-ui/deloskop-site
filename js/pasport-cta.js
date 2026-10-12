@@ -123,7 +123,8 @@
       return { sost: 'paket', knopka: 'Сформировать Паспорт', stroka: 'Осталось ' + pk.ostalos + ' из ' + vsego + (dd ? ' · до ' + dd : ''), href: put };
     }
     if (!T) return { sost: 'nejzvestno', knopka: 'Паспорт контрагента', stroka: '', href: put };
-    var r = { sost: 'gost', knopka: 'Паспорт на дату сделки — ' + rub(T.cena), stroka: 'Без подписки. PDF с QR-кодом, хранится в Кабинете.', href: '/schet/?produkt=pasport_razovyj' };
+    // pokupka-chestno-v1: ИНН проверенной компании — в ссылку на счёт: Паспорт покупают на неё (Метрика адрес с ИНН не видит — js/metrika.js)
+    var r = { sost: 'gost', knopka: 'Паспорт на дату сделки — ' + rub(T.cena), stroka: 'Без подписки. PDF с QR-кодом, хранится в Кабинете.', href: '/schet/?produkt=pasport_razovyj' + (/^(\d{10}|\d{12})$/.test(inn) ? '&inn=' + inn : '') };
     if (startVygodnee(T)) r.ssylka = { t: 'или «' + T.start + '» — ' + startPodskazka(T), href: '/tarify/#t-start', cel: 'start' };
     else if (T.paketShtuk && T.paketCena) r.ssylka = { t: T.paketShtuk + ' проверки — ' + rub(T.paketCena), href: '/schet/?produkt=paket_pasportov', cel: 'paket' };
     return r;
@@ -180,7 +181,7 @@
         if (sost !== 'gost' || !w.PasportOplata || e.ctrlKey || e.metaKey || e.shiftKey || e.button > 0) return;
         e.preventDefault();
         var href = a.getAttribute('href');
-        w.PasportOplata.otkryt({ nazvanie: a.getAttribute('data-naz') || '', doc: doc }).then(function (ok) { if (!ok) w.location.href = href; });
+        w.PasportOplata.otkryt({ nazvanie: a.getAttribute('data-naz') || '', inn: (/[?&]inn=(\d{10,12})/.exec(href) || [])[1] || '', doc: doc }).then(function (ok) { if (!ok) w.location.href = href; });
       });
     }
     return s;

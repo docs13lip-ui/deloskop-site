@@ -47,6 +47,9 @@ footer a{color:var(--muted)}
 <script src="/js/kopiya.js" defer></script>
 <link rel="icon" type="image/png" sizes="120x120" href="/favicon-120.png">
 <link rel="alternate" type="application/rss+xml" title="Разборы дел — Делоскоп" href="/praktika/rss.xml">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Делоскоп">
+<script src="/js/pwa.js" defer></script>
 </head>
 <body>
 <!--shapka-->
@@ -122,19 +125,19 @@ footer a{color:var(--muted)}
 <main id="main">
 <nav class="crumbs" aria-label="Навигация"><a href="/">Делоскоп</a><span>›</span><a href="/tarify/">Тарифы</a><span>›</span><span>Счёт</span></nav>
 <h1>Счёт для компании или ИП</h1>
-<!--oplata--><p class="sub">Выберите тариф и срок, впишите ИНН плательщика — счёт с реквизитами будет готов сразу.</p><!--/oplata--><!--v-bete--><template data-v-bete><p class="sub">Идёт открытая бета: Делоскоп работает бесплатно, счета не выставляем. Форма вернётся, когда откроем оплату.</p></template><!--/v-bete-->
+<!--oplata--><p class="sub" data-schet-sub>Выберите тариф и срок, впишите ИНН плательщика — счёт с реквизитами будет готов сразу.</p><!--/oplata--><!--v-bete--><template data-v-bete><p class="sub">Идёт открытая бета: Делоскоп работает бесплатно, счета не выставляем. Форма вернётся, когда откроем оплату.</p></template><!--/v-bete-->
 <div class="dve">
   <div class="card" id="forma"><noscript><p>Форме нужен JavaScript. Напишите на <a href="mailto:help@deloskop.ru?subject=%D0%A1%D1%87%D1%91%D1%82">help@deloskop.ru</a>: тариф, срок и ИНН плательщика — пришлём счёт.</p></noscript></div>
   <div>
 <!--oplata-->    <ol class="shagi">
       <li><b>Получите счёт</b>Реквизиты вашей компании подставим из ЕГРЮЛ по ИНН — вписывать ничего не нужно. Счёт откроется по ссылке, его можно скачать в PDF и переслать бухгалтеру.</li>
       <li><b>Оплатите с расчётного счёта</b>В назначении платежа — номер счёта. Он уже вписан в готовый текст назначения, его можно скопировать.</li>
-      <li><b>Доступ — в день зачисления</b>Не позднее следующего рабочего дня. Откроем тариф на почту из заявки и пришлём акт для бухгалтерии.</li>
+      <li><b>Доступ — в день зачисления</b>Не позднее следующего рабочего дня. <span data-schet-shag3>Откроем тариф на почту из заявки и пришлём акт для бухгалтерии.</span></li>
     </ol>
     <div class="fakt">
       <p><b>Без НДС.</b> Исполнитель применяет УСН и освобождён от НДС (п. 1 ст. 145 НК РФ), поэтому в счёте «Без налога (НДС)».</p>
       <p><b>Касса не нужна.</b> Оплата компанией или ИП с расчётного счёта — без кассового чека (п. 9 ст. 2 закона № 54-ФЗ).</p>
-      <p><b>Квартал</b> — три месяца по цене месяца, <b>год</b> — на 20% дешевле. Сравнить тарифы — <a href="/tarify/">на странице тарифов</a>.</p>
+      <p data-schet-kvartal><b>Квартал</b> — три месяца одним счётом, без скидки. <b>Год</b> — на&nbsp;20&nbsp;% дешевле. Сравнить тарифы — <a href="/tarify/">на странице тарифов</a>.</p>
     </div><!--/oplata--><!--v-bete--><!--/v-bete-->
   </div>
 </div>
@@ -142,7 +145,12 @@ footer a{color:var(--muted)}
 <script src="/js/schet.js"></script>
 <script>
 (function(){var q=new URLSearchParams(location.search);
-  DeloskopSchet.forma(document.getElementById('forma'),{tarif:q.get('tarif')||'pro',srok:q.get('srok')||'mes',produkt:q.get('produkt')});})();
+  /* pokupka-chestno-v1: разовая покупка — без «тарифа и срока»; Паспорт — на компанию из ?inn= */
+  var pr=q.get('produkt'),SH={pasport_razovyj:'Откроем Паспорт в кабинете на почту из заявки и пришлём акт для бухгалтерии.',paket_pasportov:'Добавим три развёрнутые проверки в кабинет на почту из заявки и пришлём акт для бухгалтерии.'};
+  if(pr&&/^[a-z_]{3,40}$/.test(pr)){var e=document.querySelector('[data-schet-sub]');if(e)e.textContent='Впишите ИНН плательщика — счёт с реквизитами будет готов сразу.';
+    e=document.querySelector('[data-schet-shag3]');if(e)e.textContent=SH[pr]||'Пришлём доступ на почту из заявки и акт для бухгалтерии.';
+    e=document.querySelector('[data-schet-kvartal]');if(e)e.hidden=true;}
+  DeloskopSchet.forma(document.getElementById('forma'),{tarif:q.get('tarif')||'pro',srok:q.get('srok')||'mes',produkt:q.get('produkt'),inn:q.get('inn')});})();
 </script>
 <!--podval--><div class="podval" role="contentinfo"><div class="podval__in"><div class="podval__cols"><nav class="podval__col" aria-label="Продукты"><p class="podval__h">Продукты</p><ul><li><a href="/">Проверка по ИНН</a></li><li><a href="/indeks/">Индекс Делоскопа</a></li><li><a href="/#shield">Щит</a></li><li><a href="/nalichnye/">Наличные глазами банка</a></li><li><a href="/kontragenty-iz-vypiski/">Кому вы платите</a></li><li><a href="/proverit-schet/">Проверь счёт</a></li><li><a href="/skoraya-115-fz/">Скорая 115-ФЗ</a></li><li><a href="/pasport/">Паспорт</a></li><li><a href="/delopis/">Делопись</a></li><li><a href="/tarify/">Тарифы</a></li></ul></nav><nav class="podval__col" aria-label="Знания"><p class="podval__h">Знания</p><ul><li><a href="/115-fz/">115-ФЗ простыми словами</a></li><li><a href="/nalogi/">Налоги</a></li><li><a href="/obnovleniya/">Что нового</a></li><li><a href="/company/">Компании</a></li><li><a href="/zhurnal/">Журнал</a></li></ul></nav><nav class="podval__col" aria-label="Компания"><p class="podval__h">Компания</p><ul><li><a href="/o-proekte/">О проекте</a></li><li><a href="/indeks/#metodika">Методика Индекса</a></li><li><a href="/tochnost/">Точность Индекса</a></li><li><a href="/cabinet.html">Кабинет</a></li><li><a href="/partneram/">Бухгалтерам и партнёрам</a></li><li><a href="/rekvizity/">Реквизиты и контакты</a></li><li><a href="mailto:help@deloskop.ru">help@deloskop.ru</a></li></ul></nav><nav class="podval__col" aria-label="Документы"><p class="podval__h">Документы</p><ul><li><a href="/oferta/">Публичная оферта</a></li><li><a href="/politika/">Политика обработки ПДн</a></li><li><a href="/soglasie/">Согласие на обработку ПДн</a></li><li><a href="/rassylki/">Согласие на рассылки</a></li><li><a href="/cookies/">Cookies и Метрика</a></li><li><a href="/vozvrat/">Возврат денег</a></li><li><a href="/partneram/usloviya/">Условия для партнёров</a></li><li><a href="/rekvizity/">Реквизиты</a></li></ul></nav></div><div class="podval__niz"><p>© 2026 Делоскоп · ОГРНИП 326480000055311 · <a href="/rekvizity/">Реквизиты</a></p><p>Сотрудничество, отзывы и предложения — <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>. Принимаем 24/7</p><p>Материалы носят информационный характер и не заменяют консультацию юриста</p></div></div></div><!--/podval-->
 </body>

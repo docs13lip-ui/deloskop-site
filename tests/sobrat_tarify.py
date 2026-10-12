@@ -246,6 +246,20 @@ h2.big{font-size:clamp(28px,4vw,40px);letter-spacing:-.03em;line-height:1.1;marg
 .plan-pod{margin:0;font-size:12.5px;line-height:1.45;color:var(--muted)}
 .besp{background:#E8F5EE;color:#0E4D2A;border-radius:20px;padding:18px 22px;font-size:17px;margin:20px 0 0}
 .besp a{color:#0E4D2A;text-decoration:underline}
+.sbp-t__k{display:grid;grid-template-columns:1fr 260px;gap:40px;align-items:start;background:var(--card);border-radius:var(--r);padding:28px 30px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.sbp-t__e{font-size:13px;font-weight:600;letter-spacing:.02em;color:var(--muted);margin:22px 0 8px}.sbp-t__e:first-child{margin-top:0}
+.sbp-t__v{display:flex;flex-wrap:wrap;gap:8px}
+.sbp-t__v button,.sbp-t__p button{border:0;font:inherit;font-size:15px;font-weight:500;min-height:44px;padding:10px 16px;border-radius:999px;cursor:pointer;background:#F0F0EC;color:var(--ink2)}
+.sbp-t__v button[aria-checked=true]{background:var(--ink);color:#fff}
+.sbp-t__p{display:inline-flex;gap:4px;background:#EBEBE6;border-radius:999px;padding:4px;margin:10px 0 0}.sbp-t__p[hidden]{display:none}.sbp-t__p button{background:transparent;min-height:40px;padding:8px 16px}
+.sbp-t__p button[aria-checked=true]{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.sbp-t__s{font-size:44px;font-weight:600;letter-spacing:-.03em;line-height:1.1;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sbp-t__m{font-size:24px;font-weight:600;letter-spacing:-.02em}
+.sbp-t__t{margin:10px 0 0;font-size:15px;line-height:1.5;color:var(--ink2)}
+.sbp-t__q{text-align:center}.sbp-t__kod svg{display:block;width:220px;height:220px;margin:0 auto}
+.sbp-t__ps{font-size:14px;line-height:1.45;color:var(--muted);margin:12px 0 0}
+.sbp-t__a{display:none}
+@media (max-width:760px){.sbp-t__k{grid-template-columns:1fr;gap:20px;padding:22px 18px}.sbp-t__q{order:2}.sbp-t__kod,.sbp-t__ps{display:none}.sbp-t__a{display:flex}.sbp-t__s{font-size:38px}}
 @media (max-width:1000px){.razovye{grid-template-columns:1fr}.plans{grid-template-columns:repeat(2,1fr)}.kalk{grid-template-columns:1fr}}
 @media (max-width:620px){.plans{grid-template-columns:1fr}.pravila{grid-template-columns:1fr}.f{grid-template-columns:1fr 128px}.pol{padding:4px 16px 18px}.itog{padding:22px 18px}.tabl th,.tabl td{padding:11px 10px;font-size:15px}}
 @media print{.top,.kalk,.period,footer{display:none}body{background:#fff}}
@@ -293,6 +307,70 @@ def razovye_html(D):
             + (f'<p class="pod">Скоро — подписки-дополнения:</p><ul class="skoro-spisok">{"".join(skoro)}</ul>\n' if skoro else ''))
 
 
+def sbp_ssylka(root):
+    """sbp-tarify-v1: ссылка статического QR СБП — один источник, js/sbp-qr.js (var SSYLKA). Пусто — блока нет."""
+    import re as _re_s
+    try:
+        src = open(os.path.join(root, 'js/sbp-qr.js'), encoding='utf-8').read()
+    except OSError:
+        return ''
+    m = _re_s.search(r'var SSYLKA = "([^"]*)";', src)
+    s = m.group(1) if m else ''
+    return s if _re_s.match(r'^https://qr\.nspk\.ru/[A-Za-z0-9]{20,40}(\?[A-Za-z0-9=&%._-]*)?$', s) else ''
+
+
+SBP_KOROTKO = {'pasport_razovyj': 'Паспорт контрагента', 'paket_pasportov': '3 развёрнутые проверки',
+               'pasport_svoj': 'Паспорт своей компании'}
+
+
+def sbp_html(D, root):
+    """sbp-tarify-v1 (решение владельца 12.10 ~11:45, п. 3): оплата по QR СБП для граждан — прямо на /tarify/, без окна счёта.
+    Статический QR Альфа-Банка: сумму вводит плательщик, в комментарии — e-mail. Суммы — только из tarify.json
+    (разовые покупки и платные тарифы, год и месяц). Блок — внутри <!--oplata-->: в бете его нет. Без ссылки банка — нет нигде."""
+    ss = sbp_ssylka(root)
+    if not ss:
+        return ''
+    chipy = []
+    for k, korotko in SBP_KOROTKO.items():
+        p = D.get(k)
+        if p and p.get('cena_rub'):
+            chipy.append((k, korotko, '«' + p['nazvanie'] + '»', p['cena_rub'], None))
+    for t in D['tarify']:
+        if t.get('mesyac', 0) > 0 and t.get('god', 0) > 0:
+            chipy.append((t['id'], '«' + t['nazvanie'] + '»', 'тариф «' + t['nazvanie'] + '»', t['god'], t['mesyac']))
+    if not chipy:
+        return ''
+    perv = next((c for c in chipy if c[0] == 'start'), chipy[0])
+    knopki = []
+    for k, korotko, polno, g, m in chipy:
+        on = 'true' if k == perv[0] else 'false'
+        atr = f' data-sg="{g}"' + (f' data-sm="{m}"' if m else '')
+        knopki.append(f'<button type="button" role="radio" aria-checked="{on}" data-sbp-id="{k}" data-sbp-chto="{html.escape(polno)}"{atr}>{html.escape(korotko)}</button>')
+    srok = ('<div class="sbp-t__p" role="radiogroup" aria-label="Срок тарифа" data-sbp-srok' + ('' if perv[4] else ' hidden') + '>'
+            '<button type="button" role="radio" aria-checked="true" data-sbp-s="god">На год</button>'
+            '<button type="button" role="radio" aria-checked="false" data-sbp-s="mes">На месяц</button></div>')
+    summa0 = f"{perv[3]:,}".replace(",", NB) + NB + '₽'
+    return ('<!--oplata--><section class="sbp-t" id="sbp" aria-labelledby="sbp-h" data-sbp-tarify>\n'
+            '<h2 class="big" id="sbp-h">Гражданам — по&nbsp;СБП</h2>\n'
+            '<p class="lid">Без счёта и&nbsp;без ИНН: перевод по&nbsp;QR-коду из&nbsp;приложения вашего банка. Без комиссии, деньги приходят сразу.</p>\n'
+            '<div class="sbp-t__k">\n <div class="sbp-t__l">\n'
+            '  <div class="sbp-t__e">1. Что оплачиваете</div>\n'
+            '  <div class="sbp-t__v" role="radiogroup" aria-label="Что оплачиваете">' + ''.join(knopki) + '</div>\n'
+            '  ' + srok + '\n'
+            '  <div class="sbp-t__e">2. Сумма перевода</div>\n'
+            '  <div class="sbp-t__s" data-sbp-summa aria-live="polite">' + summa0 + '</div>\n'
+            '  <div class="sbp-t__e">3. В комментарии к&nbsp;переводу</div>\n'
+            '  <div class="sbp-t__m">ваш e-mail</div>\n'
+            '  <p class="sbp-t__t">На этот адрес откроем <span data-sbp-nazv>' + html.escape(perv[2]) + '</span> не&nbsp;позднее рабочего дня после оплаты. '
+            'Компаниям и&nbsp;ИП&nbsp;— <a href="/schet/">по&nbsp;счёту</a>, с&nbsp;закрывающими документами.</p>\n'
+            ' </div>\n <div class="sbp-t__q">\n'
+            '  <div class="sbp-t__kod" data-sbp-kod></div>\n'
+            '  <p class="sbp-t__ps">Наведите камеру телефона на&nbsp;код или откройте приложение банка → «Оплата по&nbsp;QR».</p>\n'
+            '  <a class="cta primary sbp-t__a" href="' + html.escape(ss) + '" rel="noopener" data-goal="oplata_sbp">Оплатить по&nbsp;СБП с&nbsp;телефона</a>\n'
+            ' </div>\n</div>\n'
+            '<p class="pod">Условия — <a href="/oferta/">оферта</a>; возврат — <a href="/vozvrat/">«Возврат денег»</a>. Вопрос по&nbsp;оплате — <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>.</p>\n'
+            '</section><!--/oplata-->\n')
+
 _T = {t['id']: t for t in D['tarify']}
 opis = (f"Тарифы Делоскопа: бесплатно, Старт — {rub(_T['start']['mesyac'])} в месяц, Про — {rub(_T['pro']['mesyac'])}, Бизнес — {rub(_T['biznes']['mesyac'])}. "
         f"За год — скидка {D['skidka_god_procent']}%. Подбор тарифа без переплаты и окупаемость в рублях.")
@@ -306,6 +384,10 @@ OSN_BAND = (f'''<aside class="osn-band" aria-labelledby="osn-band-h">
 ''' if _osn and _osn.get('cena_rub') else '')
 
 RAZOVYE_HTML = razovye_html(D)
+SBP_HTML = sbp_html(D, ROOT)
+# sbp-tarify-v1: с блоком СБП строка под тарифами не говорит «только по счёту» — гражданам есть свой способ.
+OPLATA_KAK = ('Гражданам — <a href="#sbp">по СБП</a>, без счёта.' if SBP_HTML else 'Оплата — по счёту с расчётного счёта.')
+SBP_SKRIPTY = ('<script src="/js/qr-platezh.js" defer></script>\n<script src="/js/sbp-qr.js" defer></script>\n<script src="/js/sbp-tarify.js" defer></script>\n') if SBP_HTML else ''
 
 page = f'''<!doctype html>
 <html lang="ru">
@@ -349,9 +431,9 @@ page = f'''<!doctype html>
 <div class="plans">
 {chr(10).join(cards)}
 </div>
-<p class="pod">Не хватило развёрнутых проверок? {pak['tekst'].capitalize()} — {rub(pak['cena_rub'])} к любому платному тарифу или без подписки. {POD_MES} <!--oplata-->Компаниям и ИП — <a href="/schet/">по счёту</a> на месяц, квартал или год, с закрывающими документами. <!--/oplata--><!--v-bete--><!--/v-bete-->Цены указаны без НДС: исполнитель применяет УСН и освобождён от НДС (п. 1 ст. 145 НК РФ).<!--oplata--> Оплата — по счёту с расчётного счёта.<!--/oplata--><!--v-bete--><!--/v-bete--></p>
+<p class="pod">Не хватило развёрнутых проверок? {pak['tekst'].capitalize()} — {rub(pak['cena_rub'])} к любому платному тарифу или без подписки. {POD_MES} <!--oplata-->Компаниям и ИП — <a href="/schet/">по счёту</a> на месяц, квартал или год, с закрывающими документами. <!--/oplata--><!--v-bete--><!--/v-bete-->Цены указаны без НДС: исполнитель применяет УСН и освобождён от НДС (п. 1 ст. 145 НК РФ).<!--oplata--> {OPLATA_KAK}<!--/oplata--><!--v-bete--><!--/v-bete--></p>
 
-{RAZOVYE_HTML}
+{RAZOVYE_HTML}{SBP_HTML}
 <h2 class="big" id="podbor">Подбор без переплаты</h2>
 <p class="lid">Расскажите, как вы работаете, — покажем самый дешёвый тариф, которого хватит, и сколько денег он защищает.</p>
 <div class="kalk">
@@ -425,7 +507,7 @@ page = f'''<!doctype html>
 <script type="application/json" id="tarify-data">{json.dumps(D, ensure_ascii=False)}</script>
 <script src="tarify.js" defer></script>
 <script src="/js/schet.js" defer></script>
-<script src="/obnovleniya.js" defer></script>
+{SBP_SKRIPTY}<script src="/obnovleniya.js" defer></script>
 </body>
 </html>
 '''
@@ -504,6 +586,31 @@ if os.path.exists(_vz):
             _t2 = _re3.sub(r'(<span data-cena-shtuka="' + _k + r'">)[^<]*(</span>)', lambda m, _c=_c: m.group(1) + f'{_c:,}'.replace(',', NB) + m.group(2), _t2)
     if _t2 != _t:
         open(_vz, 'w', encoding='utf-8').write(_t2)
+
+# vozvrat-chestno-v1 ([Ночные запуски] 12.10.2026; [Право · Юрист 115-ФЗ] 11.10 14:40: «/vozvrat/ — строки о карте
+# прятать по флагу karta, оферту не трогать»): <!--karta-->…<!--/karta--> — видно только при "karta": true.
+# При false содержимое лежит в <template data-karta> (браузер не показывает, текст байт в байт тот же) — в обе стороны.
+_KBLOK = _re3.compile(r'<!--karta-->(.*?)<!--/karta-->', _re3.S)
+_KT = ('<template data-karta>', '</template>')
+
+
+def _karta_blok(m):
+    vnutri = m.group(1)
+    if vnutri.startswith(_KT[0]) and vnutri.endswith(_KT[1]):
+        vnutri = vnutri[len(_KT[0]):-len(_KT[1])]
+    return '<!--karta-->' + (vnutri if KARTA else _KT[0] + vnutri + _KT[1]) + '<!--/karta-->'
+
+
+for _f in ('vozvrat/index.html',):
+    _sk = os.path.join(ROOT, _f)
+    if not os.path.exists(_sk):
+        continue
+    _t = open(_sk, encoding='utf-8').read()
+    if '<!--karta-->' not in _t:
+        sys.exit(f'sobrat_tarify: в {_f} нет разметки <!--karta--> — строки о карте и автопродлении не спрятать')
+    _t2 = _KBLOK.sub(_karta_blok, _t)
+    if _t2 != _t:
+        open(_sk, 'w', encoding='utf-8').write(_t2)
 
 # Цены тарифов в тексте других страниц: <span data-cena="pro.god"> / "pro.mesyac" (например, «Обычный год «Про»» на /osnovatel/)
 _TAR = {x['id']: x for x in D['tarify']}

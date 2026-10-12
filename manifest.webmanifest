@@ -1,0 +1,38 @@
+{
+  "id": "/",
+  "name": "Делоскоп",
+  "short_name": "Делоскоп",
+  "description": "Проверка компаний по ИНН глазами банка и налоговой: Индекс Делоскопа, светофор сигналов, слежение за контрагентами.",
+  "lang": "ru",
+  "dir": "ltr",
+  "start_url": "/?utm_source=pwa&utm_medium=app",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#F5F5F2",
+  "theme_color": "#F5F5F2",
+  "categories": ["business", "finance", "productivity"],
+  "prefer_related_applications": false,
+  "icons": [
+    { "src": "/ikonki/ikonka-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/ikonka-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/ikonki/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/ikonki/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Проверить ИНН",
+      "short_name": "Проверить",
+      "description": "Проверка компании или ИП по ИНН",
+      "url": "/?utm_source=pwa&utm_medium=shortcut#inn",
+      "icons": [{ "src": "/ikonki/yarlyk-96.png", "sizes": "96x96", "type": "image/png" }]
+    },
+    {
+      "name": "Слежение",
+      "short_name": "Слежение",
+      "description": "Контрагенты под слежением в кабинете",
+      "url": "/cabinet.html?utm_source=pwa&utm_medium=shortcut#watch",
+      "icons": [{ "src": "/ikonki/yarlyk-96.png", "sizes": "96x96", "type": "image/png" }]
+    }
+  ]
+}

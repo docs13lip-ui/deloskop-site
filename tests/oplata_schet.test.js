@@ -78,7 +78,7 @@ test('счёт, акт и /schet/: О2, О4, О5 — дословно, реда�
   const red = chitat('oferta/index.html').match(/<p class="meta">Редакция от (\d{1,2} [а-я]+ \d{4})/)[1];
   assert.ok(chitat('schet/dokument/index.html').includes('<meta name="deloskop-oferta" content="' + red + '">'), 'meta = дата редакции');
   const sc = chitat('schet/index.html');
-  assert.ok(sc.includes('<li><b>Доступ — в день зачисления</b>Не позднее следующего рабочего дня. Откроем тариф на почту из заявки и пришлём акт для бухгалтерии.</li>'));
+  assert.ok(sc.includes('<li><b>Доступ — в день зачисления</b>Не позднее следующего рабочего дня. <span data-schet-shag3>Откроем тариф на почту из заявки и пришлём акт для бухгалтерии.</span></li>'));
   assert.doesNotMatch(sc, /Доступ — в день оплаты/);
 });
 

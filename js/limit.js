@@ -92,7 +92,7 @@
     }
     r.stroka = 'Завтра' + NB + '— снова ' + G + '. Без лимита' + NB + '— в' + NB + 'тарифе «' + T.start.nazvanie + '» за' + NB + rub(T.start.mesyac) + ' в' + NB + 'месяц.';
     r.knopki.push({ kuda: 'tarify', t: 'Тарифы', href: '/tarify/#start', primary: true });
-    if (inn && T.pasport) r.knopki.push({ kuda: 'pasport', t: T.pasport.nazvanie + NB + '— ' + rub(T.pasport.cena), href: '/schet/?produkt=pasport_razovyj', gost: true });
+    if (inn && T.pasport) r.knopki.push({ kuda: 'pasport', t: T.pasport.nazvanie + NB + '— ' + rub(T.pasport.cena), href: '/schet/?produkt=pasport_razovyj' + (/^(\d{10}|\d{12})$/.test(String(inn)) ? '&inn=' + inn : ''), gost: true });
     return r;
   }
 

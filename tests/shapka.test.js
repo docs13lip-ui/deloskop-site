@@ -13,7 +13,7 @@ const LOGO = '<svg width="36" height="32" viewBox="0 0 72 64" fill="none" aria-h
 function stranicy() {
   const vse = execSync('git ls-files "*.html"', { cwd: KOREN, encoding: 'utf8' }).split('\n').filter(Boolean);
   for (const d of ['oferta', 'politika', 'soglasie', 'vozvrat', 'rekvizity', 'cookies']) vse.push(d + '/index.html');
-  return [...new Set(vse)].filter(f => fs.existsSync(path.join(KOREN, f)) && f !== 'admin.html'
+  return [...new Set(vse)].filter(f => fs.existsSync(path.join(KOREN, f)) && !['admin.html', 'offline.html'].includes(f)
     && !/^(yandex_[0-9a-f]+|google[0-9a-f]+)\.html$/.test(f) && !f.startsWith('сайт/') && !f.startsWith('"') && !f.startsWith('tests/') && !f.startsWith('partials/'));
 }
 const SHAPKA = '<!--shapka-->\n' + chitat('partials/shapka.html').replace(/^\n+|\n+$/g, '') + '\n<!--/shapka-->';

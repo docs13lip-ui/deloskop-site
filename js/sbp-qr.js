@@ -7,7 +7,7 @@
 (function (root) {
   "use strict";
 
-  var SSYLKA = "";
+  var SSYLKA = "https://qr.nspk.ru/AS1A002VR3AE0FJH9QBR6JJT2S0SR4L6";
 
   function ssylka() {
     var s = (root.DELOSKOP_SBP_SSYLKA != null ? root.DELOSKOP_SBP_SSYLKA : SSYLKA) || "";

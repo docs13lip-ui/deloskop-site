@@ -505,6 +505,31 @@ if os.path.exists(_vz):
     if _t2 != _t:
         open(_vz, 'w', encoding='utf-8').write(_t2)
 
+# vozvrat-chestno-v1 ([Ночные запуски] 12.10.2026; [Право · Юрист 115-ФЗ] 11.10 14:40: «/vozvrat/ — строки о карте
+# прятать по флагу karta, оферту не трогать»): <!--karta-->…<!--/karta--> — видно только при "karta": true.
+# При false содержимое лежит в <template data-karta> (браузер не показывает, текст байт в байт тот же) — в обе стороны.
+_KBLOK = _re3.compile(r'<!--karta-->(.*?)<!--/karta-->', _re3.S)
+_KT = ('<template data-karta>', '</template>')
+
+
+def _karta_blok(m):
+    vnutri = m.group(1)
+    if vnutri.startswith(_KT[0]) and vnutri.endswith(_KT[1]):
+        vnutri = vnutri[len(_KT[0]):-len(_KT[1])]
+    return '<!--karta-->' + (vnutri if KARTA else _KT[0] + vnutri + _KT[1]) + '<!--/karta-->'
+
+
+for _f in ('vozvrat/index.html',):
+    _sk = os.path.join(ROOT, _f)
+    if not os.path.exists(_sk):
+        continue
+    _t = open(_sk, encoding='utf-8').read()
+    if '<!--karta-->' not in _t:
+        sys.exit(f'sobrat_tarify: в {_f} нет разметки <!--karta--> — строки о карте и автопродлении не спрятать')
+    _t2 = _KBLOK.sub(_karta_blok, _t)
+    if _t2 != _t:
+        open(_sk, 'w', encoding='utf-8').write(_t2)
+
 # Цены тарифов в тексте других страниц: <span data-cena="pro.god"> / "pro.mesyac" (например, «Обычный год «Про»» на /osnovatel/)
 _TAR = {x['id']: x for x in D['tarify']}
 for _f in ('osnovatel/index.html', 'index.html', 'nalogi/kalkulyator-tehnicheskij-postavshchik/index.html'):

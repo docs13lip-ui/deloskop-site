@@ -63,8 +63,8 @@ test('(2) бета: без цен, «Старта» и «войдите»; «т�
   assert.strictEqual(L.tekst({ tarify: null, beta: false }).beta, true);
 });
 
-test('(3) после беты: цены — из tarify.json; Паспорт — названием из оферты; одна primary', () => {
-  const t = L.iz(Object.assign({}, T, { beta: false }));
+test('(3) после беты: цены — из tarify.json; Паспорт — названием из оферты; одна primary (прежний экран — флаг ekran_limita выкл.)', () => {
+  const t = L.iz(Object.assign({}, T, { beta: false, ekran_limita: false }));
   const start = T.tarify.find((x) => x.id === 'start');
   const r = L.tekst({ tarify: t, beta: false, inn: '7707083893', stranica: 'glavnaya' });
   assert.strictEqual(r.beta, false);

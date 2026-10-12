@@ -13,7 +13,9 @@
  *
  * Отложенные ИНН — localStorage `dlk_otlozhennye`, до 5, ТОЛЬКО 10-значные ИНН организаций с верной
  * контрольной цифрой (12-значный ИНН ИП — персональные данные, не пишем). На сервер не уходит.
- * Метрика (через dlkGoal): limit_pokaz {stranica, beta}, limit_klik {kuda}, limit_otlozhennyj.
+ * Метрика (через dlkGoal): limit_pokaz {stranica, beta, vid}, limit_klik {kuda}, limit_otlozhennyj.
+ * ekran-limita-v1 (решение команды 12.10 ~11:45, п. 1): при tarify.json → ekran_limita: true вместо «Тарифы» —
+ * одно предложение по поведению на этом устройстве (pro / start / pasport), ниже — «можно ничего не покупать».
  */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -58,8 +60,15 @@
     if (!T) return null;
     var start = (T.tarify || []).filter(function (t) { return t && t.id === 'start'; })[0];
     var p = T.pasport_razovyj || {};
+    var pro = (T.tarify || []).filter(function (t) { return t && t.id === 'pro'; })[0];
+    var P = T.ekran_limita_pravila || {};
     return {
       beta: T.beta === true,
+      // ekran-limita-v1: предложение по поведению — только при ekran_limita: true (решение команды 12.10, п. 1)
+      ekran: T.ekran_limita === true,
+      pravila: { dni: P.dni_za_nedelyu > 0 ? Math.floor(P.dni_za_nedelyu) : 2, inn: P.inn_za_den > 0 ? Math.floor(P.inn_za_den) : 30 },
+      startGod: start && start.god > 0 ? { nazvanie: start.nazvanie || 'Старт', god: start.god, otchetov: start.otchetov || 0 } : null,
+      proGod: pro && pro.god > 0 ? { nazvanie: pro.nazvanie || 'Про', god: pro.god, otchetov: pro.otchetov || 0 } : null,
       gost: T.gost_v_den > 0 ? Math.floor(T.gost_v_den) : null,
       betaDo: T.beta_do || null,
       start: start && start.mesyac > 0 ? { nazvanie: start.nazvanie || 'Старт', mesyac: start.mesyac } : null,
@@ -90,10 +99,90 @@
       r.stroka = 'Завтра' + NB + '— снова ' + G + '. Пока идёт бета' + (srok ? ' (по' + NB + srok.slovami + ')' : '') + ', тарифы не' + NB + 'продаём и' + NB + 'счета не' + NB + 'выставляем.';
       return r;
     }
+    if (T.ekran) return ekranTekst(r, T, inn, G, o.povedenie);
     r.stroka = 'Завтра' + NB + '— снова ' + G + '. Без лимита' + NB + '— в' + NB + 'тарифе «' + T.start.nazvanie + '» за' + NB + rub(T.start.mesyac) + ' в' + NB + 'месяц.';
     r.knopki.push({ kuda: 'tarify', t: 'Тарифы', href: '/tarify/#start', primary: true });
     if (inn && T.pasport) r.knopki.push({ kuda: 'pasport', t: T.pasport.nazvanie + NB + '— ' + rub(T.pasport.cena), href: '/schet/?produkt=pasport_razovyj' + (/^(\d{10}|\d{12})$/.test(String(inn)) ? '&inn=' + inn : ''), gost: true });
     return r;
+  }
+
+
+  // ---------- ekran-limita-v1: одно предложение по поведению (решение команды 12.10 ~11:45, п. 1) ----------
+  // ≥ inn_za_den разных компаний за день → «Про» на год + партнёрская программа;
+  // лимит ≥ dni_za_nedelyu дней за 7 → «Старт» на год; иначе ИНН организации введён → Паспорт разово;
+  // иначе — «Старт» на год. Ниже — всегда честно: можно ничего не покупать, завтра снова G бесплатно.
+  // Цены — только из tarify.json. Тексты — черновик до ✎ [команда] (38-ФЗ: без давления и «успейте»).
+  function razvernutyh(n) {
+    var m10 = n % 10, m100 = n % 100;
+    if (m10 === 1 && m100 !== 11) return n + NB + 'развёрнутая проверка';
+    if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return n + NB + 'развёрнутые проверки';
+    return n + NB + 'развёрнутых проверок';
+  }
+  function vybor(T, inn, pov) {
+    pov = pov || {};
+    if (T.proGod && (pov.inn || 0) >= T.pravila.inn) return 'pro';
+    if (T.startGod && (pov.dni || 0) >= T.pravila.dni) return 'start';
+    if (inn && T.pasport) return 'pasport';
+    return T.startGod ? 'start' : 'tarify';
+  }
+  function ekranTekst(r, T, inn, G, pov) {
+    var v = vybor(T, inn, pov);
+    r.vid = v;
+    r.chestno = 'Можно ничего не' + NB + 'покупать: завтра снова ' + G + NB + 'бесплатных проверок.';
+    if (v === 'pro') {
+      r.stroka = 'Сегодня вы' + NB + 'проверили много компаний. В' + NB + 'тарифе «' + T.proGod.nazvanie + '»' + NB + '— быстрые проверки без лимита и' + NB + razvernutyh(T.proGod.otchetov) + ' в' + NB + 'месяц; бухгалтерам и' + NB + 'консультантам есть партнёрская программа.';
+      r.knopki.push({ kuda: 'pro_god', t: '«' + T.proGod.nazvanie + '» на' + NB + 'год' + NB + '— ' + rub(T.proGod.god), href: '/schet/?tarif=pro&srok=god', primary: true });
+      r.ssylki.unshift({ kuda: 'partneram', t: 'Партнёрская программа', href: '/partneram/' });
+    } else if (v === 'start') {
+      r.stroka = ((pov && pov.dni >= T.pravila.dni) ? 'Бесплатные проверки заканчиваются у' + NB + 'вас не' + NB + 'первый день за' + NB + 'неделю. ' : '') +
+        'В' + NB + 'тарифе «' + T.startGod.nazvanie + '»' + NB + '— быстрые проверки без лимита и' + NB + razvernutyh(T.startGod.otchetov) + ' в' + NB + 'месяц.';
+      r.knopki.push({ kuda: 'start_god', t: '«' + T.startGod.nazvanie + '» на' + NB + 'год' + NB + '— ' + rub(T.startGod.god), href: '/schet/?tarif=start&srok=god', primary: true });
+    } else if (v === 'pasport') {
+      r.stroka = 'Если эта компания нужна сегодня, её можно проверить развёрнуто и' + NB + 'разово, без подписки: источник и' + NB + 'дата у' + NB + 'каждого факта.';
+      r.knopki.push({ kuda: 'pasport', t: T.pasport.nazvanie + NB + '— ' + rub(T.pasport.cena), href: '/schet/?produkt=pasport_razovyj&inn=' + inn, primary: true, gost: true });
+    } else {
+      r.stroka = 'Завтра' + NB + '— снова ' + G + '.';
+      r.chestno = '';
+      r.knopki.push({ kuda: 'tarify', t: 'Тарифы', href: '/tarify/', primary: true });
+    }
+    return r;
+  }
+
+  // Поведение — только на этом устройстве, на сервер не уходит. dlk_limit_dni — московские дни, когда кончился лимит
+  // (последние 7); dlk_limit_den — сегодняшний день и короткие отпечатки проверенных ИНН (сами ИНН не храним).
+  var DNI_KEY = 'dlk_limit_dni', DEN_KEY = 'dlk_limit_den', OTP_MAX = 200;
+  function otpechatok(inn) {
+    var h = 0x811c9dc5, s = String(inn);
+    for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+    return (h >>> 12).toString(36); // 20 бит — сравнить можно, восстановить ИНН нельзя (миллионы ИНН на отпечаток)
+  }
+  function chitatJ(w, k, def) { var ls = hran(w); if (!ls) return def; try { var v = JSON.parse(ls.getItem(k) || 'null'); return v == null ? def : v; } catch (e) { return def; } }
+  function pisatJ(w, k, v) { var ls = hran(w); if (!ls) return false; try { ls.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+  function povedenie(w, now) {
+    now = now || Date.now();
+    var d = denMsk(now);
+    var dni = chitatJ(w, DNI_KEY, []), den = chitatJ(w, DEN_KEY, null);
+    dni = Array.isArray(dni) ? dni.filter(function (x) { return typeof x === 'number' && x > d - 7 && x <= d; }) : [];
+    var h = den && den.d === d && Array.isArray(den.h) ? den.h : [];
+    return { dni: dni.length, inn: h.length };
+  }
+  function otmetitInn(w, inn, now) {
+    inn = String(inn == null ? '' : inn).replace(/\D/g, '');
+    if (!/^(\d{10}|\d{12})$/.test(inn)) return povedenie(w, now);
+    now = now || Date.now();
+    var d = denMsk(now), den = chitatJ(w, DEN_KEY, null), o = otpechatok(inn);
+    var h = den && den.d === d && Array.isArray(den.h) ? den.h.slice(0, OTP_MAX) : [];
+    if (h.indexOf(o) < 0 && h.length < OTP_MAX) h.push(o);
+    pisatJ(w, DEN_KEY, { d: d, h: h });
+    return povedenie(w, now);
+  }
+  function otmetitLimit(w, inn, now) {
+    now = now || Date.now();
+    var d = denMsk(now), dni = chitatJ(w, DNI_KEY, []);
+    dni = Array.isArray(dni) ? dni.filter(function (x) { return typeof x === 'number' && x > d - 7 && x <= d; }) : [];
+    if (dni.indexOf(d) < 0) dni.push(d);
+    pisatJ(w, DNI_KEY, dni);
+    return otmetitInn(w, inn, now);
   }
 
   // ---------- отложенные ИНН (localStorage) ----------
@@ -152,6 +241,7 @@
     '.limit__kn{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}' +
     '.limit__kn a{display:inline-flex;align-items:center;min-height:44px;padding:10px 18px;border-radius:999px;font-weight:600;font-size:15px;text-decoration:none;box-sizing:border-box;max-width:100%}' +
     '.limit__kn .gh{border-radius:14px}.limit__kn .pr{background:var(--accent,#0B63E5);color:#fff}.limit__kn .gh{border:1px solid var(--line,#E6E6E1);color:var(--accent,#0B63E5);background:#fff}' +
+    '.limit p.limit__chestno{margin:10px 0 0;font-size:14px;color:var(--ink3,#6E6E73)}' +
     '.limit-vchera{margin-top:8px;font-size:15px;color:var(--ink2,#3A3A3C)}.limit-vchera button{font:inherit;border:0;background:none;padding:0;cursor:pointer}' +
     '.limit-vchera .go{color:var(--accent,#0B63E5)}.limit-vchera .x{color:var(--ink3,#8A8A8E);margin-left:12px;font-size:14px}';
   function stil(doc) {
@@ -211,6 +301,7 @@
       });
       box.appendChild(kn);
     }
+    if (r.chestno) box.appendChild(el(doc, 'p', 'limit__chestno', r.chestno));
     if (r.ssylki.length) {
       box.appendChild(el(doc, 'p', '', r.ssylkiZag));
       var ul = el(doc, 'ul', 'limit__ss');
@@ -235,9 +326,14 @@
     var beta = betaStranicy(doc);
     narisovat(box, tekst({ beta: true, inn: o.inn, stranica: o.stranica, sohranen: sohranen }), o);
     return tarifyZagruzit(doc).then(function (T) {
-      var r = tekst({ tarify: iz(T), beta: beta, inn: o.inn, stranica: o.stranica, sohranen: sohranen });
+      var t = iz(T), pov = null;
+      // ekran-limita-v1: поведение пишем, только когда экран предложения включён (и не в бете)
+      if (t && t.ekran && !beta && !t.beta) pov = otmetitLimit(w, o.inn);
+      var r = tekst({ tarify: t, beta: beta, inn: o.inn, stranica: o.stranica, sohranen: sohranen, povedenie: pov });
       if (!r.beta) narisovat(box, r, o);
-      cel(w, 'limit_pokaz', { stranica: o.stranica || '', beta: r.beta ? 1 : 0 });
+      var p = { stranica: o.stranica || '', beta: r.beta ? 1 : 0 };
+      if (r.vid) p.vid = r.vid;
+      cel(w, 'limit_pokaz', p);
       return r;
     }).catch(function () { return null; });
   }
@@ -261,12 +357,21 @@
     return x;
   }
   // Проверка прошла — ИНН больше не «отложенный».
-  function proveren(inn, w) { ubratInn(w || (typeof window !== 'undefined' ? window : null), String(inn || '').replace(/\D/g, '')); }
+  function proveren(inn, w) {
+    w = w || (typeof window !== 'undefined' ? window : null);
+    var x = String(inn || '').replace(/\D/g, '');
+    ubratInn(w, x);
+    // ekran-limita-v1: сколько разных компаний проверили сегодня — только при включённом экране предложения
+    var doc = w && w.document;
+    if (doc && !betaStranicy(doc)) tarifyZagruzit(doc).then(function (T) { var t = iz(T); if (t && t.ekran && !t.beta) otmetitInn(w, x); }).catch(function () {});
+  }
 
   return {
     tekst: tekst, iz: iz, innOrg: innOrg, rub: rub,
     spisok: spisok, sohranit: sohranit, kNapominaniyu: kNapominaniyu, ubratInn: ubratInn,
     pokazat: pokazat, napomnit: napomnit, proveren: proveren, ubrat: ubrat, mesto: mesto,
+    povedenie: povedenie, otmetitInn: otmetitInn, otmetitLimit: otmetitLimit, otpechatok: otpechatok, vybor: vybor,
+    DNI_KEY: DNI_KEY, DEN_KEY: DEN_KEY,
     KEY: KEY, MAX: MAX, LIMIT: LIMIT
   };
 });

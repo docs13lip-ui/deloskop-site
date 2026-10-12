@@ -153,6 +153,7 @@
     ".sf .sf-go2{display:flex;align-items:center;justify-content:center;width:100%;min-height:48px;border:1px solid #D9D9D4;border-radius:14px;background:#fff;color:var(--sf-ink);font:inherit;font-size:16px;font-weight:600;cursor:pointer;margin-top:10px;text-decoration:none;box-sizing:border-box}" +
     ".sf .sf-spin{width:18px;height:18px;border:2px solid rgba(255,255,255,.5);border-top-color:#fff;border-radius:50%;animation:sfs .8s linear infinite}@keyframes sfs{to{transform:rotate(360deg)}}" +
     "@media (prefers-reduced-motion:reduce){.sf .sf-spin{animation-duration:2.4s}}" +
+    ".sf .sbp{display:flex;gap:16px;align-items:center;margin:16px 0 0;padding:16px;border-radius:14px;background:rgba(127,127,127,.08)}.sf .sbp__k svg{display:block;width:132px;height:132px;border-radius:8px}.sf .sbp__t{font-size:13px;line-height:1.45;color:var(--sf-muted)}.sf .sbp__t b{color:var(--sf-ink);font-weight:600}.sf .sbp__t>b:first-child{display:block;font-size:15px;margin:0 0 4px}.sf .sbp__a{display:none;margin:10px 0 0;font-weight:600}@media (max-width:600px){.sf .sbp{flex-direction:column;align-items:flex-start}.sf .sbp__a{display:inline-block}}" +
     ".sf .sf-mel{font-size:13px;color:var(--sf-muted);margin:12px 0 0}.sf .sf-err{font-size:14px;color:var(--sf-bad);margin:10px 0 0;min-height:0}" +
     ".sf .sf-hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}" +
     ".sf .sf-ok{width:48px;height:48px;border-radius:50%;background:var(--ok-bg,#E8F5EE);display:flex;align-items:center;justify-content:center;margin:0 0 14px}" +
@@ -176,6 +177,36 @@
     return { fokus: function () { try { h.focus(); } catch (e) {} } };
   }
 
+  // sbp-qr-v1 (решение команды 12.10): гражданам — QR СБП Альфа-Банка с суммой выбранного тарифа.
+  // Блок появляется, только когда в js/sbp-qr.js задана ссылка банка; иначе остаётся прежняя строка «для граждан — позже».
+  var sbpZagruzka = null;
+  function sbpGotov(cb) {
+    if (window.DeloskopSBP && window.DeloskopQR) return cb();
+    if (!sbpZagruzka) {
+      sbpZagruzka = [];
+      var spisok = ["/js/qr-platezh.js", "/js/sbp-qr.js"].filter(function (u) { return u.indexOf("qr-platezh") > 0 ? !window.DeloskopQR : !window.DeloskopSBP; });
+      var ostalos = spisok.length;
+      spisok.forEach(function (u) {
+        var el = document.createElement("script"); el.src = u; el.async = false;
+        el.onload = el.onerror = function () { if (--ostalos === 0) { var q = sbpZagruzka; sbpZagruzka = true; q.forEach(function (f) { f(); }); } };
+        document.head.appendChild(el);
+      });
+    }
+    if (sbpZagruzka === true) return cb();
+    sbpZagruzka.push(cb);
+  }
+  function sbpRisovat(f, summaRub, chto) {
+    var box = f.querySelector("[data-sbp-box]"), str = f.querySelector("[data-grazhdane]");
+    if (!box) return;
+    sbpGotov(function () {
+      var h = window.DeloskopSBP && summaRub ? window.DeloskopSBP.html({ summa: summaRub, zagolovok: "Гражданам — по СБП, без ИНН",
+        kommentarij: "<b>ваш e-mail</b>: на него откроем «" + esc(chto || "Делоскоп") + "» не позднее рабочего дня после оплаты" }) : "";
+      box.innerHTML = h; box.hidden = !h;
+      if (str) str.textContent = h ? "Счёт — для компаний и ИП, без НДС. Гражданам счёт не нужен — оплата по СБП ниже." :
+        "Счёт — для компаний и ИП, без НДС. Для граждан оплата откроется позже — напишите на help@deloskop.ru, сообщим.";
+    });
+  }
+
   function forma(box, nach, vDialoge) {
     if (vBete()) return formaBeta(box);
     stili();
@@ -197,7 +228,8 @@
       '<p class="sf-err" role="alert" data-err></p>' +
       // п. 57: для счёта основание обработки — договор (п. 5 ч. 1 ст. 6 152-ФЗ), галочка согласия не нужна (правовой пакет, разд. 4)
       '<p class="sf-mel" data-oferta>Нажимая кнопку, вы принимаете <a href="/oferta/" target="_blank" rel="noopener">оферту</a>; как мы обрабатываем данные — в <a href="/politika/" target="_blank" rel="noopener">Политике</a>.</p>' +
-      '<p class="sf-mel">Счёт — для компаний и ИП, без НДС. Для граждан оплата откроется позже — напишите на help@deloskop.ru, сообщим.</p>' +
+      '<p class="sf-mel" data-grazhdane>Счёт — для компаний и ИП, без НДС. Для граждан оплата откроется позже — напишите на help@deloskop.ru, сообщим.</p>' +
+      '<div class="sf-sbp" data-sbp-box hidden></div>' +
       '</form>';
     var f = box.querySelector("form"), $ = function (s) { return f.querySelector(s); };
     var pInn = $('[data-p=inn]'), pEm = $('[data-p=email]');
@@ -214,6 +246,7 @@
           $("h3").textContent = "Счёт на «" + (p ? p.nazvanie : "Скорую под ключ").replace(/^Скорая/, "Скорую") + "»";
           $("[data-sum]").textContent = p ? rub(p.cena_rub) : "—";
           $("[data-pod]").textContent = p ? "разово" + (p.podarok ? " · " + p.podarok + " в подарок" : "") : "";
+          sbpRisovat(f, p && p.cena_rub, p && p.nazvanie);
           return;
         }
         var platnye = (DD && DD.tarify || []).filter(function (t) { return t.mesyac > 0; });
@@ -225,6 +258,7 @@
         var s = summa(DD, st.tarif, st.srok);
         $("[data-sum]").textContent = s ? rub(s) : "—";
         $("[data-pod]").textContent = s ? podpisSummy(DD, st.tarif, st.srok) : "";
+        sbpRisovat(f, s, t.nazvanie);
       });
     }
     risovat();

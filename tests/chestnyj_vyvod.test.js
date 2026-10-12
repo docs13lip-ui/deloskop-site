@@ -24,7 +24,7 @@ const VSE_NE = { sudy: blok('not_checked'), bankrotstvo: blok('not_checked'), fs
 test('бета: суды, банкротство и приставы не проверяли — вместо «Серьёзных признаков риска не найдено» честная строка', () => {
   const r = otvet(VSE_NE);
   const t = U.chestnoPoyasnenie(r, U.bezPovtora(r.verdict, 'Работать можно'));
-  assert.strictEqual(t, 'Не проверяли: арбитражные суды, банкротство, приставы — перед крупной оплатой посмотрите их сами');
+  assert.strictEqual(t, 'Не проверяли: арбитражные суды, банкротство, приставы. Перед крупной оплатой посмотрите их сами');
   assert.doesNotMatch(t, /в\s+этот\s+раз/, 'не подключённые — без «в этот раз» ([Право] 11.10, разд. 2)');
   assert.doesNotMatch(t, /риска не найдено/);
 });
@@ -37,13 +37,13 @@ test('проверено всё — пояснение из ответа API б�
 test('часть не проверена — перечислены только непроверенные; старый ответ без sostoyanie — по status', () => {
   const r = otvet({ sudy: blok('checked', 'found'), bankrotstvo: { status: 'not_found' }, fssp: { status: 'oshibka' } });
   assert.deepStrictEqual(U.neProverenyKlyuchevye(r), ['приставы']);
-  assert.match(U.chestnoPoyasnenie(r, 'Серьёзных признаков риска не найдено'), /^Не ответили в\u00a0этот раз: приставы — /);
+  assert.match(U.chestnoPoyasnenie(r, 'Серьёзных признаков риска не найдено'), /^Не ответили в\u00a0этот раз: приставы\. Перед крупной оплатой посмотрите их сами$/);
 });
 
 test('причины разные — «Пока не проверяем: … Не ответили в этот раз: …» (как в «Существенных фактах»)', () => {
   const r = otvet({ sudy: blok('not_checked'), bankrotstvo: blok('checked', 'not_found'), fssp: { status: 'oshibka' } });
   assert.strictEqual(U.chestnoPoyasnenie(r, 'Серьёзных признаков риска не найдено'),
-    'Пока не проверяем: арбитражные суды. Не ответили в\u00a0этот раз: приставы — перед крупной оплатой посмотрите их сами');
+    'Пока не проверяем: арбитражные суды. Не ответили в\u00a0этот раз: приставы. Перед крупной оплатой посмотрите их сами');
 });
 
 test('нет блока damia (старый API) или пояснение не «не найдено» — не трогаем', () => {

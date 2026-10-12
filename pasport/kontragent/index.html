@@ -143,7 +143,7 @@ td b{font-weight:600}
 .podpis{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:40px;font-size:12.5px;color:var(--muted)}
 .podpis div{border-top:1px solid var(--rule);padding-top:6px}
 .foot{margin-top:28px;font-size:12px;color:var(--muted);line-height:1.55}
-/* «Папка к договору» (Ночные 30.09 23:05): опись приложений — на экране блоком, в печати отдельной страницей только по кнопке «Папка к договору» */
+/* «Папка к договору» (команда 30.09 23:05): опись приложений — на экране блоком, в печати отдельной страницей только по кнопке «Папка к договору» */
 .pp{margin-top:34px;padding-top:18px;border-top:1px solid var(--rule)}
 .pp h2{font-size:19px;margin:0 0 4px;letter-spacing:-.01em}
 .pp .pp-k{font-size:13px;color:var(--ink2);margin:0 0 12px}
@@ -377,7 +377,7 @@ td b{font-weight:600}
 
   // «Проверьте сами» (прочерки 30.09, Прорыв Я-8): источник не подключён — даём дорогу к первоисточнику и ИНН в буфер.
   var INN='';
-  // «Отметка самопроверки» (Ночные 30.09 17:05): заказчик отмечает, что сам увидел в первоисточнике.
+  // «Отметка самопроверки» (команда 30.09 17:05): заказчик отмечает, что сам увидел в первоисточнике.
   // Хранится только в памяти этой вкладки (как «Решение о сделке»): ни fetch, ни хранилищ браузера;
   // статус раздела остаётся «не проверяли», в отпечаток SHA-256 не входит — P.vypustit считает из сведений.
   var OTM={};
@@ -469,14 +469,14 @@ td b{font-weight:600}
     return h+'</section>';
   }
 
-  // «Решение о сделке» (Прорыв «Я-3», Ночные 29.09 18:06): поля заполняет заказчик Паспорта в своём браузере.
+  // «Решение о сделке» (Прорыв «Я-3», команда 29.09 18:06): поля заполняет заказчик Паспорта в своём браузере.
   // Мы их не получаем и не храним: ни fetch, ни хранилища браузера; в отпечаток SHA-256 они не входят —
   // отпечаток считается из сведений (P.vypustit), а не из страницы, поэтому проверка подлинности не ломается.
   var RS={};
   var RS_RESH=[['platit','Платить'],['po_faktu','Платить после поставки или акта'],['ne_platit','Не платить']];
   function segodnya(){var d=new Date();function z(n){return (n<10?'0':'')+n}return z(d.getDate())+'.'+z(d.getMonth()+1)+'.'+d.getFullYear();}
   function rsZapomnit(){var f=document.getElementById('rs');if(!f)return;['dok','summa','zakupki','dokumenty','dolzhnost','data','pdolzh','pdata'].forEach(function(k){if(f[k])RS[k]=f[k].value});if(f.querySelector('input[name=pr]'))RS.pr=[].map.call(f.querySelectorAll('input[name=pr]:checked'),function(x){return x.value});var c=f.querySelector('input[name=resh]:checked');RS.resh=c?c.value:'';var o=f.querySelector('input[name=posn]:checked');RS.posn=o?o.value:'';}
-  // «Подписант на дату подписи» (Ночные 29.09 23:05): должность, основание и дата — от заказчика; сверка — P.podpisant, без сети.
+  // «Подписант на дату подписи» (команда 29.09 23:05): должность, основание и дата — от заказчика; сверка — P.podpisant, без сети.
   var RS_OSN=[['ustav','Руководитель, без доверенности'],['bumaga','Бумажная доверенность'],['mchd','Электронная доверенность (МЧД)']];
   function podpisantHtml(r,p){
     var sp=P.podpisant(r,p,{dolzhnost:RS.pdolzh,osnovanie:RS.posn,data:RS.pdata});
@@ -487,7 +487,7 @@ td b{font-weight:600}
     f.addEventListener('input',function(e){if(!/^(pdolzh|pdata|posn)$/.test(e.target.name||''))return;rsZapomnit();ul.innerHTML=podpisantHtml(r,p);});
     f.addEventListener('change',function(e){if((e.target.name||'')!=='posn')return;rsZapomnit();ul.innerHTML=podpisantHtml(r,p);});
   }
-  // «Лестница по сумме» (Ночные 30.09 21:05, п. 173): объём проверки по сумме, доле в закупках и признакам — js/lestnica.js, без сети.
+  // «Лестница по сумме» (команда 30.09 21:05, п. 173): объём проверки по сумме, доле в закупках и признакам — js/lestnica.js, без сети.
   // «Компании меньше 12 месяцев» отмечаем сами по ЕГРЮЛ, пока заказчик не тронул галочки.
   var L=window.Lestnica||null;
   function molodaya(r){var f=U&&U.facts?U.facts(r):null;return !!(f&&f.ageMonths!=null&&f.ageMonths<12);}
@@ -512,7 +512,7 @@ td b{font-weight:600}
     function obnovit(e){if(!/^(summa|zakupki|pr)$/.test(e.target.name||''))return;rsZapomnit();box.innerHTML=lestnicaHtml(summa,r);papkaObnovit();}
     f.addEventListener('input',obnovit);f.addEventListener('change',obnovit);
   }
-  // «Папка к договору» (Ночные 30.09 23:05): опись приложений из отметок, лестницы и поля «Запросили у контрагента» — js/papka.js, без сети.
+  // «Папка к договору» (команда 30.09 23:05): опись приложений из отметок, лестницы и поля «Запросили у контрагента» — js/papka.js, без сети.
   // На экране — блок после Паспорта; в печать попадает только по кнопке «Папка к договору» (обычный «Сохранить PDF» — без описи).
   var K=window.Papka||null, PP={};
   function papkaOpis(){
@@ -596,7 +596,7 @@ td b{font-weight:600}
     TEK={r:r,opts:opts,ix:ixKlyuch(p)};
     document.title='Паспорт контрагента: '+m.nazvanie+' — Делоскоп';
     // Ссылка «для коллеги» — по ИНН, не по номеру досье: получатель соберёт Паспорт заново, на день открытия,
-    // а номер досье (ключ к сведениям этой проверки) из рук не уходит (Ночные 29.09 19:07, Прорыв «Я-2»).
+    // а номер досье (ключ к сведениям этой проверки) из рук не уходит (команда 29.09 19:07, Прорыв «Я-2»).
     var link=m.demo||!/^\d{10}$/.test(String(m.inn||''))?location.href.replace(/[?&](summa|print|rezhim)=[^&]*/g,''):SAJT+'/pasport/kontragent/?inn='+m.inn;
     if(p.ip){pk.innerHTML='<div class="kol"><div class="brand">'+LOGO+'делоскоп</div></div><h1>'+esc(m.nazvanie)+'</h1><p>'+esc(p.tekst)+'</p>';msg.hidden=true;pk.hidden=false;return;}
     var osh=P.proverit(p);

@@ -228,6 +228,9 @@ IMENA_TOCHNO = {
     "РОЗА ХУТОР": "Роза Хутор",
     "ДЛ-ТРАНС": "ДЛ-Транс",
     "ПРОММАШ ТЕСТ": "Проммаш Тест",
+    # kartochki-1210-n3: фамилия с прописной; «ПФ» и «СКБ» — аббревиатуры, внутренние кавычки снимаем (как «Торговый дом Лента»)
+    "ЛАБОРАТОРИЯ КАСПЕРСКОГО": "Лаборатория Касперского",
+    "ПФ СКБ КОНТУР": "ПФ СКБ Контур",
 }
 
 
@@ -569,6 +572,21 @@ def iz_check(r):
                 if po_detali and not k["fakty"][kod]["data"] and re.match(r"ЕГРЮЛ", k["fakty"][kod]["istochnik"]):
                     k["fakty"][kod]["data"] = k["egrul_data"]
                 break
+    # kartochki-fssp-v1 (Ночные-2, 12.10): после istochniki-v1 приставы приходят не сигналом светофора, а блоком
+    # damia.fssp (status «polucheno», sostoyanie found/not_found, data_svedeniy) — V11/V12 не выходили ни у кого.
+    # Берём только ответ с датой сведений и ясным состоянием; not_checked и «нет даты» — факта нет («не проверяли»).
+    fb = (r.get("damia") or {}).get("fssp")
+    if "fssp" not in k["fakty"] and isinstance(fb, dict) and fb.get("sostoyanie") in ("found", "not_found") \
+            and data_iz(fb.get("data_svedeniy")):
+        dn = fb.get("dannye") if isinstance(fb.get("dannye"), dict) else {}
+        nashli = fb["sostoyanie"] == "found"
+        k["fakty"]["fssp"] = {
+            "kod": "fssp", "zagolovok": str(fb.get("nazvanie") or "Приставы"), "detal": str(fb.get("itog") or ""),
+            "ton": "warn" if nashli else "ok",
+            "istochnik": str(fb.get("istochnik") or "ФССП: исполнительные производства"),
+            "data": data_iz(fb.get("data_svedeniy")),
+            "znachenie": chislo(dn.get("ostatok")) if nashli else None, "god": None,
+        }
     # числа из досье (kpi) — дополняют сигналы; дата — у одноимённого сигнала или общая дата наборов ФНС
     D = r.get("dossier") or {}
     fns_data = data_iz(r.get("fns_data")) or data_iz(((r.get("daty") or {}).get("dannye") or {}).get("ФНС")

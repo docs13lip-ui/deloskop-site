@@ -1084,6 +1084,9 @@ class TestKartochkiV4Kod(unittest.TestCase):
         self.assertEqual(K.imya('ООО "ПРОММАШ ТЕСТ"'), "ООО «Проммаш Тест»")  # kartochki-1210-n2
         self.assertEqual(K.imya('АО "СВЯЗЬТРАНСНЕФТЬ"'), "АО «Связьтранснефть»")  # kartochki-1210-n2: правило регистра
         self.assertEqual(K.imya('АО "ТГК-11"'), "АО «ТГК-11»")  # kartochki-1210-n2: аббревиатура с номером
+        self.assertEqual(K.imya('АО "ЛАБОРАТОРИЯ КАСПЕРСКОГО"'), "АО «Лаборатория Касперского»")  # kartochki-1210-n3: фамилия
+        self.assertEqual(K.imya('АО "ПФ "СКБ КОНТУР"'), "АО «ПФ СКБ Контур»")  # kartochki-1210-n3: вложенные кавычки
+        self.assertEqual(K.imya('ООО "ХЭДХАНТЕР"'), "ООО «Хэдхантер»")  # kartochki-1210-n3: правило регистра
         self.assertEqual(K.imya('ПАО "ДЭК"'), "ПАО «ДЭК»")  # kartochki-1010f-n2: аббревиатура с гласной из 3 букв
         self.assertEqual(K.imya('ООО "ГАЗПРОМ МЕЖРЕГИОНГАЗ ЯРОСЛАВЛЬ"'), "ООО «Газпром межрегионгаз Ярославль»")  # kartochki-1010e-n2
         self.assertEqual(K.imya('ПАО "ТГК-14"'), "ПАО «ТГК-14»")  # kartochki-1010e-n2: аббревиатура с номером — как есть
@@ -2214,6 +2217,40 @@ class TestRazborCifry(unittest.TestCase):
         t = "".join(chitat(p) for p in stranicy(d))
         self.assertIn('<h2 id="razbor">Разбор по цифрам</h2>', t)
         self.assertIn("◆ рассчитано Делоскопом", t)
+
+
+class TestFsspIzDamia(unittest.TestCase):
+    """kartochki-fssp-v1: приставы из блока damia.fssp (istochniki-v1) → V11/V12; not_checked и без даты — вывода нет."""
+    def zap(self, sost, data="2026-09-29T10:00+03:00", ostatok=0):
+        z = O.zapis(3)
+        # без штата и налогов — иначе образец упирается в предел «не больше 6 выводов» раньше приставов
+        z["signals"] = [s for s in z["signals"] if not re.search(r"численност|Уплаченные", s["title"])]
+        z["damia"] = {"fssp": {"nazvanie": "Приставы", "istochnik": "ФССП: исполнительные производства (через DaMIA)",
+                               "status": "polucheno", "sostoyanie": sost, "data_svedeniy": data,
+                               "dannye": {"otkryto": 1 if ostatok else 0, "ostatok": ostatok}}}
+        return z
+
+    def kody(self, z):
+        return [v["kod"] for v in K.vyvody(K.iz_check(z))]
+
+    def test_ne_nashli_v11(self):
+        k = K.iz_check(self.zap("not_found"))
+        self.assertEqual(k["fakty"]["fssp"]["ton"], "ok")
+        v = [x for x in K.vyvody(k) if x["kod"] == "V11"]
+        self.assertTrue(v)
+        self.assertIn("Долгов у приставов не нашли", v[0]["tekst"])
+
+    def test_nashli_v12_s_summoj(self):
+        k = K.iz_check(self.zap("found", ostatok=250000))
+        self.assertEqual(k["fakty"]["fssp"]["znachenie"], 250000.0)
+        self.assertIn("V12", [x["kod"] for x in K.vyvody(k)])
+
+    def test_ne_proveryali_i_bez_daty_net_vyvoda(self):
+        for z in (self.zap("not_checked"), self.zap("not_found", data=None)):
+            self.assertNotIn("fssp", K.iz_check(z)["fakty"])
+
+    def test_staryj_otvet_bez_damia_kak_byl(self):
+        self.assertNotIn("fssp", K.iz_check(O.zapis(3))["fakty"])
 
 
 if __name__ == "__main__":

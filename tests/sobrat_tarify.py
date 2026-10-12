@@ -11,6 +11,16 @@ D = json.load(open(os.path.join(ROOT, 'tarify/tarify.json'), encoding='utf-8'))
 # gost-limit-10-sait-v1: «Бесплатно навсегда: N проверок в день» — число из tarify.json → gost_v_den
 _G = BETA.gost_v_den(ROOT)
 GOST = f'{_G} {BETA.proverok(_G)}'
+# chislo-bystryh-v1 (12.10): «Бесплатно — N быстрых проверок в день» — то же число, что в полосе беты и на экране лимита.
+# До 12.10 тариф «Бесплатно» на /tarify/ и строка цен на главной говорили «3», хотя API даёт gost_v_den (10).
+BYSTRYH = f'{_G} {BETA.bystryh(_G)} в день'
+import re as _re_b
+_RE_BYSTRYH = _re_b.compile(r'^\d+ быстр[а-яё]+ провер[а-яё]+ в день$')
+for _t in D['tarify']:
+    if _t['id'] == 'free':
+        _t['chto'] = [BYSTRYH if _RE_BYSTRYH.match(x) else x for x in _t['chto']]
+        if BYSTRYH not in _t['chto']:
+            sys.exit('tarify.json: у тарифа «Бесплатно» нет строки «N быстрых проверок в день» — число берётся из gost_v_den')
 import startovaya as STV  # noqa: E402  (start390-v1: стартовая цена «Старта» включается вместе с оплатами)
 D, _ = STV.vklyuchit(ROOT, D)
 STV.redakciya_pri_oplatah(ROOT, D)  # oplata-schet-v1: дата редакции оферты — день включения оплат (один раз)
@@ -432,6 +442,11 @@ _m = open(_mp, encoding='utf-8').read()
 # glavnaya-v2 (01.10): на главной больше нет карточек тарифов — только строка «Сколько стоит» с ценами
 # в узлах <span data-cena="<тариф>.mesyac|god"> (их заполняет цикл ниже, как на /osnovatel/). Кнопок оплаты на главной нет.
 _m = BETA.primenit(_m, D.get('beta') is True)
+# chislo-bystryh-v1: «Бесплатно — N быстрых проверок в день» в строке цен — из gost_v_den (было «3» при лимите 10)
+_m, _nb = _re.subn(r'(<p class="lead" data-ceny-stroka>Бесплатно&nbsp;— )\d+&nbsp;быстр[а-яё]+ провер[а-яё]+ в&nbsp;день',
+                   lambda mm: mm.group(1) + BYSTRYH.replace(' ', '&nbsp;', 1).replace(' в день', ' в&nbsp;день'), _m)
+if _nb != 1:
+    sys.exit('index.html: строка цен «Бесплатно — N быстрых проверок в день» не найдена (data-ceny-stroka)')
 # start390-glavnaya-v1 (10.10): в бете под строкой цен — стартовая цена «Старта», как на /tarify/ и в отчёте о проверке
 _m = _re.sub(r'<!--start-gl-->.*?<!--/start-gl-->', '', _m, flags=_re.S)
 _sgl = STV.stroka_glavnaya_beta(D)

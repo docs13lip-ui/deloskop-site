@@ -116,7 +116,9 @@ ok('v3: лестница цены — разовый дороже штуки в 
    PR['cena_rub'] > _sht and all(_sht > T[x]['mesyac'] / T[x]['otchetov'] for x in ('start', 'pro', 'biznes')))
 ok('v3: в тарифах развёрнутых проверок 3 / 20 / 80', [T[x]['otchetov'] for x in ('start', 'pro', 'biznes')] == [3, 20, 80]
    and all(f'{T[x]["otchetov"]} развёрнут' in ' '.join(T[x]['chto']) for x in ('start', 'pro', 'biznes')))
-ok('v3: бесплатно — 3 быстрые проверки в день, в тарифах быстрые без лимита', '3 быстрые проверки в день' in T['free']['chto']
+_GB = D['gost_v_den']  # chislo-bystryh-v1: число — из tarify.json → gost_v_den (10.10: 10 в день)
+ok('v3: бесплатно — N быстрых проверок в день (N = gost_v_den), в тарифах быстрые без лимита',
+   any(x.startswith(f'{_GB} быстр') and x.endswith(' в день') for x in T['free']['chto'])
    and all('Быстрые проверки без лимита' in T[x]['chto'] for x in ('start', 'pro')))
 ok('v3: «Паспорт своей компании» — в «Про»', 'Паспорт своей компании с проверкой подлинности' in T['pro']['chto'])
 _vse = main + pg + rd('osnovatel/index.html')

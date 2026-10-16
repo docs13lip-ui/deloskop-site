@@ -4,6 +4,9 @@
  *   1) кабинет — карточка «Чего не хватает в Делоскопе?»: темы-кнопки + строка своими словами, одно действие «Отправить»;
  *   2) под отчётом проверки — одна строка «Что добавить в отчёт?»: после 3-й разной компании на этом устройстве
  *      и не чаще раза в 30 дней (закрыли «Не сейчас» — тоже 30 дней тишины).
+ * golos-klienta-v2 (16.10.2026, обратная связь — главный продукт): строку под отчётом видят и гости —
+ *      после 2-й разной компании (у гостя всего 10 проверок в день, ждать третью — потерять половину ответов), та же пауза 30 дней.
+ *      Гость отправляет без cookie входа — сервер хранит ответ как анонимный (как «Полезно?»); почту и ИНН не шлём по-прежнему.
  * Отправка — тот же POST https://api.deloskop.ru/api/otzyv, что у «Полезно?» (js/otzyv.js), с cookie входа
  * (связь с аккаунтом — только на сервере, по id сессии; почту и имя сайт не отправляет):
  *   {id, stranica, vid: "kabinet" | "otchet", ocenka: "golos", tema: "sudy,bank" | "", tekst?, rezhim: "rabota"}
@@ -15,7 +18,7 @@
 (function (root) {
   "use strict";
   var MAX = 500;
-  var DEN = 864e5, PAUZA_DNEJ = 30, POSLE_KOMPANIJ = 3;
+  var DEN = 864e5, PAUZA_DNEJ = 30, POSLE_KOMPANIJ = 3, POSLE_KOMPANIJ_GOST = 2;
   // порядок — из решения команды 12.10; ключи уходят на сервер, подписи — только на экран
   var TEMY = [
     { k: "sudy", t: "Суды и банкротства" },
@@ -91,12 +94,12 @@
     return s;
   }
   function pokazat(sost, voshel, seichas) {
-    if (!voshel || !sost) return false;
-    if ((+sost.n || 0) < POSLE_KOMPANIJ) return false;
+    if (!sost) return false;
+    if ((+sost.n || 0) < (voshel ? POSLE_KOMPANIJ : POSLE_KOMPANIJ_GOST)) return false;
     return !sost.t || (seichas - sost.t) >= PAUZA_DNEJ * DEN;
   }
 
-  var api = { TEMY: TEMY, T: T, MAX: MAX, PAUZA_DNEJ: PAUZA_DNEJ, POSLE_KOMPANIJ: POSLE_KOMPANIJ,
+  var api = { TEMY: TEMY, T: T, MAX: MAX, PAUZA_DNEJ: PAUZA_DNEJ, POSLE_KOMPANIJ: POSLE_KOMPANIJ, POSLE_KOMPANIJ_GOST: POSLE_KOMPANIJ_GOST,
     chistyj: chistyj, tema: tema, telo: telo, mailto: mailto, otpechatok: otpechatok, uchest: uchest, pokazat: pokazat, novyjId: novyjId };
   if (typeof module !== "undefined" && module.exports) { module.exports = api; }
   if (typeof document === "undefined") return;

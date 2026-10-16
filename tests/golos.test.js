@@ -48,16 +48,19 @@ test('(3) темы — шесть, как в решении команды; по
   assert.ok(!/!|лучш|самый|гарант|бесплатн|скидк|ИИ|нейросет/i.test(vse), vse);
 });
 
-test('(4) строка под отчётом: только вошедшим, с 3-й разной компании, потом 30 дней тишины', () => {
+test('(4) строка под отчётом: вошедшим — с 3-й разной компании, гостям — со 2-й (v2), потом 30 дней тишины', () => {
   let s = {};
   const t0 = Date.parse('2026-10-12T12:00:00Z');
   s = G.uchest(s, '7707083893'); assert.strictEqual(G.pokazat(s, true, t0), false);
   s = G.uchest(s, '7707083893'); assert.strictEqual(s.n, 1, 'та же компания подряд не считается');
+  assert.strictEqual(G.pokazat(s, false, t0), false, 'гостю после одной компании рано');
   s = G.uchest(s, '7736207543'); assert.strictEqual(G.pokazat(s, true, t0), false);
+  assert.strictEqual(G.pokazat(s, false, t0), true, 'гостю — со 2-й компании (v2)');
   s = G.uchest(s, '7702070139');
   assert.strictEqual(s.n, 3);
-  assert.strictEqual(G.pokazat(s, false, t0), false, 'без входа не спрашиваем');
   assert.strictEqual(G.pokazat(s, true, t0), true);
+  assert.strictEqual(G.POSLE_KOMPANIJ_GOST, 2);
+  assert.strictEqual(G.pokazat(Object.assign({}, s, { t: t0 }), false, t0 + 29 * DEN), false, 'гостю тоже 30 дней тишины');
   s.t = t0;
   assert.strictEqual(G.pokazat(G.uchest(s, '7710140679'), true, t0 + 29 * DEN), false);
   assert.strictEqual(G.pokazat(G.uchest(s, '7710140679'), true, t0 + 30 * DEN), true);

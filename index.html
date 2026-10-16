@@ -699,7 +699,7 @@ footer a{color:var(--ink2)}
     if(window.Rentabelnost){try{Rentabelnost.mount(report,r).catch(function(){})}catch(e){}}
     // «НДС в 2027 году» — выручка 2025 года поставщика на упрощёнке рядом с порогом 20 млн ₽ (п. 1 ст. 145 НК), только к сведению; js/nds-porog.js
     if(!svoj&&window.NdsPorog){try{NdsPorog.mount(report,r)}catch(e){}}
-    // golos-klienta-v1: «Что добавить в отчёт?» — вошедшим, после 3-й разной компании, не чаще раза в 30 дней (js/golos.js)
+    // golos-klienta-v1/v2: «Что добавить в отчёт?» — вошедшим после 3-й разной компании, гостям после 2-й, не чаще раза в 30 дней (js/golos.js)
     if(window.DlkGolos){try{DlkGolos.posleProverki(report,r,{api:CAPI})}catch(e){}}
   }
   // moduli-do-otveta-v1 [команда]: модули отчёта (Usloviya, Otchet, Dinamika, IndeksOtvet…) подключены с defer и исполняются только

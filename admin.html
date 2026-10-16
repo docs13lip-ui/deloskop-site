@@ -106,6 +106,24 @@ select:disabled,input:disabled{background:var(--bg);color:var(--muted)}
 .bz-err{color:var(--muted)}
 .bz-run{margin:8px 0 0 20px;border:0;background:none;padding:4px 0;font:inherit;font-size:13px;font-weight:600;color:var(--accent);cursor:pointer;min-height:32px}
 .bz-run:disabled{color:var(--muted);cursor:default}
+/* Пульт v2 — экран «Сейчас» (pult-v2, 16.10.2026) */
+.pult{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+@media (max-width:640px){.pult{grid-template-columns:1fr}}
+.pl{background:var(--bg);border-radius:16px;padding:16px 18px;border-left:4px solid var(--line)}
+.pl--ok{border-left-color:var(--ok)} .pl--warn{border-left-color:var(--warn);background:var(--warn-bg)} .pl--bad{border-left-color:var(--bad);background:var(--bad-bg)} .pl--seryj{border-left-color:var(--line)}
+.pl__top{display:flex;align-items:baseline;gap:10px}
+.pl__dot{width:10px;height:10px;border-radius:50%;background:var(--line);flex:none;align-self:center}
+.pl--ok .pl__dot{background:var(--ok)} .pl--warn .pl__dot{background:var(--warn)} .pl--bad .pl__dot{background:var(--bad)}
+.pl__n{font-size:30px;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}
+.pl__p{margin:2px 0 0;color:var(--muted);font-size:13px}
+.pl__s{margin:10px 0 0;font-size:14px;line-height:1.45;color:var(--ink)}
+.pl__d{margin:6px 0 0;font-size:14px;line-height:1.45;color:var(--ink2);font-weight:500}
+.pl__m{margin:6px 0 0;font-size:13px;color:var(--muted)}
+.pl__list{margin:8px 0 0;padding:0 0 0 18px;font-size:13px;line-height:1.5} .pl__list a{overflow-wrap:anywhere}
+.pl__a{display:inline-block;margin-top:10px;font-size:14px;font-weight:600}
+.pult-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.pult-head .muted{font-size:13px}
+.pl-btn{border:0;background:none;padding:0;font:inherit;font-size:13px;font-weight:600;color:var(--accent);cursor:pointer;min-height:32px}
 </style>
 </head>
 <body>
@@ -141,6 +159,17 @@ select:disabled,input:disabled{background:var(--bg);color:var(--muted)}
       </div>
     </section>
 
+
+    <section class="card" id="pultSek">
+      <div class="pult-head"><h2 style="margin:0">Сейчас</h2><span class="muted"><span id="plKogda">проверяем страницы…</span> · <button class="pl-btn" type="button" id="plPovtor">Проверить сейчас</button></span></div>
+      <p class="muted" id="plObn" style="margin-top:6px"></p>
+      <div class="pult" aria-live="polite">
+        <div class="pl pl--seryj" id="plStr"><div class="pl__top"><span class="pl__dot"></span><b class="pl__n">—</b></div><p class="pl__p">страницы ещё не проверяли</p></div>
+        <div class="pl pl--seryj" id="plProv"><div class="pl__top"><span class="pl__dot"></span><b class="pl__n">—</b></div><p class="pl__p">проверок сегодня</p></div>
+        <div class="pl pl--seryj" id="plGolos"><div class="pl__top"><span class="pl__dot"></span><b class="pl__n">—</b></div><p class="pl__p">что просят</p></div>
+        <div class="pl pl--seryj" id="plLyudi"><div class="pl__top"><span class="pl__dot"></span><b class="pl__n">—</b></div><p class="pl__p">люди</p></div>
+      </div>
+    </section>
 
     <section class="card" id="schSek" hidden>
       <h2>Счета</h2>
@@ -223,7 +252,7 @@ select:disabled,input:disabled{background:var(--bg);color:var(--muted)}
       <ul class="list users" id="users"></ul>
     </section>
 
-    <section class="card">
+    <section class="card" id="fbSek">
       <h2>Отзывы и обращения</h2>
       <div id="fb"></div>
     </section>
@@ -262,6 +291,7 @@ select:disabled,input:disabled{background:var(--bg);color:var(--muted)}
     $('me').textContent=j.me.email;$('myrole').textContent=ROLES[j.me.role];$('myrole').className='rolepill '+j.me.role;
     $('sUsers').textContent=s.users;$('sNew').textContent=s.users_7d;$('sActive').textContent=s.active_1d;
     $('sToday').textContent=s.checks_today;$('sWeek').textContent=s.checks_7d;$('sFb').textContent=s.feedback_new;
+    if(window.DlkPult&&!window.DlkPult._started){window.DlkPult._started=true;try{DlkPult.start(API,s)}catch(_){}}
     Array.prototype.forEach.call($('fRole').elements,function(el){el.disabled=!isAdmin});
     if(!isAdmin)note($('rNote'),'Вы тестировщик: можно смотреть, менять роли и тарифы — только администратору.');
   })}
@@ -348,6 +378,7 @@ select:disabled,input:disabled{background:var(--bg);color:var(--muted)}
 <script src="/js/schet.js"></script>
 <script src="/js/admin-scheta.js"></script>
 <script src="/js/admin-bazy.js"></script>
+<script src="/js/admin-pult.js"></script>
 <script src="/obnovleniya.js" defer></script>
 </body>
 </html>

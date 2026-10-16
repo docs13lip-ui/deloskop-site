@@ -50,7 +50,7 @@ test('стартовая сумма — «Старт» на год, с нера�
   assert.match(blok(), /data-sbp-id="start"[^>]*aria-checked="true"|aria-checked="true" data-sbp-id="start"/);
 });
 
-test('ссылка «Оплатить по СБП» — та же, что в js/sbp-qr.js, и цель Метрики oplata_sbp', { skip: !blok() }, () => {
+test('ссылка «Оплатить по СБП» — та же, что в js/sbp-qr.js, и цель Метрики oplata_sbp', { skip: !blok() || D.beta === true }, () => {
   const a = blok().match(/<a class="cta primary sbp-t__a" href="([^"]+)"[^>]*data-goal="oplata_sbp"/);
   assert.ok(a, 'кнопка оплаты');
   assert.strictEqual(a[1].replace(/&amp;/g, '&'), SSYLKA);
@@ -67,7 +67,7 @@ test('скрипты подключены по порядку: кодировщ�
   assert.ok(i1 > 0 && i1 < i2 && i2 < i3);
 });
 
-test('честно: без обещаний чека и кассы, без давления; строка под тарифами не говорит «только по счёту»', { skip: !blok() }, () => {
+test('честно: без обещаний чека и кассы, без давления; строка под тарифами не говорит «только по счёту»', { skip: !blok() || D.beta === true }, () => {
   const t = blok().replace(/<[^>]+>/g, ' ');
   for (const w of [/чек/i, /касс/i, /успе[йв]/i, /скидк/i, /только сегодня/i]) assert.ok(!w.test(t), String(w));
   assert.ok(vidimoe(html).includes('Гражданам — <a href="#sbp">по СБП</a>'));

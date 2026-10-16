@@ -55,7 +55,7 @@ test('оферта после беты ("beta": false): видны О1–О3, б
   assert.ok(chitat('schet/dokument/index.html').includes('<meta name="deloskop-oferta" content="' + m[1] + ' ' + m[2] + ' ' + m[3] + '">'), 'счёт — та же редакция');
 });
 
-test('оферта в бете: на странице — действующая редакция, новые пункты лежат скрытыми до оплат', { skip: !BETA && 'бета снята' }, () => {
+test('оферта в бете: на странице — действующая редакция, новые пункты лежат скрытыми до оплат', { skip: 'переход 14.10 пройден; бесплатный режим с 16.10 — оферта на проверке [Право]' }, () => {
   const of = chitat('oferta/index.html');
   const v = tekst(vidimoe(of));
   const vse = tekst(of.replace(/<!--v-bete-->[\s\S]*?<!--\/v-bete-->/g, '').replace(/<\/?template[^>]*>/g, ''));  // как будет при оплатах
@@ -83,7 +83,7 @@ test('счёт, акт и /schet/: О2, О4, О5 — дословно, реда�
   assert.doesNotMatch(sc, /Доступ — в день оплаты/);
 });
 
-test('репетиция 14.10 на копии: "beta": false → новая редакция видна, дата = день включения, повтор ничего не меняет', () => {
+test('репетиция 14.10 на копии: "beta": false → новая редакция видна, дата = день включения, повтор ничего не меняет', { skip: 'переход 14.10 пройден (новая редакция на живом с 12.10); при возврате оплат — новая репетиция [Право]' }, () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'oplata-schet-'));
   const K = path.join(tmp, 'site');
   fs.cpSync(KOREN, K, { recursive: true, filter: s => !/[\\/](\.git|node_modules)([\\/]|$)/.test(s) });

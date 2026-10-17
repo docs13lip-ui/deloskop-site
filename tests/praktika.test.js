@@ -13,7 +13,7 @@ const chitat = (f) => fs.readFileSync(path.join(KOREN, f), 'utf8');
 const D = JSON.parse(chitat('praktika/dela.json'));
 const SUDY = /^https:\/\/(www\.)?(vsrf\.ru|ksrf\.ru|kad\.arbitr\.ru|publication\.pravo\.gov\.ru)\//;
 const ITOGI = ['В пользу банка', 'В пользу клиента', 'В пользу компании', 'В пользу налоговой', 'В пользу налогоплательщика', 'На новое рассмотрение', 'Жалоба не принята', 'Позиция ВС'];
-const un = (s) => s.replace(/\u00a0/g, ' ').replace(/&nbsp;/g, ' ');
+const un = (s) => s.replace(/\u00a0/g, ' ').replace(/&nbsp;/g, ' ').replace(/&#8209;|\u2011/g, '-'); // типограф (17.10): «115‑ФЗ» — неразрывным дефисом
 
 test('dela.json: у каждого дела номер, дата, первоисточник суда, дата сверки и итог из словаря', () => {
   assert.ok(D.razbory.length >= 6);

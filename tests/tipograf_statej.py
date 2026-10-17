@@ -19,7 +19,7 @@ import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-RAZDELY = ("115-fz", "nalogi")  # статьи, которые пишутся руками; /praktika/ собирает sobrat_praktika.py
+RAZDELY = ("115-fz", "nalogi")  # статьи, которые пишутся руками; /praktika/ собирает sobrat_praktika.py — он зовёт statya() сам
 NB = "&nbsp;"
 KOROTKIE = r"(?:в|и|а|к|с|у|о|я|по|на|не|до|от|за|из|ни|но|же|ли|без|для|под|над|при|про|со|об)"
 
@@ -52,12 +52,12 @@ def kusok(s):
     return "".join(c if c.startswith("<") else tekst(c) for c in TEG.split(s))
 
 
-def statya(s):
-    """Типографика внутри <article>…</article>; остальная страница — как была."""
-    if "<article" not in s or "</article>" not in s:
+def statya(s, teg="article"):
+    """Типографика внутри <article>…</article> (или другого тега: хабы /praktika/ — <main>); остальная страница — как была."""
+    if "<" + teg not in s or "</" + teg + ">" not in s:
         return s
-    a = s.index("<article")
-    b = s.index("</article>")
+    a = s.index("<" + teg)
+    b = s.index("</" + teg + ">")
     vnutri, out, i = s[a:b], [], 0
     for m in NE_TROGAT.finditer(vnutri):
         out.append(kusok(vnutri[i:m.start()]))

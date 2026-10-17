@@ -21,6 +21,7 @@ KOREN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(KOREN, "tests"))
 import sobrat_shapku as SH  # noqa: E402
 import sobrat_faq as FAQ  # noqa: E402
+import tipograf_statej as TS  # noqa: E402
 
 SAJT = "https://deloskop.ru"
 MES = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"]
@@ -45,6 +46,14 @@ def tipograf(txt):
         s = re.sub(r" (—)", NB + "\\1", s)
         return s
     return "".join(ch if ch.startswith("<") else t(ch) for ch in re.split(r"(<[^>]+>)", txt))
+
+
+def tipograf_stranicy(txt):
+    """Типографика всей видимой части разбора — те же правила, что у статей /115-fz/ и /nalogi/ (tests/tipograf_statej.py):
+    неразрывный пробел после коротких слов («в банк», «не ждите»), у чисел, перед тире, «115‑ФЗ» без переноса.
+    Разбор — внутри <article>, хаб — внутри <main>; скрипты (JSON-LD), атрибуты и блоки <!--x-->…<!--/x--> не трогаем.
+    До 17.10 tipograf() здесь не знал коротких слов — на 18 разборах висело ~1 700 предлогов и союзов."""
+    return TS.statya(txt, "article" if "<article" in txt else "main")
 
 
 def nerazryv(txt):
@@ -536,7 +545,7 @@ def sobrat():
     out = {}
     stranicy = [hab(D)] + [hab(D, k) for k in D["razdely"]] + [razbor(r, D, po_slug, F) for r in D["razbory"]]
     for url, txt in stranicy:
-        out[url.strip("/") + "/index.html"] = SH.sobrat_stranicu(nerazryv(tipograf(txt)), r_, podval, shapka)
+        out[url.strip("/") + "/index.html"] = tipograf_stranicy(SH.sobrat_stranicu(nerazryv(tipograf(txt)), r_, podval, shapka))
     for razdel, f in (("115-fz", "115-fz/index.html"), ("nalogi", "nalogi/index.html")):
         n = sum(1 for r in D["razbory"] if r["razdel"] == razdel)
         with open(put(f), encoding="utf-8") as fh:

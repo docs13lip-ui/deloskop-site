@@ -1,6 +1,6 @@
 // [Ночные запуски] 03.10 22:05 — sverka-zagrad-v1: сверка разборов по текстам актов (ВС 305-ЭС24-16889, КС 3476-О) + «Вокфорс» v1.1 ([Право] 21:10 разд. 3).
 const test = require('node:test'); const assert = require('node:assert'); const fs = require('fs'); const path = require('path');
-const R = (p) => fs.readFileSync(path.join(__dirname, '..', p), 'utf8');
+const R = (p) => fs.readFileSync(path.join(__dirname, '..', p), 'utf8').replace(/&nbsp;/g, ' '); // типограф: сверяем слова, не пробелы
 test('заградительные комиссии: цитата ВС дословно, без «Не должен»', () => {
   const t = R('praktika/115-fz/zagraditelnye-komissii/index.html');
   assert.ok(!/Не должен вводить/.test(t));

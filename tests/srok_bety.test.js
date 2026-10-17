@@ -67,8 +67,11 @@ test('полоса: каркас и тексты A/B/C — дословно ([П
   // текст B дословно; жирным — только «Открытая бета продолжается:» (на 390 px заголовок в одну строку, полоса ≤ 125 px)
   assert.ok(chast('beta-b.html').includes('<b>Открытая бета продолжается:</b> <span class="beta-bar__dop">всё бесплатно. О&nbsp;начале тарифов скажем здесь не&nbsp;позже чем за&nbsp;3&nbsp;дня; быстрая проверка останется бесплатной, {{G}}&nbsp;в&nbsp;день.'));
   assert.ok(chast('beta-c.html').startsWith('<b>Бета завершилась {{D}}.</b> Быстрая проверка&nbsp;— бесплатно, {{G}}&nbsp;в&nbsp;день. <a href="/tarify/"'));
-  for (const f of ['beta-a.html', 'beta-b.html'])
-    assert.ok(/<a href="\/osnovatel\/" data-goal="beta_osnovatel" data-beta-osn>Цена основателя для первых 300&nbsp;→<\/a>/.test(chast(f)), f);
+  // «Цена основателя» — только когда дата начала тарифов назначена (A). Без даты (B: оплаты на паузе, решение
+  // владельца 16.10) платное предложение в полосе на каждой странице не показываем — ни в B, ни в запасе B внутри A.
+  assert.ok(/<a href="\/osnovatel\/" data-goal="beta_osnovatel" data-beta-osn>Цена основателя для первых 300&nbsp;→<\/a>/.test(chast('beta-a.html')));
+  assert.ok(!/osnovatel|data-beta-osn|основател/i.test(chast('beta-b.html')), 'B без «Цены основателя»');
+  assert.ok(/в&nbsp;день\. <\/span><a href="mailto:/.test(chast('beta-b.html')), 'B: после текста — сразу «Нашли ошибку»');
   for (const f of ['beta-a.html', 'beta-b.html', 'beta-c.html']) assert.ok(!/успе|последн|только сегодня|ИИ|нейросет/i.test(chast(f)), f);
 });
 test('(в) текст B: ни даты, ни цены, ни «тарифы с…»', () => {
@@ -172,4 +175,15 @@ test('сторож «за 3 дня»: новая дата вместо null — 
   const segodnya = Date.parse(new Date(Date.now() + 3 * 36e5).toISOString().slice(0, 10) + 'T00:00:00Z');
   const dnej = (Date.parse(T.beta_do + 'T00:00:00Z') - segodnya) / 864e5;
   assert.ok(dnej >= 3, 'beta_do ' + T.beta_do + ' — через ' + dnej + ' дн.: о начале тарифов обещали сказать не позже чем за 3 дня');
+});
+// noch-1710-osn-b (17.10.2026, [Ночные запуски]): при «beta: true, beta_do: null» (оплаты на паузе) ни одна собранная
+// страница не зовёт в полосе к «Цене основателя» — иначе обещание платного на 250+ страницах при выключенных оплатах.
+test('бета без даты: в собранных страницах нет ссылки «Цена основателя» в полосе', () => {
+  const t = JSON.parse(fs.readFileSync(path.join(KOREN, 'tarify', 'tarify.json'), 'utf8'));
+  if (!(t.beta === true && t.beta_do === null)) return;
+  const ISTOCHNIKI = new Set([path.join('partials', 'beta-a.html'), path.join('js', 'shapka.js')]); // текст A и гашение ссылки
+  const plohie = obojti(KOREN, []).filter((f) => !ISTOCHNIKI.has(path.relative(KOREN, f)))
+    .filter((f) => fs.readFileSync(f, 'utf8').includes('data-beta-osn'))
+    .map((f) => path.relative(KOREN, f));
+  assert.deepStrictEqual(plohie, [], 'пересоберите: python3 tests/sobrat_shapku.py && python3 tests/kartochki.py perepechatat');
 });

@@ -60,6 +60,8 @@ RSS_LINK = '<link rel="alternate" type="application/rss+xml" title="Разбор
 MANIFEST_LINK = '<link rel="manifest" href="/manifest.webmanifest">'
 APPLE_IMYA = '<meta name="apple-mobile-web-app-title" content="Делоскоп">'
 PWA_JS = '<script src="/js/pwa.js" defer></script>'
+# vizual-v1 (17.10, «глубина и свет»): последним стилем страницы — тени в три слоя, дышащий фон, стекло
+GLUBINA_LINK = '<link rel="stylesheet" href="/css/glubina.css">'
 STARAYA_SHAPKA = re.compile(r'<header(?: class="(?:top|hdr)")?>.*?</header>\n?', re.S)
 
 
@@ -227,6 +229,8 @@ def vstavit_shapku(txt, shapka):
         txt = txt.replace("</head>", APPLE_IMYA + "\n</head>", 1)
     if PWA_JS not in txt:
         txt = txt.replace("</head>", PWA_JS + "\n</head>", 1)
+    if GLUBINA_LINK not in txt:
+        txt = txt.replace("</head>", GLUBINA_LINK + "\n</head>", 1)
     # цель ссылки «Перейти к содержанию»
     if 'id="main"' not in txt:
         mm = re.search(r"<main(?=[\s>])([^>]*)>", txt)

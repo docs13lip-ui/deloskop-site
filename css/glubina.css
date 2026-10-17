@@ -1,0 +1,43 @@
+/* Делоскоп — «Глубина и свет» (vizual-v1, часть А, 17.10.2026).
+   Подключает tests/sobrat_shapku.py на всех страницах последним стилем — поэтому переопределяет токены ds.css.
+   Один главный эффект на экран: фон дышит еле заметно, тени глубже, стекло — у шапки и примера отчёта.
+   Фон двигаем только transform (без filter:blur на весь экран — мягкость дают сами радиальные пятна,
+   телефон не греется); зерно — простой слой с прозрачностью, без mix-blend-mode. */
+:root{
+ --shadow:0 1px 1px rgba(29,29,31,.03),0 8px 24px rgba(29,29,31,.06),0 32px 64px -24px rgba(29,29,31,.10);
+ --shadow-hover:0 1px 1px rgba(29,29,31,.04),0 10px 30px rgba(29,29,31,.075),0 40px 80px -24px rgba(29,29,31,.125)
+}
+body::before{content:"";position:fixed;z-index:-2;inset:-12%;pointer-events:none;
+ background:radial-gradient(42% 38% at 22% 18%,rgba(234,241,253,.95),rgba(234,241,253,0) 70%),
+  radial-gradient(38% 34% at 82% 64%,rgba(243,239,230,.95),rgba(243,239,230,0) 70%);
+ opacity:.9;animation:dyhanie 18s ease-in-out infinite alternate;will-change:transform}
+body::after{content:"";position:fixed;z-index:-1;inset:0;pointer-events:none;opacity:.035;
+ background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='z'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23z)'/%3E%3C/svg%3E")}
+@keyframes dyhanie{from{transform:translate3d(-2%,-1.5%,0)}to{transform:translate3d(2%,1.5%,0)}}
+
+/* тени в три слоя; подъём при наведении — только там, где есть мышь */
+.card,.report.ex,.vhod,.pr-gl a,.osn-card{box-shadow:var(--shadow)}
+.report{box-shadow:var(--shadow)}
+.search,.check{box-shadow:var(--shadow)}
+.card,.report.ex,.vhod,.pr-gl a,.search,.check{transition:box-shadow var(--slow,240ms) var(--ease,cubic-bezier(.2,.7,.2,1)),transform var(--slow,240ms) var(--ease,cubic-bezier(.2,.7,.2,1)),border-color .2s}
+@media (hover:hover){
+ .card:hover,.report.ex:hover,.vhod:hover,.pr-gl a:hover{box-shadow:var(--shadow-hover);transform:translateY(-2px)}
+ .search:hover,.check:hover{box-shadow:var(--shadow-hover)}
+ .search:focus-within,.check:focus-within{box-shadow:var(--shadow-hover),0 0 0 3px var(--accent,#0B63E5)}
+}
+
+/* стекло: шапка после 8 px прокрутки (класс ставит shapka.js) и пример отчёта на главной */
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+ .shapka.is-scrolled{background:rgba(245,245,242,.72);-webkit-backdrop-filter:saturate(160%) blur(14px);backdrop-filter:saturate(160%) blur(14px);border-bottom-color:rgba(29,29,31,.06)}
+ .report.ex{background:rgba(255,255,255,.78);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:var(--shadow),inset 0 0 0 1px rgba(255,255,255,.6)}
+ @media (hover:hover){.report.ex:hover{box-shadow:var(--shadow-hover),inset 0 0 0 1px rgba(255,255,255,.6)}}
+}
+
+/* запасные пути */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.report.ex{background:#fff}}
+@media (prefers-reduced-motion:reduce){
+ body::before{animation:none;transform:none}
+ .card,.report.ex,.vhod,.pr-gl a,.search,.check{transition:none}
+ .card:hover,.report.ex:hover,.vhod:hover,.pr-gl a:hover{transform:none}
+}
+@media print{body::before,body::after{display:none}.report.ex{background:#fff;-webkit-backdrop-filter:none;backdrop-filter:none}}

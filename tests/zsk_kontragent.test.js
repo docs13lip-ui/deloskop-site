@@ -63,7 +63,7 @@ test('внешние ссылки — https, только первоисточн
 test('перелинковка: хаб, sitemap, «ЗСК простыми словами» (#osporit), Паспорт, лента', () => {
   assert.ok(chit('115-fz/index.html').includes(`href="${A}"`));
   assert.ok(chit('sitemap.xml').includes(`<loc>https://deloskop.ru${A}</loc>`));
-  const Z = chit('115-fz/zsk-zony-riska/index.html');
+  const Z = chit('115-fz/zsk-zony-riska/index.html').replace(/&nbsp;|\u00a0/g, ' ').replace(/&#8209;|\u2011/g, '-'); // типографика статьи — tests/tipograf_statej.py
   assert.ok(Z.includes('<h2 id="osporit">Как оспорить высокую оценку</h2>'));
   assert.ok(Z.includes(`<a href="${A}">Как проверить поставщика и что делать, если он в красной зоне`));
   assert.ok(S.includes('href="/115-fz/zsk-zony-riska/#osporit"'));

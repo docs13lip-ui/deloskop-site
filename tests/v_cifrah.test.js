@@ -8,7 +8,7 @@ const path = require('path');
 
 const K = path.join(__dirname, '..');
 const html = fs.readFileSync(path.join(K, '115-fz/v-cifrah/index.html'), 'utf8');
-const txt = (s) => s.replace(/<\/?(?:a|b|strong|em|span|small)\b[^>]*>/g, '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;| /g, ' ').replace(/\s+/g, ' ');
+const txt = (s) => s.replace(/<\/?(?:a|b|strong|em|span|small)\b[^>]*>/g, '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;| /g, ' ').replace(/&#8209;|\u2011/g, '-').replace(/\s+/g, ' ');
 const telo = txt(html.slice(html.indexOf('<main'), html.indexOf('</main>')));
 
 test('v-cifrah: title, description, H1, canonical', () => {
@@ -17,7 +17,7 @@ test('v-cifrah: title, description, H1, canonical', () => {
   assert.ok(t.length <= 60, 'title ≤ 60');
   const d = html.match(/<meta name="description" content="([^"]+)"/)[1];
   assert.ok(d.length >= 120 && d.length <= 160, 'description 120–160: ' + d.length);
-  assert.match(html, /<h1>115-ФЗ в цифрах: что сообщает Банк России<\/h1>/);
+  assert.match(html.replace(/&nbsp;|\u00a0/g, ' ').replace(/&#8209;|\u2011/g, '-'), /<h1>115-ФЗ в цифрах: что сообщает Банк России<\/h1>/);
   assert.match(html, /<link rel="canonical" href="https:\/\/deloskop\.ru\/115-fz\/v-cifrah\/">/);
 });
 

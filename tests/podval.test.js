@@ -16,6 +16,8 @@ const stranicy = () => {
   return [...new Set(vse)];
 };
 const chitat = f => fs.readFileSync(path.join(KOREN, f), 'utf8');
+// текст без типографики (неразрывные пробелы и дефис — tests/tipograf_statej.py): сверяем слова, а не пробелы
+const slova = f => chitat(f).replace(/&nbsp;|\u00a0/g, ' ').replace(/&#8209;|\u2011/g, '-');
 const podval = t => { const m = t.match(/<!--podval-->[\s\S]*?<!--\/podval-->/g); return m || []; };
 
 test('на каждой публичной странице ровно один подвал, и он одинаковый', () => {
@@ -109,9 +111,9 @@ test('форма счёта: без галочки согласия, строк�
 
 test('налоговые правки п. 36 на месте', () => {
   assert.ok(!chitat('delopis/index.html').includes('он возместит налог'));
-  assert.ok(chitat('nalogi/nedostovernyj-adres-egryul/index.html').includes('пп. «ф» п. 1 ст. 23'));
+  assert.ok(slova('nalogi/nedostovernyj-adres-egryul/index.html').includes('пп. «ф» п. 1 ст. 23'));
   assert.ok(!chitat('kontragenty-iz-vypiski/index.html').includes('пп. 17–21'));
-  assert.ok(chitat('115-fz/snyatie-nalichnyh-s-raschetnogo-scheta/index.html').includes('шкала 13–22%'));
+  assert.ok(slova('115-fz/snyatie-nalichnyh-s-raschetnogo-scheta/index.html').includes('шкала 13–22%'));
 });
 
 test('лента: запись 2026-09-26-6 есть и id уникальны', () => {

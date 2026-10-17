@@ -28,7 +28,7 @@ test('в страницах нет ссылок на сервисы-конкур
 });
 
 test('1-МР Банка России: обе ветки порога и ссылка на cbr.ru', () => {
-  const t = fs.readFileSync(path.join(KOREN, '115-fz/snyatie-nalichnyh-s-raschetnogo-scheta/index.html'), 'utf8').replace(/\u00a0/g, ' ');
+  const t = fs.readFileSync(path.join(KOREN, '115-fz/snyatie-nalichnyh-s-raschetnogo-scheta/index.html'), 'utf8').replace(/&nbsp;|\u00a0/g, ' ').replace(/&#8209;|\u2011/g, '-'); // типографика (tipograf_statej.py) — пробелы не в счёт
   assert.ok(t.includes('от 30 млн ₽ за 30 дней'));
   assert.ok(t.includes('3 предыдущих месяца'), 'ветка 1: больше обычных оборотов');
   assert.ok(t.includes('в основном безналично'), 'ветка 2: раньше работала безналично');

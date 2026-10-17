@@ -93,6 +93,7 @@ test('страницы с «Условиями сделки» подключаю
   }
   const fr = 'Если отчёт за&nbsp;год сдан, а&nbsp;выручки в&nbsp;нём нет, выручку считаем нулевой: предоплата — 0&nbsp;₽, советуем платить по&nbsp;факту. Потолок по&nbsp;возрасту — только для компаний, чьей отчётности в&nbsp;открытых данных нет.';
   for (const p of ['indeks/index.html', 'nalogi/skolko-platit-vpered-neznakomoj-kompanii/index.html']) {
-    assert.ok(fs.readFileSync(path.join(KOREN, p), 'utf8').includes(fr), p);
+    const sl = (s) => s.replace(/&nbsp;|\u00a0/g, ' ').replace(/&#8209;|\u2011/g, '-'); // типографика статьи — tests/tipograf_statej.py
+    assert.ok(sl(fs.readFileSync(path.join(KOREN, p), 'utf8')).includes(sl(fr)), p);
   }
 });

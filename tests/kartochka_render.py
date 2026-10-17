@@ -494,6 +494,19 @@ def daty_naborov(s):
     return out
 
 
+_IZM_ZAPISI = re.compile(r"последнее изменение записи ЕГРЮЛ[^—–;]*[—–]\s*(\d{2}\.\d{2}\.\d{4})", re.I)
+
+
+def data_izmeneniya_zapisi(c, data_dates):
+    """kartochki-daty-v2: дата последнего изменения записи в ЕГРЮЛ — company.state_actuality_date, запасной путь —
+    «последнее изменение записи ЕГРЮЛ/ЕГРИП — ДД.ММ.ГГГГ» в dossier.data_dates (как js/dinamika.js). «— на …» не берём."""
+    d = data_iz(str((c or {}).get("state_actuality_date") or "")[:10])
+    if d:
+        return d
+    m = _IZM_ZAPISI.search(str(data_dates or ""))
+    return data_iz(m.group(1)) if m else None
+
+
 def _god(s):
     m = re.search(r"\b(20\d\d)\b", str(s or ""))
     return int(m.group(1)) if m else None
@@ -608,8 +621,10 @@ def iz_check(r):
     # «ЕГРЮЛ/ЕГРИП — на …» в досье — state.actuality_date DaData, то есть дата последних изменений записи, а не дата
     # сведений: для ЕГРЮЛ остаётся дата проверки (сведения получены в этот день).
     dd = daty_naborov(D.get("data_dates"))
-    # kartochki-daty-v1: «ЕГРЮЛ/ЕГРИП — на …» — state.actuality_date (см. выше) → строка «Сведения в реестре актуальны на …»
-    k["egrul_aktualno"] = dd.get("egrul")
+    # kartochki-daty-v2 ([Ночные-2] 17.10): «ЕГРЮЛ/ЕГРИП — на …» — дата получения сведений, а не изменения записи (сверено
+    # живым /api/check 17.10: «на 17.10.2026; последнее изменение записи — 28.08.2026»). Дата изменения — только
+    # company.state_actuality_date или отдельная строка «последнее изменение записи …»; нет — строки на карточке нет.
+    k["egrul_aktualno"] = data_izmeneniya_zapisi(c, D.get("data_dates"))
     for x in D.get("kpi") or []:
         lab = str(x.get("label") or "")
         for kod, rx in KPI:
@@ -1476,6 +1491,32 @@ def daty_html(k, cena=None):
         z, d, (' <span class="co-daty__p">— %s</span>' % p) if p else "") for z, d, p in stroki)
     return ('<section class="co-sec co-daty" aria-labelledby="daty"><h2 id="daty">Даты из реестра</h2><dl class="co-daty__sp">%s</dl>'
             '%s%s</section>' % (dl, _istochnik_stroka("ЕГРЮЛ", k.get("egrul_data")), pasport_vhod_html(k["inn"], cena)))
+
+
+# kartochki-daty-v2: на 106 из 142 опубликованных карточек «Последнее изменение записи» = день получения сведений
+# (генератор брал «ЕГРЮЛ — на …»; живой /api/check 17.10 у «Газпром переработки»: карточка — 11.10, на деле — 07.10.2026).
+# Сведений для настоящей даты в HTML нет — строку снимаем (не проверяли ≠ не нашли). Дата раньше дня сведений больше
+# чем на сутки — настоящая (её давали старые ответы API), остаётся.
+_IZM_STROKA = re.compile(r'<div><dt>Последнее изменение записи в(?:&nbsp;|\u00a0)ЕГРЮЛ</dt> <dd><span class="num">'
+                         r'(\d{1,2})(?:&nbsp;|\u00a0)(\S+?)(?:&nbsp;|\u00a0)(\d{4})(?:&nbsp;|\u00a0)года</span></dd></div>')
+_IZM_SVED = re.compile(r'<span class="co-src">ЕГРЮЛ · сведения на (\d{2})\.(\d{2})\.(\d{4})')
+
+
+def pochinit_izmenenie(t):
+    """kartochki-daty-v2: снять «Последнее изменение записи в ЕГРЮЛ», если дата не раньше дня сведений минус сутки
+    (это дата получения сведений, а не изменения). Повтор ничего не меняет."""
+    m, sv = _IZM_STROKA.search(t), None
+    if not m or m.group(2) not in MESYACY:
+        return t
+    i = t.find('<section class="co-sec co-daty"')
+    sv = _IZM_SVED.search(t, i) if i >= 0 else None
+    if not sv:
+        return t
+    d = dt.date(int(m.group(3)), MESYACY.index(m.group(2)) + 1, int(m.group(1)))
+    na = dt.date(int(sv.group(3)), int(sv.group(2)), int(sv.group(1)))
+    if d >= na - dt.timedelta(days=1):
+        t = t[:m.start()] + t[m.end():]
+    return t
 
 
 _DATY_VHOD = re.compile(r'<p class="co-daty__vhod">.*?</p>', re.S)

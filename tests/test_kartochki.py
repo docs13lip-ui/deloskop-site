@@ -2029,7 +2029,9 @@ class TestDatyIzReestraV1(unittest.TestCase):
 
     def _k(self, **pr):
         r = O.zapis(0, reg_date=pr.pop("reg_date", "2011-03-14"))
-        r["dossier"]["data_dates"] = pr.pop("data_dates", "ЕГРЮЛ/ЕГРИП — на 21.09.2026; задолженность — на 01.09.2026")
+        # kartochki-daty-v2: формат живого /api/check (17.10) — «на …» = день сведений, дата изменения — отдельной строкой
+        r["dossier"]["data_dates"] = pr.pop("data_dates", "ЕГРЮЛ/ЕГРИП — на 29.09.2026; последнее изменение записи"
+                                            " ЕГРЮЛ/ЕГРИП — 21.09.2026; задолженность — на 01.09.2026")
         r["company"]["director_date"] = pr.pop("director_date", "2024-09-20")
         return K.iz_check(r)
 

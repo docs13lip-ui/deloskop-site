@@ -197,6 +197,9 @@ _DOHOD = re.compile(r"(?:доход|выручка) ([0-9]+(?:,[0-9]+)?)(?:&nbsp
 # kartochki-shablon-v1: доход только из набора ФНС (без таблицы ГИР БО) — из заголовка блока «Доход за 2025 год — …»
 _DOHOD_H2 = re.compile(r'<h2 id="fin">Доход[^<]*? — ([0-9]+(?:,[0-9]+)?)(?:&nbsp;|\u00a0| )(трлн|млрд|млн|тыс\.)(?:&nbsp;|\u00a0| )₽</h2>')
 _DOHOD_TAB = re.compile(r'<tbody><tr><td>\d{4}</td><td class="num">([0-9]+(?:,[0-9]+)?)(?:&nbsp;|\u00a0| )(трлн|млрд|млн|тыс\.)(?:&nbsp;|\u00a0| )₽')
+_ZA_GOD = re.compile(r"(?:&nbsp;|\u00a0| )за(?:&nbsp;|\u00a0| )(\d{4})")
+_GOD_TAB = re.compile(r'<tbody><tr><td>(\d{4})</td><td class="num">')
+_GOD_H2 = re.compile(r'<h2 id="fin">Доход за(?:&nbsp;|\u00a0| )(\d{4})')
 _MNOZH = {"трлн": 1e12, "млрд": 1e9, "млн": 1e6, "тыс.": 1e3}
 _SVEDENIYA = re.compile(r"сведения на (\d\d)\.(\d\d)\.(\d{4})")
 BEZ_OBOLOCHKI = "<!--shapka--><!--/shapka-->"
@@ -245,9 +248,15 @@ def kartochki_na_diske(koren=KOREN):
              "gorod": adr.get("addressLocality") or "", "okved": "", "fakty": {}, "_papka": d, "_s_diska": True}
         md = re.search(r'<meta name="description" content="([^"]*)"', t)
         z = _DOHOD.search(md.group(1)) if md else None
+        # kartochki-unik-v3: год — тот, что напечатан рядом с этой суммой («… млн ₽ за 2025»), иначе — строки таблицы
+        zg = _ZA_GOD.match(md.group(1), z.end()) if z else None
         z = z or _DOHOD_TAB.search(t) or _DOHOD_H2.search(t)  # kartochki-indeks-v1: старой выручки в description нет — берём строку таблицы
         if z:
             k["fakty"]["dohod"] = {"znachenie": float(z.group(1).replace(",", ".")) * _MNOZH[z.group(2)]}
+            # kartochki-unik-v3: год оборота — первая строка таблицы финансов или «Доход за Г» (для сравнения соседей)
+            zg = zg or _GOD_TAB.search(t) or _GOD_H2.search(t)
+            if zg:
+                k["fakty"]["dohod"]["god"] = int(zg.group(1))
         daty = [dt.date(int(g), int(mm), int(dd)) for dd, mm, g in _SVEDENIYA.findall(t)]
         k["_lastmod"] = max(daty) if daty else None
         ok = _OKVED_ATTR.search(t)  # kartochki-okved-v1: код основного ОКВЭД (крошки, data-okved) — класс для «Похожих» и хаба
@@ -433,6 +442,16 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         with open(put, encoding="utf-8") as fh:
             t = fh.read()
         izm += zapisat(put, vstavit_znachit(t))
+    # kartochki-unik-v3: «Похожие» (подпись — сравнение по обороту) — по напечатанному на всех карточках, как у добора:
+    # первая сборка из сведений и следующий добор дают одни и те же байты
+    na_d = kartochki_na_diske(koren)
+    vse_d = [na_d[i] for i in sorted(na_d)]
+    for x in vse_d:
+        put = os.path.join(papka, x["_papka"], "index.html")
+        with open(put, encoding="utf-8") as fh:
+            t = fh.read()
+        sos_ = pohozhie(x, vse_d)
+        izm += zapisat(put, _SOS.sub(lambda m: m.group(1) + sosedi_html(x, sos_, eshche_kompanii(x, vse_d, sos_)) + m.group(3), t, count=1))
     # kartochki-volna-v1: хаб — по HAB_NA_STRANICE карточек; лишние страницы прошлой сборки убираем
     str_haba = stranicy_haba(vse, HAB_NA_STRANICE) if vse else []
     # kartochki-v4.5: ссылки «Как читать карточку» — только на статьи, которые уже есть в этой сборке сайта

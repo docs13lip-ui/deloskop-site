@@ -292,6 +292,7 @@ footer a{color:var(--ink2)}
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="apple-mobile-web-app-title" content="Делоскоп">
 <script src="/js/pwa.js" defer></script>
+<script src="/js/zhivoj-indeks.js" defer></script>
 <meta name="deloskop-rezhim" content="beta">
 </head>
 <body>
@@ -393,7 +394,7 @@ footer a{color:var(--ink2)}
           <div class="sub n">ИНН 0000000000 · действующая</div>
         </header>
         <div class="ex-vd ex-vd--ok" role="group" aria-label="Вывод">
-          <div class="ex-ix">
+          <div class="ex-ix" data-zhi="72" data-zhi-aria="Шкала Индекса Делоскопа: зона «без серьёзных сигналов»">
             <div class="ex-ix__lab">Уровень риска</div>
             <div class="pill"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5L6.5 11.5L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Без серьёзных сигналов</div>
             <div class="ex-ix__pod">по признакам из реестров</div>
@@ -417,7 +418,7 @@ footer a{color:var(--ink2)}
         <h2 id="vhody-h">С&nbsp;чего начнём?</h2>
         <p>Три частые задачи&nbsp;— три входа. Быстрая проверка&nbsp;— бесплатно, 10&nbsp;в&nbsp;день.</p>
       </div>
-      <div class="grid3">
+      <div class="grid3" data-sobir>
         <article class="vhod" data-vhod="entry_pay">
           <div class="vhod__n">01 · Перед оплатой</div>
           <h3><a href="/#inn" data-vhod-inn>Проверить поставщика</a></h3>
@@ -444,7 +445,7 @@ footer a{color:var(--ink2)}
   </section>
 
   <section class="sect shield" id="shield">
-    <div class="wrap">
+    <div class="wrap" data-sobir>
       <div class="sect-head">
         <div class="eyebrow">Щит · бесплатно</div>
         <h2 class="h2">Посмотрите на свою компанию глазами банка и&nbsp;налоговой</h2>
@@ -490,7 +491,7 @@ footer a{color:var(--ink2)}
     <span id="why" class="yakor" aria-hidden="true"></span>
     <div class="wrap">
       <h2 class="h2" id="doverie-h">Почему нам можно верить</h2>
-      <div class="grid3 principles">
+      <div class="grid3 principles" data-sobir>
         <article>
           <h3>Вывод, а&nbsp;не&nbsp;справка</h3>
           <p>Каждая проверка заканчивается ответом: можно работать или нет, и&nbsp;на&nbsp;каких условиях.</p>

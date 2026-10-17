@@ -72,7 +72,7 @@ test('без обещаний исхода и превосходных степ�
 // основной перечень (№ 86н) — для контролируемых сделок (пп. 3 п. 1 ст. 105.14 НК РФ).
 test('ofshory-v1.1: дивиденды — по специальному перечню, основной — для контролируемых сделок', () => {
   const fs = require('fs');
-  const s = fs.readFileSync(require('path').join(__dirname, '..', 'nalogi/ofshornye-zony-perechen-minfina/index.html'), 'utf8').replace(/&nbsp;/g, ' ');
+  const s = fs.readFileSync(require('path').join(__dirname, '..', 'nalogi/ofshornye-zony-perechen-minfina/index.html'), 'utf8').replace(/&nbsp;|\u00a0/g, ' ').replace(/&#8209;|\u2011/g, '-');
   const assert = require('assert');
   assert.ok(!s.includes('Перечень утверждён для правила о нулевой ставке'), 'основной перечень не определяет нулевую ставку в 2024–2026');
   assert.ok(s.includes('в 2024–2026 годах применяется не основной, а специальный перечень'));

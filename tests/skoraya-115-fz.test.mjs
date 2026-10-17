@@ -101,7 +101,7 @@ test('п. 40: меры ЗСК применены — только комисси
 });
 
 test('п. 40: статья ЗСК — п. 6 ст. 7.7 для разрешённых операций, пути развёдены', () => {
-  const html = readFileSync(new URL('../115-fz/zsk-zony-riska/index.html', import.meta.url), 'utf8');
+  const html = readFileSync(new URL('../115-fz/zsk-zony-riska/index.html', import.meta.url), 'utf8').replace(/&nbsp;|\u00a0/g, ' ').replace(/&#8209;|\u2011/g, '-');
   assert.ok(!html.includes('пункте 5 статьи 7.7'));
   assert.ok(html.includes('пункте 6 статьи 7.7'));
   assert.ok(html.includes('Банк уже применил меры'));

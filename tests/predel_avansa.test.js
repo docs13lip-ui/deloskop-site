@@ -16,7 +16,7 @@ const STATYA = 'nalogi/skolko-platit-vpered-neznakomoj-kompanii/index.html';
 const sig = (title, status, detail) => ({ title, status, detail: detail || '' });
 const resp = (o) => Object.assign({ checked_at: '2026-09-28T10:00:00+03:00', risk_level: 'low',
   company: { inn: '7700000000', name_short: 'ООО «Тест»', status: 'ACTIVE', reg_date: '2024-06-01' }, signals: [] }, o || {});
-const bezNb = (s) => s.replace(/ /g, ' ');
+const bezNb = (s) => s.replace(/&nbsp;|\u00a0/g, ' ').replace(/&#8209;|\u2011/g, '-');
 
 test('пример из разбора: 13 млн ÷ 26 = 500 тыс., одно замечание → половина 250 тыс.', () => {
   const v = U.decide(resp({ dossier: { kpi: [{ label: 'Выручка за 2025', value: 13000000 }] }, signals: [sig('Административные правонарушения', 'warn', 'штраф')] }));

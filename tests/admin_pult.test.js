@@ -86,3 +86,43 @@ test('(8) админка: раздел «Сейчас» выше счетов, �
   assert.ok(js.includes('method: "HEAD"') && js.includes('cache: "no-store"'), 'без кэша и без скачивания страниц');
   assert.strictEqual(P.PERIOD_MS, 300000); assert.strictEqual(P.KARTOCHEK, 20);
 });
+
+// pult-v2-api-v1 (17.10.2026): плитка «Страницы» по обходу сервера (Сторож раз в 5 минут, даже когда админка закрыта).
+test('(сервер 1) свежий обход сервера — плитка из него, «без перебоев N дней»; без жаргона', () => {
+  const t = Date.parse('2026-10-17T05:00:00Z');
+  const j = { est: true, obhod: '2026-10-17T04:58:00Z', pervyj_obhod: '2026-10-10T04:00:00Z', poslednij_sboj: '2026-10-14T03:00:00Z',
+    vsego: 92, otkrylis: 92, sred_ms: 640, server_zhiv: true, problemy: [] };
+  const p = P.ocenkaServera(j, t);
+  assert.strictEqual(p.cvet, 'ok');
+  assert.strictEqual(p.cifra, '92 из 92');
+  assert.match(p.smysl, /в среднем за 0,6 с/);
+  assert.strictEqual(p.bezPereboev, 'Без перебоев — 3 дня.');
+  assert.ok(P.bezZhargona(p));
+});
+
+test('(сервер 2) перебоев не было; сбой сегодня; проблемы и «сервер не отвечает» — как у браузера', () => {
+  const t = Date.parse('2026-10-17T05:00:00Z');
+  const baza = { est: true, obhod: '2026-10-17T04:58:00Z', pervyj_obhod: '2026-10-15T04:00:00Z', vsego: 10, sred_ms: 300, server_zhiv: true, problemy: [] };
+  assert.match(P.ocenkaServera(baza, t).bezPereboev, /не было ни разу за 2 дня/);
+  const p = P.ocenkaServera(Object.assign({}, baza, { poslednij_sboj: '2026-10-17T04:58:00Z',
+    problemy: [{ url: 'https://deloskop.ru/tarify/', kod: 0, ms: 15000 }] }), t);
+  assert.strictEqual(p.cvet, 'warn'); assert.strictEqual(p.cifra, '9 из 10');
+  assert.strictEqual(p.bezPereboev, ''); // сейчас не открылась — «без перебоев» не пишем
+  assert.match(P.ocenkaServera(Object.assign({}, baza, { poslednij_sboj: '2026-10-17T04:00:00Z' }), t).bezPereboev, /сегодня в 07:00 МСК/);
+  assert.strictEqual(P.ocenkaServera(Object.assign({}, baza, { server_zhiv: false }), t).cvet, 'bad');
+});
+
+test('(сервер 3) обход старше 15 минут, пустой или ручки нет — null (обходит браузер)', () => {
+  const t = Date.parse('2026-10-17T05:00:00Z');
+  assert.strictEqual(P.ocenkaServera({ est: true, obhod: '2026-10-17T04:40:00Z', vsego: 5, problemy: [] }, t), null);
+  assert.strictEqual(P.ocenkaServera({ est: false }, t), null);
+  assert.strictEqual(P.ocenkaServera(null, t), null);
+  assert.strictEqual(P.ocenkaServera({ est: true, obhod: '2026-10-17T04:59:00Z', vsego: 0 }, t), null);
+});
+
+test('(сервер 4) «Проверить сейчас» — всегда браузером; подпись про сервер есть в коде', () => {
+  const js = chitat('js/admin-pult.js');
+  assert.match(js, /obhod\(API, true\)/);
+  assert.match(js, /Проверяет сервер Делоскопа сам, каждые 5 минут/);
+  assert.match(js, /\/api\/admin\/pult\/stranicy/);
+});

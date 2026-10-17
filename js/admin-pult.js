@@ -13,6 +13,10 @@
  *     checks_7d, feedback_new): это счётчики, без персональных данных.
  *   — «Люди на сайте» — живые визиты есть только у Метрики; без токена плитка серая с кнопкой «Открыть Метрику».
  *   — «Последнее обновление сайта» — верхняя запись /obnovleniya.json.
+ *   pult-v2-api-v1 (17.10): когда на сервере работает свой Сторож (/api/admin/pult/stranicy — обход раз в 5 минут,
+ *     даже если админку никто не открыл), плитка берёт его последний обход и пишет «без перебоев N дней».
+ *     Обход свежее 15 минут — берём сервер; нет ручки или сторож молчит — обходит сам браузер, как раньше.
+ *     «Проверить сейчас» — всегда браузером, сразу.
  * Чистые функции (оценка, фразы) — без DOM, для автотестов: tests/admin_pult.test.js. */
 (function (root) {
   "use strict";
@@ -93,6 +97,28 @@
       delat: "Что сделать: открыть Метрику — там посетители за сегодня и откуда пришли. Подключим её сюда, когда будет токен Яндекса." };
   }
 
+  /* ---- Страницы по обходу сервера ----
+   * j: ответ /api/admin/pult/stranicy {est, obhod, pervyj_obhod, poslednij_sboj, vsego, otkrylis, sred_ms, server_zhiv, problemy}.
+   * Возвращает плитку с полем bezPereboev (строка) или null, если обход старше 15 минут / сервера нет — тогда обходит браузер. */
+  var SVEZHO_MS = 15 * 60 * 1000;
+  function ocenkaServera(j, seichas) {
+    seichas = seichas || Date.now();
+    if (!j || !j.est || !j.obhod || !(+j.vsego > 0)) return null;
+    var t = Date.parse(j.obhod), voz = seichas - t;
+    if (!(voz >= -60000 && voz <= SVEZHO_MS)) return null;
+    var problemy = (j.problemy || []).map(function (r) { return { url: r.url, kod: +r.kod || 0, ms: +r.ms || 0 }; });
+    var itogi = problemy.slice();
+    for (var i = problemy.length; i < +j.vsego; i++) itogi.push({ url: "", kod: 200, ms: +j.sred_ms || 0 });
+    var p = ocenkaStranic(itogi, j.server_zhiv === false ? false : true);
+    var ot = j.poslednij_sboj || j.pervyj_obhod, dnej = ot ? Math.floor((seichas - Date.parse(ot)) / 86400000) : 0;
+    if (!j.poslednij_sboj) p.bezPereboev = dnej >= 1 ? "Перебоев не было ни разу за " + dnej + " " + sklon(dnej, "день", "дня", "дней") + " наблюдения." : "Перебоев не было с начала наблюдения.";
+    else if (dnej >= 1) p.bezPereboev = "Без перебоев — " + dnej + " " + sklon(dnej, "день", "дня", "дней") + ".";
+    else p.bezPereboev = "Последний перебой — сегодня в " + vremyaMsk(j.poslednij_sboj) + " МСК.";
+    if (problemy.some(function (r) { return !r.kod || r.kod >= 400; })) p.bezPereboev = "";
+    p.kogda = t;
+    return p;
+  }
+
   function frazaObnovleniya(zapis) {
     if (!zapis) return "";
     return "Последнее обновление сайта: «" + zapis.zagolovok + "» — " + (zapis.data || "") + (zapis.vremya ? ", " + zapis.vremya : "") + ".";
@@ -103,7 +129,7 @@
 
   var api = { MEDLENNO_MS: MEDLENNO_MS, PERIOD_MS: PERIOD_MS, KARTOCHEK: KARTOCHEK, METRIKA_URL: METRIKA_URL,
     ocenkaStranic: ocenkaStranic, ocenkaProverok: ocenkaProverok, ocenkaGolosa: ocenkaGolosa, ocenkaLyudej: ocenkaLyudej,
-    frazaObnovleniya: frazaObnovleniya, bezZhargona: bezZhargona, sklon: sklon, sek: sek };
+    ocenkaServera: ocenkaServera, SVEZHO_MS: SVEZHO_MS, frazaObnovleniya: frazaObnovleniya, bezZhargona: bezZhargona, sklon: sklon, sek: sek };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   if (typeof document === "undefined") return;
   root.DlkPult = api;
@@ -140,8 +166,24 @@
   }
   function put(u) { try { return new URL(u, location.origin).pathname; } catch (_) { return u; } }
 
-  var sost = { kogda: 0, idet: false };
-  function obhod(API) {
+  var sost = { kogda: 0, idet: false, server: false };
+  function spisokProblem(p) {
+    return p.problemy.length ? '<ul class="pl__list">' + p.problemy.slice(0, 10).map(function (r) {
+      return "<li><a href=\"" + esc(r.url) + '" target="_blank" rel="noopener">' + esc(put(r.url)) + "</a> — " + (r.kod && r.kod < 400 ? "отвечает " + (r.ms / 1000).toFixed(1).replace(".", ",") + " с" : (r.kod ? "не открылась (ответ " + r.kod + ")" : "не открылась (нет ответа)")) + "</li>";
+    }).join("") + "</ul>" : "";
+  }
+  function obhod(API, rukami) {
+    if (rukami || !API) return obhodBrauzerom(API);
+    return fetch(API + "/api/admin/pult/stranicy", { credentials: "include", cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
+      .then(function (j) {
+        var p = ocenkaServera(j);
+        if (!p) return obhodBrauzerom(API);
+        risovatPlitku("plStr", p, spisokProblem(p) + '<p class="pl__m">Проверяет сервер Делоскопа сам, каждые 5 минут — даже когда эта страница закрыта. ' + esc(p.bezPereboev) + "</p>");
+        sost.kogda = p.kogda; sost.server = true; tik();
+      });
+  }
+  function obhodBrauzerom(API) {
     if (sost.idet) return Promise.resolve(); sost.idet = true;
     var el = $("plStr"); if (el && !sost.kogda) risovatPlitku("plStr", ocenkaStranic([], null));
     return Promise.all([
@@ -152,19 +194,17 @@
       var urls = x[0].concat(sluchajnye(x[1], KARTOCHEK));
       return pachkami(urls, proverit).then(function (itogi) {
         var p = ocenkaStranic(itogi, x[2]);
-        var spisok = p.problemy.length ? '<ul class="pl__list">' + p.problemy.slice(0, 10).map(function (r) {
-          return "<li><a href=\"" + esc(r.url) + '" target="_blank" rel="noopener">' + esc(put(r.url)) + "</a> — " + (r.kod && r.kod < 400 ? "отвечает " + (r.ms / 1000).toFixed(1).replace(".", ",") + " с" : (r.kod ? "не открылась (ответ " + r.kod + ")" : "не открылась (нет ответа)")) + "</li>";
-        }).join("") + "</ul>" : "";
+        var spisok = spisokProblem(p);
         var kart = x[1].length ? '<p class="pl__m">Карточек компаний на сайте — ' + chislo(x[1].length) + ", проверили " + Math.min(KARTOCHEK, x[1].length) + " случайных.</p>" : "";
         risovatPlitku("plStr", p, spisok + kart);
-        sost.kogda = Date.now(); tik();
+        sost.kogda = Date.now(); sost.server = false; tik();
       });
     }).then(function () { sost.idet = false; }, function () { sost.idet = false; });
   }
 
   function tik() {
     var el = $("plKogda"); if (!el) return;
-    el.textContent = sost.kogda ? "обновлено " + sek(Date.now() - sost.kogda) + " назад · " + vremyaMsk(sost.kogda) + " МСК" : "проверяем страницы…";
+    el.textContent = sost.kogda ? (sost.server ? "сервер проверил " : "обновлено ") + sek(Date.now() - sost.kogda) + " назад · " + vremyaMsk(sost.kogda) + " МСК" : "проверяем страницы…";
   }
 
   function start(API, summary) {
@@ -176,7 +216,7 @@
       var z = (j.obnovleniya || [])[0]; var el = $("plObn"); if (el && z) el.textContent = frazaObnovleniya(z);
     }).catch(function () {});
     obhod(API); setInterval(function () { obhod(API); }, PERIOD_MS); setInterval(tik, TIK_MS); tik();
-    var b = $("plPovtor"); if (b) b.addEventListener("click", function () { sost.kogda = 0; obhod(API).then(tik); });
+    var b = $("plPovtor"); if (b) b.addEventListener("click", function () { sost.kogda = 0; obhod(API, true).then(tik); });
   }
   root.DlkPult.start = start;
 })(typeof window !== "undefined" ? window : globalThis);

@@ -3457,3 +3457,151 @@ _html_kartochki_do_razbora = html_kartochki
 
 def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811
     return pochinit_razbor(_html_kartochki_do_razbora(k, V, sosedi, kom, normy, cena, segodnya))
+
+
+# ---------------------------------------------------------------- kartochki-unik-v3 (Очередь п. 310, ТЗ [Штаб] 12.10 п. 4)
+# Замер Штаба (5-словные фрагменты, без фраз > 30 % страниц) на 17.10: карточки — медиана 46 %, хабы отраслей 94–97 %.
+# Больше всего общего текста давали «Похожие компании» (79 % фрагментов блока — одни и те же «название, город, выручка»
+# на всех карточках, где сосед встречается) и хабы (только списки тех же строк). v3: (1) у соседа — сравнение с этой
+# компанией по обороту за один и тот же год («в 2,1 раза больше, чем у «Лента»»); годы разные — без сравнения, как было;
+# (2) у хаба — вводный абзац из данных: крупнейшие по обороту, где больше всего компаний группы. Только напечатанное на
+# карточках (добор = полная сборка), без новых сведений и без оценок компании.
+SOS_POCHTI = 1.15  # ближе ±15 % — «почти столько же»
+SOS_MAKS = 20  # разница больше чем в 20 раз — не сравниваем: «в 1 248 раз меньше» ничего не говорит о сделке
+
+
+def _god_dohoda(x):
+    """Год оборота, который печатает карточка (fakty.dohod.god; у опубликованной — из её таблицы или заголовка); нет — None.
+    Дату сведений годом не считаем: у набора ФНС это день публикации, а не отчётный год."""
+    g = ((x.get("fakty") or {}).get("dohod") or {}).get("god")
+    return int(g) if g else None
+
+
+def _drob1(v):
+    """2.04 → «2», 2.46 → «2,5» (одна цифра после запятой, ноль не пишем)."""
+    s = ("%.1f" % v).replace(".", ",")
+    return s[:-2] if s.endswith(",0") else s
+
+
+def sos_otnoshenie(moj, chuzhoj):
+    """Оборот соседа к обороту этой компании → «в 2,1 раза больше» / «на 30 % меньше» / «почти столько же»."""
+    if not (moj and chuzhoj and moj > 0 and chuzhoj > 0):
+        return ""
+    r = chuzhoj / moj
+    if 1 / SOS_POCHTI < r < SOS_POCHTI:
+        return "почти столько же"
+    slovo, q = ("больше", r) if r > 1 else ("меньше", 1 / r)
+    if q > SOS_MAKS:
+        return ""
+    if q < 1.95:
+        return "на%s%d%s%% %s" % (NB, round(abs(r - 1) * 100), NB, slovo)
+    if q < 10 and _drob1(q).find(",") >= 0:
+        return "в%s%s%sраза %s" % (NB, _drob1(q), NB, slovo)
+    n = int(round(q))
+    return "в%s%d%s%s %s" % (NB, n, NB, plural(n, "раз", "раза", "раз"), slovo)
+
+
+def sos_podpis(k, x):
+    """Подпись соседа в «Похожих»: сравнение с этой компанией, если оборот обеих — за один год; иначе — город и сумма."""
+    mesto = x.get("gorod") or x.get("region") or ""
+    d_k, d_x, g_k, g_x = _dohod_kart(k), _dohod_kart(x), _god_dohoda(k), _god_dohoda(x)
+    rel = sos_otnoshenie(d_k, d_x) if (g_k and g_k == g_x) else ""
+    if not rel:
+        return e(", ".join(filter(None, [mesto, dengi(d_x) if d_x else ""]))).replace("&nbsp;", NB)
+    imya_k = e(un_kratkoe(k.get("name") or ""))
+    nachalo = ("%s, сколько у %s" if rel == "почти столько же" else "%s, чем у %s") % (rel, imya_k)
+    return "%s: %s за%s%d%s" % (nachalo, e(dengi(d_x)).replace("&nbsp;", NB), NB, g_x,
+                                (" · " + e(mesto)) if mesto else "")
+
+
+def _sos_li(k, x):
+    return '<li><a href="%s">%s</a><span class="caption">%s</span></li>' % (adres_str(x), e(x["name"]), sos_podpis(k, x))
+
+
+def sosedi_html(k, sosedi, eshche=None):  # noqa: F811 — kartochki-unik-v3: подпись соседа — сравнение с этой компанией
+    if not sosedi:
+        return ""
+    kl = okved_klass(k)
+    if kl and all(okved_klass(x) == kl for x in sosedi):
+        zag = ("Похожие компании — " + e(k["region"])) if (k.get("region") and all(x.get("region") == k["region"] for x in sosedi)) \
+            else "Похожие компании"
+    else:
+        zag = "Ещё компании в Делоскопе"
+    return '<aside class="co-side card" aria-labelledby="sos"><h2 id="sos" class="co-h3">%s</h2><ul class="co-sos">%s</ul>%s</aside>' % (
+        zag, "".join(_sos_li(k, x) for x in sosedi), eshche_html(k, eshche or []))
+
+
+def eshche_html(k, eshche):  # noqa: F811 — kartochki-unik-v3: та же подпись-сравнение
+    if not eshche:
+        return ""
+    zag = ("Ещё в регионе: " + e(k["region"])) if (k.get("region") and all(x.get("region") == k["region"] for x in eshche)) \
+        else "Ещё компании в Делоскопе"
+    return '<p class="co-sos__h caption">%s</p><ul class="co-sos co-sos--eshche">%s</ul>' % (
+        zag, "".join(_sos_li(k, x) for x in eshche))
+
+
+HAB_KRUPNYE = 3
+
+
+def hab_vvod(g):
+    """Вводный абзац хаба группы из напечатанного на карточках: крупнейшие по обороту и где их больше всего.
+    Меньше 3 компаний с оборотом — без абзаца (не из чего сравнивать)."""
+    kart = g.get("kart") or []
+    s_dohodom = sorted([x for x in kart if _dohod_kart(x) > 0 and _god_dohoda(x)],
+                       key=lambda x: (-_dohod_kart(x), x["inn"]))
+    if len(s_dohodom) < HAB_KRUPNYE:
+        return ""
+    top = s_dohodom[:HAB_KRUPNYE]
+    sp = ["%s — %s за%s%d" % (e(un_kratkoe(x["name"])), e(dengi(_dohod_kart(x))).replace("&nbsp;", NB), NB, _god_dohoda(x))
+          for x in top]
+    gde = "в группе" if g["vid"] == "otrasl" else "с адресом в этом регионе"
+    abz = "Крупнейшие по обороту %s (последняя открытая отчётность каждой): %s и %s." % (gde, ", ".join(sp[:-1]), sp[-1])
+    po = {}
+    for x in kart:
+        kl = (x.get("region") or "") if g["vid"] == "otrasl" else (hab_otrasl(x) if hab_otrasl(x) != HAB_NET_OTRASLI else "")
+        if kl:
+            po[kl] = po.get(kl, 0) + 1
+    chasto = sorted(po.items(), key=lambda a: (-a[1], a[0]))
+    if len(chasto) >= 2 and chasto[0][1] >= 2:
+        (a, na), (b, nb) = chasto[0], chasto[1]
+        if g["vid"] == "otrasl":
+            abz += " Больше всего компаний группы — с адресом %s (%d), дальше — %s (%d)." % (
+                e(region_polnyj(a)), na, e(region_polnyj(b)), nb)
+        else:
+            abz += " Чаще всего здесь — «%s» (%d), дальше — «%s» (%d)." % (e(a), na, e(b), nb)
+    return '<p class="co-hab__vvod">%s</p>' % abz
+
+
+_html_gruppy_do_v3 = html_gruppy
+
+
+_LI_VID = {"vid": None}
+_li_haba_do_v3 = _li_haba
+
+
+def _li_haba(x, s_otraslyu=False):  # noqa: F811 — kartochki-unik-v3: подпись строки — своя у хаба отрасли и хаба региона
+    """Хаб отрасли: «оборот за Г — сумма · город»; хаб региона: «ОКВЭД · оборот сумма за Г». Та же строка «город · ОКВЭД»
+    стояла в хабе отрасли, хабе региона и общем хабе — три страницы из одинаковых строк. Нет оборота — как раньше."""
+    vid = _LI_VID["vid"]
+    d, g = _dohod_kart(x), _god_dohoda(x)
+    if vid not in ("otrasl", "region") or not (d > 0 and g):
+        return _li_haba_do_v3(x, s_otraslyu)
+    summa = e(dengi(d)).replace("&nbsp;", NB)
+    if vid == "otrasl":
+        podpis = "оборот за%s%d — %s" % (NB, g, summa)
+        mesto = e(x.get("gorod") or x.get("region") or "")
+        podpis += (" · " + mesto) if mesto else ""
+    else:
+        kod = okved_kod(x.get("okved"))
+        podpis = ("ОКВЭД%s<span class=\"num\">%s</span> · " % (NB, kod) if kod else "") + "оборот %s за%s%d" % (summa, NB, g)
+    return '<li><a href="%s">%s</a><span class="caption">%s</span></li>' % (adres_str(x), e(x["name"]), podpis)
+
+
+def html_gruppy(g, kart, index, n=1, vsego=1):  # noqa: F811 — kartochki-unik-v3: вводный абзац из данных на 1-й странице
+    _LI_VID["vid"] = g.get("vid")
+    try:
+        t = _html_gruppy_do_v3(g, kart, index, n, vsego)
+    finally:
+        _LI_VID["vid"] = None
+    vv = hab_vvod(g) if n <= 1 else ""
+    return t.replace("</p></header>", "</p>%s</header>" % vv, 1) if vv else t

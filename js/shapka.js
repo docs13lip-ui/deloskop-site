@@ -252,6 +252,34 @@
         }
       });
     });
+
+    // 8. vizual-v3.0b: тема — «Как в системе / Светлая / Тёмная» в подвале. Строка в <head> уже поставила
+    // data-theme до отрисовки; здесь — выбор, запоминание (localStorage «tema») и смена темы системы на лету.
+    tema();
+  }
+
+  function tema() {
+    var root = document.documentElement, mq = window.matchMedia ? matchMedia("(prefers-color-scheme: dark)") : null;
+    var vybor = function () { var v = null; try { v = localStorage.getItem("tema"); } catch (e) {} return v === "dark" || v === "light" ? v : "auto"; };
+    var primenit = function () {
+      var v = vybor(), t = v === "auto" ? (mq && mq.matches ? "dark" : "light") : v;
+      root.dataset.theme = t;
+      var m = document.querySelector('meta[name="theme-color"]');
+      if (m) m.content = t === "dark" ? "#111113" : "#F5F5F2";
+      document.querySelectorAll("[data-tema-v]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-tema-v") === v)); });
+    };
+    document.querySelectorAll("[data-tema]").forEach(function (blok) {
+      blok.hidden = false;
+      blok.addEventListener("click", function (e) {
+        var b = e.target.closest("[data-tema-v]"); if (!b) return;
+        var v = b.getAttribute("data-tema-v");
+        try { if (v === "auto") localStorage.removeItem("tema"); else localStorage.setItem("tema", v); } catch (er) {}
+        primenit();
+      });
+    });
+    if (mq) { var sl = function () { if (vybor() === "auto") primenit(); }; if (mq.addEventListener) mq.addEventListener("change", sl); else if (mq.addListener) mq.addListener(sl); }
+    window.addEventListener("storage", function (e) { if (e.key === "tema") primenit(); });
+    primenit();
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();

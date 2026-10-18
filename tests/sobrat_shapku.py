@@ -39,6 +39,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import beta as BETA  # noqa: E402
+import tema_temnaya as TT  # noqa: E402  vizual-v3.0b: тёмный слой стилей страницы
 
 KOREN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ISKLYUCHIT = {"admin.html", "offline.html"}  # служебная — без подвала; offline.html (pwa-v1) самодостаточный экран «Нет сети»
@@ -62,6 +63,19 @@ APPLE_IMYA = '<meta name="apple-mobile-web-app-title" content="Делоскоп"
 PWA_JS = '<script src="/js/pwa.js" defer></script>'
 # vizual-v1 (17.10, «глубина и свет»): последним стилем страницы — тени в три слоя, дышащий фон, стекло
 GLUBINA_LINK = '<link rel="stylesheet" href="/css/glubina.css">'
+# vizual-v3.0b (18.10): тёмная тема — по системе + переключатель в подвале (решение владельца 18.10 15:38).
+# Строка в <head> ставит data-theme на <html> до первой отрисовки (без мигания): выбор из localStorage «tema»
+# (light | dark; иначе — как в системе) и цвет панели браузера. Остальное — css/tema.css и js/shapka.js §8.
+TEMA_LINK = '<link rel="stylesheet" href="/css/tema.css">'
+TEMA_JS = ('<script>!function(d,t){try{t=localStorage.tema}catch(e){}t=t=="dark"||t=="light"?t:'
+           'matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light";d.dataset.theme=t;'
+           'if(t=="dark"&&(t=document.querySelector("meta[name=theme-color]")))t.content="#111113"}'
+           '(document.documentElement)</script>')
+TEMA_PODVAL = ('<div class="tema" data-tema hidden><span class="tema__h" id="tema-h">Тема</span>'
+               '<span class="tema__g" role="group" aria-labelledby="tema-h">'
+               '<button type="button" data-tema-v="auto" aria-pressed="true">Как в системе</button>'
+               '<button type="button" data-tema-v="light" aria-pressed="false">Светлая</button>'
+               '<button type="button" data-tema-v="dark" aria-pressed="false">Тёмная</button></span></div>')
 STARAYA_SHAPKA = re.compile(r'<header(?: class="(?:top|hdr)")?>.*?</header>\n?', re.S)
 
 
@@ -164,7 +178,7 @@ def podval_html(r):
         stroka += ' · <a href="/rekvizity/">Реквизиты</a>'
     return ('<!--podval--><div class="podval" role="contentinfo"><div class="podval__in">'
             '<div class="podval__cols">' + "".join(cols) + '</div>'
-            '<div class="podval__niz"><p>' + stroka + '</p>'
+            '<div class="podval__niz"><p>' + stroka + '</p>' + TEMA_PODVAL +
             '<p>Сотрудничество, отзывы и предложения — <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>. Принимаем 24/7</p>'
             '<p>Материалы носят информационный характер и не заменяют консультацию юриста</p></div>'
             '</div></div><!--/podval-->')
@@ -258,6 +272,10 @@ def vstavit_shapku(txt, shapka):
         txt = txt.replace("</head>", PWA_JS + "\n</head>", 1)
     if not est(txt, GLUBINA_LINK):
         txt = txt.replace("</head>", GLUBINA_LINK + "\n</head>", 1)
+    if not est(txt, TEMA_LINK):
+        txt = txt.replace("</head>", TEMA_LINK + "\n</head>", 1)
+    if TEMA_JS not in txt:
+        txt = txt.replace("</head>", TEMA_JS + "\n</head>", 1)
     # цель ссылки «Перейти к содержанию»
     if 'id="main"' not in txt:
         mm = re.search(r"<main(?=[\s>])([^>]*)>", txt)
@@ -366,6 +384,9 @@ def sobrat_stranicu(txt, r, podval, shapka=None):
     txt = re.sub(r"<!--rekvizity-->.*?<!--/rekvizity-->", lambda m: "<!--rekvizity-->" + tablica(r) + "<!--/rekvizity-->", txt, flags=re.S)
     # 5) открытая бета: оплата ↔ «в бете бесплатно», метка режима, полоса под шапкой
     txt = BETA.primenit(txt, r.get("_beta", False), bdo=r.get("_beta_do"))
+    # 6) vizual-v3.0b: тёмная тема — цвета, записанные числом в <style> страницы, получают тёмную пару
+    #    (<style data-tema> в <head>; tests/tema_temnaya.py). Правки стилей страницы — пересобрать.
+    txt = TT.dlya_stranicy(txt)
     return txt
 
 
@@ -401,7 +422,21 @@ def main():
     podval = podval_html(r)
     shapka = shapka_html()
     izmeneno = []
-    for imya, css in (("podval.css", podval_css()), ("shapka.css", shapka_css())):
+    gotovye = {"podval.css": podval_css(), "shapka.css": shapka_css()}
+    # vizual-v3.0b: авто-слой тёмной темы для общих стилей — в css/tema.css между /*<avto>*/ и /*</avto>*/
+    ist = {}
+    for f in TT.FAJLY:
+        imya = f.split("/")[-1]
+        if imya in gotovye:
+            ist[f] = gotovye[imya]
+        elif os.path.exists(put(f)):
+            ist[f] = open(put(f), encoding="utf-8").read()
+    for f in sorted(os.listdir(put("js"))) + ["../obnovleniya.js"]:
+        if f.endswith(".js") and os.path.isfile(put("js", f)):
+            ist[os.path.normpath("js/" + f)] = open(put("js", f), encoding="utf-8").read()
+    tp = put("css", "tema.css")
+    gotovye["tema.css"] = TT.tema_css(KOREN, open(tp, encoding="utf-8").read(), ist)
+    for imya, css in gotovye.items():
         cp = put("css", imya)
         stary = open(cp, encoding="utf-8").read() if os.path.exists(cp) else ""
         if stary != css:

@@ -4,7 +4,8 @@
     "ds": [
       "css/fonts.css",
       "css/podval.css",
-      "css/shapka.css"
+      "css/shapka.css",
+      "css/tema.css"
     ],
     "glavnaya-stil": [
       "css/otchet.css",

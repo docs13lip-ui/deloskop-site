@@ -30,6 +30,8 @@ test('Dockerfile: порт = listen, конфиг в conf.d, проверка ng
   assert.match(DOCKERFILE, /COPY deploy\/nginx\.conf \/etc\/nginx\/conf\.d\/default\.conf/);
   assert.match(DOCKERFILE, /nginx -t/);
   assert.match(DOCKERFILE, /^FROM nginx:\d+\.\d+-alpine$/m, 'версия образа закреплена');
+  assert.match(DOCKERFILE, /gzip -9 -n -c "\$1" > "\$1\.gz"/, 'vizual-v3.0b: сжатые копии при сборке образа');
+  assert.match(CONF, /^\s*gzip_static on;/m, 'и сервер их отдаёт');
 });
 
 test('.dockerignore: служебное и данные карточек не попадают на сайт', () => {
@@ -117,6 +119,16 @@ http { include ${MIME}; default_type application/octet-stream; access_log off;
   }
   assert.strictEqual((await zapros(port, '/404.html')).h['x-robots-tag'], 'noindex');
   assert.strictEqual((await zapros(port, '/favicon.svg')).h['cache-control'], 'public, max-age=2592000');
+
+  // vizual-v3.0b: пакеты с отпечатком — год и immutable; несуществующий отпечаток — 404; страницы — no-cache
+  const paket = (fs.readFileSync(path.join(KOREN, 'index.html'), 'utf8').match(/\/js\/b\/yadro\.[0-9a-f]{10}\.js/) || [])[0];
+  assert.ok(paket, 'главная подключает пакет yadro');
+  const pk = await zapros(port, paket);
+  assert.strictEqual(pk.kod, 200);
+  assert.strictEqual(pk.h['cache-control'], 'public, max-age=31536000, immutable');
+  assert.strictEqual(pk.h['content-encoding'], 'gzip');
+  assert.strictEqual((await zapros(port, '/js/b/yadro.0000000000.js')).kod, 404);
+  assert.strictEqual((await zapros(port, '/js/shapka.js')).h['cache-control'], 'no-cache', 'исходники без отпечатка — переспрашивать');
 
   const bezSlesha = await zapros(port, '/nalogi');
   assert.strictEqual(bezSlesha.kod, 301);

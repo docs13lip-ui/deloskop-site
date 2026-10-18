@@ -222,6 +222,8 @@
     }
     function pusk() { if (!tiho && !idet && vidno && !d.hidden) { t0 = 0; idet = raf(kadr); } }
     razmer();
+    // vizual-v3.0b: сменилась тема (переключатель в подвале или система) — цвет точек из нового --ink, кадр заново
+    if (W.MutationObserver) new W.MutationObserver(function () { rgb = cvet(); risovat(); }).observe(d.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     risovat(); // один кадр сразу — и единственный при reduce
     if (tiho) {
       var tr; W.addEventListener('resize', function () { clearTimeout(tr); tr = setTimeout(function () { razmer(); risovat(); }, 150); });

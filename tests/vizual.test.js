@@ -108,7 +108,8 @@ test('сборщик: glubina.css — последним стилем на вс�
     if (!s.includes('<!--shapka-->')) continue;
     const head = s.slice(0, s.indexOf('</head>'));
     assert.ok(head.includes(LINK), f);
-    const vse = head.match(/<link rel="stylesheet" href="[^"]+">/g);
+    // vizual-v3.0b: после неё — только слой тёмной темы (css/tema.css, действует лишь под [data-theme=dark])
+    const vse = head.match(/<link rel="stylesheet" href="[^"]+">/g).filter((x) => !x.includes('/css/tema.css'));
     assert.strictEqual(vse[vse.length - 1], LINK, f + ': glubina.css не последний');
     n++;
   }

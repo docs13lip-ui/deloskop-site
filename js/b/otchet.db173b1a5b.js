@@ -372,7 +372,7 @@
       if (b.status === 'found' && b.dubl_statusa && (r.company || {}).status === 'BANKRUPT') {
         // istochniki-v1: банкротство из ЕГРЮЛ — строка «Статус» уже говорит об этом; второй раз не пишем (в «Все данные» — есть)
       } else if (b.status === 'found') {
-        add({ k: 'damia_' + k, nazv: b.nazvanie, znach: b.itog || b.znachenie || 'Сведения найдены',
+        add({ k: 'damia_' + k, nazv: b.nazvanie, znach: bezDaty(b.itog, b.data_svedeniy) || b.znachenie || 'Сведения найдены',
           ton: b.uroven === 'bad' || b.uroven === 'high' ? 'bad' : 'warn', ist: b.istochnik || '', data: dmy(b.data_svedeniy) || dataPr });
         var f = vse.pop(); // найденное — среди первых
         var i = 0; while (i < vse.length && VES[vse[i].ton] <= VES[f.ton]) i++;
@@ -431,6 +431,21 @@
     return { razdely: out, daty: D.data_dates ? String(D.data_dates) : '' };
   }
 
+  // otchet-detali-v1: подпись ссылки на первоисточник называет его (js/istochniki.js → samiTekst); нет модуля — как было
+  function samiT(url) {
+    var I = typeof self !== 'undefined' && self.DlkIstochniki;
+    try { return I && I.samiTekst ? I.samiTekst(url) : 'проверьте сами'; } catch (e) { return 'проверьте сами'; }
+  }
+  // otchet-detali-v1: дата сведений уже стоит в подписи строки («Картотека … · на 12.10.2026») — хвост «Сведения на 12.10.2026, 11:40.»
+  // в тексте факта второй раз не повторяем (только если дата та же; в «Все данные из реестров» текст — полностью)
+  function bezDaty(t, iso) {
+    if (!t) return t;
+    var d = dmy(iso);
+    if (!d) return t;
+    var x = String(t).replace(new RegExp('\\s*Сведения на\\s+' + d.replace(/\./g, '\\.') + '(?:,\\s*\\d{1,2}:\\d{2})?\\.?\\s*$'), '');
+    return x || t;
+  }
+
   // ---- разметка ----
   function rowHtml(x) {
     var meta = [x.ist, x.data ? 'на' + NB + x.data : ''].filter(Boolean).join(' · ');
@@ -447,7 +462,7 @@
       g.razdely.map(function (s) {
         return '<section class="sut__s"><h4>' + esc(s.zag) + '</h4><dl>' + s.stroki.map(function (row) {
           var dop = row[4] ? '<small>' + esc(row[4]) + '</small>' : '';
-          var sam = row[3] ? ' <a href="' + esc(row[3]) + '" target="_blank" rel="noopener">проверьте сами</a>' : '';
+          var sam = row[3] ? ' <a href="' + esc(row[3]) + '" target="_blank" rel="noopener">' + esc(samiT(row[3])) + '</a>' : '';
           return '<div><dt>' + esc(row[0]) + dop + '</dt><dd' + (row[2] && row[2] !== 'neutral' ? ' class="' + row[2] + '"' : '') + '>' + esc(row[1]) + sam + '</dd></div>';
         }).join('') + '</dl>' + (s.ist ? '<p>Источник: ' + esc(s.ist) + '</p>' : '') + '</section>';
       }).join('') +
@@ -1030,10 +1045,16 @@
     return { spisok: spisok, otvetili: otvetili, oprosheno: oprosheno, nep: nep, dataPr: dataPr };
   }
 
+  // otchet-detali-v1: подпись ссылки на первоисточник называет его (js/istochniki.js → samiTekst); нет модуля — как было
+  function samiT(url) {
+    var I = typeof self !== 'undefined' && self.DlkIstochniki;
+    try { return I && I.samiTekst ? I.samiTekst(url) : 'проверьте сами'; } catch (e) { return 'проверьте сами'; }
+  }
+
   function stroka(x) {
     var st = x.status === 'ok' ? 'ответил' : x.status === 'net' ? 'не ответил' : x.status === 'nep' ? 'не проверяли' : 'рассчитано';
     var hvost = x.status === 'net' || x.status === 'nep'
-      ? (x.prichina ? nw(esc(x.prichina)) : '') + (x.ssylka ? (x.prichina ? ' · ' : '') + '<a href="' + esc(x.ssylka) + '" target="_blank" rel="noopener">проверьте сами</a>' : '') || (x.status === 'nep' ? 'не проверяли' : 'не ответил')
+      ? (x.prichina ? nw(esc(x.prichina)) : '') + (x.ssylka ? (x.prichina ? ' · ' : '') + '<a href="' + esc(x.ssylka) + '" target="_blank" rel="noopener">' + esc(samiT(x.ssylka)) + '</a>' : '') || (x.status === 'nep' ? 'не проверяли' : 'не ответил')
       : x.status === 'raschet' ? '<a href="' + esc(x.ssylka) + '">методика</a>' : esc(x.data || '');
     return '<li class="otk__r otk__r--' + x.status + '" data-ist="' + esc(x.k) + '">' +
       '<span class="otk__z" aria-label="' + st + '">' + x.znak + '</span>' +
@@ -1172,6 +1193,12 @@
     return vse.filter(function (x) { return x.okvedKod; }).concat(vse.filter(function (x) { return !x.okvedKod; }));
   }
 
+  // otchet-detali-v1: подпись ссылки на первоисточник называет его (js/istochniki.js → samiTekst); нет модуля — как было
+  function samiT(url) {
+    var I = typeof self !== 'undefined' && self.DlkIstochniki;
+    try { return I && I.samiTekst ? I.samiTekst(url) : 'проверьте сами'; } catch (e) { return 'проверьте сами'; }
+  }
+
   function html(spisok, sprav) {
     if (!spisok || !spisok.length) return '';
     var d = dmy((sprav || {}).svereno);
@@ -1179,7 +1206,7 @@
       spisok.map(function (x) {
         return '<div data-reestr="' + esc(x.id) + '"' + (x.okvedKod ? ' data-okved' : '') + '><dt>' + esc(nb(x.nazv)) + '<small>' + esc(nb(x.kogda || '')) + '</small></dt>' +
           '<dd>' + esc(nb(x.chto)) + ' <a href="' + esc(x.ssylka) + '" target="_blank" rel="noopener"' +
-          (x.cel ? ' data-goal="' + esc(x.cel) + '"' : '') + '>проверьте сами</a>' +
+          (x.cel ? ' data-goal="' + esc(x.cel) + '"' : '') + '>' + esc(samiT(x.ssylka)) + '</a>' +
           '<small class="rs__m">' + esc(nb([x.okvedKod ? 'по основному ОКВЭД' + NB + x.okvedKod : '', x.kto, x.obnovlenie ? 'обновление: ' + x.obnovlenie : '', x.norma,
             x.okvedKod && dmy(x.svereno) ? 'сверено ' + dmy(x.svereno) : ''].filter(Boolean).join(' · '))) + '</small></dd></div>';
       }).join('') + '</dl>' +
@@ -2063,6 +2090,7 @@
     '.usl-btns button:hover,.usl-btns a:hover{border-color:var(--accent,#0B63E5);color:var(--accent,#0B63E5)}' +
     '.usl-napr{display:flex;gap:0;padding:3px;margin:-2px 0 2px;background:rgba(0,0,0,.055);border-radius:10px;align-self:flex-start;max-width:100%}' +
     '.usl-napr button{min-height:36px;padding:0 14px;border:0;border-radius:9px;background:transparent;font:inherit;font-size:15px;font-weight:500;line-height:1.15;color:var(--ink2,#48484C);cursor:pointer;white-space:nowrap}' +
+    '@media (max-width:640px),(pointer:coarse){.usl-napr button,.usl-btns button,.usl-btns a{min-height:44px}.usl-btns a{display:inline-flex;align-items:center}}' + /* otchet-detali-v1: поле касания 44 px на телефоне */
     '.usl-napr button[aria-pressed=true]{background:#fff;color:var(--ink,#1D1D1F);box-shadow:0 1px 3px rgba(0,0,0,.1)}' +
     '.usl-napr button:focus-visible{outline:2px solid var(--accent,#0B63E5);outline-offset:1px}' +
     '.usl-watch{align-self:flex-start;font-size:15px;line-height:1.35;color:var(--accent,#0B63E5);text-decoration:none;border:1px solid #D9D9D4;background:#fff;border-radius:10px;padding:8px 12px}' +
@@ -6165,6 +6193,11 @@
 
   var OGOVORKA = 'Оценка по открытым данным на дату проверки, а не решение банка или налоговой.';
 
+  // otchet-detali-v1: строка под отчётом в режиме /?inn= (названия — как в витрине partials/vitrina.json)
+  var DRUGIE = [['Проверить счёт', '/proverit-schet/'], ['Кому вы' + NB + 'платите', '/kontragenty-iz-vypiski/'],
+    ['Наличные глазами банка', '/nalichnye/'], ['Скорая 115\u2011ФЗ', '/skoraya-115-fz/'], ['Разборы дел', '/praktika/'],
+    ['Все инструменты', '/#vitrina']];
+
   // ---------- браузер: раскладка готового отчёта по листу ----------
   // текст пилюли (после значка): t — новый, null — исходный (запомнен в data-t0)
   function tekstPilyuli(pill, t) {
@@ -6193,6 +6226,16 @@
     if (who) whoBox.appendChild(who);
     if (rkv) rq.appendChild(rkv);
     hd.appendChild(whoBox); hd.appendChild(rq);
+    // otchet-detali-v1: номер проверки нужен поддержке, а не читателю — из шапки в строку под действиями (и на печати)
+    var nom = null, nomEl = rkv && rkv.querySelector('.rkv__nom');
+    if (nomEl) {
+      var nomDiv = nomEl.closest ? nomEl.closest('div') : nomEl.parentNode.parentNode;
+      var nomDt = nomDiv && nomDiv.querySelector('dt');
+      nom = el(doc, 'p', 'ot-nom', (nomDt ? nomDt.innerHTML : 'Проверка №') + NB);
+      nom.appendChild(nomEl);
+      if (nomDiv && nomDiv.parentNode === rkv) rkv.removeChild(nomDiv);
+      if (rkv.children.length % 2) rkv.classList.add('rkv--nechet');
+    }
 
     var vd = el(doc, 'section', 'ot-vd ot-vd--' + tonPolosy(r));
     vd.setAttribute('aria-label', 'Вывод');
@@ -6261,7 +6304,17 @@
     body.appendChild(main); body.appendChild(side);
 
     var foot = el(doc, 'div', 'ot-foot'); foot.appendChild(act);
+    if (nom) foot.appendChild(nom);
     var disc = el(doc, 'p', 'ot-disc', esc(OGOVORKA));
+    // otchet-detali-v1: на главной в режиме отчёта витрина и разделы скрыты (css/otchet.css) — под отчётом одна строка
+    // «Другие инструменты»; «Все инструменты» ведёт на чистую главную к витрине
+    var dr = null;
+    if (!svoj && doc.querySelector && doc.querySelector('main#top > .hero')) {
+      dr = el(doc, 'nav', 'ot-dr', '<p class="ot-dr__h">Другие инструменты</p><ul>' + DRUGIE.map(function (x) {
+        return '<li><a href="' + x[1] + '" data-goal="otchet_drugie">' + x[0] + '</a></li>';
+      }).join('') + '</ul>');
+      dr.setAttribute('aria-label', 'Другие инструменты');
+    }
 
     // всё, что осталось (неизвестные блоки модулей), — в основное, ничего не теряем
     Array.prototype.slice.call(report.children).forEach(function (x) { if (x !== head) main.appendChild(x); });
@@ -6269,7 +6322,7 @@
     // пустые обёртки (строки светофора, из которых глубина ушла ниже) — убираем, чтобы не было пустых полос
     Array.prototype.slice.call(main.children).forEach(function (x) { if (!x.textContent.trim()) main.removeChild(x); });
     report.innerHTML = '';
-    [hd, vd, body, foot, disc].forEach(function (x) { report.appendChild(x); });
+    [hd, vd, body, foot, disc, dr].forEach(function (x) { if (x) report.appendChild(x); });
     report.classList.add('ot');
     report.setAttribute('aria-label', svoj ? 'Ваша компания глазами банка и налоговой' : 'Отчёт о проверке контрагента');
     Array.prototype.forEach.call(vd.querySelectorAll('[data-cel]'), function (a) {

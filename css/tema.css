@@ -38,6 +38,9 @@
 [data-theme=dark] .wn-bar .wn-bar__x:hover{background:rgba(91,155,255,0.08)}
 [data-theme=dark] body::before{background:radial-gradient(42% 38% at 22% 18%,rgba(22,36,61,0.95),rgba(22,36,61,0) 70%),
   radial-gradient(38% 34% at 82% 64%,rgba(46,34,12,0.95),rgba(46,34,12,0) 70%)}
+[data-theme=dark] .report.ex{box-shadow:var(--shadow)}
+@media (hover:hover){[data-theme=dark] .report.ex:hover{box-shadow:var(--shadow-hover)}
+}
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){[data-theme=dark] .shapka.is-scrolled{background:rgba(17,17,19,0.72);border-bottom-color:rgba(255,255,255,0.104)}
 [data-theme=dark] .report.ex{background:rgba(28,28,31,0.78);box-shadow:var(--shadow),inset 0 0 0 1px rgba(255,255,255,0.06)}
 @media (hover:hover){[data-theme=dark] .report.ex:hover{box-shadow:var(--shadow-hover),inset 0 0 0 1px rgba(255,255,255,0.06)}
@@ -62,9 +65,13 @@
 [data-theme=dark] .ot-btn.p:hover{color:#0B0B0C}
 [data-theme=dark] .ot-btn.s{background:rgba(28,28,31,0.6)}
 [data-theme=dark] .ot-sc .ot-ne{color:#E8A23A;background:#2E220C}
+@media (max-width:860px){[data-theme=dark] .ot-ix{border-right:0}
+}
 [data-theme=dark] .ex-ix{border-right:1px solid rgba(255,255,255,0.132)}
 [data-theme=dark] .ex-ix .pill{background:rgba(28,28,31,0.7)}
 [data-theme=dark] .ex-vt .usl details{border-top-color:rgba(255,255,255,0.132)}
+@media (max-width:520px){[data-theme=dark] .ex-ix{border-right:0}
+}
 [data-theme=dark] .pf__s--mnogo b{color:#FF7B72}
 [data-theme=dark] .pf__s--ser b{color:#FF8F57}
 [data-theme=dark] .pf__s--vopr b{color:#E8A23A}

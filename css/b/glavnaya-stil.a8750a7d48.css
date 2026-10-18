@@ -224,6 +224,40 @@ dialog.po::backdrop{background:rgba(17,17,19,.4)}
  .po-cena b{font-size:32px}
 }
 @media print{dialog.po{display:none!important}}
+
+/* otchet-detali-v1 (19.10.2026; разбор отчёта на телефоне).
+   1) Поля касания в теле отчёта ≥ 44 px на телефоне и сенсорном экране: термины, ссылки в строке и «проверить …» — невидимой
+      полосой 44 px вокруг (::after, строка текста не сдвигается); summary, кнопки «Условий сделки» — высотой. С мышью — 24 px (WCAG 2.5.8).
+   2) «Готово. Отчёт — рядом.» на телефоне — только для экранного диктора: страница сама прокручивает к отчёту, строка над ним
+      оставалась наполовину под шапкой; role=status по-прежнему озвучивает готовность.
+   3) Номер проверки — в подвале отчёта мелкой строкой (нужен поддержке, не читателю); в шапке остаются даты.
+   4) Режим отчёта (/?inn=…): под отчётом — строка «Другие инструменты» и подвал сайта, витрина и разделы главной — на чистой главной. */
+@media (max-width:640px),(pointer:coarse){
+ .report.ot .termin,.report.ot a:not(.btn):not(.ot-btn):not([data-u]){position:relative}
+ .report.ot .termin::after,.report.ot a:not(.btn):not(.ot-btn):not([data-u])::after{content:"";position:absolute;left:-4px;right:-4px;top:50%;height:44px;transform:translateY(-50%)}
+ .report.ot summary{min-height:44px;display:flex;align-items:center;flex-wrap:wrap}
+ .report.ot .ot-ix__pch>summary{display:inline-flex}
+}
+@media (max-width:979px){.rezhim-otcheta .hero-text .note.ok{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}}
+.ot-nom{margin:10px 0 0;font-size:12px;color:var(--muted,#6B6B70)}
+.ot-nom .rkv__nom{font-size:inherit}
+.ot-dr{margin:0;padding:16px 40px 20px;border-top:1px solid var(--line,#E6E6E1)}
+.ot-dr__h{margin:0 0 8px;font-size:13px;font-weight:600;color:var(--ink2,#48484C)}
+.ot-dr ul{display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0;list-style:none}
+.ot-dr a{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border:1px solid var(--line-2,#D9D9D4);border-radius:var(--r-pill,999px);font-size:15px;color:var(--ink,#1D1D1F);text-decoration:none}
+.ot-dr a:hover{border-color:var(--accent,#0B63E5);color:var(--accent,#0B63E5)}
+.ot-dr a:focus-visible{outline:2px solid var(--accent,#0B63E5);outline-offset:2px}
+@media (max-width:860px){.ot-dr{padding-left:20px;padding-right:20px}}
+@media (max-width:640px),(pointer:coarse){.ot-dr ul{flex-wrap:nowrap;overflow-x:auto;scroll-snap-type:x proximity;scroll-padding-inline:20px;scrollbar-width:none;margin:0 -20px;padding:0 20px 4px}.ot-dr ul::-webkit-scrollbar{display:none}.ot-dr li{flex:0 0 auto;scroll-snap-align:start}.ot-dr a{white-space:nowrap}}
+@media (min-width:641px) and (pointer:fine){
+ .report.ot .termin,.report.ot a:not(.btn):not(.ot-btn):not([data-u]){position:relative}
+ .report.ot .termin::after,.report.ot a:not(.btn):not(.ot-btn):not([data-u])::after{content:"";position:absolute;left:-2px;right:-2px;top:50%;height:24px;transform:translateY(-50%)}
+ .report.ot summary{min-height:24px}
+}
+.rezhim-otcheta main#top>:not(.hero){display:none}
+@media print{.ot-dr{display:none}}
+.rkv.rkv--nechet>div:last-child{grid-column:1/-1}
+@media print{.report.ot .ot-foot:has(.ot-nom){display:block!important;border:0;padding:4px 0 0}}
 /* --- /css/perehod.css --- */
 /* Делоскоп — vizual-v3.1a «Инструмент» (18.10.2026): переход «пример → отчёт» и подсказки у поля ИНН.
    Визуал v3 §7, волна 3.1 (а, б). Без поддержки — правила просто не действуют, всё работает как раньше. */
@@ -428,7 +462,9 @@ dialog.lip-d[open]{animation:lip-vverh .28s cubic-bezier(.2,.7,.2,1)}
 .ot-main .ex-zad .ex-r,.ot-main .ex-zad .sut__r{border-color:rgba(29,29,31,.08)}
 /* после поворота скрытая сторона не ловит клики и не читается — inert/aria-hidden ставит скрипт */
 .ex-lico[inert],.ex-zad[inert]{pointer-events:none}
-@media (max-width:520px){.ex-vid.ot-vid{margin:0 0 12px}.ex-vid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:16px 20px 2px;width:auto;max-width:none;border-radius:16px}.ex-vid button{white-space:normal;line-height:1.15;padding:6px 4px;font-size:13px;min-height:44px;border-radius:10px}.ex-zad{padding:16px 20px 4px}}
+/* otchet-detali-v1: вкладок 3 (пример) или 4 (отчёт, «Связи» добавляет js/svyazi.js) — всегда одна строка равных колонок; было 3 колонки — «Связи» уезжала на вторую строку */
+@media (min-width:521px) and (max-width:720px){.ex-vid.ot-vid{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);width:auto}.ex-vid.ot-vid button{white-space:normal;line-height:1.15;padding:6px 8px}}
+@media (max-width:520px){.ex-vid.ot-vid{margin:0 0 12px}.ex-vid{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);margin:16px 20px 2px;width:auto;max-width:none;border-radius:16px}.ex-vid button{white-space:normal;line-height:1.15;padding:6px 4px;font-size:13px;min-height:44px;border-radius:10px}.ex-zad{padding:16px 20px 4px}}
 @media (max-width:520px){.zhdu-js .report.ex .ex-vid[hidden]+.ex-f{margin-top:68px}}
 
 /* ===== Б. «сеть связей» за первым экраном ===== */

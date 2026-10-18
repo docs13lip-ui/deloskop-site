@@ -195,7 +195,7 @@ main{max-width:1120px}
 .cta.ghost{background:#EEF3FC;color:var(--accent)}
 .knopki{display:flex;flex-direction:column;gap:2px}
 .cta2{display:flex;align-items:center;justify-content:center;min-height:44px;font-size:15px;font-weight:500;color:var(--accent);border-radius:10px}.cta2:hover{background:#F2F6FD}
-.pod{font-size:15px;color:var(--muted);margin:6px 0 0;max-width:58ch}
+.pod{font-size:15px;color:var(--muted);margin:6px 0 0;max-width:38em}
 .razovye{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:0 0 6px}
 .raz{background:var(--card);border-radius:var(--r);padding:22px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
 .raz__n{font-size:17px;font-weight:600;letter-spacing:-.01em;line-height:1.3}

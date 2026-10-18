@@ -24,11 +24,11 @@ test('вкладки отчёта — 44 px, место до скрипта — 
   assert.match(css, /\.ex-vid\[hidden\]\+\.ex-f\{margin-top:78px\}/);
 });
 
-test('строка подписей ≤ 75 знаков (58ch — Onest: в среднем ~1,25 буквы кириллицы на ширину «0»): /tarify/ (источник — sobrat_tarify), /skoraya-115-fz/, /reyting/', () => {
-  assert.match(chitat('tests/sobrat_tarify.py'), /\.pod\{[^}]*max-width:58ch/);
-  assert.match(chitat('tarify/index.html'), /\.pod\{[^}]*max-width:58ch/, 'сборщик тарифов не запущен');
-  assert.match(chitat('skoraya-115-fz/index.html'), /\.disc\{[^}]*max-width:58ch/);
-  assert.match(chitat('css/reyting.css'), /\.ry-ub\{max-width:58ch/);
+test('строка подписей ≤ 75 знаков (38em ≈ 58ch Onest; em, а не ch: ширина «0» меняется, пока грузится шрифт — detali-v1c): /tarify/ (источник — sobrat_tarify), /skoraya-115-fz/, /reyting/', () => {
+  assert.match(chitat('tests/sobrat_tarify.py'), /\.pod\{[^}]*max-width:38em/);
+  assert.match(chitat('tarify/index.html'), /\.pod\{[^}]*max-width:38em/, 'сборщик тарифов не запущен');
+  assert.match(chitat('skoraya-115-fz/index.html'), /\.disc\{[^}]*max-width:38em/);
+  assert.match(chitat('css/reyting.css'), /\.ry-ub\{max-width:38em/);
 });
 
 test('/indeks/: подписи шкалы не меньше 12 px, после h1 — h2', () => {
@@ -46,4 +46,14 @@ test('типограф: «во», «мы», «вы», «их» не висят �
   new Function('window', 'document', 'location', 'localStorage', chitat('obnovleniya.js'))(sreda.window, sreda.document, sreda.location, sreda.localStorage);
   assert.strictEqual(okno.DlkTipo.tekst(s), py.replace(/&nbsp;/g, ' '));
   assert.match(chitat('js/usloviya.js'), /window\.DlkTipo\.uzly\(box\)/, '«Условия сделки» — через ту же типографику');
+});
+
+test('detali-v1c: остаток касания и строки — крошки, источники, лента, FAQ, cookie, фильтры практики; абзацы ≤ 38em', () => {
+  const css = chitat('css/detali.css');
+  for (const r of ['.crumbs a,.co-krosh a{display:inline-block;padding:12px 0;margin:-12px 0}', '.u .p a,.tw td>a{display:inline-block;padding:12px 0;margin:-12px 0}', '.src li>a', 'summary{min-height:44px',
+    '.pr .razd a', 'button[data-preset]', '.shapka .shapka__btn', '@media (min-width:641px) and (pointer:fine)', '.podval li a{display:inline-block;padding:1px 0;margin:-1px 0}'])
+    assert.ok(css.includes(r), r);
+  assert.match(css, /:where\(article,\.set-host,\.co-ogov\) :where\(p:not\(\[class\]\),ul:not\(\[class\]\)>li,ol:not\(\[class\]\)>li\)\{max-width:38em\}/);
+  assert.doesNotMatch(css.replace(/\/\*[\s\S]*?\*\//g, ''), /\d+ch\b/, 'ширина строки — в em: ch зависит от шрифта и сдвигает колонку при загрузке Onest');
+  assert.match(chitat('partials/shapka.css'), /\.ck-bar \.ck-bar__b button\{flex:1;min-height:44px/, 'кнопки cookie на телефоне — 44 px (источник — partials/shapka.css)');
 });

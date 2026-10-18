@@ -42,6 +42,7 @@
 [data-theme=dark] .report.ex{background:rgba(28,28,31,0.78);box-shadow:var(--shadow),inset 0 0 0 1px rgba(255,255,255,0.06)}
 @media (hover:hover){[data-theme=dark] .report.ex:hover{box-shadow:var(--shadow-hover),inset 0 0 0 1px rgba(255,255,255,0.06)}
 }
+[data-theme=dark] .report.ex.loading,[data-theme=dark] .rezhim-otcheta .report.ex{background:#1C1C1F}
 }
 [data-theme=dark] .zhi__strelka::after{box-shadow:0 0 0 3px rgba(255,255,255,0.1)}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){[data-theme=dark] .report.ex{background:#1C1C1F}

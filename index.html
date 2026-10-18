@@ -281,9 +281,9 @@ footer a{color:var(--ink2)}
 .yakor{position:absolute}
 </style>
 <!-- vizual-v3.0a: стили и скрипты главной — пятью файлами вместо 17 (partials/sborka.json, tests/sobrat_js.py) -->
-<link rel="stylesheet" href="/css/b/ds.df84d3420a.css">
-<link rel="stylesheet" href="/css/b/glavnaya-stil.a5edc2073a.css">
-<script src="/js/b/yadro.26585b48ea.js" defer></script>
+<link rel="stylesheet" href="/css/b/ds.2aa626e550.css">
+<link rel="stylesheet" href="/css/b/glavnaya-stil.f6f866c123.css">
+<script src="/js/b/yadro.ee696c7534.js" defer></script>
 <script src="/js/b/glavnaya.8b55ffc475.js" defer></script>
 <link rel="icon" type="image/png" sizes="120x120" href="/favicon-120.png">
 <link rel="alternate" type="application/rss+xml" title="Разборы дел — Делоскоп" href="/praktika/rss.xml">
@@ -692,7 +692,7 @@ footer a{color:var(--ink2)}
   // vizual-v3.0a: модули отчёта (~450 КБ) — одним пакетом и только когда нужны: при проверке, при намерении проверить
   // (фокус в поле, наведение или касание кнопки) и после загрузки страницы, когда браузер свободен (пример «Условий сделки»).
   // Пакет не загрузился — отчёт рисуется как раньше без модулей (каждый вызов — через window.X).
-  var OTCHET_JS='/js/b/otchet.8a0e71f2ac.js', moduliP=null;
+  var OTCHET_JS='/js/b/otchet.da6a3c8c6c.js', moduliP=null;
   function gruzitModuli(){if(moduliP)return moduliP;moduliP=new Promise(function(ok){var s=document.createElement('script');s.src=OTCHET_JS;s.onload=s.onerror=function(){ok()};document.head.appendChild(s);});return moduliP;}
   function kogdaModuli(f){gruzitModuli().then(function(){if(moduliGotovy)f();else document.addEventListener('DOMContentLoaded',function(){f()},{once:true});});}
   ['focus','input','pointerenter','touchstart'].forEach(function(ev){form.addEventListener(ev,function(){gruzitModuli()},{once:true,passive:true,capture:true});});

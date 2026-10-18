@@ -268,7 +268,16 @@
       var m = document.querySelector('meta[name="theme-color"]');
       if (m) m.content = t === "dark" ? "#111113" : "#F5F5F2";
       document.querySelectorAll("[data-tema-v]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-tema-v") === v)); });
+      document.querySelectorAll("[data-tema-knopka]").forEach(function (b) { b.setAttribute("aria-label", t === "dark" ? "Включить светлую тему" : "Включить тёмную тему"); });
     };
+    // кнопка в шапке: тёмная ↔ светлая одним нажатием (выбор запоминается, как и в подвале)
+    document.querySelectorAll("[data-tema-knopka]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var t = root.dataset.theme === "dark" ? "light" : "dark";
+        try { localStorage.setItem("tema", t); } catch (er) {}
+        primenit();
+      });
+    });
     document.querySelectorAll("[data-tema]").forEach(function (blok) {
       blok.hidden = false;
       blok.addEventListener("click", function (e) {

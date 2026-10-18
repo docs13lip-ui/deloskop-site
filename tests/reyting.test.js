@@ -84,7 +84,8 @@ test('у каждой таблицы — источник, дата сведен
   const sekcii = h.split('<section class="co-sec').slice(1);
   const s_tabl = sekcii.filter(s => s.includes('<table'));
   assert.ok(s_tabl.length >= 3, 'таблиц меньше трёх');
-  for (const s of s_tabl) assert.match(s, /class="co-src ry-src">[^<]*(сведения на \d{2}\.\d{2}\.\d{4}|дата регистрации)[^<]*● подтверждено источником/, 'таблица без источника и даты');
+  // 18.10 lenta-chisto-v1: подпись прошла типограф статей — сверяем без учёта вида пробела
+  for (const s of s_tabl.map(x => x.replace(/&nbsp;|\u00a0/g, ' '))) assert.match(s, /class="co-src ry-src">[^<]*(сведения на \d{2}\.\d{2}\.\d{4}|дата регистрации)[^<]*● подтверждено источником/, 'таблица без источника и даты');
   const v = vidimyj(h);
   if (/не вошли \d+/.test(v)) assert.match(v, /не значит, что её нет у компании/);
 });

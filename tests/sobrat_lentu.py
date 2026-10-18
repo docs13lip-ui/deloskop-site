@@ -11,6 +11,15 @@
 рисует скрипт страницы). Раньше снимок стоял руками на 11.10: новая запись ленты вытесняла его якорь из 20 записей
 /obnovleniya/ и tests/ssylki.test.js краснел у любого комплекта с лентой. Теперь якоря пульса всегда среди 20.
 
+Типографика ленты (18.10.2026, [Ночные запуски] lenta-chisto-v1): заголовки и пункты записей проходят те же правила,
+что статьи (tests/tipograf_statej.py → tekst): короткие слова не висят в конце строки, «115-ФЗ», суммы и сроки не рвутся.
+До этого на /obnovleniya/ при 390 px висело ~1 500 предлогов и союзов. Скрипт страницы и полоса «Новое» (obnovleniya.js)
+делают то же самое своей функцией tipo(); совпадение с этим сборщиком сверяет tests/lenta_chisto.test.js.
+
+Блок ленты — ровно одна пара меток <!--lenta-->…<!--/lenta--> внутри #list. С 12.10 после блока висел хвост старой
+сборки (записи -71 и -47 и лишняя </div>): метка искалась до ПЕРВОГО <!--/lenta-->, хвост за ней жил вечно, и посетитель
+видел эти две записи дважды (с одинаковыми id). Теперь блок заменяется до ПОСЛЕДНЕЙ закрывающей метки внутри <main>.
+
 Запуск: python3 tests/sobrat_lentu.py [--check]
 Вызывается сам из tests/postavit_vremya.py — то есть при каждой выкладке, вместе с проставлением времени.
 """
@@ -18,6 +27,9 @@ import json
 import pathlib
 import re
 import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import tipograf_statej as TS  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 LENTA = ROOT / "obnovleniya.json"
@@ -36,6 +48,11 @@ def esc(s):
             .replace('"', "&quot;").replace("'", "&#39;"))
 
 
+def t(s):
+    """Текст записи: экранирование + типографика статей (те же правила, что tipo() в скрипте страницы)."""
+    return TS.tekst(esc(s))
+
+
 def kogda(u):
     t = esc(u.get("data") or "") + (", " + esc(u["vremya"]) + " МСК" if u.get("vremya") else "")
     m = re.match(r"^(\d{4}-\d{2}-\d{2})", u.get("id") or "")
@@ -45,19 +62,19 @@ def kogda(u):
 
 
 def zapis(u):
-    h = '<section class="u" id="%s"><span class="tag">%s</span><h2>%s</h2>' % (esc(u["id"]), kogda(u), esc(u.get("zagolovok", "")))
+    h = '<section class="u" id="%s"><span class="tag">%s</span><h2>%s</h2>' % (esc(u["id"]), kogda(u), t(u.get("zagolovok", "")))
     if u.get("chto_novogo"):
-        h += '<h3>Что нового</h3><ul class="n">' + "".join("<li>%s</li>" % esc(t) for t in u["chto_novogo"]) + "</ul>"
+        h += '<h3>Что нового</h3><ul class="n">' + "".join("<li>%s</li>" % t(x) for x in u["chto_novogo"]) + "</ul>"
     if u.get("chto_proverit"):
         li = []
         for p in u["chto_proverit"]:
             if p.get("ssylka"):
-                li.append('<li><a href="%s">%s →</a></li>' % (esc(p["ssylka"]), esc(p.get("tekst", ""))))
+                li.append('<li><a href="%s">%s →</a></li>' % (esc(p["ssylka"]), t(p.get("tekst", ""))))
             else:
-                li.append("<li>%s</li>" % esc(p.get("tekst", "")))
+                li.append("<li>%s</li>" % t(p.get("tekst", "")))
         h += '<h3>Что проверить</h3><ul class="p">' + "".join(li) + "</ul>"
     if u.get("kuda_pisat"):
-        h += '<p class="note">%s</p>' % esc(u["kuda_pisat"])
+        h += '<p class="note">%s</p>' % t(u["kuda_pisat"])
     return h + "</section>"
 
 
@@ -68,10 +85,19 @@ def blok():
     return "<!--lenta-->" + "\n".join(zapis(u) for u in zapisi) + "<!--/lenta-->"
 
 
+LIST = re.compile(r'<div id="list">(.*?)(?=</main>)', re.S)
+# что может стоять в #list между метками ленты и </main>: записи, метки, пустые <p class="empty">, закрывающие </div>
+LIST_MUSOR = re.compile(r'<section class="u"[^>]*>.*?</section>|<p class="empty">[^<]*</p>|<!--/?lenta-->|</div>|\s+', re.S)
+
+
 def sobrat(txt):
+    """Блок #list = одна пара меток ленты и </div>. Всё, что сборка оставляла в #list раньше (хвост 12.10), — заменяется."""
     b = blok()
-    if METKA.search(txt):
-        return METKA.sub(lambda m: b, txt, count=1)
+    m = LIST.search(txt)
+    if m and "<!--lenta-->" in m.group(1):
+        if LIST_MUSOR.sub("", m.group(1)):
+            raise SystemExit("sobrat_lentu: в #list на /obnovleniya/ после ленты стоит что-то кроме записей — разметку правили руками")
+        return txt[:m.start()] + '<div id="list">' + b + "</div>\n" + txt[m.end():]
     stary = '<div id="list"><p class="empty">Загружаю…</p></div>'
     if stary not in txt:
         raise SystemExit("sobrat_lentu: на /obnovleniya/ нет ни меток <!--lenta-->, ни блока #list — разметку правили руками")

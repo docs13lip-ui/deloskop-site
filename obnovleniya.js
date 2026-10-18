@@ -16,6 +16,15 @@
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
   }
+  // Типографика ленты — как tests/tipograf_statej.py (tekst): короткие слова, числа, тире, «115-ФЗ». Без (?<!) — старые iOS.
+  function tipo(s){var B=/[0-9A-Za-zЀ-ӿ_&#-]/,P=/[0-9A-Za-zЀ-ӿ_-]/;
+    function pered(re){return function(m,w,o,x){return o&&re.test(x.charAt(o-1))?m:w+"\u00a0";};}
+    return String(s).replace(/(\d) (?=\d{3}(?![0-9A-Za-zЀ-ӿ_]))/g,"$1\u00a0")
+      .replace(/(\d) (?=₽|%|млн|млрд|тыс|рабоч|дн|месяц|год|лет|час|минут)/g,"$1\u00a0")
+      .replace(/ (?=—)/g,"\u00a0")
+      .replace(/(пп?\.|ст\.|ч\.|№) /g,pered(P))
+      .replace(/(в|и|а|к|с|у|о|я|по|на|не|до|от|за|из|ни|но|же|ли|без|для|под|над|при|про|со|об) /gi,pered(B))
+      .replace(/(\d)-(?=ФЗ(?![0-9A-Za-zЀ-ӿ_]))/g,"$1\u2011");}
   var MES = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
   function denMes(u) {
     var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(u.id || "");
@@ -63,7 +72,7 @@
     d.className = "wn-bar";
     d.setAttribute("role", "region");
     d.setAttribute("aria-label", "Новое на сайте");
-    d.innerHTML = '<div class="wn-bar__in"><p class="wn-bar__t"><b>Новое ' + denMes(u) + ":</b> " + esc(u.zagolovok) +
+    d.innerHTML = '<div class="wn-bar__in"><p class="wn-bar__t"><b>Новое ' + denMes(u) + ":</b> " + tipo(esc(u.zagolovok)) +
       ' · <a href="/obnovleniya/#' + esc(u.id) + '">Что проверить →</a></p>' +
       '<button class="wn-bar__x" type="button" aria-label="Скрыть"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div>';
     d.querySelector("a").addEventListener("click", function () { set(u.id); });
@@ -83,16 +92,16 @@
     var dlg = document.createElement("dialog");
     dlg.className = "dlo";
     dlg.setAttribute("aria-labelledby", "dlo-h");
-    var h = '<span class="dlo-tag">Обновление · ' + kogda(u) + '</span><h2 id="dlo-h">' + esc(u.zagolovok) + "</h2>";
+    var h = '<span class="dlo-tag">Обновление · ' + kogda(u) + '</span><h2 id="dlo-h">' + tipo(esc(u.zagolovok)) + "</h2>";
     if (u.chto_novogo && u.chto_novogo.length) {
-      h += '<h3>Что нового</h3><ul class="dlo-n">' + u.chto_novogo.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ul>";
+      h += '<h3>Что нового</h3><ul class="dlo-n">' + u.chto_novogo.map(function (t) { return "<li>" + tipo(esc(t)) + "</li>"; }).join("") + "</ul>";
     }
     if (u.chto_proverit && u.chto_proverit.length) {
       h += '<h3>Что проверить</h3><ul class="dlo-p">' + u.chto_proverit.map(function (p) {
-        return "<li>" + (p.ssylka ? '<a href="' + esc(p.ssylka) + '">' + esc(p.tekst) + " →</a>" : esc(p.tekst)) + "</li>";
+        return "<li>" + (p.ssylka ? '<a href="' + esc(p.ssylka) + '">' + tipo(esc(p.tekst)) + " →</a>" : tipo(esc(p.tekst))) + "</li>";
       }).join("") + "</ul>";
     }
-    if (u.kuda_pisat) h += '<p class="dlo-note">' + esc(u.kuda_pisat) + "</p>";
+    if (u.kuda_pisat) h += '<p class="dlo-note">' + tipo(esc(u.kuda_pisat)) + "</p>";
     h += '<div class="dlo-btns"><button class="dlo-ok" type="button">Понятно</button>' +
       '<a class="dlo-all" href="/obnovleniya/">Все обновления и что проверить →</a></div>';
     dlg.innerHTML = h;

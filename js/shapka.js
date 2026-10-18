@@ -299,6 +299,8 @@
    CSS даёт заголовку <h1> новой страницы имя dlk-zag; здесь, на уходящей странице, решаем, что переедет на его место:
    — список → карточка, раздел → статья: видимая на экране ссылка, по которой ушли (название переезжает в заголовок);
    — статья → статья, карточка → карточка: заголовок старой страницы;
+   — с витрины главной (vitrina-v1): ссылка экспоната с data-vt, по которой нажали, — его название переезжает в заголовок
+     страницы продукта;
    — всё прочее: ничего — новая страница просто проявляется. Нет поддержки — событий нет, всё как раньше. */
 (function () {
   "use strict";
@@ -326,7 +328,16 @@
     }
     return null;
   }
-  var nazvannye = [];
+  var nazvannye = [], nazhata = null;
+  // ссылка витрины, по которой ушли (pageswap не знает, по чему нажали)
+  if (typeof addEventListener === "function") addEventListener("click", function (e) {
+    var t = e.target;
+    nazhata = t && t.closest ? t.closest("a[data-vt]") : null;
+  }, true);
+  function vidna(a) {
+    var r = a.getBoundingClientRect();
+    return r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < (innerHeight || 0);
+  }
   function snyat() { nazvannye.forEach(function (e) { e.style.viewTransitionName = ""; }); nazvannye = []; }
   function imya(e, v) { e.style.viewTransitionName = v; nazvannye.push(e); }
   if (typeof module === "object" && module.exports) module.exports = { para: para, semya: semya, spisok: spisok };
@@ -339,6 +350,8 @@
     if (kuda.origin !== location.origin) return;
     var vid = para(location.pathname, kuda.pathname), h1 = document.querySelectorAll("h1"), a = null;
     if (vid === "ssylka") a = ssylkaNa(kuda.href.split("#")[0]);
+    else if (!vid && nazhata && nazhata.href.split("#")[0] === kuda.href.split("#")[0] && vidna(nazhata)) a = nazhata;
+    nazhata = null;
     // заголовок старой страницы остаётся с именем, только если он и переезжает (и он один)
     for (var i = 0; i < h1.length; i++) if (!(vid === "zagolovok" && i === 0)) imya(h1[i], "none");
     if (a) imya(a, "dlk-zag");

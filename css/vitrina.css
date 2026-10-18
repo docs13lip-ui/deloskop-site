@@ -1,0 +1,126 @@
+/* vitrina-v1 — «Витрина экосистемы» на главной (разметку собирает tests/sobrat_vitrinu.py из partials/vitrina.json).
+   Каждый продукт — экспонат: сцена с героем + статус, польза, три факта, одно действие. Цвета — только токены темы
+   (в тёмной теме подхватываются сами). Движение: появление — общий механизм «сборки» (data-sobir, css/glubina.css);
+   поворот героя и свет — по прокрутке (animation-timeline: view(), только transform/opacity); наклон к курсору —
+   js/vitrina.js. «Меньше движения» и браузеры без view() — сцены стоят, всё читается. */
+.vit{
+ --vg-a:var(--accent);--vg-p:var(--surface,var(--card));--vg-on:var(--surface,var(--card));
+ --vg-k:color-mix(in srgb,var(--ink) 72%,transparent);--vg-l:color-mix(in srgb,var(--ink) 20%,transparent);
+ --vg-s:color-mix(in srgb,var(--accent) 14%,var(--surface,var(--card)));
+ --vg-ok:var(--ok);--vg-warn:var(--warn);--vg-bad:var(--bad,#B3261E);
+ --vit-ten:rgba(0,0,0,.16);--vit-svet:color-mix(in srgb,var(--accent) 20%,transparent);
+ padding-block:0 var(--sect);position:relative
+}
+.vit-nabor{position:absolute;width:0;height:0;overflow:hidden}
+.vit__head{display:flex;flex-direction:column;gap:16px;max-width:760px;margin-bottom:32px}
+.vit__head .lead{max-width:34em}
+
+/* карта витрины: все продукты одним взглядом, ведёт к экспонату */
+.vit__karta ul{list-style:none;margin:0 0 clamp(48px,7vw,96px);padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:10px}
+.vit-k{display:flex;align-items:center;gap:12px;min-height:56px;padding:6px 14px 6px 6px;border:1px solid var(--line);border-radius:16px;background:var(--surface,var(--card));color:var(--ink);font-size:15px;font-weight:500;line-height:1.25;text-decoration:none;transition:transform .2s var(--ease),border-color .2s var(--ease),box-shadow .2s var(--ease)}
+.vit-k:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--accent) 45%,var(--line));box-shadow:0 10px 24px rgba(0,0,0,.08)}
+.vit-k:active{transform:translateY(0) scale(.98)}
+.vit-k:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.vit-k__g{stroke:var(--vg-k);stroke-width:3;stroke-linejoin:round;stroke-linecap:round;flex:none;width:44px;height:44px;padding:5px;border-radius:10px;background:var(--vg-s)}
+.vit-k--b{color:var(--ink2)}
+.vit-k--b .vit-k__g{opacity:.6;filter:grayscale(.7)}
+
+/* зал: экспонаты чередуют сторону сцены */
+.vit__zal{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:clamp(64px,9vw,128px)}
+.vit-e{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:clamp(32px,5vw,80px);align-items:center;scroll-margin-top:96px}
+.vit-e:nth-child(even) .vit-e__scena{order:2}
+.vit-e__scena{position:relative;aspect-ratio:5/4;border-radius:28px;border:1px solid var(--line);overflow:hidden;isolation:isolate;perspective:900px;
+ background:radial-gradient(120% 90% at 50% 0%,var(--vg-s),var(--surface,var(--card)) 72%)}
+.vit-e__svet{position:absolute;inset:-25%;z-index:-1;background:radial-gradient(38% 38% at 34% 34%,var(--vit-svet),transparent 72%)}
+.vit-e__blik{position:absolute;left:-30%;top:-30%;width:60%;height:60%;z-index:2;pointer-events:none;opacity:0;border-radius:50%;
+ background:radial-gradient(closest-side,rgba(255,255,255,.22),transparent);transition:opacity .3s var(--ease)}
+.vit-e__scena:hover .vit-e__blik{opacity:1}
+.vit-e__tilt{position:absolute;inset:12% 14% 17%;transform-style:preserve-3d;transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .45s var(--ease)}
+.vit-g{display:block;width:100%;height:100%;stroke:var(--vg-k);stroke-width:2;stroke-linejoin:round;stroke-linecap:round;filter:drop-shadow(0 22px 26px var(--vit-ten))}
+.vit-e__pol{position:absolute;left:24%;right:24%;bottom:8%;height:9%;z-index:-1;border-radius:50%;background:radial-gradient(closest-side,var(--vit-ten),transparent)}
+
+.vit-e__nad{display:flex;align-items:center;gap:14px;margin:0 0 14px}
+.vit-e__n{font-size:13px;font-weight:600;letter-spacing:.06em;color:var(--muted);font-variant-numeric:tabular-nums}
+.vit-st{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--ink2)}
+.vit-st::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--ok);box-sizing:border-box}
+.vit-st--chast::before{background:linear-gradient(90deg,var(--ok) 50%,transparent 50%);border:2px solid var(--ok)}
+.vit-st--razrabotka::before{background:none;border:2px solid var(--muted)}
+.vit-e__h{font-size:clamp(28px,3.2vw,40px);line-height:1.1;letter-spacing:-.025em;margin:0 0 16px;text-wrap:balance}
+.vit-e__a{padding-block:5px;color:var(--ink);text-decoration:none;transition:color .2s var(--ease)}
+.vit-e__a:hover{color:var(--accent)}
+.vit-e__a:focus-visible{outline:3px solid var(--accent);outline-offset:4px;border-radius:6px}
+.vit-e__p{font-size:clamp(17px,1.5vw,20px);line-height:1.5;color:var(--ink2);max-width:34em;margin:0 0 22px;text-wrap:pretty}
+.vit-e__u{list-style:none;margin:0 0 30px;padding:0;display:grid;gap:12px;max-width:34em}
+.vit-e__u li{position:relative;padding-left:30px;font-size:16px;line-height:1.5;color:var(--ink);text-wrap:pretty}
+.vit-e__u li::before{content:"";position:absolute;left:3px;top:.42em;width:12px;height:6px;border-left:2px solid var(--accent);border-bottom:2px solid var(--accent);transform:rotate(-45deg)}
+.vit-e__go{margin:0}
+.vit-btn{display:inline-flex;align-items:center;gap:10px;min-height:48px;padding:0 24px;border-radius:999px;background:var(--accent);color:var(--on-accent,#fff);font-size:16px;font-weight:600;text-decoration:none;
+ transition:transform .2s var(--ease),box-shadow .2s var(--ease),background-color .2s var(--ease)}
+.vit-btn span{display:inline-block;transition:transform .2s var(--ease)}
+.vit-btn:hover{background:var(--accent-hover,var(--accent));transform:translateY(-1px);box-shadow:0 10px 24px color-mix(in srgb,var(--accent) 32%,transparent)}
+.vit-btn:hover span{transform:translateX(3px)}
+.vit-btn:active{transform:translateY(0) scale(.98);box-shadow:none}
+.vit-btn:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+
+/* в разработке — приглушённый свет, без дат */
+.vit-s{margin-top:clamp(80px,10vw,144px);padding-top:clamp(40px,5vw,64px);border-top:1px solid var(--line)}
+.vit-s__h{font-size:clamp(26px,3vw,34px);letter-spacing:-.025em;margin:0 0 24px}
+.vit-s__g{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.vit-b{display:flex;flex-direction:column;gap:10px;padding:24px;border:1px dashed color-mix(in srgb,var(--ink) 22%,transparent);border-radius:28px;background:color-mix(in srgb,var(--surface,var(--card)) 55%,transparent);scroll-margin-top:96px}
+.vit-b__scena{height:132px;margin-bottom:6px;border-radius:16px;background:var(--vg-s);display:grid;place-items:center;padding:12px}
+.vit-b__scena .vit-g{width:auto;height:100%;aspect-ratio:5/4;opacity:.62;filter:grayscale(.6)}
+.vit-b__h{font-size:22px;letter-spacing:-.02em;margin:0}
+.vit-b__p{font-size:15px;line-height:1.5;color:var(--ink2);margin:0;text-wrap:pretty}
+.vit-b__u{list-style:disc;margin:0;padding-left:18px;font-size:15px;line-height:1.5;color:var(--muted)}
+.vit-b__go{margin:auto 0 0}
+.vit-lnk{display:inline-flex;align-items:center;gap:6px;min-height:44px;font-weight:600;color:var(--accent);text-decoration:none}
+.vit-lnk:hover{text-decoration:underline;text-underline-offset:3px}
+.vit-lnk:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+.vit-d{margin-top:24px;padding:28px;border-radius:28px;border:1px solid var(--line);background:var(--surface,var(--card));max-width:760px}
+.vit-d__h{font-size:22px;letter-spacing:-.02em;margin:0 0 10px}
+.vit-d p{margin:0;max-width:68ch;font-size:16px;line-height:1.55;color:var(--ink2)}
+
+/* тёмная тема: свечение вместо тени */
+[data-theme=dark] .vit{--vit-ten:rgba(0,0,0,.55);--vit-svet:color-mix(in srgb,var(--accent) 28%,transparent)}
+[data-theme=dark] .vit-e__scena{box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 0 1px color-mix(in srgb,var(--accent) 10%,transparent),0 30px 60px rgba(0,0,0,.35)}
+[data-theme=dark] .vit-g{filter:drop-shadow(0 0 22px color-mix(in srgb,var(--accent) 22%,transparent)) drop-shadow(0 22px 26px var(--vit-ten))}
+[data-theme=dark] .vit-k:hover{box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 30%,transparent),0 10px 28px rgba(0,0,0,.4)}
+
+/* телефон и узкие экраны: сцена над текстом */
+@media (max-width:860px){
+ .vit-e{grid-template-columns:1fr;gap:24px}
+ .vit-e:nth-child(even) .vit-e__scena{order:0}
+ .vit-e__scena{aspect-ratio:16/11}
+ .vit-s__g{grid-template-columns:1fr}
+}
+@media (min-width:861px) and (max-width:1100px){.vit-s__g{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){
+ .vit__karta ul{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .vit-k{gap:8px;padding-right:8px;font-size:14px}
+ .vit-k__g{width:40px;height:40px}
+ .vit-btn{width:100%;justify-content:center}
+}
+
+/* движение по прокрутке: герой поворачивается к зрителю, свет переходит, тень пола дышит */
+@supports (animation-timeline:view()){
+ @media (prefers-reduced-motion:no-preference){
+  .vit-g{animation:vit-povorot linear both;animation-timeline:view();animation-range:cover 0% cover 100%}
+  .vit-e__svet{animation:vit-svet linear both;animation-timeline:view();animation-range:cover 0% cover 100%}
+  .vit-e__pol{animation:vit-pol linear both;animation-timeline:view();animation-range:cover 0% cover 100%}
+ }
+}
+@keyframes vit-povorot{
+ from{transform:translateY(20px) rotateX(18deg) rotateY(-24deg) scale(.92)}
+ 50%{transform:none}
+ to{transform:translateY(-14px) rotateX(-8deg) rotateY(16deg) scale(.97)}
+}
+@keyframes vit-svet{from{transform:translate(-14%,18%);opacity:.5}50%{opacity:1}to{transform:translate(22%,-12%);opacity:.6}}
+@keyframes vit-pol{from{transform:scaleX(.7);opacity:.5}50%{transform:none;opacity:1}to{transform:scaleX(.85);opacity:.7}}
+
+@media (prefers-reduced-motion:reduce){
+ .vit-k,.vit-btn,.vit-btn span,.vit-e__tilt,.vit-e__a,.vit-e__blik{transition:none}
+ .vit-k:hover,.vit-btn:hover,.vit-btn:active,.vit-btn:hover span{transform:none}
+ .vit-e__tilt{transform:none}
+ .vit-e__blik{display:none}
+}
+@media print{.vit-e__scena,.vit-b__scena,.vit__karta{display:none}.vit-e{grid-template-columns:1fr}}

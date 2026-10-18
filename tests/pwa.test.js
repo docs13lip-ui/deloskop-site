@@ -81,7 +81,8 @@ test('сборщик: на всех страницах манифест и /js/p
   }
   const ob = JSON.parse(chitat('partials/obolochka.json'));
   assert.ok(ob.head.includes('/js/pwa.js'), 'карточки из API — тоже с pwa.js');
-  assert.ok(!/theme-color|apple-touch-icon/.test(ob.head), 'у карточек свои — в оболочку не дублируем');
+  assert.ok(!/<meta name="theme-color"|apple-touch-icon/.test(ob.head), // vizual-v3.0b: строка темы в <head> ищет этот meta — это не второй тег
+    'у карточек свои — в оболочку не дублируем');
 });
 
 test('подсказка «Установить»: тихо — не на первой странице, пауза 14 дней, не в приложении и не в админке', () => {

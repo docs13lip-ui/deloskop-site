@@ -9,6 +9,7 @@
     ],
     "glavnaya-stil": [
       "css/otchet.css",
+      "css/perehod.css",
       "css/vizual2.css",
       "css/glubina.css"
     ],
@@ -26,7 +27,8 @@
       "js/istochniki.js",
       "js/imya.js",
       "js/kanaly.js",
-      "js/portfel.js"
+      "js/portfel.js",
+      "js/perehod.js"
     ],
     "glavnaya-sinhr": [
       "js/limit.js",

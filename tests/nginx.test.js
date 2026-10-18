@@ -139,6 +139,16 @@ http { include ${MIME}; default_type application/octet-stream; access_log off;
   assert.strictEqual(kab.h.location, '/cabinet.html?x=1');
   assert.strictEqual((await zapros(port, '/report/')).h.location, '/report.html');
 
+  // vizual-v3.1a: адрес отчёта — главная без индексации; без слеша — 301; не ИНН — 404
+  const ot = await zapros(port, '/otchet/7707083893/');
+  assert.strictEqual(ot.kod, 200);
+  assert.strictEqual(ot.h['x-robots-tag'], 'noindex');
+  assert.strictEqual(ot.h['cache-control'], 'no-cache');
+  assert.match(require('zlib').gunzipSync(ot.telo).toString('utf8'), /<link rel="canonical" href="https:\/\/deloskop\.ru\/">/);
+  assert.strictEqual((await zapros(port, '/otchet/770708389312')).h.location, '/otchet/770708389312/');
+  assert.strictEqual((await zapros(port, '/otchet/123/')).kod, 404);
+  assert.strictEqual((await zapros(port, '/otchet/')).kod, 404);
+
   const komp = await zapros(port, '/company/7707083893-pao-sberbank/');
   assert.strictEqual(komp.kod, 302);
   assert.strictEqual(komp.h.location, '/?inn=7707083893');

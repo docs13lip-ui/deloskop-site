@@ -269,6 +269,19 @@
       if (m) m.content = t === "dark" ? "#111113" : "#F5F5F2";
       document.querySelectorAll("[data-tema-v]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-tema-v") === v)); });
       document.querySelectorAll("[data-tema-knopka]").forEach(function (b) { b.setAttribute("aria-label", t === "dark" ? "Включить светлую тему" : "Включить тёмную тему"); });
+      nebo(t);
+    };
+    // nebo-v1: «живое небо» — только в тёмной теме и только после load (пакет js/b/nebo.*, адрес — у кнопки темы в шапке);
+    // светлая — небо гаснет и уходит со страницы (js/nebo.js)
+    var neboZhdu = false;
+    var nebo = function (t) {
+      if (window.DlkNebo) { if (t === "dark") window.DlkNebo.vkl(); else window.DlkNebo.vykl(); return; }
+      if (t !== "dark" || neboZhdu) return;
+      var kn = document.querySelector("[data-nebo-src]"), src = kn && kn.getAttribute("data-nebo-src");
+      if (!src) return;
+      neboZhdu = true;
+      var gruzit = function () { var s = document.createElement("script"); s.src = src; s.async = true; document.head.appendChild(s); };
+      if (document.readyState === "complete") setTimeout(gruzit, 0); else window.addEventListener("load", function () { setTimeout(gruzit, 0); }, { once: true });
     };
     // кнопка в шапке: тёмная ↔ светлая одним нажатием (выбор запоминается, как и в подвале)
     document.querySelectorAll("[data-tema-knopka]").forEach(function (b) {

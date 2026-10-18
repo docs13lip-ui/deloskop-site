@@ -269,25 +269,25 @@
 
   var CSS = '' +
     '.shch{display:flex;flex-direction:column;gap:18px;color:var(--ink,#1D1D1F)}' +
-    '.shch-oh{margin:0;font-size:13.5px;color:var(--muted,#6B6B70);max-width:68ch}' +
+    '.shch-oh{margin:0;font-size:13px;color:var(--muted,#6B6B70);max-width:68ch}' +
     '.shch-b{display:flex;flex-direction:column;gap:8px}' +
     '.shch-b h3{margin:0;font-size:17px;line-height:1.3;font-weight:600;letter-spacing:-.01em}' +
     '.shch-b ul,.shch-b ol{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}' +
-    '.shch-b li{background:var(--bg,#F5F5F2);border-radius:14px;padding:12px 14px;max-width:68ch}' +
+    '.shch-b li{background:var(--bg,#F5F5F2);border-radius:16px;padding:12px 14px;max-width:68ch}' +
     '.shch-b li b{display:block;font-size:15px;font-weight:600;line-height:1.35}' +
-    '.shch-b li span{display:block;margin-top:3px;font-size:14.5px;line-height:1.45;color:var(--ink2,#48484C)}' +
-    '.shch-b li a{font-size:14.5px}' +
+    '.shch-b li span{display:block;margin-top:3px;font-size:15px;line-height:1.45;color:var(--ink2,#48484C)}' +
+    '.shch-b li a{font-size:15px}' +
     '.shch-sh{counter-reset:sh}' +
     '.shch-sh li{position:relative;padding-left:44px}' +
-    '.shch-sh li:before{counter-increment:sh;content:counter(sh);position:absolute;left:14px;top:12px;width:20px;height:20px;border-radius:50%;background:var(--card,#fff);font-size:12.5px;font-weight:600;line-height:20px;text-align:center;color:var(--ink2,#48484C)}' +
+    '.shch-sh li:before{counter-increment:sh;content:counter(sh);position:absolute;left:14px;top:12px;width:20px;height:20px;border-radius:50%;background:var(--card,#fff);font-size:13px;font-weight:600;line-height:20px;text-align:center;color:var(--ink2,#48484C)}' +
     '.shch-sh li.shch-sled:before{content:"";background:var(--accent,#0B63E5);box-shadow:inset 0 0 0 6px var(--card,#fff)}' +
     '.shch-sh li span{margin-top:0;color:var(--ink,#1D1D1F)}' +
     '.shch-pusto{margin:0;font-size:15px;color:var(--ink2,#48484C);max-width:68ch}' +
-    '.shch-ne{margin:0;font-size:14px;color:#8A5A00;background:#FFF6E0;border-radius:10px;padding:8px 10px;max-width:68ch}' +
+    '.shch-ne{margin:0;font-size:15px;color:#8A5A00;background:#FFF6E0;border-radius:10px;padding:8px 10px;max-width:68ch}' +
     '.shch-k{display:inline-flex;align-items:center;justify-content:center;align-self:flex-start;border-radius:999px;background:var(--accent,#0B63E5);color:#fff!important;font-weight:600;font-size:15px;padding:12px 22px;min-height:44px;text-decoration:none;max-width:100%;text-align:center}' +
     '.shch-k:hover{background:var(--accent-hover,#084BB0)}' +
     '.shch-ch{font-weight:400;color:var(--muted,#6B6B70);font-variant-numeric:tabular-nums}' +
-    '.shch-sv{margin:0;font-size:12.5px;line-height:1.45;color:var(--muted,#6B6B70);max-width:68ch;border-top:1px solid var(--line,#E5E5E0);padding-top:10px}';
+    '.shch-sv{margin:0;font-size:13px;line-height:1.45;color:var(--muted,#6B6B70);max-width:68ch;border-top:1px solid var(--line,#E5E5E0);padding-top:10px}';
 
   // «№ ММ-3-06/333@)» вместе со скобкой и точкой — одним куском: иначе на 390 px «)» уходит на новую строку.
   function nwNomer(h) { return h.replace(/№ ([^\s)<]+\)\.?)/g, '<span class="nw">№ $1</span>'); }

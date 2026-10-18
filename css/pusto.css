@@ -2,19 +2,19 @@
    Токены — те же имена, что в /css/ds.css; запасные значения — для страниц, ещё не переведённых на ds.css (п. 28). */
 .pusto{max-width:760px;margin:clamp(32px,8vh,88px) auto 48px;padding:0 16px}
 .pusto__h{font-size:clamp(32px,5vw,48px);line-height:1.08;letter-spacing:-.025em;font-weight:600;margin:0 0 12px;text-wrap:balance}
-.pusto__lead{font-size:18px;line-height:1.5;color:var(--ink-2,var(--ink2,#48484C));margin:0 0 24px;max-width:600px}
-.pusto__form{display:flex;gap:8px;padding:8px;background:var(--surface,var(--card,#fff));border-radius:32px;box-shadow:0 1px 2px rgba(29,29,31,.04),0 12px 32px rgba(29,29,31,.06);max-width:560px}
+.pusto__lead{font-size:17px;line-height:1.5;color:var(--ink-2,var(--ink2,#48484C));margin:0 0 24px;max-width:600px}
+.pusto__form{display:flex;gap:8px;padding:8px;background:var(--surface,var(--card,#fff));border-radius:28px;box-shadow:0 1px 2px rgba(29,29,31,.04),0 12px 32px rgba(29,29,31,.06);max-width:560px}
 .pusto__form:focus-within{box-shadow:0 1px 2px rgba(29,29,31,.04),0 12px 32px rgba(29,29,31,.06),0 0 0 3px var(--accent,#0B63E5)}
-.pusto__form input{flex:1;min-width:0;border:0;background:transparent;font-family:inherit;font-size:18px;line-height:1.2;color:var(--ink,#1D1D1F);padding:0 16px;min-height:48px}
+.pusto__form input{flex:1;min-width:0;border:0;background:transparent;font-family:inherit;font-size:17px;line-height:1.2;color:var(--ink,#1D1D1F);padding:0 16px;min-height:48px}
 .pusto__form input:focus{outline:none}
 .pusto__form input::placeholder{color:var(--muted,#6B6B70)}
-.pusto__btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 24px;border:0;border-radius:999px;background:var(--accent,#0B63E5);color:#fff;font-family:inherit;font-size:16px;font-weight:600;line-height:1;cursor:pointer;white-space:nowrap}
+.pusto__btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 24px;border:0;border-radius:999px;background:var(--accent,#0B63E5);color:#fff;font-family:inherit;font-size:17px;font-weight:600;line-height:1;cursor:pointer;white-space:nowrap}
 .pusto__btn:hover{background:var(--accent-hover,#084BB0)}
 .pusto__note{min-height:22px;margin:10px 0 0 16px;font-size:15px;color:var(--muted,#6B6B70)}
 .pusto__note.err{color:var(--bad,#B3261E)}
 .pusto__alt{margin:20px 0 0;font-size:15px;color:var(--muted,#6B6B70)}
 .pusto__alt a{white-space:nowrap}
-@media (max-width:640px){.pusto__form{flex-direction:column;border-radius:24px}.pusto__btn{width:100%;min-height:52px}.pusto__note{margin-left:8px}}
+@media (max-width:640px){.pusto__form{flex-direction:column;border-radius:28px}.pusto__btn{width:100%;min-height:52px}.pusto__note{margin-left:8px}}
 /* недавние проверки */
 .ned{margin-top:40px;max-width:560px}
 .ned__h{font-size:13px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#6B6B70);margin:0 0 8px}

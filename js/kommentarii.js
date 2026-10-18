@@ -217,11 +217,11 @@
   }
 
   var CSS_EKRANA = ".sut .kom{margin:-4px 0 12px;padding:10px 14px;border-left:3px solid var(--line,#E5E5E0);background:#FAFAF8;" +
-    "border-radius:0 10px 10px 0;font-size:14px;line-height:1.5;color:var(--ink,#1D1D1F)}" +
+    "border-radius:0 10px 10px 0;font-size:15px;line-height:1.5;color:var(--ink,#1D1D1F)}" +
     ".sut .kom--zel{border-left-color:var(--ok,#1E7F4F)}.sut .kom--zhel{border-left-color:var(--warn,#B26B00)}.sut .kom--kras{border-left-color:var(--bad,#C0362C)}" +
-    ".sut .kom__h{font-weight:600;font-size:12.5px;letter-spacing:.02em;color:var(--ink2,#48484C);margin-bottom:4px}" +
+    ".sut .kom__h{font-weight:600;font-size:13px;letter-spacing:.02em;color:var(--ink2,#48484C);margin-bottom:4px}" +
     ".sut .kom p{margin:2px 0}.sut .kom__l{font-weight:600}.sut .kom__p{color:var(--muted,#6B6B70);font-size:12px;margin-top:6px}" +
-    ".kom-og{margin:4px 0 12px;font-size:12.5px;line-height:1.45;color:var(--muted,#6B6B70)}" +
+    ".kom-og{margin:4px 0 12px;font-size:13px;line-height:1.45;color:var(--muted,#6B6B70)}" +
     "@media print{.sut .kom{background:none;break-inside:avoid}}";
   function stil(doc) {
     if (!doc || !doc.createElement || doc.getElementById("kom-css")) return;

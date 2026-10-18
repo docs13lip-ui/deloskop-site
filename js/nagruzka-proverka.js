@@ -207,7 +207,7 @@
     '.ngo__h span{font-size:13px;color:var(--muted,#6B6B70)}' +
     '.ngo p{margin:0}.ngo__v{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px}.ngo__v b{font-size:24px;font-weight:600;letter-spacing:-.01em}' +
     '.ngo__v span{font-size:13px;color:var(--muted,#6B6B70)}.ngo .n{font-variant-numeric:tabular-nums}' +
-    '.ngo__s{font-size:14px;color:var(--ink2,#48484C)}.ngo__s b{font-weight:600}.ngo__z{font-size:15px}' +
+    '.ngo__s{font-size:15px;color:var(--ink2,#48484C)}.ngo__s b{font-weight:600}.ngo__z{font-size:15px}' +
     '.ngo__p{font-size:13px;line-height:1.5;color:var(--ink2,#48484C)}' +
     '.ngo__k summary{cursor:pointer;font-size:13px;color:var(--muted,#6B6B70)}.ngo__k p{margin-top:6px;font-size:13px;line-height:1.5;color:var(--ink2,#48484C)}' +
     '.ngo__k a{color:inherit;text-decoration:underline;text-underline-offset:2px}' +

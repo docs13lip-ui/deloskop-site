@@ -16,91 +16,91 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <style>
-:root{--bg:#F5F5F2;--card:#fff;--ink:#1D1D1F;--ink2:#48484C;--muted:#6B6B70;--line:#E6E6E1;--accent:#0B63E5;--accent-hover:#084BB0;--r:24px}
+:root{--bg:#F5F5F2;--card:#fff;--ink:#1D1D1F;--ink2:#48484C;--muted:#6B6B70;--line:#E6E6E1;--accent:#0B63E5;--accent-hover:#084BB0;--r:28px}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest','Onest Zapas','Onest Zapas R','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;line-height:1.6;-webkit-font-smoothing:antialiased}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest','Onest Zapas','Onest Zapas R','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
 a{color:var(--accent);text-decoration:none}a:hover{color:var(--accent-hover)}
 .top{position:sticky;top:0;z-index:5;background:rgba(245,245,242,.86);backdrop-filter:saturate(180%) blur(16px);-webkit-backdrop-filter:saturate(180%) blur(16px);border-bottom:1px solid rgba(0,0,0,.05)}
 .top .in{max-width:1120px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:22px}
-.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:19px;color:var(--ink);letter-spacing:-.02em;margin-right:auto}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:20px;color:var(--ink);letter-spacing:-.02em;margin-right:auto}
 .top nav{display:flex;gap:22px;font-size:15px}.top nav a{color:var(--ink2)}.top nav a:hover{color:var(--ink)}
-.btn{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:12px;background:var(--accent);color:#fff!important;font-weight:600;font-size:15px}
+.btn{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:10px;background:var(--accent);color:#fff!important;font-weight:600;font-size:15px}
 @media (max-width:760px){.top .in{flex-wrap:wrap;row-gap:4px;padding-bottom:8px}.top nav{order:3;width:100%;overflow-x:auto;gap:20px;scrollbar-width:none}.top nav::-webkit-scrollbar{display:none}.top nav a{white-space:nowrap}}
 main{max-width:760px;margin:0 auto;padding:28px 20px 64px}
-.crumbs{font-size:14px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap}.crumbs a{color:var(--muted)}
-h1{font-size:clamp(30px,5vw,44px);line-height:1.1;letter-spacing:-.03em;margin:14px 0 12px;font-weight:600}
+.crumbs{font-size:15px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap}.crumbs a{color:var(--muted)}
+h1{font-size:clamp(32px,5vw,48px);line-height:1.1;letter-spacing:-.03em;margin:14px 0 12px;font-weight:600}
 .meta{font-size:15px;color:var(--muted)}
 .lead{margin:26px 0 8px;background:var(--card);border-radius:var(--r);padding:24px 26px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 16px 40px rgba(0,0,0,.05)}
-.lead b{display:block;font-size:14px;color:var(--accent);margin-bottom:6px;letter-spacing:.01em}
-article h2{font-size:clamp(24px,3vw,30px);letter-spacing:-.02em;line-height:1.2;margin:40px 0 12px;font-weight:600}
+.lead b{display:block;font-size:15px;color:var(--accent);margin-bottom:6px;letter-spacing:.01em}
+article h2{font-size:clamp(24px,3vw,32px);letter-spacing:-.02em;line-height:1.2;margin:40px 0 12px;font-weight:600}
 article p{margin:0 0 14px;color:var(--ink2)}article p strong,article li strong{color:var(--ink)}
 article ul,article ol{margin:0 0 16px;padding-left:22px;color:var(--ink2)}article li{margin:6px 0}
-article table{width:100%;border-collapse:collapse;margin:8px 0 18px;font-size:16px;background:var(--card);border-radius:16px;overflow:hidden}
+article table{width:100%;border-collapse:collapse;margin:8px 0 18px;font-size:17px;background:var(--card);border-radius:16px;overflow:hidden}
 article th,article td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
 article th{font-weight:600;background:#FAFAF8}article tr:last-child td{border-bottom:0}
 .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .check{margin:44px 0 0;background:#111113;color:#fff;border-radius:var(--r);padding:28px 26px}
-.check h2{margin:0 0 8px;font-size:26px;letter-spacing:-.02em;font-weight:600}.check p{color:#B8B8BD;margin:0 0 16px}
+.check h2{margin:0 0 8px;font-size:24px;letter-spacing:-.02em;font-weight:600}.check p{color:#B8B8BD;margin:0 0 16px}
 .check form{display:flex;gap:10px;flex-wrap:wrap}
-.check input{flex:1 1 220px;min-height:50px;border:0;border-radius:12px;padding:0 14px;font:inherit;font-size:17px}
-.check button{min-height:50px;border:0;border-radius:12px;background:var(--accent);color:#fff;font:inherit;font-weight:600;padding:0 22px;cursor:pointer}
-.src{margin-top:36px;font-size:15px;color:var(--muted)}.src h2{font-size:18px;margin:0 0 8px;color:var(--ink);letter-spacing:0}
+.check input{flex:1 1 220px;min-height:50px;border:0;border-radius:10px;padding:0 14px;font:inherit;font-size:17px}
+.check button{min-height:50px;border:0;border-radius:10px;background:var(--accent);color:#fff;font:inherit;font-weight:600;padding:0 22px;cursor:pointer}
+.src{margin-top:36px;font-size:15px;color:var(--muted)}.src h2{font-size:17px;margin:0 0 8px;color:var(--ink);letter-spacing:0}
 .src ol{padding-left:20px;margin:0}.src li{margin:4px 0}.src a{color:var(--ink2);text-decoration:underline;text-decoration-color:var(--line)}
-.disc{margin-top:18px;font-size:14px;color:var(--muted)}
-.more{margin-top:44px}.more h2{font-size:22px;margin:0 0 12px}
+.disc{margin-top:18px;font-size:15px;color:var(--muted)}
+.more{margin-top:44px}.more h2{font-size:24px;margin:0 0 12px}
 .cards{display:grid;gap:14px}
-.card{display:block;background:var(--card);border-radius:20px;padding:20px 22px;color:var(--ink)}
+.card{display:block;background:var(--card);border-radius:16px;padding:20px 22px;color:var(--ink)}
 .card:hover{box-shadow:0 12px 32px rgba(0,0,0,.07);color:var(--ink)}
-.card small{color:var(--accent);font-weight:600;font-size:13px}.card b{display:block;font-size:19px;line-height:1.3;margin:4px 0 6px;font-weight:600;letter-spacing:-.01em}.card span{color:var(--muted);font-size:15px}
-footer{max-width:1120px;margin:0 auto;padding:28px 20px 40px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:14px;color:var(--muted);border-top:1px solid var(--line)}
+.card small{color:var(--accent);font-weight:600;font-size:13px}.card b{display:block;font-size:20px;line-height:1.3;margin:4px 0 6px;font-weight:600;letter-spacing:-.01em}.card span{color:var(--muted);font-size:15px}
+footer{max-width:1120px;margin:0 auto;padding:28px 20px 40px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:15px;color:var(--muted);border-top:1px solid var(--line)}
 footer a{color:var(--muted)}
 </style>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "Делопись — Делоскоп", "url": "https://deloskop.ru/delopis/", "applicationCategory": "BusinessApplication", "operatingSystem": "Any", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "RUB"}, "description": "Договор, который знает вашего контрагента: реквизиты из ЕГРЮЛ, заверения об обстоятельствах, налоговая оговорка и защитные пункты. Скачайте в Word."}</script><style>
 .tool{margin-top:24px;background:var(--card);border-radius:var(--r);padding:24px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 16px 40px rgba(0,0,0,.05)}
-.drop{display:block;border:2px dashed var(--line);border-radius:18px;padding:26px 18px;text-align:center;cursor:pointer;color:var(--ink2)}
+.drop{display:block;border:2px dashed var(--line);border-radius:16px;padding:26px 18px;text-align:center;cursor:pointer;color:var(--ink2)}
 .drop.over,.drop:hover{border-color:var(--accent);background:#F3F7FE}
-.drop b{display:block;color:var(--ink);font-size:19px;margin-bottom:4px}.drop input{display:none}
-.or{text-align:center;color:var(--muted);font-size:14px;margin:14px 0}
-.tool textarea{width:100%;min-height:150px;border:1px solid var(--line);border-radius:14px;padding:12px 14px;font:inherit;font-size:15px;resize:vertical}
-.tool .go{margin-top:12px;min-height:52px;width:100%;border:0;border-radius:14px;background:var(--accent);color:#fff;font:inherit;font-weight:600;font-size:17px;cursor:pointer}
+.drop b{display:block;color:var(--ink);font-size:20px;margin-bottom:4px}.drop input{display:none}
+.or{text-align:center;color:var(--muted);font-size:15px;margin:14px 0}
+.tool textarea{width:100%;min-height:150px;border:1px solid var(--line);border-radius:16px;padding:12px 14px;font:inherit;font-size:15px;resize:vertical}
+.tool .go{margin-top:12px;min-height:52px;width:100%;border:0;border-radius:16px;background:var(--accent);color:#fff;font:inherit;font-weight:600;font-size:17px;cursor:pointer}
 .tool .go:hover{background:var(--accent-hover)}
 #msg{min-height:22px;font-size:15px;color:var(--muted);margin-top:10px}
-.priv{font-size:14px;color:var(--muted);margin:12px 0 0}
+.priv{font-size:15px;color:var(--muted);margin:12px 0 0}
 #out{margin-top:22px}
-.res{border-radius:18px;padding:18px 20px;margin-bottom:14px}.res p{margin:4px 0 0;color:var(--ink2);font-size:16px}
+.res{border-radius:16px;padding:18px 20px;margin-bottom:14px}.res p{margin:4px 0 0;color:var(--ink2);font-size:17px}
 .res.ok{background:#E9F7EF}.res.warn{background:#FFF6E0}.res.bad{background:#FDECEC}
 .verdict-big{font-size:24px;font-weight:600;letter-spacing:-.02em}
 .res.ok .verdict-big{color:#137A3E}.res.warn .verdict-big{color:#8A5A00}.res.bad .verdict-big{color:#B42318}
-.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:14px;color:var(--muted);margin:0 0 12px}
-.chips button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font:inherit;font-size:14px;cursor:pointer}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:15px;color:var(--muted);margin:0 0 12px}
+.chips button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font:inherit;font-size:15px;cursor:pointer}
 .chips button.on{border-color:var(--accent);color:var(--accent);font-weight:600}
-.rows .row{display:grid;grid-template-columns:190px 1fr;gap:14px;padding:12px 0;border-bottom:1px solid var(--line);font-size:16px}
+.rows .row{display:grid;grid-template-columns:190px 1fr;gap:14px;padding:12px 0;border-bottom:1px solid var(--line);font-size:17px}
 .rows .row span{color:var(--muted)}.d{font-weight:500}.d.ok{color:#137A3E}.d.warn{color:#8A5A00}.d.bad{color:#B42318}.d.neutral{color:var(--ink2)}
 @media (max-width:560px){.rows .row{grid-template-columns:1fr;gap:2px}}
-.note.warn{background:#FFF6E0;border-radius:12px;padding:10px 14px;font-size:15px}
+.note.warn{background:#FFF6E0;border-radius:10px;padding:10px 14px;font-size:15px}
 .meta2{font-size:15px;color:var(--ink2);margin:12px 0 0}
-.pur{margin-top:16px;background:#FAFAF8;border-radius:14px;padding:14px 16px;font-size:16px}
-.pur b{display:block;font-size:14px;color:var(--muted);font-weight:500}.pur div{margin:4px 0 10px}
-.pur button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 14px;font:inherit;font-size:14px;cursor:pointer}
-.small{font-size:14px;color:var(--muted);margin-top:14px}
-.how{margin-top:40px}.how h2{font-size:26px;letter-spacing:-.02em;margin:0 0 12px}
+.pur{margin-top:16px;background:#FAFAF8;border-radius:16px;padding:14px 16px;font-size:17px}
+.pur b{display:block;font-size:15px;color:var(--muted);font-weight:500}.pur div{margin:4px 0 10px}
+.pur button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 14px;font:inherit;font-size:15px;cursor:pointer}
+.small{font-size:15px;color:var(--muted);margin-top:14px}
+.how{margin-top:40px}.how h2{font-size:24px;letter-spacing:-.02em;margin:0 0 12px}
 .how ol{padding-left:22px;color:var(--ink2)}.how li{margin:6px 0}
 
 .dp-form{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px}
 .dp-form label{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:15px}
-.dp-form input,.dp-form textarea{font:inherit;font-weight:400;font-size:17px;padding:11px 14px;border:1px solid var(--line);border-radius:12px;background:var(--bg);width:100%;box-sizing:border-box}
+.dp-form input,.dp-form textarea{font:inherit;font-weight:400;font-size:17px;padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:var(--bg);width:100%;box-sizing:border-box}
 .dp-form .wide{grid-column:1/-1}
 .dp-kind{grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap}
 .dp-kind label{flex-direction:row;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:9px 16px;cursor:pointer;font-weight:500}
 .dp-kind input{width:auto;margin:0}
-#dp-msg{margin-top:12px;font-size:16px}#dp-msg.err{color:#B42318}
+#dp-msg{margin-top:12px;font-size:17px}#dp-msg.err{color:#B42318}
 #dp-risks{margin-top:28px}
 #dp-risks h2{font-size:24px;margin:0 0 12px}
-.dp-lvl{padding:12px 16px;border-radius:14px;background:var(--bg);font-size:16px}
+.dp-lvl{padding:12px 16px;border-radius:16px;background:var(--bg);font-size:17px}
 .dp-lvl.dp-high{background:#FDECEA}.dp-lvl.dp-medium{background:#FFF4E0}.dp-lvl.dp-low{background:#E8F5EE}
-.dp-stop{background:#B42318;color:#fff;border-radius:14px;padding:12px 16px;margin:12px 0;font-weight:600}
+.dp-stop{background:#B42318;color:#fff;border-radius:16px;padding:12px 16px;margin:12px 0;font-weight:600}
 .dp-stop p{margin:0}
-.dp-cl{display:flex;gap:12px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--line);font-size:16px;color:var(--ink2);cursor:pointer}
+.dp-cl{display:flex;gap:12px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--line);font-size:17px;color:var(--ink2);cursor:pointer}
 .dp-cl input{margin-top:4px;width:18px;height:18px;flex:none}
 .dp-cl b{color:var(--ink)}
 .dp-cl em{font-style:normal;font-size:13px;font-weight:600;color:#9A5B00;background:#FFF4E0;border-radius:999px;padding:2px 8px;margin-left:4px}
@@ -108,14 +108,14 @@ footer a{color:var(--muted)}
 .dp-bar button{font:inherit;font-weight:600;font-size:15px;border-radius:999px;padding:11px 18px;cursor:pointer;border:1px solid var(--accent);background:#fff;color:var(--accent)}
 .dp-bar button.main{background:var(--accent);color:#fff}
 #dp-post-note{font-size:15px;color:#9A5B00;margin:0 0 10px}
-#dp-doc{background:#fff;border:1px solid var(--line);border-radius:6px;padding:48px 52px;font-family:"Times New Roman",Times,serif;font-size:16px;line-height:1.5;color:#111;box-shadow:0 12px 40px rgba(0,0,0,.06)}
-#dp-doc h2{text-align:center;font-size:19px;margin:0 0 14px}
-#dp-doc h3{font-size:16px;margin:20px 0 6px}
+#dp-doc{background:#fff;border:1px solid var(--line);border-radius:6px;padding:48px 52px;font-family:"Times New Roman",Times,serif;font-size:17px;line-height:1.5;color:#111;box-shadow:0 12px 40px rgba(0,0,0,.06)}
+#dp-doc h2{text-align:center;font-size:20px;margin:0 0 14px}
+#dp-doc h3{font-size:17px;margin:20px 0 6px}
 #dp-doc p{margin:0 0 8px;text-align:justify}
 #dp-doc .dp-row{display:flex;justify-content:space-between}
 .dp-sign{width:100%;border-collapse:collapse;margin-top:12px}
-.dp-sign td{vertical-align:top;width:50%;padding:6px 10px 6px 0;font-size:14px;line-height:1.45;word-break:break-word}
-.dp-beta{font-size:14px;font-weight:600;color:var(--accent);background:#EAF1FD;border-radius:999px;padding:3px 10px;vertical-align:middle;margin-left:8px}
+.dp-sign td{vertical-align:top;width:50%;padding:6px 10px 6px 0;font-size:15px;line-height:1.45;word-break:break-word}
+.dp-beta{font-size:15px;font-weight:600;color:var(--accent);background:#EAF1FD;border-radius:999px;padding:3px 10px;vertical-align:middle;margin-left:8px}
 @media (max-width:640px){.dp-form{grid-template-columns:1fr}#dp-doc{padding:22px 16px;font-size:15px}.dp-sign td{display:block;width:auto}}
 @media print{body *{visibility:hidden}#dp-doc,#dp-doc *{visibility:visible}#dp-doc{position:absolute;left:0;top:0;border:0;box-shadow:none;padding:0;width:100%}}
 </style>
@@ -207,7 +207,7 @@ footer a{color:var(--muted)}
 <main id="main">
 <nav class="crumbs" aria-label="Навигация"><a href="/">Делоскоп</a></nav>
 <h1>Делопись<span class="dp-beta">бета</span></h1>
-<p class="meta" style="font-size:18px;color:var(--ink2)">Договор, который знает вашего контрагента. Введите два ИНН — соберём договор с реквизитами из ЕГРЮЛ и защитными пунктами под риски, которые нашла проверка.</p>
+<p class="meta" style="font-size:17px;color:var(--ink2)">Договор, который знает вашего контрагента. Введите два ИНН — соберём договор с реквизитами из ЕГРЮЛ и защитными пунктами под риски, которые нашла проверка.</p>
 <section class="tool" aria-label="Сборка договора">
   <div class="dp-form">
     <div class="dp-kind" role="radiogroup" aria-label="Вид договора">

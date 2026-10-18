@@ -191,7 +191,7 @@
   var CSS = '.otk{margin-top:12px;border-top:1px solid var(--line,#E6E6E1);font-size:13px;color:var(--ink2,#48484C)}' +
     '.otk summary{cursor:pointer;list-style:none;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 12px;padding:12px 0}' +
     '.otk summary::-webkit-details-marker{display:none}' +
-    '.otk__t{font-size:14px;font-weight:600;color:var(--ink,#1D1D1F)}' +
+    '.otk__t{font-size:15px;font-weight:600;color:var(--ink,#1D1D1F)}' +
     '.otk__t::after{content:"";display:inline-block;width:6px;height:6px;margin-left:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-3px) rotate(45deg);transition:transform .2s}' +
     '.otk[open] .otk__t::after{transform:translateY(0) rotate(225deg)}' +
     '.otk__s{font-variant-numeric:tabular-nums;color:var(--muted,#6B6B70)}' +

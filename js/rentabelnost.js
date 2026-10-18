@@ -242,7 +242,7 @@
     '.rnt__h span{font-size:13px;color:var(--muted,#6B6B70)}' +
     '.rnt p{margin:0}.rnt__v{display:flex;align-items:baseline;gap:8px}.rnt__v b{font-size:24px;font-weight:600;letter-spacing:-.01em}' +
     '.rnt__v span{font-size:13px;color:var(--muted,#6B6B70)}.rnt .n{font-variant-numeric:tabular-nums}' +
-    '.rnt__s{font-size:14px;color:var(--ink2,#48484C)}.rnt__s b{font-weight:600}.rnt__z{font-size:15px}' +
+    '.rnt__s{font-size:15px;color:var(--ink2,#48484C)}.rnt__s b{font-weight:600}.rnt__z{font-size:15px}' +
     '.rnt__p{font-size:13px;color:var(--ink2,#48484C)}' +
     '.rnt__k summary{cursor:pointer;font-size:13px;color:var(--muted,#6B6B70)}.rnt__k p{margin-top:6px;font-size:13px;line-height:1.5;color:var(--ink2,#48484C)}' +
     '.rnt__k a{color:inherit;text-decoration:underline;text-underline-offset:2px}' +

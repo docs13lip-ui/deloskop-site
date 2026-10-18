@@ -287,6 +287,58 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();
 })();
+
+/* §9. vizual-v3.1b (г): переходы между страницами — какой заголовок с каким связать (css: partials/shapka.css).
+   CSS даёт заголовку <h1> новой страницы имя dlk-zag; здесь, на уходящей странице, решаем, что переедет на его место:
+   — список → карточка, раздел → статья: видимая на экране ссылка, по которой ушли (название переезжает в заголовок);
+   — статья → статья, карточка → карточка: заголовок старой страницы;
+   — всё прочее: ничего — новая страница просто проявляется. Нет поддержки — событий нет, всё как раньше. */
+(function () {
+  "use strict";
+  function semya(p) {
+    if (/^\/company\//.test(p)) return "company";
+    if (/^\/(115-fz|nalogi|praktika)\//.test(p)) return "statya";
+    return "";
+  }
+  // list(p) — раздел или список (у него нет «своего» заголовка, который стоит переносить)
+  function spisok(p) {
+    return /^\/(?:115-fz|nalogi|praktika|praktika\/115-fz|praktika\/nalogi)\/$/.test(p) || (/^\/company\//.test(p) && !/^\/company\/\d{10}(?:\d{2})?-[^/]+\/$/.test(p));
+  }
+  function para(s, n) {
+    var a = semya(s);
+    if (!a || a !== semya(n) || s === n || spisok(n)) return "";
+    return spisok(s) ? "ssylka" : "zagolovok";
+  }
+  function ssylkaNa(url) {
+    var vse = document.querySelectorAll("a[href]"), h = innerHeight || 0;
+    for (var i = 0; i < vse.length; i++) {
+      var a = vse[i];
+      if (a.href.split("#")[0] !== url) continue;
+      var r = a.getBoundingClientRect();
+      if (r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < h) return a;
+    }
+    return null;
+  }
+  var nazvannye = [];
+  function snyat() { nazvannye.forEach(function (e) { e.style.viewTransitionName = ""; }); nazvannye = []; }
+  function imya(e, v) { e.style.viewTransitionName = v; nazvannye.push(e); }
+  if (typeof module === "object" && module.exports) module.exports = { para: para, semya: semya, spisok: spisok };
+  if (typeof addEventListener !== "function") return;
+  addEventListener("pageswap", function (e) {
+    snyat();
+    if (!e.viewTransition || !e.activation || !e.activation.entry) return;
+    var kuda;
+    try { kuda = new URL(e.activation.entry.url); } catch (er) { return; }
+    if (kuda.origin !== location.origin) return;
+    var vid = para(location.pathname, kuda.pathname), h1 = document.querySelectorAll("h1"), a = null;
+    if (vid === "ssylka") a = ssylkaNa(kuda.href.split("#")[0]);
+    // заголовок старой страницы остаётся с именем, только если он и переезжает (и он один)
+    for (var i = 0; i < h1.length; i++) if (!(vid === "zagolovok" && i === 0)) imya(h1[i], "none");
+    if (a) imya(a, "dlk-zag");
+  });
+  // страница вернулась из кэша «Назад» — имена, поставленные перед уходом, снимаем
+  addEventListener("pageshow", function (e) { if (e.persisted) snyat(); });
+})();
 ;
 /* --- /js/metrika.js --- */
 /* Делоскоп — Яндекс Метрика ТОЛЬКО с согласия (документ команды, раздел 6).

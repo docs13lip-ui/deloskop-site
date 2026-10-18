@@ -188,6 +188,17 @@ dialog.dlo::backdrop{background:rgba(17,17,19,.55)}
 @media (min-width:1025px){.ck-bar{left:auto;right:24px;bottom:24px;width:440px;border:0;border-radius:var(--r-l);box-shadow:0 12px 40px rgba(29,29,31,.16)}.ck-bar .ck-bar__in{flex-direction:column;align-items:stretch;padding:var(--s-5);gap:var(--s-4)}.ck-bar .ck-bar__b button{flex:1}}
 /* Номера дел, законов и писем не рвутся на переносе (js/shapka.js, п. 8) */
 .nw{white-space:nowrap}
+/* vizual-v3.1b (г) — переходы между страницами без белого экрана (cross-document View Transitions).
+   Старая страница плавно сменяется новой; заголовок статьи или компании переезжает на место нового.
+   Пара «что с чем» решает js/shapka.js (§9, событие pageswap): статья → статья, список → карточка, карточка → карточка;
+   в остальных переходах заголовок просто проявляется вместе со страницей. «Уменьшить движение» — переходов нет. */
+@media (prefers-reduced-motion:no-preference){
+  @view-transition{navigation:auto;types:dlk-str}
+  html:active-view-transition-type(dlk-str) h1{view-transition-name:dlk-zag}
+  ::view-transition-old(root),::view-transition-new(root){animation-duration:.22s}
+  ::view-transition-group(dlk-zag){animation-duration:.38s;animation-timing-function:cubic-bezier(.2,.7,.2,1)}
+  ::view-transition-old(dlk-zag),::view-transition-new(dlk-zag){height:100%;object-fit:none;object-position:left top}
+}
 /* --- /css/tema.css --- */
 /* vizual-v3.0b — тёмная тема. База — ДС v1 §2.5.
    Тему ставит строка в <head> (tests/sobrat_shapku.py → TEMA_JS): выбор из localStorage «tema» или система;
@@ -233,6 +244,7 @@ dialog.dlo::backdrop{background:rgba(17,17,19,.55)}
 [data-theme=dark] .report.ex{background:rgba(28,28,31,0.78);box-shadow:var(--shadow),inset 0 0 0 1px rgba(255,255,255,0.06)}
 @media (hover:hover){[data-theme=dark] .report.ex:hover{box-shadow:var(--shadow-hover),inset 0 0 0 1px rgba(255,255,255,0.06)}
 }
+[data-theme=dark] .report.ex.loading,[data-theme=dark] .rezhim-otcheta .report.ex{background:#1C1C1F}
 }
 [data-theme=dark] .zhi__strelka::after{box-shadow:0 0 0 3px rgba(255,255,255,0.1)}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){[data-theme=dark] .report.ex{background:#1C1C1F}

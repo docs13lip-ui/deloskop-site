@@ -156,3 +156,14 @@ dialog.dlo::backdrop{background:rgba(17,17,19,.55)}
 @media (min-width:1025px){.ck-bar{left:auto;right:24px;bottom:24px;width:440px;border:0;border-radius:var(--r-l);box-shadow:0 12px 40px rgba(29,29,31,.16)}.ck-bar .ck-bar__in{flex-direction:column;align-items:stretch;padding:var(--s-5);gap:var(--s-4)}.ck-bar .ck-bar__b button{flex:1}}
 /* Номера дел, законов и писем не рвутся на переносе (js/shapka.js, п. 8) */
 .nw{white-space:nowrap}
+/* vizual-v3.1b (г) — переходы между страницами без белого экрана (cross-document View Transitions).
+   Старая страница плавно сменяется новой; заголовок статьи или компании переезжает на место нового.
+   Пара «что с чем» решает js/shapka.js (§9, событие pageswap): статья → статья, список → карточка, карточка → карточка;
+   в остальных переходах заголовок просто проявляется вместе со страницей. «Уменьшить движение» — переходов нет. */
+@media (prefers-reduced-motion:no-preference){
+  @view-transition{navigation:auto;types:dlk-str}
+  html:active-view-transition-type(dlk-str) h1{view-transition-name:dlk-zag}
+  ::view-transition-old(root),::view-transition-new(root){animation-duration:.22s}
+  ::view-transition-group(dlk-zag){animation-duration:.38s;animation-timing-function:cubic-bezier(.2,.7,.2,1)}
+  ::view-transition-old(dlk-zag),::view-transition-new(dlk-zag){height:100%;object-fit:none;object-position:left top}
+}

@@ -19,7 +19,7 @@ test('пример — один блок .report.ex: шапка → полоса
 });
 
 test('ровно 3 существенных факта, у каждого — источник и дата', () => {
-  const rows = ex.match(/<div class="row ex-r">[\s\S]*?<\/div>/g) || [];
+  const rows = ex.match(/<div class="row ex-r"(?: data-vid="[a-z ]+")?>[\s\S]*?<\/div>/g) || [];
   assert.strictEqual(rows.length, 3);
   rows.forEach((r) => {
     assert.match(r, /<small>[^<]*(ЕГРЮЛ|ФНС)[^<]*·[^<]*на(?:\u00a0|&nbsp;|\s)дату[^<]*<\/small>/, 'у факта нет «источник · дата»: ' + r);

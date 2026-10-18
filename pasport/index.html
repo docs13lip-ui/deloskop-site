@@ -181,6 +181,9 @@ footer a{color:var(--muted)}
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="apple-mobile-web-app-title" content="Делоскоп">
 <script src="/js/pwa.js" defer></script>
+<script src="/js/inn.js" defer></script>
+<script src="/js/vizual2.js" defer></script>
+<link rel="stylesheet" href="/css/vizual2.css">
 <link rel="stylesheet" href="/css/glubina.css">
 <meta name="deloskop-rezhim" content="beta">
 </head>
@@ -260,7 +263,7 @@ footer a{color:var(--muted)}
 <nav class="crumbs" aria-label="Навигация"><a href="/">Делоскоп</a><span>›</span><a href="/pasport/">Паспорт компании</a></nav>
 
 <!-- Лендинг: открыт, пока в адресе нет ИНН -->
-<section id="landing">
+<section id="landing" data-set data-set-pole="innTop">
   <h1>Паспорт компании</h1>
   <p class="sub">Всё, что открытые реестры говорят о&nbsp;компании,&nbsp;— на&nbsp;одной странице и&nbsp;на&nbsp;сегодняшнюю дату. У&nbsp;каждого факта из&nbsp;реестров&nbsp;— источник и&nbsp;дата сведений. Чего не&nbsp;проверили&nbsp;— так и&nbsp;пишем.</p>
   <form class="ask" id="askTop" data-rol="kontragent" novalidate>

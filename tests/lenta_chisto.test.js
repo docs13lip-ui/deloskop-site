@@ -64,7 +64,7 @@ test('tipo() = tipograf_statej.tekst() на всех текстах ленты (
   vm.runInNewContext(tipoIz(chitat('obnovleniya.js')) + ';this.tipo=tipo;', ctx);
   const py = JSON.parse(execFileSync('python3', ['-c',
     'import sys,json; sys.path.insert(0,"tests"); import tipograf_statej as T, sobrat_lentu as S;' +
-    'print(json.dumps([T.tekst(S.esc(x)) for x in json.load(sys.stdin)]))'], { cwd: K, input: JSON.stringify(teksty) }).toString());
+    'print(json.dumps([T.tekst(S.esc(x)) for x in json.load(sys.stdin)]))'], { cwd: K, input: JSON.stringify(teksty), maxBuffer: 64 * 1024 * 1024 }).toString());
   let raznyh = 0;
   teksty.forEach((t, i) => {
     const js = ctx.tipo(esc(t));

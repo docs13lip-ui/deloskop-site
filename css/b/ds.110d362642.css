@@ -1,4 +1,4 @@
-/* Делоскоп · пакет «ds» — собран tests/sobrat_js.py из 4 файлов (partials/sborka.json). Правьте исходники, не этот файл. */
+/* Делоскоп · пакет «ds» — собран tests/sobrat_js.py из 5 файлов (partials/sborka.json). Правьте исходники, не этот файл. */
 /* --- /css/fonts.css --- */
 /* Onest (SIL OFL 1.1, /fonts/OFL.txt) — со своего сервера, без Google Fonts. Сборка: подмножества кириллица, латиница, латиница-расш. (₽). */
 @font-face{font-family:Onest;font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/onest-cyrillic-400.woff2) format("woff2");unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
@@ -377,3 +377,17 @@ dialog.dlo::backdrop{background:rgba(17,17,19,.55)}
 [data-theme=dark] .usl-napr button[aria-pressed=true]{background:#1C1C1F}
 [data-theme=dark] .usl-watch{border:1px solid #2E2E33;background:#1C1C1F}
 /*</avto>*/
+/* --- /css/detali.css --- */
+/* detali-v1 (18.10.2026): детали по замеру 18.10 — общее для всех страниц, пакет «ds».
+   1) Переносы: браузер сам не оставляет одно слово последней строкой абзаца и не вешает короткое слово в конце строки,
+      где типограф не дотянулся (текст из скриптов, данные). Второй рубеж после tests/tipograf_statej.py; где не поддерживается — как было.
+   2) Поля касания на телефоне и сенсорном экране — не меньше 44 px (Apple HIG, WCAG 2.5.5). С мышью подвал остаётся плотным:
+      строки ≥ 24 px с промежутком — норма WCAG 2.5.8. */
+p,li,dd,dt,figcaption,blockquote,summary,legend,h1,h2,h3,h4{text-wrap:pretty}
+@media (max-width:640px),(pointer:coarse){
+  .podval li{margin:0}
+  .podval li a{display:inline-block;padding:11px 0}  /* ссылки в строке текста внизу подвала — как были */
+  .tema button{min-height:44px;padding-left:14px;padding-right:14px}
+  .shapka__tema,.shapka__burger{min-width:44px;min-height:44px}
+  .shapka__btn{min-height:44px}
+}

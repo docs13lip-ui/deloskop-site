@@ -119,8 +119,8 @@ footer a{color:var(--muted)}
 {"@type":"Question","name":"Куда уходит моя выписка?","acceptedAnswer":{"@type":"Answer","text":"Никуда. Выписка читается прямо в браузере на вашем компьютере. Если вы сами нажмёте «Проверить по реестрам», на сервер уйдёт только список ИНН поставщиков — без сумм, дат и назначений платежей."}},
 {"@type":"Question","name":"Что такое «деньги на кону»?","acceptedAnswer":{"@type":"Answer","text":"Сумма, которую налоговая может доначислить, если признает поставщика технической компанией по статье 54.1 НК: вычет НДС, налог с расходов и штраф. Мягкий сценарий — с налоговой реконструкцией и штрафом 20%, жёсткий — без реконструкции и со штрафом 40%. Пени считаются отдельно."}},
 {"@type":"Question","name":"Какую выписку загрузить?","acceptedAnswer":{"@type":"Answer","text":"Файл обмена с 1С (kl_to_1c.txt или похожий), который выгружает любой интернет-банк: «Выписка → Экспорт в 1С». Лучше за квартал или год. Можно загрузить несколько файлов сразу — например, по разным счетам."}}]}</script>
-<link rel="stylesheet" href="/css/b/ds.0968eb5e79.css">
-<script src="/js/b/yadro.db56c1e440.js" defer></script>
+<link rel="stylesheet" href="/css/b/ds.110d362642.css">
+<script src="/js/b/yadro.a63f89fcb5.js" defer></script>
 <link rel="icon" type="image/png" sizes="120x120" href="/favicon-120.png">
 <link rel="alternate" type="application/rss+xml" title="Разборы дел — Делоскоп" href="/praktika/rss.xml">
 <link rel="manifest" href="/manifest.webmanifest">
@@ -204,7 +204,7 @@ footer a{color:var(--muted)}
 <!--beta-polosa--><div class="beta-bar" role="region" aria-label="Открытая бета" data-beta-rezhim="b" data-beta-do="" data-beta-bar><div class="beta-bar__in"><span class="beta-bar__metka">бета</span><p class="beta-bar__t"><b>Открытая бета продолжается:</b> <span class="beta-bar__dop">всё бесплатно. О&nbsp;начале тарифов скажем здесь не&nbsp;позже чем за&nbsp;3&nbsp;дня; быстрая проверка останется бесплатной, 10&nbsp;в&nbsp;день. </span><a href="mailto:help@deloskop.ru?subject=%D0%91%D0%B5%D1%82%D0%B0%20%D0%94%D0%B5%D0%BB%D0%BE%D1%81%D0%BA%D0%BE%D0%BF%D0%B0">Нашли ошибку&nbsp;— напишите</a></p><button class="beta-bar__x" type="button" aria-label="Скрыть на неделю" data-beta-x><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div></div><script>try{(function(b){var r=b.getAttribute("data-beta-rezhim"),d=b.getAttribute("data-beta-do"),k=d?Date.parse(d+"T00:00:00+03:00")+864e5:0,n=Date.now();if(r==="c"){if(n>=k+6048e5)b.hidden=true;return}if(r==="a"&&n>=k){var t=b.querySelector("template[data-beta-b]");if(t){b.querySelector(".beta-bar__t").innerHTML=t.innerHTML;b.setAttribute("data-beta-rezhim","b")}}if(+localStorage.getItem("dlk_beta_skryt_"+(d||"net"))>n)b.hidden=true})(document.querySelector("[data-beta-bar]"))}catch(e){}</script><!--/beta-polosa-->
 <main id="main">
 <nav class="crumbs" aria-label="Навигация"><a href="/">Делоскоп</a><span>›</span><a href="/#shield">Щит</a></nav>
-<h1>Кому вы платите</h1>
+<h1>Кому вы&nbsp;платите</h1>
 <p class="sub">Загрузите выписку из&nbsp;1С&nbsp;— покажем всех поставщиков, сколько денег на&nbsp;кону, если кто-то из&nbsp;них окажется «технической» компанией, и&nbsp;что сделать на&nbsp;этой неделе.</p>
 
 <section class="tool" aria-label="Разбор выписки">
@@ -214,25 +214,25 @@ footer a{color:var(--muted)}
     <button type="button" class="link" id="demo">Посмотреть на&nbsp;примере</button>
   </div>
   <div id="msg" role="status" aria-live="polite"></div>
-  <p class="priv"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l7 3v6c0 4.4-3 8-7 9-4-1-7-4.6-7-9V6l7-3z" stroke="#1D1D1F" stroke-width="1.8"/><path d="M9 12l2 2 4-4" stroke="#0B63E5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Выписка не&nbsp;уходит с&nbsp;вашего компьютера: всё считается прямо в&nbsp;браузере. Проверку по&nbsp;реестрам вы запускаете сами&nbsp;— тогда на&nbsp;сервер уходит только список ИНН, без&nbsp;сумм и&nbsp;назначений.</span></p>
+  <p class="priv"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l7 3v6c0 4.4-3 8-7 9-4-1-7-4.6-7-9V6l7-3z" stroke="#1D1D1F" stroke-width="1.8"/><path d="M9 12l2 2 4-4" stroke="#0B63E5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Выписка не&nbsp;уходит с&nbsp;вашего компьютера: всё считается прямо в&nbsp;браузере. Проверку по&nbsp;реестрам вы&nbsp;запускаете сами&nbsp;— тогда на&nbsp;сервер уходит только список ИНН, без&nbsp;сумм и&nbsp;назначений.</span></p>
   <div id="out" hidden></div>
 </section>
 
 <section class="how">
 <h2>Как считаем деньги на&nbsp;кону</h2>
-<p>Если налоговая решит, что поставщик&nbsp;— «техническая» компания без&nbsp;реальной работы, она снимет то, что вы по&nbsp;нему заявили. Насколько жёстко&nbsp;— зависит от&nbsp;того, докажете ли&nbsp;вы, что работа реальная и&nbsp;поставщика выбирали осмотрительно.</p>
+<p>Если налоговая решит, что поставщик&nbsp;— «техническая» компания без&nbsp;реальной работы, она снимет то, что вы&nbsp;по&nbsp;нему заявили. Насколько жёстко&nbsp;— зависит от&nbsp;того, докажете ли&nbsp;вы, что работа реальная и&nbsp;поставщика выбирали осмотрительно.</p>
 <div class="tw"><table>
 <tr><th>Сценарий</th><th>Что снимут</th><th>Штраф</th></tr>
 <tr><td><strong>Мягкий</strong>&nbsp;— работа реальная, исполнитель неизвестен</td><td>Вычет НДС. Расходы оставят по&nbsp;рыночной цене&nbsp;— налоговая реконструкция</td><td>20% от&nbsp;недоимки</td></tr>
-<tr><td><strong>Жёсткий</strong>&nbsp;— налоговая докажет, что вы знали</td><td>Вычет НДС и&nbsp;налог с&nbsp;расходов: 25% у&nbsp;компаний на&nbsp;ОСН, 13–22% у&nbsp;ИП на&nbsp;ОСН, 15% на&nbsp;УСН «доходы минус расходы». На&nbsp;УСН «доходы» снимать нечего</td><td>40% от&nbsp;недоимки</td></tr>
+<tr><td><strong>Жёсткий</strong>&nbsp;— налоговая докажет, что вы&nbsp;знали</td><td>Вычет НДС и&nbsp;налог с&nbsp;расходов: 25% у&nbsp;компаний на&nbsp;ОСН, 13–22% у&nbsp;ИП на&nbsp;ОСН, 15% на&nbsp;УСН «доходы минус расходы». На&nbsp;УСН «доходы» снимать нечего</td><td>40% от&nbsp;недоимки</td></tr>
 </table></div>
 <p>Если у&nbsp;исполнителя нет людей и&nbsp;ресурсов, чтобы выполнить работу, суды могут не&nbsp;учесть расходы вовсе (ВС РФ, №&nbsp;307-ЭС25-11805, 31.03.2026).</p>
-<p>Сверху начисляют пени за&nbsp;каждый день&nbsp;— их считаем отдельно, в&nbsp;сумму на&nbsp;кону не&nbsp;включаем. На&nbsp;УСН 6% налог с&nbsp;расходов не&nbsp;зависит, поэтому денег на&nbsp;кону нет&nbsp;— но&nbsp;переводы сомнительным компаниям всё равно видит банк.</p>
+<p>Сверху начисляют пени за&nbsp;каждый день&nbsp;— их&nbsp;считаем отдельно, в&nbsp;сумму на&nbsp;кону не&nbsp;включаем. На&nbsp;УСН 6% налог с&nbsp;расходов не&nbsp;зависит, поэтому денег на&nbsp;кону нет&nbsp;— но&nbsp;переводы сомнительным компаниям всё равно видит банк.</p>
 <h2 style="margin-top:32px">Что видно из&nbsp;одной выписки</h2>
 <ul>
 <li><strong>Ошибка в&nbsp;ИНН получателя</strong>&nbsp;— такого ИНН не&nbsp;существует: деньги ушли не&nbsp;туда или реквизиты подменили.</li>
 <li><strong>Смена реквизитов</strong>&nbsp;— поставщик тот же, а&nbsp;счёт или банк новый; и&nbsp;платёж организации на&nbsp;личный счёт физлица. Так выглядит подмена реквизитов в&nbsp;письме&nbsp;— подтвердите звонком до&nbsp;следующей оплаты.</li>
-<li><strong>Ключевые поставщики</strong>&nbsp;— на&nbsp;ком держится больше 30% расходов. Их налоговая смотрит первыми.</li>
+<li><strong>Ключевые поставщики</strong>&nbsp;— на&nbsp;ком держится больше 30% расходов. Их&nbsp;налоговая смотрит первыми.</li>
 <li><strong>Разовые крупные платежи</strong>&nbsp;— сделки «один раз и&nbsp;много» проверяют чаще.</li>
 <li><strong>Размытое назначение</strong>&nbsp;— «оплата по&nbsp;счёту» без&nbsp;предмета. И&nbsp;банк, и&nbsp;налоговая начинают с&nbsp;назначения.</li>
 <li><strong>Переводы физлицам и&nbsp;доля налогов</strong>&nbsp;— то, на&nbsp;что банк смотрит по&nbsp;115&#8209;ФЗ.</li>
@@ -241,7 +241,7 @@ footer a{color:var(--muted)}
 </section>
 
 <section class="faq"><h2>Частые вопросы</h2>
-<details><summary>Куда уходит моя выписка?</summary><p>Никуда. Выписка читается прямо в&nbsp;браузере на&nbsp;вашем компьютере. Если вы сами нажмёте «Проверить по&nbsp;реестрам», на&nbsp;сервер уйдёт только список ИНН поставщиков&nbsp;— без&nbsp;сумм, дат и&nbsp;назначений платежей.</p></details>
+<details><summary>Куда уходит моя выписка?</summary><p>Никуда. Выписка читается прямо в&nbsp;браузере на&nbsp;вашем компьютере. Если вы&nbsp;сами нажмёте «Проверить по&nbsp;реестрам», на&nbsp;сервер уйдёт только список ИНН поставщиков&nbsp;— без&nbsp;сумм, дат и&nbsp;назначений платежей.</p></details>
 <details><summary>Что такое «деньги на&nbsp;кону»?</summary><p>Сумма, которую налоговая может доначислить, если признает поставщика технической компанией по&nbsp;статье 54.1 НК: вычет НДС, налог с&nbsp;расходов и&nbsp;штраф. Мягкий сценарий&nbsp;— с&nbsp;налоговой реконструкцией и&nbsp;штрафом 20%, жёсткий&nbsp;— без&nbsp;реконструкции и&nbsp;со&nbsp;штрафом 40%. Пени считаются отдельно.</p></details>
 <details><summary>Какую выписку загрузить?</summary><p>Файл обмена с&nbsp;1С (kl_to_1c.txt или похожий), который выгружает любой интернет-банк: «Выписка → Экспорт в&nbsp;1С». Лучше за&nbsp;квартал или год. Можно загрузить несколько файлов сразу&nbsp;— например, по&nbsp;разным счетам.</p></details>
 </section>
@@ -258,7 +258,7 @@ footer a{color:var(--muted)}
 <a class="card" href="/nalichnye/"><small>Щит</small><b>Наличные глазами банка</b><span>Та же&nbsp;выписка: снятие, инкассация и&nbsp;что увидит банк по&nbsp;115&#8209;ФЗ</span></a>
 <a class="card" href="/nalogi/nds-postavshchika-na-usn-po-inn/"><small>Налоги</small><b>Будет ли&nbsp;НДС в&nbsp;счёте поставщика на&nbsp;упрощёнке</b><span>Порог 2027&nbsp;года&nbsp;— 20&nbsp;млн&nbsp;₽ · проверка по&nbsp;ИНН</span></a>
 <a class="card" href="/nalogi/statya-54-1-nk-prostymi-slovami/"><small>Налоги</small><b>Статья 54.1 НК простыми словами: когда налоговая снимет вычет</b><span>5&nbsp;минут чтения</span></a>
-<a class="card" href="/nalogi/priznaki-tehnicheskoj-kompanii/"><small>Налоги</small><b>Признаки технической компании</b><span>Как их видит налоговая и&nbsp;как проверить поставщика</span></a>
+<a class="card" href="/nalogi/priznaki-tehnicheskoj-kompanii/"><small>Налоги</small><b>Признаки технической компании</b><span>Как их&nbsp;видит налоговая и&nbsp;как проверить поставщика</span></a>
 </div></section>
 </main>
 

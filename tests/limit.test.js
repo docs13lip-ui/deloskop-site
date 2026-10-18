@@ -3,6 +3,7 @@
 const test = require('node:test');
 const assert = require('node:assert');
 const fs = require('fs');
+require('./razvernut_sborku.js'); // vizual-v3.0a: главная подключает пакеты — сторож видит исходники в порядке исполнения
 const path = require('path');
 const ROOT = path.join(__dirname, '..');
 const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');

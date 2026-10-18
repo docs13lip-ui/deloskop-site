@@ -3,6 +3,7 @@
 const test = require('node:test');
 const assert = require('node:assert');
 const fs = require('node:fs');
+require('./razvernut_sborku.js'); // vizual-v3.0a: главная подключает пакеты — сторож видит исходники в порядке исполнения
 const path = require('node:path');
 const R = require('../js/rekvizity-proverki.js');
 const KOREN = path.join(__dirname, '..');

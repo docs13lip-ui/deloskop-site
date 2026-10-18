@@ -279,23 +279,15 @@ footer a{color:var(--ink2)}
 .ceny p a{display:inline-block;margin-top:18px;font-weight:600}
 .yakor{position:absolute}
 </style>
-<link rel="stylesheet" href="/css/fonts.css">
-<link rel="stylesheet" href="/css/podval.css">
-<link rel="stylesheet" href="/css/shapka.css">
-<link rel="stylesheet" href="/css/otchet.css">
-<script src="/js/shapka.js" defer></script>
-<script src="/js/metrika.js" defer></script>
-<script src="/js/vhody.js" defer></script>
-<script src="/js/kopiya.js" defer></script>
+<!-- vizual-v3.0a: стили и скрипты главной — пятью файлами вместо 17 (partials/sborka.json, tests/sobrat_js.py) -->
+<link rel="stylesheet" href="/css/b/ds.80976758b3.css">
+<link rel="stylesheet" href="/css/b/glavnaya-stil.792cc1df61.css">
+<script src="/js/b/yadro.06afa9aaff.js" defer></script>
+<script src="/js/b/glavnaya.e9c85ee936.js" defer></script>
 <link rel="icon" type="image/png" sizes="120x120" href="/favicon-120.png">
 <link rel="alternate" type="application/rss+xml" title="Разборы дел — Делоскоп" href="/praktika/rss.xml">
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="apple-mobile-web-app-title" content="Делоскоп">
-<script src="/js/pwa.js" defer></script>
-<script src="/js/zhivoj-indeks.js" defer></script>
-<script src="/js/vizual2.js" defer></script>
-<link rel="stylesheet" href="/css/vizual2.css">
-<link rel="stylesheet" href="/css/glubina.css">
 <meta name="deloskop-rezhim" content="beta">
 </head>
 <body>
@@ -575,35 +567,11 @@ footer a{color:var(--ink2)}
   <p class="fb-note" id="fbNote">Сообщение увидит только команда Делоскопа.</p>
 </div>
 
-<script src="/js/istochniki.js" defer></script>
-<script src="/js/imya.js" defer></script>
-<script src="/js/kanaly.js" defer></script>
+<!-- vizual-v3.0a: модули отчёта — один пакет по требованию (partials/sborka.json, tests/sobrat_js.py) -->
+<!-- vizual-v3.0a: куда чаще всего идут с главной — браузер готовит заранее при наведении или касании ссылки: тарифы, Паспорт, методику и карточки компаний открывает целиком (prerender; Метрика ждёт показа — js/metrika.js), статьи — только скачивает -->
+<script type="speculationrules">{"prerender":[{"where":{"and":[{"or":[{"href_matches":"/tarify/"},{"href_matches":"/pasport/"},{"href_matches":"/indeks/"},{"href_matches":"/company/*"}]},{"not":{"href_matches":"/*\\?*"}}]},"eagerness":"moderate"}],"prefetch":[{"where":{"or":[{"href_matches":"/115-fz/*"},{"href_matches":"/nalogi/*"}]},"eagerness":"moderate"}]}</script>
 <style>[data-kanal][hidden],[data-kanaly-blok][hidden]{display:none!important}</style>
-<script src="/js/sushchestvennoe.js" defer></script>
-<script src="/js/kommentarii.js" defer></script>
-<script src="/js/otkuda.js" defer></script>
-<script src="/js/reestry-sami.js" defer></script>
-<script src="/js/rekvizity-proverki.js" defer></script>
-<script src="/js/status-kod.js" defer></script>
-<script src="/js/usloviya.js" defer></script>
-<script src="/js/shchit.js" defer></script>
-<script src="/js/dinamika.js" defer></script>
-<script src="/js/golos.js" defer></script>
-<script src="/js/nagruzka.js" defer></script>
-<script src="/js/nagruzka-proverka.js" defer></script>
-<script src="/js/rentabelnost.js" defer></script>
-<script src="/js/bez-nds.js" defer></script>
-<script src="/js/nds-porog.js" defer></script>
-<script src="/js/terminy.js" defer></script>
-<script src="/js/pasport-cta.js" defer></script>
-<script src="/js/pasport-oplata.js" defer></script>
-<script src="/indeks/indeks.js" defer></script>
-<script src="/js/indeks-otvet.js" defer></script>
-<script src="/js/otchet.js" defer></script>
-<script src="/js/nedavnie.js" defer></script>
-<script src="/js/portfel.js" defer></script>
-<script src="/js/limit.js"></script>
-<script src="/js/inn.js"></script>
+<script src="/js/b/glavnaya-sinhr.4e05b10d4b.js"></script>
 <script>
 (function(){
   var form=document.getElementById('check'), input=document.getElementById('inn'), note=document.getElementById('note');
@@ -629,13 +597,15 @@ footer a{color:var(--ink2)}
   document.addEventListener('DOMContentLoaded',function(){
     if(window.Portfel){try{Portfel.mount(document.getElementById('portfel'),{form:form,input:input})}catch(e){}}
   });
-  document.addEventListener('DOMContentLoaded',function(){
+  function primerUslovij(){
     var ex=document.querySelector('[data-usl-demo]');
-    if(!ex||!window.Usloviya)return;
+    if(!ex||!window.Usloviya||ex.hasAttribute('data-usl-gotov'))return;ex.setAttribute('data-usl-gotov','');
     ex.className='';
     try{Usloviya.mount(ex,{risk_level:'low',company:{inn:'0000000000',name_short:'ООО «Пример»',status:'ACTIVE',reg_date:'2019-04-01'},
       signals:[{title:'Руководитель сменился недавно',status:'warn',detail:'Внимание'}]},{compact:true});}catch(e){ex.className='verdict';}
-  });
+  }
+  // пример «Условий сделки» — когда страница загрузилась и браузер свободен (не спорит с первым экраном)
+  window.addEventListener('load',function(){var ric=window.requestIdleCallback||function(f){setTimeout(f,200)};ric(function(){kogdaModuli(primerUslovij)},{timeout:2500});});
 
   // ---- живая проверка ----
   var CAPI=(location.hostname.endsWith('deloskop.ru')?'https://api.deloskop.ru':'');
@@ -712,10 +682,16 @@ footer a{color:var(--ink2)}
   // приходил до модулей — отчёт рисовался старой вёрсткой: без вывода, предела предоплаты, Индекса и Динамики. Запрос уходит сразу, рисуем — когда модули на месте.
   // readyState не годится: «interactive» ставится до исполнения defer-скриптов — ждём само событие (этот скрипт исполняется раньше него).
   var moduliGotovy=false;document.addEventListener('DOMContentLoaded',function(){moduliGotovy=true});
-  function kogdaModuli(f){if(moduliGotovy)f();else document.addEventListener('DOMContentLoaded',function(){f()},{once:true});}
+  // vizual-v3.0a: модули отчёта (~450 КБ) — одним пакетом и только когда нужны: при проверке, при намерении проверить
+  // (фокус в поле, наведение или касание кнопки) и после загрузки страницы, когда браузер свободен (пример «Условий сделки»).
+  // Пакет не загрузился — отчёт рисуется как раньше без модулей (каждый вызов — через window.X).
+  var OTCHET_JS='/js/b/otchet.8a0e71f2ac.js', moduliP=null;
+  function gruzitModuli(){if(moduliP)return moduliP;moduliP=new Promise(function(ok){var s=document.createElement('script');s.src=OTCHET_JS;s.onload=s.onerror=function(){ok()};document.head.appendChild(s);});return moduliP;}
+  function kogdaModuli(f){gruzitModuli().then(function(){if(moduliGotovy)f();else document.addEventListener('DOMContentLoaded',function(){f()},{once:true});});}
+  ['focus','input','pointerenter','touchstart'].forEach(function(ev){form.addEventListener(ev,function(){gruzitModuli()},{once:true,passive:true,capture:true});});
   function runCheck(v,o){
     if(!CAPI){note.className='note ok';note.textContent='Проверка работает на deloskop.ru.';return;}
-    if(window.dlkLimit)dlkLimit.ubrat(note);
+    gruzitModuli();if(window.dlkLimit)dlkLimit.ubrat(note);
     note.className='note';note.textContent='Проверяем по реестрам…';report.classList.add('loading');if(window.dlkGoal)dlkGoal('check_started');
     fetch(CAPI+'/api/check?q='+encodeURIComponent(v),{credentials:'include'})
       .then(function(res){return res.json().then(function(j){return {ok:res.ok,s:res.status,j:j}},function(){return {ok:false,s:res.status,j:{}}})})
@@ -823,7 +799,6 @@ footer a{color:var(--ink2)}
 })();
 
 </script>
-<script src="/obnovleniya.js" defer></script>
 <!--podval--><div class="podval" role="contentinfo"><div class="podval__in"><div class="podval__cols"><nav class="podval__col" aria-label="Продукты"><p class="podval__h">Продукты</p><ul><li><a href="/">Проверка по ИНН</a></li><li><a href="/indeks/">Индекс Делоскопа</a></li><li><a href="/#shield">Щит</a></li><li><a href="/nalichnye/">Наличные глазами банка</a></li><li><a href="/kontragenty-iz-vypiski/">Кому вы платите</a></li><li><a href="/proverit-schet/">Проверь счёт</a></li><li><a href="/skoraya-115-fz/">Скорая 115-ФЗ</a></li><li><a href="/pasport/">Паспорт</a></li><li><a href="/delopis/">Делопись</a></li><li><a href="/tarify/">Тарифы</a></li></ul></nav><nav class="podval__col" aria-label="Знания"><p class="podval__h">Знания</p><ul><li><a href="/115-fz/">115-ФЗ простыми словами</a></li><li><a href="/nalogi/">Налоги</a></li><li><a href="/obnovleniya/">Что нового</a></li><li><a href="/company/">Компании</a></li><li><a href="/zhurnal/">Журнал</a></li></ul></nav><nav class="podval__col" aria-label="Компания"><p class="podval__h">Компания</p><ul><li><a href="/o-proekte/">О проекте</a></li><li><a href="/indeks/#metodika">Методика Индекса</a></li><li><a href="/tochnost/">Точность Индекса</a></li><li><a href="/cabinet.html">Кабинет</a></li><li><a href="/partneram/">Бухгалтерам и партнёрам</a></li><li><a href="/rekvizity/">Реквизиты и контакты</a></li><li><a href="mailto:help@deloskop.ru">help@deloskop.ru</a></li></ul></nav><nav class="podval__col" aria-label="Документы"><p class="podval__h">Документы</p><ul><li><a href="/oferta/">Публичная оферта</a></li><li><a href="/politika/">Политика обработки ПДн</a></li><li><a href="/soglasie/">Согласие на обработку ПДн</a></li><li><a href="/rassylki/">Согласие на рассылки</a></li><li><a href="/cookies/">Cookies и Метрика</a></li><li><a href="/vozvrat/">Возврат денег</a></li><li><a href="/partneram/usloviya/">Условия для партнёров</a></li><li><a href="/rekvizity/">Реквизиты</a></li></ul></nav></div><div class="podval__niz"><p>© 2026 Делоскоп</p><p>Сотрудничество, отзывы и предложения — <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>. Принимаем 24/7</p><p>Материалы носят информационный характер и не заменяют консультацию юриста</p></div></div></div><!--/podval-->
 </body>
 </html>

@@ -4,6 +4,7 @@
 const test = require('node:test');
 const assert = require('node:assert');
 const fs = require('fs');
+require('./razvernut_sborku.js'); // vizual-v3.0a: главная подключает пакеты — сторож видит исходники в порядке исполнения
 const path = require('path');
 const K = require('../js/kanaly.js');
 

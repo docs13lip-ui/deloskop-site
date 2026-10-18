@@ -167,6 +167,12 @@
     });
     obnovitStranicu();
   }
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
-  else start();
+  function zapusk() {
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
+    else start();
+  }
+  // vizual-v3.0a: страницу, которую браузер открыл заранее (Speculation Rules, prerender), человек ещё не видел —
+  // ни баннера, ни Метрики, пока она не показана (событие prerenderingchange); иначе просмотр без посетителя
+  if (document.prerendering) document.addEventListener("prerenderingchange", zapusk, { once: true });
+  else zapusk();
 })();

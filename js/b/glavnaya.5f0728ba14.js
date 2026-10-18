@@ -181,10 +181,11 @@
     lico.setAttribute('role', 'tabpanel'); zad.setAttribute('role', 'tabpanel');
     // строки по месту: вернуть — перед якорем-комментарием, который ставим вместо каждой
     var mesto = rows.map(function (r) { var m = d.createComment(''); r.parentNode.insertBefore(m, r); return m; });
-    function nazad() { rows.forEach(function (r, i) { if (r.parentNode !== f) mesto[i].parentNode.insertBefore(r, mesto[i].nextSibling); }); }
-    function vpered(v) {
+    function nazad() { if (W.Svyazi) Svyazi.ubrat(spis); rows.forEach(function (r, i) { if (r.parentNode !== f) mesto[i].parentNode.insertBefore(r, mesto[i].nextSibling); }); }
+    function vpered(v, zhivo) {
       nazad();
       rows.forEach(function (r) { if ((' ' + r.getAttribute('data-vid') + ' ').indexOf(' ' + v + ' ') >= 0) spis.appendChild(r); });
+      if (v === 'svyazi' && W.Svyazi) Svyazi.pokazat(spis, f, zhivo); // vizual-v3.2: оборот «Связи» — граф/список из js/svyazi.js
     }
     function podpis(b) { return b.getAttribute('data-zag') || ''; }
     // высота — по большей стороне (лицо целиком или любой из оборотов)
@@ -212,7 +213,7 @@
       vn.setAttribute('data-vid', v);
       zad.setAttribute('aria-labelledby', b.id);
       if (na) {
-        var smena = function () { zb.textContent = podpis(b); vpered(v); };
+        var smena = function () { zb.textContent = podpis(b); vpered(v, true); };
         // банк ↔ налоговая: оборот уже повёрнут — меняем строки мягко, без второго вращения
         if (bylo !== 'svodka' && !tiho) { zad.classList.add('is-smena'); setTimeout(function () { smena(); zad.classList.remove('is-smena'); }, 160); }
         else smena();
@@ -268,6 +269,7 @@
       r.setAttribute('data-vid', v.join(' '));
     });
     var vid = ZAG.filter(function (z) { return z[0] === 'svodka' || est[z[0]]; });
+    if (W.Svyazi && Svyazi.est(f)) vid.push(['svyazi', 'Связи', 'Связи компании']); // vizual-v3.2: третья вкладка — из ответа /api/check
     if (vid.length < 2) return;
     var tabs = el('div', 'ex-vid ot-vid');
     tabs.setAttribute('role', 'tablist'); tabs.setAttribute('aria-label', ZAG_ARIA);

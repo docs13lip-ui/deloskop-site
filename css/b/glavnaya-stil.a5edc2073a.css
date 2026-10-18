@@ -1,4 +1,4 @@
-/* Делоскоп · пакет «glavnaya-stil» — собран tests/sobrat_js.py из 3 файлов (partials/sborka.json). Правьте исходники, не этот файл. */
+/* Делоскоп · пакет «glavnaya-stil» — собран tests/sobrat_js.py из 4 файлов (partials/sborka.json). Правьте исходники, не этот файл. */
 /* --- /css/otchet.css --- */
 /* Делоскоп — лист «Отчёт о проверке» на всю ширину (js/otchet.js; макет документ команды, разд. 2.1–2.3).
    Токены v1.1 — дополнение к ds.css; названия совпадают с макетом. */
@@ -224,6 +224,22 @@ dialog.po::backdrop{background:rgba(17,17,19,.4)}
  .po-cena b{font-size:32px}
 }
 @media print{dialog.po{display:none!important}}
+/* --- /css/perehod.css --- */
+/* Делоскоп — vizual-v3.1a «Инструмент» (18.10.2026): переход «пример → отчёт» и подсказки у поля ИНН.
+   Визуал v3 §7, волна 3.1 (а, б). Без поддержки — правила просто не действуют, всё работает как раньше. */
+
+/* (а) View Transitions одного документа: кольцо Индекса, название, вывод и первые факты перетекают на новое место (js/perehod.js) */
+::view-transition-group(*){animation-duration:.45s;animation-timing-function:cubic-bezier(.2,.7,.2,1)}
+::view-transition-old(root),::view-transition-new(root){animation-duration:.28s}
+@media (prefers-reduced-motion:reduce){
+  ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}
+}
+
+/* (б) Подсказки компаний — в верхнем слое (popover) и под формой по якорю; без якорей — position:absolute, как было */
+.check--yakor{anchor-name:--dlk-forma}
+.check--yakor .sugg[popover]{position:fixed;position-anchor:--dlk-forma;inset:auto;top:anchor(bottom);left:anchor(left);
+  width:anchor-size(width);margin:6px 0 0;border:0;color:inherit;position-try-fallbacks:flip-block}
+.check--yakor .sugg[popover]:not(:popover-open){display:none}
 /* --- /css/vizual2.css --- */
 /* Делоскоп — визуал, волна 2 (vizual-v2, 18.10.2026). Разметку ставит /js/vizual2.js; без JS ничего из этого не видно.
    Подключается до glubina.css (тот — последним стилем страницы). */

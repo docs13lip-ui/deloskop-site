@@ -21,7 +21,7 @@
 @font-face{font-family:"Onest Zapas R";font-style:normal;font-weight:600;src:local("Roboto Medium"),local("Roboto-Medium");size-adjust:103.61%;ascent-override:93.62%;descent-override:29.44%;line-gap-override:0%}
 /* --- /css/podval.css --- */
 /* СОБРАНО tests/sobrat_shapku.py из /css/ds.css — руками не править. Подвал §3.2 дизайн-системы. */
-.podval{--bg:#F5F5F2;--surface:#FFFFFF;--surface-2:#EEEEEA;--ink:#1D1D1F;--ink-2:#48484C;--muted:#6B6B70;--line:#E6E6E1; --accent:#0B63E5;--accent-hover:#084BB0;--accent-soft:#EAF1FD;--on-accent:#FFFFFF; --ok:#16723F;--ok-bg:#E8F5EE;--warn:#9A5B00;--warn-bg:#FFF4E0;--high:#C2410C;--high-bg:#FFEDE3;--bad:#B3261E;--bad-bg:#FDECEA; --font:Onest,"Onest Zapas","Onest Zapas R",-apple-system,"Segoe UI",Roboto,Arial,sans-serif; --t-display:clamp(44px,6.4vw,72px);--t-h1:clamp(36px,4.6vw,56px);--t-h2:clamp(28px,3.2vw,40px);--t-h3:22px; --t-lead:20px;--t-body:17px;--t-small:15px;--t-caption:13px; --s-1:4px;--s-2:8px;--s-3:12px;--s-4:16px;--s-5:24px;--s-6:32px;--s-7:48px;--s-8:64px;--s-9:96px;--s-10:128px; --wide:1200px;--text:760px;--gutter:clamp(16px,5vw,48px);--section:clamp(64px,9vw,120px); --r-s:10px;--r-m:16px;--r-l:24px;--r-xl:32px;--r-pill:999px; --shadow:0 1px 2px rgba(29,29,31,.04),0 12px 32px rgba(29,29,31,.06); --ease:cubic-bezier(.2,.7,.2,1);--fast:160ms;--slow:240ms; --header-h:64px;}
+.podval{--bg:#F5F5F2;--surface:#FFFFFF;--surface-2:#EEEEEA;--ink:#1D1D1F;--ink-2:#48484C;--muted:#6B6B70;--line:#E6E6E1; --accent:#0B63E5;--accent-hover:#084BB0;--accent-soft:#EAF1FD;--on-accent:#FFFFFF; --ok:#16723F;--ok-bg:#E8F5EE;--warn:#9A5B00;--warn-bg:#FFF4E0;--high:#C2410C;--high-bg:#FFEDE3;--bad:#B3261E;--bad-bg:#FDECEA; --font:Onest,"Onest Zapas","Onest Zapas R",-apple-system,"Segoe UI",Roboto,Arial,sans-serif; --t-display:clamp(48px,6.4vw,72px);--t-h1:clamp(32px,4.6vw,56px);--t-h2:clamp(32px,3.2vw,48px);--t-h3:24px; --t-lead:20px;--t-body:17px;--t-small:15px;--t-caption:13px; --s-1:4px;--s-2:8px;--s-3:12px;--s-4:16px;--s-5:24px;--s-6:32px;--s-7:48px;--s-8:64px;--s-9:96px;--s-10:128px; --wide:1200px;--text:760px;--gutter:clamp(16px,5vw,48px);--section:clamp(64px,9vw,120px); --r-s:10px;--r-m:16px;--r-l:28px;--r-xl:28px;--r-pill:999px; --shadow:0 1px 2px rgba(29,29,31,.04),0 12px 32px rgba(29,29,31,.06); --ease:cubic-bezier(.2,.7,.2,1);--fast:160ms;--slow:240ms; --header-h:64px;}
 .podval{background:var(--surface);border-top:1px solid var(--line);color:var(--muted);font:400 var(--t-small)/1.5 var(--font);margin-top:var(--s-8);padding:var(--s-8) 0 var(--s-7);text-align:left}
 .podval *{box-sizing:border-box}
 .podval__in{max-width:calc(var(--wide) + 2*var(--gutter));margin:0 auto;padding:0 var(--gutter)}
@@ -40,8 +40,8 @@
 @media print{.podval{display:none}}
 /* --- /css/shapka.css --- */
 /* СОБРАНО tests/sobrat_shapku.py из /partials/shapka.css и токенов /css/ds.css — руками не править. */
-a.skip,.shapka,dialog.mnav,.wn-bar,.beta-bar,dialog.dlo,.ck-bar{--bg:#F5F5F2;--surface:#FFFFFF;--surface-2:#EEEEEA;--ink:#1D1D1F;--ink-2:#48484C;--muted:#6B6B70;--line:#E6E6E1; --accent:#0B63E5;--accent-hover:#084BB0;--accent-soft:#EAF1FD;--on-accent:#FFFFFF; --ok:#16723F;--ok-bg:#E8F5EE;--warn:#9A5B00;--warn-bg:#FFF4E0;--high:#C2410C;--high-bg:#FFEDE3;--bad:#B3261E;--bad-bg:#FDECEA; --font:Onest,"Onest Zapas","Onest Zapas R",-apple-system,"Segoe UI",Roboto,Arial,sans-serif; --t-display:clamp(44px,6.4vw,72px);--t-h1:clamp(36px,4.6vw,56px);--t-h2:clamp(28px,3.2vw,40px);--t-h3:22px; --t-lead:20px;--t-body:17px;--t-small:15px;--t-caption:13px; --s-1:4px;--s-2:8px;--s-3:12px;--s-4:16px;--s-5:24px;--s-6:32px;--s-7:48px;--s-8:64px;--s-9:96px;--s-10:128px; --wide:1200px;--text:760px;--gutter:clamp(16px,5vw,48px);--section:clamp(64px,9vw,120px); --r-s:10px;--r-m:16px;--r-l:24px;--r-xl:32px;--r-pill:999px; --shadow:0 1px 2px rgba(29,29,31,.04),0 12px 32px rgba(29,29,31,.06); --ease:cubic-bezier(.2,.7,.2,1);--fast:160ms;--slow:240ms; --header-h:64px;}
-@media (max-width:640px){a.skip,.shapka,dialog.mnav,.wn-bar,.beta-bar,dialog.dlo,.ck-bar{--t-lead:18px;--t-body:16px;--header-h:56px}}
+a.skip,.shapka,dialog.mnav,.wn-bar,.beta-bar,dialog.dlo,.ck-bar{--bg:#F5F5F2;--surface:#FFFFFF;--surface-2:#EEEEEA;--ink:#1D1D1F;--ink-2:#48484C;--muted:#6B6B70;--line:#E6E6E1; --accent:#0B63E5;--accent-hover:#084BB0;--accent-soft:#EAF1FD;--on-accent:#FFFFFF; --ok:#16723F;--ok-bg:#E8F5EE;--warn:#9A5B00;--warn-bg:#FFF4E0;--high:#C2410C;--high-bg:#FFEDE3;--bad:#B3261E;--bad-bg:#FDECEA; --font:Onest,"Onest Zapas","Onest Zapas R",-apple-system,"Segoe UI",Roboto,Arial,sans-serif; --t-display:clamp(48px,6.4vw,72px);--t-h1:clamp(32px,4.6vw,56px);--t-h2:clamp(32px,3.2vw,48px);--t-h3:24px; --t-lead:20px;--t-body:17px;--t-small:15px;--t-caption:13px; --s-1:4px;--s-2:8px;--s-3:12px;--s-4:16px;--s-5:24px;--s-6:32px;--s-7:48px;--s-8:64px;--s-9:96px;--s-10:128px; --wide:1200px;--text:760px;--gutter:clamp(16px,5vw,48px);--section:clamp(64px,9vw,120px); --r-s:10px;--r-m:16px;--r-l:28px;--r-xl:28px;--r-pill:999px; --shadow:0 1px 2px rgba(29,29,31,.04),0 12px 32px rgba(29,29,31,.06); --ease:cubic-bezier(.2,.7,.2,1);--fast:160ms;--slow:240ms; --header-h:64px;}
+@media (max-width:640px){a.skip,.shapka,dialog.mnav,.wn-bar,.beta-bar,dialog.dlo,.ck-bar{--t-lead:17px;--t-body:17px;--header-h:56px}}
 /* ===== шапка (документ команды, часть 1) =====
    Все правила — с префиксом .shapka / .mnav / .skip / .wn-: старые страницы ещё не на ds.css,
    их стили (a{…}, header{…}, .btn) не должны протекать в шапку, а шапка — в страницу. */
@@ -68,7 +68,7 @@ a.skip:focus{top:var(--s-2);color:var(--on-accent)}
 .shapka .shapka__logo:hover,.mnav .shapka__logo:hover{color:var(--ink)}
 .shapka__logo svg{display:block;flex:none}
 .shapka__logo circle{stroke:var(--ink)}
-.shapka__word{font:600 22px/1 var(--font);letter-spacing:-.03em}
+.shapka__word{font:600 24px/1 var(--font);letter-spacing:-.03em}
 
 .shapka .shapka__nav{flex:1;min-width:0;display:flex;justify-content:center}
 .shapka .shapka__list{display:flex;gap:var(--s-1)}
@@ -93,7 +93,7 @@ a.skip:focus{top:var(--s-2);color:var(--on-accent)}
 .shapka .shapka__right{display:flex;align-items:center;gap:var(--s-1);flex:none}
 .shapka__new-s{display:none}
 .shapka__dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-left:2px}
-.shapka__cnt{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:var(--r-pill);background:var(--accent);color:var(--on-accent);font:600 11px/1 var(--font)}
+.shapka__cnt{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:var(--r-pill);background:var(--accent);color:var(--on-accent);font:600 12px/1 var(--font)}
 .shapka__dot[hidden],.shapka__cnt[hidden]{display:none}
 .shapka .shapka__btn,.mnav .shapka__btn{display:inline-flex;align-items:center;justify-content:center;min-height:40px;margin-left:var(--s-2);padding:0 18px;border-radius:var(--r-pill);background:var(--accent);color:var(--on-accent);font:600 15px/1 var(--font);white-space:nowrap;transition:background var(--fast) var(--ease)}
 .shapka .shapka__btn:hover,.mnav .shapka__btn:hover{background:var(--accent-hover);color:var(--on-accent)}
@@ -123,7 +123,7 @@ dialog.mnav::backdrop{background:rgba(17,17,19,.4);-webkit-backdrop-filter:blur(
 .mnav .mnav__list{margin-top:var(--s-4)}
 .mnav .mnav__list>li{border-top:1px solid var(--line);padding:var(--s-3) 0}
 .mnav .mnav__list>li:first-child{border-top:0}
-.mnav .mnav__link,.mnav .mnav__sub a{display:flex;align-items:center;min-height:44px;color:var(--ink);font:600 22px/1.25 var(--font);letter-spacing:-.01em}
+.mnav .mnav__link,.mnav .mnav__sub a{display:flex;align-items:center;min-height:44px;color:var(--ink);font:600 24px/1.25 var(--font);letter-spacing:-.01em}
 .mnav .mnav__link.is-active,.mnav .mnav__link[aria-current=page],.mnav .mnav__sub a[aria-current=page]{color:var(--accent)}
 .mnav .mnav__group{min-height:32px;color:var(--muted);font:500 var(--t-caption)/1.25 var(--font);letter-spacing:.06em;text-transform:uppercase}
 .mnav .mnav__group.is-active{color:var(--accent)}
@@ -163,21 +163,21 @@ dialog.mnav::backdrop{background:rgba(17,17,19,.4);-webkit-backdrop-filter:blur(
 dialog.dlo{width:min(640px,calc(100% - 32px));max-width:none;max-height:calc(100dvh - 32px);margin:auto;padding:clamp(24px,5vw,44px);border:0;border-radius:var(--r-xl);background:var(--surface);color:var(--ink);font:400 var(--t-body)/1.5 var(--font);text-align:left;box-shadow:0 24px 80px rgba(0,0,0,.25);overflow:auto}
 dialog.dlo[open]{animation:mnav-in var(--slow) var(--ease)}
 dialog.dlo::backdrop{background:rgba(17,17,19,.55)}
-.dlo .dlo-tag{display:inline-block;margin-bottom:14px;padding:6px 14px;border-radius:var(--r-pill);background:var(--accent-soft);color:var(--accent);font:600 14px/1.2 var(--font)}
+.dlo .dlo-tag{display:inline-block;margin-bottom:14px;padding:6px 14px;border-radius:var(--r-pill);background:var(--accent-soft);color:var(--accent);font:600 15px/1.2 var(--font)}
 .dlo h2{margin:0 0 22px;font:600 clamp(28px,5vw,38px)/1.1 var(--font);letter-spacing:-.02em}
 .dlo h3{margin:24px 0 10px;color:var(--muted);font:600 15px/1.3 var(--font);letter-spacing:.06em;text-transform:uppercase}
 .dlo ul{list-style:none;margin:0;padding:0}
-.dlo li{position:relative;margin:0;padding:9px 0 9px 30px;border-bottom:1px solid var(--line);font-size:clamp(18px,2.6vw,21px);line-height:1.35}
+.dlo li{position:relative;margin:0;padding:9px 0 9px 30px;border-bottom:1px solid var(--line);font-size:clamp(17px,2.6vw,20px);line-height:1.35}
 .dlo li:last-child{border-bottom:0}
 .dlo .dlo-n li::before{content:"";position:absolute;left:4px;top:18px;width:10px;height:10px;border-radius:50%;background:var(--accent)}
 .dlo .dlo-p li::before{content:"✓";position:absolute;left:2px;top:8px;color:var(--ok);font-weight:600}
 .dlo a{display:inline;padding:0;background:none;color:var(--accent);text-decoration:none}
 .dlo a:hover{text-decoration:underline}
-.dlo .dlo-note{margin:20px 0 0;color:var(--ink-2);font-size:16px;line-height:1.45}
+.dlo .dlo-note{margin:20px 0 0;color:var(--ink-2);font-size:17px;line-height:1.45}
 .dlo .dlo-btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
 .dlo .dlo-ok{min-height:52px;padding:0 28px;border:0;border-radius:var(--r-pill);background:var(--accent);color:var(--on-accent);font:600 17px/1 var(--font);cursor:pointer}
 .dlo .dlo-ok:hover{background:var(--accent-hover)}
-.dlo .dlo-all{align-self:center;font-size:16px}
+.dlo .dlo-all{align-self:center;font-size:17px}
 @media (prefers-reduced-motion:reduce){dialog.mnav[open],dialog.dlo[open]{animation:none}.shapka,.shapka *,.mnav *{transition:none!important}}
 
 /* баннер cookies (документ команды, раздел 6) — внизу, компактный, не закрывает поле ИНН */
@@ -383,6 +383,8 @@ dialog.dlo::backdrop{background:rgba(17,17,19,.55)}
       где типограф не дотянулся (текст из скриптов, данные). Второй рубеж после tests/tipograf_statej.py; где не поддерживается — как было.
    2) Поля касания на телефоне и сенсорном экране — не меньше 44 px (Apple HIG, WCAG 2.5.5). С мышью подвал остаётся плотным:
       строки ≥ 24 px с промежутком — норма WCAG 2.5.8. */
+/* detali-v1b: шкала размеров и радиусов — значения, которые остались на сайте (сторож tests/shkala_radiusy.test.js). */
+:root{--t-12:12px;--t-13:13px;--t-15:15px;--t-17:17px;--t-20:20px;--t-24:24px;--t-32:32px;--t-48:48px;--r-small:10px;--r-inner:16px;--r-card:28px;--r-pill:999px}
 p,li,dd,dt,figcaption,blockquote,summary,legend,h1,h2,h3,h4{text-wrap:pretty}
 @media (max-width:640px),(pointer:coarse){
   .podval li{margin:0}

@@ -282,9 +282,9 @@ footer a{color:var(--ink2)}
 .yakor{position:absolute}
 </style>
 <!-- vizual-v3.0a: стили и скрипты главной — пятью файлами вместо 17 (partials/sborka.json, tests/sobrat_js.py) -->
-<link rel="stylesheet" href="/css/b/ds.110d362642.css">
-<link rel="stylesheet" href="/css/b/glavnaya-stil.0612a65e15.css">
-<script src="/js/b/yadro.a63f89fcb5.js" defer></script>
+<link rel="stylesheet" href="/css/b/ds.bc1ab1a3dc.css">
+<link rel="stylesheet" href="/css/b/glavnaya-stil.959b0a106e.css">
+<script src="/js/b/yadro.1da692cae5.js" defer></script>
 <script src="/js/b/glavnaya.20e6a755b2.js" defer></script>
 <link rel="icon" type="image/png" sizes="120x120" href="/favicon-120.png">
 <link rel="alternate" type="application/rss+xml" title="Разборы дел — Делоскоп" href="/praktika/rss.xml">
@@ -579,7 +579,7 @@ footer a{color:var(--ink2)}
 <!-- vizual-v3.0a: куда чаще всего идут с главной — браузер готовит заранее при наведении или касании ссылки: тарифы, Паспорт, методику и карточки компаний открывает целиком (prerender; Метрика ждёт показа — js/metrika.js), статьи — только скачивает -->
 <script type="speculationrules">{"prerender":[{"where":{"and":[{"or":[{"href_matches":"/tarify/"},{"href_matches":"/pasport/"},{"href_matches":"/indeks/"},{"href_matches":"/company/*"}]},{"not":{"href_matches":"/*\\?*"}}]},"eagerness":"moderate"}],"prefetch":[{"where":{"or":[{"href_matches":"/115-fz/*"},{"href_matches":"/nalogi/*"}]},"eagerness":"moderate"}]}</script>
 <style>[data-kanal][hidden],[data-kanaly-blok][hidden]{display:none!important}</style>
-<script src="/js/b/glavnaya-sinhr.4e05b10d4b.js"></script>
+<script src="/js/b/glavnaya-sinhr.6c5d1a767f.js"></script>
 <script>
 (function(){
   var form=document.getElementById('check'), input=document.getElementById('inn'), note=document.getElementById('note');
@@ -698,7 +698,7 @@ footer a{color:var(--ink2)}
   // vizual-v3.0a: модули отчёта (~450 КБ) — одним пакетом и только когда нужны: при проверке, при намерении проверить
   // (фокус в поле, наведение или касание кнопки) и после загрузки страницы, когда браузер свободен (пример «Условий сделки»).
   // Пакет не загрузился — отчёт рисуется как раньше без модулей (каждый вызов — через window.X).
-  var OTCHET_JS='/js/b/otchet.588749ff27.js', moduliP=null;
+  var OTCHET_JS='/js/b/otchet.0b29571785.js', moduliP=null;
   function gruzitModuli(){if(moduliP)return moduliP;moduliP=new Promise(function(ok){var s=document.createElement('script');s.src=OTCHET_JS;s.onload=s.onerror=function(){ok()};document.head.appendChild(s);});return moduliP;}
   function kogdaModuli(f){gruzitModuli().then(function(){if(moduliGotovy)f();else document.addEventListener('DOMContentLoaded',function(){f()},{once:true});});}
   ['focus','input','pointerenter','touchstart'].forEach(function(ev){form.addEventListener(ev,function(){gruzitModuli()},{once:true,passive:true,capture:true});});

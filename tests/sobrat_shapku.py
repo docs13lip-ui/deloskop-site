@@ -73,15 +73,15 @@ GLUBINA_LINK = '<link rel="stylesheet" href="/css/glubina.css">'
 # Строка в <head> ставит data-theme на <html> до первой отрисовки (без мигания): выбор из localStorage «tema»
 # (light | dark; иначе — как в системе) и цвет панели браузера. Остальное — css/tema.css и js/shapka.js §8.
 TEMA_LINK = '<link rel="stylesheet" href="/css/tema.css">'
-TEMA_JS = ('<script>!function(d,t){try{t=localStorage.tema}catch(e){}t=t=="dark"||t=="light"?t:'
-           'matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light";d.dataset.theme=t;'
+TEMA_JS = ('<script>!function(d,t){try{t=localStorage.tema}catch(e){}t=t=="light"||t=="auto"?t:"dark";'
+           'if(t=="auto")t=matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light";d.dataset.theme=t;'
            'if(t=="dark"&&(t=document.querySelector("meta[name=theme-color]")))t.content="#111113"}'
            '(document.documentElement)</script>')
 TEMA_PODVAL = ('<div class="tema" data-tema hidden><span class="tema__h" id="tema-h">Тема</span>'
                '<span class="tema__g" role="group" aria-labelledby="tema-h">'
-               '<button type="button" data-tema-v="auto" aria-pressed="true">Как в системе</button>'
+               '<button type="button" data-tema-v="dark" aria-pressed="true">Тёмная</button>'
                '<button type="button" data-tema-v="light" aria-pressed="false">Светлая</button>'
-               '<button type="button" data-tema-v="dark" aria-pressed="false">Тёмная</button></span></div>')
+               '<button type="button" data-tema-v="auto" aria-pressed="false">Как в системе</button></span></div>')
 STARAYA_SHAPKA = re.compile(r'<header(?: class="(?:top|hdr)")?>.*?</header>\n?', re.S)
 
 

@@ -253,14 +253,15 @@
       });
     });
 
-    // 8. vizual-v3.0b: тема — «Как в системе / Светлая / Тёмная» в подвале. Строка в <head> уже поставила
+    // 8. vizual-v3.0b: тема — «Тёмная / Светлая / Как в системе» в подвале. Строка в <head> уже поставила
     // data-theme до отрисовки; здесь — выбор, запоминание (localStorage «tema») и смена темы системы на лету.
+    // 18.10 (решение владельца): по умолчанию — тёмная; «Как в системе» — отдельный выбор.
     tema();
   }
 
   function tema() {
     var root = document.documentElement, mq = window.matchMedia ? matchMedia("(prefers-color-scheme: dark)") : null;
-    var vybor = function () { var v = null; try { v = localStorage.getItem("tema"); } catch (e) {} return v === "dark" || v === "light" ? v : "auto"; };
+    var vybor = function () { var v = null; try { v = localStorage.getItem("tema"); } catch (e) {} return v === "light" || v === "auto" ? v : "dark"; };
     var primenit = function () {
       var v = vybor(), t = v === "auto" ? (mq && mq.matches ? "dark" : "light") : v;
       root.dataset.theme = t;
@@ -273,7 +274,7 @@
       blok.addEventListener("click", function (e) {
         var b = e.target.closest("[data-tema-v]"); if (!b) return;
         var v = b.getAttribute("data-tema-v");
-        try { if (v === "auto") localStorage.removeItem("tema"); else localStorage.setItem("tema", v); } catch (er) {}
+        try { localStorage.setItem("tema", v); } catch (er) {}
         primenit();
       });
     });

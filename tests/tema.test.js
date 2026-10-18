@@ -30,7 +30,7 @@ test('строка темы: в <head> каждой страницы с шапк
   assert.match(JSON.parse(chitat('partials/obolochka.json')).head, STROKA);
 });
 
-test('строка темы: выбор из localStorage, иначе система; ставит data-theme до отрисовки', () => {
+test('строка темы: выбор из localStorage, иначе тёмная (решение владельца 18.10); «auto» — по системе; ставит data-theme до отрисовки', () => {
   const kod = chitat('index.html').match(STROKA)[0].replace(/^<script>|<\/script>$/g, '');
   const progon = (ls, sistemaTemnaya) => {
     const el = { dataset: {} }, meta = { content: '#F5F5F2' };
@@ -38,13 +38,15 @@ test('строка темы: выбор из localStorage, иначе систе
     new Function('localStorage', 'matchMedia', 'document', kod)(ctx.localStorage, ctx.matchMedia, ctx.document);
     return [el.dataset.theme, meta.content];
   };
-  assert.deepStrictEqual(progon({}, false), ['light', '#F5F5F2']);
+  assert.deepStrictEqual(progon({}, false), ['dark', '#111113'], 'ничего не выбрано, система светлая — всё равно тёмная');
   assert.deepStrictEqual(progon({}, true), ['dark', '#111113']);
   assert.deepStrictEqual(progon({ tema: 'light' }, true), ['light', '#F5F5F2']);
   assert.deepStrictEqual(progon({ tema: 'dark' }, false), ['dark', '#111113']);
-  assert.deepStrictEqual(progon({ tema: 'мусор' }, true), ['dark', '#111113']);
+  assert.deepStrictEqual(progon({ tema: 'auto' }, false), ['light', '#F5F5F2'], '«как в системе» — светлая система');
+  assert.deepStrictEqual(progon({ tema: 'auto' }, true), ['dark', '#111113'], '«как в системе» — тёмная система');
+  assert.deepStrictEqual(progon({ tema: 'мусор' }, false), ['dark', '#111113']);
   const brosaet = {}; Object.defineProperty(brosaet, 'tema', { get() { throw new Error('запрещено'); } });
-  assert.deepStrictEqual(progon(brosaet, false), ['light', '#F5F5F2'], 'localStorage недоступен — как в системе');
+  assert.deepStrictEqual(progon(brosaet, false), ['dark', '#111113'], 'localStorage недоступен — тёмная');
 });
 
 test('слой css/tema.css: на каждой странице с шапкой (тегом или в пакете) и в оболочке', () => {
@@ -57,10 +59,11 @@ test('переключатель в подвале: три положения, �
   const ob = JSON.parse(chitat('partials/obolochka.json'));
   const m = ob.podval.match(/<div class="tema" data-tema hidden>.*?<\/div>/);
   assert.ok(m, 'нет переключателя');
-  assert.deepStrictEqual([...m[0].matchAll(/data-tema-v="(\w+)"/g)].map((x) => x[1]), ['auto', 'light', 'dark']);
-  assert.match(m[0], /aria-pressed="true">Как в системе/);
+  assert.deepStrictEqual([...m[0].matchAll(/data-tema-v="(\w+)"/g)].map((x) => x[1]), ['dark', 'light', 'auto']);
+  assert.match(m[0], /aria-pressed="true">Тёмная/);
   const js = chitat('js/shapka.js');
-  assert.match(js, /localStorage\.removeItem\("tema"\)/);
+  assert.match(js, /localStorage\.setItem\("tema", v\)/);
+  assert.match(js, /v === "light" \|\| v === "auto" \? v : "dark"/, 'по умолчанию — тёмная');
   assert.match(js, /prefers-color-scheme: dark/);
   assert.match(js, /addEventListener\("storage"/, 'смена в другой вкладке');
   // сеть связей рисует цветом --ink: при смене темы перечитывает его и рисует кадр заново

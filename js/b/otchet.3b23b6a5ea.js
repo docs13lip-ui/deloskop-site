@@ -6489,6 +6489,7 @@
   var tiho = !W || !W.matchMedia || !W.matchMedia('(prefers-reduced-motion: no-preference)').matches;
   var TON = { ok: 'ok', warn: 'warn', medium: 'warn', high: 'bad', bad: 'bad', critical: 'bad' };
 
+  function skl(n, a, b, c) { var m = Math.abs(n) % 100, k = m % 10; return m > 10 && m < 20 ? c : k === 1 ? a : k > 1 && k < 5 ? b : c; }
   function str(v) { return v == null ? '' : String(v).trim(); }
   function ton(s) { return (s && TON[s.status]) || 'neutral'; }
 
@@ -6522,8 +6523,30 @@
     dob('inspekciya', ryad('profile', /^Налоговая инспекция/i)[0], '', null);
     dob('vid', ryad('activity', /^Основной вид деятельности/i)[0], '', null);
     dob('filialy', ryad('profile', /^Филиалы/i)[0], '', null);
+    // vizual-v3.2b: связи из реестров DaMIA — арбитражные суды, приставы, госзаказ, РНП; только где источник ответил и есть что показать.
+    // Подпись — «итог» ответа слово в слово (в нём источник и дата), число — из ответа; не ответил — узла нет (не проверяли ≠ не нашли)
+    function dm(k) {
+      var b = (r.damia || {})[k];
+      return b && /^(polucheno|found|not_found|provereno)$/.test(b.status) && b.dannye && typeof b.dannye === 'object' && !b.iz_egryul ? b : null;
+    }
+    function chislo(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0'); }
+    var istD = [], KRATKO = { sudy: 'картотека арбитражных дел', fssp: 'ФССП', kontrakty: 'ЕИС', rnp: 'РНП ЕИС' };
+    function dmUzel(k, b, n, slova, tn) {
+      uzly.push({ k: k, zag: str(b.nazvanie), znach: chislo(n) + ' ' + slova, pod: str(b.itog), ton: tn });
+      var dd = /^(\d{4})-(\d{2})-(\d{2})/.exec(str(b.data_svedeniy));
+      istD.push(KRATKO[k] + (dd ? ' на ' + dd[3] + '.' + dd[2] + '.' + dd[1] : ''));
+    }
+    var su = dm('sudy'), fs = dm('fssp'), kt = dm('kontrakty'), rn = dm('rnp');
+    if (su && +su.dannye.vsego > 0) dmUzel('sudy', su, +su.dannye.vsego, skl(+su.dannye.vsego, 'дело', 'дела', 'дел') + ' в картотеке', +su.dannye.otvetchik_nezaversheno > 0 ? 'warn' : 'neutral');
+    if (fs && +fs.dannye.otkryto > 0) dmUzel('fssp', fs, +fs.dannye.otkryto, skl(+fs.dannye.otkryto, 'открытое производство', 'открытых производства', 'открытых производств'), 'warn');
+    if (kt && +kt.dannye.vsego > 0) dmUzel('kontrakty', kt, +kt.dannye.vsego, skl(+kt.dannye.vsego, 'контракт', 'контракта', 'контрактов'), 'neutral');
+    if (rn && +rn.dannye.vsego > 0) dmUzel('rnp', rn, +rn.dannye.vsego, skl(+rn.dannye.vsego, 'запись', 'записи', 'записей') + ' в реестре', 'bad');
     if (uzly.length < 2) return null;
-    return { centr: { zag: str(c.name_short || c.name_full), pod: c.inn ? 'ИНН ' + c.inn : '' }, uzly: uzly };
+    // дата сведений ЕГРЮЛ — день получения (fetched_at / checked_at), а не state_actuality_date: та — последнее изменение записи (урок kartochki-daty-v2)
+    var ist = /^(\d{4})-(\d{2})-(\d{2})/.exec(str(c.fetched_at || r.checked_at));
+    return { centr: { zag: str(c.name_short || c.name_full), pod: c.inn ? 'ИНН ' + c.inn : '' }, uzly: uzly,
+      ist: 'Связи — из сведений этого отчёта: ЕГРЮЛ' + (ist ? ' на ' + ist[3] + '.' + ist[2] + '.' + ist[1] : '') + (istD.length ? ', ' + istD.join(', ') : '') +
+        '. Другие компании руководителя и учредителей покажем, когда загрузим ЕГРЮЛ целиком: неполную картину за полную не выдаём.' };
   }
 
   // ---------- рисование ----------
@@ -6554,6 +6577,9 @@
       return { u: u, x: ox + rx * Math.sin(a), y: oy + ry * z * 0.75, z: z, s: 0.8 + 0.2 * (z + 1) / 2 }; // ближние — ниже: камера чуть сверху
     });
     P.sort(function (a, b) { return a.z - b.z; });
+    // орбита — пунктирный эллипс: глубина видна и в кадре без движения (vizual-v3.2b)
+    cx.globalAlpha = 0.25; cx.strokeStyle = C.muted; cx.lineWidth = 1; cx.setLineDash([2, 5]);
+    cx.beginPath(); cx.ellipse(ox, oy, rx, ry * 0.75, 0, 0, 6.2832); cx.stroke(); cx.setLineDash([]);
     cx.lineWidth = 1.5;
     P.forEach(function (p) { // нити
       cx.globalAlpha = 0.35 + 0.45 * (p.z + 1) / 2;
@@ -6600,6 +6626,7 @@
     cv.setAttribute('aria-hidden', 'true');
     var kn = el('button', 'svz__kn', 'Показать граф'); kn.type = 'button'; kn.setAttribute('aria-expanded', 'false');
     p.appendChild(kn); if (cx) p.appendChild(cv); p.appendChild(spisok(m));
+    if (m.ist) p.appendChild(el('p', 'svz__ist', m.ist)); // источник и дата — видно и под графом, и под списком
     if (!cx) kn.hidden = true;
     var phi = 0, cel = 0, idet = 0, C = null, w = 0, h = 0;
     function razmer() {

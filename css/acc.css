@@ -5,8 +5,8 @@
  --surface:#FFFFFF;--surface-2:#EEEEEA;--ink:#1D1D1F;--ink-2:#48484C;--muted:#6B6B70;--line:#E6E6E1;
  --bad:#B3261E;--high:#C2410C;--accent:#0B63E5;
  --font:Onest,"Onest Zapas","Onest Zapas R",-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
- --t-h3:22px;--t-body:17px;--t-small:15px;--t-caption:13px;
- --r-l:24px;
+ --t-h3:24px;--t-body:17px;--t-small:15px;--t-caption:13px;
+ --r-l:28px;
  display:grid;gap:14px;margin:0 0 18px;padding:clamp(18px,3vw,26px);border-radius:var(--r-l);
  background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);font-family:var(--font);color:var(--ink)
 }

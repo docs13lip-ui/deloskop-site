@@ -44,11 +44,11 @@ test('/indeks/: ссылки на статью о баллах ФНС нет, п
   if (!est) assert.ok(!chitat('indeks/index.html').includes('/nalogi/vypiska-ocenki-fns-bally/'));
 });
 
-test('подстрочник пилюли — единое правило: 12,5/1,45, --muted, tabular-nums, без отрицательного отступа', () => {
+test('подстрочник пилюли — единое правило: 13/1,45, --muted, tabular-nums, без отрицательного отступа', () => {
   const c = chitat('css/otchet.css');
   const m = c.match(/\.ot-ix__pod\{([^}]*)\}/);
   assert.ok(m);
-  assert.match(m[1], /font-size:12\.5px/);
+  assert.match(m[1], /font-size:13px/);  // detali-v1b: шкала 12,5 → 13
   assert.match(m[1], /line-height:1\.45/);
   assert.match(m[1], /color:var\(--muted,#6B6B70\)/);
   assert.match(m[1], /margin-top:4px/);

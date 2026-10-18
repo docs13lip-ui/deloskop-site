@@ -65,10 +65,10 @@ html:not(.est-js) .ex-ix .zhi{--p:72}
 @media (max-width:720px){.ex-ix .zhi{--d:96px;flex-basis:100%;flex-direction:row;gap:14px}.ex-ix .zhi__pod{white-space:normal}}
 /* отчёт: число Индекса переезжает в центр кольца (тот же узел — текст отчёта не меняется) */
 .ot-ix .zhi{--d:168px;align-self:flex-start;margin:4px 0}
-.ot-ix .zhi .ot-ix__big{font-size:46px;line-height:1}
+.ot-ix .zhi .ot-ix__big{font-size:48px;line-height:1}
 .ot-ix .zhi .ot-ix__big small{font-size:15px}
 .ot-ix--zhi .ot-ix__sh{display:none}
-@media (max-width:860px){.ot-ix--zhi{align-items:center}.ot-ix .zhi{--d:132px;align-self:center}.ot-ix .zhi .ot-ix__big{font-size:38px}}
+@media (max-width:860px){.ot-ix--zhi{align-items:center}.ot-ix .zhi{--d:132px;align-self:center}.ot-ix .zhi .ot-ix__big{font-size:32px}}
 
 /* ===== Сборка при прокрутке (часть В): классы ставит /js/zhivoj-indeks.js; без JS всё видно сразу ===== */
 @supports (animation-timeline:view()){

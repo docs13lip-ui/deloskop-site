@@ -2,7 +2,7 @@
 /* --- /css/otchet.css --- */
 /* Делоскоп — лист «Отчёт о проверке» на всю ширину (js/otchet.js; макет документ команды, разд. 2.1–2.3).
    Токены v1.1 — дополнение к ds.css; названия совпадают с макетом. */
-:root{--r-doc:14px;--line-2:#D9D9D4;--ok-dot:#16723F;--warn-dot:#B86E00;--bad-dot:#B3261E;--na:#A1A1A6}
+:root{--r-doc:16px;--line-2:#D9D9D4;--ok-dot:#16723F;--warn-dot:#B86E00;--bad-dot:#B3261E;--na:#A1A1A6}
 .n{font-variant-numeric:tabular-nums}
 
 /* режим отчёта: герой схлопывается в строку с полем, отчёт — лист 1 200 px */
@@ -11,8 +11,8 @@
 .rezhim-otcheta .hero-text{flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 16px}
 .rezhim-otcheta .hero-text>.eyebrow,.rezhim-otcheta .hero-text>h1,.rezhim-otcheta .hero-text>.lead,.rezhim-otcheta .hero-text>.doverie-str{display:none}
 .rezhim-otcheta .hero-text .check{flex:1 1 360px;max-width:560px;padding:6px}
-.rezhim-otcheta .hero-text .check input,.rezhim-otcheta .hero-text .check button{min-height:44px;font-size:16px}
-.rezhim-otcheta .hero-text .note{flex:1 1 200px;min-height:0;font-size:14px}
+.rezhim-otcheta .hero-text .check input,.rezhim-otcheta .hero-text .check button{min-height:44px;font-size:17px}
+.rezhim-otcheta .hero-text .note{flex:1 1 200px;min-height:0;font-size:15px}
 @media (min-width:901px){.rezhim-otcheta .hero-text{position:sticky;top:68px;z-index:9;padding:10px 0;background:rgba(245,245,242,.92);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}}
 
 /* лист */
@@ -34,10 +34,10 @@
 .ot-ix__big small{font-size:20px;color:var(--muted,#6B6B70);font-weight:500}
 .ot-ix__sh{position:relative;height:6px;border-radius:3px;margin:4px 0;background:linear-gradient(90deg,var(--bad-dot) 0 29%,var(--warn-dot) 29% 49%,#C9A227 49% 69%,var(--ok-dot) 69%)}
 .ot-ix__sh i{position:absolute;top:-5px;width:2px;height:16px;margin-left:-1px;background:var(--ink,#1D1D1F)}
-.ot-ix__ne{font-size:22px;line-height:1.2;font-weight:600;letter-spacing:-.01em}
-.ot-ix__pl{font-size:14px;color:var(--ink2,#48484C)}
-.ot-ix__lv{font-size:14px;font-weight:600}
-.ot-ix__pod{font-size:12.5px;line-height:1.45;color:var(--muted,#6B6B70);margin-top:4px;font-variant-numeric:tabular-nums}
+.ot-ix__ne{font-size:24px;line-height:1.2;font-weight:600;letter-spacing:-.01em}
+.ot-ix__pl{font-size:15px;color:var(--ink2,#48484C)}
+.ot-ix__lv{font-size:15px;font-weight:600}
+.ot-ix__pod{font-size:13px;line-height:1.45;color:var(--muted,#6B6B70);margin-top:4px;font-variant-numeric:tabular-nums}
 /* indeks-v-otchete-v1: число по открытой методике в браузере, раскладка «Почему N» */
 .ot-ix__lv--ok{color:var(--ok,#16723F)}.ot-ix__lv--warn{color:var(--warn,#9A5B00)}.ot-ix__lv--bad{color:var(--bad,#B3261E)}
 .ot-ix__po{font-size:13px;line-height:1.4;color:var(--muted,#6B6B70)}
@@ -50,24 +50,24 @@
 .ot-ix__rs li{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-bottom:1px solid rgba(0,0,0,.06)}
 .ot-ix__rs b{font-weight:600;white-space:nowrap}.ot-ix__rs .m b{color:var(--bad,#B3261E)}.ot-ix__rs .p b{color:var(--ok,#16723F)}
 .ot-ix__rs .n span{color:var(--muted,#6B6B70)}.ot-ix__rs .i{border-bottom:0;font-weight:600}
-.ot-ix__ne-uch{margin:8px 0 0;color:var(--muted,#6B6B70);font-size:12.5px}
+.ot-ix__ne-uch{margin:8px 0 0;color:var(--muted,#6B6B70);font-size:13px}
 .ot-main>.din{background:transparent;border-radius:0;padding:24px 0}
 .ot-ix .pill{align-self:flex-start;background:rgba(255,255,255,.7)}
 /* «Без серьёзных сигналов» / «Есть серьёзные сигналы» длиннее прежних слов — в узкой колонке переносим, а не вылезаем за край (malo-pilyulya-v1) */
-.ot-ix .pill,.ex-ix .pill{white-space:normal;max-width:100%;line-height:1.25;border-radius:14px}
+.ot-ix .pill,.ex-ix .pill{white-space:normal;max-width:100%;line-height:1.25;border-radius:16px}
 .ot-ix .pill svg,.ex-ix .pill svg{flex:none}
 .ot-vt{grid-column:4/10;min-width:0;display:flex;flex-direction:column;gap:8px}
 .ot-vt .usl{background:transparent;padding:0;gap:10px}
-.ot-vt .usl-t{font-size:26px;line-height:1.2}
+.ot-vt .usl-t{font-size:24px;line-height:1.2}
 .ot-vt .usl-mark{margin-top:11px}
-.ot-vt .usl-r,.ot-vt .usl-a{font-size:16px}
+.ot-vt .usl-r,.ot-vt .usl-a{font-size:17px}
 .ot-vt .usl-kak{display:none}
 .ot-vt .usl-sum,.ot-vt .usl details{border-top-color:rgba(0,0,0,.08)}
-.ot-vt__h{font-size:28px;line-height:1.2;letter-spacing:-.01em;margin:0}
-.ot-vt__p{margin:0;color:var(--ink2,#48484C);font-size:16px}
+.ot-vt__h{font-size:32px;line-height:1.2;letter-spacing:-.01em;margin:0}
+.ot-vt__p{margin:0;color:var(--ink2,#48484C);font-size:17px}
 .ot-vt__kak{font-size:15px;align-self:flex-start}
 .ot-act{grid-column:10/13;display:flex;flex-direction:column;gap:8px;justify-content:center}
-.ot-btn{display:inline-flex;justify-content:center;align-items:center;text-align:center;font-weight:600;font-size:15px;padding:12px 16px;border-radius:12px;text-decoration:none;min-height:44px}
+.ot-btn{display:inline-flex;justify-content:center;align-items:center;text-align:center;font-weight:600;font-size:15px;padding:12px 16px;border-radius:10px;text-decoration:none;min-height:44px}
 .ot-btn.p{background:var(--accent,#0B63E5);color:#fff}.ot-btn.p:hover{background:var(--accent-hover,#084BB0);color:#fff}
 .ot-btn.s{background:rgba(255,255,255,.6);box-shadow:inset 0 0 0 1px var(--line-2);color:var(--ink,#1D1D1F)}.ot-btn.s:hover{box-shadow:inset 0 0 0 1px var(--accent,#0B63E5);color:var(--accent,#0B63E5)}
 /* «Паспорт в один шаг» (js/pasport-cta.js): строка под кнопкой — 13 px серым (ТЗ [команда] 02.10, разд. 1.1) */
@@ -84,9 +84,9 @@
 .ot-side{grid-column:9/13;min-width:0;padding-top:24px}
 .ot-sc{padding:0 0 20px;border-bottom:1px solid var(--line,#E6E6E1);margin-bottom:20px}
 .ot-sc h3{font-size:15px;font-weight:600;margin:0 0 10px;letter-spacing:0}
-.ot-sc p{margin:0 0 8px;font-size:14px;color:var(--ink2,#48484C);overflow-wrap:anywhere}
+.ot-sc p{margin:0 0 8px;font-size:15px;color:var(--ink2,#48484C);overflow-wrap:anywhere}
 .ot-sc .ot-ne{color:#8A5A00;background:#FFF6E0;border-radius:10px;padding:8px 10px}
-.ot-sc .ot-cap{font-size:12.5px;color:var(--muted,#6B6B70)}
+.ot-sc .ot-cap{font-size:13px;color:var(--muted,#6B6B70)}
 .ot-side .otk{margin:0;border-top:0}
 .report.ot .shch-k{display:none}
 #ot-kak,#indeks{scroll-margin-top:140px}
@@ -105,7 +105,7 @@
  .ot-vd{gap:16px}
  .ot-ix{border-right:0;padding-right:0;flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:6px 12px}
  .ot-ix__lab{flex-basis:100%}.ot-ix__big{font-size:52px}.ot-ix__sh{flex-basis:100%}
- .ot-vt .usl-t,.ot-vt__h{font-size:22px}
+ .ot-vt .usl-t,.ot-vt__h{font-size:24px}
  .ot-body{display:flex;flex-direction:column;padding-top:0}
  .ot-main,.ot-side{display:contents}
  .ot-main>*{order:1}.ot-side>.ot-sc{order:2;padding-top:20px;margin-bottom:0}.ot-side>.otk{order:3;padding-top:12px}.ot-main>.ot-gl{order:4;border-top:1px solid var(--line,#E6E6E1)}
@@ -116,7 +116,7 @@
 .report.ex{padding:0;gap:0;overflow:hidden;border-radius:var(--r-doc)}
 .ex-hd{padding:24px 28px 18px;border-bottom:1px solid var(--line,#E6E6E1)}
 .ex-hd .company{font-size:24px;margin-top:4px}
-.ex-hd .sub{font-size:14px}
+.ex-hd .sub{font-size:15px}
 .ex-vd{display:grid;grid-template-columns:minmax(0,9fr) minmax(0,16fr);gap:18px;padding:20px 28px;background:var(--warn-bg,#FFF4E0)}
 .ex-vd--ok{background:var(--ok-bg,#E8F5EE)}
 .ex-ix{display:flex;flex-direction:column;gap:6px;min-width:0;border-right:1px solid rgba(0,0,0,.08);padding-right:16px}
@@ -125,8 +125,8 @@
 .ex-ix__pod{font-size:12px;color:var(--ink2,#48484C)}
 .ex-vt{min-width:0}
 .ex-vt .usl{background:transparent;padding:0;gap:8px}
-.ex-vt .usl-t{font-size:19px;line-height:1.25}
-.ex-vt .usl-r,.ex-vt .usl-a{font-size:14px}
+.ex-vt .usl-t{font-size:20px;line-height:1.25}
+.ex-vt .usl-r,.ex-vt .usl-a{font-size:15px}
 .ex-vt .usl-kak{display:none}
 .ex-vt .usl details{border-top-color:rgba(0,0,0,.08)}
 .ex-vt .verdict{background:transparent;padding:0}
@@ -146,15 +146,15 @@
 
 /* «Ваши контрагенты» — прошлые проверки из этого браузера на месте примера (ТЗ [команда] 02.10 19:37, разд. 1; js/portfel.js) */
 .hero.pf-on .report.ex{display:none}
-.pf{background:var(--card,#fff);border-radius:var(--r-doc,20px);box-shadow:0 1px 2px rgba(29,29,31,.04),0 12px 32px rgba(29,29,31,.06);padding:24px 28px 18px;min-width:0}
+.pf{background:var(--card,#fff);border-radius:var(--r-doc,16px);box-shadow:0 1px 2px rgba(29,29,31,.04),0 12px 32px rgba(29,29,31,.06);padding:24px 28px 18px;min-width:0}
 .pf[hidden]{display:none}
 .pf__h{margin:0;font-size:24px;line-height:1.2;letter-spacing:-.01em}
-.pf__pod{margin:6px 0 0;font-size:14px;color:var(--ink2,#48484C)}
+.pf__pod{margin:6px 0 0;font-size:15px;color:var(--ink2,#48484C)}
 .pf__sv{margin:14px 0 0;font-size:15px;line-height:1.5}
 .pf__s{white-space:nowrap}.pf__s b{font-weight:600}.pf__s--mnogo b{color:#B3261E}.pf__s--ser b{color:#C2410C}.pf__s--vopr b{color:#9A5B00}.pf__s--bez b{color:#16723F}
-.pf__nb{margin:2px 0 0;font-size:12.5px;color:var(--muted,#6B6B70)}
+.pf__nb{margin:2px 0 0;font-size:13px;color:var(--muted,#6B6B70)}
 .pf__list{list-style:none;margin:14px 0 0;padding:0}
-.pf__r{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"a c" "b c";gap:2px 12px;align-items:center;padding:12px 0;border-top:1px solid var(--line,#E6E6E1);font-size:14px}
+.pf__r{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"a c" "b c";gap:2px 12px;align-items:center;padding:12px 0;border-top:1px solid var(--line,#E6E6E1);font-size:15px}
 .pf__a{grid-area:a;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;min-width:0}
 .pf__nm{font-weight:600;font-size:15px;overflow-wrap:anywhere}
 .pf__b{grid-area:b;display:flex;flex-wrap:wrap;gap:2px 12px;font-size:13px;color:var(--muted,#6B6B70)}
@@ -162,23 +162,23 @@
 .pf__d--star{color:#9A5B00}
 .pf__isk{flex-basis:100%;font-size:13px;line-height:1.4;font-weight:600;color:#B3261E}
 .pf__c{grid-area:c;display:flex;align-items:center;gap:2px}
-.pf__pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12.5px;font-weight:600;white-space:nowrap;background:#F0F0EC;color:var(--ink2,#48484C)}
+.pf__pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:13px;font-weight:600;white-space:nowrap;background:#F0F0EC;color:var(--ink2,#48484C)}
 .pf__pill--bez{background:#E8F5EE;color:#16723F}.pf__pill--vopr{background:#FFF4E0;color:#9A5B00}.pf__pill--ser{background:#FDEEE4;color:#C2410C}.pf__pill--mnogo{background:#FDECEA;color:#B3261E}
 .pf button{font:inherit;cursor:pointer;border:0;background:none;color:var(--accent,#0B63E5)}
-.pf__go{min-height:44px;padding:0 10px;font-size:14px;font-weight:600;border-radius:10px}
+.pf__go{min-height:44px;padding:0 10px;font-size:15px;font-weight:600;border-radius:10px}
 .pf__go:hover{background:#EEF4FD}
 .pf__x{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;color:var(--muted,#6B6B70)!important}
 .pf__x:hover{background:#F0F0EC;color:var(--ink,#1D1D1F)!important}
 .pf button:focus-visible{outline:2px solid var(--accent,#0B63E5);outline-offset:2px}
-.pf__vse{display:block;width:100%;min-height:44px;margin-top:2px;border-top:1px solid var(--line,#E6E6E1)!important;font-size:14px;font-weight:600}
-.pf__niz{border-top:1px solid var(--line,#E6E6E1);padding-top:6px;margin-top:2px;font-size:12.5px}
-.pf__clr{min-height:32px;padding:0;font-size:12.5px!important;color:var(--muted,#6B6B70)!important;text-decoration:underline;text-underline-offset:2px}
+.pf__vse{display:block;width:100%;min-height:44px;margin-top:2px;border-top:1px solid var(--line,#E6E6E1)!important;font-size:15px;font-weight:600}
+.pf__niz{border-top:1px solid var(--line,#E6E6E1);padding-top:6px;margin-top:2px;font-size:13px}
+.pf__clr{min-height:32px;padding:0;font-size:13px!important;color:var(--muted,#6B6B70)!important;text-decoration:underline;text-underline-offset:2px}
 .pf__conf{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:8px 0;font-size:13px;color:var(--ink,#1D1D1F)}
 .pf__conf[hidden]{display:none}
 .pf__da{min-height:36px;padding:0 12px;border-radius:10px;background:#FDECEA!important;color:#B3261E!important;font-weight:600}
 .pf__net{min-height:36px;padding:0 12px;border-radius:10px;font-weight:600}
 @media (max-width:520px){
- .pf{padding:20px 20px 14px}.pf__h{font-size:22px}
+ .pf{padding:20px 20px 14px}.pf__h{font-size:24px}
  .pf__r{grid-template-areas:"a a" "i c" "d d";row-gap:0}
  .pf__b{display:contents}.pf__inn{grid-area:i;color:var(--muted,#6B6B70)}.pf__d{grid-area:d;font-size:13px;color:var(--muted,#6B6B70)}.pf__d--star{color:#9A5B00}
  .pf__go{padding:0 8px}
@@ -197,18 +197,18 @@
 
 /* «Паспорт 490 ₽ в один шаг» — лист оплаты (js/pasport-oplata.js; ТЗ [команда] 02.10, разд. 1.2):
    справа поверх отчёта, на телефоне — снизу; цена крупно, одна главная кнопка */
-dialog.po{position:fixed;inset:0 0 0 auto;width:min(440px,100vw);max-width:none;height:100dvh;max-height:none;margin:0;padding:28px 28px calc(24px + env(safe-area-inset-bottom));border:0;border-radius:var(--r-doc,14px) 0 0 var(--r-doc,14px);background:var(--surface,#fff);color:var(--ink,#1D1D1F);font:400 15px/1.5 var(--font,Onest,"Onest Zapas","Onest Zapas R",-apple-system,"Segoe UI",Roboto,Arial,sans-serif);box-shadow:var(--shadow);overflow-y:auto;overscroll-behavior:contain}
+dialog.po{position:fixed;inset:0 0 0 auto;width:min(440px,100vw);max-width:none;height:100dvh;max-height:none;margin:0;padding:28px 28px calc(24px + env(safe-area-inset-bottom));border:0;border-radius:var(--r-doc,16px) 0 0 var(--r-doc,16px);background:var(--surface,#fff);color:var(--ink,#1D1D1F);font:400 15px/1.5 var(--font,Onest,"Onest Zapas","Onest Zapas R",-apple-system,"Segoe UI",Roboto,Arial,sans-serif);box-shadow:var(--shadow);overflow-y:auto;overscroll-behavior:contain}
 dialog.po::backdrop{background:rgba(17,17,19,.4)}
 .po-x{position:absolute;top:12px;right:12px;width:40px;height:40px;border:0;border-radius:999px;background:transparent;font-size:24px;line-height:1;color:var(--ink2,#48484C);cursor:pointer}
 .po-x:hover{background:var(--surface-2,#EEEEEA)}
 .po-hd{padding-right:40px;border-bottom:1px solid var(--line,#E6E6E1);padding-bottom:16px}
-.po-zag{margin:0;font-size:22px;line-height:1.25;font-weight:600;outline:none}
+.po-zag{margin:0;font-size:24px;line-height:1.25;font-weight:600;outline:none}
 .po-naz{margin:6px 0 0;font-size:15px;color:var(--ink2,#48484C)}
 .po-vn{list-style:none;margin:16px 0 0;padding:0}
 .po-vn li{position:relative;padding:6px 0 6px 20px;font-size:15px}
 .po-vn li::before{content:"";position:absolute;left:2px;top:14px;width:8px;height:8px;border-radius:50%;background:var(--ok,#16723F)}
 .po-cena{display:flex;align-items:baseline;gap:10px;margin:20px 0 16px;padding-top:16px;border-top:1px solid var(--line,#E6E6E1)}
-.po-cena b{font-size:36px;line-height:1;font-weight:600;letter-spacing:-.01em}
+.po-cena b{font-size:32px;line-height:1;font-weight:600;letter-spacing:-.01em}
 .po-cena span{font-size:13px;color:var(--muted,#6B6B70)}
 .po-sp{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
 .po-sp .btn{justify-content:center;width:100%}
@@ -218,9 +218,9 @@ dialog.po::backdrop{background:rgba(17,17,19,.4)}
 .po-forma{margin-top:4px}
 .po--schet .po-cena,.po-forma .sf>h3{display:none}
 .po--schet .po-forma{margin-top:20px;padding-top:4px;border-top:1px solid var(--line,#E6E6E1)}
-.po-og{margin:16px 0 0;font-size:12.5px;line-height:1.45;color:var(--muted,#6B6B70)}
+.po-og{margin:16px 0 0;font-size:13px;line-height:1.45;color:var(--muted,#6B6B70)}
 @media (max-width:520px){
- dialog.po{inset:auto 0 0 0;width:100vw;height:auto;max-height:92dvh;padding:24px 20px calc(20px + env(safe-area-inset-bottom));border-radius:var(--r-doc,14px) var(--r-doc,14px) 0 0}
+ dialog.po{inset:auto 0 0 0;width:100vw;height:auto;max-height:92dvh;padding:24px 20px calc(20px + env(safe-area-inset-bottom));border-radius:var(--r-doc,16px) var(--r-doc,16px) 0 0}
  .po-cena b{font-size:32px}
 }
 @media print{dialog.po{display:none!important}}
@@ -247,7 +247,7 @@ dialog.po::backdrop{background:rgba(17,17,19,.4)}
   transform:translateY(calc(100% + 24px));visibility:hidden;transition:transform .28s cubic-bezier(.2,.7,.2,1),visibility 0s .28s}
 .lip.is-on{transform:none;visibility:visible;transition:transform .28s cubic-bezier(.2,.7,.2,1),visibility 0s}
 .lip__b{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"z s" "t s";align-items:center;column-gap:12px;width:100%;min-height:52px;margin:0;
-  padding:7px 7px 7px 14px;border:0;border-radius:14px;background:var(--surface-2,#EEEEEA);color:var(--ink,#1D1D1F);font:500 15px/1.3 var(--font,inherit);text-align:left;cursor:pointer}
+  padding:7px 7px 7px 14px;border:0;border-radius:16px;background:var(--surface-2,#EEEEEA);color:var(--ink,#1D1D1F);font:500 15px/1.3 var(--font,inherit);text-align:left;cursor:pointer}
 .lip__z{grid-area:z;color:var(--muted,#6B6B70);font-size:13px;font-weight:500}
 .lip__t{grid-area:t;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lip__t::before{content:"";display:inline-block;width:8px;height:8px;margin-right:8px;border-radius:50%;vertical-align:1px;background:var(--warn-dot,#B86E00)}
@@ -259,8 +259,8 @@ dialog.po::backdrop{background:rgba(17,17,19,.4)}
 @media (min-width:601px){.lip{display:none}}
 body.lip-on .fb-btn{bottom:calc(84px + var(--lip-niz,0px) + env(safe-area-inset-bottom,0px))}
 dialog.lip-d{position:fixed;inset:auto 0 0 0;width:100vw;max-width:none;max-height:88dvh;margin:0;padding:24px 20px calc(20px + env(safe-area-inset-bottom,0px));
-  border:0;border-radius:var(--r-doc,14px) var(--r-doc,14px) 0 0;background:var(--card,#fff);color:var(--ink,#1D1D1F);
-  font:400 16px/1.5 var(--font,inherit);box-shadow:var(--shadow,0 -8px 32px rgba(0,0,0,.12));overflow-y:auto;overscroll-behavior:contain}
+  border:0;border-radius:var(--r-doc,16px) var(--r-doc,16px) 0 0;background:var(--card,#fff);color:var(--ink,#1D1D1F);
+  font:400 17px/1.5 var(--font,inherit);box-shadow:var(--shadow,0 -8px 32px rgba(0,0,0,.12));overflow-y:auto;overscroll-behavior:contain}
 dialog.lip-d::backdrop{background:rgba(17,17,19,.4)}
 dialog.lip-d[open]{animation:lip-vverh .28s cubic-bezier(.2,.7,.2,1)}
 @keyframes lip-vverh{from{transform:translateY(24px);opacity:0}}
@@ -268,7 +268,7 @@ dialog.lip-d[open]{animation:lip-vverh .28s cubic-bezier(.2,.7,.2,1)}
 .lip-d__t p{margin:0 0 10px;color:var(--ink2,#48484C)}
 .lip-d__t .lip-d__itog{color:var(--ink,#1D1D1F);font-weight:600;font-size:17px}
 .lip-d__act{display:grid;gap:8px;margin:16px 0 8px}
-.lip-d__x{width:100%;min-height:44px;margin-top:4px;border:0;border-radius:12px;background:var(--surface-2,#EEEEEA);color:var(--ink,#1D1D1F);font:500 15px/1 var(--font,inherit);cursor:pointer}
+.lip-d__x{width:100%;min-height:44px;margin-top:4px;border:0;border-radius:10px;background:var(--surface-2,#EEEEEA);color:var(--ink,#1D1D1F);font:500 15px/1 var(--font,inherit);cursor:pointer}
 .lip-d__x:focus-visible,.lip-d__act a:focus-visible{outline:3px solid var(--accent,#0B63E5);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){.lip,.lip.is-on{transition:none}dialog.lip-d[open]{animation:none}}
 @media print{.lip,dialog.lip-d{display:none!important}}
@@ -408,7 +408,7 @@ dialog.lip-d[open]{animation:lip-vverh .28s cubic-bezier(.2,.7,.2,1)}
 .ex-vid[hidden]{display:none}
 /* vizual-v3.1c: до js/vizual2.js — место под таблетки отступом блока фактов (таблетки 18 + 44 + 2 px и обёртка .ex-flip 6 px); [hidden] в ДС — !important, поэтому не показываем, а отодвигаем. Без JS места нет: класс ставит строка в <head> главной */
 .zhdu-js .report.ex .ex-vid[hidden]+.ex-f{margin-top:78px}
-.ex-vid button{white-space:nowrap;border:0;background:transparent;font:inherit;font-size:14px;font-weight:500;color:var(--ink2,#48484C);padding:7px 14px;border-radius:999px;cursor:pointer;min-height:44px;transition:background .2s,color .2s,box-shadow .2s}
+.ex-vid button{white-space:nowrap;border:0;background:transparent;font:inherit;font-size:15px;font-weight:500;color:var(--ink2,#48484C);padding:7px 14px;border-radius:999px;cursor:pointer;min-height:44px;transition:background .2s,color .2s,box-shadow .2s}
 .ex-vid button:hover{color:var(--ink,#1D1D1F)}
 .ex-vid button[aria-selected=true]{background:#fff;color:var(--ink,#1D1D1F);box-shadow:0 1px 3px rgba(29,29,31,.10)}
 .ex-vid button:focus-visible{outline:2px solid var(--accent,#0B63E5);outline-offset:2px}
@@ -424,11 +424,11 @@ dialog.lip-d[open]{animation:lip-vverh .28s cubic-bezier(.2,.7,.2,1)}
 .ex-zad .ex-r{border-color:rgba(29,29,31,.08)}
 /* настоящий отчёт: таблетки над «Существенными фактами», оборот — мягкая плашка в колонке */
 .ex-vid.ot-vid{margin:0 0 12px;max-width:100%}
-.ot-main .ex-zad{bottom:auto;padding:14px 16px 4px;border-radius:14px}
+.ot-main .ex-zad{bottom:auto;padding:14px 16px 4px;border-radius:16px}
 .ot-main .ex-zad .ex-r,.ot-main .ex-zad .sut__r{border-color:rgba(29,29,31,.08)}
 /* после поворота скрытая сторона не ловит клики и не читается — inert/aria-hidden ставит скрипт */
 .ex-lico[inert],.ex-zad[inert]{pointer-events:none}
-@media (max-width:520px){.ex-vid.ot-vid{margin:0 0 12px}.ex-vid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:16px 20px 2px;width:auto;max-width:none;border-radius:14px}.ex-vid button{white-space:normal;line-height:1.15;padding:6px 4px;font-size:13px;min-height:44px;border-radius:11px}.ex-zad{padding:16px 20px 4px}}
+@media (max-width:520px){.ex-vid.ot-vid{margin:0 0 12px}.ex-vid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:16px 20px 2px;width:auto;max-width:none;border-radius:16px}.ex-vid button{white-space:normal;line-height:1.15;padding:6px 4px;font-size:13px;min-height:44px;border-radius:10px}.ex-zad{padding:16px 20px 4px}}
 @media (max-width:520px){.zhdu-js .report.ex .ex-vid[hidden]+.ex-f{margin-top:68px}}
 
 /* ===== Б. «сеть связей» за первым экраном ===== */
@@ -471,7 +471,7 @@ dialog.lip-d[open]{animation:lip-vverh .28s cubic-bezier(.2,.7,.2,1)}
  .svz__cv{display:none;height:300px}
  .svz--graf .svz__cv{display:block}
  .svz__sp{position:static;width:auto;height:auto;overflow:visible;clip:auto;white-space:normal}
- .svz__kn{display:inline-flex;align-items:center;min-height:44px;margin:0 0 8px;padding:0 16px;border:1px solid var(--line,#E6E6E1);border-radius:999px;background:transparent;color:var(--ink,#1D1D1F);font:inherit;font-size:14px;cursor:pointer}
+ .svz__kn{display:inline-flex;align-items:center;min-height:44px;margin:0 0 8px;padding:0 16px;border:1px solid var(--line,#E6E6E1);border-radius:999px;background:transparent;color:var(--ink,#1D1D1F);font:inherit;font-size:15px;cursor:pointer}
  .svz__kn:focus-visible{outline:2px solid var(--accent,#0B63E5);outline-offset:2px}
 }
 .svz__ist{margin:8px 0 4px;font-size:12px;line-height:1.4;color:var(--muted,#6B6B70)}
@@ -544,10 +544,10 @@ html:not(.est-js) .ex-ix .zhi{--p:72}
 @media (max-width:720px){.ex-ix .zhi{--d:96px;flex-basis:100%;flex-direction:row;gap:14px}.ex-ix .zhi__pod{white-space:normal}}
 /* отчёт: число Индекса переезжает в центр кольца (тот же узел — текст отчёта не меняется) */
 .ot-ix .zhi{--d:168px;align-self:flex-start;margin:4px 0}
-.ot-ix .zhi .ot-ix__big{font-size:46px;line-height:1}
+.ot-ix .zhi .ot-ix__big{font-size:48px;line-height:1}
 .ot-ix .zhi .ot-ix__big small{font-size:15px}
 .ot-ix--zhi .ot-ix__sh{display:none}
-@media (max-width:860px){.ot-ix--zhi{align-items:center}.ot-ix .zhi{--d:132px;align-self:center}.ot-ix .zhi .ot-ix__big{font-size:38px}}
+@media (max-width:860px){.ot-ix--zhi{align-items:center}.ot-ix .zhi{--d:132px;align-self:center}.ot-ix .zhi .ot-ix__big{font-size:32px}}
 
 /* ===== Сборка при прокрутке (часть В): классы ставит /js/zhivoj-indeks.js; без JS всё видно сразу ===== */
 @supports (animation-timeline:view()){

@@ -504,14 +504,14 @@
     '.sut__r>span{display:block}.sut__r small{display:block;margin-top:2px;font-size:12px;color:var(--muted,#6B6B70);font-weight:400}' +
     '.sut__r small a{color:inherit;text-decoration:underline}.sut__r small.sut__pod{color:var(--warn,#8A5A00)}' +
     '.sut__ne{margin:0;padding:12px 0 0;border-top:1px solid #EFEFEA;font-size:13px;color:var(--ink2,#48484C)}' +
-    '.sut__g{margin-top:12px;border:1px solid var(--line,#E6E6E1);border-radius:14px;padding:0 16px}' +
+    '.sut__g{margin-top:12px;border:1px solid var(--line,#E6E6E1);border-radius:16px;padding:0 16px}' +
     '.sut__g summary{cursor:pointer;display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:14px 0;font-size:15px;font-weight:600;list-style:none}' +
     '.sut__g summary::-webkit-details-marker{display:none}' +
     '.sut__g summary span::after{content:"";display:inline-block;width:7px;height:7px;margin-left:10px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-3px) rotate(45deg);transition:transform .2s}' +
     '.sut__g[open] summary span::after{transform:translateY(0) rotate(225deg)}' +
     '.sut__g summary small{font-size:13px;font-weight:400;color:var(--muted,#6B6B70)}' +
-    '.sut__s{padding:4px 0 14px;border-top:1px solid #EFEFEA}.sut__s h4{margin:12px 0 6px;font-size:14px;font-weight:600}' +
-    '.sut__s dl{margin:0;display:grid}.sut__s dl div{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:12px;padding:6px 0;font-size:14px}' +
+    '.sut__s{padding:4px 0 14px;border-top:1px solid #EFEFEA}.sut__s h4{margin:12px 0 6px;font-size:15px;font-weight:600}' +
+    '.sut__s dl{margin:0;display:grid}.sut__s dl div{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:12px;padding:6px 0;font-size:15px}' +
     '.sut__s dt{color:var(--ink2,#48484C);display:grid}.sut__s dt small{font-size:12px;color:var(--muted,#6B6B70)}.sut__s dd{margin:0;overflow-wrap:anywhere}' +
     '.sut__s dd.ok{color:var(--ok,#16723F)}.sut__s dd.warn{color:var(--warn,#8A5A00)}.sut__s dd.bad{color:#B3261E}' +
     '.sut--svoj .sut__g{margin-top:0}.sut--svoj .sut__ne{border-top:1px solid #EFEFEA;padding:12px 0}' +

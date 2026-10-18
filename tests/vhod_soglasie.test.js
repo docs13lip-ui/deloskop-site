@@ -26,7 +26,7 @@ test('галочка: по умолчанию снята, скрыта, пока
 test('строка об оферте под кнопкой; вход не зависит от галочки', () => {
   assert.ok(prosto(vhod.replace(/<\/?a[^>]*>/g, '')).includes('Входя, вы принимаете оферту. Как мы обрабатываем данные — в Политике.'));
   assert.ok(vhod.includes('<a href="/oferta/">оферту</a>') && vhod.includes('<a href="/politika/">Политике</a>'));
-  assert.ok(/\.oferta-vhod\{[^}]*font-size:12\.5px/.test(S));
+  assert.ok(/\.oferta-vhod\{[^}]*font-size:13px/.test(S));
   // поле rassylki уходит только при отмеченной и видимой галочке; кнопки входа не блокируются
   assert.ok(S.includes("function sGalochkoj(b){if(galochka())b.rassylki=true;return b}"));
   assert.ok(S.includes("return !!(g&&!$('soglVhod').hidden&&g.checked)"));

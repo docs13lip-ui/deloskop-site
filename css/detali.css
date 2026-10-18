@@ -3,6 +3,8 @@
       где типограф не дотянулся (текст из скриптов, данные). Второй рубеж после tests/tipograf_statej.py; где не поддерживается — как было.
    2) Поля касания на телефоне и сенсорном экране — не меньше 44 px (Apple HIG, WCAG 2.5.5). С мышью подвал остаётся плотным:
       строки ≥ 24 px с промежутком — норма WCAG 2.5.8. */
+/* detali-v1b: шкала размеров и радиусов — значения, которые остались на сайте (сторож tests/shkala_radiusy.test.js). */
+:root{--t-12:12px;--t-13:13px;--t-15:15px;--t-17:17px;--t-20:20px;--t-24:24px;--t-32:32px;--t-48:48px;--r-small:10px;--r-inner:16px;--r-card:28px;--r-pill:999px}
 p,li,dd,dt,figcaption,blockquote,summary,legend,h1,h2,h3,h4{text-wrap:pretty}
 @media (max-width:640px),(pointer:coarse){
   .podval li{margin:0}

@@ -16,82 +16,82 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <style>
-:root{--bg:#F5F5F2;--card:#fff;--ink:#1D1D1F;--ink2:#48484C;--muted:#6B6B70;--line:#E6E6E1;--accent:#0B63E5;--accent-hover:#084BB0;--r:24px}
+:root{--bg:#F5F5F2;--card:#fff;--ink:#1D1D1F;--ink2:#48484C;--muted:#6B6B70;--line:#E6E6E1;--accent:#0B63E5;--accent-hover:#084BB0;--r:28px}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest','Onest Zapas','Onest Zapas R','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;line-height:1.6;-webkit-font-smoothing:antialiased}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest','Onest Zapas','Onest Zapas R','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
 a{color:var(--accent);text-decoration:none}a:hover{color:var(--accent-hover)}
 .top{position:sticky;top:0;z-index:5;background:rgba(245,245,242,.86);backdrop-filter:saturate(180%) blur(16px);-webkit-backdrop-filter:saturate(180%) blur(16px);border-bottom:1px solid rgba(0,0,0,.05)}
 .top .in{max-width:1120px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:22px}
-.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:19px;color:var(--ink);letter-spacing:-.02em;margin-right:auto}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:20px;color:var(--ink);letter-spacing:-.02em;margin-right:auto}
 .top nav{display:flex;gap:22px;font-size:15px}.top nav a{color:var(--ink2)}.top nav a:hover{color:var(--ink)}
-.btn{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:12px;background:var(--accent);color:#fff!important;font-weight:600;font-size:15px}
+.btn{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:10px;background:var(--accent);color:#fff!important;font-weight:600;font-size:15px}
 @media (max-width:760px){.top .in{flex-wrap:wrap;row-gap:4px;padding-bottom:8px}.top nav{order:3;width:100%;overflow-x:auto;gap:20px;scrollbar-width:none}.top nav::-webkit-scrollbar{display:none}.top nav a{white-space:nowrap}}
 main{max-width:760px;margin:0 auto;padding:28px 20px 64px}
-.crumbs{font-size:14px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap}.crumbs a{color:var(--muted)}
-h1{font-size:clamp(30px,5vw,44px);line-height:1.1;letter-spacing:-.03em;margin:14px 0 12px;font-weight:600}
+.crumbs{font-size:15px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap}.crumbs a{color:var(--muted)}
+h1{font-size:clamp(32px,5vw,48px);line-height:1.1;letter-spacing:-.03em;margin:14px 0 12px;font-weight:600}
 .meta{font-size:15px;color:var(--muted)}
 .lead{margin:26px 0 8px;background:var(--card);border-radius:var(--r);padding:24px 26px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 16px 40px rgba(0,0,0,.05)}
-.lead b{display:block;font-size:14px;color:var(--accent);margin-bottom:6px;letter-spacing:.01em}
-article h2{font-size:clamp(24px,3vw,30px);letter-spacing:-.02em;line-height:1.2;margin:40px 0 12px;font-weight:600}
+.lead b{display:block;font-size:15px;color:var(--accent);margin-bottom:6px;letter-spacing:.01em}
+article h2{font-size:clamp(24px,3vw,32px);letter-spacing:-.02em;line-height:1.2;margin:40px 0 12px;font-weight:600}
 article p{margin:0 0 14px;color:var(--ink2)}article p strong,article li strong{color:var(--ink)}
 article ul,article ol{margin:0 0 16px;padding-left:22px;color:var(--ink2)}article li{margin:6px 0}
-article table{width:100%;border-collapse:collapse;margin:8px 0 18px;font-size:16px;background:var(--card);border-radius:16px;overflow:hidden}
+article table{width:100%;border-collapse:collapse;margin:8px 0 18px;font-size:17px;background:var(--card);border-radius:16px;overflow:hidden}
 article th,article td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
 article th{font-weight:600;background:#FAFAF8}article tr:last-child td{border-bottom:0}
 .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .check{margin:44px 0 0;background:#111113;color:#fff;border-radius:var(--r);padding:28px 26px}
-.check h2{margin:0 0 8px;font-size:26px;letter-spacing:-.02em;font-weight:600}.check p{color:#B8B8BD;margin:0 0 16px}
+.check h2{margin:0 0 8px;font-size:24px;letter-spacing:-.02em;font-weight:600}.check p{color:#B8B8BD;margin:0 0 16px}
 .check form{display:flex;gap:10px;flex-wrap:wrap}
-.check input{flex:1 1 220px;min-height:50px;border:0;border-radius:12px;padding:0 14px;font:inherit;font-size:17px}
-.check button{min-height:50px;border:0;border-radius:12px;background:var(--accent);color:#fff;font:inherit;font-weight:600;padding:0 22px;cursor:pointer}
-.src{margin-top:36px;font-size:15px;color:var(--muted)}.src h2{font-size:18px;margin:0 0 8px;color:var(--ink);letter-spacing:0}
+.check input{flex:1 1 220px;min-height:50px;border:0;border-radius:10px;padding:0 14px;font:inherit;font-size:17px}
+.check button{min-height:50px;border:0;border-radius:10px;background:var(--accent);color:#fff;font:inherit;font-weight:600;padding:0 22px;cursor:pointer}
+.src{margin-top:36px;font-size:15px;color:var(--muted)}.src h2{font-size:17px;margin:0 0 8px;color:var(--ink);letter-spacing:0}
 .src ol{padding-left:20px;margin:0}.src li{margin:4px 0}.src a{color:var(--ink2);text-decoration:underline;text-decoration-color:var(--line)}
-.disc{margin-top:18px;font-size:14px;color:var(--muted)}
-.more{margin-top:44px}.more h2{font-size:22px;margin:0 0 12px}
+.disc{margin-top:18px;font-size:15px;color:var(--muted)}
+.more{margin-top:44px}.more h2{font-size:24px;margin:0 0 12px}
 .cards{display:grid;gap:14px}
-.card{display:block;background:var(--card);border-radius:20px;padding:20px 22px;color:var(--ink)}
+.card{display:block;background:var(--card);border-radius:16px;padding:20px 22px;color:var(--ink)}
 .card:hover{box-shadow:0 12px 32px rgba(0,0,0,.07);color:var(--ink)}
-.card small{color:var(--accent);font-weight:600;font-size:13px}.card b{display:block;font-size:19px;line-height:1.3;margin:4px 0 6px;font-weight:600;letter-spacing:-.01em}.card span{color:var(--muted);font-size:15px}
-footer{max-width:1120px;margin:0 auto;padding:28px 20px 40px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:14px;color:var(--muted);border-top:1px solid var(--line)}
+.card small{color:var(--accent);font-weight:600;font-size:13px}.card b{display:block;font-size:20px;line-height:1.3;margin:4px 0 6px;font-weight:600;letter-spacing:-.01em}.card span{color:var(--muted);font-size:15px}
+footer{max-width:1120px;margin:0 auto;padding:28px 20px 40px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:15px;color:var(--muted);border-top:1px solid var(--line)}
 footer a{color:var(--muted)}
 </style>
 <script type="application/ld+json">[{"@context": "https://schema.org", "@type": "WebApplication", "name": "Наличные глазами банка — Делоскоп", "url": "https://deloskop.ru/nalichnye/", "applicationCategory": "BusinessApplication", "operatingSystem": "Any", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "RUB"}, "description": "Загрузите выписку из 1С: покажем долю наличных, транзит, налоги к обороту и сколько денег встанет при блокировке по 115-ФЗ. Выписка не покидает компьютер."}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Сколько наличных можно снять без вопросов банка?", "acceptedAnswer": {"@type": "Answer", "text": "Единого лимита нет. Банк смотрит на картину по счёту: долю наличных, скорость, с которой уходят деньги, налоги и обычные расходы. Операции юрлица с наличными от 1 млн ₽ банк обязан передать в Росфинмониторинг, но это отчёт, а не блокировка."}}, {"@type": "Question", "name": "Это то же самое, что уровень риска ЗСК?", "acceptedAnswer": {"@type": "Answer", "text": "Нет. Уровень на платформе «Знай своего клиента» знает только Банк России и банки; публично можно проверить лишь попадание в «красную» группу — на сайте Банка России. Мы показываем признаки, которые банк видит в вашей выписке, и объясняем, что с ними делать."}}, {"@type": "Question", "name": "Можно ли доверить выписку сайту?", "acceptedAnswer": {"@type": "Answer", "text": "Выписка не уходит с вашего компьютера: разбор идёт прямо в браузере. Можно отключить интернет после загрузки страницы — всё продолжит работать."}}, {"@type": "Question", "name": "Почему у меня «Внимание», хотя банк ничего не спрашивал?", "acceptedAnswer": {"@type": "Answer", "text": "Признак — это повод навести порядок, а не приговор. Банки обновляют оценки регулярно, и лучше, чтобы документы были готовы до запроса."}}]}]</script>
 <style>
 .tool{margin-top:24px;background:var(--card);border-radius:var(--r);padding:24px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 16px 40px rgba(0,0,0,.05)}
-.drop{display:block;border:2px dashed var(--line);border-radius:18px;padding:30px 18px;text-align:center;cursor:pointer;color:var(--ink2)}
+.drop{display:block;border:2px dashed var(--line);border-radius:16px;padding:30px 18px;text-align:center;cursor:pointer;color:var(--ink2)}
 .drop.over,.drop:hover{border-color:var(--accent);background:#F3F7FE}
-.drop b{display:block;color:var(--ink);font-size:19px;margin-bottom:4px}.drop input{display:none}
-.opt{display:flex;gap:10px;align-items:flex-start;margin:16px 0 0;font-size:16px;color:var(--ink2);cursor:pointer}
+.drop b{display:block;color:var(--ink);font-size:20px;margin-bottom:4px}.drop input{display:none}
+.opt{display:flex;gap:10px;align-items:flex-start;margin:16px 0 0;font-size:17px;color:var(--ink2);cursor:pointer}
 .opt input{margin-top:5px;width:18px;height:18px;accent-color:var(--accent)}
 .row2{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
-.ghost{min-height:46px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:0 16px;font:inherit;font-size:15px;cursor:pointer;color:var(--ink)}
+.ghost{min-height:46px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:0 16px;font:inherit;font-size:15px;cursor:pointer;color:var(--ink)}
 .ghost:hover{border-color:var(--accent);color:var(--accent)}
 #msg{min-height:22px;font-size:15px;color:var(--muted);margin-top:10px}
-.priv{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--muted);margin:14px 0 0}
+.priv{display:flex;gap:10px;align-items:flex-start;font-size:15px;color:var(--muted);margin:14px 0 0}
 .priv svg{flex:0 0 18px;margin-top:2px}
 #out{margin-top:8px;scroll-margin-top:110px}
 .verdict{border-radius:var(--r);padding:24px 26px;margin:22px 0 14px}
 .verdict.l0{background:#E9F7EF}.verdict.l1{background:#FFF6E0}.verdict.l2{background:#FDECEC}
-.verdict .who{font-size:14px;color:var(--muted)}
-.verdict .big{display:flex;align-items:center;gap:10px;font-size:30px;font-weight:600;letter-spacing:-.02em;margin:6px 0 4px}
+.verdict .who{font-size:15px;color:var(--muted)}
+.verdict .big{display:flex;align-items:center;gap:10px;font-size:32px;font-weight:600;letter-spacing:-.02em;margin:6px 0 4px}
 .l0 .big{color:#137A3E}.l1 .big{color:#8A5A00}.l2 .big{color:#B42318}
 .verdict p{margin:6px 0 0;color:var(--ink2);font-size:17px}
 .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0}
-.tile{background:var(--card);border-radius:20px;padding:18px 18px 16px}
+.tile{background:var(--card);border-radius:16px;padding:18px 18px 16px}
 .tile small{display:block;font-size:13px;color:var(--muted)}
-.tile b{display:block;font-size:28px;font-weight:600;letter-spacing:-.02em;margin:4px 0 2px;font-variant-numeric:tabular-nums}
-.tile span{font-size:14px;color:var(--muted)}
+.tile b{display:block;font-size:32px;font-weight:600;letter-spacing:-.02em;margin:4px 0 2px;font-variant-numeric:tabular-nums}
+.tile span{font-size:15px;color:var(--muted)}
 .st{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;white-space:nowrap}.tile .st{margin-top:6px}
 .st.s0{color:#137A3E}.st.s1{color:#8A5A00}.st.s2{color:#B42318}
 .money{background:#111113;color:#fff;border-radius:var(--r);padding:24px 26px;margin:14px 0}
-.money small{color:#B8B8BD;font-size:14px}.money .sum{font-size:clamp(30px,6vw,44px);font-weight:600;letter-spacing:-.03em;margin:4px 0 6px;font-variant-numeric:tabular-nums}
+.money small{color:#B8B8BD;font-size:15px}.money .sum{font-size:clamp(32px,6vw,48px);font-weight:600;letter-spacing:-.03em;margin:4px 0 6px;font-variant-numeric:tabular-nums}
 .money p{margin:0;color:#B8B8BD;font-size:15px}.money .split{display:flex;gap:24px;flex-wrap:wrap;margin-top:14px;font-size:15px}
-.money .split b{display:block;color:#fff;font-size:19px;font-weight:600}
+.money .split b{display:block;color:#fff;font-size:20px;font-weight:600}
 .todo{background:var(--card);border-radius:var(--r);padding:22px 24px;margin:14px 0}
-.todo h2,.sig-wrap h2,.chart h2,.strong h2{font-size:22px;letter-spacing:-.02em;margin:0 0 10px;font-weight:600}
+.todo h2,.sig-wrap h2,.chart h2,.strong h2{font-size:24px;letter-spacing:-.02em;margin:0 0 10px;font-weight:600}
 .todo ol{margin:0;padding-left:22px}.todo li{margin:8px 0;color:var(--ink2)}.todo li b{color:var(--ink)}
 .chart{background:var(--card);border-radius:var(--r);padding:22px 24px;margin:14px 0}
-.chart .sub{font-size:14px;color:var(--muted);margin:-4px 0 14px}
+.chart .sub{font-size:15px;color:var(--muted);margin:-4px 0 14px}
 .bars{position:relative;display:flex;gap:14px;align-items:flex-end;height:180px;padding:0 4px;border-bottom:1px solid var(--line)}
 .bars .ref{position:absolute;left:0;right:0;border-top:1px dashed #B8B8BD;pointer-events:none}
 .bars .ref span{position:absolute;right:0;top:-20px;font-size:12px;color:var(--muted);background:var(--card);padding:0 4px}
@@ -103,29 +103,29 @@ footer a{color:var(--muted)}
 .bar:hover .tip,.bar:focus .tip{display:block}
 .months{display:flex;gap:14px;padding:6px 4px 0;font-size:13px;color:var(--muted)}.months span{flex:1;text-align:center}
 .sig-wrap{margin:26px 0 0}
-.sig{background:var(--card);border-radius:20px;padding:18px 20px;margin:10px 0}
+.sig{background:var(--card);border-radius:16px;padding:18px 20px;margin:10px 0}
 .sig .hd{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
-.sig h3{margin:0;font-size:18px;font-weight:600;letter-spacing:-.01em}
-.sig p{margin:8px 0 0;color:var(--ink2);font-size:16px}
+.sig h3{margin:0;font-size:17px;font-weight:600;letter-spacing:-.01em}
+.sig p{margin:8px 0 0;color:var(--ink2);font-size:17px}
 .sig ul{margin:10px 0 0;padding-left:20px;color:var(--ink2);font-size:15px}.sig li{margin:4px 0}
 .sig .src2{font-size:13px;color:var(--muted);margin-top:10px}
-.strong{background:#E9F7EF;border-radius:20px;padding:18px 20px;margin:14px 0}
+.strong{background:#E9F7EF;border-radius:16px;padding:18px 20px;margin:14px 0}
 .strong ul{margin:0;padding-left:20px;color:var(--ink2)}
 .after{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0 0}
-.after .btn2{min-height:48px;border:0;border-radius:12px;background:var(--accent);color:#fff;font:inherit;font-weight:600;padding:0 20px;cursor:pointer}
-.note{font-size:14px;color:var(--muted);margin-top:14px}
-.how{margin-top:44px}.how h2{font-size:26px;letter-spacing:-.02em;margin:0 0 12px}
+.after .btn2{min-height:48px;border:0;border-radius:10px;background:var(--accent);color:#fff;font:inherit;font-weight:600;padding:0 20px;cursor:pointer}
+.note{font-size:15px;color:var(--muted);margin-top:14px}
+.how{margin-top:44px}.how h2{font-size:24px;letter-spacing:-.02em;margin:0 0 12px}
 .how ol{padding-left:22px;color:var(--ink2)}.how li{margin:6px 0}
-.faq{margin-top:40px}.faq h2{font-size:26px;letter-spacing:-.02em;margin:0 0 8px}
-.faq details{background:var(--card);border-radius:18px;padding:16px 20px;margin:10px 0}
+.faq{margin-top:40px}.faq h2{font-size:24px;letter-spacing:-.02em;margin:0 0 8px}
+.faq details{background:var(--card);border-radius:16px;padding:16px 20px;margin:10px 0}
 .faq summary{cursor:pointer;font-weight:600;font-size:17px;list-style:none}.faq summary::-webkit-details-marker{display:none}
 .faq summary::after{content:'+';float:right;color:var(--muted);font-weight:400}.faq details[open] summary::after{content:'–'}
-.faq p{margin:10px 0 0;color:var(--ink2);font-size:16px}
+.faq p{margin:10px 0 0;color:var(--ink2);font-size:17px}
 @media (max-width:640px){.tiles{grid-template-columns:1fr}.bars{gap:8px}.months{gap:8px}}
 @media print{.top,.tool,.how,.faq,.more,footer,.after,.crumbs{display:none!important}body{background:#fff}.verdict,.tile,.todo,.chart,.sig,.strong{break-inside:avoid;box-shadow:none;border:1px solid #E6E6E1}.money{background:#fff;color:#000;border:1px solid #000}.money p,.money small{color:#333}.money .split b{color:#000}}
 </style>
-<link rel="stylesheet" href="/css/b/ds.110d362642.css">
-<script src="/js/b/yadro.a63f89fcb5.js" defer></script>
+<link rel="stylesheet" href="/css/b/ds.bc1ab1a3dc.css">
+<script src="/js/b/yadro.1da692cae5.js" defer></script>
 <link rel="icon" type="image/png" sizes="120x120" href="/favicon-120.png">
 <link rel="alternate" type="application/rss+xml" title="Разборы дел — Делоскоп" href="/praktika/rss.xml">
 <link rel="manifest" href="/manifest.webmanifest">
@@ -210,7 +210,7 @@ footer a{color:var(--muted)}
 <main id="main">
 <nav class="crumbs" aria-label="Навигация"><a href="/">Делоскоп</a><span>›</span><a href="/#shield">Щит</a></nav>
 <h1>Наличные глазами банка</h1>
-<p class="meta" style="font-size:18px;color:var(--ink2)">Загрузите выписку в&nbsp;формате 1С&nbsp;— за&nbsp;минуту покажем, как банк видит ваши снятия, взносы и&nbsp;переводы себе, сколько денег встанет при&nbsp;блокировке и&nbsp;что поправить на&nbsp;этой неделе.</p>
+<p class="meta" style="font-size:17px;color:var(--ink2)">Загрузите выписку в&nbsp;формате 1С&nbsp;— за&nbsp;минуту покажем, как банк видит ваши снятия, взносы и&nbsp;переводы себе, сколько денег встанет при&nbsp;блокировке и&nbsp;что поправить на&nbsp;этой неделе.</p>
 
 <section class="tool" aria-label="Разбор выписки">
   <label class="drop" id="drop"><b>Перетащите выписку из&nbsp;банка в&nbsp;формате 1С</b>или нажмите, чтобы выбрать файл&nbsp;— обычно он&nbsp;называется kl_to_1c.txt<input type="file" id="file" accept=".txt,text/plain"></label>

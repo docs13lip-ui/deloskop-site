@@ -144,10 +144,10 @@
   }
   function imyaFajla(now) { return 'deloskop-proverki-' + data(now).split('.').reverse().join('-') + '.csv'; }
 
-  var CSS = '.pp__sv{margin:14px 0 0;font-size:14px;color:var(--ink2)}.pp__s .n{font-weight:600}' +
+  var CSS = '.pp__sv{margin:14px 0 0;font-size:15px;color:var(--ink2)}.pp__s .n{font-weight:600}' +
     '.pp__s--high .n{color:var(--bad)}.pp__s--medium .n{color:var(--warn)}.pp__s--low .n{color:var(--ok)}' +
-    '.pp__nb{margin:2px 0 0;font-size:12.5px;color:var(--muted)}' +
-    '.pp__inst{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}.pp__q{flex:1 1 220px;min-height:44px;border:1px solid #D9D9D4;border-radius:12px;padding:0 14px;font:inherit;font-size:16px;background:#fff;color:var(--ink)}' +
+    '.pp__nb{margin:2px 0 0;font-size:13px;color:var(--muted)}' +
+    '.pp__inst{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}.pp__q{flex:1 1 220px;min-height:44px;border:1px solid #D9D9D4;border-radius:10px;padding:0 14px;font:inherit;font-size:17px;background:#fff;color:var(--ink)}' +
     '.pp__q:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}' +
     '.pp__sv .n,.pp__r .n,.pp__ist .n{font-variant-numeric:tabular-nums}.pp__r{align-items:flex-start!important}.pp__r>.pill{margin-top:2px}.pp__r .acts{margin-top:2px}' +
     '.pp__star{margin:4px 0 0;font-size:13px;color:var(--warn)}.pp__izm{margin:4px 0 0;font-size:13px;color:var(--warn)}' +

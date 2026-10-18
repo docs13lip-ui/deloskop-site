@@ -19,12 +19,12 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DATA = ROOT / "partials" / "faq.json"
 
-CSS = ('<!--faq-css--><style>.faq{margin-top:40px}.faq h2{font-size:clamp(24px,3vw,30px);letter-spacing:-.02em;'
+CSS = ('<!--faq-css--><style>.faq{margin-top:40px}.faq h2{font-size:clamp(24px,3vw,32px);letter-spacing:-.02em;'
        'line-height:1.2;margin:0 0 12px;font-weight:600}.faq details{background:var(--card);border-radius:16px;'
        'padding:14px 18px;margin:0 0 10px}.faq summary{cursor:pointer;font-weight:600;color:var(--ink)}'
        '.faq summary{list-style:none;display:flex;justify-content:space-between;align-items:baseline;gap:16px}'
        '.faq summary::-webkit-details-marker{display:none}.faq summary::after{content:"+";flex:none;color:var(--muted);'
-       'font-weight:400;font-size:22px;line-height:1;transition:transform .2s}.faq details[open] summary::after{transform:rotate(45deg)}'
+       'font-weight:400;font-size:24px;line-height:1;transition:transform .2s}.faq details[open] summary::after{transform:rotate(45deg)}'
        '.faq summary:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:6px}'
        '.faq details p{margin:10px 0 0;color:var(--ink2)}</style><!--/faq-css-->')
 

@@ -16,87 +16,87 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <style>
-:root{--bg:#F5F5F2;--card:#fff;--ink:#1D1D1F;--ink2:#48484C;--muted:#6B6B70;--line:#E6E6E1;--accent:#0B63E5;--accent-hover:#084BB0;--r:24px}
+:root{--bg:#F5F5F2;--card:#fff;--ink:#1D1D1F;--ink2:#48484C;--muted:#6B6B70;--line:#E6E6E1;--accent:#0B63E5;--accent-hover:#084BB0;--r:28px}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest','Onest Zapas','Onest Zapas R','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;line-height:1.6;-webkit-font-smoothing:antialiased}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest','Onest Zapas','Onest Zapas R','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
 a{color:var(--accent);text-decoration:none}a:hover{color:var(--accent-hover)}
 .top{position:sticky;top:0;z-index:5;background:rgba(245,245,242,.86);backdrop-filter:saturate(180%) blur(16px);-webkit-backdrop-filter:saturate(180%) blur(16px);border-bottom:1px solid rgba(0,0,0,.05)}
 .top .in{max-width:1120px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:22px}
-.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:19px;color:var(--ink);letter-spacing:-.02em;margin-right:auto}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:20px;color:var(--ink);letter-spacing:-.02em;margin-right:auto}
 .top nav{display:flex;gap:22px;font-size:15px}.top nav a{color:var(--ink2)}.top nav a:hover{color:var(--ink)}
-.btn{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:12px;background:var(--accent);color:#fff!important;font-weight:600;font-size:15px}
+.btn{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:10px;background:var(--accent);color:#fff!important;font-weight:600;font-size:15px}
 @media (max-width:760px){.top .in{flex-wrap:wrap;row-gap:4px;padding-bottom:8px}.top nav{order:3;width:100%;overflow-x:auto;gap:20px;scrollbar-width:none}.top nav::-webkit-scrollbar{display:none}.top nav a{white-space:nowrap}}
 main{max-width:760px;margin:0 auto;padding:28px 20px 64px}
-.crumbs{font-size:14px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap}.crumbs a{color:var(--muted)}
-h1{font-size:clamp(30px,5vw,44px);line-height:1.1;letter-spacing:-.03em;margin:14px 0 12px;font-weight:600}
+.crumbs{font-size:15px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap}.crumbs a{color:var(--muted)}
+h1{font-size:clamp(32px,5vw,48px);line-height:1.1;letter-spacing:-.03em;margin:14px 0 12px;font-weight:600}
 .meta{font-size:15px;color:var(--muted)}
 .lead{margin:26px 0 8px;background:var(--card);border-radius:var(--r);padding:24px 26px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 16px 40px rgba(0,0,0,.05)}
-.lead b{display:block;font-size:14px;color:var(--accent);margin-bottom:6px;letter-spacing:.01em}
-article h2{font-size:clamp(24px,3vw,30px);letter-spacing:-.02em;line-height:1.2;margin:40px 0 12px;font-weight:600}
+.lead b{display:block;font-size:15px;color:var(--accent);margin-bottom:6px;letter-spacing:.01em}
+article h2{font-size:clamp(24px,3vw,32px);letter-spacing:-.02em;line-height:1.2;margin:40px 0 12px;font-weight:600}
 article p{margin:0 0 14px;color:var(--ink2)}article p strong,article li strong{color:var(--ink)}
 article ul,article ol{margin:0 0 16px;padding-left:22px;color:var(--ink2)}article li{margin:6px 0}
-article table{width:100%;border-collapse:collapse;margin:8px 0 18px;font-size:16px;background:var(--card);border-radius:16px;overflow:hidden}
+article table{width:100%;border-collapse:collapse;margin:8px 0 18px;font-size:17px;background:var(--card);border-radius:16px;overflow:hidden}
 article th,article td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
 article th{font-weight:600;background:#FAFAF8}article tr:last-child td{border-bottom:0}
 .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .check{margin:44px 0 0;background:#111113;color:#fff;border-radius:var(--r);padding:28px 26px}
-.check h2{margin:0 0 8px;font-size:26px;letter-spacing:-.02em;font-weight:600}.check p{color:#B8B8BD;margin:0 0 16px}
+.check h2{margin:0 0 8px;font-size:24px;letter-spacing:-.02em;font-weight:600}.check p{color:#B8B8BD;margin:0 0 16px}
 .check form{display:flex;gap:10px;flex-wrap:wrap}
-.check input{flex:1 1 220px;min-height:50px;border:0;border-radius:12px;padding:0 14px;font:inherit;font-size:17px}
-.check button{min-height:50px;border:0;border-radius:12px;background:var(--accent);color:#fff;font:inherit;font-weight:600;padding:0 22px;cursor:pointer}
-.src{margin-top:36px;font-size:15px;color:var(--muted)}.src h2{font-size:18px;margin:0 0 8px;color:var(--ink);letter-spacing:0}
+.check input{flex:1 1 220px;min-height:50px;border:0;border-radius:10px;padding:0 14px;font:inherit;font-size:17px}
+.check button{min-height:50px;border:0;border-radius:10px;background:var(--accent);color:#fff;font:inherit;font-weight:600;padding:0 22px;cursor:pointer}
+.src{margin-top:36px;font-size:15px;color:var(--muted)}.src h2{font-size:17px;margin:0 0 8px;color:var(--ink);letter-spacing:0}
 .src ol{padding-left:20px;margin:0}.src li{margin:4px 0}.src a{color:var(--ink2);text-decoration:underline;text-decoration-color:var(--line)}
-.disc{margin-top:18px;font-size:14px;color:var(--muted)}
-.more{margin-top:44px}.more h2{font-size:22px;margin:0 0 12px}
+.disc{margin-top:18px;font-size:15px;color:var(--muted)}
+.more{margin-top:44px}.more h2{font-size:24px;margin:0 0 12px}
 .cards{display:grid;gap:14px}
-.card{display:block;background:var(--card);border-radius:20px;padding:20px 22px;color:var(--ink)}
+.card{display:block;background:var(--card);border-radius:16px;padding:20px 22px;color:var(--ink)}
 .card:hover{box-shadow:0 12px 32px rgba(0,0,0,.07);color:var(--ink)}
-.card small{color:var(--accent);font-weight:600;font-size:13px}.card b{display:block;font-size:19px;line-height:1.3;margin:4px 0 6px;font-weight:600;letter-spacing:-.01em}.card span{color:var(--muted);font-size:15px}
-footer{max-width:1120px;margin:0 auto;padding:28px 20px 40px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:14px;color:var(--muted);border-top:1px solid var(--line)}
+.card small{color:var(--accent);font-weight:600;font-size:13px}.card b{display:block;font-size:20px;line-height:1.3;margin:4px 0 6px;font-weight:600;letter-spacing:-.01em}.card span{color:var(--muted);font-size:15px}
+footer{max-width:1120px;margin:0 auto;padding:28px 20px 40px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:15px;color:var(--muted);border-top:1px solid var(--line)}
 footer a{color:var(--muted)}
 </style>
-<!--faq-css--><style>.faq{margin-top:40px}.faq h2{font-size:clamp(24px,3vw,30px);letter-spacing:-.02em;line-height:1.2;margin:0 0 12px;font-weight:600}.faq details{background:var(--card);border-radius:16px;padding:14px 18px;margin:0 0 10px}.faq summary{cursor:pointer;font-weight:600;color:var(--ink)}.faq summary{list-style:none;display:flex;justify-content:space-between;align-items:baseline;gap:16px}.faq summary::-webkit-details-marker{display:none}.faq summary::after{content:"+";flex:none;color:var(--muted);font-weight:400;font-size:22px;line-height:1;transition:transform .2s}.faq details[open] summary::after{transform:rotate(45deg)}.faq summary:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:6px}.faq details p{margin:10px 0 0;color:var(--ink2)}</style><!--/faq-css-->
+<!--faq-css--><style>.faq{margin-top:40px}.faq h2{font-size:clamp(24px,3vw,32px);letter-spacing:-.02em;line-height:1.2;margin:0 0 12px;font-weight:600}.faq details{background:var(--card);border-radius:16px;padding:14px 18px;margin:0 0 10px}.faq summary{cursor:pointer;font-weight:600;color:var(--ink)}.faq summary{list-style:none;display:flex;justify-content:space-between;align-items:baseline;gap:16px}.faq summary::-webkit-details-marker{display:none}.faq summary::after{content:"+";flex:none;color:var(--muted);font-weight:400;font-size:24px;line-height:1;transition:transform .2s}.faq details[open] summary::after{transform:rotate(45deg)}.faq summary:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:6px}.faq details p{margin:10px 0 0;color:var(--ink2)}</style><!--/faq-css-->
 <script type="application/ld+json">[{"@context": "https://schema.org", "@type": "WebApplication", "name": "Проверь счёт — Делоскоп", "url": "https://deloskop.ru/proverit-schet/", "applicationCategory": "BusinessApplication", "operatingSystem": "Any", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "RUB"}, "description": "Загрузите счёт в PDF или вставьте реквизиты: проверим ИНН, расчётный счёт по БИК, НДС и признаки риска поставщика, подскажем назначение платежа. Файл — у вас."}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Проверка счёта и БИК покажет, чей это счёт?", "acceptedAnswer": {"@type": "Answer", "text": "Ключ ловит опечатку или изменённую цифру. Чей это счёт, он не показывает: правильные реквизиты чужой компании пройдут проверку — поэтому в результате мы отдельно пишем «принадлежность счёта не подтверждена»."}}, {"@type": "Question", "name": "Как по номеру отличить счёт организации от личного счёта?", "acceptedAnswer": {"@type": "Answer", "text": "Счёт организации начинается с 40702, предпринимателя — с 40802; 40817 и 423 — личные счета людей."}}, {"@type": "Question", "name": "Какая ставка НДС должна стоять в счёте в 2026 году?", "acceptedAnswer": {"@type": "Answer", "text": "С 2026 года основная ставка — 22%."}}, {"@type": "Question", "name": "Поставщик прислал новые реквизиты — что сделать до оплаты?", "acceptedAnswer": {"@type": "Answer", "text": "Позвоните поставщику по номеру из договора или с его сайта — не по номеру из письма. Продиктуйте новый счёт и БИК, пусть подтвердит."}}, {"@type": "Question", "name": "Как распознать поддельное письмо со сменой реквизитов?", "acceptedAnswer": {"@type": "Answer", "text": "Подделку выдаёт одна буква или чужой домен: romashka-ooo.ru вместо ooo-romashka.ru, почта на бесплатном сервисе вместо корпоративной."}}, {"@type": "Question", "name": "Видно ли, что счёт поставщика заблокирован?", "acceptedAnswer": {"@type": "Answer", "text": "Решения налоговой о приостановке видны в сервисе ФНС по ИНН и БИК; ограничения банка по 115-ФЗ там не видны — как поставщик выглядит для банка, покажет проверка по ИНН."}}, {"@type": "Question", "name": "Уходит ли файл счёта на сервер?", "acceptedAnswer": {"@type": "Answer", "text": "Файл не уходит с вашего компьютера: реквизиты читаются прямо в браузере. На сервер отправляется только ИНН поставщика."}}]}]</script><style>
 .tool{margin-top:24px;background:var(--card);border-radius:var(--r);padding:24px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 16px 40px rgba(0,0,0,.05)}
-.drop{display:block;border:2px dashed var(--line);border-radius:18px;padding:26px 18px;text-align:center;cursor:pointer;color:var(--ink2)}
+.drop{display:block;border:2px dashed var(--line);border-radius:16px;padding:26px 18px;text-align:center;cursor:pointer;color:var(--ink2)}
 .drop.over,.drop:hover{border-color:var(--accent);background:#F3F7FE}
-.drop b{display:block;color:var(--ink);font-size:19px;margin-bottom:4px}.drop input{display:none}
-.or{text-align:center;color:var(--muted);font-size:14px;margin:14px 0}
-.tool textarea{width:100%;min-height:150px;border:1px solid var(--line);border-radius:14px;padding:12px 14px;font:inherit;font-size:15px;resize:vertical}
-.tool .go{margin-top:12px;min-height:52px;width:100%;border:0;border-radius:14px;background:var(--accent);color:#fff;font:inherit;font-weight:600;font-size:17px;cursor:pointer}
+.drop b{display:block;color:var(--ink);font-size:20px;margin-bottom:4px}.drop input{display:none}
+.or{text-align:center;color:var(--muted);font-size:15px;margin:14px 0}
+.tool textarea{width:100%;min-height:150px;border:1px solid var(--line);border-radius:16px;padding:12px 14px;font:inherit;font-size:15px;resize:vertical}
+.tool .go{margin-top:12px;min-height:52px;width:100%;border:0;border-radius:16px;background:var(--accent);color:#fff;font:inherit;font-weight:600;font-size:17px;cursor:pointer}
 .tool .go:hover{background:var(--accent-hover)}
 #msg{min-height:22px;font-size:15px;color:var(--muted);margin-top:10px}
-.priv{font-size:14px;color:var(--muted);margin:12px 0 0}
+.priv{font-size:15px;color:var(--muted);margin:12px 0 0}
 #out{margin-top:22px}
-.res{border-radius:18px;padding:18px 20px;margin-bottom:14px}.res p{margin:4px 0 0;color:var(--ink2);font-size:16px}
+.res{border-radius:16px;padding:18px 20px;margin-bottom:14px}.res p{margin:4px 0 0;color:var(--ink2);font-size:17px}
 .res.ok{background:#E9F7EF}.res.warn{background:#FFF6E0}.res.bad{background:#FDECEC}
 .verdict-big{font-size:24px;font-weight:600;letter-spacing:-.02em}
 .res.ok .verdict-big{color:#137A3E}.res.warn .verdict-big{color:#8A5A00}.res.bad .verdict-big{color:#B42318}
-.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:14px;color:var(--muted);margin:0 0 12px}
-.chips button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font:inherit;font-size:14px;cursor:pointer}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:15px;color:var(--muted);margin:0 0 12px}
+.chips button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font:inherit;font-size:15px;cursor:pointer}
 .chips button.on{border-color:var(--accent);color:var(--accent);font-weight:600}
-.rows .row{display:grid;grid-template-columns:190px 1fr;gap:14px;padding:12px 0;border-bottom:1px solid var(--line);font-size:16px}
+.rows .row{display:grid;grid-template-columns:190px 1fr;gap:14px;padding:12px 0;border-bottom:1px solid var(--line);font-size:17px}
 .rows .row span{color:var(--muted)}.d{font-weight:500}.d.ok{color:#137A3E}.d.warn{color:#8A5A00}.d.bad{color:#B42318}.d.neutral{color:var(--ink2)}
 @media (max-width:560px){.rows .row{grid-template-columns:1fr;gap:2px}}
-.note.warn{background:#FFF6E0;border-radius:12px;padding:10px 14px;font-size:15px}
+.note.warn{background:#FFF6E0;border-radius:10px;padding:10px 14px;font-size:15px}
 .meta2{font-size:15px;color:var(--ink2);margin:12px 0 0}
-.pur{margin-top:16px;background:#FAFAF8;border-radius:14px;padding:14px 16px;font-size:16px}
-.pur b{display:block;font-size:14px;color:var(--muted);font-weight:500}.pur div{margin:4px 0 10px}
-.pur button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 14px;font:inherit;font-size:14px;cursor:pointer}
-.small{font-size:14px;color:var(--muted);margin-top:14px}
-.how{margin-top:40px}.how h2{font-size:26px;letter-spacing:-.02em;margin:0 0 12px}
+.pur{margin-top:16px;background:#FAFAF8;border-radius:16px;padding:14px 16px;font-size:17px}
+.pur b{display:block;font-size:15px;color:var(--muted);font-weight:500}.pur div{margin:4px 0 10px}
+.pur button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 14px;font:inherit;font-size:15px;cursor:pointer}
+.small{font-size:15px;color:var(--muted);margin-top:14px}
+.how{margin-top:40px}.how h2{font-size:24px;letter-spacing:-.02em;margin:0 0 12px}
 .how ol{padding-left:22px;color:var(--ink2)}.how li{margin:6px 0}
-.smena{margin-top:48px}.smena h2{font-size:26px;letter-spacing:-.02em;margin:0 0 10px}.smena h3{font-size:19px;margin:28px 0 8px}
+.smena{margin-top:48px}.smena h2{font-size:24px;letter-spacing:-.02em;margin:0 0 10px}.smena h3{font-size:20px;margin:28px 0 8px}
 .smena__lid{color:var(--ink2);font-size:17px;margin:0 0 18px}
-.smena__forma{display:grid;grid-template-columns:1fr 1fr;gap:14px}.smena__forma .go{grid-column:1/-1;margin-top:0;min-height:52px;width:100%;border:0;border-radius:14px;background:var(--accent);color:#fff;font:inherit;font-weight:600;font-size:17px;cursor:pointer}.smena__forma .go:hover{background:var(--accent-hover)}
-.smena__pole-v{display:flex;flex-direction:column;gap:2px}.smena__pole-v b{font-size:16px}.smena__pole-v span{font-size:14px;color:var(--muted);margin-bottom:6px}
-.smena__pole-v textarea{width:100%;min-height:120px;border:1px solid var(--line);border-radius:14px;padding:12px 14px;font:inherit;font-size:15px;resize:vertical}
+.smena__forma{display:grid;grid-template-columns:1fr 1fr;gap:14px}.smena__forma .go{grid-column:1/-1;margin-top:0;min-height:52px;width:100%;border:0;border-radius:16px;background:var(--accent);color:#fff;font:inherit;font-weight:600;font-size:17px;cursor:pointer}.smena__forma .go:hover{background:var(--accent-hover)}
+.smena__pole-v{display:flex;flex-direction:column;gap:2px}.smena__pole-v b{font-size:17px}.smena__pole-v span{font-size:15px;color:var(--muted);margin-bottom:6px}
+.smena__pole-v textarea{width:100%;min-height:120px;border:1px solid var(--line);border-radius:16px;padding:12px 14px;font:inherit;font-size:15px;resize:vertical}
 #smena-out{margin-top:20px}
 .smena__r{display:grid;grid-template-columns:150px 1fr 1fr;gap:4px 14px;padding:12px 0;border-bottom:1px solid var(--line);font-size:15px}
-.smena__h{font-size:14px;color:var(--muted);padding:6px 0}.smena__pole{color:var(--muted)}.smena__z{font-variant-numeric:tabular-nums;word-break:break-all}
+.smena__h{font-size:15px;color:var(--muted);padding:6px 0}.smena__pole{color:var(--muted)}.smena__z{font-variant-numeric:tabular-nums;word-break:break-all}
 .smena__novoe{font-weight:600}.smena__t{grid-column:2/-1;margin:2px 0 0;color:var(--ink2)}
 .smena__r.is-bad .smena__t{color:#B42318}.smena__r.is-warn .smena__t{color:#8A5A00}.smena__r.is-ok .smena__t{color:#137A3E}
-.smena__dalee{margin:14px 0 0;font-size:16px}.smena__shagi{padding-left:22px;color:var(--ink2)}.smena__shagi li{margin:8px 0}
+.smena__dalee{margin:14px 0 0;font-size:17px}.smena__shagi{padding-left:22px;color:var(--ink2)}.smena__shagi li{margin:8px 0}
 @media (max-width:560px){.smena__forma{grid-template-columns:1fr}.smena__r{grid-template-columns:1fr 1fr}.smena__h .smena__pole,.smena__h span:first-child{display:none}.smena__pole{grid-column:1/-1}.smena__t{grid-column:1/-1}}
 </style><script src="/js/vendor/pdfjs/pdf.min.js" defer></script>
 <link rel="stylesheet" href="/css/fonts.css">
@@ -109,7 +109,7 @@ footer a{color:var(--muted)}
 <script src="/js/kpp-inn.js" defer></script>
 <script src="/js/smena.js" defer></script>
 <script src="/js/bez-nds.js" defer></script>
-<script src="/js/b/yadro.a63f89fcb5.js" defer></script>
+<script src="/js/b/yadro.1da692cae5.js" defer></script>
 <link rel="icon" type="image/png" sizes="120x120" href="/favicon-120.png">
 <link rel="alternate" type="application/rss+xml" title="Разборы дел — Делоскоп" href="/praktika/rss.xml">
 <link rel="manifest" href="/manifest.webmanifest">
@@ -196,7 +196,7 @@ footer a{color:var(--muted)}
 <main id="main">
 <nav class="crumbs" aria-label="Навигация"><a href="/">Делоскоп</a></nav>
 <h1>Проверь счёт перед оплатой</h1>
-<p class="meta" style="font-size:18px;color:var(--ink2)">Загрузите счёт&nbsp;— за&nbsp;минуту скажем, можно ли&nbsp;платить: реквизиты, НДС и&nbsp;признаки риска поставщика.</p>
+<p class="meta" style="font-size:17px;color:var(--ink2)">Загрузите счёт&nbsp;— за&nbsp;минуту скажем, можно ли&nbsp;платить: реквизиты, НДС и&nbsp;признаки риска поставщика.</p>
 <section class="tool" aria-label="Проверка счёта">
   <label class="drop" id="drop"><b>Перетащите счёт в&nbsp;PDF</b>или нажмите, чтобы выбрать файл<input type="file" id="file" accept="application/pdf,.pdf,.txt,image/*"></label>
   <div class="or">или вставьте текст счёта / реквизиты</div>

@@ -492,12 +492,12 @@ def utm(href, V, mesto):
 def pismo(V):
     """HTML-письмо: таблицы и инлайн-стили (почтовые клиенты режут <style>), ширина 600."""
     url = url_vypuska(V)
-    P = 'style="margin:0 0 12px;font:400 16px/1.5 %s;color:%s"' % (SHRIFT, C["ink2"])
+    P = 'style="margin:0 0 12px;font:400 17px/1.5 %s;color:%s"' % (SHRIFT, C["ink2"])
 
     def blok(rub, zag, tekst, href):
         return ('<tr><td style="padding:24px 32px 0">'
                 '<p style="margin:0 0 6px;font:600 12px/1 %s;letter-spacing:.06em;text-transform:uppercase;color:%s">%s</p>'
-                '<p style="margin:0 0 6px;font:600 19px/1.3 %s;color:%s">%s</p>'
+                '<p style="margin:0 0 6px;font:600 20px/1.3 %s;color:%s">%s</p>'
                 '<p %s>%s</p>'
                 '<a href="%s" style="font:600 15px/1 %s;color:%s;text-decoration:none">Читать дальше →</a>'
                 '</td></tr>') % (SHRIFT, C["muted"], e(rub), SHRIFT, C["ink"], t(zag), P, t(tekst), e(href), SHRIFT, C["accent"])
@@ -521,7 +521,7 @@ def pismo(V):
             dela = "".join('<li style="margin:0 0 6px">%s</li>' % t(x["chto"]) for x in V["delobuh"]["dela"])
             bloki.append(('<tr><td style="padding:24px 32px 0">'
                           '<p style="margin:0 0 8px;font:600 12px/1 %s;letter-spacing:.06em;text-transform:uppercase;color:%s">%s</p>'
-                          '<ul style="margin:0 0 12px;padding:0 0 0 20px;font:400 16px/1.5 %s;color:%s;list-style:square">%s</ul>'
+                          '<ul style="margin:0 0 12px;padding:0 0 0 20px;font:400 17px/1.5 %s;color:%s;list-style:square">%s</ul>'
                           '<a href="%s" style="font:600 15px/1 %s;color:%s;text-decoration:none">Зачем и где проверить →</a>'
                           '</td></tr>') % (SHRIFT, C["muted"], e(z), SHRIFT, C["ink"], dela, e(utm(url, V, y) + "#" + y), SHRIFT, C["accent"]))
     ob = V["oblozhka"]
@@ -532,19 +532,19 @@ def pismo(V):
          '<body style="margin:0;padding:0;background:%(bg)s">'
          '<div style="display:none;max-height:0;overflow:hidden">%(pre)s</div>'
          '<table role="presentation" width="100%%" cellpadding="0" cellspacing="0" border="0" style="background:%(bg)s"><tr><td align="center" style="padding:24px 12px">'
-         '<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%%;max-width:600px;background:%(card)s;border-radius:24px">'
+         '<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%%;max-width:600px;background:%(card)s;border-radius:28px">'
          '<tr><td style="padding:32px 32px 0">'
          '<p style="margin:0 0 4px;font:600 12px/1 %(f)s;letter-spacing:.06em;text-transform:uppercase;color:%(muted)s">%(nad)s</p>'
-         '<p style="margin:0;font:600 22px/1.2 %(f)s;color:%(ink)s">%(naz)s</p>'
-         '<p style="margin:4px 0 0;font:400 14px/1.4 %(f)s;color:%(muted)s">%(data)s</p>'
+         '<p style="margin:0;font:600 24px/1.2 %(f)s;color:%(ink)s">%(naz)s</p>'
+         '<p style="margin:4px 0 0;font:400 15px/1.4 %(f)s;color:%(muted)s">%(data)s</p>'
          '<p style="margin:28px 0 8px;font:600 64px/1 %(f)s;letter-spacing:-.03em;color:%(ink)s">%(cifra)s</p>'
          '<p %(P)s>%(podpis)s</p>'
          '<p style="margin:16px 0 8px;font:600 12px/1 %(f)s;letter-spacing:.06em;text-transform:uppercase;color:%(muted)s">Главное за неделю</p>'
-         '<ol style="margin:0;padding:0 0 0 20px;font:400 16px/1.5 %(f)s;color:%(ink)s">%(gl)s</ol>'
+         '<ol style="margin:0;padding:0 0 0 20px;font:400 17px/1.5 %(f)s;color:%(ink)s">%(gl)s</ol>'
          '</td></tr>%(bloki)s'
          '<tr><td style="padding:32px">'
-         '<a href="%(vse)s" style="display:inline-block;padding:14px 24px;border-radius:999px;background:%(accent)s;color:#FFFFFF;font:600 16px/1 %(f)s;text-decoration:none">Читать выпуск целиком</a>'
-         '<p style="margin:14px 0 0;font:400 14px/1.4 %(f)s;color:%(muted)s"><a href="%(pdf)s" style="color:%(muted)s">PDF для печати</a> — тот же выпуск на листах A4</p>'
+         '<a href="%(vse)s" style="display:inline-block;padding:14px 24px;border-radius:999px;background:%(accent)s;color:#FFFFFF;font:600 17px/1 %(f)s;text-decoration:none">Читать выпуск целиком</a>'
+         '<p style="margin:14px 0 0;font:400 15px/1.4 %(f)s;color:%(muted)s"><a href="%(pdf)s" style="color:%(muted)s">PDF для печати</a> — тот же выпуск на листах A4</p>'
          '</td></tr>'
          '<tr><td style="padding:0 32px 32px;border-top:1px solid %(line)s">'
          '<p style="margin:20px 0 6px;font:400 13px/1.5 %(f)s;color:%(muted)s">У каждой новости в выпуске — ссылка на первоисточник и дата. Материалы носят информационный характер и не заменяют консультацию юриста.</p>'

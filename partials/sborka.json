@@ -10,6 +10,7 @@
     "glavnaya-stil": [
       "css/otchet.css",
       "css/perehod.css",
+      "css/vitrina.css",
       "css/vizual2.css",
       "css/glubina.css"
     ],
@@ -28,7 +29,8 @@
       "js/imya.js",
       "js/kanaly.js",
       "js/portfel.js",
-      "js/perehod.js"
+      "js/perehod.js",
+      "js/vitrina.js"
     ],
     "glavnaya-sinhr": [
       "js/limit.js",
@@ -59,6 +61,9 @@
       "js/lipkaya.js",
       "js/svyazi.js",
       "js/nedavnie.js"
+    ],
+    "nebo": [
+      "js/nebo.js"
     ]
   },
   "stranicy": {

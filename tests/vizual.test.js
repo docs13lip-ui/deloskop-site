@@ -89,7 +89,8 @@ test('пример на главной: дуга до базы методики 
   assert.match(js, /kolco\(n, zona\(n\), d\.createTextNode\(''\), \{\}, g\)/);
   assert.match(css, /\.ex-ix \.zhi__chislo::before\{content:"";/);
   assert.ok(gl.includes('<script src="/js/zhivoj-indeks.js" defer></script>'));
-  assert.strictEqual((gl.match(/ data-sobir>/g) || []).length, 3);
+  // vitrina-v1: у экспонатов витрины своя «сборка» (сторож — tests/vitrina.test.js); здесь — остальная главная
+  assert.strictEqual((gl.replace(/<!--vitrina-->[\s\S]*?<!--\/vitrina-->/, '').match(/ data-sobir>/g) || []).length, 3);
 });
 
 test('отчёт: зона кольца — из класса уровня (ok|warn|bad), неизвестный класс — по порогам, а не «зелёный»', () => {

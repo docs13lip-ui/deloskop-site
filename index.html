@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <script>/* Мягкая 404 (п. 32): сервер отдаёт главную на любой адрес — уводим на настоящую страницу «нет такой страницы», чтобы поисковики не видели дубли главной. Адрес отчёта /otchet/<ИНН>/ (vizual-v3.1a) — остаётся на главной с noindex. */(function(){var p=location.pathname,a={'/cabinet':'/cabinet.html','/report':'/report.html','/admin':'/admin.html'},k=p.replace(/\/+$/,'');if(p==='/'||p==='/index.html')return;var m=document.createElement('meta');m.name='robots';m.content='noindex';document.head.appendChild(m);if(/^\/otchet\/\d{10}(?:\d{2})?\/?$/.test(p))return;var ci=/^\/company\/(\d{10})(?:[-\/]|$)/.exec(p);if(ci){location.replace('/?inn='+ci[1]);return;}location.replace(a[k]?a[k]+location.search+location.hash:'/404.html?s='+encodeURIComponent(p));})();</script>
 <script>/* vizual-v3.1b: страница открыта адресом отчёта (/?inn=…, /otchet/<ИНН>/) — сразу компактная шапка отчёта, как после проверки: пример не прыгает вверх, когда приходит ответ (CLS). Ошибка или «Назад» — класс снимается. */(function(d){if(/[?&]inn=\d{10}(?:\d{2})?(?:&|$)/.test(location.search)||/^\/otchet\/\d{10}(?:\d{2})?\/?$/.test(location.pathname))d.classList.add('rezhim-otcheta')})(document.documentElement)</script>
+<script>/* vizual-v3.1c: место под таблетки «Все факты / Глазами банка / Глазами налоговой» в примере — с первого кадра (их показывает js/vizual2.js после загрузки; без этого пример вырастал на 70 px — CLS). Не показал к load — место отдаём. est-js — скрипты есть: без них кольцо примера сразу заполнено (css/glubina.css). */(function(d){d.classList.add('zhdu-js','est-js');addEventListener('load',function(){setTimeout(function(){d.classList.remove('zhdu-js')})})})(document.documentElement)</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Проверка контрагента по ИНН бесплатно: глазами банка и ФНС — Делоскоп</title>
 <meta name="description" content="Проверьте поставщика по ИНН перед оплатой: статус в ЕГРЮЛ, долги, отчётность — с источником и датой. Банк спросил по 115-ФЗ — план ответа по дням.">
@@ -31,7 +32,7 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:17px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest','Onest Zapas','Onest Zapas R','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:17px;line-height:1.5;-webkit-font-smoothing:antialiased}
 a{color:var(--accent);text-decoration:none}
 a:hover{color:var(--accent-hover)}
 h1,h2,h3{margin:0;font-weight:600;letter-spacing:-0.03em;line-height:1.08}
@@ -394,6 +395,7 @@ footer a{color:var(--ink2)}
         </header>
         <div class="ex-vd ex-vd--ok" role="group" aria-label="Вывод">
           <div class="ex-ix" data-zhi="72" data-zhi-aria="Шкала Индекса Делоскопа: зона «без серьёзных сигналов»">
+            <div class="zhi" data-zona="ok" role="img" aria-label="Шкала Индекса Делоскопа: зона «без серьёзных сигналов»"><div class="zhi__scena"><div class="zhi__kolco"><div class="zhi__svet"></div><div class="zhi__fon"></div><div class="zhi__duga"></div><div class="zhi__strelka"></div><div class="zhi__chislo"></div></div></div><div class="zhi__pod"></div></div>
             <div class="ex-ix__lab">Уровень риска</div>
             <div class="pill"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5L6.5 11.5L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Без&nbsp;серьёзных сигналов</div>
             <div class="ex-ix__pod">по&nbsp;признакам из&nbsp;реестров</div>

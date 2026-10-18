@@ -60,6 +60,8 @@ body::after{content:"";position:fixed;z-index:-1;inset:0;pointer-events:none;opa
 .zhi.is-idet{transition:--p 1.2s var(--ease,cubic-bezier(.2,.7,.2,1))}
 /* пример на главной: кольцо сверху колонки; на 390 — слева от «Уровень риска» */
 .ex-ix .zhi{align-self:flex-start;--d:120px}
+/* vizual-v3.1c: кольцо примера лежит в разметке; без JS (нет класса est-js из <head> главной) — сразу до базы методики */
+html:not(.est-js) .ex-ix .zhi{--p:72}
 @media (max-width:720px){.ex-ix .zhi{--d:96px;flex-basis:100%;flex-direction:row;gap:14px}.ex-ix .zhi__pod{white-space:normal}}
 /* отчёт: число Индекса переезжает в центр кольца (тот же узел — текст отчёта не меняется) */
 .ot-ix .zhi{--d:168px;align-self:flex-start;margin:4px 0}

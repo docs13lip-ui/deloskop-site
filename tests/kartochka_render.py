@@ -1465,8 +1465,9 @@ def pasport_vhod_html(inn, cena=None):
     """Абзац входа в Паспорт: общий текст + ссылка; ссылка — две половины беты (в бете / после беты)."""
     href = "/pasport/kontragent/?inn=%s" % inn
     a = '<a href="%s" rel="nofollow" data-goal="%s">%%s</a>' % (href, PASPORT_VHOD_GOAL)
-    posle = ("Полный Паспорт на" + NB + "дату сделки" + NB + "— %d" + NB + "₽ или в" + NB + "тарифе «Старт»" + NB + "→") % cena if cena \
-        else "Полный Паспорт на" + NB + "дату сделки" + NB + "→"
+    # kartochki-bez-ceny-v1: решение владельца 16.10 «в публичных текстах нет цен» — и в скрытой половине беты тоже
+    # (скрытый HTML индексируется; ответ Штаба 18.10 11:35). cena оставлен в подписи — API передаёт его же.
+    posle = "Полный Паспорт на" + NB + "дату сделки" + NB + "→"
     return ('<p class="co-daty__vhod">%s <!--oplata-->%s<!--/oplata--><!--v-bete-->%s<!--/v-bete--></p>'
             % (PASPORT_VHOD_TEKST, a % posle, a % PASPORT_VHOD_BETA))
 
@@ -3125,6 +3126,12 @@ def _un_kompanij(n):
 
 def un_otlichie(k, vse):
     """1–2 самых необычных факта компании на фоне других карточек → (текст, год отчётности) или None."""
+    r = _un_otlichie_vid(k, vse)
+    return r[:2] if r else None
+
+
+def _un_otlichie_vid(k, vse):
+    """То же + вид первого факта (kartochki-unik-v5: от него — заголовок абзаца)."""
     if not k:
         return None
     g1 = k["g1"]
@@ -3197,12 +3204,12 @@ def un_otlichie(k, vse):
         kand.append((0, "vse", "%s выручки за%s%d год — по этой цифре рядом на Делоскопе %s"
                      % (dengi(k["r1"]), NB, g1, " и ".join("%s (%s)" % (un_kratkoe(x["imya"]), dengi(x["r1"])) for x in ryadom))))
     kand.sort(key=lambda x: -x[0])
-    vybor, vidy = [], set()
+    vybor, vidy = [], []
     for ves, vid, tx in kand:
         if vid not in vidy and len(vybor) < 2:
             vybor.append(tx)
-            vidy.add(vid)
-    return "; ".join(vybor), g1
+            vidy.append(vid)
+    return "; ".join(vybor), g1, vidy[0]
 
 
 def un_otlichie_html(f):
@@ -3212,13 +3219,48 @@ def un_otlichie_html(f):
     vse = un_kontekst()
     if k["inn"] not in vse:
         return ""
-    r = un_otlichie(k, vse)
+    r = _un_otlichie_vid(k, vse)
     if not r:
         return ""
     tx = r[0]
     if STOP_SLOVA.search(tx):
         return ""
-    return "<p><b>На фоне других компаний Делоскопа.</b> %s.</p>" % (html.escape(_zn_nb(tx[0].upper() + tx[1:]), quote=False))
+    zag = un_otlichie_zag(un_kratkoe(f["imya"]) if f.get("imya") else "", r[2])
+    return "<p><b>%s</b> %s.</p>" % (html.escape(_zn_nb(zag), quote=False), html.escape(_zn_nb(tx[0].upper() + tx[1:]), quote=False))
+
+
+# kartochki-unik-v5 ([Ночные-2] 18.10): заголовок «На фоне других компаний Делоскопа.» стоял на всех карточках с абзацем
+# (5 одинаковых слов подряд). Теперь — имя компании и то, с кем сравниваем (вид первого выбранного факта).
+UN_ZAG = {
+    "razdel": "%s в своём разделе.",
+    "rent": "%s в своём разделе.",
+    "region": "%s в своём регионе.",
+    "vozrast": "%s в своём регионе.",
+    "rost": "Рост выручки %s — среди других.",
+    "povorot": "Год %s в цифрах.",
+    "vse": "Рядом с %s по выручке.",
+}
+
+
+def un_otlichie_zag(im, vid):
+    if not im:
+        return "На фоне других компаний Делоскопа."
+    return UN_ZAG.get(vid, "%s среди компаний Делоскопа.") % im
+
+
+def un_istoriya(im, reestr, ruk, a0, p1):
+    """kartochki-unik-v5 ([Ночные-2] 18.10): «— с него начинается открытая отчётность на странице» было на 159 из 167
+    карточек. Теперь — что произошло с выручкой от первого года открытой отчётности до последнего (числа той же таблицы
+    на странице; новых утверждений нет)."""
+    g0, r0, g1, r1 = a0["god"], a0["dohod"], p1["god"], p1["dohod"]
+    nach = "%s %s%s" % (im, reestr, ruk)
+    if r1 / r0 >= 1.3:
+        return "%s; с%s%d по%s%d год выручка выросла в%s%s — с%s%s до%s%s." % (
+            nach, NB, g0, NB, g1, NB, _raz(r0, r1), NB, dengi(r0), NB, dengi(r1))
+    if r1 / r0 <= 0.8:
+        return "%s; выручка %d года — %s, на%s%s меньше, чем в%s%d (%s)." % (
+            nach, g1, dengi(r1), NB, _zn_proc(1 - r1 / r0), NB, g0, dengi(r0))
+    return "%s: %s выручки в%s%d году и%s%s — в%s%d." % (nach, dengi(r0), NB, g0, NB, dengi(r1), NB, g1)
 
 
 def _un_let(n):
@@ -3287,9 +3329,8 @@ def un_frazy(f):
             out.append("%s %s: история короткая, поэтому оплату вперёд лучше ограничить и платить частями по факту "
                        "поставки." % (im, reestr))
         elif glub:
-            out.append("%s %s%s: выручка %s в %d году — с него начинается открытая отчётность на странице." % (
-                im, reestr, (", руководитель тот же с %s года" % ruk_s.group(1)) if ruk_s else "",
-                dengi(a0["dohod"]), a0["god"]))
+            out.append(un_istoriya(im, reestr, (", руководитель тот же с %s года" % ruk_s.group(1)) if ruk_s else "",
+                                   a0, p1))
         else:
             out.append("%s %s%s; %s." % (
                 im, reestr, (", руководитель не менялся с %s года" % ruk_s.group(1)) if ruk_s else "",

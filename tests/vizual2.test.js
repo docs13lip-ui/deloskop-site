@@ -42,7 +42,7 @@ test('подключение: главная и /pasport/; vizual2.css — до 
   for (const [imya, s] of [['index.html', gl], ['pasport/index.html', pa]]) {
     const head = s.slice(0, s.indexOf('</head>'));
     assert.ok(head.includes('<script src="/js/vizual2.js" defer></script>'), imya);
-    const st = head.match(/<link rel="stylesheet" href="[^"]+">/g).filter((x) => !x.includes('/css/tema.css')); // vizual-v3.0b: слой темы — после
+    const st = head.match(/<link rel="stylesheet" href="[^"]+">/g).filter((x) => !x.includes('/css/tema.css') && !x.includes('/css/detali.css'))  /* detali-v1: переносы и поля касания — тоже после */; // vizual-v3.0b: слой темы — после
     assert.strictEqual(st[st.length - 1], '<link rel="stylesheet" href="/css/glubina.css">', imya);
     assert.strictEqual(st[st.length - 2], '<link rel="stylesheet" href="/css/vizual2.css">', imya);
   }

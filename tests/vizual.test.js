@@ -110,7 +110,7 @@ test('сборщик: glubina.css — последним стилем на вс�
     const head = s.slice(0, s.indexOf('</head>'));
     assert.ok(head.includes(LINK), f);
     // vizual-v3.0b: после неё — только слой тёмной темы (css/tema.css, действует лишь под [data-theme=dark])
-    const vse = head.match(/<link rel="stylesheet" href="[^"]+">/g).filter((x) => !x.includes('/css/tema.css'));
+    const vse = head.match(/<link rel="stylesheet" href="[^"]+">/g).filter((x) => !x.includes('/css/tema.css') && !x.includes('/css/detali.css'))  /* detali-v1: переносы и поля касания — тоже после */;
     assert.strictEqual(vse[vse.length - 1], LINK, f + ': glubina.css не последний');
     n++;
   }

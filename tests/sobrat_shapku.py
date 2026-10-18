@@ -73,6 +73,7 @@ GLUBINA_LINK = '<link rel="stylesheet" href="/css/glubina.css">'
 # Строка в <head> ставит data-theme на <html> до первой отрисовки (без мигания): выбор из localStorage «tema»
 # (light | dark; иначе — как в системе) и цвет панели браузера. Остальное — css/tema.css и js/shapka.js §8.
 TEMA_LINK = '<link rel="stylesheet" href="/css/tema.css">'
+DETALI_LINK = '<link rel="stylesheet" href="/css/detali.css">'  # detali-v1: переносы и поля касания — последним в пакете «ds»
 TEMA_JS = ('<script>!function(d,t){try{t=localStorage.tema}catch(e){}t=t=="auto"?'
            '(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light"):t=="light"?t:"dark";d.dataset.theme=t;'
            'if(t=="dark"&&(t=document.querySelector("meta[name=theme-color]")))t.content="#111113"}'
@@ -356,6 +357,8 @@ def vstavit_shapku(txt, shapka):
         txt = txt.replace("</head>", GLUBINA_LINK + "\n</head>", 1)
     if not est(txt, TEMA_LINK):
         txt = txt.replace("</head>", TEMA_LINK + "\n</head>", 1)
+    if not est(txt, DETALI_LINK):  # сразу за tema.css (glubina.css остаётся последним)
+        txt = txt.replace(TEMA_LINK, TEMA_LINK + "\n" + DETALI_LINK, 1) if TEMA_LINK in txt else txt.replace("</head>", DETALI_LINK + "\n</head>", 1)
     if TEMA_JS not in txt:
         txt = STARAYA_TEMA_JS.sub("", txt)  # прежняя строка темы (другое умолчание) — заменяем
         txt = txt.replace("</head>", TEMA_JS + "\n</head>", 1)

@@ -23,8 +23,15 @@
       .replace(/(\d) (?=₽|%|млн|млрд|тыс|рабоч|дн|месяц|год|лет|час|минут)/g,"$1\u00a0")
       .replace(/ (?=—)/g,"\u00a0")
       .replace(/(пп?\.|ст\.|ч\.|№) /g,pered(P))
-      .replace(/(в|и|а|к|с|у|о|я|по|на|не|до|от|за|из|ни|но|же|ли|без|для|под|над|при|про|со|об) /gi,pered(B))
+      .replace(/(в|и|а|к|с|у|о|я|по|на|не|до|от|за|из|ни|но|же|ли|без|для|под|над|при|про|со|об|во|мы|вы|он|её|ее|их|ей|им) /gi,pered(B))
       .replace(/(\d)-(?=ФЗ(?![0-9A-Za-zЀ-ӿ_]))/g,"$1\u2011");}
+  // detali-v1: та же типографика для текста, который рисуют скрипты (например, «Условия сделки» в отчёте):
+  // DlkTipo.uzly(el) проходит текстовые узлы внутри el (кроме полей ввода, кода и скриптов).
+  window.DlkTipo = { tekst: tipo, uzly: function (el) {
+    if (!el || !document.createTreeWalker) return;
+    var w = document.createTreeWalker(el, 4), n, ne = /^(SCRIPT|STYLE|TEXTAREA|CODE|PRE|OPTION)$/;
+    while ((n = w.nextNode())) { if (n.parentNode && !ne.test(n.parentNode.nodeName) && / /.test(n.nodeValue)) { var v = tipo(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v; } }
+  } };
   var MES = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
   function denMes(u) {
     var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(u.id || "");

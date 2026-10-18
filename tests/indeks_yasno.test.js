@@ -23,7 +23,7 @@ test('/indeks/: title, og:title и headline — без номера версии
 
 test('/indeks/: блок «Чем Индекс отличается от баллов ФНС» и вопрос — дословно, в тексте, в details и в FAQPage', () => {
   const h = chitat('indeks/index.html');
-  assert.match(h, /<h3 id="bally-fns">Чем Индекс отличается от&nbsp;баллов ФНС<\/h3>/);
+  assert.match(h, /<h2 id="bally-fns">Чем Индекс отличается от&nbsp;баллов ФНС<\/h2>/);
   const blok = h.slice(h.indexOf('id="bally-fns"'), h.indexOf('</div>', h.indexOf('id="bally-fns"')));
   assert.ok(plain(blok).includes(TEKST));
   assert.ok(bez(h).includes('<details><summary>Индекс Делоскопа — это баллы ФНС?</summary><p>Нет. ' + TEKST + '</p></details>'));

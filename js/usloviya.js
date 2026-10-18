@@ -736,6 +736,7 @@
           '<div class="usl-btns"><button type="button" data-u="copy">Скопировать письмо</button>' +
           '<a data-u="mail" href="mailto:?subject=' + encodeURIComponent(v.letter.subject) + '&body=' + encodeURIComponent(v.letter.body) + '">Открыть в почте</a></div>' +
         '</details>';
+      if (window.DlkTipo) window.DlkTipo.uzly(box);       // detali-v1: без висячих предлогов, как в статьях
       var inp = box.querySelector('input'), s = box.querySelector('select');
       if (inp) {
         inp.addEventListener('input', function () {

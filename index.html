@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<script>/* Мягкая 404 (п. 32): сервер отдаёт главную на любой адрес — уводим на настоящую страницу «нет такой страницы», чтобы поисковики не видели дубли главной. */(function(){var p=location.pathname,a={'/cabinet':'/cabinet.html','/report':'/report.html','/admin':'/admin.html'},k=p.replace(/\/+$/,'');if(p==='/'||p==='/index.html')return;var m=document.createElement('meta');m.name='robots';m.content='noindex';document.head.appendChild(m);var ci=/^\/company\/(\d{10})(?:[-\/]|$)/.exec(p);if(ci){location.replace('/?inn='+ci[1]);return;}location.replace(a[k]?a[k]+location.search+location.hash:'/404.html?s='+encodeURIComponent(p));})();</script>
+<script>/* Мягкая 404 (п. 32): сервер отдаёт главную на любой адрес — уводим на настоящую страницу «нет такой страницы», чтобы поисковики не видели дубли главной. Адрес отчёта /otchet/<ИНН>/ (vizual-v3.1a) — остаётся на главной с noindex. */(function(){var p=location.pathname,a={'/cabinet':'/cabinet.html','/report':'/report.html','/admin':'/admin.html'},k=p.replace(/\/+$/,'');if(p==='/'||p==='/index.html')return;var m=document.createElement('meta');m.name='robots';m.content='noindex';document.head.appendChild(m);if(/^\/otchet\/\d{10}(?:\d{2})?\/?$/.test(p))return;var ci=/^\/company\/(\d{10})(?:[-\/]|$)/.exec(p);if(ci){location.replace('/?inn='+ci[1]);return;}location.replace(a[k]?a[k]+location.search+location.hash:'/404.html?s='+encodeURIComponent(p));})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Проверка контрагента по ИНН бесплатно: глазами банка и ФНС — Делоскоп</title>
 <meta name="description" content="Проверьте поставщика по ИНН перед оплатой: статус в ЕГРЮЛ, долги, отчётность — с источником и датой. Банк спросил по 115-ФЗ — план ответа по дням.">
@@ -281,9 +281,9 @@ footer a{color:var(--ink2)}
 </style>
 <!-- vizual-v3.0a: стили и скрипты главной — пятью файлами вместо 17 (partials/sborka.json, tests/sobrat_js.py) -->
 <link rel="stylesheet" href="/css/b/ds.df84d3420a.css">
-<link rel="stylesheet" href="/css/b/glavnaya-stil.792cc1df61.css">
+<link rel="stylesheet" href="/css/b/glavnaya-stil.a5edc2073a.css">
 <script src="/js/b/yadro.ddc3ebdbdb.js" defer></script>
-<script src="/js/b/glavnaya.58381a2d1a.js" defer></script>
+<script src="/js/b/glavnaya.8b55ffc475.js" defer></script>
 <link rel="icon" type="image/png" sizes="120x120" href="/favicon-120.png">
 <link rel="alternate" type="application/rss+xml" title="Разборы дел — Делоскоп" href="/praktika/rss.xml">
 <link rel="manifest" href="/manifest.webmanifest">
@@ -628,6 +628,8 @@ footer a{color:var(--ink2)}
     if(r.zsk){var zc=r.zsk.level==='high'?'bad':r.zsk.level==='medium'?'warn':'ok';
       rows+='<div class="row"><span>Прогноз ЗСК · наша оценка, не статус Банка России <a href="'+esc(r.zsk.cbr_url)+'" target="_blank" rel="noopener" style="font-size:13px">проверить в ЦБ</a></span><b class="d '+zc+'">'+esc(r.zsk.title)+'</b></div>';}
     var d=new Date(r.checked_at||Date.now());
+    // vizual-v3.1a: пример уходит со сцены живым (узлы с обработчиками — в запас), «Назад» возвращает его как был
+    if(report.classList.contains('ex')&&!exUzly){exUzly=[].slice.call(report.childNodes);exUzly.forEach(function(n){report.removeChild(n)});exAtr={c:report.className,a:report.getAttribute('aria-label')};}
     report.classList.remove('ex');
     if(window.Portfel)Portfel.skryt();
     report.setAttribute('aria-label','Отчёт о проверке');
@@ -691,41 +693,66 @@ footer a{color:var(--ink2)}
   function gruzitModuli(){if(moduliP)return moduliP;moduliP=new Promise(function(ok){var s=document.createElement('script');s.src=OTCHET_JS;s.onload=s.onerror=function(){ok()};document.head.appendChild(s);});return moduliP;}
   function kogdaModuli(f){gruzitModuli().then(function(){if(moduliGotovy)f();else document.addEventListener('DOMContentLoaded',function(){f()},{once:true});});}
   ['focus','input','pointerenter','touchstart'].forEach(function(ev){form.addEventListener(ev,function(){gruzitModuli()},{once:true,passive:true,capture:true});});
+  // ---- vizual-v3.1a: адрес отчёта и «Назад» ----
+  // Отчёт получает свой адрес в истории: «Назад» возвращает пример, «Вперёд» — отчёт. Сейчас адрес — /?inn=…
+  // (так работает на любом сервере). OTCHET_PUT — адрес /otchet/<ИНН>/: включить после переезда на nginx
+  // (deploy/nginx.conf уже отдаёт для него главную; tests/perehod.test.js сверяет, что флаг выключен, пока переезда нет).
+  var OTCHET_PUT=false;
+  var exUzly=null,exAtr=null;
+  function perehod(fn){if(window.DlkPerehod)return DlkPerehod.smena(report,fn);fn();return Promise.resolve(false);}
+  function innIzAdresa(){var m=/^\/otchet\/(\d{10}(?:\d{2})?)\/?$/.exec(location.pathname);if(m)return m[1];
+    var q=new URLSearchParams(location.search).get('inn');return q&&/^\d{10}(\d{2})?$/.test(q)?q:'';}
+  function adres(inn,o){if(o&&(o.svoj||o.izIstorii)||!/^\d{10}(\d{2})?$/.test(String(inn))||!history.pushState)return;
+    var u=OTCHET_PUT?'/otchet/'+inn+'/':'/?inn='+inn;
+    try{if(innIzAdresa()===String(inn))history.replaceState({dlkInn:String(inn)},'',u);else history.pushState({dlkInn:String(inn)},'',u);}catch(e){}}
+  function vernutPrimer(){if(!exUzly||report.classList.contains('ex'))return;
+    perehod(function(){report.textContent='';exUzly.forEach(function(n){report.appendChild(n)});report.className=exAtr.c;
+      if(exAtr.a)report.setAttribute('aria-label',exAtr.a);document.body.classList.remove('rezhim-otcheta');}).then(function(){
+      note.className='note';note.textContent=def;if(window.Portfel)try{Portfel.obnovit()}catch(e){}});}
+  window.addEventListener('popstate',function(){var inn=innIzAdresa();
+    if(inn){input.value=inn;runCheck(inn,{izIstorii:true});}else vernutPrimer();});
   function runCheck(v,o){
     if(!CAPI){note.className='note ok';note.textContent='Проверка работает на deloskop.ru.';return;}
     gruzitModuli();if(window.dlkLimit)dlkLimit.ubrat(note);
-    note.className='note';note.textContent='Проверяем по реестрам…';report.classList.add('loading');if(window.dlkGoal)dlkGoal('check_started');
+    note.className='note';note.textContent='Проверяем по реестрам…';report.classList.add('loading');report.setAttribute('aria-busy','true');if(window.dlkGoal)dlkGoal('check_started');
     fetch(CAPI+'/api/check?q='+encodeURIComponent(v),{credentials:'include'})
       .then(function(res){return res.json().then(function(j){return {ok:res.ok,s:res.status,j:j}},function(){return {ok:false,s:res.status,j:{}}})})
       .then(function(x){kogdaModuli(function(){report.classList.remove('loading');
         // лимит бесплатных проверок — понятный экран вместо текста API (js/limit.js); `detail` не выводим
+        if(x.s!==200||!x.ok)report.removeAttribute('aria-busy');
         if(x.s===429){note.className='note';note.textContent='';if(window.dlkLimit)dlkLimit.pokazat(note,{stranica:'glavnaya',inn:v});else note.textContent='На сегодня бесплатные проверки закончились. Завтра — снова 10.';return;}
         if(!x.ok){note.className='note err';note.textContent=(x.j&&x.j.detail)||'Не получилось проверить. Попробуйте ещё раз.';return;}
         if(window.dlkLimit)dlkLimit.proveren((x.j.company&&x.j.company.inn)||v);
         // kavychki-v1: ПАО "РОССЕТИ ЮГ" → ПАО «РОССЕТИ ЮГ» — до всех модулей отчёта (js/imya.js; буквы — как в ЕГРЮЛ)
         if(window.DlkImya)DlkImya.ispravitOtvet(x.j);
-        render(x.j,o);note.className='note ok';note.textContent='Готово. Отчёт — рядом.';
-        if(window.Otchet&&report.classList.contains('ot'))Otchet.prokrutit(report);else if(window.innerWidth<980)report.scrollIntoView({behavior:'smooth',block:'start'});});})
-      .catch(function(){report.classList.remove('loading');note.className='note err';
+        // vizual-v3.1a: пример перетекает в отчёт (js/perehod.js — View Transitions; нет поддержки или «уменьшить движение» — сразу)
+        perehod(function(){render(x.j,o)}).then(function(){report.removeAttribute('aria-busy');note.className='note ok';note.textContent='Готово. Отчёт — рядом.';
+        adres((x.j.company&&x.j.company.inn)||v,o);
+        if(window.Otchet&&report.classList.contains('ot'))Otchet.prokrutit(report);else if(window.innerWidth<980)report.scrollIntoView({behavior:'smooth',block:'start'});});});})
+      .catch(function(){report.classList.remove('loading');report.removeAttribute('aria-busy');note.className='note err';
         note.textContent='Сервис не ответил. Проверьте интернет и попробуйте ещё раз.';});
   }
 
   // ---- подсказки по названию ----
   var list=document.createElement('ul');list.className='sugg';list.id='sugg';list.setAttribute('role','listbox');list.hidden=true;form.appendChild(list);
-  input.setAttribute('aria-controls','sugg');input.setAttribute('aria-autocomplete','list');
+  input.setAttribute('aria-controls','sugg');input.setAttribute('aria-autocomplete','list');input.setAttribute('aria-expanded','false');
+  // vizual-v3.1a: подсказки — в верхнем слое (popover) и привязаны к форме якорем (anchor positioning): не обрезаются
+  // соседними блоками и не прячутся под отчётом. Нет поддержки якорей — список под полем, как раньше (position:absolute).
+  var POP=!!(list.showPopover&&window.CSS&&CSS.supports&&CSS.supports('position-anchor','--dlk-forma'));
+  if(POP){list.setAttribute('popover','manual');list.hidden=false;form.classList.add('check--yakor');}
   var tmr,items=[],sel=-1,lastQ='';
-  function hide(){list.hidden=true;sel=-1}
+  function hide(){if(POP){try{if(list.matches(':popover-open'))list.hidePopover()}catch(e){}}else list.hidden=true;sel=-1;input.setAttribute('aria-expanded','false')}
   function pickItem(i){var it=items[i];if(!it)return;input.value=it.name;hide();runCheck(it.inn);}
   function show(arr){items=arr||[];sel=-1;
     if(!items.length){hide();return;}
     list.innerHTML=items.map(function(it,i){return '<li role="option" data-i="'+i+'"><b>'+esc(window.DlkImya?DlkImya.kavychki(it.name):it.name)+'</b><span>ИНН '+esc(it.inn)+(it.address?' · '+esc(it.address):'')+'</span></li>'}).join('');
-    list.hidden=false;}
+    if(POP){try{if(!list.matches(':popover-open'))list.showPopover()}catch(e){}}else list.hidden=false;input.setAttribute('aria-expanded','true');}
   list.addEventListener('mousedown',function(e){var li=e.target.closest('li');if(li){e.preventDefault();pickItem(+li.dataset.i)}});
   input.addEventListener('input',function(){clearTimeout(tmr);var q=input.value.trim();
     if(!CAPI||q.length<3||/^\d+$/.test(q)){hide();return;}
     tmr=setTimeout(function(){lastQ=q;fetch(CAPI+'/api/suggest?q='+encodeURIComponent(q)).then(function(r){return r.ok?r.json():{items:[]}})
       .then(function(j){if(lastQ===input.value.trim())show(j.items)}).catch(hide)},250);});
-  input.addEventListener('keydown',function(e){if(list.hidden)return;
+  input.addEventListener('keydown',function(e){if(POP?!list.matches(':popover-open'):list.hidden)return;
     if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();sel=(sel+(e.key==='ArrowDown'?1:-1)+items.length)%items.length;
       [].forEach.call(list.children,function(li,i){li.setAttribute('aria-selected',i===sel)});}
     else if(e.key==='Enter'&&sel>=0){e.preventDefault();pickItem(sel);}
@@ -780,7 +807,7 @@ footer a{color:var(--ink2)}
       setTimeout(function(){t.remove()},12000); },8000); }
   form.addEventListener('submit',askLater);
   // ИНН из адреса (?inn=…) — например, «Проверить снова» из кабинета
-  var qi=new URLSearchParams(location.search).get('inn');
+  var qi=innIzAdresa()||new URLSearchParams(location.search).get('inn');
   if(qi&&/^\d{10}(\d{2})?$/.test(qi)){input.value=qi;
     if(window.DlkInn&&!DlkInn.ok(qi)){note.className='note err';note.textContent=DlkInn.OPECHATKA;}else runCheck(qi);}
   // не ИНН (поиск по сайту из выдачи, SearchAction) — подставляем запрос в поле, проверку человек запускает сам

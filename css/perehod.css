@@ -1,0 +1,15 @@
+/* Делоскоп — vizual-v3.1a «Инструмент» (18.10.2026): переход «пример → отчёт» и подсказки у поля ИНН.
+   Визуал v3 §7, волна 3.1 (а, б). Без поддержки — правила просто не действуют, всё работает как раньше. */
+
+/* (а) View Transitions одного документа: кольцо Индекса, название, вывод и первые факты перетекают на новое место (js/perehod.js) */
+::view-transition-group(*){animation-duration:.45s;animation-timing-function:cubic-bezier(.2,.7,.2,1)}
+::view-transition-old(root),::view-transition-new(root){animation-duration:.28s}
+@media (prefers-reduced-motion:reduce){
+  ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}
+}
+
+/* (б) Подсказки компаний — в верхнем слое (popover) и под формой по якорю; без якорей — position:absolute, как было */
+.check--yakor{anchor-name:--dlk-forma}
+.check--yakor .sugg[popover]{position:fixed;position-anchor:--dlk-forma;inset:auto;top:anchor(bottom);left:anchor(left);
+  width:anchor-size(width);margin:6px 0 0;border:0;color:inherit;position-try-fallbacks:flip-block}
+.check--yakor .sugg[popover]:not(:popover-open){display:none}

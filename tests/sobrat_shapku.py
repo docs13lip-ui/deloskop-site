@@ -27,6 +27,12 @@
      полоса /partials/beta.html под шапкой; в подвале и документах — без ИНН и ОГРНИП, даже если
      rekvizity.json заполнен. Флаг false — всё возвращается байт в байт (tests/beta.py, tests/test_beta.py).
 
+  7. ОБЩИЕ ПАКЕТЫ (yadro-v1, 18.10.2026): fonts/podval/shapka/tema.css → один /css/b/ds.<отпечаток>.css,
+     shapka/metrika/kopiya/pwa.js и obnovleniya.js → один /js/b/yadro.<отпечаток>.js (те же, что на главной;
+     состав — partials/sborka.json). svernut(): только если порядок каскада и исполнения не меняется. Отпечаток
+     считается здесь же по только что собранным стилям; python3 tests/sobrat_js.py пишет сами файлы пакетов
+     и обновляет отпечаток на всех страницах. Правите исходник пакета — запустите оба.
+
 Запуск: python3 tests/sobrat_shapku.py        — собрать
         python3 tests/sobrat_shapku.py --check — только проверить (код 1, если нужна сборка)
 """
@@ -237,6 +243,81 @@ def est(txt, teg):
     return False
 
 
+# yadro-v1 (18.10, Визуал v3 §7, шаг 2 волны 3.0): общие стили и скрипты каждой страницы — двумя пакетами
+# с отпечатком вместо девяти файлов: «ds» (fonts, podval, shapka, tema — css/b/) и «yadro» (shapka, metrika, kopiya,
+# pwa, obnovleniya — js/b/). Те же, что на главной: перешёл с главной — оба уже в кэше. Пакет встаёт на место
+# первого своего файла (шрифты — только @font-face, их место в каскаде не важно), остальные теги уходят.
+# Сворачиваем, только если порядок каскада и исполнения не меняется: между файлами пакета нет чужих стилей
+# (кроме glubina.css — на главной тот же порядок) и чужих внешних скриптов. Иначе страница остаётся как была.
+SVERNUT = (("ds", "css"), ("yadro", "js"))
+ADRESA = {}  # имя пакета → /css|js/b/<имя>.<отпечаток>.*; main() считает по только что собранным стилям
+
+
+def adres(imya):
+    if imya not in ADRESA:
+        import sobrat_js as SJ
+        ADRESA[imya] = SJ.adres_paketa(imya, KOREN)
+    return ADRESA[imya]
+
+
+def _teg(v, put):
+    return ('<link rel="stylesheet" href="/%s">' % put) if v == "css" else ('<script src="/%s" defer></script>' % put)
+
+
+def _ubrat(txt, teg):
+    i = txt.find(teg)
+    if i < 0:
+        return txt
+    j = i + len(teg)
+    if txt[j:j + 1] == "\n":
+        j += 1
+    return txt[:i] + txt[j:]
+
+
+def svernut(txt):
+    """yadro-v1: теги общих файлов → один тег пакета (или обновить отпечаток уже стоящего)."""
+    for imya, v in SVERNUT:
+        fajly = PAKETY.get(imya)
+        if not fajly:
+            continue
+        nov = adres(imya)
+        star = re.compile(r"/%s/b/%s\.[0-9a-f]{10}\.%s" % (v, re.escape(imya), v))
+        tegi = [_teg(v, f) for f in fajly]
+        if star.search(txt):
+            txt = star.sub(nov, txt)
+            for t in tegi:  # остатки, если кто-то вставил файл пакета руками
+                txt = _ubrat(txt, t)
+            continue
+        if not all(t in txt for t in tegi):
+            continue
+        konec_head = txt.find("</head>")
+        poz = {t: txt.find(t) for t in tegi}
+        if v == "css":
+            if any(p > konec_head for p in poz.values()):
+                continue
+            yakor = min(p for t, p in poz.items() if "fonts.css" not in t)
+            kusok = txt[yakor:max(poz.values())]
+            chuzhie = [h for h in re.findall(r'<link rel="stylesheet" href="([^"]+)"', kusok)
+                       if h not in ["/" + f for f in fajly] + ["/css/glubina.css"]]
+            if chuzhie or "<style" in kusok:
+                continue
+        else:
+            v_head = [p for p in poz.values() if p < konec_head]
+            if not v_head:
+                continue
+            yakor = min(v_head)
+            kusok = txt[yakor:max(v_head)]
+            chuzhie = [m for m in re.findall(r'<script[^>]*\ssrc="([^"]+)"', kusok) if m not in ["/" + f for f in fajly]]
+            if chuzhie:
+                continue
+        paket = _teg(v, nov.lstrip("/"))
+        txt = txt[:yakor] + "\0PAKET\0" + txt[yakor:]
+        for t in tegi:
+            txt = _ubrat(txt, t)
+        txt = txt.replace("\0PAKET\0", paket + "\n", 1)
+    return txt
+
+
 def vstavit_shapku(txt, shapka):
     if "<!--shapka-->" in txt:
         txt = re.sub(r"<!--shapka-->.*?<!--/shapka-->", lambda m: shapka, txt, count=1, flags=re.S)
@@ -277,6 +358,7 @@ def vstavit_shapku(txt, shapka):
     if TEMA_JS not in txt:
         txt = txt.replace("</head>", TEMA_JS + "\n</head>", 1)
     # цель ссылки «Перейти к содержанию»
+    txt = svernut(txt)
     if 'id="main"' not in txt:
         mm = re.search(r"<main(?=[\s>])([^>]*)>", txt)
         if mm and " id=" not in mm.group(1):
@@ -444,6 +526,12 @@ def main():
             if not check:
                 with open(cp, "w", encoding="utf-8") as fh:
                     fh.write(css)
+    # yadro-v1: адреса общих пакетов — по стилям, которые только что собраны (при --check они ещё не на диске)
+    import sobrat_js as SJ
+    zam = {"css/" + imya: css for imya, css in gotovye.items()}
+    for imya, _v in SVERNUT:
+        if imya in PAKETY:
+            ADRESA[imya] = SJ.adres_paketa(imya, KOREN, zam)
     op = put(*OBOLOCHKA_JSON)
     ob = obolochka(r, podval, shapka)
     stary = open(op, encoding="utf-8").read() if os.path.exists(op) else ""

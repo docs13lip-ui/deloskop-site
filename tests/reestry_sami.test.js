@@ -2,6 +2,7 @@
 const test = require('node:test');
 const assert = require('node:assert');
 const fs = require('fs');
+require('./razvernut_sborku.js'); // vizual-v3.0a: главная подключает пакеты — сторож видит исходники в порядке исполнения
 const path = require('path');
 const RS = require('../js/reestry-sami.js');
 const KOREN = path.join(__dirname, '..');

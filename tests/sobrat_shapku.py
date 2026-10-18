@@ -196,6 +196,33 @@ def shapka_css():
             + src)
 
 
+# vizual-v3.0a: страница, которая подключает пакет (js/b/<имя>.<отпечаток>.js, css/b/<имя>.<отпечаток>.css —
+# tests/sobrat_js.py, partials/sborka.json), уже содержит исходники пакета — отдельный тег не вставляем.
+def _pakety_karta():
+    try:
+        with open(os.path.join(KOREN, "partials", "sborka.json"), encoding="utf-8") as f:
+            return json.load(f).get("pakety", {})
+    except OSError:
+        return {}
+
+
+PAKETY = _pakety_karta()
+PAKET_V_HTML = re.compile(r'/(?:js|css)/b/([a-z0-9-]+)\.[0-9a-f]{10}\.(?:js|css)"')
+
+
+def est(txt, teg):
+    """Тег уже на странице — сам или внутри подключённого пакета."""
+    if teg in txt:
+        return True
+    m = re.search(r'(?:src|href)="/([^"]+)"', teg)
+    if not m:
+        return False
+    for imya in PAKET_V_HTML.findall(txt):
+        if m.group(1) in PAKETY.get(imya, ()):
+            return True
+    return False
+
+
 def vstavit_shapku(txt, shapka):
     if "<!--shapka-->" in txt:
         txt = re.sub(r"<!--shapka-->.*?<!--/shapka-->", lambda m: shapka, txt, count=1, flags=re.S)
@@ -207,15 +234,15 @@ def vstavit_shapku(txt, shapka):
             b = re.search(r"<body[^>]*>\n?", txt)
             txt = txt[:b.end()] + shapka + "\n" + txt[b.end():]
     # <head>: стили и скрипты шапки
-    if SHAPKA_LINK not in txt:
+    if not est(txt, SHAPKA_LINK):
         txt = txt.replace("</head>", SHAPKA_LINK + "\n</head>", 1)
-    if SHAPKA_JS not in txt:
+    if not est(txt, SHAPKA_JS):
         txt = txt.replace("</head>", SHAPKA_JS + "\n</head>", 1)
-    if OBNOV_JS not in txt:
+    if not est(txt, OBNOV_JS):
         txt = txt.replace("</head>", OBNOV_JS + "\n</head>", 1)
-    if METRIKA_JS not in txt:
+    if not est(txt, METRIKA_JS):
         txt = txt.replace("</head>", METRIKA_JS + "\n</head>", 1)
-    if KOPIYA_JS not in txt:
+    if not est(txt, KOPIYA_JS):
         txt = txt.replace("</head>", KOPIYA_JS + "\n</head>", 1)
     if IKONKA_120 not in txt:
         txt = txt.replace("</head>", IKONKA_120 + "\n</head>", 1)
@@ -227,9 +254,9 @@ def vstavit_shapku(txt, shapka):
         txt = txt.replace("</head>", MANIFEST_LINK + "\n</head>", 1)
     if APPLE_IMYA not in txt:
         txt = txt.replace("</head>", APPLE_IMYA + "\n</head>", 1)
-    if PWA_JS not in txt:
+    if not est(txt, PWA_JS):
         txt = txt.replace("</head>", PWA_JS + "\n</head>", 1)
-    if GLUBINA_LINK not in txt:
+    if not est(txt, GLUBINA_LINK):
         txt = txt.replace("</head>", GLUBINA_LINK + "\n</head>", 1)
     # цель ссылки «Перейти к содержанию»
     if 'id="main"' not in txt:
@@ -318,9 +345,9 @@ def sobrat_stranicu(txt, r, podval, shapka=None):
     # 1) шрифты со своего сервера
     if GOOGLE_FONTS.search(txt):
         txt = GOOGLE_FONTS.sub("", txt)
-    if FONTS_LINK not in txt:
+    if not est(txt, FONTS_LINK):
         txt = txt.replace("</head>", FONTS_LINK + "\n</head>", 1)
-    if PODVAL_LINK not in txt:
+    if not est(txt, PODVAL_LINK):
         txt = txt.replace("</head>", PODVAL_LINK + "\n</head>", 1)
     # 2) подвал
     if "<!--podval-->" in txt:

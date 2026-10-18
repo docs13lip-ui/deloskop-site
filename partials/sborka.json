@@ -1,0 +1,69 @@
+{
+  "_": "vizual-v3.0a: пакеты JS — tests/sobrat_js.py склеивает исходники в js/b/<имя>.<отпечаток>.js в этом порядке (порядок = прежний порядок тегов defer). Правьте исходники и этот список, потом: python3 tests/sobrat_js.py. «otchet» на главной не подключается тегом — его грузит страница при первой проверке, при намерении проверить (фокус в поле, наведение на кнопку) или после загрузки страницы, когда браузер свободен (пример «Условий сделки»). Пакеты стилей (*.css) — так же, в css/b/. «yadro» — общее для всех страниц (шапка, Метрика, подпись при копировании, PWA, «Что нового»); sobrat_shapku не вставляет отдельные теги того, что уже есть в пакете страницы.",
+  "pakety": {
+    "ds": [
+      "css/fonts.css",
+      "css/podval.css",
+      "css/shapka.css"
+    ],
+    "glavnaya-stil": [
+      "css/otchet.css",
+      "css/vizual2.css",
+      "css/glubina.css"
+    ],
+    "yadro": [
+      "js/shapka.js",
+      "js/metrika.js",
+      "js/kopiya.js",
+      "js/pwa.js",
+      "obnovleniya.js"
+    ],
+    "glavnaya": [
+      "js/vhody.js",
+      "js/zhivoj-indeks.js",
+      "js/vizual2.js",
+      "js/istochniki.js",
+      "js/imya.js",
+      "js/kanaly.js",
+      "js/portfel.js"
+    ],
+    "glavnaya-sinhr": [
+      "js/limit.js",
+      "js/inn.js"
+    ],
+    "otchet": [
+      "js/sushchestvennoe.js",
+      "js/kommentarii.js",
+      "js/otkuda.js",
+      "js/reestry-sami.js",
+      "js/rekvizity-proverki.js",
+      "js/status-kod.js",
+      "js/usloviya.js",
+      "js/shchit.js",
+      "js/dinamika.js",
+      "js/golos.js",
+      "js/nagruzka.js",
+      "js/nagruzka-proverka.js",
+      "js/rentabelnost.js",
+      "js/bez-nds.js",
+      "js/nds-porog.js",
+      "js/terminy.js",
+      "js/pasport-cta.js",
+      "js/pasport-oplata.js",
+      "indeks/indeks.js",
+      "js/indeks-otvet.js",
+      "js/otchet.js",
+      "js/nedavnie.js"
+    ]
+  },
+  "stranicy": {
+    "index.html": [
+      "ds",
+      "glavnaya-stil",
+      "yadro",
+      "glavnaya",
+      "glavnaya-sinhr",
+      "otchet"
+    ]
+  }
+}

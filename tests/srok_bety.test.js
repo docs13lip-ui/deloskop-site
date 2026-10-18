@@ -182,7 +182,8 @@ test('бета без даты: в собранных страницах нет 
   const t = JSON.parse(fs.readFileSync(path.join(KOREN, 'tarify', 'tarify.json'), 'utf8'));
   if (!(t.beta === true && t.beta_do === null)) return;
   const ISTOCHNIKI = new Set([path.join('partials', 'beta-a.html'), path.join('js', 'shapka.js')]); // текст A и гашение ссылки
-  const plohie = obojti(KOREN, []).filter((f) => !ISTOCHNIKI.has(path.relative(KOREN, f)))
+  // vizual-v3.0a: js/b/* — склейка исходников (shapka.js в пакете «yadro»), сверяется tests/sborka_js.test.js
+  const plohie = obojti(KOREN, []).filter((f) => !ISTOCHNIKI.has(path.relative(KOREN, f)) && !path.relative(KOREN, f).startsWith(path.join('js', 'b') + path.sep))
     .filter((f) => fs.readFileSync(f, 'utf8').includes('data-beta-osn'))
     .map((f) => path.relative(KOREN, f));
   assert.deepStrictEqual(plohie, [], 'пересоберите: python3 tests/sobrat_shapku.py && python3 tests/kartochki.py perepechatat');

@@ -9,8 +9,9 @@ const KOREN = path.join(__dirname, '..');
 const U = require('../js/usloviya.js');
 const P = require('../indeks/predoplata.js');
 const S = fs.readFileSync(path.join(KOREN, 'indeks/index.html'), 'utf8');
-const NB = '\u00a0';
-const tekst = (h) => h.replace(/&nbsp;/g, NB).replace(/<[^>]+>/g, '');
+// tipograf-stranic-v1 (18.10): типограф расставляет неразрывные пробелы сам — сверяем слова и числа без учёта вида пробела
+const NB = ' ';
+const tekst = (h) => h.replace(/&nbsp;/g, NB).replace(/\u00a0/g, NB).replace(/&#8209;/g, '-').replace(/<[^>]+>/g, '');
 const sek = (() => {
   const a = S.indexOf('<h2 id="predoplata">'), b = S.indexOf('<h2>Как считается</h2>');
   assert.ok(a > 0 && b > a, 'раздел #predoplata стоит перед «Как считается»');
@@ -51,7 +52,7 @@ test('предел меньше 10 000 ₽ — числа нет, «совету
   {
     assert.strictEqual(v.raschet.base, 'revenue');
     assert.ok(v.malo);
-    assert.ok(v.kak.kak.includes('Вперёд — не больше двух недель выручки компании, а это меньше 10' + NB + '000' + NB + '₽. Советуем платить по факту поставки.'), v.kak.kak);
+    assert.ok(v.kak.kak.includes('Вперёд — не больше двух недель выручки компании, а это меньше 10\u00a0000\u00a0₽. Советуем платить по факту поставки.'), v.kak.kak);
     assert.ok(/^Предоплату не вносите/.test(v.prepay));
     assert.ok(!/0\u00a0₽|до 0/.test(v.headline), v.headline);
   }
@@ -97,7 +98,7 @@ test('FAQ: вопрос в разметке и на странице — одн�
   const ld = JSON.parse(S.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
   const q = ld.find((x) => x['@type'] === 'FAQPage').mainEntity.find((x) => x.name === v);
   assert.ok(q, 'вопрос в FAQPage');
-  assert.ok(S.includes('<details><summary>' + v + '</summary><p>' + q.acceptedAnswer.text + '</p></details>'));
+  assert.ok(tekst(S.replace(/<(\/?)(details|summary|p)>/g, '[$1$2]')).includes('[details][summary]' + v + '[/summary][p]' + q.acceptedAnswer.text + '[/p][/details]'));
   assert.ok(q.acceptedAnswer.text.includes('выручка ÷ ' + U.METODIKA.DELITEL));
 });
 

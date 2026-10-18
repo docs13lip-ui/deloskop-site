@@ -10,7 +10,7 @@ const D = JSON.parse(R("tarify/tarify.json"));
 const { platnyj, vidimoe } = require("./beta_vid.js"); // beta-v1: устройство оплаты — в «платном» виде
 const html = vidimoe(platnyj(R("skoraya-115-fz/index.html")));
 const blok = html.slice(html.indexOf('<section class="pkg'), html.indexOf("</section>\n\n<section class=\"more"));
-const tekst = (s) => s.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/[  ]/g, " ").replace(/\s+/g, " ").trim();
+const tekst = (s) => s.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&#8209;/g, "-").replace(/[  ]/g, " ").replace(/\s+/g, " ").trim();
 const NB = /[  ]/g;
 
 // Редакция Юриста 115-ФЗ (claude/Скорая_под_ключ_v2.md §2а). Меняется только через юриста.
@@ -33,7 +33,7 @@ test("14 пунктов подряд, группы 7 / 4 / 3, start = 1, 8, 12",
   const gr = blok.split('<section class="pkg__group"').slice(1).map((g) => (g.match(/class="pkg-item"/g) || []).length);
   assert.deepStrictEqual(gr, [7, 4, 3]);
   assert.deepStrictEqual([...blok.matchAll(/<ol class="pkg__list" start="(\d+)">/g)].map((m) => +m[1]), [1, 8, 12]);
-  const t = [...blok.matchAll(/<b class="pkg-item__t">([^<]+)<\/b>/g)].map((m) => m[1].replace(/&nbsp;/g, " ").replace(NB, " "));
+  const t = [...blok.matchAll(/<b class="pkg-item__t">([^<]+)<\/b>/g)].map((m) => m[1].replace(/&nbsp;/g, " ").replace(/&#8209;/g, "-").replace(NB, " "));
   assert.deepStrictEqual(t, PUNKTY);
 });
 
@@ -42,7 +42,7 @@ test("оговорка юриста — полным текстом в блок�
   assert.ok(leg); assert.strictEqual(tekst(leg[1]), OGOVORKA);
   assert.ok(tekst(blok).includes(FIT));
   const card = blok.match(/<aside class="pkg__card"[\s\S]*?<\/aside>/)[0];
-  assert.ok(card.includes('href="#pkg-legal"') && card.includes("не гарантия исхода"));
+  assert.ok(card.includes('href="#pkg-legal"') && tekst(card).includes("не гарантия исхода"));
 });
 
 test("цена — только из tarify.json, в узлах data-cena; других сумм с ₽ в блоке нет", () => {

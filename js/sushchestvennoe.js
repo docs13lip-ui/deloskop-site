@@ -370,7 +370,7 @@
       if (b.status === 'found' && b.dubl_statusa && (r.company || {}).status === 'BANKRUPT') {
         // istochniki-v1: банкротство из ЕГРЮЛ — строка «Статус» уже говорит об этом; второй раз не пишем (в «Все данные» — есть)
       } else if (b.status === 'found') {
-        add({ k: 'damia_' + k, nazv: b.nazvanie, znach: b.itog || b.znachenie || 'Сведения найдены',
+        add({ k: 'damia_' + k, nazv: b.nazvanie, znach: bezDaty(b.itog, b.data_svedeniy) || b.znachenie || 'Сведения найдены',
           ton: b.uroven === 'bad' || b.uroven === 'high' ? 'bad' : 'warn', ist: b.istochnik || '', data: dmy(b.data_svedeniy) || dataPr });
         var f = vse.pop(); // найденное — среди первых
         var i = 0; while (i < vse.length && VES[vse[i].ton] <= VES[f.ton]) i++;
@@ -429,6 +429,21 @@
     return { razdely: out, daty: D.data_dates ? String(D.data_dates) : '' };
   }
 
+  // otchet-detali-v1: подпись ссылки на первоисточник называет его (js/istochniki.js → samiTekst); нет модуля — как было
+  function samiT(url) {
+    var I = typeof self !== 'undefined' && self.DlkIstochniki;
+    try { return I && I.samiTekst ? I.samiTekst(url) : 'проверьте сами'; } catch (e) { return 'проверьте сами'; }
+  }
+  // otchet-detali-v1: дата сведений уже стоит в подписи строки («Картотека … · на 12.10.2026») — хвост «Сведения на 12.10.2026, 11:40.»
+  // в тексте факта второй раз не повторяем (только если дата та же; в «Все данные из реестров» текст — полностью)
+  function bezDaty(t, iso) {
+    if (!t) return t;
+    var d = dmy(iso);
+    if (!d) return t;
+    var x = String(t).replace(new RegExp('\\s*Сведения на\\s+' + d.replace(/\./g, '\\.') + '(?:,\\s*\\d{1,2}:\\d{2})?\\.?\\s*$'), '');
+    return x || t;
+  }
+
   // ---- разметка ----
   function rowHtml(x) {
     var meta = [x.ist, x.data ? 'на' + NB + x.data : ''].filter(Boolean).join(' · ');
@@ -445,7 +460,7 @@
       g.razdely.map(function (s) {
         return '<section class="sut__s"><h4>' + esc(s.zag) + '</h4><dl>' + s.stroki.map(function (row) {
           var dop = row[4] ? '<small>' + esc(row[4]) + '</small>' : '';
-          var sam = row[3] ? ' <a href="' + esc(row[3]) + '" target="_blank" rel="noopener">проверьте сами</a>' : '';
+          var sam = row[3] ? ' <a href="' + esc(row[3]) + '" target="_blank" rel="noopener">' + esc(samiT(row[3])) + '</a>' : '';
           return '<div><dt>' + esc(row[0]) + dop + '</dt><dd' + (row[2] && row[2] !== 'neutral' ? ' class="' + row[2] + '"' : '') + '>' + esc(row[1]) + sam + '</dd></div>';
         }).join('') + '</dl>' + (s.ist ? '<p>Источник: ' + esc(s.ist) + '</p>' : '') + '</section>';
       }).join('') +

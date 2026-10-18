@@ -63,6 +63,12 @@
     return vse.filter(function (x) { return x.okvedKod; }).concat(vse.filter(function (x) { return !x.okvedKod; }));
   }
 
+  // otchet-detali-v1: подпись ссылки на первоисточник называет его (js/istochniki.js → samiTekst); нет модуля — как было
+  function samiT(url) {
+    var I = typeof self !== 'undefined' && self.DlkIstochniki;
+    try { return I && I.samiTekst ? I.samiTekst(url) : 'проверьте сами'; } catch (e) { return 'проверьте сами'; }
+  }
+
   function html(spisok, sprav) {
     if (!spisok || !spisok.length) return '';
     var d = dmy((sprav || {}).svereno);
@@ -70,7 +76,7 @@
       spisok.map(function (x) {
         return '<div data-reestr="' + esc(x.id) + '"' + (x.okvedKod ? ' data-okved' : '') + '><dt>' + esc(nb(x.nazv)) + '<small>' + esc(nb(x.kogda || '')) + '</small></dt>' +
           '<dd>' + esc(nb(x.chto)) + ' <a href="' + esc(x.ssylka) + '" target="_blank" rel="noopener"' +
-          (x.cel ? ' data-goal="' + esc(x.cel) + '"' : '') + '>проверьте сами</a>' +
+          (x.cel ? ' data-goal="' + esc(x.cel) + '"' : '') + '>' + esc(samiT(x.ssylka)) + '</a>' +
           '<small class="rs__m">' + esc(nb([x.okvedKod ? 'по основному ОКВЭД' + NB + x.okvedKod : '', x.kto, x.obnovlenie ? 'обновление: ' + x.obnovlenie : '', x.norma,
             x.okvedKod && dmy(x.svereno) ? 'сверено ' + dmy(x.svereno) : ''].filter(Boolean).join(' · '))) + '</small></dd></div>';
       }).join('') + '</dl>' +

@@ -151,10 +151,16 @@
     return { spisok: spisok, otvetili: otvetili, oprosheno: oprosheno, nep: nep, dataPr: dataPr };
   }
 
+  // otchet-detali-v1: подпись ссылки на первоисточник называет его (js/istochniki.js → samiTekst); нет модуля — как было
+  function samiT(url) {
+    var I = typeof self !== 'undefined' && self.DlkIstochniki;
+    try { return I && I.samiTekst ? I.samiTekst(url) : 'проверьте сами'; } catch (e) { return 'проверьте сами'; }
+  }
+
   function stroka(x) {
     var st = x.status === 'ok' ? 'ответил' : x.status === 'net' ? 'не ответил' : x.status === 'nep' ? 'не проверяли' : 'рассчитано';
     var hvost = x.status === 'net' || x.status === 'nep'
-      ? (x.prichina ? nw(esc(x.prichina)) : '') + (x.ssylka ? (x.prichina ? ' · ' : '') + '<a href="' + esc(x.ssylka) + '" target="_blank" rel="noopener">проверьте сами</a>' : '') || (x.status === 'nep' ? 'не проверяли' : 'не ответил')
+      ? (x.prichina ? nw(esc(x.prichina)) : '') + (x.ssylka ? (x.prichina ? ' · ' : '') + '<a href="' + esc(x.ssylka) + '" target="_blank" rel="noopener">' + esc(samiT(x.ssylka)) + '</a>' : '') || (x.status === 'nep' ? 'не проверяли' : 'не ответил')
       : x.status === 'raschet' ? '<a href="' + esc(x.ssylka) + '">методика</a>' : esc(x.data || '');
     return '<li class="otk__r otk__r--' + x.status + '" data-ist="' + esc(x.k) + '">' +
       '<span class="otk__z" aria-label="' + st + '">' + x.znak + '</span>' +

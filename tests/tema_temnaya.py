@@ -272,15 +272,53 @@ def _deklaracii(telo):
     return out
 
 
-def pravila(css):
-    """Тёмный слой для куска CSS — строка CSS (может быть пустой)."""
+def _semya(sv):
+    """Семья свойства: border-right и border — одна (сброс «border-right:0» гасит рамку из «border»)."""
+    for k in ("border", "outline", "background", "column-rule", "text-decoration"):
+        if sv.startswith(k):
+            return k
+    return sv
+
+
+def _perevedennye(css, nabor):
+    """(селектор, семья) всех объявлений, которым тёмный слой даёт свой цвет, — во всём куске, с @media."""
+    for zag, telo in _bloki(css):
+        zl = zag.lower()
+        if zl.startswith(("@media", "@supports", "@container", "@layer")):
+            if not ("print" in zl and "screen" not in zl):
+                _perevedennye(telo, nabor)
+            continue
+        if zl.startswith("@"):
+            continue
+        dekl = _deklaracii(telo)
+        fon = " ".join(zn for sv, zn in dekl if sv.startswith("background")).lower()
+        na_akcente = bool(re.search(r"#0b63e5|#084bb0|#0952c2|var\(--[\w-]*acc", fon))
+        for sv, zn in dekl:
+            if SVOJSTVA.match(sv) and sv not in TOKENY_RUKAMI and not sv.startswith("--"):
+                if perevesti_znachenie(sv, re.sub(r"\s*!important$", "", zn, flags=re.I), na_akcente) is not None:
+                    for s in _razdelit_selektory(zag):
+                        nabor.add((s, _semya(sv)))
+    return nabor
+
+
+def pravila(css, _nabor=None):
+    """Тёмный слой для куска CSS — строка CSS (может быть пустой).
+
+    detali-отчёт (19.10): правило тёмного слоя сильнее обычного на атрибут [data-theme], поэтому сброс того же
+    свойства ниже по каскаду (чаще всего — в @media для телефона: «.ex-ix{border-right:0}») в тёмной теме
+    проигрывал — на 390 у кольца Индекса висела рамка-сирота. Теперь слой повторяет под [data-theme=dark] и такие
+    объявления, если для того же селектора и той же семьи свойства слой уже дал свой цвет: порядок каскада
+    в тёмной теме тот же, что в светлой."""
+    if _nabor is None:
+        css = _bez_kommentariev(css)
+        _nabor = _perevedennye(css, set())
     out = []
-    for zag, telo in _bloki(_bez_kommentariev(css)):
+    for zag, telo in _bloki(css):
         zl = zag.lower()
         if zl.startswith(("@media", "@supports", "@container", "@layer")):
             if "print" in zl and "screen" not in zl:
                 continue
-            vnutri = pravila(telo)
+            vnutri = pravila(telo, _nabor)
             if vnutri:
                 out.append(zag + "{" + vnutri + "}")
             continue
@@ -289,7 +327,8 @@ def pravila(css):
         dekl = _deklaracii(telo)
         fon = " ".join(zn for sv, zn in dekl if sv.startswith("background")).lower()
         na_akcente = bool(re.search(r"#0b63e5|#084bb0|#0952c2|var\(--[\w-]*acc", fon))
-        nov = []
+        nov, povtor = [], {}
+        sels = _razdelit_selektory(zag)
         for sv, zn in dekl:
             if not SVOJSTVA.match(sv) or sv in TOKENY_RUKAMI:
                 continue
@@ -299,13 +338,18 @@ def pravila(css):
             p = perevesti_znachenie(sv, zn, na_akcente)
             if p is not None:
                 nov.append(sv + ":" + p + vazhno)
-        if na_akcente and not any(sv == "color" for sv, _ in dekl):
-            pass
-        if not nov:
-            continue
-        sel = [x for x in (_selektor(s) for s in _razdelit_selektory(zag)) if x]
-        if sel:
-            out.append(",".join(sel) + "{" + ";".join(nov) + "}")
+            elif not sv.startswith("--"):
+                for s in sels:  # сброс без цвета — повторить там, где слой перекрасил ту же семью
+                    if (s, _semya(sv)) in _nabor:
+                        povtor.setdefault(s, []).append(sv + ":" + zn + vazhno)
+        if nov:
+            sel = [x for x in (_selektor(s) for s in sels) if x]
+            if sel:
+                out.append(",".join(sel) + "{" + ";".join(nov) + "}")
+        for s, d in povtor.items():
+            x = _selektor(s)
+            if x:
+                out.append(x + "{" + ";".join(d) + "}")
     return "".join(out)
 
 

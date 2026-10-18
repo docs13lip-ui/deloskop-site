@@ -153,6 +153,11 @@
 
   var OGOVORKA = 'Оценка по открытым данным на дату проверки, а не решение банка или налоговой.';
 
+  // otchet-detali-v1: строка под отчётом в режиме /?inn= (названия — как в витрине partials/vitrina.json)
+  var DRUGIE = [['Проверить счёт', '/proverit-schet/'], ['Кому вы' + NB + 'платите', '/kontragenty-iz-vypiski/'],
+    ['Наличные глазами банка', '/nalichnye/'], ['Скорая 115\u2011ФЗ', '/skoraya-115-fz/'], ['Разборы дел', '/praktika/'],
+    ['Все инструменты', '/#vitrina']];
+
   // ---------- браузер: раскладка готового отчёта по листу ----------
   // текст пилюли (после значка): t — новый, null — исходный (запомнен в data-t0)
   function tekstPilyuli(pill, t) {
@@ -181,6 +186,16 @@
     if (who) whoBox.appendChild(who);
     if (rkv) rq.appendChild(rkv);
     hd.appendChild(whoBox); hd.appendChild(rq);
+    // otchet-detali-v1: номер проверки нужен поддержке, а не читателю — из шапки в строку под действиями (и на печати)
+    var nom = null, nomEl = rkv && rkv.querySelector('.rkv__nom');
+    if (nomEl) {
+      var nomDiv = nomEl.closest ? nomEl.closest('div') : nomEl.parentNode.parentNode;
+      var nomDt = nomDiv && nomDiv.querySelector('dt');
+      nom = el(doc, 'p', 'ot-nom', (nomDt ? nomDt.innerHTML : 'Проверка №') + NB);
+      nom.appendChild(nomEl);
+      if (nomDiv && nomDiv.parentNode === rkv) rkv.removeChild(nomDiv);
+      if (rkv.children.length % 2) rkv.classList.add('rkv--nechet');
+    }
 
     var vd = el(doc, 'section', 'ot-vd ot-vd--' + tonPolosy(r));
     vd.setAttribute('aria-label', 'Вывод');
@@ -249,7 +264,17 @@
     body.appendChild(main); body.appendChild(side);
 
     var foot = el(doc, 'div', 'ot-foot'); foot.appendChild(act);
+    if (nom) foot.appendChild(nom);
     var disc = el(doc, 'p', 'ot-disc', esc(OGOVORKA));
+    // otchet-detali-v1: на главной в режиме отчёта витрина и разделы скрыты (css/otchet.css) — под отчётом одна строка
+    // «Другие инструменты»; «Все инструменты» ведёт на чистую главную к витрине
+    var dr = null;
+    if (!svoj && doc.querySelector && doc.querySelector('main#top > .hero')) {
+      dr = el(doc, 'nav', 'ot-dr', '<p class="ot-dr__h">Другие инструменты</p><ul>' + DRUGIE.map(function (x) {
+        return '<li><a href="' + x[1] + '" data-goal="otchet_drugie">' + x[0] + '</a></li>';
+      }).join('') + '</ul>');
+      dr.setAttribute('aria-label', 'Другие инструменты');
+    }
 
     // всё, что осталось (неизвестные блоки модулей), — в основное, ничего не теряем
     Array.prototype.slice.call(report.children).forEach(function (x) { if (x !== head) main.appendChild(x); });
@@ -257,7 +282,7 @@
     // пустые обёртки (строки светофора, из которых глубина ушла ниже) — убираем, чтобы не было пустых полос
     Array.prototype.slice.call(main.children).forEach(function (x) { if (!x.textContent.trim()) main.removeChild(x); });
     report.innerHTML = '';
-    [hd, vd, body, foot, disc].forEach(function (x) { report.appendChild(x); });
+    [hd, vd, body, foot, disc, dr].forEach(function (x) { if (x) report.appendChild(x); });
     report.classList.add('ot');
     report.setAttribute('aria-label', svoj ? 'Ваша компания глазами банка и налоговой' : 'Отчёт о проверке контрагента');
     Array.prototype.forEach.call(vd.querySelectorAll('[data-cel]'), function (a) {

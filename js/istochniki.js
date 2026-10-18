@@ -101,10 +101,43 @@
     b.chto_sdelat = (Array.isArray(a.chto_sdelat) ? a.chto_sdelat : []).filter(function (x) { return x && x.soglasovano === true && x.tekst; });
   }
 
+  // otchet-detali-v1 (19.10): «не завершены 2 на 0 ₽» читалось как ошибка — у таких дел сумма иска в картотеке не указана
+  // (неимущественные требования или сумма не внесена). Говорим это словами; ненулевую сумму не трогаем.
+  function sudyNol(b) {
+    if (!b || typeof b !== 'object' || typeof b.itog !== 'string') return;
+    var t = b.itog.replace(/(\d+)\s+на\s+0\s*₽/g, '$1; сумма исков в' + NB + 'картотеке не' + NB + 'указана');
+    if (t !== b.itog) { if (!b.itog_prezhnij) b.itog_prezhnij = b.itog; b.itog = t; }
+  }
+
+  // otchet-detali-v1: подпись ссылки на первоисточник по адресу — «проверить в картотеке арбитражных дел» вместо семи
+  // одинаковых «проверьте сами» (доверие: видно, куда ведём; WCAG 2.4.4 — у ссылок с разной целью разный текст).
+  // Неизвестный адрес — «проверить на <домен>». Порядок важен: сначала точные пути, потом домены.
+  var SAMI = [
+    [/^service\.nalog\.ru\/bi/, 'в' + NB + 'сервисе ФНС о' + NB + 'приостановлениях'],
+    [/^egrul\.nalog\.ru/, 'в' + NB + 'ЕГРЮЛ'], [/^pb\.nalog\.ru/, 'в' + NB + '«Прозрачном бизнесе» ФНС'],
+    [/^bo\.nalog\.ru/, 'в' + NB + 'ГИР' + NB + 'БО'], [/^rmsp\.nalog\.ru/, 'в' + NB + 'реестре МСП'],
+    [/^m4d\.nalog\.gov\.ru/, 'в' + NB + 'реестре доверенностей ФНС'],
+    [/^(?:www\.)?cbr\.ru\/fmp_check/, 'в' + NB + 'справочнике Банка России'],
+    [/^(?:www\.)?cbr\.ru\/finorg/, 'в' + NB + 'карточке Банка России'], [/^(?:www\.)?cbr\.ru/, 'на' + NB + 'сайте Банка России'],
+    [/^bankrot\.fedresurs\.ru/, 'в' + NB + 'ЕФРСБ'], [/^(?:www\.)?fedresurs\.ru/, 'на' + NB + 'Федресурсе'],
+    [/^kad\.arbitr\.ru/, 'в' + NB + 'картотеке арбитражных дел'], [/^(?:www\.)?fssp\.gov\.ru/, 'в' + NB + 'банке данных ФССП'],
+    [/^zakupki\.gov\.ru/, 'в' + NB + 'ЕИС закупок'], [/^(?:www\.)?reestr-zalogov\.ru/, 'в' + NB + 'реестре залогов'],
+    [/^(?:www\.)?reestr-dover\.ru/, 'в' + NB + 'реестре нотариальных доверенностей'],
+    [/^(?:www\.)?fips\.ru/, 'в' + NB + 'реестрах Роспатента'], [/^pub\.fsa\.gov\.ru/, 'в' + NB + 'реестре Росаккредитации'],
+    [/^(?:www\.)?nalog\.(?:gov\.)?ru/, 'на' + NB + 'сайте ФНС']
+  ];
+  function samiTekst(url) {
+    var m = /^https?:\/\/([^?#]+)/i.exec(String(url || ''));
+    if (!m) return 'проверьте сами';
+    var put = m[1].toLowerCase();
+    for (var i = 0; i < SAMI.length; i++) if (SAMI[i][0].test(put)) return 'проверить ' + SAMI[i][1];
+    return 'проверить на' + NB + put.split('/')[0].replace(/^www\./, '');
+  }
+
   function dopolnit(r) {
     if (!r || typeof r !== 'object' || !r.company) return r;
     var dm = r.damia && typeof r.damia === 'object' ? r.damia : null;
-    if (dm) { privestiSlovar(dm); sudyItog(dm.sudy); }
+    if (dm) { privestiSlovar(dm); sudyItog(dm.sudy); sudyNol(dm.sudy); }
     var est = dm && dm.bankrotstvo && typeof dm.bankrotstvo === 'object' ? dm.bankrotstvo : null;
     // ЕГРЮЛ говорит «банкротство», а картотека API — «дел, где компания должник, не нашли»: верим ЕГРЮЛ (запись о процедуре
     // вносит налоговая по решению суда; картотека по роли «должник» могла не сопоставиться)
@@ -132,5 +165,5 @@
     return b.status === 'provereno' || b.status === 'found' || b.status === 'not_found';
   }
 
-  return { dopolnit: dopolnit, bankrotstvoIzEgryul: bankrotstvoIzEgryul, uchten: uchten, privestiSlovar: privestiSlovar, sudyItog: sudyItog, OGOVORKA_EFRSB: OGOVORKA_EFRSB };
+  return { dopolnit: dopolnit, bankrotstvoIzEgryul: bankrotstvoIzEgryul, uchten: uchten, privestiSlovar: privestiSlovar, sudyItog: sudyItog, sudyNol: sudyNol, samiTekst: samiTekst, OGOVORKA_EFRSB: OGOVORKA_EFRSB };
 });

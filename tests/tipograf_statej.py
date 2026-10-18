@@ -34,6 +34,7 @@ STRANICY = {
     "skoraya-115-fz/index.html": "main",
     "proverit-schet/index.html": "main",
     "osnovatel/index.html": "main",
+    "index.html": "main",  # tipograf-tarify-v1 (18.10.2026): главная — пишется руками; строку цен и JSON-LD правит sobrat_tarify
 }
 NB = "&nbsp;"
 KOROTKIE = r"(?:в|и|а|к|с|у|о|я|по|на|не|до|от|за|из|ни|но|же|ли|без|для|под|над|при|про|со|об)"

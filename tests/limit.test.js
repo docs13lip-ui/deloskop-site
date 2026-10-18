@@ -37,7 +37,7 @@ test('(1) при 429 текст `detail` из API нигде не выводит
       for (const g of ['return;', ':esc(']) if (kusok.includes(g)) kusok = kusok.slice(0, kusok.indexOf(g));
       assert.ok(!/detail|e\.message/.test(kusok), f + ': при 429 выводится текст API: ' + kusok.slice(0, 120));
     }
-    assert.ok(!/войдите в кабинет|Войти или выбрать тариф/i.test(s), f + ': осталось «войдите» у лимита');
+    assert.ok(!/войдите\s+в(?:\s|&nbsp;)+кабинет|Войти\s+или\s+выбрать\s+тариф/i.test(s), f + ': осталось «войдите» у лимита');  // tipograf-tarify-v1: и с &nbsp; типографа
   }
 });
 

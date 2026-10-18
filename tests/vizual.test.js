@@ -86,7 +86,7 @@ test('пример на главной: дуга до базы методики 
   assert.ok(gl.includes('<div class="ex-vd ex-vd--ok"'), 'пример — в зелёной зоне');
   assert.ok(gl.includes(u.nazvanie), 'плашка уровня осталась в примере');
   // в центр кольца примера — пустой текстовый узел, докрутка пишет в пустышку {}; знак зоны рисует CSS
-  assert.match(js, /kolco\(n, zona\(n\), d\.createTextNode\(''\), \{\}\)/);
+  assert.match(js, /kolco\(n, zona\(n\), d\.createTextNode\(''\), \{\}, g\)/);
   assert.match(css, /\.ex-ix \.zhi__chislo::before\{content:"";/);
   assert.ok(gl.includes('<script src="/js/zhivoj-indeks.js" defer></script>'));
   assert.strictEqual((gl.match(/ data-sobir>/g) || []).length, 3);
@@ -123,4 +123,20 @@ test('стекло шапки и примера — с запасным путё
   assert.match(css, /@supports not \(\(backdrop-filter:blur\(1px\)\) or \(-webkit-backdrop-filter:blur\(1px\)\)\)\{\.report\.ex\{background:#fff\}\}/);
   assert.match(css, /@media \(hover:hover\)\{\n \.card:hover/);
   assert.match(css, /@media print\{body::before,body::after\{display:none\}/);
+});
+
+test('vizual-v3.1c: кольцо примера — в разметке главной (место с первого кадра, CLS), той же структуры, что строит JS', () => {
+  const m = /<div class="ex-ix" data-zhi="(\d+)" data-zhi-aria="([^"]+)">\s*(<div class="zhi"[^\n]*)\n/.exec(gl);
+  assert.ok(m, 'кольца нет первым ребёнком .ex-ix');
+  const n = +m[1], z = /function zona\(n\) \{ return n >= (\d+) \? 'ok' : n >= (\d+) \? 'warn' : n >= (\d+) \? 'high' : 'bad'; \}/.exec(js);
+  const zona = n >= +z[1] ? 'ok' : n >= +z[2] ? 'warn' : n >= +z[3] ? 'high' : 'bad';
+  // то же, что kolco() + primery(): сцена → кольцо (svet fon duga strelka chislo) + подпись; aria — из data-zhi-aria
+  const ozhid = '<div class="zhi" data-zona="' + zona + '" role="img" aria-label="' + m[2] + '"><div class="zhi__scena"><div class="zhi__kolco">' +
+    'svet fon duga strelka chislo'.split(' ').map((c) => '<div class="zhi__' + c + '"></div>').join('') + '</div></div><div class="zhi__pod"></div></div>';
+  assert.strictEqual(m[3], ozhid);
+  assert.match(js, /'svet fon duga strelka'\.split/);
+  assert.doesNotMatch(m[3], /\d/, 'в кольце примера нет числа');
+  // без JS — сразу до базы; со скриптами — пусто до показа (докрутка)
+  assert.ok(css.includes('html:not(.est-js) .ex-ix .zhi{--p:' + n + '}'));
+  assert.ok(gl.includes("d.classList.add('zhdu-js','est-js')"));
 });

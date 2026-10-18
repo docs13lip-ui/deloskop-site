@@ -12,11 +12,16 @@
   function el(c, v) { var e = d.createElement('div'); e.className = c; if (v) e.appendChild(v); return e; }
   function vse(s, f) { [].forEach.call(d.querySelectorAll(s), f); }
 
-  // кольцо вокруг centr; uzel — текстовый узел числа для докрутки (в примере — пустышка {})
-  function kolco(n, zn, centr, uzel) {
-    var k = el('zhi__kolco'), z = el('zhi', el('zhi__scena', k));
-    'svet fon duga strelka'.split(' ').forEach(function (c) { k.appendChild(el('zhi__' + c)); });
-    k.appendChild(el('zhi__chislo', centr));
+  // кольцо вокруг centr; uzel — текстовый узел числа для докрутки (в примере — пустышка {});
+  // gotovo — кольцо уже в разметке (пример на главной, vizual-v3.1c: место под него с первого кадра, CLS) — его только оживляем
+  function kolco(n, zn, centr, uzel, gotovo) {
+    var z = gotovo;
+    if (!z) {
+      var k = el('zhi__kolco');
+      z = el('zhi', el('zhi__scena', k));
+      'svet fon duga strelka'.split(' ').forEach(function (c) { k.appendChild(el('zhi__' + c)); });
+      k.appendChild(el('zhi__chislo', centr));
+    }
     z.setAttribute('data-zona', zn);
     kolca.push(z);
     if (tiho) { z.style.setProperty('--p', n); return z; }
@@ -43,14 +48,18 @@
   }
 
   // пример: <div class="ex-ix" data-zhi="72" data-zhi-aria="…"> — компания вымышленная, поэтому ЧИСЛА в центре нет
-  // (честность примера, tests/glavnaya_primer.test.js): дуга доходит до зоны, в центре — знак зоны; подпись — из разметки
+  // (честность примера, tests/glavnaya_primer.test.js): дуга доходит до зоны, в центре — знак зоны; подпись — из разметки.
+  // Кольцо примера лежит в index.html готовым (пустая дуга) — JS только заполняет; нет разметки — строим, как раньше
   function primery() {
     vse('.ex-ix[data-zhi]', function (b) {
-      var n = +b.getAttribute('data-zhi'), z = kolco(n, zona(n), d.createTextNode(''), {});
+      var n = +b.getAttribute('data-zhi'), g = b.firstElementChild;
+      g = g && g.classList.contains('zhi') ? g : null;
+      var z = kolco(n, zona(n), d.createTextNode(''), {}, g);
+      b.removeAttribute('data-zhi');
+      if (g) return;
       z.setAttribute('role', 'img');
       z.setAttribute('aria-label', b.getAttribute('data-zhi-aria'));
       z.appendChild(el('zhi__pod'));
-      b.removeAttribute('data-zhi');
       b.insertBefore(z, b.firstChild);
     });
   }

@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script>/* Мягкая 404 (п. 32): сервер отдаёт главную на любой адрес — уводим на настоящую страницу «нет такой страницы», чтобы поисковики не видели дубли главной. Адрес отчёта /otchet/<ИНН>/ (vizual-v3.1a) — остаётся на главной с noindex. */(function(){var p=location.pathname,a={'/cabinet':'/cabinet.html','/report':'/report.html','/admin':'/admin.html'},k=p.replace(/\/+$/,'');if(p==='/'||p==='/index.html')return;var m=document.createElement('meta');m.name='robots';m.content='noindex';document.head.appendChild(m);if(/^\/otchet\/\d{10}(?:\d{2})?\/?$/.test(p))return;var ci=/^\/company\/(\d{10})(?:[-\/]|$)/.exec(p);if(ci){location.replace('/?inn='+ci[1]);return;}location.replace(a[k]?a[k]+location.search+location.hash:'/404.html?s='+encodeURIComponent(p));})();</script>
+<script>/* vizual-v3.1b: страница открыта адресом отчёта (/?inn=…, /otchet/<ИНН>/) — сразу компактная шапка отчёта, как после проверки: пример не прыгает вверх, когда приходит ответ (CLS). Ошибка или «Назад» — класс снимается. */(function(d){if(/[?&]inn=\d{10}(?:\d{2})?(?:&|$)/.test(location.search)||/^\/otchet\/\d{10}(?:\d{2})?\/?$/.test(location.pathname))d.classList.add('rezhim-otcheta')})(document.documentElement)</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Проверка контрагента по ИНН бесплатно: глазами банка и ФНС — Делоскоп</title>
 <meta name="description" content="Проверьте поставщика по ИНН перед оплатой: статус в ЕГРЮЛ, долги, отчётность — с источником и датой. Банк спросил по 115-ФЗ — план ответа по дням.">
@@ -670,6 +671,8 @@ footer a{color:var(--ink2)}
       try{navigator.clipboard.writeText(t);e.target.textContent='Скопировано'}catch(_){}};
     // лист «Отчёт о проверке» на всю ширину: шапка → вывод → факты, динамика, все данные; справа — как посчитали и откуда данные (js/otchet.js)
     if(window.Otchet){try{Otchet.razlozhit(report,r,{svoj:!!shR,shR:shR,usl:ub,api:CAPI})}catch(e){}}
+    // vizual-v3.1b: на телефоне — липкая строка «Что делать завтра утром» из вывода отчёта, по нажатию — окно (js/lipkaya.js)
+    if(window.DlkLipkaya){try{DlkLipkaya.mount(report)}catch(e){}}
     // «Что изменилось» с прошлой проверки из кабинета — на любом устройстве (вошедшим; js/dinamika.js)
     if(window.Dinamika&&Dinamika.dogruzit&&CAPI){try{Dinamika.dogruzit(report,r,{api:CAPI})}catch(e){}}
     // «Рентабельность активов против отрасли» — оценка по ГИР БО против нормы ФНС (приложение 4 к ММ-3-06/333@), после «Динамики»; js/rentabelnost.js
@@ -705,21 +708,26 @@ footer a{color:var(--ink2)}
   function adres(inn,o){if(o&&(o.svoj||o.izIstorii)||!/^\d{10}(\d{2})?$/.test(String(inn))||!history.pushState)return;
     var u=OTCHET_PUT?'/otchet/'+inn+'/':'/?inn='+inn;
     try{if(innIzAdresa()===String(inn))history.replaceState({dlkInn:String(inn)},'',u);else history.pushState({dlkInn:String(inn)},'',u);}catch(e){}}
-  function vernutPrimer(){if(!exUzly||report.classList.contains('ex'))return;
+  function bezOtcheta(){document.documentElement.classList.remove('rezhim-otcheta')}
+  function vernutPrimer(){bezOtcheta();if(!exUzly||report.classList.contains('ex'))return;
+    if(window.DlkLipkaya)try{DlkLipkaya.snyat()}catch(e){}
     perehod(function(){report.textContent='';exUzly.forEach(function(n){report.appendChild(n)});report.className=exAtr.c;
       if(exAtr.a)report.setAttribute('aria-label',exAtr.a);document.body.classList.remove('rezhim-otcheta');}).then(function(){
       note.className='note';note.textContent=def;if(window.Portfel)try{Portfel.obnovit()}catch(e){}});}
   window.addEventListener('popstate',function(){var inn=innIzAdresa();
     if(inn){input.value=inn;runCheck(inn,{izIstorii:true});}else vernutPrimer();});
   function runCheck(v,o){
-    if(!CAPI){note.className='note ok';note.textContent='Проверка работает на deloskop.ru.';return;}
+    if(!CAPI){bezOtcheta();note.className='note ok';note.textContent='Проверка работает на deloskop.ru.';return;}
     gruzitModuli();if(window.dlkLimit)dlkLimit.ubrat(note);
+    // vizual-v3.1b: компактная шапка отчёта — сразу по нажатию «Проверить», а не когда придёт ответ: сдвиг вёрстки — в ответ на действие человека (не CLS),
+    // а ответ API только меняет пример на отчёт на том же месте. Ошибка — шапка возвращается (bezOtcheta).
+    document.documentElement.classList.add('rezhim-otcheta');
     note.className='note';note.textContent='Проверяем по реестрам…';report.classList.add('loading');report.setAttribute('aria-busy','true');if(window.dlkGoal)dlkGoal('check_started');
     fetch(CAPI+'/api/check?q='+encodeURIComponent(v),{credentials:'include'})
       .then(function(res){return res.json().then(function(j){return {ok:res.ok,s:res.status,j:j}},function(){return {ok:false,s:res.status,j:{}}})})
       .then(function(x){kogdaModuli(function(){report.classList.remove('loading');
         // лимит бесплатных проверок — понятный экран вместо текста API (js/limit.js); `detail` не выводим
-        if(x.s!==200||!x.ok)report.removeAttribute('aria-busy');
+        if(x.s!==200||!x.ok){report.removeAttribute('aria-busy');bezOtcheta();}
         if(x.s===429){note.className='note';note.textContent='';if(window.dlkLimit)dlkLimit.pokazat(note,{stranica:'glavnaya',inn:v});else note.textContent='На сегодня бесплатные проверки закончились. Завтра — снова 10.';return;}
         if(!x.ok){note.className='note err';note.textContent=(x.j&&x.j.detail)||'Не получилось проверить. Попробуйте ещё раз.';return;}
         if(window.dlkLimit)dlkLimit.proveren((x.j.company&&x.j.company.inn)||v);
@@ -729,7 +737,7 @@ footer a{color:var(--ink2)}
         perehod(function(){render(x.j,o)}).then(function(){report.removeAttribute('aria-busy');note.className='note ok';note.textContent='Готово. Отчёт — рядом.';
         adres((x.j.company&&x.j.company.inn)||v,o);
         if(window.Otchet&&report.classList.contains('ot'))Otchet.prokrutit(report);else if(window.innerWidth<980)report.scrollIntoView({behavior:'smooth',block:'start'});});});})
-      .catch(function(){report.classList.remove('loading');report.removeAttribute('aria-busy');note.className='note err';
+      .catch(function(){bezOtcheta();report.classList.remove('loading');report.removeAttribute('aria-busy');note.className='note err';
         note.textContent='Сервис не ответил. Проверьте интернет и попробуйте ещё раз.';});
   }
 
@@ -809,7 +817,7 @@ footer a{color:var(--ink2)}
   // ИНН из адреса (?inn=…) — например, «Проверить снова» из кабинета
   var qi=innIzAdresa()||new URLSearchParams(location.search).get('inn');
   if(qi&&/^\d{10}(\d{2})?$/.test(qi)){input.value=qi;
-    if(window.DlkInn&&!DlkInn.ok(qi)){note.className='note err';note.textContent=DlkInn.OPECHATKA;}else runCheck(qi);}
+    if(window.DlkInn&&!DlkInn.ok(qi)){bezOtcheta();note.className='note err';note.textContent=DlkInn.OPECHATKA;}else runCheck(qi);}
   // не ИНН (поиск по сайту из выдачи, SearchAction) — подставляем запрос в поле, проверку человек запускает сам
   else if(qi&&qi.trim()){input.value=qi.trim().slice(0,120);}
   // вчера упёрлись в лимит — ИНН сохранён на устройстве: «Вчера не успели проверить: … ›» (js/limit.js, только ИНН организаций)

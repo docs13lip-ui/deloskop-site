@@ -8,7 +8,9 @@ const K = path.join(__dirname, '..');
 const chitat = (f) => fs.readFileSync(path.join(K, f), 'utf8');
 const TITLE = 'Индекс Делоскопа 1–99: 35 признаков риска компании, открытая методика';
 const TEKST = 'Индекс Делоскопа считается по открытым данным и опубликованной методике, а выписку ФНС формирует налоговая по своим сведениям — в том числе по декларациям, которых в открытом доступе нет. Совпадение не обещаем: Индекс — наша оценка, баллы — оценка налоговой.';
-const plain = (h) => h.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
+const plain = (h) => h.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&#8209;/g, '-').replace(/\s+/g, ' ');
+// tipograf-stranic-v1 (18.10): типограф ставит &nbsp; и «115&#8209;ФЗ» в видимом тексте — сверяем слова без учёта пробелов
+const bez = (h) => h.replace(/&nbsp;/g, ' ').replace(/&#8209;/g, '-');
 
 test('/indeks/: title, og:title и headline — без номера версии', () => {
   const h = chitat('indeks/index.html');
@@ -24,13 +26,13 @@ test('/indeks/: блок «Чем Индекс отличается от бал�
   assert.match(h, /<h3 id="bally-fns">Чем Индекс отличается от&nbsp;баллов ФНС<\/h3>/);
   const blok = h.slice(h.indexOf('id="bally-fns"'), h.indexOf('</div>', h.indexOf('id="bally-fns"')));
   assert.ok(plain(blok).includes(TEKST));
-  assert.ok(h.includes('<details><summary>Индекс Делоскопа — это баллы ФНС?</summary><p>Нет. ' + TEKST + '</p></details>'));
+  assert.ok(bez(h).includes('<details><summary>Индекс Делоскопа — это баллы ФНС?</summary><p>Нет. ' + TEKST + '</p></details>'));
   const ld = JSON.parse(h.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
   const faq = ld.find((x) => x['@type'] === 'FAQPage');
   const q = faq.mainEntity.find((x) => x.name === 'Индекс Делоскопа — это баллы ФНС?');
   assert.ok(q && q.acceptedAnswer.text === 'Нет. ' + TEKST);
   // вопросы на странице и в разметке совпадают
-  const det = [...h.matchAll(/<details><summary>([^<]+)<\/summary>/g)].map((m) => m[1]);
+  const det = [...bez(h).matchAll(/<details><summary>([^<]+)<\/summary>/g)].map((m) => m[1]);
   assert.deepStrictEqual(det, faq.mainEntity.map((x) => x.name));
   // без «рейтинга благонадёжности» и обещаний совпадения
   assert.ok(!/благонад[её]жност/i.test(h));

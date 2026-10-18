@@ -37,7 +37,8 @@ test('JSON-LD: WebPage, BreadcrumbList, FAQPage = видимые вопросы'
 });
 
 test('без старого имени, без сравнения с чужими продуктами, без обещаний', () => {
-  const t = html.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g, '');
+  // tipograf-stranic-v1 (18.10): &nbsp; от типографа не должен прятать запретные фразы — сверяем по обычным пробелам
+  const t = html.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g, '').replace(/&nbsp;/g, ' ').replace(/&#8209;/g, '-');
   for (const re of [/добросовестност/i, /сертификат(ов|ами|ы)\b/i, /class="cmp"/, /Платные свидетельства/i,
     /проверено — чисто/i, /долгов нет/i, /(?<!не )гарантир(уем|ует) (исход|результат)/i, /вместо десят/i, /Паспорт ИП\b/]) {
     assert.ok(!re.test(t), 'нашлось: ' + re);

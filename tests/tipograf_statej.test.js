@@ -46,3 +46,21 @@ test('страница «Запрос банка»: «Коротко» без в
   assert.ok(!/(?:^|[\s>])(?:в|и|а|к|с|у|о|по|на|не|до|от|за|из) [а-яё]/i.test(lead), 'висячий предлог в «Коротко»');
   assert.ok(!s.includes('\u00a0'), 'NBSP символом — только &nbsp;');
 });
+
+// tipograf-stranic-v1 (18.10.2026, [Ночные запуски]): тот же типограф — на длинных страницах, которые пишутся руками
+// (/indeks/, /o-proekte/, /tochnost/, /pasport/, /nalichnye/, /skoraya-115-fz/ …). Куски сборщиков не трогаем.
+test('страницы вне статей: «Последние изменения» (sobrat_lentu) и реквизиты <!--r:…--> не трогаем, рамка — свой тег', () => {
+  const kod = 'import sys,importlib.util as u;s=u.spec_from_file_location("t",sys.argv[1]);m=u.module_from_spec(s);'
+    + 's.loader.exec_module(m);sys.stdout.write(m.statya(sys.stdin.read(), "main"))';
+  const html = '<main><p>Сделано в срок</p><ul class="puls__l" data-puls><li>в ленте</li></ul>'
+    + '<p>Оператор — <!--r:ispolnitel--><span>сведения о нём</span><!--/r--></p></main>';
+  const v = execFileSync('python3', ['-c', kod, SKRIPT], { input: html, encoding: 'utf8' });
+  assert.ok(v.includes('Сделано в&nbsp;срок'));
+  assert.ok(v.includes('<ul class="puls__l" data-puls><li>в ленте</li></ul>'), 'блок sobrat_lentu не тронут');
+  assert.ok(v.includes('<!--r:ispolnitel--><span>сведения о нём</span><!--/r-->'), 'реквизиты не тронуты');
+  const js = '<script>var t = \'<article class="pp">в банк</article>\';</script><article><p>в банк</p></article>';
+  assert.strictEqual(tipograf(js), '<script>var t = \'<article class="pp">в банк</article>\';</script><article><p>в&nbsp;банк</p></article>',
+    'рамку ищем вне <script> — разметка строкой в скрипте (/pasport/) не в счёт');
+  const s = fs.readFileSync(path.join(KOREN, 'indeks/index.html'), 'utf8');
+  assert.ok(s.includes('&#8209;ФЗ') || !s.includes('-ФЗ'), '/indeks/ доведён типографом');
+});

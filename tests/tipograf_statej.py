@@ -20,6 +20,21 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 RAZDELY = ("115-fz", "nalogi")  # статьи, которые пишутся руками; /praktika/ собирает sobrat_praktika.py — он зовёт statya() сам
+# tipograf-stranic-v1 (18.10.2026): длинные страницы, которые пишутся руками, — тот же типограф, свой тег-рамка.
+# Не берём: страницы целиком из сборщиков (/tarify/, /reyting/, /zhurnal/, /obnovleniya/, /company/) и юридические
+# документы (/oferta/, /politika/, /soglasie/, /cookies/, /vozvrat/, /partneram/usloviya/, /rassylki/) — их только с [Право].
+STRANICY = {
+    "indeks/index.html": "article",
+    "o-proekte/index.html": "article",
+    "tochnost/index.html": "article",
+    "pasport/index.html": "main",
+    "pasport/proverka/index.html": "article",
+    "nalichnye/index.html": "main",
+    "kontragenty-iz-vypiski/index.html": "main",
+    "skoraya-115-fz/index.html": "main",
+    "proverit-schet/index.html": "main",
+    "osnovatel/index.html": "main",
+}
 NB = "&nbsp;"
 KOROTKIE = r"(?:в|и|а|к|с|у|о|я|по|на|не|до|от|за|из|ни|но|же|ли|без|для|под|над|при|про|со|об)"
 
@@ -36,9 +51,12 @@ PRAVILA = [
 NE_TROGAT = re.compile(
     r"<!--([a-z0-9-]+)-->.*?<!--/\1-->"
     r"|<(script|style|code|pre|textarea)\b.*?</\2>"
+    r"|<!--r:[a-z0-9_-]+-->.*?<!--/r-->"  # реквизиты из rekvizity.json (sobrat_shapku)
+    r"|<ul\b[^>]*\bdata-puls\b.*?</ul>"  # «Последние изменения» на /o-proekte/ — пишет sobrat_lentu
     r"|<!--.*?-->",
     re.S | re.I)
 TEG = re.compile(r"(<[^>]*>)")
+SKRIPT = re.compile(r"<script\b.*?</script>", re.S | re.I)
 
 
 def tekst(t):
@@ -54,10 +72,13 @@ def kusok(s):
 
 def statya(s, teg="article"):
     """Типографика внутри <article>…</article> (или другого тега: хабы /praktika/ — <main>); остальная страница — как была."""
-    if "<" + teg not in s or "</" + teg + ">" not in s:
+    # Ищем рамку вне <script>: в скриптах страниц бывает разметка строкой ('<article class="pp">' на /pasport/).
+    skripty = [(m.start(), m.end()) for m in SKRIPT.finditer(s)]
+    vne = lambda i: not any(x <= i < y for x, y in skripty)
+    a = next((m.start() for m in re.finditer("<" + teg + r"[\s>]", s) if vne(m.start())), None)
+    b = next((m.start() for m in re.finditer("</" + teg + ">", s) if a is not None and m.start() > a and vne(m.start())), None)
+    if a is None or b is None:
         return s
-    a = s.index("<" + teg)
-    b = s.index("</" + teg + ">")
     vnutri, out, i = s[a:b], [], 0
     for m in NE_TROGAT.finditer(vnutri):
         out.append(kusok(vnutri[i:m.start()]))
@@ -68,16 +89,21 @@ def statya(s, teg="article"):
 
 
 def stranicy():
+    """(путь, тег-рамка): статьи разделов — <article>; страницы из STRANICY — свой тег."""
     for r in RAZDELY:
-        yield from sorted((ROOT / r).glob("*/index.html"))
+        for p in sorted((ROOT / r).glob("*/index.html")):
+            yield p, "article"
+    for put, teg in STRANICY.items():
+        if (ROOT / put).exists():
+            yield ROOT / put, teg
 
 
 def main(argv):
     check = "--check" in argv
     izm = []
-    for p in stranicy():
+    for p, teg in stranicy():
         s = p.read_text(encoding="utf-8")
-        nov = statya(s)
+        nov = statya(s, teg)
         if nov != s:
             izm.append(str(p.relative_to(ROOT)))
             if not check:

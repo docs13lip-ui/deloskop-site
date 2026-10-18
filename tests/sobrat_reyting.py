@@ -29,6 +29,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import sobrat_shapku as SH  # noqa: E402
 from sobrat_praktika import tipograf, nerazryv, kroshki_ld  # noqa: E402
+import tipograf_statej as TS  # noqa: E402
 
 KOREN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SAJT = "https://deloskop.ru"
@@ -382,6 +383,9 @@ def sobrat(koren=KOREN):
     r_ = SH.rekv_sajta()
     # сырые NBSP → &nbsp;: патч остаётся ASCII-безопасным при пересылке текстом (урок kartochki-ascii-v1)
     txt = nerazryv(tipograf(txt)).replace(NB, "&nbsp;")
+    # 18.10 lenta-chisto-v1: те же правила, что у статей и разборов (короткие слова, числа, тире) — внутри <main>;
+    # таблицы и подписи источника — тоже текст: на 390 px висело ~20 предлогов и союзов
+    txt = TS.statya(txt, "main")
     return SH.sobrat_stranicu(txt, r_, SH.podval_html(r_), SH.shapka_html()), D
 
 

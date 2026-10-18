@@ -194,28 +194,28 @@ footer a{color:var(--muted)}
 <main id="main">
 <nav class="crumbs" aria-label="Навигация"><a href="/">Делоскоп</a></nav>
 <h1>Проверь счёт перед оплатой</h1>
-<p class="meta" style="font-size:18px;color:var(--ink2)">Загрузите счёт — за минуту скажем, можно ли платить: реквизиты, НДС и признаки риска поставщика.</p>
+<p class="meta" style="font-size:18px;color:var(--ink2)">Загрузите счёт&nbsp;— за&nbsp;минуту скажем, можно ли&nbsp;платить: реквизиты, НДС и&nbsp;признаки риска поставщика.</p>
 <section class="tool" aria-label="Проверка счёта">
-  <label class="drop" id="drop"><b>Перетащите счёт в PDF</b>или нажмите, чтобы выбрать файл<input type="file" id="file" accept="application/pdf,.pdf,.txt,image/*"></label>
+  <label class="drop" id="drop"><b>Перетащите счёт в&nbsp;PDF</b>или нажмите, чтобы выбрать файл<input type="file" id="file" accept="application/pdf,.pdf,.txt,image/*"></label>
   <div class="or">или вставьте текст счёта / реквизиты</div>
   <textarea id="txt" placeholder="Например: ООО «Ромашка», ИНН …, КПП …, р/с 40702810…, БИК 04…, Итого к оплате 120 000,00, в т.ч. НДС 22% 21 639,34"></textarea>
   <button type="button" class="go" id="go">Проверить счёт</button>
   <div id="msg" role="status" aria-live="polite"></div>
-  <p class="priv">Файл не уходит с вашего компьютера: реквизиты читаются прямо в браузере. На сервер отправляется только ИНН поставщика.</p>
+  <p class="priv">Файл не&nbsp;уходит с&nbsp;вашего компьютера: реквизиты читаются прямо в&nbsp;браузере. На&nbsp;сервер отправляется только ИНН поставщика.</p>
   <div id="out" hidden></div>
 </section>
 <section class="how"><h2>Что проверяем</h2><ol>
-<li><b>ИНН поставщика</b> — есть ли он и верна ли контрольная цифра.</li>
-<li><b>Расчётный счёт и БИК</b> — сходятся ли по&nbsp;контрольному ключу. Ключ ловит опечатку или изменённую цифру. Чей это счёт, он не&nbsp;показывает: правильные реквизиты чужой компании пройдут проверку — поэтому в&nbsp;результате мы отдельно пишем «принадлежность счёта не&nbsp;подтверждена».</li>
-<li><b>Чей счёт</b> — организации, предпринимателя или личный счёт человека.</li>
-<li><b>НДС</b> — ставка и сумма. С 2026 года основная ставка — 22%.</li>
-<li><b>Поставщик</b> — статус в ЕГРЮЛ, долги, отметки о недостоверности, риск для вычета НДС и блокировки счёта. 10 проверок в день бесплатно.</li>
+<li><b>ИНН поставщика</b>&nbsp;— есть ли&nbsp;он и&nbsp;верна ли&nbsp;контрольная цифра.</li>
+<li><b>Расчётный счёт и&nbsp;БИК</b>&nbsp;— сходятся ли&nbsp;по&nbsp;контрольному ключу. Ключ ловит опечатку или изменённую цифру. Чей это счёт, он не&nbsp;показывает: правильные реквизиты чужой компании пройдут проверку&nbsp;— поэтому в&nbsp;результате мы отдельно пишем «принадлежность счёта не&nbsp;подтверждена».</li>
+<li><b>Чей счёт</b>&nbsp;— организации, предпринимателя или личный счёт человека.</li>
+<li><b>НДС</b>&nbsp;— ставка и&nbsp;сумма. С&nbsp;2026&nbsp;года основная ставка&nbsp;— 22%.</li>
+<li><b>Поставщик</b>&nbsp;— статус в&nbsp;ЕГРЮЛ, долги, отметки о&nbsp;недостоверности, риск для&nbsp;вычета НДС и&nbsp;блокировки счёта. 10 проверок в&nbsp;день бесплатно.</li>
 </ol></section>
 <section class="smena" id="smena" aria-labelledby="smena-h"><h2 id="smena-h">Поставщик прислал новые реквизиты?</h2>
 <p class="smena__lid">Подменить реквизиты в&nbsp;письме&nbsp;— простой способ увести оплату: письмо как будто от&nbsp;поставщика, а&nbsp;счёт в&nbsp;нём чужой. Контрольный ключ этого не&nbsp;поймает&nbsp;— чужой счёт тоже «правильный». Сравните прежние реквизиты с&nbsp;новыми: покажем, что именно поменялось.</p>
 <form class="smena__forma" id="smena-forma" novalidate>
-<label class="smena__pole-v"><b>Было</b><span>из договора или счёта, по&nbsp;которому вы уже платили</span><textarea id="smena-bylo" rows="5" placeholder="ИНН 7707083893, р/с 40702810…, БИК 044525225"></textarea></label>
-<label class="smena__pole-v"><b>Стало</b><span>из письма или нового счёта</span><textarea id="smena-stalo" rows="5" placeholder="Вставьте реквизиты из письма"></textarea></label>
+<label class="smena__pole-v"><b>Было</b><span>из&nbsp;договора или счёта, по&nbsp;которому вы уже платили</span><textarea id="smena-bylo" rows="5" placeholder="ИНН 7707083893, р/с 40702810…, БИК 044525225"></textarea></label>
+<label class="smena__pole-v"><b>Стало</b><span>из&nbsp;письма или нового счёта</span><textarea id="smena-stalo" rows="5" placeholder="Вставьте реквизиты из письма"></textarea></label>
 <button type="submit" class="go">Сравнить реквизиты</button>
 </form>
 <p class="priv">Реквизиты сравниваются прямо в&nbsp;браузере и&nbsp;никуда не&nbsp;отправляются.</p>
@@ -226,13 +226,13 @@ footer a{color:var(--muted)}
 <li><b>Посмотрите на&nbsp;адрес отправителя.</b> Подделку выдаёт одна буква или чужой домен: <i>romashka-ooo.ru</i> вместо <i>ooo-romashka.ru</i>, почта на&nbsp;бесплатном сервисе вместо корпоративной.</li>
 <li><b>Получатель тот&nbsp;же?</b> ИНН в&nbsp;новых реквизитах должен совпадать с&nbsp;прежним. Другой ИНН&nbsp;— другой получатель.</li>
 <li><b>Счёт не&nbsp;личный.</b> Счёт организации начинается с&nbsp;40702, предпринимателя&nbsp;— с&nbsp;40802; 40817 и&nbsp;423&nbsp;— личные счета людей.</li>
-<li><b>Проверьте, почему сменился банк.</b> Иногда счёт меняют, потому что прежний банк ограничил операции или закрыл счёт. Решения налоговой о&nbsp;приостановке видны <a href="https://service.nalog.ru/bi.do" target="_blank" rel="noopener">в&nbsp;сервисе ФНС</a> по&nbsp;ИНН и&nbsp;БИК; ограничения банка по&nbsp;115-ФЗ там не&nbsp;видны&nbsp;— как поставщик выглядит для банка, покажет <a href="/#inn">проверка по&nbsp;ИНН</a>.</li>
+<li><b>Проверьте, почему сменился банк.</b> Иногда счёт меняют, потому что прежний банк ограничил операции или закрыл счёт. Решения налоговой о&nbsp;приостановке видны <a href="https://service.nalog.ru/bi.do" target="_blank" rel="noopener">в&nbsp;сервисе ФНС</a> по&nbsp;ИНН и&nbsp;БИК; ограничения банка по&nbsp;115&#8209;ФЗ там не&nbsp;видны&nbsp;— как поставщик выглядит для&nbsp;банка, покажет <a href="/#inn">проверка по&nbsp;ИНН</a>.</li>
 </ol>
 <p class="smena__dalee"><a href="/nalogi/pismo-o-smene-rekvizitov-kak-proverit/">Что делать, если уже заплатили&nbsp;→</a></p>
 </section>
 <!--faq-mesto-->
 <!--faq--><section class="faq" aria-label="Частые вопросы"><h2>Частые вопросы</h2><details><summary>Проверка счёта и&nbsp;БИК покажет, чей это счёт?</summary><p>Ключ ловит опечатку или изменённую цифру. Чей это счёт, он не&nbsp;показывает: правильные реквизиты чужой компании пройдут проверку&nbsp;— поэтому в&nbsp;результате мы отдельно пишем «принадлежность счёта не&nbsp;подтверждена».</p></details><details><summary>Как по&nbsp;номеру отличить счёт организации от&nbsp;личного счёта?</summary><p>Счёт организации начинается с&nbsp;40702, предпринимателя&nbsp;— с&nbsp;40802; 40817 и&nbsp;423&nbsp;— личные счета людей.</p></details><details><summary>Какая ставка НДС должна стоять в&nbsp;счёте в&nbsp;2026&nbsp;году?</summary><p>С&nbsp;2026&nbsp;года основная ставка&nbsp;— 22%.</p></details><details><summary>Поставщик прислал новые реквизиты&nbsp;— что сделать до&nbsp;оплаты?</summary><p>Позвоните поставщику по&nbsp;номеру из&nbsp;договора или с&nbsp;его сайта&nbsp;— не&nbsp;по&nbsp;номеру из&nbsp;письма. Продиктуйте новый счёт и&nbsp;БИК, пусть подтвердит.</p></details><details><summary>Как распознать поддельное письмо со сменой реквизитов?</summary><p>Подделку выдаёт одна буква или чужой домен: romashka-ooo.ru вместо ooo-romashka.ru, почта на&nbsp;бесплатном сервисе вместо корпоративной.</p></details><details><summary>Видно ли, что счёт поставщика заблокирован?</summary><p>Решения налоговой о&nbsp;приостановке видны в&nbsp;сервисе ФНС по&nbsp;ИНН и&nbsp;БИК; ограничения банка по&nbsp;115&#8209;ФЗ там не&nbsp;видны&nbsp;— как поставщик выглядит для&nbsp;банка, покажет проверка по&nbsp;ИНН.</p></details><details><summary>Уходит ли&nbsp;файл счёта на&nbsp;сервер?</summary><p>Файл не&nbsp;уходит с&nbsp;вашего компьютера: реквизиты читаются прямо в&nbsp;браузере. На&nbsp;сервер отправляется только ИНН поставщика.</p></details></section><!--/faq-->
-<section class="more"><h2>Читайте также</h2><div class="cards"><a class="card" href="/nalogi/nds-postavshchika-na-usn-po-inn/"><small>Налоги</small><b>Будет ли НДС в счёте поставщика на упрощёнке</b><span>Порог 2027 года — 20&nbsp;млн&nbsp;₽ · проверка по ИНН</span></a><a class="card" href="/nalogi/statya-54-1-nk-prostymi-slovami/"><small>Налоги</small><b>Статья 54.1 НК простыми словами: когда налоговая снимет вычет</b><span>5 минут чтения</span></a><a class="card" href="/nalogi/kak-proverit-schet-pered-oplatoj/"><small>Налоги</small><b>Как проверить счёт перед оплатой: 6 пунктов за 2 минуты</b><span>4 минуты чтения</span></a><a class="card" href="/nalogi/proverka-kontragenta-pered-dogovorom/"><small>Налоги</small><b>Проверка контрагента перед договором: чек-лист и бесплатные сервисы</b><span>5 минут чтения</span></a></div></section>
+<section class="more"><h2>Читайте также</h2><div class="cards"><a class="card" href="/nalogi/nds-postavshchika-na-usn-po-inn/"><small>Налоги</small><b>Будет ли&nbsp;НДС в&nbsp;счёте поставщика на&nbsp;упрощёнке</b><span>Порог 2027&nbsp;года&nbsp;— 20&nbsp;млн&nbsp;₽ · проверка по&nbsp;ИНН</span></a><a class="card" href="/nalogi/statya-54-1-nk-prostymi-slovami/"><small>Налоги</small><b>Статья 54.1 НК простыми словами: когда налоговая снимет вычет</b><span>5&nbsp;минут чтения</span></a><a class="card" href="/nalogi/kak-proverit-schet-pered-oplatoj/"><small>Налоги</small><b>Как проверить счёт перед оплатой: 6 пунктов за&nbsp;2&nbsp;минуты</b><span>4&nbsp;минуты чтения</span></a><a class="card" href="/nalogi/proverka-kontragenta-pered-dogovorom/"><small>Налоги</small><b>Проверка контрагента перед договором: чек-лист и&nbsp;бесплатные сервисы</b><span>5&nbsp;минут чтения</span></a></div></section>
 </main>
 <script>(function(){
 'use strict';

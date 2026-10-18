@@ -347,6 +347,7 @@ dialog.lip-d[open]{animation:lip-vverh .28s cubic-bezier(.2,.7,.2,1)}
  .svz__kn{display:inline-flex;align-items:center;min-height:44px;margin:0 0 8px;padding:0 16px;border:1px solid var(--line,#E6E6E1);border-radius:999px;background:transparent;color:var(--ink,#1D1D1F);font:inherit;font-size:14px;cursor:pointer}
  .svz__kn:focus-visible{outline:2px solid var(--accent,#0B63E5);outline-offset:2px}
 }
+.svz__ist{margin:8px 0 4px;font-size:12px;line-height:1.4;color:var(--muted,#6B6B70)}
 @media print{.svz__cv,.svz__kn{display:none}.svz__sp{position:static;width:auto;height:auto;overflow:visible;clip:auto;white-space:normal}}
 /* --- /css/glubina.css --- */
 /* Делоскоп — «Глубина и свет» (vizual-v1, часть А, 17.10.2026).

@@ -50,7 +50,17 @@
       nazad();
       if (tek && tek !== 'svodka') { var b = tabs.querySelector('[data-vid="' + tek + '"]'); zb.textContent = podpis(b); vpered(tek); }
       vn.style.minHeight = Math.ceil(h) + 'px';
+      vys0 = Math.ceil(h);
     }
+    // vizual-v3.2b: «Связи» меняют высоту сами (граф по кнопке на телефоне, длинный список) — карточка растёт вместе с оборотом,
+    // а не накрывает то, что ниже; сначала база (оборот мог и уменьшиться), потом высота содержимого
+    var vys0 = 0;
+    if (W.ResizeObserver) new W.ResizeObserver(function () {
+      if (!vys0) return;
+      vn.style.minHeight = vys0 + 'px'; // ушли со «Связей» — база
+      if (vn.getAttribute('data-vid') !== 'svyazi') return;
+      vn.style.minHeight = Math.max(vys0, Math.ceil(zad.scrollHeight)) + 'px';
+    }).observe(spis);
     function vybrat(b, fokus) {
       var v = b.getAttribute('data-vid'), na = v !== 'svodka';
       kn.forEach(function (x) { var s = x === b; x.setAttribute('aria-selected', s ? 'true' : 'false'); x.tabIndex = s ? 0 : -1; });

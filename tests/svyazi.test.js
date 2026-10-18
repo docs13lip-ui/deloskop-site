@@ -77,3 +77,32 @@ test('кадр на 40 узлах укладывается в бюджет вы�
   assert.ok(n / 100 < 40 * 10 + 20, 'вызовов на кадр: ' + n / 100);
   assert.ok(ms < 1, 'кадр ' + ms.toFixed(3) + ' мс без браузера');
 });
+
+// vizual-v3.2b (18.10.2026, [Ночные запуски]): связи из реестров DaMIA и подпись источника с датой
+test('3.2b: суды, приставы, госзаказ, РНП — только где источник ответил и есть что показать; подпись — «итог» ответа', () => {
+  const r = JSON.parse(JSON.stringify(OTVET));
+  r.company.fetched_at = '2026-10-18T06:36:45+00:00';
+  r.damia = {
+    sudy: { nazvanie: 'Арбитражные суды', status: 'polucheno', data_svedeniy: '2026-10-12T11:40+03:00', itog: 'Дел, где компания — ответчик: 2.', dannye: { vsego: 1449, otvetchik_nezaversheno: 2 } },
+    fssp: { nazvanie: 'Приставы', status: 'found', data_svedeniy: '2026-10-12T11:40+03:00', itog: 'Открыто 3.', dannye: { otkryto: 3 } },
+    kontrakty: { nazvanie: 'Госконтракты', status: 'ne_provereno', itog_ne_provereno: 'Не проверяли.' },
+    rnp: { nazvanie: 'РНП', status: 'polucheno', dannye: { vsego: 0 }, itog: 'Нет.' }
+  };
+  const m = Svyazi.model(r);
+  const d = m.uzly.filter((u) => /^(sudy|fssp|kontrakty|rnp)$/.test(u.k));
+  assert.deepStrictEqual(d.map((u) => u.k), ['sudy', 'fssp'], 'не проверено и ноль — без узла');
+  assert.strictEqual(d[0].znach, '1\u00a0449 дел в картотеке');
+  assert.strictEqual(d[0].pod, 'Дел, где компания — ответчик: 2.');
+  assert.strictEqual(d[0].ton, 'warn');
+  assert.strictEqual(d[1].znach, '3 открытых производства');
+  assert.match(m.ist, /ЕГРЮЛ на 18\.10\.2026, картотека арбитражных дел на 12\.10\.2026, ФССП на 12\.10\.2026\./);
+  assert.match(m.ist, /неполную картину за полную не выдаём\.$/);
+  assert.doesNotMatch(js, /state_actuality_date \?|ist = .*state_actuality_date/, 'дата ЕГРЮЛ — не дата изменения записи');
+  assert.doesNotMatch(m.ist, /!|аффилирован|группа лиц/i);
+});
+
+test('3.2b: карточка растёт вместе с оборотом «Связи» (граф по кнопке не накрывает то, что ниже)', () => {
+  assert.match(v2, /vn\.style\.minHeight = vys0 \+ 'px'; \/\/ ушли со «Связей» — база\s+if \(vn\.getAttribute\('data-vid'\) !== 'svyazi'\) return;/);
+  assert.match(v2, /Math\.max\(vys0, Math\.ceil\(zad\.scrollHeight\)\)/);
+  assert.match(v2, /\}\)\.observe\(spis\);/);
+});

@@ -30,7 +30,7 @@ test('строка темы: в <head> каждой страницы с шапк
   assert.match(JSON.parse(chitat('partials/obolochka.json')).head, STROKA);
 });
 
-test('строка темы: выбор из localStorage, иначе тёмная (решение владельца 18.10); «auto» — по системе; ставит data-theme до отрисовки', () => {
+test('строка темы: выбор из localStorage, иначе тёмная (с 18.10); «auto» — по системе; ставит data-theme до отрисовки', () => {
   const kod = chitat('index.html').match(STROKA)[0].replace(/^<script>|<\/script>$/g, '');
   const progon = (ls, sistemaTemnaya) => {
     const el = { dataset: {} }, meta = { content: '#F5F5F2' };

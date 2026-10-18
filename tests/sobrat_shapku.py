@@ -73,10 +73,11 @@ GLUBINA_LINK = '<link rel="stylesheet" href="/css/glubina.css">'
 # Строка в <head> ставит data-theme на <html> до первой отрисовки (без мигания): выбор из localStorage «tema»
 # (light | dark; иначе — как в системе) и цвет панели браузера. Остальное — css/tema.css и js/shapka.js §8.
 TEMA_LINK = '<link rel="stylesheet" href="/css/tema.css">'
-TEMA_JS = ('<script>!function(d,t){try{t=localStorage.tema}catch(e){}t=t=="light"||t=="auto"?t:"dark";'
-           'if(t=="auto")t=matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light";d.dataset.theme=t;'
+TEMA_JS = ('<script>!function(d,t){try{t=localStorage.tema}catch(e){}t=t=="auto"?'
+           '(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light"):t=="light"?t:"dark";d.dataset.theme=t;'
            'if(t=="dark"&&(t=document.querySelector("meta[name=theme-color]")))t.content="#111113"}'
            '(document.documentElement)</script>')
+STARAYA_TEMA_JS = re.compile(r'<script>!function\(d,t\)\{try\{t=localStorage\.tema\}[^<]*</script>\n?')
 TEMA_PODVAL = ('<div class="tema" data-tema hidden><span class="tema__h" id="tema-h">Тема</span>'
                '<span class="tema__g" role="group" aria-labelledby="tema-h">'
                '<button type="button" data-tema-v="dark" aria-pressed="true">Тёмная</button>'
@@ -356,6 +357,7 @@ def vstavit_shapku(txt, shapka):
     if not est(txt, TEMA_LINK):
         txt = txt.replace("</head>", TEMA_LINK + "\n</head>", 1)
     if TEMA_JS not in txt:
+        txt = STARAYA_TEMA_JS.sub("", txt)  # прежняя строка темы (другое умолчание) — заменяем
         txt = txt.replace("</head>", TEMA_JS + "\n</head>", 1)
     # цель ссылки «Перейти к содержанию»
     txt = svernut(txt)

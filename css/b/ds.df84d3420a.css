@@ -1,4 +1,4 @@
-/* Делоскоп · пакет «ds» — собран tests/sobrat_js.py из 3 файлов (partials/sborka.json). Правьте исходники, не этот файл. */
+/* Делоскоп · пакет «ds» — собран tests/sobrat_js.py из 4 файлов (partials/sborka.json). Правьте исходники, не этот файл. */
 /* --- /css/fonts.css --- */
 /* Onest (SIL OFL 1.1, /fonts/OFL.txt) — со своего сервера, без Google Fonts. Сборка: подмножества кириллица, латиница, латиница-расш. (₽). */
 @font-face{font-family:Onest;font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/onest-cyrillic-400.woff2) format("woff2");unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
@@ -188,3 +188,162 @@ dialog.dlo::backdrop{background:rgba(17,17,19,.55)}
 @media (min-width:1025px){.ck-bar{left:auto;right:24px;bottom:24px;width:440px;border:0;border-radius:var(--r-l);box-shadow:0 12px 40px rgba(29,29,31,.16)}.ck-bar .ck-bar__in{flex-direction:column;align-items:stretch;padding:var(--s-5);gap:var(--s-4)}.ck-bar .ck-bar__b button{flex:1}}
 /* Номера дел, законов и писем не рвутся на переносе (js/shapka.js, п. 8) */
 .nw{white-space:nowrap}
+/* --- /css/tema.css --- */
+/* vizual-v3.0b — тёмная тема. База — ДС v1 §2.5.
+   Тему ставит строка в <head> (tests/sobrat_shapku.py → TEMA_JS): выбор из localStorage «tema» или система;
+   на <html> — data-theme="dark|light". Без скрипта — светлая, как было. Переключатель — в подвале (js/shapka.js, §8).
+   Токены переопределяются там, где страницы и блоки задают их сами: :root (в т. ч. старые имена --card, --ink2,
+   --dark…), подвал, шапка, «Разборы», «Журнал», пакет «Скорой», окно доступа. Цвета риска подобраны на контраст
+   ≥ 4,5 : 1 на --surface и на своих плашках (замер — tests/zamer_temy.js). */
+:root[data-theme=dark],
+[data-theme=dark] :is(.podval,a.skip,.shapka,dialog.mnav,.wn-bar,.beta-bar,dialog.dlo,.ck-bar,.pr,.zh,.pkg,.acc-box){
+ color-scheme:dark;
+ --bg:#111113;--surface:#1C1C1F;--surface-2:#26262A;--card:#1C1C1F;--soft:#19191C;
+ --ink:#F5F5F2;--ink-2:#C7C7CC;--ink2:#C7C7CC;--muted:#A1A1A6;--off:#8E8E93;--na:#8E8E93;--rule:#F5F5F2;
+ --line:#2E2E33;--line-2:#3A3A40;
+ --accent:#5B9BFF;--accent-hover:#8AB8FF;--accent-soft:#16243D;--on-accent:#0B0B0C;
+ --ok:#4CC38A;--ok-bg:#0F2A1C;--okbg:#0F2A1C;--ok-dot:#4CC38A;
+ --warn:#E8A23A;--warn-bg:#2E220C;--warnbg:#2E220C;--warn-dot:#E8A23A;
+ --high:#FF8F57;--high-bg:#35190D;--or:#FF8F57;
+ --bad:#FF7B72;--bad-bg:#3A1513;--badbg:#3A1513;--bad-dot:#FF7B72;
+ --dark:#000;--dark2:#1C1C1F;
+ --shadow:0 1px 2px rgba(0,0,0,.5),0 12px 32px rgba(0,0,0,.4);
+}
+:root[data-theme=light]{color-scheme:light}
+[data-theme=dark] body{background:var(--bg);color:var(--ink)}
+/* картинки с белым фоном (иконки, схемы) — чуть приглушаем, чтобы не слепили */
+[data-theme=dark] img:not([src$=".svg"]){filter:brightness(.92)}
+
+/* переключатель темы в подвале — сегменты в духе системных; без скрипта скрыт */
+.tema{display:inline-flex;align-items:center;gap:var(--s-2,8px);margin:0}
+.tema__h{color:var(--muted);font-size:var(--t-caption,13px)}
+.tema__g{display:inline-flex;padding:2px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line)}
+.tema button{appearance:none;border:0;margin:0;padding:4px 12px;border-radius:999px;background:none;color:var(--ink-2);font:500 var(--t-caption,13px)/1.4 var(--font,inherit);cursor:pointer;transition:background-color var(--fast,160ms) var(--ease,ease),color var(--fast,160ms) var(--ease,ease)}
+.tema button:hover{color:var(--ink)}
+.tema button[aria-pressed=true]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.tema button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media print{.tema{display:none}}
+/*<avto>*/
+/* СОБРАНО tests/tema_temnaya.py (зовёт sobrat_shapku) из css/ds.css, css/shapka.css, css/podval.css, css/glubina.css, css/vizual2.css, css/otchet.css, css/co.css, css/acc.css, css/praktika.css, css/zhurnal.css, css/reyting.css, css/paket.css, css/pusto.css — руками не править. */
+[data-theme=dark] .hdr{background:rgba(17,17,19,0.88)}
+[data-theme=dark] .wn-bar .wn-bar__x:hover{background:rgba(91,155,255,0.08)}
+[data-theme=dark] body::before{background:radial-gradient(42% 38% at 22% 18%,rgba(22,36,61,0.95),rgba(22,36,61,0) 70%),
+  radial-gradient(38% 34% at 82% 64%,rgba(46,34,12,0.95),rgba(46,34,12,0) 70%)}
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){[data-theme=dark] .shapka.is-scrolled{background:rgba(17,17,19,0.72);border-bottom-color:rgba(255,255,255,0.104)}
+[data-theme=dark] .report.ex{background:rgba(28,28,31,0.78);box-shadow:var(--shadow),inset 0 0 0 1px rgba(255,255,255,0.06)}
+@media (hover:hover){[data-theme=dark] .report.ex:hover{box-shadow:var(--shadow-hover),inset 0 0 0 1px rgba(255,255,255,0.06)}
+}
+}
+[data-theme=dark] .zhi__strelka::after{box-shadow:0 0 0 3px rgba(255,255,255,0.1)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){[data-theme=dark] .report.ex{background:#1C1C1F}
+}
+[data-theme=dark] .ex-vid{background:rgba(255,255,255,0.09)}
+[data-theme=dark] .ex-vid button[aria-selected=true]{background:#1C1C1F}
+[data-theme=dark] .ex-flip__in[data-vid=nalog] .ex-zad{background:#2E220C}
+[data-theme=dark] .ex-zad .ex-r{border-color:rgba(255,255,255,0.132)}
+[data-theme=dark] .ot-main .ex-zad .ex-r,[data-theme=dark] .ot-main .ex-zad .sut__r{border-color:rgba(255,255,255,0.132)}
+@media (min-width:901px){[data-theme=dark] .rezhim-otcheta .hero-text{background:rgba(17,17,19,0.92)}
+}
+[data-theme=dark] .ot-ix{border-right:1px solid rgba(255,255,255,0.132)}
+[data-theme=dark] .ot-ix__rs li{border-bottom:1px solid rgba(255,255,255,0.104)}
+[data-theme=dark] .ot-ix .pill{background:rgba(28,28,31,0.7)}
+[data-theme=dark] .ot-vt .usl-sum,[data-theme=dark] .ot-vt .usl details{border-top-color:rgba(255,255,255,0.132)}
+[data-theme=dark] .ot-btn.p{color:#0B0B0C}
+[data-theme=dark] .ot-btn.p:hover{color:#0B0B0C}
+[data-theme=dark] .ot-btn.s{background:rgba(28,28,31,0.6)}
+[data-theme=dark] .ot-sc .ot-ne{color:#E8A23A;background:#2E220C}
+[data-theme=dark] .ex-ix{border-right:1px solid rgba(255,255,255,0.132)}
+[data-theme=dark] .ex-ix .pill{background:rgba(28,28,31,0.7)}
+[data-theme=dark] .ex-vt .usl details{border-top-color:rgba(255,255,255,0.132)}
+[data-theme=dark] .pf__s--mnogo b{color:#FF7B72}
+[data-theme=dark] .pf__s--ser b{color:#FF8F57}
+[data-theme=dark] .pf__s--vopr b{color:#E8A23A}
+[data-theme=dark] .pf__s--bez b{color:#4CC38A}
+[data-theme=dark] .pf__d--star{color:#E8A23A}
+[data-theme=dark] .pf__isk{color:#FF7B72}
+[data-theme=dark] .pf__pill{background:#26262A}
+[data-theme=dark] .pf__pill--bez{background:#0F2A1C;color:#4CC38A}
+[data-theme=dark] .pf__pill--vopr{background:#2E220C;color:#E8A23A}
+[data-theme=dark] .pf__pill--ser{background:#35190D;color:#FF8F57}
+[data-theme=dark] .pf__pill--mnogo{background:#3A1513;color:#FF7B72}
+[data-theme=dark] .pf__go:hover{background:#16243D}
+[data-theme=dark] .pf__x:hover{background:#26262A}
+[data-theme=dark] .pf__da{background:#3A1513!important;color:#FF7B72!important}
+@media (max-width:520px){[data-theme=dark] .pf__d--star{color:#E8A23A}
+}
+[data-theme=dark] .co .kom{background:#19191C}
+[data-theme=dark] body{background:#111113}
+[data-theme=dark] .pr .primer{border:1px dashed #48484E}
+[data-theme=dark] .pr th{background:#19191C}
+[data-theme=dark] .pr .btn{color:#0B0B0C!important}
+[data-theme=dark] .pr .btn--vtor{box-shadow:inset 0 0 0 1.5px rgba(255,255,255,0.04)}
+[data-theme=dark] .pr .btn--vtor:hover{background:rgba(28,28,31,0.08)}
+[data-theme=dark] body{background:#111113}
+[data-theme=dark] .zh-btn{color:#0B0B0C!important}
+[data-theme=dark] .pusto__btn{color:#0B0B0C}
+[data-theme=dark] .din__r--vniz .din__k{color:#FF7B72}
+[data-theme=dark] .din__sv .din__0{stroke:#48484E}
+[data-theme=dark] .din__b--kor{background:#26262A}
+[data-theme=dark] .din__minus b,[data-theme=dark] .din__minus em{color:#FF7B72}
+[data-theme=dark] .izm--svezh{border-color:#443822;background:#2E220C}
+[data-theme=dark] .golos__t{border:1px solid #2E2E33;background:#1C1C1F;color:#F5F5F2}
+[data-theme=dark] .golos__t:hover{border-color:#5B9BFF}
+[data-theme=dark] .golos__t[aria-pressed=true]{background:#16243D;border-color:#5B9BFF;color:#5B9BFF}
+[data-theme=dark] .golos textarea,[data-theme=dark] .golos__in{border:1px solid #2E2E33;color:#F5F5F2;background:#1C1C1F}
+[data-theme=dark] .golos textarea:focus,[data-theme=dark] .golos__in:focus{outline:2px solid #5B9BFF;border-color:#5B9BFF}
+[data-theme=dark] .golos__m{color:#A1A1A6}
+[data-theme=dark] .golos__ok span{color:#C7C7CC}
+[data-theme=dark] .golos :focus-visible{outline:3px solid #5B9BFF}
+[data-theme=dark] .golos--otchet{background:#111113}
+[data-theme=dark] .golos--otchet .golos__z span{color:#A1A1A6}
+[data-theme=dark] .golos__b{background:#5B9BFF;color:#0B0B0C}
+[data-theme=dark] .golos__b--tiho{color:#C7C7CC;box-shadow:inset 0 0 0 1px rgba(255,255,255,0.1)}
+[data-theme=dark] .sut .kom{background:#19191C}
+[data-theme=dark] .limit__kn .pr{color:#0B0B0C}
+[data-theme=dark] .limit__kn .gh{background:#1C1C1F}
+[data-theme=dark] .otk__r{border-top:1px solid #2E2E33}
+[data-theme=dark] .otz{color:#F5F5F2}
+[data-theme=dark] .otz__in{background:#1C1C1F}
+[data-theme=dark] .otz__q span{color:#A1A1A6}
+[data-theme=dark] .otz__b{background:#16243D;color:#5B9BFF}
+[data-theme=dark] .otz__b:hover{background:#16243D}
+[data-theme=dark] .otz__b--tiho{box-shadow:inset 0 0 0 1px rgba(255,255,255,0.1);color:#C7C7CC}
+[data-theme=dark] .otz__f textarea{border:1px solid #2E2E33}
+[data-theme=dark] .otz__f textarea:focus{border-color:#5B9BFF}
+[data-theme=dark] .otz__m{color:#A1A1A6}
+[data-theme=dark] .otz :focus-visible{outline:3px solid #5B9BFF}
+[data-theme=dark] .otz__n{background:#1C1C1F}
+[data-theme=dark] .otz__n .otz__s{color:#A1A1A6}
+[data-theme=dark] .pp__q{border:1px solid #2E2E33;background:#1C1C1F}
+[data-theme=dark] .pwa__da{color:#0B0B0C}
+[data-theme=dark] .rkv>div:nth-child(even){border-left:1px solid #2E2E33}
+[data-theme=dark] .rkv>div:nth-child(n+3){border-top:1px solid #2E2E33}
+[data-theme=dark] .sf .sf-na{background:#16243D}
+[data-theme=dark] .sf .sf-seg{background:#26262A}
+[data-theme=dark] .sf .sf-seg button[aria-checked=true]{background:#1C1C1F}
+[data-theme=dark] .sf input[type=text],[data-theme=dark] .sf input[type=email]{border:1px solid #2E2E33;background:#1C1C1F}
+[data-theme=dark] .sf .sf-go{color:#0B0B0C}
+[data-theme=dark] .sf .sf-go2{border:1px solid #2E2E33;background:#1C1C1F}
+[data-theme=dark] .sf .sf-spin{border:2px solid rgba(46,46,51,0.5);border-top-color:#2E2E33}
+[data-theme=dark] dialog.sf-dlg{background:#1C1C1F}
+[data-theme=dark] dialog.sf-dlg .sf-x{background:#26262A}
+[data-theme=dark] .shch-ne{color:#E8A23A;background:#2E220C}
+[data-theme=dark] .shch-k{color:#0B0B0C!important}
+[data-theme=dark] .sut__ne{border-top:1px solid #2E2E33}
+[data-theme=dark] .sut__s{border-top:1px solid #2E2E33}
+[data-theme=dark] .sut__s dd.bad{color:#FF7B72}
+[data-theme=dark] .sut--svoj .sut__ne{border-top:1px solid #2E2E33}
+[data-theme=dark] .termin:hover,[data-theme=dark] .termin[aria-expanded=true]{color:#5B9BFF}
+[data-theme=dark] #termin-pop{background:#1C1C1F;color:#F5F5F2;border:1px solid #2E2E33}
+[data-theme=dark] #termin-pop a{color:#5B9BFF}
+[data-theme=dark] .usl-kak{border-top:1px solid #2E2E33}
+[data-theme=dark] .usl-kak .usl-ne{color:#E8A23A;background:#2E220C}
+[data-theme=dark] .usl-sum{border-top:1px solid #2E2E33}
+[data-theme=dark] .usl-in{background:#1C1C1F;border:1px solid #2E2E33}
+[data-theme=dark] .usl select{border:1px solid #2E2E33;background:#1C1C1F}
+[data-theme=dark] .usl details{border-top:1px solid #2E2E33}
+[data-theme=dark] .usl-btns button,[data-theme=dark] .usl-btns a{border:1px solid #2E2E33;background:#1C1C1F}
+[data-theme=dark] .usl-napr{background:rgba(255,255,255,0.097)}
+[data-theme=dark] .usl-napr button[aria-pressed=true]{background:#1C1C1F}
+[data-theme=dark] .usl-watch{border:1px solid #2E2E33;background:#1C1C1F}
+/*</avto>*/

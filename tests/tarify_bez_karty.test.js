@@ -13,7 +13,9 @@ const D = JSON.parse(chitat('tarify/tarify.json'));
 const T = require('../tarify/tarify.js');
 
 // видимый текст страницы: без JSON-данных, скриптов и стилей (там служебные пояснения)
-const vidimoe = (h) => h.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<style[\s\S]*?<\/style>/g, '');
+// tipograf-tarify-v1 (18.10.2026): страницу ведёт типограф статей — сверяем без учёта вида пробела и дефиса в «376‑ФЗ»
+const norm = (h) => h.replace(/&nbsp;/g, ' ').replace(/&#8209;/g, '-');
+const vidimoe = (h) => norm(h.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<style[\s\S]*?<\/style>/g, ''));
 const ZAPRET = [/спиш/i, /списани/i, /карту не трогаем/i, /частным лицам/i, /самозанят/i, /376-ФЗ/];
 const OBYAZ = ['Счёт на месяц', 'ИП и небольшим компаниям', 'Сами мы ничего не списываем', 'Отменять нечего',
   'Отказаться можно и раньше', 'вернём деньги за неиспользованные дни', 'только если вы сами оплатите новый счёт'];
@@ -40,7 +42,7 @@ test('живой tarify.json: karta = false, пока нет эквайера (1
 });
 
 test('живой /tarify/ собран из tarify.json (karta:false): запретных слов нет, обязательные есть', () => {
-  const h = chitat('tarify/index.html');
+  const h = norm(chitat('tarify/index.html'));
   const v = vidimoe(h);
   for (const z of ZAPRET) assert.ok(!z.test(v), 'на странице: ' + z);
   for (const z of [/частным лицам/, /самозанят/, /спиш/]) assert.ok(!z.test(h), 'в данных страницы: ' + z);

@@ -93,6 +93,21 @@
   var nach = document.querySelector('[data-period][aria-pressed="true"]');
   var period = nach && nach.getAttribute("data-period") === "god" ? "god" : "mes";
 
+  // tipograf-tarify-v1 (18.10.2026): подсказки калькулятора — с той же типографикой, что статьи
+  // (tipo() — копия из obnovleniya.js, сверяет tests/tipograf_tarify.test.js), и число быстрых проверок — из
+  // tarify.json → gost_v_den, как в карточке «Бесплатно» (до этого подсказка называла три проверки при лимите 10).
+  function tipo(s){var B=/[0-9A-Za-zЀ-ӿ_&#-]/,P=/[0-9A-Za-zЀ-ӿ_-]/;
+    function pered(re){return function(m,w,o,x){return o&&re.test(x.charAt(o-1))?m:w+"\u00a0";};}
+    return String(s).replace(/(\d) (?=\d{3}(?![0-9A-Za-zЀ-ӿ_]))/g,"$1\u00a0")
+      .replace(/(\d) (?=₽|%|млн|млрд|тыс|рабоч|дн|месяц|год|лет|час|минут)/g,"$1\u00a0")
+      .replace(/ (?=—)/g,"\u00a0")
+      .replace(/(пп?\.|ст\.|ч\.|№) /g,pered(P))
+      .replace(/(в|и|а|к|с|у|о|я|по|на|не|до|от|за|из|ни|но|же|ли|без|для|под|над|при|про|со|об) /gi,pered(B))
+      .replace(/(\d)-(?=ФЗ(?![0-9A-Za-zЀ-ӿ_]))/g,"$1\u2011");}
+  function bystryhVDen(D) {
+    var n = D.gost_v_den, odna = n % 10 === 1 && n % 100 !== 11;
+    return n + "\u00a0" + (odna ? "быстрой проверки" : "быстрых проверок") + " в\u00a0день";
+  }
   function rub(x) { return Math.round(x).toLocaleString("ru-RU").replace(/ |,/g, " ") + " ₽"; }
   function chislo(inp) { var v = +String(inp.value).replace(/\D/g, ""); return isFinite(v) ? v : 0; }
   function format(inp) {
@@ -144,7 +159,7 @@
       box.dataset.ton = "ind";
       $("i-nazv").textContent = "Под вашу команду";
       $("i-cena").textContent = "Рассчитаем";
-      $("i-per").textContent = "Больше 5 сотрудников или 50 компаний на слежении — соберём тариф под вас.";
+      $("i-per").textContent = tipo("Больше 5 сотрудников или 50 компаний на слежении — соберём тариф под вас.");
       $("i-pochemu").innerHTML = '<li>Напишите на <a href="mailto:help@deloskop.ru?subject=%D0%A2%D0%B0%D1%80%D0%B8%D1%84%20%D0%BF%D0%BE%D0%B4%20%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%83">help@deloskop.ru</a>: сколько людей, компаний и отчётов.</li>';
       $("i-alt").textContent = "";
       okup(tarifPoId("biznes"), cenaGoda(tarifPoId("biznes"), period));
@@ -154,25 +169,25 @@
     box.dataset.ton = L.id;
     $("i-nazv").textContent = L.pakety ? t.nazvanie + " + " + L.pakety + " " + (L.pakety === 1 ? "пакет" : L.pakety < 5 ? "пакета" : "пакетов") + " проверок" : t.nazvanie;
     $("i-cena").textContent = L.god === 0 ? "0 ₽" : rub(L.mesyac) + " в месяц";
-    $("i-per").textContent = L.god === 0 ? "Платить не нужно — бесплатного хватит." :
-      (period === "god" ? "При оплате за год — " + rub(L.god) + (L.pakety ? " вместе с пакетами" : "") : "При оплате помесячно — " + rub(L.god) + " за год");
+    $("i-per").textContent = tipo(L.god === 0 ? "Платить не нужно — бесплатного хватит." :
+      (period === "god" ? "При оплате за год — " + rub(L.god) + (L.pakety ? " вместе с пакетами" : "") : "При оплате помесячно — " + rub(L.god) + " за год"));
     var pochemu = [];
-    if (t.id === "free") pochemu.push("Развёрнутых проверок и слежения вам не нужно — хватит трёх быстрых проверок в день.");
+    if (t.id === "free") pochemu.push("Развёрнутых проверок и слежения вам не нужно — хватит " + bystryhVDen(D) + ".");
     else {
       pochemu.push("Развёрнутых проверок в тарифе: " + t.otchetov + " в месяц" + (L.pakety ? ", ещё " + L.pakety * paket(D).shtuk + " — пакетами по " + rub(paket(D).cena_rub) : "") + ".");
       pochemu.push("Слежение: до " + t.slezhenie + " компаний" + (t.polzovatelej > 1 ? ", до " + t.polzovatelej + " сотрудников" : "") + ".");
       if (nuzhno.delopis) pochemu.push("Делопись есть начиная с тарифа «Про».");
     }
-    $("i-pochemu").innerHTML = pochemu.map(function (s) { return "<li>" + s + "</li>"; }).join("");
+    $("i-pochemu").innerHTML = pochemu.map(function (s) { return "<li>" + tipo(s) + "</li>"; }).join("");
     var A = p.alternativa;
     if (A) {
       var ta = tarifPoId(A.id), raz = A.god - L.god;
       var bolsheDaet = ta.slezhenie > t.slezhenie || ta.otchetov > t.otchetov || (ta.delopis && !t.delopis);
-      if (raz <= 0) $("i-alt").textContent = "«" + ta.nazvanie + "» стоит столько же, но даёт больше — берите его.";
+      if (raz <= 0) $("i-alt").textContent = tipo("«" + ta.nazvanie + "» стоит столько же, но даёт больше — берите его.");
       else if (bolsheDaet && raz <= L.god * 0.1)
-        $("i-alt").textContent = "«" + ta.nazvanie + "» дороже всего на " + rub(raz) + " в год, но даёт больше: " +
-          ta.otchetov + " развёрнутых проверок в месяц, слежение за " + ta.slezhenie + " компаниями" + (ta.delopis && !t.delopis ? ", Делопись" : "") + ". Решайте сами.";
-      else $("i-alt").textContent = "«" + ta.nazvanie + "»" + (A.pakety ? " с пакетами" : "") + " обошёлся бы на " + rub(raz) + " в год дороже — не переплачивайте.";
+        $("i-alt").textContent = tipo("«" + ta.nazvanie + "» дороже всего на " + rub(raz) + " в год, но даёт больше: " +
+          ta.otchetov + " развёрнутых проверок в месяц, слежение за " + ta.slezhenie + " компаниями" + (ta.delopis && !t.delopis ? ", Делопись" : "") + ". Решайте сами.");
+      else $("i-alt").textContent = tipo("«" + ta.nazvanie + "»" + (A.pakety ? " с пакетами" : "") + " обошёлся бы на " + rub(raz) + " в год дороже — не переплачивайте.");
     } else $("i-alt").textContent = "";
     okup(t, L.god);
   }
@@ -182,9 +197,9 @@
     $("p-pribyl-l").hidden = vvod.rezhim !== "osn";
     var o = okupaemost(D, vvod, godCena);
     $("o-nalog").textContent = rub(o.naKonu);
-    $("o-nalog-sost").textContent = o.naKonu > 0
+    $("o-nalog-sost").textContent = tipo(o.naKonu > 0
       ? "налог " + rub(o.nalog) + " + штраф " + rub(o.shtraf) + " + пени за 2 года " + rub(o.peni)
-      : "на УСН «доходы» вычетов нет — налоговая не снимет их из-за поставщика";
+      : "на УСН «доходы» вычетов нет — налоговая не снимет их из-за поставщика");
     $("o-prostoj").textContent = rub(o.prostoj);
     var vyvod;
     if (godCena === 0) vyvod = "Бесплатный тариф ничего не стоит — но и не следит за партнёрами. Когда появятся постоянные поставщики, вернитесь к расчёту.";
@@ -197,7 +212,7 @@
     } else {
       vyvod = "Главная защита для вас — счёт и авансы. Год тарифа — " + procent(o.dolyaOtProstoya) + " от денег, которые встанут при блокировке.";
     }
-    $("o-vyvod").textContent = vyvod;
+    $("o-vyvod").textContent = tipo(vyvod);
     $("o-nal").hidden = !$("p-nal").checked;
   }
 

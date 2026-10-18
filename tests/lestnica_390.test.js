@@ -92,7 +92,7 @@ test('пакет: «без подписки», срок и цена провер
   assert.strictEqual(p.chto, 'Три Паспорта контрагента без подписки: действуют ' + p.srok_mes + ' месяцев с даты оплаты — '
     + shtuka + ' ₽ за проверку вместо ' + cena + ' ₽. Подходит и тем, кому не хватило проверок в тарифе');
   assert.strictEqual(p.shtuk, 3, '«Три» в описании — словом');
-  const t = chitat('tarify/index.html');
+  const t = chitat('tarify/index.html').replace(/&nbsp;/g, ' ');  // tipograf-tarify-v1: без учёта вида пробела
   assert.ok(t.includes('3 развёрнутые проверки — 990' + NB + '₽ к любому платному тарифу или без подписки.') ||
     t.includes(p.tekst + ' — ' + P.rub(p.cena_rub) + ' к любому платному тарифу или без подписки.'));
   assert.ok(t.includes('Три Паспорта контрагента без подписки: действуют'));

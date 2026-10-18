@@ -39,7 +39,7 @@ test('подпись к пеням: ставка — оценка, с датой
   const t = JSON.parse(fs.readFileSync(path.join(kor, 'tarify/tarify.json'), 'utf8'));
   assert.match(t.raschet.klyuchevaya_stavka_istochnik, /действует с \d\d\.\d\d\.\d{4}/);
   for (const f of ['nalogi/kalkulyator-tehnicheskij-postavshchik/index.html', 'tarify/index.html']) {  // glavnaya-v2: калькулятор переехал с главной
-    const s = fs.readFileSync(path.join(kor, f), 'utf8');
+    const s = fs.readFileSync(path.join(kor, f), 'utf8').replace(/&nbsp;/g, ' ');  // tipograf-tarify-v1: без учёта вида пробела
     assert.match(s, /оценка по нынешней ключевой ставке/, f);
     assert.match(s, /по давним сделкам пени выше/, f);
   }

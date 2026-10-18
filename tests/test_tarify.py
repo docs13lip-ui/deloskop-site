@@ -29,7 +29,7 @@ KALK = rd('nalogi/kalkulyator-tehnicheskij-postavshchik/index.html')
 ok('калькулятор: год «Про» из tarify.json', f'<span data-cena="pro.god">{nbr(T["pro"]["god"])}</span>' in KALK)
 ok('калькулятор: считает от года «Про» со страницы, а не от зашитой цифры', "data-cena=\"pro.god\"" in KALK and 'GOD/tot' in KALK)
 
-pg = rd('tarify/index.html')
+pg = rd('tarify/index.html').replace('&nbsp;', ' ').replace('&#8209;', '-')  # tipograf-tarify-v1: без учёта вида пробела
 sys.path.insert(0, os.path.join(R, 'tests'))
 import beta as _B  # beta-v1: кнопки оплаты проверяем в «платном» виде — они спрятаны, а не потеряны
 _platnyj = lambda t: _B.vidimoe(_B.primenit(t, False, polosa=''))

@@ -422,7 +422,7 @@ page = f'''<!doctype html>
 <h1>Тарифы</h1>
 <p class="sub">Подписка стоит меньше одной ошибки. Мы считаем это в рублях — и советуем тариф дешевле, если его хватит.</p>
 <div class="meta">Цены с 26 сентября 2026 · помесячно или за год со скидкой 20%</div>
-<!--oplata--><!--/oplata--><!--v-bete--><p class="beta-note"><b>Идёт открытая бета — всё бесплатно.</b> Счета не выставляем, реквизиты и оплата появятся позже. Цены ниже — какими они станут после беты.</p><!--/v-bete-->
+<!--oplata--><!--/oplata--><!--v-bete--><p class="beta-note"><b>Идёт открытая бета&nbsp;— всё бесплатно.</b> Счета не&nbsp;выставляем, реквизиты и&nbsp;оплата появятся позже. Цены ниже&nbsp;— какими они станут после беты.</p><!--/v-bete-->
 
 {OSN_BAND}<div class="period" role="group" aria-label="Период оплаты">
   {KNOPKA_MES}
@@ -512,6 +512,12 @@ page = f'''<!doctype html>
 </html>
 '''
 page = BETA.primenit(page, D.get('beta') is True, polosa='')  # полосу ставит sobrat_shapku.py (нужна шапка)
+# tipograf-tarify-v1 (18.10.2026, [Ночные запуски]): та же типографика, что в статьях и на длинных страницах
+# (tests/tipograf_statej.py → statya): предлоги не висят в конце строки, «490 ₽», «20 %», «слово — тире» не рвутся.
+# Правим здесь, в источнике, а не в готовом HTML — CI пересобирает страницу и сверяет (урок 12.10). Только текст
+# внутри <article>: атрибуты, <script> (данные tarify-data), служебные блоки <!--x-->…<!--/x--> — как были.
+import tipograf_statej as TIPO  # noqa: E402
+page = TIPO.statya(page, 'article')
 open(os.path.join(ROOT, 'tarify/index.html'), 'w', encoding='utf-8').write(page)
 print('ok', len(page))
 
@@ -544,7 +550,7 @@ def _ld_glavnoj(txt):
     qa = []
     for q, a in _re.findall(r'<details[^>]*><summary>(.*?)</summary><p>(.*?)</p></details>', faq_html, _re.S):
         txt_a = html.unescape(_re.sub(r'<[^>]+>', '', a)).replace('\u00a0', ' ')
-        qa.append({"@type": "Question", "name": html.unescape(q), "acceptedAnswer": {"@type": "Answer", "text": txt_a}})
+        qa.append({"@type": "Question", "name": html.unescape(q).replace('\u00a0', ' '), "acceptedAnswer": {"@type": "Answer", "text": txt_a}})
     ld = [{"@context": "https://schema.org", "@type": "Organization", "name": "Делоскоп", "url": "https://deloskop.ru/",
            "logo": "https://deloskop.ru/ikonka-512.png", "email": "help@deloskop.ru"},
           {"@context": "https://schema.org", "@type": "WebSite", "name": "Делоскоп", "url": "https://deloskop.ru/", "inLanguage": "ru",

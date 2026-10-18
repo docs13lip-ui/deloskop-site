@@ -2063,14 +2063,17 @@ class TestDatyIzReestraV1(unittest.TestCase):
         self.assertIn("У" + NB + "каждого факта" + NB + "— источник и" + NB + "дата, расчёты" + NB + "— по" + NB + "открытой методике.", h)
         # beta-data-v1: дату вписывает сборщик из tarify.json → beta_do (tests/beta.py, sroki)
         self.assertIn("<!--v-bete--><a href=\"/pasport/kontragent/?inn=0012345678\" rel=\"nofollow\" data-goal=\"kartochka_pasport_vhod\">В" + NB + "бете бесплатно<span data-beta-srok></span>" + NB + "→</a><!--/v-bete-->", h)
-        self.assertIn("Полный Паспорт на" + NB + "дату сделки" + NB + "— 490" + NB + "₽ или в" + NB + "тарифе «Старт»" + NB + "→", h)
+        self.assertIn("Полный Паспорт на" + NB + "дату сделки" + NB + "→", h)
+        self.assertNotIn("490", h)  # kartochki-bez-ceny-v1: цены нет и в скрытой половине
+        self.assertNotIn("«Старт»", h)
         self.assertNotRegex(h, r"каждая строка|что менялось|истори|до(\s|\u00a0)13")
         # бета → видна только «по 13 октября»; после беты → только цена
         import beta as B
         vb, vp = B.vidimoe(B.primenit(h, True, "", bdo="2026-10-13")), B.vidimoe(B.primenit(h, False, "", bdo="2026-10-13"))
         self.assertIn("бесплатно<span data-beta-srok=\"2026-10-13\"> по&nbsp;13&nbsp;октября</span>", vb)
         self.assertNotIn("490", vb)
-        self.assertIn("490" + NB + "₽", vp)
+        self.assertNotIn("490", vp)
+        self.assertIn("Полный Паспорт на" + NB + "дату сделки" + NB + "→", vp)
         self.assertNotIn("бесплатно", vp)
         self.assertEqual(K.cena_pasporta(), 490)  # цена — из tarify.json, не руками
         self.assertIsNone(K.cena_pasporta("/net/takogo/fajla.json"))
@@ -2098,9 +2101,9 @@ class TestDatyIzReestraV1(unittest.TestCase):
         self.assertIn("у каждого факта" + NB + "— источник", t)
         self.assertEqual(K.pochinit_daty(t, 490), t)  # повтор ничего не меняет
         self.assertEqual(t.count("co-daty__vhod"), 1)
-        # смена цены — абзац входа обновляется, блок не дублируется
+        # смена цены — блок не дублируется; цены в абзаце нет (kartochki-bez-ceny-v1)
         t2 = K.pochinit_daty(t, 590)
-        self.assertIn("— 590" + NB + "₽", t2)
+        self.assertNotIn("590", t2)
         self.assertEqual(t2.count('<section class="co-sec co-daty"'), 1)
 
     def test_na_sajte(self):

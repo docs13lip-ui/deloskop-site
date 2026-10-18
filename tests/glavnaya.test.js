@@ -46,7 +46,8 @@ test('«Разборы дел»: 3 карточки, все адреса сущ�
 });
 
 test('FAQ: 6 вопросов, FAQPage = видимым вопросам', () => {
-  const vidnye = [...MAIN.matchAll(/<summary>([^<]+)<\/summary>/g)].map((m) => m[1]);
+  // tipograf-tarify-v1: в вопросах — &nbsp; типографа; в JSON-LD — обычный текст
+  const vidnye = [...MAIN.matchAll(/<summary>([^<]+)<\/summary>/g)].map((m) => m[1].replace(/&nbsp;/g, ' '));
   assert.strictEqual(vidnye.length, 6);
   const ld = JSON.parse(/<!--ld-glavnaya--><script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(G)[1]);
   const faq = ld.find((x) => x['@type'] === 'FAQPage');

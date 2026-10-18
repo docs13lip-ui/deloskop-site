@@ -3,6 +3,7 @@
 const test = require('node:test');
 const assert = require('node:assert');
 const fs = require('fs');
+require('./razvernut_sborku.js'); // yadro-v1: общие пакеты «ds» и «yadro» на всех страницах — сторож видит исходники
 const path = require('path');
 const { execSync } = require('child_process');
 const K = path.join(__dirname, '..');

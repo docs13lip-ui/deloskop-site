@@ -48,14 +48,18 @@ def vid(fajly):
 SLOI = {}  # файл стилей → каскадный слой (partials/sborka.json → «sloi»); заполняет plan()
 
 
-def sobrat_paket(imya, fajly, koren=KOREN):
-    """Текст пакета: заголовок + исходники в заданном порядке, каждый — со своей пометкой."""
+def sobrat_paket(imya, fajly, koren=KOREN, zamena=None):
+    """Текст пакета: заголовок + исходники в заданном порядке, каждый — со своей пометкой.
+    zamena — {путь: текст} для исходников, которые ещё не записаны на диск (sobrat_shapku --check)."""
     css = vid(fajly) == "css"
     chasti = ["/* Делоскоп · пакет «%s» — собран tests/sobrat_js.py из %d файлов (partials/sborka.json). "
               "Правьте исходники, не этот файл. */\n" % (imya, len(fajly))]
     for put in fajly:
-        with open(os.path.join(koren, put), encoding="utf-8") as f:
-            t = f.read()
+        if zamena and put in zamena:
+            t = zamena[put]
+        else:
+            with open(os.path.join(koren, put), encoding="utf-8") as f:
+                t = f.read()
         if css:
             # @charset/@import в середине склейки не работают — в исходниках их быть не должно
             if re.search(r"@(?:charset|import)\b", t):
@@ -85,6 +89,27 @@ def shablon(imya, v="js"):
     return re.compile(r"/%s/b/%s\.[0-9a-f]{%d}\.%s" % (v, re.escape(imya), DLINA, v))
 
 
+def adres_paketa(imya, koren=KOREN, zamena=None):
+    """yadro-v1: адрес пакета по текущим исходникам (sobrat_shapku ставит его на все страницы)."""
+    karta = chitat_kartu(koren)
+    SLOI.clear()
+    SLOI.update(karta.get("sloi", {}))
+    fajly = karta["pakety"][imya]
+    return adres(imya, sobrat_paket(imya, fajly, koren, zamena), vid(fajly))
+
+
+def vse_s_paketami(koren=KOREN):
+    """yadro-v1: файлы, где может стоять адрес пакета, кроме страниц карты: все *.html репозитория
+    (общие пакеты «ds» и «yadro» ставит sobrat_shapku на каждую страницу) и оболочка карточек API."""
+    import subprocess
+    try:
+        vse = subprocess.check_output(["git", "ls-files", "*.html"], cwd=koren, text=True).split("\n")
+    except Exception:
+        vse = [os.path.relpath(os.path.join(d, f), koren) for d, _, fs in os.walk(koren) for f in fs if f.endswith(".html")]
+    vse = [x.strip() for x in vse if x.strip() and not x.startswith('"')]
+    return sorted(set(vse)) + [os.path.join("partials", "obolochka.json")]
+
+
 def plan(koren=KOREN):
     """Что должно лежать на диске: {путь: текст} и список лишних файлов пакетов."""
     karta = chitat_kartu(koren)
@@ -110,6 +135,19 @@ def plan(koren=KOREN):
                 raise SystemExit("sobrat_js: на %s нет адреса пакета «%s» (/%s/b/%s.<отпечаток>.%s)" % (stranica, imya, v, imya, v))
             novyj = shablon(imya, v).sub(adresa[imya], novyj)
         nado[stranica] = novyj
+    # yadro-v1: на остальных страницах — только заменить адрес уже стоящего пакета на текущий
+    for stranica in vse_s_paketami(koren):
+        if stranica in nado or not os.path.exists(os.path.join(koren, stranica)):
+            continue
+        with open(os.path.join(koren, stranica), encoding="utf-8") as f:
+            html = f.read()
+        if "/b/" not in html:
+            continue
+        novyj = html
+        for imya, fajly in pakety.items():
+            novyj = shablon(imya, vid(fajly)).sub(adresa[imya], novyj)
+        if novyj != html:
+            nado[stranica] = novyj
     lishnie = []
     for chasti in PAPKI:
         papka = os.path.join(koren, *chasti)

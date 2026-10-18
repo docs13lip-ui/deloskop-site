@@ -89,9 +89,9 @@ test('на сайте нет обещаний проверки судов, ба�
 });
 
 test('/indeks/: над группой «Суды и долги» — честная строка, что в балл не входит', () => {
-  assert.match(chitat('indeks/index.html'), /class="gr-net"><td colspan="3">Источники этой группы мы пока не&nbsp;подключили/);
+  assert.match(chitat('indeks/index.html'), /class="gr-net"><td colspan="3">Источники этой группы мы(?: |&nbsp;)пока не&nbsp;подключили/);
 });
 
 test('главная: вместо «следом подключаем» — где проверить самим', () => {
-  assert.match(chitat('index.html'), /Арбитражные дела, приставов и&nbsp;госзакупки мы пока не&nbsp;проверяем/);
+  assert.match(chitat('index.html'), /Арбитражные дела, приставов и&nbsp;госзакупки мы(?: |&nbsp;)пока не&nbsp;проверяем/);
 });

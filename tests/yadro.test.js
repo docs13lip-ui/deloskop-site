@@ -64,7 +64,7 @@ test('сворачивание не меняет каскад: страница 
   const src = chitat('tests/sobrat_shapku.py');
   const kod = `
 import sys; sys.path.insert(0, "tests"); import sobrat_shapku as S
-a = '<html><head>\\n<link rel="stylesheet" href="/css/fonts.css">\\n<link rel="stylesheet" href="/css/podval.css">\\n<link rel="stylesheet" href="/css/svoj.css">\\n<link rel="stylesheet" href="/css/shapka.css">\\n<link rel="stylesheet" href="/css/tema.css">\\n</head><body></body></html>'
+a = '<html><head>\\n<link rel="stylesheet" href="/css/fonts.css">\\n<link rel="stylesheet" href="/css/podval.css">\\n<link rel="stylesheet" href="/css/svoj.css">\\n<link rel="stylesheet" href="/css/shapka.css">\\n<link rel="stylesheet" href="/css/tema.css">\\n<link rel="stylesheet" href="/css/detali.css">\\n</head><body></body></html>'
 b = a.replace('<link rel="stylesheet" href="/css/svoj.css">\\n', '')
 print(S.svernut(a) == a, "/css/b/ds." in S.svernut(b), S.svernut(S.svernut(b)) == S.svernut(b))`;
   assert.ok(src.includes('def svernut('));

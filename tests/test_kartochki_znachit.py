@@ -59,7 +59,7 @@ class TestPravila(unittest.TestCase):
         self.assertIn("У «Ромашка» за 2025 год убыток 9,8 млрд ₽ (шестой год подряд) при выручке 36,6 млрд ₽", f)
         self.assertIn("обязательства больше активов на 12,6 млрд ₽", f)
         self.assertIn("привяжите оплату к поставке или этапам работ", f)
-        self.assertIn("Средняя месячная выручка «Ромашка» за 2025 год — 3 млрд ₽", f)
+        self.assertIn("При убытке 9,8 млрд ₽ за 2025 год заказ от 3 млрд ₽ (это средняя выручка «Ромашка» в месяц)", f)
         self.assertLess(t.index("co-znachit"), t.index("co-pered"))  # перед «Перед оплатой»
 
     def test_padenie_pribyli(self):

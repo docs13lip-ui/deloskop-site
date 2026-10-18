@@ -57,6 +57,7 @@
       "js/indeks-otvet.js",
       "js/otchet.js",
       "js/lipkaya.js",
+      "js/svyazi.js",
       "js/nedavnie.js"
     ]
   },

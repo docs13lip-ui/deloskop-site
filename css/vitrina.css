@@ -28,7 +28,7 @@
 /* зал: экспонаты чередуют сторону сцены */
 .vit__zal{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:clamp(64px,9vw,128px)}
 .vit-e{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:clamp(32px,5vw,80px);align-items:center;scroll-margin-top:96px}
-.vit-e:nth-child(even) .vit-e__scena{order:2}
+.vit-e--sp .vit-e__scena{order:2}
 .vit-e__scena{position:relative;aspect-ratio:5/4;border-radius:28px;border:1px solid var(--line);overflow:hidden;isolation:isolate;perspective:900px;
  background:radial-gradient(120% 90% at 50% 0%,var(--vg-s),var(--surface,var(--card)) 72%)}
 .vit-e__svet{position:absolute;inset:-25%;z-index:-1;background:radial-gradient(38% 38% at 34% 34%,var(--vit-svet),transparent 72%)}
@@ -89,7 +89,7 @@
 /* телефон и узкие экраны: сцена над текстом */
 @media (max-width:860px){
  .vit-e{grid-template-columns:1fr;gap:24px}
- .vit-e:nth-child(even) .vit-e__scena{order:0}
+ .vit-e--sp .vit-e__scena{order:0}
  .vit-e__scena{aspect-ratio:16/11}
  .vit-s__g{grid-template-columns:1fr}
 }
@@ -210,3 +210,66 @@
 .fb-ukryt .fb-btn{opacity:0;scale:.6;pointer-events:none}
 @media (prefers-reduced-motion:reduce){.fb-btn,.vit-e__fb span{transition:none}.vit-e__zad,.vit-e__tilt,.vit-e__pol,.vit-e__ch{translate:none}}
 @media print{.vit-e__scena,.vit-b__scena,.vit__karta,.vit-e__fb{display:none}.vit-e__u{display:grid!important}.vit-e{grid-template-columns:1fr}}
+
+/* ---------- vitrina-v2b (19.10.2026): ритм зала, «камера едет», свет пола между экспонатами ---------- */
+/* Ритм на широком экране: крупные — полная строка; одиночный компактный — малая сцена и текст шире;
+   два компактных подряд — пара в одну строку (сцена над текстом). Вид и сторону считает tests/sobrat_vitrinu.py (ritm). */
+@media (min-width:861px){
+ .vit__zal{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:clamp(24px,3vw,40px)}
+ .vit-e{grid-column:1 / -1}
+ .vit-e--m{grid-template-columns:minmax(0,.7fr) minmax(0,1fr)}
+ .vit-e--m.vit-e--sp{grid-template-columns:minmax(0,1fr) minmax(0,.7fr)}
+ .vit-e--m .vit-e__scena{aspect-ratio:4/3;border-radius:28px}
+ .vit-e--m .vit-e__h{font-size:clamp(24px,2.4vw,32px)}
+ .vit-e--para{grid-column:auto;grid-template-columns:1fr;grid-template-rows:auto 1fr;align-items:stretch;gap:24px}
+ .vit-e--para .vit-e__txt{display:flex;flex-direction:column}
+ .vit-e--para .vit-e__niz{margin-top:auto}
+ .vit-e--para .vit-e__scena{aspect-ratio:16/9}
+ .vit-e--para .vit-e__tilt{inset:10% 26% 16%}
+}
+
+/* Свет пола «перетекает»: у каждого экспоната мягкое пятно со стороны сцены; по прокрутке (view()) оно разгорается
+   у экспоната в центре экрана и смещается к следующему — свет переходит по залу. Только transform/opacity. */
+.vit{overflow-x:clip}   /* пятна света шире колонки — не дают прокрутку вбок */
+.vit__zal{position:relative;isolation:isolate}
+.vit-e{position:relative}
+.vit-e::before{content:"";position:absolute;z-index:-1;pointer-events:none;top:-18%;bottom:-18%;left:-12%;width:64%;opacity:0;
+ background:radial-gradient(closest-side,color-mix(in srgb,var(--accent) 9%,transparent),transparent)}
+.vit-e--sp::before{left:auto;right:-12%}
+.vit-e--para::before{left:-8%;width:116%}
+[data-theme=dark] .vit-e::before{background:radial-gradient(closest-side,color-mix(in srgb,var(--accent) 15%,transparent),transparent)}
+@supports (animation-timeline:view()){
+ @media (prefers-reduced-motion:no-preference){
+  .vit-e::before{animation:vit-luzha linear both;animation-timeline:view();animation-range:cover 0% cover 100%}
+  .vit-e--sp::before{animation-name:vit-luzha-p}
+ }
+}
+@keyframes vit-luzha{from{opacity:0;transform:translate3d(0,-12%,0)}45%,55%{opacity:1;transform:none}to{opacity:0;transform:translate3d(38%,14%,0)}}
+@keyframes vit-luzha-p{from{opacity:0;transform:translate3d(0,-12%,0)}45%,55%{opacity:1;transform:none}to{opacity:0;transform:translate3d(-38%,14%,0)}}
+
+/* Индикатор «03 / 13 · название» — создаёт js/vitrina.js, только внутри зала. Широкий экран с полем слева —
+   вертикальная шкала у левого края (32 px); иначе — таблетка под шапкой, видна во время прокрутки. Не ловит нажатия. */
+.vit-ind{position:fixed;z-index:15;pointer-events:none;opacity:0;transition:opacity .3s var(--ease),translate .3s var(--ease);
+ font-size:13px;font-weight:600;line-height:1;color:var(--ink2);font-variant-numeric:tabular-nums}
+.vit-ind.is-vid{opacity:1}
+.vit-ind b{font-weight:600;color:var(--ink)}
+.vit-ind--shk{left:clamp(12px,calc((100vw - var(--wide,1200px)) / 4),40px);top:50%;width:32px;translate:-8px -50%;
+ display:flex;flex-direction:column;align-items:center;gap:10px}
+.vit-ind--shk.is-vid{translate:0 -50%}
+.vit-ind--shk .vit-ind__dor{position:relative;width:2px;height:96px;border-radius:2px;background:var(--line);overflow:hidden}
+.vit-ind--shk .vit-ind__dor i{position:absolute;inset:0;background:var(--accent);transform-origin:top;transform:scaleY(var(--hod,0))}
+.vit-ind--shk .vit-ind__ns{writing-mode:vertical-rl;rotate:180deg;max-height:30vh;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-weight:500;color:var(--muted)}
+.vit-ind--shk .vit-ind__sl{display:none}
+.vit-ind--tab{left:50%;top:calc(var(--header-h,56px) + 8px);translate:-50% -6px;display:flex;align-items:center;gap:6px;height:32px;padding:0 14px;max-width:calc(100vw - 32px);
+ border:1px solid var(--line);border-radius:999px;background:color-mix(in srgb,var(--surface,var(--card)) 90%,transparent);
+ -webkit-backdrop-filter:saturate(180%) blur(12px);backdrop-filter:saturate(180%) blur(12px);box-shadow:0 6px 18px rgba(0,0,0,.12);white-space:nowrap}
+.vit-ind--tab.is-vid{translate:-50% 0}
+.vit-ind--tab .vit-ind__dor,.vit-ind--tab .vit-ind__vs{display:none}
+.vit-ind--tab .vit-ind__ns{overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.vit-ind--tab .vit-ind__ns::before{content:"·";margin-right:6px;color:var(--muted)}
+
+/* Карта витрины подсвечивает экспонат на экране (aria-current ставит js/vitrina.js) */
+.vit-k[aria-current]{border-color:color-mix(in srgb,var(--accent) 60%,var(--line));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 40%,transparent)}
+.vit-k[aria-current] .vit-k__g{background:color-mix(in srgb,var(--accent) 22%,var(--surface,var(--card)))}
+@media (prefers-reduced-motion:reduce){.vit-ind{transition:none}}
+@media print{.vit-ind{display:none}}

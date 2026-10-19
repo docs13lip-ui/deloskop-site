@@ -1104,6 +1104,7 @@
    2) Частицы — слой точек в сцене (CSS-анимация), идут только пока сцена в средней части экрана; «меньше движения» — нет.
    3) «Что умеет» — на узком экране факты экспоната свёрнуты, кнопка раскрывает (без скрипта — всё открыто).
    4) Бабл «Отзыв» прячется, пока у нижнего края экрана (120 px) видна кнопка действия; возвращается через 600 мс.
+   5) «Камера едет» (v2b): индикатор «03 / 13 · название» внутри зала и подсветка текущего пункта карты.
    Один кадр на событие, только transform/translate/opacity; без JS и при reduce — сцены стоят, всё читается. */
 (function (W, d) {
   'use strict';
@@ -1153,6 +1154,70 @@
     sledit();
     var rt = 0;
     W.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(sledit, 200); }, { passive: true });
+  }
+
+  /* --- 5) «камера едет» (vitrina-v2b): индикатор «03 / 13 · название» и подсветка карты витрины.
+     Текущий экспонат — тот, что пересекает середину экрана. Широкий экран с полем слева — шкала у края,
+     иначе — таблетка под шапкой во время прокрутки. Индикатор только для глаз (aria-hidden); для чтения с экрана —
+     aria-current в карте. --- */
+  var zal = vit && vit.querySelector('.vit__zal');
+  if (zal && IO) {
+    var ex = zal.querySelectorAll('.vit-e'), vsego = ex.length, dd = function (n) { return (n < 10 ? '0' : '') + n; };
+    var ind = d.createElement('div');
+    ind.className = 'vit-ind'; ind.setAttribute('aria-hidden', 'true');
+    ind.innerHTML = '<b class="vit-ind__n"></b><span class="vit-ind__sl">/ ' + dd(vsego) + '</span><span class="vit-ind__dor"><i></i></span>' +
+      '<span class="vit-ind__vs">' + dd(vsego) + '</span><span class="vit-ind__ns"></span>';
+    d.body.appendChild(ind);
+    var nN = ind.querySelector('.vit-ind__n'), nS = ind.querySelector('.vit-ind__ns'), dor = ind.querySelector('.vit-ind__dor i');
+    var karta = {}, kl = vit.querySelectorAll('.vit-k');
+    for (var j = 0; j < kl.length; j++) karta[(kl[j].getAttribute('href') || '').slice(1)] = kl[j];
+    var tek = null, vZale = false, shk = false, pokaz = 0, rafI = 0, tm = 0;
+    var rezhim = function () {
+      var r = ex[0] && ex[0].getBoundingClientRect();
+      shk = !!r && W.innerWidth >= 1100 && r.left >= 76;
+      ind.classList.toggle('vit-ind--shk', shk); ind.classList.toggle('vit-ind--tab', !shk);
+    };
+    var vidno = function () {
+      ind.classList.toggle('is-vid', vZale && !!tek && (shk || Date.now() - pokaz < 1200));
+    };
+    var vybrat = function (li) {
+      if (li === tek || (li && tek && li.offsetTop === tek.offsetTop)) return;   // пара в одной строке — номер не прыгает
+      if (tek && karta[tek.id]) karta[tek.id].removeAttribute('aria-current');
+      tek = li;
+      if (!li) return vidno();
+      var n = Array.prototype.indexOf.call(ex, li) + 1;
+      nN.textContent = dd(n); nS.textContent = li.getAttribute('data-kratko') || '';
+      if (karta[li.id]) karta[li.id].setAttribute('aria-current', 'location');
+      vidno();
+    };
+    var hod = function () {
+      rafI = 0;
+      var r = zal.getBoundingClientRect(), c = W.innerHeight / 2;
+      dor.style.setProperty('--hod', Math.max(0, Math.min(1, (c - r.top) / (r.height || 1))).toFixed(3));
+      vidno();
+    };
+    var sered = new IntersectionObserver(function (zap) {
+      var luch = null;
+      for (var i = 0; i < zap.length; i++) {
+        var li = zap[i].target;
+        if (zap[i].isIntersecting && (!luch || Array.prototype.indexOf.call(ex, li) < Array.prototype.indexOf.call(ex, luch))) luch = li;
+      }
+      if (luch) vybrat(luch);
+    }, { rootMargin: '-50% 0px -49% 0px' });
+    for (var k = 0; k < ex.length; k++) sered.observe(ex[k]);
+    new IntersectionObserver(function (zap) {
+      vZale = zap[zap.length - 1].isIntersecting;
+      if (!vZale) vybrat(null);
+      vidno();
+    }, { rootMargin: '-50% 0px -49% 0px' }).observe(zal);
+    W.addEventListener('scroll', function () {
+      if (!vZale) return;
+      pokaz = Date.now();
+      if (!rafI) rafI = requestAnimationFrame(hod);
+      if (!shk) { clearTimeout(tm); tm = setTimeout(vidno, 1250); }
+    }, { passive: true });
+    rezhim();
+    W.addEventListener('resize', function () { rezhim(); vidno(); }, { passive: true });
   }
 
   if (reduce || !sceny.length) return;

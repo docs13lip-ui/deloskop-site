@@ -1,0 +1,95 @@
+/* vizual-v3.3 «Как вас видит банк» — /kak-vidit-bank/. Скролл-история из 5 шагов на примере «ООО «Пример»» с главной.
+   Без скриптов: на широком экране (≥ 861 px), если браузер умеет animation-timeline и движение не выключено, справа
+   стоит одна карточка-сцена, и шаги собирают её по мере прокрутки (view-timeline + timeline-scope).
+   Иначе — у каждого шага свой снимок карточки: история читается и без движения. Цвета — только токены ДС. */
+.kvb{max-width:calc(var(--wide) + 2*var(--gutter));margin:0 auto;padding:var(--s-6) var(--gutter) var(--s-8)}
+.kvb-hd{max-width:var(--text)}
+.kvb-crumbs{font-size:var(--t-15);color:var(--muted);display:flex;gap:6px;flex-wrap:wrap}
+.kvb-crumbs a{color:var(--muted);text-decoration:none;display:inline-flex;align-items:center;min-height:44px}
+.kvb-crumbs span{display:inline-flex;align-items:center;min-height:44px}
+.kvb h1{margin:var(--s-2) 0 var(--s-4)}
+.kvb-lead{font-size:var(--t-20);line-height:1.45;color:var(--ink-2);max-width:38em}
+
+.kvb-ist{margin-top:var(--s-7)}
+.kvb-shag{padding:var(--s-6) 0;border-top:1px solid var(--line)}
+.kvb-shag:first-child{border-top:0;padding-top:0}
+.kvb-shag h2{font-size:var(--t-32);line-height:1.15;margin:0 0 var(--s-4)}
+.kvb-shag p{color:var(--ink-2);max-width:38em;margin:0 0 var(--s-3)}
+.kvb-n{font-size:var(--t-13)!important;font-weight:600;letter-spacing:.04em;color:var(--accent)!important;margin:0 0 var(--s-2)!important;font-variant-numeric:tabular-nums}
+
+/* карточка — как пример отчёта на главной */
+.kvb-karta{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);box-shadow:var(--shadow);padding:var(--s-5);margin-top:var(--s-5);max-width:520px}
+.kvb-karta p{margin:0;max-width:none}
+.kvb-tag{font-size:var(--t-13);color:var(--muted)!important}
+.kvb-imya{font-size:var(--t-24);font-weight:600;letter-spacing:-.01em;color:var(--ink)!important;margin-top:var(--s-1)!important}
+.kvb-sub{font-size:var(--t-15);color:var(--muted)!important;font-variant-numeric:tabular-nums}
+.kvb-r{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--s-4);padding:var(--s-3) 0;border-top:1px solid var(--line);font-size:var(--t-15)}
+.kvb-r:first-child{border-top:0}
+.kvb-r span{color:var(--ink)}
+.kvb-r small{display:block;font-size:var(--t-13);color:var(--muted);margin-top:2px}
+.kvb-r b{font-weight:600;text-align:right;white-space:nowrap}
+@media (max-width:480px){.kvb-r b{white-space:normal;max-width:48%}}
+.kvb-r b.ok{color:var(--ok)}.kvb-r b.warn{color:var(--warn)}
+.kvb-ix{display:flex;align-items:center;gap:var(--s-4)}
+.kvb-kolco{width:96px;height:96px;flex:none}
+.kvb-kolco path{fill:none;stroke-width:10;stroke-linecap:round}
+.kvb-kolco__fon{stroke:var(--surface-2)}
+.kvb-kolco__duga{stroke:var(--ok);stroke-dasharray:100;stroke-dashoffset:28}
+.kvb-pill{font-weight:600;color:var(--ok)!important;font-size:var(--t-17)}
+.kvb-pill small{display:block;font-weight:400;font-size:var(--t-13);color:var(--muted)}
+.kvb-s-fh{display:flex;justify-content:space-between;align-items:baseline;gap:var(--s-3);flex-wrap:wrap;font-size:var(--t-15);margin:var(--s-5) 0 var(--s-1)!important}
+.kvb-s-fh span{font-size:var(--t-13);color:var(--muted)}
+.kvb-s-ix{margin-top:var(--s-5);padding-top:var(--s-4);border-top:1px solid var(--line)}
+.kvb-vyvod{margin-top:var(--s-4)!important;font-size:var(--t-17);line-height:1.45;color:var(--ink)!important}
+
+/* шаг 5 — форма проверки */
+.kvb-forma{display:flex;gap:10px;flex-wrap:wrap;margin:var(--s-5) 0 var(--s-3);max-width:520px}
+.kvb-forma input{flex:1 1 220px;min-height:50px;border:1px solid var(--line);border-radius:var(--r-s);padding:0 14px;font:inherit;font-size:var(--t-17);background:var(--surface);color:var(--ink)}
+.kvb-forma button{min-height:50px;border:0;border-radius:var(--r-s);background:var(--accent);color:var(--on-accent);font:inherit;font-weight:600;padding:0 22px;cursor:pointer}
+.kvb-forma button:hover{background:var(--accent-hover)}
+.kvb-note{font-size:var(--t-15)}
+.kvb-dalshe{display:flex;flex-wrap:wrap;gap:0 var(--s-5);margin-top:var(--s-3)}
+.kvb-dalshe a{display:inline-flex;align-items:center;min-height:44px;text-decoration:none;font-size:var(--t-15)}
+.kvb-ogovorka{max-width:38em;margin:var(--s-6) 0 0;font-size:var(--t-13);color:var(--muted)}
+
+.kvb-scena{display:none}
+
+/* ——— скролл-история: одна сцена, шаги собирают карточку ——— */
+@supports (animation-timeline: view()) and (timeline-scope: --a){
+ @media (min-width:861px) and (prefers-reduced-motion:no-preference){
+  .kvb-ist{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,480px);gap:var(--s-8);align-items:start;timeline-scope:--k1,--k2,--k3,--k4,--k5}
+  .kvb-shag{min-height:78vh;display:flex;flex-direction:column;justify-content:center;border-top:0;padding:var(--s-7) 0}
+  .kvb-shag:first-child{padding-top:var(--s-7)}
+  .kvb-shag--tvoya{min-height:64vh}
+  #shag-1{view-timeline:--k1 block}#shag-2{view-timeline:--k2 block}#shag-3{view-timeline:--k3 block}
+  #shag-4{view-timeline:--k4 block}#shag-5{view-timeline:--k5 block}
+  .kvb-snimok{display:none}
+  .kvb-scena{display:block;position:sticky;top:calc(var(--header-h) + var(--s-6));grid-column:2;grid-row:1}
+  .kvb-karta--scena{margin-top:0;max-width:none;transform-origin:50% 0}
+
+  /* шаг активен — его текст светлее остальных */
+  .kvb-shag>*{animation:kvb-fokus linear both;animation-range:cover 0% cover 100%}
+  #shag-1>*{animation-timeline:--k1}#shag-2>*{animation-timeline:--k2}#shag-3>*{animation-timeline:--k3}
+  #shag-4>*{animation-timeline:--k4}#shag-5>*{animation-timeline:--k5}
+  #shag-5>*{animation-name:kvb-fokus-k;animation-range:cover 0% contain 0%}
+
+  /* 1 — компания с первого кадра; факты, Индекс и вывод появляются, когда до них дошла прокрутка */
+  .kvb-s-bank{animation:kvb-vhod linear both,kvb-svet linear none,kvb-ten linear none;animation-timeline:--k2,--k2,--k3;animation-range:entry 40% contain 10%,cover 25% cover 75%,cover 25% cover 75%}
+  .kvb-s-oba{animation:kvb-vhod linear both,kvb-svet linear none,kvb-svet linear none;animation-timeline:--k2,--k2,--k3;animation-range:entry 40% contain 10%,cover 25% cover 75%,cover 25% cover 75%}
+  .kvb-s-nalog{animation:kvb-vhod linear both,kvb-svet linear none;animation-timeline:--k3,--k3;animation-range:entry 40% contain 10%,cover 25% cover 75%}
+  .kvb-s-fh{animation:kvb-vhod linear both;animation-timeline:--k2;animation-range:entry 30% contain 0%}
+  .kvb-s-ix,.kvb-s-vyvod{animation:kvb-vhod linear both;animation-timeline:--k4;animation-range:entry 40% contain 10%}
+  .kvb-s-ix .kvb-kolco__duga{animation:kvb-duga linear both;animation-timeline:--k4;animation-range:entry 50% contain 30%}
+  /* 5 — пример отходит назад: дальше ваша компания */
+  .kvb-karta--scena{animation:kvb-nazad linear both;animation-timeline:--k5;animation-range:entry 20% contain 0%}
+  @keyframes kvb-fokus{0%,100%{opacity:.45}30%,70%{opacity:1}}
+  @keyframes kvb-fokus-k{from{opacity:.45}to{opacity:1}}
+  @keyframes kvb-vhod{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+  @keyframes kvb-svet{0%,100%{background:transparent}20%,80%{background:var(--accent-soft)}}
+  @keyframes kvb-ten{0%,100%{opacity:1}20%,80%{opacity:.4}}
+  @keyframes kvb-duga{from{stroke-dashoffset:100}to{stroke-dashoffset:28}}
+  @keyframes kvb-nazad{from{transform:none;opacity:1}to{transform:scale(.94);opacity:.5}}
+  .kvb-s-f .kvb-r{margin:0 calc(-1*var(--s-3));padding-inline:var(--s-3);border-radius:var(--r-s)}
+ }
+}
+@media print{.kvb-scena{display:none!important}.kvb-snimok{display:block!important}}

@@ -174,6 +174,8 @@
     var zh = el('div', 'ex-f__h'), zb = el('b');
     zh.appendChild(zb); zad.appendChild(zh);
     var spis = el('div', 'ex-zad__r'); zad.appendChild(spis);
+    // pravo-teksty-v1: под «Глазами банка / налоговой» — всегда оговорка юристов 19.10 (иначе вкладка читается как мнение банка); текст — из примера на главной
+    var pod = el('p', 'ex-zad__pod'); pod.textContent = tabs.getAttribute('data-pod') || ZAG_POD; pod.hidden = true; if (pod.textContent) zad.appendChild(pod);
     f.parentNode.insertBefore(flip, f);
     lico.appendChild(f);
     vn.appendChild(lico); vn.appendChild(zad); flip.appendChild(vn);
@@ -185,6 +187,7 @@
     function vpered(v, zhivo) {
       nazad();
       rows.forEach(function (r) { if ((' ' + r.getAttribute('data-vid') + ' ').indexOf(' ' + v + ' ') >= 0) spis.appendChild(r); });
+      pod.hidden = v === 'svyazi';
       if (v === 'svyazi' && W.Svyazi) Svyazi.pokazat(spis, f, zhivo); // vizual-v3.2: оборот «Связи» — граф/список из js/svyazi.js
     }
     function podpis(b) { return b.getAttribute('data-zag') || ''; }
@@ -263,10 +266,11 @@
   // Ключ не из списка — строка остаётся только во «Всех фактах»; угол без строк — без таблетки.
   var VID = {
     bank: /^(status|address|age|rukovoditel|zsk|employees|damia_priostanovki|damia_bankrotstvo)$/,
-    nalog: /^(status|address|tax_debt|otchetnost|kapital|likvidnost|ubytki|skachok|damia_fssp|damia_bankrotstvo)$/
+    // pravo-teksty-v1 (юристы, 19.10): ФССП взыскивает любые долги — только во «Всех фактах»; приостановки решает ФНС (ст. 76 НК), исполняет банк — в обеих
+    nalog: /^(status|address|tax_debt|otchetnost|kapital|likvidnost|ubytki|skachok|damia_priostanovki|damia_bankrotstvo)$/
   };
   // подписи таблеток — из примера на главной (тот же HTML, ни одного своего слова); примера нет — отчёт без таблеток
-  var ZAG = [], ZAG_ARIA = '';
+  var ZAG = [], ZAG_ARIA = '', ZAG_POD = '';
   function otchet(f) {
     if (f.getAttribute('data-v2') || f.closest('.ex-flip') || !f.closest('.ot-main')) return; // после раскладки листа (js/otchet.js)
     var rows = [].slice.call(f.querySelectorAll(':scope > .sut__r[data-fakt]'));
@@ -462,7 +466,7 @@
 
   function start() {
     vse('.report.ex .ex-vid', function (t) {
-      ZAG_ARIA = t.getAttribute('aria-label');
+      ZAG_ARIA = t.getAttribute('aria-label'); ZAG_POD = t.getAttribute('data-pod') || '';
       vse('[role=tab]', function (b) { ZAG.push([b.getAttribute('data-vid'), b.textContent, b.getAttribute('data-zag') || '']); }, t);
     });
     vse('.report.ex[data-oborot]', primer);

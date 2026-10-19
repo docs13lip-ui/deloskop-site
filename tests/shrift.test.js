@@ -41,3 +41,12 @@ test('оболочка карточек из API несёт ту же предз
   const ob = JSON.parse(chitat('partials/obolochka.json'));
   assert.deepStrictEqual([...ob.head.matchAll(PRELOAD)].map((m) => m[1]), NUZHNO);
 });
+
+test('предзагрузка стоит до стилей пакета ds (запрос шрифта уходит раньше разбора стилей)', () => {
+  for (const f of ['indeks/index.html', 'zhurnal/index.html', 'reyting/index.html', 'tarify/index.html']) {
+    const t = chitat(f), i = t.indexOf('onest-cyrillic-400.woff2" as="font"'), d = t.search(/<link rel="stylesheet" href="\/css\/b\/ds\.[0-9a-f]{10}\.css">/);
+    assert.ok(i > 0 && d > 0 && i < d, f);
+  }
+  const ob = JSON.parse(chitat('partials/obolochka.json')).head;
+  assert.ok(ob.indexOf('onest-cyrillic-400') < ob.search(/\/css\/b\/ds\./), 'оболочка API');
+});

@@ -61,6 +61,7 @@ SHRIFT_PRELOAD = "\n".join('<link rel="preload" href="/fonts/onest-%s.woff2" as=
                            for f in ("cyrillic-400", "latin-400", "cyrillic-600"))
 GLAVNAYA_CANON = '<link rel="canonical" href="https://deloskop.ru/">'
 STARYJ_PRELOAD = re.compile(r'<link rel="preload" href="/fonts/onest-[^"]+" as="font"[^>]*>\n?')
+DS_PAKET = re.compile(r'<link rel="stylesheet" href="/css/b/ds\.[0-9a-f]{10}\.css">')
 PODVAL_LINK = '<link rel="stylesheet" href="/css/podval.css">'
 SHAPKA_LINK = '<link rel="stylesheet" href="/css/shapka.css">'
 SHAPKA_JS = '<script src="/js/shapka.js" defer></script>'
@@ -488,7 +489,9 @@ def sobrat_stranicu(txt, r, podval, shapka=None):
         # а ожидание шрифта задержало бы первый экран (+~250 мс на 4G, замер shrift-v1).
         # Перед </head>, как остальные вставки: карточки из API надевают ту же оболочку (TestObolochka); сканер
         # предзагрузки браузера видит ссылку, пока разбирается <head>, — место в <head> на скорость не влияет.
-        txt = txt.replace("</head>", SHRIFT_PRELOAD + "\n</head>", 1)
+        m = DS_PAKET.search(txt)  # до стилей пакета ds: запрос шрифта уходит раньше, чем разбор стилей его потребует
+        i = m.start() if m and m.start() < txt.find("</head>") else txt.find("</head>")
+        txt = txt[:i] + SHRIFT_PRELOAD + "\n" + txt[i:]
     return txt
 
 

@@ -9,7 +9,10 @@ const fs = require('fs');
 const path = require('path');
 
 const KOREN = path.join(__dirname, '..');
-const chitat = f => fs.readFileSync(path.join(KOREN, f), 'utf8');
+// tipograf-yur-v1: юридические документы прогнаны типографом — сверяем текст без учёта вида пробела и дефиса
+const bezVidaYur = (f, s) => (/^(oferta|politika|soglasie|cookies|vozvrat|rassylki|partneram\/usloviya)\//.test(f)
+  ? s.replace(/<main[\s\S]*<\/main>/, (m) => m.replace(/&nbsp;|\u00a0/g, ' ').replace(/&#8209;|\u2011/g, '-')) : s); // только <main>: шапка и подвал — байт в байт
+const chitat = f => bezVidaYur(f, fs.readFileSync(path.join(KOREN, f), 'utf8'));
 const bezTegov = t => t.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/ /g, ' ').replace(/\s+/g, ' ');
 const T = JSON.parse(chitat('tarify/tarify.json'));
 const RAZOVYE = Object.keys(T).filter(k => T[k] && typeof T[k] === 'object' && T[k].razovo === true);
@@ -90,7 +93,7 @@ test('/vozvrat/: строки [Право] дословно, старой «Па
     ['«Паспорт своей компании»', 'Как подписка: за вычетом дней до отказа, пропорционально году.'],
   ]) assert.ok(s.includes(sit + ' ' + skolko) || s.includes(sit + skolko), 'нет строки: ' + sit);
   assert.ok(/<tr id="razovye">/.test(t));
-  assert.ok(t.includes('<a href="/oferta/#razovye">п.&nbsp;3.7</a>'));
+  assert.ok(t.includes('<a href="/oferta/#razovye">п. 3.7</a>'));
   assert.ok(s.includes('п. 6.6 и 5.11 оферты'));
 });
 

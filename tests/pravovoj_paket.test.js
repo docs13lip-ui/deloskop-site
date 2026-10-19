@@ -8,7 +8,10 @@ const fs = require('fs');
 const path = require('path');
 
 const KOREN = path.join(__dirname, '..');
-const chitat = f => fs.readFileSync(path.join(KOREN, f), 'utf8');
+// tipograf-yur-v1: юридические документы прогнаны типографом — сверяем текст без учёта вида пробела и дефиса
+const bezVidaYur = (f, s) => (/^(oferta|politika|soglasie|cookies|vozvrat|rassylki|partneram\/usloviya)\//.test(f)
+  ? s.replace(/<main[\s\S]*<\/main>/, (m) => m.replace(/&nbsp;|\u00a0/g, ' ').replace(/&#8209;|\u2011/g, '-')) : s); // только <main>: шапка и подвал — байт в байт
+const chitat = f => bezVidaYur(f, fs.readFileSync(path.join(KOREN, f), 'utf8'));
 const bezTegov = t => t.replace(/<[^>]+>/g, '').replace(/&#8209;/g, '‑').replace(/&nbsp;/g, ' ');
 const skolko = (s, f) => s.split(f).length - 1;
 const DOKI = ['oferta', 'politika', 'soglasie', 'rassylki', 'cookies', 'partneram/usloviya', 'vozvrat', 'rekvizity'];
@@ -103,7 +106,7 @@ test('партнёрам: все типы (гражданин, НПД, ИП/ор
   const t = chitat('partneram/usloviya/index.html');
   const s = bezTegov(t);
   for (const f of ['ст. 779 ГК РФ', 'не агентский', 'до удержания налога', 'включает НДС', 'erid', '«Реклама»', '25%',
-    'ч. 3 ст. 14 Федерального закона № 422-ФЗ', 'до 15‑го числа', 'гражданин, самозанятый', 'налоговый агент'])
+    'ч. 3 ст. 14 Федерального закона № 422-ФЗ', 'до 15-го числа', 'гражданин, самозанятый', 'налоговый агент'])
     assert.ok(s.includes(f), 'в условиях партнёров нет: ' + f);
   for (const id of ['grazhdanin', 'npd', 'ip-org']) {
     assert.ok(t.includes(`<section id="${id}" data-partner-blok>`), 'нет блока #' + id);
@@ -132,7 +135,7 @@ test('лента: запись 2026-09-26-13 про правовой пакет,
 
 // [Юрист 115-ФЗ] 30.09 (claude/Юрист115_оферта_п7.1_30.09.md): разд. 7 оферты не называет источниками то, что не проверяем
 test('оферта разд. 7: нет ФССП, судов, арбитража, банкротства; п. 7.1 — по тексту юриста', () => {
-  const t = fs.readFileSync(path.join(__dirname, '..', 'oferta', 'index.html'), 'utf8');
+  const t = bezVidaYur('oferta/', fs.readFileSync(path.join(__dirname, '..', 'oferta', 'index.html'), 'utf8'));
   const r7 = t.slice(t.indexOf('id="o7"'), t.indexOf('id="o8"'));
   assert.ok(!/ФССП|судов|арбитраж|банкрот/i.test(r7), 'разд. 7 обещает непроверяемое');
   assert.ok(r7.includes('Какие источники проверены для конкретной компании, на какую дату получены сведения и какие источники не проверялись, указано в самом отчёте у каждого блока.'));

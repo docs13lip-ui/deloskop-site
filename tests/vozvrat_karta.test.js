@@ -9,7 +9,10 @@ const os = require('node:os');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const K = path.join(__dirname, '..');
-const chitat = (f) => fs.readFileSync(path.join(K, f), 'utf8');
+// tipograf-yur-v1: юридические документы прогнаны типографом — сверяем текст без учёта вида пробела и дефиса
+const bezVidaYur = (f, s) => (/^(oferta|politika|soglasie|cookies|vozvrat|rassylki|partneram\/usloviya)\//.test(f)
+  ? s.replace(/<main[\s\S]*<\/main>/, (m) => m.replace(/&nbsp;|\u00a0/g, ' ').replace(/&#8209;|\u2011/g, '-')) : s); // только <main>: шапка и подвал — байт в байт
+const chitat = (f) => bezVidaYur(f, fs.readFileSync(path.join(K, f), 'utf8'));
 const D = JSON.parse(chitat('tarify/tarify.json'));
 
 // видимое: без <template>, скриптов и стилей
@@ -30,7 +33,7 @@ function sobrat(...flagi) { // сборки подряд в одной копи�
     fs.writeFileSync(f, JSON.stringify(d, null, 2));
     execFileSync('python3', ['-W', 'ignore', 'tests/sobrat_tarify.py', '.'], { cwd: kop, stdio: 'pipe' });
   }
-  const h = fs.readFileSync(path.join(kop, 'vozvrat/index.html'), 'utf8');
+  const h = bezVidaYur('vozvrat/', fs.readFileSync(path.join(kop, 'vozvrat/index.html'), 'utf8'));
   fs.rmSync(tmp, { recursive: true, force: true });
   return h;
 }

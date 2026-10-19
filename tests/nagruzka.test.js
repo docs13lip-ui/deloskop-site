@@ -147,7 +147,7 @@ test("справочник собран из JSON (sobrat_nagruzka.py --check) �
   assert.deepStrictEqual(tr, [45, 61]);
   assert.match(TABL, /<td>Строительство<\/td><td>раздел F<\/td><td><b>15,0%<\/b><\/td><td>14,4%<\/td><td>\+0,6 п\. п\.<\/td>/);
   assert.match(TABL, /<td>Добыча угля<\/td><td>05<\/td><td><b>убыток<\/b><\/td><td>4,8%<\/td><td><b>убыток<\/b><\/td><td>убыток<\/td>/);
-  assert.match(TABL, /Данные ФНС от 05\.05\.2026/);
+  assert.match(TABL, /Данные ФНС от(?: |&nbsp;)05\.05\.2026/);  // tipograf-obolochka-v1: пробел — любой
 });
 
 test("страницы: SEO, ссылки, источники, без внешних скриптов, в sitemap и в разделе «Налоги»", () => {

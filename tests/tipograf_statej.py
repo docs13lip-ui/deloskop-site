@@ -24,7 +24,7 @@ RAZDELY = ("115-fz", "nalogi")  # статьи, которые пишутся р
 # Не берём: страницы целиком из сборщиков (/tarify/, /reyting/, /zhurnal/, /obnovleniya/, /company/) и юридические
 # документы (/oferta/, /politika/, /soglasie/, /cookies/, /vozvrat/, /partneram/usloviya/, /rassylki/) — их только с [Право].
 STRANICY = {
-    "indeks/index.html": "article",
+    "indeks/index.html": "main",  # tipograf-obolochka-v1: оговорка и «Проверить» после методики — тоже текст страницы
     "o-proekte/index.html": "article",
     "tochnost/index.html": "article",
     "pasport/index.html": "main",
@@ -80,23 +80,35 @@ def statya(s, teg="article"):
     b = next((m.start() for m in re.finditer("</" + teg + ">", s) if a is not None and m.start() > a and vne(m.start())), None)
     if a is None or b is None:
         return s
-    vnutri, out, i = s[a:b], [], 0
-    for m in NE_TROGAT.finditer(vnutri):
-        out.append(kusok(vnutri[i:m.start()]))
+    return s[:a] + fragment(s[a:b]) + s[b:]
+
+
+def fragment(s):
+    """Типографика куска HTML целиком: служебные блоки сборщиков, скрипты, стили и комментарии не трогаем.
+    Для оболочки (шапка, подвал — tests/sobrat_shapku.py), статей и страниц из STRANICY — одни правила."""
+    out, i = [], 0
+    for m in NE_TROGAT.finditer(s):
+        out.append(kusok(s[i:m.start()]))
         out.append(m.group(0))
         i = m.end()
-    out.append(kusok(vnutri[i:]))
-    return s[:a] + "".join(out) + s[b:]
+    out.append(kusok(s[i:]))
+    return "".join(out)
 
 
 def stranicy():
     """(путь, тег-рамка): статьи разделов — <article>; страницы из STRANICY — свой тег."""
     for r in RAZDELY:
         for p in sorted((ROOT / r).glob("*/index.html")):
-            yield p, "article"
+            # tipograf-obolochka-v1: рамка — <main>: после <article> идут «Проверьте себя», «Источники», оговорка
+            # и «Читайте также» — там висели «за несколько», «от 26.08.2025», «не заменяют» (замер 19.10, 390 px)
+            # Страницы без <article> (калькулятор, справочник нагрузки — свои сборщики) — как раньше, не трогаем.
+            yield p, ("main" if "<article" in p.read_text(encoding="utf-8") else "article")
     for put, teg in STRANICY.items():
         if (ROOT / put).exists():
             yield ROOT / put, teg
+    # tipograf-obolochka-v1 (19.10.2026): шапка — на всех страницах (sobrat_shapku вставляет файл байт в байт);
+    # типографим источник целиком, иначе «из вашей выписки», «для банка и партнёров» висели на каждой странице.
+    yield ROOT / "partials" / "shapka.html", None
 
 
 def main(argv):
@@ -104,7 +116,7 @@ def main(argv):
     izm = []
     for p, teg in stranicy():
         s = p.read_text(encoding="utf-8")
-        nov = statya(s, teg)
+        nov = statya(s, teg) if teg else fragment(s)
         if nov != s:
             izm.append(str(p.relative_to(ROOT)))
             if not check:

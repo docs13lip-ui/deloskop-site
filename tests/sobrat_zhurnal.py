@@ -31,6 +31,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import sobrat_shapku as SH  # noqa: E402
+import tipograf_statej as TS  # noqa: E402
 from sobrat_praktika import tipograf, nerazryv, data_ru, kroshki_ld, kroshki_html  # noqa: E402
 
 KOREN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -476,7 +477,8 @@ def stranica_spiska(spisok):
 
 
 def gotovo(txt, r_, podval, shapka):
-    return SH.sobrat_stranicu(nerazryv(tipograf(txt)), r_, podval, shapka)
+    # tipograf-obolochka-v1: + короткие слова, как в статьях («до какого», «и Минфина» висели на 390 px)
+    return SH.sobrat_stranicu(nerazryv(TS.statya(tipograf(txt), "main")), r_, podval, shapka)
 
 
 # ---------- письмо ----------

@@ -51,6 +51,7 @@
 .kvb-dalshe{display:flex;flex-wrap:wrap;gap:0 var(--s-5);margin-top:var(--s-3)}
 .kvb-dalshe a{display:inline-flex;align-items:center;min-height:44px;text-decoration:none;font-size:var(--t-15)}
 .kvb-ogovorka{max-width:38em;margin:var(--s-6) 0 0;font-size:var(--t-13);color:var(--muted)}
+.kvb-ogovorka--pod{margin-top:var(--s-2)}
 
 .kvb-scena{display:none}
 

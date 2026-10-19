@@ -179,3 +179,20 @@ print(json.dumps({'stop': stop, 'obertok': n.count('<template data-dubli="vhody"
   assert.strictEqual(r.obertok, 1, 'секция обёрнута в <template>');
   assert.ok(r.obratno, 'false — разворачивает обратно байт в байт');
 });
+
+// priemka-1910-v1 (19.10.2026, приёмка Штаба с живого 09:05, пп. 1–4)
+test('priemka-1910-v1: таблетка не накрывает заголовки, текущий экспонат на телефоне — по заголовку, шкала на 40vh, зал 390 ≤ 6 500', () => {
+  const js = chitat('js/vitrina.js'), css = chitat('css/vitrina.css');
+  // (1) спрятана, пока в её полосе заголовок; назад — через 300 мс после ухода; гаснет через 0,8 с покоя
+  assert.match(js, /t - pokaz < 800 && !podZag && t - svob >= 300/);
+  assert.match(js, /if \(byl && !podZag\) \{ svob = Date\.now\(\); setTimeout\(vidno, 310\); \}/);
+  assert.match(js, /tm = setTimeout\(vidno, 820\)/);
+  // (2) на телефоне — последний заголовок, ушедший под таблетку; середина экрана — только для шкалы
+  assert.match(js, /if \(q\.height && q\.top < n\) \{ var li = zagl\[i\]\.closest\('\.vit-e'\)/);
+  assert.match(js, /if \(luch && shk\) vybrat\(luch\)/);
+  // (3) шкала у края — на уровне глаз (40vh), position: fixed — не уходит из поля зрения
+  assert.match(css, /\.vit-ind--shk\{left:[^}]*top:40vh;/);
+  assert.match(css, /\.vit-ind\{position:fixed;/);
+  // (4) воздух между экспонатами на телефоне 32 → 28 px (−48 px на 12 промежутках)
+  assert.match(css, /@media \(max-width:860px\)\{[\s\S]*? \.vit__zal\{gap:28px\}/);
+});

@@ -481,7 +481,7 @@
     d.className = "ck-bar";
     d.setAttribute("role", "region");
     d.setAttribute("aria-label", "Cookies");
-    d.innerHTML = '<div class="ck-bar__in"><p class="ck-bar__t"><span class="ck-bar__dl">Мы используем необходимые cookies для работы сайта и, с вашего согласия, Яндекс Метрику, чтобы понимать, что улучшить. Подробнее — в <a href="/cookies/">Политике cookies</a>.</span><span class="ck-bar__kr">Cookies — для работы сайта, Метрика — только с вашего согласия. <a href="/cookies/">Подробнее</a></span></p>' +
+    d.innerHTML = '<div class="ck-bar__in"><p class="ck-bar__t"><span class="ck-bar__dl">Мы используем необходимые cookies для работы сайта и, с\u00a0вашего согласия, Яндекс Метрику, чтобы понимать, что улучшить. Подробнее\u00a0— в\u00a0<a href="/cookies/">Политике cookies</a>.</span><span class="ck-bar__kr">Cookies\u00a0— для работы сайта, Метрика\u00a0— только с\u00a0вашего согласия. <a href="/cookies/">Подробнее</a></span></p>' +
       '<div class="ck-bar__b"><button type="button" class="ck-bar__ok" data-ck="all">Принять</button>' +
       '<button type="button" class="ck-bar__no" data-ck="need">Только необходимые</button></div></div>';
     d.addEventListener("click", function (e) {

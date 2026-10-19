@@ -31,7 +31,7 @@ test('2.1: на «Нагрузку по отраслям 2025» ссылаютс
   assert.ok(hab.includes('<b>Налоговая нагрузка по отраслям за 2025 год</b>'));
   assert.ok(hab.includes('Средняя нагрузка и рентабельность по видам деятельности, таблица ФНС с датой'));
   for (const f of ['nalogi/statya-54-1-nk-prostymi-slovami/index.html', 'nalogi/priznaki-tehnicheskoj-kompanii/index.html']) {
-    const more = chitat(f).match(/<section class="more">[\s\S]*?<\/section>/)[0];
+    const more = chitat(f).match(/<section class="more">[\s\S]*?<\/section>/)[0].replace(/&nbsp;/g, ' ');  // tipograf-obolochka-v1
     assert.ok(more.includes('Средняя налоговая нагрузка по вашей отрасли за 2025 год'), f);
   }
 });

@@ -83,7 +83,8 @@ test('v-cifrah: страница самостоятельная, не мягка
 
 test('v-cifrah: оба письма ЦБ в источниках — ссылкой с полным названием (сверено 05.10 02:10)', () => {
   const html = fs.readFileSync(path.join(__dirname, '..', '115-fz', 'v-cifrah', 'index.html'), 'utf8');
-  const src = html.slice(html.indexOf('<section class="src">'));
+  // tipograf-obolochka-v1: «Источники» — тоже типографом; сверяем без учёта вида пробела и дефиса
+  const src = html.slice(html.indexOf('<section class="src">')).replace(/&nbsp;/g, ' ').replace(/&#8209;/g, '-');
   assert.ok(src.includes('cons_doc_LAW_513007/') && src.includes('№ ИН-01-59/98 «Об информировании клиентов'));
   assert.ok(src.includes('cons_doc_LAW_545360/') && src.includes('№ ИН-03-45/32 «О сроках'));
   for (const u of ['?id=32883', '?id=32735', 'counteraction_m_ter/platform_zsk']) assert.ok(src.includes(u), u);

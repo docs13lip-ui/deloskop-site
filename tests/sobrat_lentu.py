@@ -117,7 +117,7 @@ def puls_stroka(u):
     else:
         kogda_, dt = esc_js(u.get("data") or ""), ""
     return '<li><time datetime="%s">%s</time><a href="/obnovleniya/#%s">%s</a></li>' % (
-        dt, kogda_, esc_js(u.get("id", "")), esc_js(u.get("zagolovok", "")))
+        dt, kogda_, esc_js(u.get("id", "")), TS.tekst(esc_js(u.get("zagolovok", ""))))  # tipograf-obolochka-v1
 
 
 def sobrat_puls(txt, zapisi):

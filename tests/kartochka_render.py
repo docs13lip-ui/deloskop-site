@@ -3721,3 +3721,60 @@ def html_gruppy(g, kart, index, n=1, vsego=1):  # noqa: F811 — kartochki-unik-
         _LI_VID["vid"] = None
     vv = hab_vvod(g) if n <= 1 else ""
     return t.replace("</p></header>", "</p>%s</header>" % vv, 1) if vv else t
+
+
+# kartochki-unik-v6: «Перед оплатой» без замечаний — совет из фактов этой страницы, а не одна строка на 113 карточках
+# («В сведениях этой страницы у X замечаний нет — перед оплатой остаётся сверить счёт…»). Порядок: заметное движение
+# выручки → (по ИНН) дата сведений о налогах или возраст в реестре / руководитель. Слова — без оценок (STOP_SLOVA).
+_un_pered_do_v6 = un_pered
+
+
+def _un_pered_fakt(f):
+    """Один совет «Перед оплатой» по фактам страницы без замечаний (HTML-строка) или None."""
+    im = html.escape(un_kratkoe(f["imya"]), quote=False)
+    inn = f.get("inn", "") or ""
+    ryad = [x for x in f["ryad"] if x.get("dohod") and x["dohod"] > 0]
+    p1 = ryad[-1] if ryad else {}
+    p0 = ryad[-2] if len(ryad) >= 2 and ryad[-2].get("god") == (p1.get("god") or 0) - 1 else None
+    g1, r1 = p1.get("god"), p1.get("dohod")
+    if p0 and r1 and g1:
+        dl = r1 / p0["dohod"] - 1
+        if dl <= -0.05:
+            return ("Выручка %s за%s%d год — %s, на %s ниже, чем за %d: в длинном договоре закрепите объёмы и сроки "
+                    "поставок по этапам." % (im, NB, g1, dengi(r1), _zn_proc(dl), g1 - 1))
+        if dl >= 0.3:
+            return ("За%s%d год выручка %s выросла на %s, до %s: если заказ рассчитан на месяцы вперёд, пропишите "
+                    "сроки этапов и неустойку за их срыв." % (NB, g1, im, _zn_proc(dl), dengi(r1)))
+    var = []
+    bez = _zn_v(f, "ok", "Налоговой задолженности")
+    d = re.search(r"\(на (.*?)\)", bez or "")
+    if d:
+        t = "Налогового долга у %s не было на %s — это последние сведения ФНС на странице." % (im, d.group(1))
+        if r1 and g1:
+            t += (" Если сумма сделки больше %s (средняя месячная выручка за%s%d), попросите справку КНД 1120101 "
+                  "на дату договора." % (dengi(r1 / 12), NB, g1))
+        var.append(t)
+    ruk = re.search(r"с%s?(\d{4}) года" % NB, (_zn_v(f, "ok", "Руководитель тот же") or "").replace(" ", NB))
+    if ruk:
+        var.append("Руководитель %s не менялся с%s%s года — договор подписывает он или представитель по доверенности "
+                   "от него; копию доверенности приложите к договору." % (im, NB, ruk.group(1)))
+    elif f.get("osnovana") and f.get("na") and f["na"].year - f["osnovana"].year >= 10:
+        var.append("%s в реестре с%s%d года. При первой сделке сверьте реквизиты в договоре с выпиской ЕГРЮЛ: "
+                   "полное название, адрес и того, кто подписывает." % (im, NB, f["osnovana"].year))
+    if not var:
+        return None
+    return var[int(inn[-1]) % len(var)] if inn[-1:].isdigit() else var[0]
+
+
+def un_pered(f):  # noqa: F811
+    s = _un_pered_do_v6(f)
+    if len(s) != 1 or "замечаний нет" not in s[0]:
+        return s
+    fakt = _un_pered_fakt(f)
+    if not fakt:
+        return s
+    assert not STOP_SLOVA.search(fakt), fakt
+    inn = f.get("inn", "")
+    im = html.escape(un_kratkoe(f["imya"]), quote=False)
+    return [fakt, 'Счёт от %s: сверьте ИНН%s%s, название и банк. <a href="/proverit-schet/">Проверить счёт</a>'
+            % (im, NB, inn)]

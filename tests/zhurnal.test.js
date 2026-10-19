@@ -83,7 +83,7 @@ test('сборка выпуска: страница, письмо ≤ 3 500 зн
     assert.ok(!/"/.test(vid), `${f}: прямые кавычки в тексте страницы`);
     if (V.obrazec) {
       assert.match(str, /<meta name="robots" content="noindex/, `${f}: образец без noindex`);
-      assert.ok(/Образец выпуска(\u00a0| |&nbsp;)— не публиковать/.test(str), `${f}: у образца нет плашки`);
+      assert.ok(/Образец выпуска(\u00a0| |&nbsp;)—(\u00a0| |&nbsp;)не(\u00a0| |&nbsp;)публиковать/.test(str), `${f}: у образца нет плашки`);
     }
     // письмо
     assert.ok(meta.znakov_v_pisme <= 3500, `${f}: письмо ${meta.znakov_v_pisme} знаков`);

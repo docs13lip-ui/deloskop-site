@@ -46,6 +46,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import beta as BETA  # noqa: E402
 import tema_temnaya as TT  # noqa: E402  vizual-v3.0b: тёмный слой стилей страницы
+import tipograf_statej as TS  # noqa: E402  tipograf-obolochka-v1: шапка и подвал — тем же типографом, что статьи
 
 KOREN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ISKLYUCHIT = {"admin.html", "offline.html"}  # служебная — без подвала; offline.html (pwa-v1) самодостаточный экран «Нет сети»
@@ -192,12 +193,14 @@ def podval_html(r):
         if r.get("_gorod"):
             stroka += " · " + gorod(r)
         stroka += ' · <a href="/rekvizity/">Реквизиты</a>'
-    return ('<!--podval--><div class="podval" role="contentinfo"><div class="podval__in">'
+    # tipograf-obolochka-v1 (19.10.2026): подвал и шапка — на всех ~250 страницах, а типограф статей их не видел
+    # (служебные блоки): «и партнёрам», «для партнёров», «не заменяют» висели на каждой странице (замер 390 px).
+    return ('<!--podval-->' + TS.fragment('<div class="podval" role="contentinfo"><div class="podval__in">'
             '<div class="podval__cols">' + "".join(cols) + '</div>'
             '<div class="podval__niz"><p>' + stroka + '</p>' + TEMA_PODVAL +
             '<p>Сотрудничество, отзывы и предложения — <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>. Принимаем 24/7</p>'
             '<p>Материалы носят информационный характер и не заменяют консультацию юриста</p></div>'
-            '</div></div><!--/podval-->')
+            '</div></div>') + '<!--/podval-->')
 
 
 # ---------- шапка ----------

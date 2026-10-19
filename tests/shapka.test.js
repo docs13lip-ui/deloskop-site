@@ -41,7 +41,8 @@ test('логотип — фирменная линза, дважды (шапка
 });
 
 test('5 пунктов меню, без aria-current/is-active/style, цвета — только цвета логотипа', () => {
-  const p = chitat('partials/shapka.html');
+  // tipograf-obolochka-v1: «115&#8209;ФЗ» (неразрывный дефис) — не цвет и не другой пункт
+  const p = chitat('partials/shapka.html').replace(/&#8209;/g, '-');
   const nav = p.slice(p.indexOf('<ul class="shapka__list">'), p.indexOf('</nav>'));
   const punkty = [...nav.matchAll(/<li(?: class="shapka__dd")?>\s*<(?:a|button) class="shapka__link"[^>]*>([^<]+)/g)].map(m => m[1].trim());
   assert.deepStrictEqual(punkty, ['Проверка', 'Выписка', '115-ФЗ', 'Индекс', 'Тарифы']);

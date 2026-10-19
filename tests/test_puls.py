@@ -84,7 +84,11 @@ try:
         json.dumps(S.MESYACY, ensure_ascii=False), json.dumps(d["obnovleniya"][:5], ensure_ascii=False), skript.group(1))
     out = subprocess.run(["node", "-e", js], capture_output=True, text=True, check=True).stdout
     nash = S.PULS.search(proekt).group(2).strip().replace("&nbsp;", "\u00a0")
-    ok("разметка снимка = то, что рисует скрипт", out == nash, "\nJS:  " + out[:300] + "\nPY:  " + nash[:300])
+    # tipograf-obolochka-v1 (19.10.2026): заголовки пульса — с типографикой статей (TS.tekst); скрипт страницы после
+    # отрисовки зовёт DlkTipo.uzly (те же правила, obnovleniya.js) — сверяем разметку без учёта вида пробела.
+    sp = lambda x: x.replace("\u00a0", " ")
+    ok("разметка снимка = то, что рисует скрипт", sp(out) == sp(nash), "\nJS:  " + out[:300] + "\nPY:  " + nash[:300])
+    ok("скрипт пульса типографит, как сборщик (DlkTipo.uzly)", "DlkTipo.uzly(l)" in proekt)
 
     ok("повторная сборка — без изменений, --check зелёный", S.main(["--check"]) == 0)
 finally:

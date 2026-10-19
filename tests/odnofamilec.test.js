@@ -79,7 +79,7 @@ test('типографика: NBSP только сущностью, 115‑ФЗ �
 });
 
 test('срок 24 часа — с 14.06.2026 по закону № 462-ФЗ (сверено с текстом закона 03.10.2026)', () => {
-  const s = S.replace(/&nbsp;/g, ' ');
+  const s = S.replace(/&nbsp;/g, ' ').replace(/&#8209;/g, '-');  // tipograf-obolochka-v1: источники — тоже типографом
   assert.ok(s.includes('№ 462-ФЗ') && s.includes('с 14 июня 2026 года'));
   assert.ok(S.includes('publication.pravo.gov.ru/Document/View/0001202512150027'));
 });

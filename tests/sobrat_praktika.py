@@ -431,7 +431,9 @@ def ssylki_s_sajta(txt, f, spisok, D, po_slug):
     else:
         blok = "".join('<p><strong>Как это решают суды:</strong> <a href="%s">%s&nbsp;→</a></p>' % (u, e(t)) for u, t in celi)
         yakor, kak = "</article>", "pered"
-    blok = "<!--praktika-ssylki-->" + blok.replace("115-ФЗ", "115&#8209;ФЗ") + "<!--/praktika-ssylki-->"  # не рвётся на 390
+    # tipograf-obolochka-v1 (19.10.2026): строка «Как это решают суды» — тем же типографом, что статья вокруг
+    # («за перевод «по 115‑ФЗ»» висело на 390 px); «115‑ФЗ» неразрывным дефисом делает он же.
+    blok = "<!--praktika-ssylki-->" + TS.fragment(blok) + "<!--/praktika-ssylki-->"
     if "<!--praktika-ssylki-->" in txt:
         return re.sub(r"<!--praktika-ssylki-->.*?<!--/praktika-ssylki-->", lambda m: blok, txt, flags=re.S)
     if txt.count(yakor) != 1:

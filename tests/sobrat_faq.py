@@ -28,7 +28,12 @@ CSS = ('<!--faq-css--><style>.faq{margin-top:40px}.faq h2{font-size:clamp(24px,3
        '.faq summary:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:6px}'
        '.faq details p{margin:10px 0 0;color:var(--ink2)}</style><!--/faq-css-->')
 
-KOROTKIE = r"(?:в|и|а|к|с|у|о|я|по|на|не|до|от|за|из|ни|но|же|ли|без|для|под|над|при|про)"
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import tipograf_statej as TS  # noqa: E402
+
+# tipograf-obolochka-v1 (19.10.2026): один список коротких слов на весь сайт — из типографа статей
+# (было своё, без «со, об, во, мы, вы, он, её, их, ей, им» — в ответах FAQ висело «их использования»).
+KOROTKIE = TS.KOROTKIE
 
 
 def norm(s):

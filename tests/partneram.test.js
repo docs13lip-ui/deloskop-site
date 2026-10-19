@@ -67,7 +67,7 @@ test('страница настоящая: в sitemap, в подвале «Ко�
   assert.ok(html.includes('<link rel="canonical" href="https://deloskop.ru/partneram/">'));
   assert.ok(html.includes('"@type": "BreadcrumbList"'));
   const pod = JSON.parse(chitat('partials/obolochka.json')).podval;
-  assert.ok(/aria-label="Компания">[\s\S]*?<a href="\/partneram\/">Бухгалтерам и партнёрам<\/a>/.test(pod));
+  assert.ok(/aria-label="Компания">[\s\S]*?<a href="\/partneram\/">Бухгалтерам и(?: |&nbsp;)партнёрам<\/a>/.test(pod));
   const u = chitat('partneram/usloviya/index.html');
   assert.ok(u.includes('<a href="/">Делоскоп</a> › <a href="/partneram/">Партнёрам</a> › <span>Условия</span>'));
   assert.ok(u.includes('"name": "Партнёрам", "item": "https://deloskop.ru/partneram/"'));

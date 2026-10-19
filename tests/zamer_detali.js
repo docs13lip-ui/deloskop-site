@@ -87,7 +87,8 @@ function izmerit(norma) {
     if (zn > dlinnaya) dlinnaya = zn;
     if (zn > 75) dlinnye.push(imya(el) + ' ' + Math.round(zn));
   }
-  // висячие короткие слова (в конце строки)
+  // висячие короткие слова (в конце строки). tipograf-obolochka-v1: следующее слово — по ПЕРВОЙ его строке: «в 2024–2025»
+  // с переносом после тире — не висячее «в» (раньше брали последнюю строку слова и считали такое висячим).
   const KOROTKIE = /^(в|и|а|к|с|у|о|я|по|на|не|до|от|за|из|ни|но|же|ли|без|для|под|над|при|про|со|об|во|мы|вы|он|её|их|ее)$/i;
   const visyat = [];
   for (const el of document.body.querySelectorAll('p, li, h1, h2, h3, h4, dd, figcaption, .pod, .cap')) {
@@ -100,11 +101,11 @@ function izmerit(norma) {
       while ((m = re.exec(t.nodeValue))) {
         const rg = document.createRange(); rg.setStart(t, m.index); rg.setEnd(t, m.index + m[0].length);
         const rs = rg.getClientRects(); if (!rs.length) continue;
-        slova.push({ s: m[0], top: rs[rs.length - 1].top, nbsp: t.nodeValue[m.index + m[0].length] === ' ' });
+        slova.push({ s: m[0], top: rs[rs.length - 1].top, top0: rs[0].top, nbsp: t.nodeValue[m.index + m[0].length] === ' ' });
       }
     }
     for (let i = 0; i < slova.length - 1; i++) {
-      if (slova[i + 1].top - slova[i].top > 4 && KOROTKIE.test(slova[i].s.replace(/[«(]/g, ''))) visyat.push(imya(el) + ' «…' + slova[i].s + '|' + slova[i + 1].s + '»');
+      if (slova[i + 1].top0 - slova[i].top > 4 && KOROTKIE.test(slova[i].s.replace(/[«(]/g, ''))) visyat.push(imya(el) + ' «…' + slova[i].s + '|' + slova[i + 1].s + '»');
     }
   }
   // уровни заголовков

@@ -3248,13 +3248,38 @@ def un_otlichie_zag(im, vid):
     return UN_ZAG.get(vid, "%s среди компаний Делоскопа.") % im
 
 
-def un_istoriya(im, reestr, ruk, a0, p1):
+def _un_put(ryad):
+    """kartochki-unik-v7 ([Ночные-2] 19.10): каким путём шла выручка между первым и последним открытым годом —
+    по строкам той же таблицы на странице (соседние годы). Возвращает (вид, год, доля): «kazhdyj» — росла каждый год,
+    «spad» — самый глубокий годовой спад (≥ 5 %), иначе (None, None, None)."""
+    pary = [(a, b) for a, b in zip(ryad, ryad[1:]) if a.get("god") and b.get("god") == a["god"] + 1
+            and a.get("dohod") and b.get("dohod")]
+    if len(pary) < 2 or len(pary) != len(ryad) - 1:
+        return None, None, None
+    spady = [(b["dohod"] / a["dohod"] - 1, b["god"]) for a, b in pary if b["dohod"] < a["dohod"] * 0.95]
+    if spady:
+        d, g = min(spady)
+        return "spad", g, -d
+    if all(b["dohod"] > a["dohod"] for a, b in pary):
+        return "kazhdyj", None, None
+    return None, None, None
+
+
+def un_istoriya(im, reestr, ruk, a0, p1, ryad=None):
     """kartochki-unik-v5 ([Ночные-2] 18.10): «— с него начинается открытая отчётность на странице» было на 159 из 167
     карточек. Теперь — что произошло с выручкой от первого года открытой отчётности до последнего (числа той же таблицы
     на странице; новых утверждений нет)."""
     g0, r0, g1, r1 = a0["god"], a0["dohod"], p1["god"], p1["dohod"]
     nach = "%s %s%s" % (im, reestr, ruk)
     if r1 / r0 >= 1.3:
+        vid, gs, ds = _un_put(ryad or [])
+        if vid == "kazhdyj":
+            return "%s; выручка росла каждый год из%s%d%s%s открытой отчётности — от%s%s в%s%d до%s%s в%s%d." % (
+                nach, NB, len(ryad), NB, "года" if len(ryad) % 10 == 1 and len(ryad) % 100 != 11 else "лет", NB, dengi(r0), NB, g0, NB, dengi(r1), NB, g1)
+        if vid == "spad":
+            return "%s. За%s%d–%d%sгоды выручка %s выросла в%s%s, до%s%s; %s%s%d%sгод — спад на%s%s." % (
+                nach[:1].upper() + nach[1:], NB, g0, g1, NB, im, NB, _raz(r0, r1), NB, dengi(r1),
+                "последний, " if gs == g1 else "", "", gs, NB, NB, _zn_proc(ds))
         return "%s; с%s%d по%s%d год выручка выросла в%s%s — с%s%s до%s%s." % (
             nach, NB, g0, NB, g1, NB, _raz(r0, r1), NB, dengi(r0), NB, dengi(r1))
     if r1 / r0 <= 0.8:
@@ -3330,7 +3355,7 @@ def un_frazy(f):
                        "поставки." % (im, reestr))
         elif glub:
             out.append(un_istoriya(im, reestr, (", руководитель тот же с %s года" % ruk_s.group(1)) if ruk_s else "",
-                                   a0, p1))
+                                   a0, p1, [x for x in ryad if not x.get("fns")]))
         else:
             out.append("%s %s%s; %s." % (
                 im, reestr, (", руководитель не менялся с %s года" % ruk_s.group(1)) if ruk_s else "",
@@ -3409,7 +3434,17 @@ def un_frazy(f):
         chasti = []
         if mx["god"] != g1:
             chasti.append("по выручке лучшим у %s из открытых лет был %d год — %s" % (im, mx["god"], dengi(mx["dohod"])))
-        if mp and mp["pribyl"] > 0 and mp["god"] != g1:
+        if mp and mp["pribyl"] > 0 and mp["god"] != g1 and not chasti:
+            # kartochki-unik-v7: одна «по прибыли — N год, …» без начала фразы читалась обрывком (47 карточек) →
+            # лучший год прибыли против последнего, числа той же таблицы
+            posl = p1.get("pribyl")
+            if posl is not None and posl > 0:
+                chasti.append("самая большая прибыль у %s из открытых лет — за %d год, %s; за %d — %s, это %s от неё" % (
+                    im, mp["god"], dengi(mp["pribyl"]), g1, dengi(posl), _zn_proc(posl / mp["pribyl"])))
+            else:
+                chasti.append("самая большая прибыль у %s из открытых лет — за %d год, %s" % (
+                    im, mp["god"], dengi(mp["pribyl"])))
+        elif mp and mp["pribyl"] > 0 and mp["god"] != g1:
             chasti.append("по прибыли — %d год, %s" % (mp["god"], dengi(mp["pribyl"])))
         elif mp and mp["pribyl"] > 0 and mp["god"] == g1 and len(pp) >= 3:
             chasti.append("прибыль %s за %d год — самая высокая за %s открытой отчётности" % (im, g1, _zn_let(len(pp))))

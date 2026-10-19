@@ -173,3 +173,14 @@ dialog.dlo::backdrop{background:rgba(17,17,19,.55)}
 [data-theme=dark] .shapka .shapka__tema-s{display:block}
 [data-theme=dark] .shapka .shapka__tema-m{display:none}
 @media print{.shapka .shapka__tema{display:none}}
+
+/* zhivoj-v1 (19.10.2026) — живая смена темы. Новая тема раскрывается кругом от нажатой кнопки (шапка или подвал):
+   js/shapka.js §8 ставит на <html> класс tema-vt на время перехода и растит круг у снимка новой страницы.
+   На время перехода у остальных элементов имена переходов снимаются — вся страница меняется одним кругом,
+   заголовки и кольцо не улетают отдельно. Иконка солнца/луны — поворотом. «Уменьшить движение», нет поддержки — сразу. */
+.tema-vt body *{view-transition-name:none!important}
+.tema-vt::view-transition-old(root),.tema-vt::view-transition-new(root){animation:none;mix-blend-mode:normal}
+.tema-vt::view-transition-group(root){animation:none}
+@keyframes dlk-ikonka{from{rotate:-90deg;scale:.4;opacity:0}to{rotate:0deg;scale:1;opacity:1}}
+.tema-ik .shapka .shapka__tema svg{animation:dlk-ikonka .48s var(--ease,cubic-bezier(.2,.7,.2,1)) both}
+@media (prefers-reduced-motion:reduce){.tema-ik .shapka .shapka__tema svg{animation:none}}

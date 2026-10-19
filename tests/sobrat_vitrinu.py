@@ -203,9 +203,13 @@ def proverit(d, html_stranicy=""):
     for k in ("nad", "zag", "lead", "skoro"):
         if not zal.get(k):
             raise Oshibka("vitrina.json: zal.%s пусто" % k)
+    if not isinstance(zal.get("ubrat_dubli", False), bool):
+        raise Oshibka("vitrina.json: zal.ubrat_dubli — true или false")
+    if not all(isinstance(i, str) and re.fullmatch(r"[a-z][a-z0-9-]*", i) for i in zal.get("dubli") or []):
+        raise Oshibka("vitrina.json: zal.dubli — список id секций главной")
     cd = d.get("chto_dalshe") or {}
     for r, chto in ZAPRET:
-        if r.search(cd.get("tekst", "")) or any(r.search(v) for v in zal.values()):
+        if r.search(cd.get("tekst", "")) or any(r.search(v) for v in zal.values() if isinstance(v, str)):
             raise Oshibka("zal/chto_dalshe: %s — нельзя" % chto)
 
 
@@ -248,14 +252,31 @@ def ssylka(x, klass, tekst_html, vt=True):
     return '<a class="%s" href="%s"%s>%s</a>' % (klass, e(s), dop, tekst_html)
 
 
-def eksponat(x, n):
+def ritm(n_vsego):
+    """vitrina-v2b: ритм зала на широком экране — для экспоната n (с 1) классы вида и стороны сцены.
+    Крупные (KRUPNYE) — полная строка; компактные подряд — парой в одну строку (две колонки, сцена над текстом);
+    одиночный компактный — строка с малой сценой. Сторона сцены чередуется по строкам (пара — одна строка)."""
+    vid = {n: ("k" if n in KRUPNYE else "m") for n in range(1, n_vsego + 1)}
+    klass, n, stroka = {}, 1, 0
+    while n <= n_vsego:
+        if vid[n] == "m" and n + 1 <= n_vsego and vid[n + 1] == "m":
+            klass[n] = klass[n + 1] = "vit-e--m vit-e--para"
+            n += 2
+        else:
+            klass[n] = "vit-e--%s%s" % (vid[n], " vit-e--sp" if stroka % 2 else "")
+            n += 1
+        stroka += 1
+    return klass
+
+
+def eksponat(x, n, klass=None):
     st = x["status"]
     umeet = "".join("<li>%s</li>" % t(u) for u in x["umeet"])
-    vid = "k" if n in KRUPNYE else "m"
+    klass = klass or "vit-e--%s" % ("k" if n in KRUPNYE else "m")
     fid = "vf-" + x["id"]
     # сцена — слои глубины (задний ореол, свет, тело героя, пол, частицы, блик): css/vitrina.css, js/vitrina.js
     return (
-        '<li class="vit-e vit-e--%s" id="%s" data-status="%s" data-sobir>' % (vid, e(x["id"]), st) +
+        '<li class="vit-e %s" id="%s" data-status="%s" data-kratko="%s" data-sobir>' % (klass, e(x["id"]), st, e(x["kratko"])) +
         '<div class="vit-e__scena" data-geroj="%s"><div class="vit-e__zad"></div><div class="vit-e__svet"></div>' % e(x["geroj"]) +
         '<div class="vit-e__tilt">%s</div><div class="vit-e__pol"></div><div class="vit-e__blik"></div></div>' % geroj(x["geroj"]) +
         '<div class="vit-e__txt">'
@@ -305,7 +326,8 @@ def blok(d):
         '<li><a href="#%s" class="vit-k%s">%s<span>%s</span></a></li>' % (
             e(x["id"]), " vit-k--b" if x["status"] == "razrabotka" else "", geroj(x["geroj"], "vit-k__g"), t(x["kratko"]))
         for x in ex)
-    zalhtml = "".join(eksponat(x, i + 1) for i, x in enumerate(zhivye))
+    kl = ritm(len(zhivye))
+    zalhtml = "".join(eksponat(x, i + 1, kl[i + 1]) for i, x in enumerate(zhivye))
     cd = d.get("chto_dalshe") or {}
     dalshe = ""
     if cd.get("tekst"):
@@ -334,17 +356,88 @@ def vyrezat(s):
     return s
 
 
-def sobrat(s, d):
+# vitrina-v2b: флаг zal.ubrat_dubli — секции главной, которые повторяют экспонаты («С чего начнём?», «Щит»,
+# «Почему нам можно верить»), убираются со страницы обратимо: секция оборачивается в <template data-dubli="id">
+# (не рисуется и не читается как текст страницы), false — разворачивается обратно. Включать — только после переноса
+# их форм в экспонаты и ✓ Арт-директора (ТЗ Штаба 19.10). Ворота: если на id секции (или любой id внутри неё)
+# ведут ссылки с других страниц сайта, а на главной вне убранных секций такого id нет — сборка останавливается.
+DUBLI = ["vhody", "shield", "doverie"]
+OBERTKA = re.compile(r'<template data-dubli="([a-z][a-z0-9-]*)">(<section[\s\S]*?</section>)</template>')
+
+
+def sekciya(s, i):
+    """(начало, конец) секции верхнего уровня с id=i — по парным <section>…</section>."""
+    m = re.search(r'<section\b[^>]*\sid="%s"' % re.escape(i), s)
+    if not m:
+        return None
+    glub, poz = 0, m.start()
+    for t_ in re.finditer(r'<(/?)section\b', s[m.start():]):
+        glub += -1 if t_.group(1) else 1
+        if glub == 0:
+            kon = s.index(">", m.start() + t_.start()) + 1
+            return poz, kon
+    raise Oshibka("index.html: секция #%s не закрыта" % i)
+
+
+def ssylki_na(ids, koren=KOREN):
+    """Страницы сайта со ссылками на /#id или #id (для главной) — {id: [файл, …]}."""
+    nashli = {}
+    for papka, dirs, files in os.walk(koren):
+        dirs[:] = [x for x in dirs if not x.startswith(".") and x not in ("node_modules", "tests", "partials")]
+        for f in files:
+            if not f.endswith(".html"):
+                continue
+            put = os.path.join(papka, f)
+            with open(put, encoding="utf-8") as fh:
+                txt = fh.read()
+            glavnaya = os.path.relpath(put, koren) == "index.html"
+            for i in ids:
+                shablon = r'href="(?:https://deloskop\.ru)?/#%s"' % re.escape(i)
+                if glavnaya:
+                    shablon = r'href="(?:/)?#%s"' % re.escape(i)
+                if re.search(shablon, txt):
+                    nashli.setdefault(i, []).append(os.path.relpath(put, koren))
+    return nashli
+
+
+def dubli(s, d, koren=KOREN):
+    zal = d.get("zal") or {}
+    s = OBERTKA.sub(lambda m: m.group(2), s)          # сначала всегда разворачиваем — сборка повторяема
+    if not zal.get("ubrat_dubli"):
+        return s
+    spisok = zal.get("dubli") or DUBLI
+    granicy = []
+    for i in spisok:
+        g = sekciya(s, i)
+        if not g:
+            raise Oshibka("ubrat_dubli: на главной нет секции #%s" % i)
+        granicy.append((i, g))
+    vnutri = set()
+    for i, (a, z) in granicy:
+        vnutri |= set(re.findall(r'\sid="([^"]+)"', s[a:z]))
+    ostatok = s
+    for i, (a, z) in sorted(granicy, key=lambda x: -x[1][0]):
+        ostatok = ostatok[:a] + ostatok[z:]
+    ostayutsya = set(re.findall(r'\sid="([^"]+)"', ostatok))
+    for i, fajly in ssylki_na(sorted(vnutri), koren).items():
+        if i not in ostayutsya:
+            raise Oshibka("ubrat_dubli: на #%s ведут ссылки (%s) — сначала перенесите якорь в экспонат" % (i, ", ".join(fajly[:3])))
+    for i, (a, z) in sorted(granicy, key=lambda x: -x[1][0]):
+        s = s[:a] + '<template data-dubli="%s">' % i + s[a:z] + "</template>" + s[z:]
+    return s
+
+
+def sobrat(s, d, koren=KOREN):
     proverit(d, s)
     b = blok(d)
     if NACH in s:
         a = s.index(NACH)
         z = s.index(KON, a) + len(KON)
-        return s[:a] + b + s[z:]
+        return dubli(s[:a] + b + s[z:], d, koren)
     m = re.search(r'<section class="vhody"[\s\S]*?</section>', s)
     if not m:
         raise Oshibka("index.html: нет секции #vhody — некуда поставить витрину")
-    return s[:m.end()] + "\n\n  " + b + s[m.end():]
+    return dubli(s[:m.end()] + "\n\n  " + b + s[m.end():], d, koren)
 
 
 def main(argv):

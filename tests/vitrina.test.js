@@ -107,7 +107,7 @@ test('vitrina-v2: глубина сцены, «Что умеет» на теле
   assert.ok(/\.vit,\.vit-nabor\{/.test(css), 'переменные градиентов — и на наборе рисунков');
   assert.ok(/\.vit-e__scena \.vit-g\{--vg-p:url\(#vg-gp\)/.test(css));
   // слои глубины в каждой сцене; ритм: крупные 1, 3, 5, 8, 10, 12
-  const ex = [...b.matchAll(/<li class="vit-e vit-e--(k|m)" id="([^"]+)"/g)];
+  const ex = [...b.matchAll(/<li class="vit-e vit-e--(k|m)[^"]*" id="([^"]+)"/g)];
   assert.strictEqual(ex.length, V.eksponaty.filter((x) => x.status !== 'razrabotka').length);
   ex.forEach((m, i) => assert.strictEqual(m[1], [1, 3, 5, 8, 10, 12].includes(i + 1) ? 'k' : 'm', m[2] + ': вид экспоната'));
   assert.strictEqual((b.match(/<div class="vit-e__zad"><\/div>/g) || []).length, ex.length);
@@ -120,4 +120,62 @@ test('vitrina-v2: глубина сцены, «Что умеет» на теле
   // частицы — CSS (вне основного потока), не canvas; при reduce скрипт до них не доходит
   assert.ok(!/getContext\(/.test(js));
   assert.ok(js.indexOf('if (reduce || !sceny.length) return;') < js.indexOf('function sozdat'));
+});
+
+test('vitrina-v2b: ритм зала (пары, сторона сцены), индикатор «03 / 13», карта с подсветкой, свет между экспонатами', () => {
+  const b = blok();
+  const css = chitat('css/vitrina.css');
+  const js = chitat('js/vitrina.js');
+  const ex = [...b.matchAll(/<li class="vit-e (vit-e--[km](?: vit-e--(?:para|sp))?)" id="([^"]+)" data-status="[a-z]+" data-kratko="([^"]+)"/g)];
+  const zhivye = V.eksponaty.filter((x) => x.status !== 'razrabotka');
+  assert.strictEqual(ex.length, zhivye.length, 'у каждого экспоната зала — data-kratko для индикатора');
+  ex.forEach((m, i) => assert.strictEqual(m[3], zhivye[i].kratko.replace(/"/g, '&quot;'), m[2]));
+  // пары — только два компактных подряд, сторона сцены чередуется по строкам (пара — одна строка)
+  const vid = ex.map((m) => m[1]);
+  for (let i = 0; i < vid.length; i++) {
+    if (!vid[i].includes('para')) continue;
+    const para = (vid[i + 1] || '').includes('para') ? i + 1 : i - 1;
+    assert.ok(vid[para] && vid[para].includes('para') && vid[i].startsWith('vit-e--m') && vid[para].startsWith('vit-e--m'), ex[i][2] + ': пара из двух компактных');
+  }
+  for (let i = 0, stroka = 0; i < vid.length; stroka++) {
+    if (vid[i].includes('para')) { i += 2; continue; }
+    assert.strictEqual(vid[i].includes('vit-e--sp'), stroka % 2 === 1, ex[i][2] + ': сторона сцены чередуется по строкам');
+    i++;
+  }
+  assert.ok(!/\.vit-e:nth-child\(even\)/.test(css), 'сторону сцены задаёт сборщик (vit-e--sp), а не nth-child');
+  assert.ok(/@media \(min-width:861px\)\{\s*\.vit__zal\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/.test(css));
+  // свет пола: transform/opacity по view(), без прокрутки вбок
+  assert.ok(/@keyframes vit-luzha\{[^}]*opacity:0;transform:translate3d/.test(css));
+  assert.ok(/\.vit\{overflow-x:clip\}/.test(css), 'пятна света шире колонки — без прокрутки вбок');
+  // индикатор: только для глаз, не ловит нажатия; aria-current — в карте; пара не прыгает номером
+  assert.ok(/\.vit-ind\{position:fixed;z-index:15;pointer-events:none;opacity:0/.test(css));
+  assert.ok(js.includes("setAttribute('aria-hidden', 'true')") && js.includes("setAttribute('aria-current', 'location')"));
+  assert.ok(/li\.offsetTop === tek\.offsetTop/.test(js), 'пара в одной строке — номер не прыгает');
+  assert.ok(js.indexOf('vit-ind') < js.indexOf('if (reduce || !sceny.length) return;'), 'индикатор работает и при «меньше движения» (это не анимация)');
+  assert.ok(/\.vit-k\[aria-current\]\{/.test(css));
+});
+
+test('vitrina-v2b: флаг zal.ubrat_dubli — выключен; включение обратимо и не ломает ссылки на секции', () => {
+  assert.strictEqual(V.zal.ubrat_dubli, false, 'дубли убираем только после ✓ Арт-директора');
+  assert.ok(!/<template data-dubli=/.test(html));
+  const kod = `
+import json, sys
+sys.path.insert(0, 'tests')
+import sobrat_vitrinu as v
+s = open('index.html', encoding='utf-8').read()
+d = v.dannye()
+d['zal']['ubrat_dubli'] = True
+try:
+    v.sobrat(s, d); stop = ''
+except v.Oshibka as o:
+    stop = str(o)
+d['zal']['dubli'] = ['vhody']
+n = v.sobrat(s, d)
+obratno = v.sobrat(n, v.dannye())
+print(json.dumps({'stop': stop, 'obertok': n.count('<template data-dubli="vhody"><section'), 'obratno': obratno == s}))
+`;
+  const r = JSON.parse(execFileSync('python3', ['-c', kod], { cwd: KOREN, encoding: 'utf8' }));
+  assert.ok(/ведут ссылки/.test(r.stop), 'на #shield ведут ссылки с других страниц — сборка остановилась');
+  assert.strictEqual(r.obertok, 1, 'секция обёрнута в <template>');
+  assert.ok(r.obratno, 'false — разворачивает обратно байт в байт');
 });

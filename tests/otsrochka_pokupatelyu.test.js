@@ -186,7 +186,8 @@ test('(е) Chromium 390 и 1280: два сегмента в одну строк�
       const seg = await p.$$eval('[data-napr]', (bs) => bs.map((x) => { const r = x.getBoundingClientRect(); return { top: Math.round(r.top), h: r.height, pr: x.getAttribute('aria-pressed') }; }));
       assert.strictEqual(seg.length, 2);
       assert.strictEqual(seg[0].top, seg[1].top, w + ': сегменты в одну строку');
-      assert.ok(seg[0].h >= 36 && seg[0].h <= 40, w + ': высота ' + seg[0].h);
+      // otchet-detali-v1: на телефоне — поле касания 44 px, с мышью — 36–40 px, как было
+      assert.ok(w < 641 ? seg[0].h === 44 : seg[0].h >= 36 && seg[0].h <= 40, w + ': высота ' + seg[0].h);
       await p.click('[data-napr=otgruzhaem]');
       const t = await p.$eval('.usl-t', (x) => x.textContent);
       assert.strictEqual(t, 'Можно, отсрочка — до 150' + NB + '000' + NB + '₽');

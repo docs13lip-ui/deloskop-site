@@ -220,7 +220,24 @@ def nabor(ex):
             nuzhny.append(x["geroj"])
     sym = "".join('<symbol id="vg-%s" viewBox="0 0 200 160">%s</symbol>' % (g, GEROI[g]) for g in nuzhny)
     # штрих (цвет, толщина, скругления) наследуется от <svg class="vit-g"> через <use> — css/vitrina.css
-    return '<svg class="vit-nabor" width="0" height="0" aria-hidden="true" focusable="false">%s</svg>' % sym
+    return '<svg class="vit-nabor" width="0" height="0" aria-hidden="true" focusable="false">%s%s</svg>' % (MATERIALY, sym)
+
+
+# vitrina-v2: материалы героев сцены — объём градиентом при одном свете сверху слева (ДС: цвета — токены темы,
+# поэтому stop-color задан style="…var()"). В сцене css/vitrina.css подменяет плоские --vg-p/--vg-a/--vg-s на эти
+# градиенты; в карте витрины рисунки остаются плоскими (маленький размер — объём не читается).
+def _grad(gid, verh, niz):
+    return ('<linearGradient id="%s" x1="0" y1="0" x2="1" y2="1">'
+            '<stop offset="0" style="stop-color:%s"/><stop offset="1" style="stop-color:%s"/></linearGradient>') % (gid, verh, niz)
+
+
+MATERIALY = "<defs>%s%s%s</defs>" % (
+    _grad("vg-gp", "var(--vg-p-svet)", "var(--vg-p-ten)"),   # поверхность: бумага/стекло
+    _grad("vg-ga", "var(--vg-a-svet)", "var(--vg-a-ten)"),   # акцент: эмаль
+    _grad("vg-gs", "var(--vg-s-svet)", "var(--vg-s-ten)"),   # мягкий акцент
+)
+# Крупные экспонаты (полная сцена) — остальные компактные: ритм зала и короткая витрина на телефоне.
+KRUPNYE = {1, 3, 5, 8, 10, 12}
 
 
 def ssylka(x, klass, tekst_html, vt=True):
@@ -234,16 +251,22 @@ def ssylka(x, klass, tekst_html, vt=True):
 def eksponat(x, n):
     st = x["status"]
     umeet = "".join("<li>%s</li>" % t(u) for u in x["umeet"])
+    vid = "k" if n in KRUPNYE else "m"
+    fid = "vf-" + x["id"]
+    # сцена — слои глубины (задний ореол, свет, тело героя, пол, частицы, блик): css/vitrina.css, js/vitrina.js
     return (
-        '<li class="vit-e" id="%s" data-status="%s" data-sobir>' % (e(x["id"]), st) +
-        '<div class="vit-e__scena" data-geroj="%s"><div class="vit-e__svet"></div>' % e(x["geroj"]) +
+        '<li class="vit-e vit-e--%s" id="%s" data-status="%s" data-sobir>' % (vid, e(x["id"]), st) +
+        '<div class="vit-e__scena" data-geroj="%s"><div class="vit-e__zad"></div><div class="vit-e__svet"></div>' % e(x["geroj"]) +
         '<div class="vit-e__tilt">%s</div><div class="vit-e__pol"></div><div class="vit-e__blik"></div></div>' % geroj(x["geroj"]) +
         '<div class="vit-e__txt">'
         '<p class="vit-e__nad"><span class="vit-e__n">%02d</span><span class="vit-st vit-st--%s">%s</span></p>' % (n, st, STATUSY[st]) +
         '<h2 class="vit-e__h">%s</h2>' % ssylka(x, "vit-e__a", t(x["zag"])) +
         '<p class="vit-e__p">%s</p>' % t(x["polza"]) +
-        '<ul class="vit-e__u">%s</ul>' % umeet +
-        '<p class="vit-e__go">%s</p>' % ssylka(x, "vit-btn", t(x["dejstvie"]) + '<span aria-hidden="true">→</span>') +
+        '<ul class="vit-e__u" id="%s">%s</ul>' % (fid, umeet) +
+        # «3 факта» — только на узком экране и только со скриптом (js/vitrina.js снимает hidden); без скрипта факты открыты
+        '<div class="vit-e__niz"><button type="button" class="vit-e__fb" aria-expanded="false" aria-controls="%s" hidden>'
+        'Что умеет<span aria-hidden="true"></span></button>' % fid +
+        '<p class="vit-e__go">%s</p></div>' % ssylka(x, "vit-btn", t(x["dejstvie"]) + '<span aria-hidden="true">→</span>') +
         '</div></li>'
     )
 
@@ -254,8 +277,10 @@ def budushij(x):
         '<li class="vit-b" id="%s" data-status="razrabotka">' % e(x["id"]) +
         '<div class="vit-b__scena" data-geroj="%s">%s</div>' % (e(x["geroj"]), geroj(x["geroj"])) +
         '<h3 class="vit-b__h">%s</h3>' % t(x["zag"]) +
-        '<p class="vit-b__p">%s</p><ul class="vit-b__u">%s</ul>' % (t(x["polza"]), umeet) +
-        '<p class="vit-b__go">%s</p>' % ssylka(x, "vit-lnk", t(x["dejstvie"]) + '<span aria-hidden="true">→</span>', vt=False) +
+        '<p class="vit-b__p">%s</p><ul class="vit-b__u" id="vf-%s">%s</ul>' % (t(x["polza"]), e(x["id"]), umeet) +
+        '<div class="vit-e__niz"><button type="button" class="vit-e__fb" aria-expanded="false" aria-controls="vf-%s" hidden>'
+        'Что будет<span aria-hidden="true"></span></button>' % e(x["id"]) +
+        '<p class="vit-b__go">%s</p></div>' % ssylka(x, "vit-lnk", t(x["dejstvie"]) + '<span aria-hidden="true">→</span>', vt=False) +
         '</li>'
     )
 

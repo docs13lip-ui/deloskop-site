@@ -35,3 +35,12 @@ p,li,dd,dt,figcaption,blockquote,summary,legend,h1,h2,h3,h4{text-wrap:pretty}
 .pkg .pkg-item__d{max-width:38em}
 /* заголовок третьего уровня без своего размера (стиль браузера 1,17 em = 19,89 px) — на шкалу */
 :where(article) h3{font-size:var(--t-20)}
+/* vitrina-v2a (19.10.2026): остаток целей касания на главной (замер tests/zamer_detali.js после detali-v1c: 8) */
+.vse>a,.rynok__go>a{padding-block:2px}
+.usl summary{min-height:24px}
+@media (max-width:640px),(pointer:coarse){
+  .vse>a,.rynok__go>a{padding-block:12px}
+  .usl summary{min-height:44px}
+  .usl-btns button,.usl-btns a{min-height:44px}
+  .ceny p a{padding-block:9px;margin-top:9px;margin-bottom:-9px}
+}

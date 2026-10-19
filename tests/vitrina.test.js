@@ -97,3 +97,27 @@ test('переход на страницу продукта: название э
   assert.ok(/<a class="vit-e__a" href="\/pasport\/" data-vt>/.test(b));
   assert.ok(!/href="\/#inn"[^>]*data-vt/.test(b), 'ссылки на поле ИНН — без перехода страниц');
 });
+
+test('vitrina-v2: глубина сцены, «Что умеет» на телефоне, бабл «Отзыв» не накрывает кнопки', () => {
+  const b = blok();
+  const css = fs.readFileSync(path.join(KOREN, 'css/vitrina.css'), 'utf8');
+  const js = fs.readFileSync(path.join(KOREN, 'js/vitrina.js'), 'utf8');
+  // материалы — градиенты набора, цвета — переменные темы (заданы и на самом наборе: он стоит вне секции)
+  assert.ok(/<linearGradient id="vg-gp"[^>]*><stop offset="0" style="stop-color:var\(--vg-p-svet\)"/.test(b));
+  assert.ok(/\.vit,\.vit-nabor\{/.test(css), 'переменные градиентов — и на наборе рисунков');
+  assert.ok(/\.vit-e__scena \.vit-g\{--vg-p:url\(#vg-gp\)/.test(css));
+  // слои глубины в каждой сцене; ритм: крупные 1, 3, 5, 8, 10, 12
+  const ex = [...b.matchAll(/<li class="vit-e vit-e--(k|m)" id="([^"]+)"/g)];
+  assert.strictEqual(ex.length, V.eksponaty.filter((x) => x.status !== 'razrabotka').length);
+  ex.forEach((m, i) => assert.strictEqual(m[1], [1, 3, 5, 8, 10, 12].includes(i + 1) ? 'k' : 'm', m[2] + ': вид экспоната'));
+  assert.strictEqual((b.match(/<div class="vit-e__zad"><\/div>/g) || []).length, ex.length);
+  // факты: кнопка скрыта, пока скрипт не снимет hidden; свёрнуто только со скриптом (vit--js) и только на узком экране
+  assert.strictEqual((b.match(/class="vit-e__fb" aria-expanded="false" aria-controls="vf-[a-z]+" hidden>/g) || []).length, V.eksponaty.length);
+  assert.ok(/@media \(max-width:860px\)\{\s*\.vit--js \.vit-e:not\(\.is-f\) \.vit-e__u/.test(css));
+  assert.ok(/\.fb-ukryt \.fb-btn\{opacity:0;scale:\.6;pointer-events:none\}/.test(css));
+  assert.ok(/rootMargin: '-' \+ verh \+ 'px 0px 0px 0px'/.test(js) && /innerHeight \|\| 800\) - 120/.test(js), 'нижние 120 px экрана');
+  assert.ok(/600\)/.test(js), 'возврат через 600 мс');
+  // частицы — CSS (вне основного потока), не canvas; при reduce скрипт до них не доходит
+  assert.ok(!/getContext\(/.test(js));
+  assert.ok(js.indexOf('if (reduce || !sceny.length) return;') < js.indexOf('function sozdat'));
+});

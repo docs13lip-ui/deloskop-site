@@ -54,6 +54,13 @@ PODTVERZHDENIE = re.compile(r"^(yandex_[0-9a-f]+|google[0-9a-f]+)\.html$")
 GOOGLE_FONTS = re.compile(
     r'[ \t]*<link[^>]+href="https://fonts\.(?:googleapis|gstatic)\.com[^"]*"[^>]*>\n?')
 FONTS_LINK = '<link rel="stylesheet" href="/css/fonts.css">'
+# shrift-v1 (19.10): фирменный шрифт грузится сразу с HTML, а не после разбора стилей — к первой отрисовке он уже есть,
+# и текст не перенабирается запасным «Onest Zapas» (прыжок строк при подмене: CLS /indeks/ на холодном кэше, замер Штаба 00:55).
+# Кириллица и латиница (пробелы, цифры, знаки — из латинского набора) начертаний 400 и 600: ~44 КБ, нужны любой странице.
+SHRIFT_PRELOAD = "\n".join('<link rel="preload" href="/fonts/onest-%s.woff2" as="font" type="font/woff2" crossorigin>' % f
+                           for f in ("cyrillic-400", "latin-400", "cyrillic-600"))
+GLAVNAYA_CANON = '<link rel="canonical" href="https://deloskop.ru/">'
+STARYJ_PRELOAD = re.compile(r'<link rel="preload" href="/fonts/onest-[^"]+" as="font"[^>]*>\n?')
 PODVAL_LINK = '<link rel="stylesheet" href="/css/podval.css">'
 SHAPKA_LINK = '<link rel="stylesheet" href="/css/shapka.css">'
 SHAPKA_JS = '<script src="/js/shapka.js" defer></script>'
@@ -474,6 +481,14 @@ def sobrat_stranicu(txt, r, podval, shapka=None):
     # 6) vizual-v3.0b: тёмная тема — цвета, записанные числом в <style> страницы, получают тёмную пару
     #    (<style data-tema> в <head>; tests/tema_temnaya.py). Правки стилей страницы — пересобрать.
     txt = TT.dlya_stranicy(txt)
+    # 7) shrift-v1: предзагрузка шрифта — последней строкой <head> и после всех вставок: так страница, собранная заново
+    #    (kartochki perepechatat, сборщики разделов), и пересобранная sobrat_shapku совпадают байт в байт
+    txt = STARYJ_PRELOAD.sub("", txt)
+    if GLAVNAYA_CANON not in txt:  # главная — без предзагрузки: подмена шрифта там не двигает строки (CLS 0,000),
+        # а ожидание шрифта задержало бы первый экран (+~250 мс на 4G, замер shrift-v1).
+        # Перед </head>, как остальные вставки: карточки из API надевают ту же оболочку (TestObolochka); сканер
+        # предзагрузки браузера видит ссылку, пока разбирается <head>, — место в <head> на скорость не влияет.
+        txt = txt.replace("</head>", SHRIFT_PRELOAD + "\n</head>", 1)
     return txt
 
 

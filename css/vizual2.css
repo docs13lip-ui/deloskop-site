@@ -26,7 +26,9 @@
 .ot-main .ex-zad .ex-r,.ot-main .ex-zad .sut__r{border-color:rgba(29,29,31,.08)}
 /* после поворота скрытая сторона не ловит клики и не читается — inert/aria-hidden ставит скрипт */
 .ex-lico[inert],.ex-zad[inert]{pointer-events:none}
-@media (max-width:520px){.ex-vid.ot-vid{margin:0 0 12px}.ex-vid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:16px 20px 2px;width:auto;max-width:none;border-radius:16px}.ex-vid button{white-space:normal;line-height:1.15;padding:6px 4px;font-size:13px;min-height:44px;border-radius:10px}.ex-zad{padding:16px 20px 4px}}
+/* otchet-detali-v1: вкладок 3 (пример) или 4 (отчёт, «Связи» добавляет js/svyazi.js) — всегда одна строка равных колонок; было 3 колонки — «Связи» уезжала на вторую строку */
+@media (min-width:521px) and (max-width:720px){.ex-vid.ot-vid{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);width:auto}.ex-vid.ot-vid button{white-space:normal;line-height:1.15;padding:6px 8px}}
+@media (max-width:520px){.ex-vid.ot-vid{margin:0 0 12px}.ex-vid{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);margin:16px 20px 2px;width:auto;max-width:none;border-radius:16px}.ex-vid button{white-space:normal;line-height:1.15;padding:6px 4px;font-size:13px;min-height:44px;border-radius:10px}.ex-zad{padding:16px 20px 4px}}
 @media (max-width:520px){.zhdu-js .report.ex .ex-vid[hidden]+.ex-f{margin-top:68px}}
 
 /* ===== Б. «сеть связей» за первым экраном ===== */

@@ -283,21 +283,44 @@
       var gruzit = function () { var s = document.createElement("script"); s.src = src; s.async = true; document.head.appendChild(s); };
       if (document.readyState === "complete") setTimeout(gruzit, 0); else window.addEventListener("load", function () { setTimeout(gruzit, 0); }, { once: true });
     };
+    // zhivoj-v1: новая тема раскрывается кругом от нажатой кнопки (View Transitions одного документа; css — partials/shapka.css).
+    // Круг растёт у снимка новой страницы, старая под ним неподвижна; 520 мс, та же кривая, что у переходов страниц.
+    // «Уменьшить движение», вкладка в фоне, нет поддержки, тема не меняется (тот же выбор) — сразу, как раньше.
+    var tishe = function () { return !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches); };
+    var ikonka = 0;
+    var smena = function (el, v) {
+      try { localStorage.setItem("tema", v); } catch (er) {}
+      var budet = v === "auto" ? (mq && mq.matches ? "dark" : "light") : v;
+      if (budet === root.dataset.theme) { primenit(); return; }
+      // иконка солнца/луны входит поворотом — класс ставим вместе с новой темой (в снимок старой страницы он не попадает)
+      var delo = function () {
+        if (!tishe()) { root.classList.add("tema-ik"); clearTimeout(ikonka); ikonka = setTimeout(function () { root.classList.remove("tema-ik"); }, 600); }
+        primenit();
+      };
+      if (!document.startViewTransition || tishe() || document.visibilityState === "hidden" || !el || !root.animate) { delo(); return; }
+      var r = el.getBoundingClientRect(), x = Math.round(r.left + r.width / 2), y = Math.round(r.top + r.height / 2);
+      var R = Math.ceil(Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y)));
+      var konec = function () { root.classList.remove("tema-vt"); };
+      root.classList.add("tema-vt");
+      var vt;
+      try { vt = document.startViewTransition(delo); } catch (er) { konec(); delo(); return; }
+      vt.ready.then(function () {
+        root.animate({ clipPath: ["circle(0px at " + x + "px " + y + "px)", "circle(" + R + "px at " + x + "px " + y + "px)"] },
+          { duration: 520, easing: "cubic-bezier(.2,.7,.2,1)", pseudoElement: "::view-transition-new(root)" });
+      }).catch(function () {});
+      vt.finished.then(konec, konec);
+    };
     // кнопка в шапке: тёмная ↔ светлая одним нажатием (выбор запоминается, как и в подвале)
     document.querySelectorAll("[data-tema-knopka]").forEach(function (b) {
       b.addEventListener("click", function () {
-        var t = root.dataset.theme === "dark" ? "light" : "dark";
-        try { localStorage.setItem("tema", t); } catch (er) {}
-        primenit();
+        smena(b, root.dataset.theme === "dark" ? "light" : "dark");
       });
     });
     document.querySelectorAll("[data-tema]").forEach(function (blok) {
       blok.hidden = false;
       blok.addEventListener("click", function (e) {
         var b = e.target.closest("[data-tema-v]"); if (!b) return;
-        var v = b.getAttribute("data-tema-v");
-        try { localStorage.setItem("tema", v); } catch (er) {}
-        primenit();
+        smena(b, b.getAttribute("data-tema-v"));
       });
     });
     if (mq) { var sl = function () { if (vybor() === "auto") primenit(); }; if (mq.addEventListener) mq.addEventListener("change", sl); else if (mq.addListener) mq.addListener(sl); }
@@ -371,4 +394,34 @@
   });
   // страница вернулась из кэша «Назад» — имена, поставленные перед уходом, снимаем
   addEventListener("pageshow", function (e) { if (e.persisted) snyat(); });
+})();
+
+/* §10. zhivoj-v1: кнопки отвечают на нажатие — чуть вдавливаются под пальцем и мягко возвращаются (с лёгким «отскоком»).
+   Только свойство scale через Web Animations: не трогает transform и transition страниц (магнит кнопки, переворот, сцены),
+   работает поверх них. Крупные блоки (шире 480 px или выше 120 px) не вдавливаем. «Уменьшить движение», нет поддержки — как было. */
+(function () {
+  "use strict";
+  if (typeof window === "undefined" || typeof document === "undefined" || !window.Element || !Element.prototype.animate || !window.matchMedia || !CSS.supports || !CSS.supports("scale", "1")) return;
+  var tiho = matchMedia("(prefers-reduced-motion: reduce)");
+  var SEL = "button,.btn,a.shapka__btn,a.vit-btn,[role=tab],[role=button]";
+  var ease = "cubic-bezier(.2,.7,.2,1)";
+  var el = null, nazh = null;
+  function otpusk() {
+    if (!el) return;
+    var e = el; el = null;
+    if (nazh) { nazh.cancel(); nazh = null; }
+    e.animate([{ scale: 0.96 }, { scale: 1.015, offset: 0.55 }, { scale: 1 }], { duration: 280, easing: ease });
+  }
+  document.addEventListener("pointerdown", function (ev) {
+    if (tiho.matches || ev.button > 0 || !ev.isPrimary) return;
+    var t = ev.target && ev.target.closest ? ev.target.closest(SEL) : null;
+    if (!t || t.disabled || t.getAttribute("aria-disabled") === "true" || t.closest("[data-bez-nazhatiya]")) return;
+    var r = t.getBoundingClientRect();
+    if (r.width > 480 || r.height > 120 || !r.width) return;
+    otpusk();
+    el = t;
+    nazh = t.animate([{ scale: 1 }, { scale: 0.96 }], { duration: 110, easing: ease, fill: "forwards" });
+  }, { passive: true });
+  ["pointerup", "pointercancel", "dragstart"].forEach(function (n) { document.addEventListener(n, otpusk, { passive: true }); });
+  document.addEventListener("pointerout", function (ev) { if (el && ev.target === el && !el.contains(ev.relatedTarget)) otpusk(); }, { passive: true });
 })();

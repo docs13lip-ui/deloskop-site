@@ -66,7 +66,7 @@ test('prefers-reduced-motion: без вращения и переходов; с�
 });
 
 test('без JS: таблетки скрыты атрибутом hidden, лицо — прежняя разметка', () => {
-  const m = /<div class="ex-vid" role="tablist" aria-label="[^"]+" hidden>(.*?)<\/div>/.exec(gl);
+  const m = /<div class="ex-vid" role="tablist" aria-label="[^"]+"(?: data-pod="[^"]+")? hidden>(.*?)<\/div>/.exec(gl);
   assert.ok(m, 'нет скрытого tablist');
   const kn = m[1].match(/<button [^>]*>[^<]+<\/button>/g);
   assert.deepStrictEqual(kn.map(tekst), ['Все факты', 'Глазами банка', 'Глазами налоговой']);
@@ -104,7 +104,7 @@ test('настоящий отчёт: те же таблетки над «Сущ�
   assert.match(js, /MutationObserver/);
   assert.match(js, /if \(vid\.length < 2\) return;/); // ни одного угла — таблеток нет
   // подписи таблеток отчёта — из разметки примера (своих слов в скрипте нет)
-  assert.match(js, /var ZAG = \[\], ZAG_ARIA = '';/);
+  assert.match(js, /var ZAG = \[\], ZAG_ARIA = '', ZAG_POD = '';/); // pravo-teksty-v1: + оговорка под вкладками — тоже из примера
   assert.match(js, /vse\('\.report\.ex \.ex-vid'/);
   assert.doesNotMatch(js.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*$/gm, ''), /Глазами|Что увидит|Все факты/);
   // ключи фактов — из js/sushchestvennoe.js (PORYADOK и damia_*), чужих нет

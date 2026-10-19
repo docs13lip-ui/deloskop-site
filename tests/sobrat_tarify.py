@@ -83,9 +83,9 @@ def cena_i_knopki(t, nb=NB):
         k2 = f'<a class="cta2" data-tarif="{t["id"]}" data-srok="god" href="{mail("god")}">Оплатить год — {r(g)}</a>'
     cta = (f'<!--oplata--><div class="knopki" data-cena-m="{r(m)}" data-cena-g="{r(g)}"{mt}>{k1}{k2}'
            f'</div><!--/oplata-->'
-           # beta-v1: в открытой бете вместо оплаты — действие; цена остаётся как сведения «после беты»
+           # beta-v1: в открытой бете вместо оплаты — действие; цена остаётся справочной (pravo-teksty-v1: «после беты» обещало цену, которую владелец не утверждал — п. 4 ч. 3 ст. 5 38-ФЗ, [Право] 19.10)
            f'<!--v-bete--><div class="knopki knopki--beta"><a class="cta {vid}" href="/#inn">В бете — бесплатно</a>'
-           f'<span class="knopki__pod">Цена — после беты</span></div><!--/v-bete-->')
+           f'<span class="knopki__pod">Цена справочная</span></div><!--/v-bete-->')
     return price, cta
 
 
@@ -150,7 +150,7 @@ faq = [
 ]
 if D.get('beta') is True:  # beta-v1: честный ответ «сколько стоит сейчас»; «как оплатить» — вернётся вместе с оплатой
     faq = [("Сколько стоит Делоскоп сейчас?", "Ничего. Идёт открытая бета: все возможности открыты бесплатно, счета мы не выставляем. "
-            "Цены на этой странице — какими они станут после беты. Нашли ошибку или что-то непонятно — напишите на help@deloskop.ru.")] + \
+            "Цены на этой странице — справочные, сейчас по ним ничего не продаём. О начале оплат и их условиях объявим здесь не позже чем за 3 дня. Нашли ошибку или что-то непонятно — напишите на help@deloskop.ru.")] + \
           [x for x in faq if not x[0].startswith("Как оплатить")]
 MAIL = '<a href="mailto:help@deloskop.ru">help@deloskop.ru</a>'
 faq_html = ''.join('<details><summary>' + html.escape(q) + '</summary><p>' + html.escape(a).replace('help@deloskop.ru', MAIL) + '</p></details>' for q, a in faq)
@@ -286,7 +286,7 @@ def razovye_html(D):
   <div class="raz__n">{html.escape(p['nazvanie'])}</div>
   <div class="raz__c"><b><span data-cena="{k}">{f"{p['cena_rub']:,}".replace(',', NB)}</span>{NB}₽</b> <span>{per}</span>{v_tarife}</div>
   <p class="raz__t">{_re_nb.sub(lambda m: m.group(1) + NB + '₽', html.escape(p.get('chto', '')))}</p>
-  <!--oplata--><a class="cta ghost" data-schet data-produkt="{k}" href="/schet/?produkt={k}">Купить за {rub(p['cena_rub'])}</a><!--/oplata--><!--v-bete--><div class="knopki knopki--beta"><a class="cta ghost" href="{ssylka}">В бете — бесплатно</a><span class="knopki__pod">Цена — после беты</span></div><!--/v-bete-->
+  <!--oplata--><a class="cta ghost" data-schet data-produkt="{k}" href="/schet/?produkt={k}">Купить за {rub(p['cena_rub'])}</a><!--/oplata--><!--v-bete--><div class="knopki knopki--beta"><a class="cta ghost" href="{ssylka}">В бете — бесплатно</a><span class="knopki__pod">Цена справочная</span></div><!--/v-bete-->
 </div>''')
     skoro = []
     for k, x in (D.get('dopolneniya') or {}).items():
@@ -422,7 +422,7 @@ page = f'''<!doctype html>
 <h1>Тарифы</h1>
 <p class="sub">Подписка стоит меньше одной ошибки. Мы считаем это в рублях — и советуем тариф дешевле, если его хватит.</p>
 <div class="meta">Цены с 26 сентября 2026 · помесячно или за год со скидкой 20%</div>
-<!--oplata--><!--/oplata--><!--v-bete--><p class="beta-note"><b>Идёт открытая бета&nbsp;— всё бесплатно.</b> Счета не&nbsp;выставляем, реквизиты и&nbsp;оплата появятся позже. Цены ниже&nbsp;— какими они станут после беты.</p><!--/v-bete-->
+<!--oplata--><!--/oplata--><!--v-bete--><p class="beta-note"><b>Идёт открытая бета&nbsp;— всё бесплатно.</b> Счета не&nbsp;выставляем, реквизиты и&nbsp;оплата появятся позже. Цены ниже&nbsp;— справочные, сейчас по&nbsp;ним ничего не&nbsp;продаём. О&nbsp;начале оплат и&nbsp;их условиях объявим здесь не&nbsp;позже чем за&nbsp;3&nbsp;дня.</p><!--/v-bete-->
 
 {OSN_BAND}<div class="period" role="group" aria-label="Период оплаты">
   {KNOPKA_MES}

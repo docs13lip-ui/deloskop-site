@@ -126,7 +126,7 @@ ok("бета: метка режима для скриптов — на кажд�
 ok("бета: в подвале нет ИНН и ОГРНИП, хотя rekvizity.json заполнен",
    all("ОГРНИП 304500116000157" not in t and "Тестов" not in t for t in beta1.values()))
 ok("бета: /rekvizity/ — честная строка про бету", 'data-rekv="beta"' in beta1["rekvizity/index.html"])
-ok("бета: /tarify/ — цены остаются, пометка «после беты»", "Цена — после беты" in B.vidimoe(beta1["tarify/index.html"])
+ok("бета: /tarify/ — цены остаются, пометка «Цена справочная» (pravo-teksty-v1)", "Цена справочная" in B.vidimoe(beta1["tarify/index.html"])
    and "1 490" in B.vidimoe(beta1["tarify/index.html"]).replace(" ", " "))
 ok("бета: /tarify/ — FAQPage без «Как оплатить», с «Сколько стоит сейчас»",
    '"Сколько стоит Делоскоп сейчас?"' in beta1["tarify/index.html"] and '"Как оплатить компании или ИП?"' not in beta1["tarify/index.html"])

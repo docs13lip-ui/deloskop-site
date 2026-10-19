@@ -20,6 +20,9 @@
 .ex-zad .ex-f__h{padding-bottom:6px}
 .ex-zad .ex-f__h b{font-size:15px}
 .ex-zad .ex-r{border-color:rgba(29,29,31,.08)}
+/* pravo-teksty-v1: оговорка под «Глазами банка / налоговой» */
+.ex-zad__pod{margin:10px 0 12px;font-size:13px;line-height:1.45;color:var(--ink2,#48484C);max-width:38em}
+.ex-zad__pod[hidden]{display:none}
 /* настоящий отчёт: таблетки над «Существенными фактами», оборот — мягкая плашка в колонке */
 .ex-vid.ot-vid{margin:0 0 12px;max-width:100%}
 .ot-main .ex-zad{bottom:auto;padding:14px 16px 4px;border-radius:16px}

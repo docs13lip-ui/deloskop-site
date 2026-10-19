@@ -1161,7 +1161,7 @@
   }
 
   /* --- 5) «камера едет» (vitrina-v2b): индикатор «03 / 13 · название» и подсветка карты витрины.
-     Текущий экспонат — тот, что пересекает середину экрана. Широкий экран с полем слева — шкала у края,
+     Текущий экспонат — тот, что пересекает середину экрана (на телефоне — чей заголовок последним ушёл под таблетку). Широкий экран с полем слева — шкала у края,
      иначе — таблетка под шапкой во время прокрутки. Индикатор только для глаз (aria-hidden); для чтения с экрана —
      aria-current в карте. --- */
   var zal = vit && vit.querySelector('.vit__zal');
@@ -1175,14 +1175,20 @@
     var nN = ind.querySelector('.vit-ind__n'), nS = ind.querySelector('.vit-ind__ns'), dor = ind.querySelector('.vit-ind__dor i');
     var karta = {}, kl = vit.querySelectorAll('.vit-k');
     for (var j = 0; j < kl.length; j++) karta[(kl[j].getAttribute('href') || '').slice(1)] = kl[j];
-    var tek = null, vZale = false, shk = false, pokaz = 0, rafI = 0, tm = 0;
+    var tek = null, vZale = false, shk = false, pokaz = 0, rafI = 0, tm = 0, zagl = [], podZag = false, svob = 0;
+    // priemka-1910-v1: таблетка (телефон) не спорит с текстом — пока в её полосе (≈ 56–110 px от верха) заголовок
+    // витрины, она спрятана и возвращается через 300 мс после его ухода; гаснет через 0,8 с покоя.
+    // Текущий экспонат на телефоне — тот, чей заголовок последним ушёл под таблетку (а не тот, что в середине экрана).
+    var zagolovki = function () { zagl = Array.prototype.slice.call(vit.querySelectorAll('h2,h3')); };
     var rezhim = function () {
       var r = ex[0] && ex[0].getBoundingClientRect();
       shk = !!r && W.innerWidth >= 1100 && r.left >= 76;
       ind.classList.toggle('vit-ind--shk', shk); ind.classList.toggle('vit-ind--tab', !shk);
+      zagolovki();
     };
     var vidno = function () {
-      ind.classList.toggle('is-vid', vZale && !!tek && (shk || Date.now() - pokaz < 1200));
+      var t = Date.now();
+      ind.classList.toggle('is-vid', vZale && !!tek && (shk || (t - pokaz < 800 && !podZag && t - svob >= 300)));
     };
     var vybrat = function (li) {
       if (li === tek || (li && tek && li.offsetTop === tek.offsetTop)) return;   // пара в одной строке — номер не прыгает
@@ -1198,6 +1204,17 @@
       rafI = 0;
       var r = zal.getBoundingClientRect(), c = W.innerHeight / 2;
       dor.style.setProperty('--hod', Math.max(0, Math.min(1, (c - r.top) / (r.height || 1))).toFixed(3));
+      if (!shk) {
+        var R = ind.getBoundingClientRect(), v = R.top - 8, n = R.top + 46, byl = podZag, posl = null;
+        podZag = false;
+        for (var i = 0; i < zagl.length; i++) {
+          var q = zagl[i].getBoundingClientRect();
+          if (q.height && q.bottom > v && q.top < n) podZag = true;
+          if (q.height && q.top < n) { var li = zagl[i].closest('.vit-e'); if (li) posl = li; }
+        }
+        if (byl && !podZag) { svob = Date.now(); setTimeout(vidno, 310); }
+        if (posl) vybrat(posl);
+      }
       vidno();
     };
     var sered = new IntersectionObserver(function (zap) {
@@ -1206,7 +1223,7 @@
         var li = zap[i].target;
         if (zap[i].isIntersecting && (!luch || Array.prototype.indexOf.call(ex, li) < Array.prototype.indexOf.call(ex, luch))) luch = li;
       }
-      if (luch) vybrat(luch);
+      if (luch && shk) vybrat(luch);
     }, { rootMargin: '-50% 0px -49% 0px' });
     for (var k = 0; k < ex.length; k++) sered.observe(ex[k]);
     new IntersectionObserver(function (zap) {
@@ -1218,7 +1235,7 @@
       if (!vZale) return;
       pokaz = Date.now();
       if (!rafI) rafI = requestAnimationFrame(hod);
-      if (!shk) { clearTimeout(tm); tm = setTimeout(vidno, 1250); }
+      if (!shk) { clearTimeout(tm); tm = setTimeout(vidno, 820); }
     }, { passive: true });
     rezhim();
     W.addEventListener('resize', function () { rezhim(); vidno(); }, { passive: true });

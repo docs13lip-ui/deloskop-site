@@ -93,12 +93,30 @@ test('nebo-v2: виньетка под колонкой текста — 60 % в
 });
 
 test('nebo-v2: ядро галактики — только во внешней трети экрана по ширине (не под текстом)', () => {
-  const m = /function gxy\(ug, ww, hh\) \{ return (\[[^\n]*\]); \}/.exec(js);
+  const m = /function gxy\(ug, ww, hh\) \{ return ([^\n]*\]); \}/.exec(js);
   assert.ok(m, 'gxy');
   const gxy = new Function('ug', 'ww', 'hh', 'return ' + m[1]); // eslint-disable-line no-new-func
   for (const ww of [390, 768, 1280, 1920, 3840]) {
     for (let ug = 0; ug < 6.3; ug += 0.05) { const x = gxy(ug, ww, 800)[0]; assert.ok(x > ww * 2 / 3, ww + ': ' + x); }
   }
+});
+
+test('nebo-v2b: уже 1100 px (колонка во всю ширину) — галактика меньше и заглядывает из-за правого края, ядро не под текстом', () => {
+  const m = /function gxy\(ug, ww, hh\) \{ return (ww < 1100 \? [^\n]*); \}/.exec(js);
+  assert.ok(m, 'gxy с веткой узкого экрана');
+  const gxy = new Function('ug', 'ww', 'hh', 'return ' + m[1]); // eslint-disable-line no-new-func
+  assert.match(js, /gW = G\.width \* \(w < 1100 \? 2\.4 : 4\)/);
+  // ядро: радиус gr·0,5 в пикселях спрайта (gr = S·0,11, спрайт S·0,24) × масштаб 2,4 → ≈ 0,55·S·0,11·… — считаем как в nebo.js
+  for (const [ww, hh] of [[360, 740], [390, 844], [430, 932], [768, 1024], [1024, 768]]) {
+    const S = Math.ceil(Math.hypot(ww, hh) / 4), rc = S * 0.11 * 0.5 * 2.4 * (S * 0.24) / Math.ceil(S * 0.24);
+    for (let ug = 0; ug < 6.3; ug += 0.05) {
+      const x = gxy(ug, ww, hh)[0];
+      // на экране — не больше 45 % радиуса ядра: оно в правом поле (≥ 16 px), а не на строках
+      assert.ok(x + rc * 0.45 >= ww, ww + ': центр ' + x.toFixed(1) + ', ядро ' + rc.toFixed(1));
+    }
+  }
+  // широкий экран — как в nebo-v2 (внешняя треть, масштаб 4)
+  assert.ok(gxy(0, 1280, 900)[0] > 1280 * 2 / 3 && gxy(0, 1280, 900)[0] < 1280);
 });
 
 test('nebo-v2: созвездия проявляются рядом с курсором/пальцем за 400 мс; наклон ±4 px без системных запросов', () => {

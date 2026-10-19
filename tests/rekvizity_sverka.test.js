@@ -12,7 +12,10 @@ const http = require('http');
 const { execFile, execFileSync } = require('child_process');
 
 const KOREN = path.join(__dirname, '..');
-const chitat = f => fs.readFileSync(path.join(KOREN, f), 'utf8');
+// tipograf-yur-v1: юридические документы прогнаны типографом — сверяем текст без учёта вида пробела и дефиса
+const bezVidaYur = (f, s) => (/^(oferta|politika|soglasie|cookies|vozvrat|rassylki|partneram\/usloviya)\//.test(f)
+  ? s.replace(/<main[\s\S]*<\/main>/, (m) => m.replace(/&nbsp;|\u00a0/g, ' ').replace(/&#8209;|\u2011/g, '-')) : s); // только <main>: шапка и подвал — байт в байт
+const chitat = f => bezVidaYur(f, fs.readFileSync(path.join(KOREN, f), 'utf8'));
 
 // Синтетические номера с верными контрольными цифрами (не реальный человек)
 function inn12() {
@@ -122,7 +125,7 @@ test('сборщик: город — в подвале, оферте (подсу
   assert.ok(out.tab.includes('<td>Место нахождения</td><td>г.&nbsp;Липецк — по ЕГРИП</td>'));
   assert.ok(out.tab.includes('<td>Сверено с ЕГРИП</td><td>28.09.2026 — ИНН, ОГРНИП и статус «действующий» совпадают.'));
   assert.ok(out.tab.includes('href="/report.html?inn=' + INN + '"'));
-  assert.ok(out.of.includes('по месту нахождения Исполнителя<!--r:gorod--> (г.&nbsp;Липецк)<!--/r--> после'));
+  assert.ok(out.of.includes('по&nbsp;месту нахождения Исполнителя<!--r:gorod--> (г.&nbsp;Липецк)<!--/r--> после'));
   for (const k of ['podval', 'isp', 'tab', 'of']) for (const x of ['Тестовая', 'кв 13', '398001'])
     assert.ok(!out[k].includes(x), k + ': адрес регистрации попал на сайт: ' + x);
 });

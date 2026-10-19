@@ -6,7 +6,10 @@ const fs = require('fs');
 require('./razvernut_sborku.js'); // vizual-v3.0a: главная подключает пакеты — сторож видит исходники в порядке исполнения
 const path = require('path');
 const ROOT = path.join(__dirname, '..');
-const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
+// tipograf-yur-v1: юридические документы прогнаны типографом — сверяем текст без учёта вида пробела и дефиса
+const bezVidaYur = (f, s) => (/^(oferta|politika|soglasie|cookies|vozvrat|rassylki|partneram\/usloviya)\//.test(f)
+  ? s.replace(/<main[\s\S]*<\/main>/, (m) => m.replace(/&nbsp;|\u00a0/g, ' ').replace(/&#8209;|\u2011/g, '-')) : s); // только <main>: шапка и подвал — байт в байт
+const read = (f) => bezVidaYur(f, fs.readFileSync(path.join(ROOT, f), 'utf8'));
 const L = require('../js/limit.js');
 const T = JSON.parse(read('tarify/tarify.json'));
 const G = T.gost_v_den; // gost-limit-10-sait-v1: число из tarify.json

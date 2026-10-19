@@ -35,6 +35,16 @@ STRANICY = {
     "proverit-schet/index.html": "main",
     "osnovatel/index.html": "main",
     "index.html": "main",  # tipograf-tarify-v1 (18.10.2026): главная — пишется руками; строку цен и JSON-LD правит sobrat_tarify
+    # tipograf-yur-v1 (19.10.2026): юридические документы — «да» [Право] 19.10 10:50 (п. 333 б): меняется только вид
+    # пробела и дефиса; без U+00A0 и U+2011 текст побуквенно прежний (сторож tipograf_yur.test.js), дату редакции не трогаем.
+    # Блоки сборщиков (<!--oplata-->, <!--v-bete-->, <!--r:…-->, реквизиты) — как везде, не трогаем.
+    "oferta/index.html": "main",
+    "politika/index.html": "main",
+    "soglasie/index.html": "main",
+    "cookies/index.html": "main",
+    "vozvrat/index.html": "main",
+    "rassylki/index.html": "main",
+    "partneram/usloviya/index.html": "main",
 }
 NB = "&nbsp;"
 KOROTKIE = r"(?:в|и|а|к|с|у|о|я|по|на|не|до|от|за|из|ни|но|же|ли|без|для|под|над|при|про|со|об|во|мы|вы|он|её|ее|их|ей|им)"  # detali-v1: + во и местоимения (аудит 18.10)
@@ -54,6 +64,7 @@ NE_TROGAT = re.compile(
     r"|<(script|style|code|pre|textarea)\b.*?</\2>"
     r"|<!--r:[a-z0-9_-]+-->.*?<!--/r-->"  # реквизиты из rekvizity.json (sobrat_shapku)
     r"|<ul\b[^>]*\bdata-puls\b.*?</ul>"  # «Последние изменения» на /o-proekte/ — пишет sobrat_lentu
+    r'|<p class="meta">Редакция от\b.*?</p>'  # tipograf-yur-v1: дату редакции читают счёт и акт (startovaya.RED_RE) — байт в байт
     r"|<!--.*?-->",
     re.S | re.I)
 TEG = re.compile(r"(<[^>]*>)")

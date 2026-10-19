@@ -485,7 +485,7 @@ dialog.lip-d[open]{animation:lip-vverh .28s cubic-bezier(.2,.7,.2,1)}
  .vit__karta ul::-webkit-scrollbar{display:none}
  .vit__karta li{flex:none;scroll-snap-align:start}
  .vit-k{min-height:48px;padding-right:14px;white-space:nowrap}
- .vit__zal{gap:32px}
+ .vit__zal{gap:28px}
  .vit-e{gap:16px}
  .vit-e--k .vit-e__scena{aspect-ratio:auto;height:176px}
  .vit-e--m{grid-template-columns:minmax(0,1fr) 104px;column-gap:16px;row-gap:0;align-items:start}
@@ -562,7 +562,7 @@ dialog.lip-d[open]{animation:lip-vverh .28s cubic-bezier(.2,.7,.2,1)}
  font-size:13px;font-weight:600;line-height:1;color:var(--ink2);font-variant-numeric:tabular-nums}
 .vit-ind.is-vid{opacity:1}
 .vit-ind b{font-weight:600;color:var(--ink)}
-.vit-ind--shk{left:clamp(12px,calc((100vw - var(--wide,1200px)) / 4),40px);top:50%;width:32px;translate:-8px -50%;
+.vit-ind--shk{left:clamp(12px,calc((100vw - var(--wide,1200px)) / 4),40px);top:40vh;width:32px;translate:-8px -50%;
  display:flex;flex-direction:column;align-items:center;gap:10px}
 .vit-ind--shk.is-vid{translate:0 -50%}
 .vit-ind--shk .vit-ind__dor{position:relative;width:2px;height:96px;border-radius:2px;background:var(--line);overflow:hidden}

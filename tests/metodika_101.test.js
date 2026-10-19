@@ -8,7 +8,10 @@ const fs = require('node:fs');
 require('./razvernut_sborku.js'); // vizual-v3.0a: главная подключает пакеты — сторож видит исходники в порядке исполнения
 const path = require('node:path');
 const K = path.join(__dirname, '..');
-const chitat = (f) => fs.readFileSync(path.join(K, f), 'utf8');
+// tipograf-yur-v1: юридические документы прогнаны типографом — сверяем текст без учёта вида пробела и дефиса
+const bezVidaYur = (f, s) => (/^(oferta|politika|soglasie|cookies|vozvrat|rassylki|partneram\/usloviya)\//.test(f)
+  ? s.replace(/<main[\s\S]*<\/main>/, (m) => m.replace(/&nbsp;|\u00a0/g, ' ').replace(/&#8209;|\u2011/g, '-')) : s); // только <main>: шапка и подвал — байт в байт
+const chitat = (f) => bezVidaYur(f, fs.readFileSync(path.join(K, f), 'utf8'));
 const M = require('../indeks/metodika-v1.json');
 const KALK = require('../indeks/indeks.js');
 const IO = require('../js/indeks-otvet.js');

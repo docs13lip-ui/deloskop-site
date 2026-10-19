@@ -16,7 +16,10 @@ const stranicy = () => {
     .filter(f => fs.existsSync(path.join(KOREN, f)));
   return [...new Set(vse)];
 };
-const chitat = f => fs.readFileSync(path.join(KOREN, f), 'utf8');
+// tipograf-yur-v1: юридические документы прогнаны типографом — сверяем текст без учёта вида пробела и дефиса
+const bezVidaYur = (f, s) => (/^(oferta|politika|soglasie|cookies|vozvrat|rassylki|partneram\/usloviya)\//.test(f)
+  ? s.replace(/<main[\s\S]*<\/main>/, (m) => m.replace(/&nbsp;|\u00a0/g, ' ').replace(/&#8209;|\u2011/g, '-')) : s); // только <main>: шапка и подвал — байт в байт
+const chitat = f => bezVidaYur(f, fs.readFileSync(path.join(KOREN, f), 'utf8'));
 // текст без типографики (неразрывные пробелы и дефис — tests/tipograf_statej.py): сверяем слова, а не пробелы
 const slova = f => chitat(f).replace(/&nbsp;|\u00a0/g, ' ').replace(/&#8209;|\u2011/g, '-');
 const podval = t => { const m = t.match(/<!--podval-->[\s\S]*?<!--\/podval-->/g); return m || []; };

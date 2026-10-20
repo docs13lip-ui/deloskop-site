@@ -26,6 +26,10 @@ import re
 import sys
 
 DARK = "[data-theme=dark]"
+# классы, которые ставятся на <html> (тот же элемент, что [data-theme]): index.html (rezhim-otcheta, zhdu-js, est-js),
+# js/zhivoj-indeks.js (zhi-io), js/shapka.js (tema-vt, tema-ik, is-locked) — сверяет tests/zhivoj_otchet.test.js
+KORNEVYE = ("rezhim-otcheta", "zhdu-js", "est-js", "zhi-io", "tema-vt", "tema-ik", "is-locked")
+KORNEVOJ = re.compile(r"\.(?:" + "|".join(KORNEVYE) + r")(?![\w-])")
 # токены, которые задаёт css/tema.css руками (общие имена ДС v1 и старых страниц) — их не трогаем
 TOKENY_RUKAMI = {
     "--bg", "--surface", "--surface-2", "--card", "--soft", "--ink", "--ink-2", "--ink2", "--muted", "--off", "--na",
@@ -231,6 +235,11 @@ def _selektor(s):
         return "html" + DARK + s[4:]
     if s.startswith(DARK) or s.startswith("[data-theme"):
         return None
+    # zhivoj-v2: класс, который скрипты ставят на сам <html> (rezhim-otcheta — по «Проверить», до ответа API),
+    # стоит на том же элементе, что и [data-theme] — «[data-theme=dark] .rezhim-otcheta» его не находит. На живом
+    # 19.10: пока шёл запрос, липкая полоса формы в тёмной теме была светлой (245,245,242) со светлым текстом.
+    if KORNEVOJ.match(s):
+        return DARK + " " + s + "," + DARK + s
     return DARK + " " + s
 
 

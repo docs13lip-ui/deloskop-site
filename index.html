@@ -728,7 +728,7 @@ footer a{color:var(--ink2)}
     // vizual-v3.1b: компактная шапка отчёта — сразу по нажатию «Проверить», а не когда придёт ответ: сдвиг вёрстки — в ответ на действие человека (не CLS),
     // а ответ API только меняет пример на отчёт на том же месте. Ошибка — шапка возвращается (bezOtcheta).
     document.documentElement.classList.add('rezhim-otcheta');
-    note.className='note';note.textContent='Проверяем по реестрам…';report.classList.add('loading');report.setAttribute('aria-busy','true');if(window.dlkGoal)dlkGoal('check_started');
+    note.className='note';note.textContent='Проверяем по реестрам…';if(window.DlkZhivoj)try{DlkZhivoj.zhdu(note,v)}catch(e){}report.classList.add('loading');report.setAttribute('aria-busy','true');if(window.dlkGoal)dlkGoal('check_started');
     fetch(CAPI+'/api/check?q='+encodeURIComponent(v),{credentials:'include'})
       .then(function(res){return res.json().then(function(j){return {ok:res.ok,s:res.status,j:j}},function(){return {ok:false,s:res.status,j:{}}})})
       .then(function(x){kogdaModuli(function(){report.classList.remove('loading');
@@ -740,7 +740,7 @@ footer a{color:var(--ink2)}
         // kavychki-v1: ПАО "РОССЕТИ ЮГ" → ПАО «РОССЕТИ ЮГ» — до всех модулей отчёта (js/imya.js; буквы — как в ЕГРЮЛ)
         if(window.DlkImya)DlkImya.ispravitOtvet(x.j);
         // vizual-v3.1a: пример перетекает в отчёт (js/perehod.js — View Transitions; нет поддержки или «уменьшить движение» — сразу)
-        perehod(function(){render(x.j,o)}).then(function(){report.removeAttribute('aria-busy');note.className='note ok';note.textContent='Готово. Отчёт — рядом.';
+        perehod(function(){render(x.j,o);if(window.DlkZhivoj)try{DlkZhivoj.pojav(report)}catch(e){}}).then(function(){report.removeAttribute('aria-busy');note.className='note ok';note.textContent='Готово. Отчёт — рядом.';
         adres((x.j.company&&x.j.company.inn)||v,o);
         if(window.Otchet&&report.classList.contains('ot'))Otchet.prokrutit(report);else if(window.innerWidth<980)report.scrollIntoView({behavior:'smooth',block:'start'});});});})
       .catch(function(){bezOtcheta();report.classList.remove('loading');report.removeAttribute('aria-busy');note.className='note err';

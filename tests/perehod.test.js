@@ -69,7 +69,7 @@ test('главная: пакеты подключают переход и сти
   assert.ok(karta.pakety.glavnaya.includes('js/perehod.js'));
   assert.ok(karta.pakety['glavnaya-stil'].includes('css/perehod.css'));
   const h = chitat('index.html');
-  assert.match(h, /perehod\(function\(\)\{render\(x\.j,o\)\}\)\.then\(/);
+  assert.match(h, /perehod\(function\(\)\{render\(x\.j,o\);if\(window\.DlkZhivoj\)try\{DlkZhivoj\.pojav\(report\)\}catch\(e\)\{\}\}\)\.then\(/); // zhivoj-v2: проявление вывода — в том же обновлении
   assert.match(h, /report\.setAttribute\('aria-busy','true'\)/);
   // пример уходит в запас живыми узлами, «Назад» возвращает их (обработчики вкладок и кольца на месте)
   assert.match(h, /exUzly=\[\]\.slice\.call\(report\.childNodes\)/);

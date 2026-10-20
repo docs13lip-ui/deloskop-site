@@ -135,5 +135,5 @@ test('адрес отчёта: компактная шапка ставится 
   assert.ok(/function runCheck\(v,o\)\{[\s\S]{0,600}?document\.documentElement\.classList\.add\('rezhim-otcheta'\);/.test(g));
   // стекло примера (backdrop-filter) Chromium считает шире блока — пока ждём ответ, его нет, иначе смена примера на отчёт = CLS 0,17–0,39
   assert.ok(chitat('css/glubina.css').includes(' .report.ex.loading,.rezhim-otcheta .report.ex{background:#fff;-webkit-backdrop-filter:none;backdrop-filter:none}'));
-  assert.ok(chitat('css/tema.css').includes('[data-theme=dark] .report.ex.loading,[data-theme=dark] .rezhim-otcheta .report.ex{background:#1C1C1F}'), 'тёмная тема — своим цветом');
+  assert.ok(chitat('css/tema.css').includes('[data-theme=dark] .report.ex.loading,[data-theme=dark] .rezhim-otcheta .report.ex,[data-theme=dark].rezhim-otcheta .report.ex{background:#1C1C1F}'), 'тёмная тема — своим цветом (zhivoj-v2: и когда rezhim-otcheta на самом <html>)');
 });

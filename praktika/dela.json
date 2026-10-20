@@ -10,11 +10,11 @@
     "115-fz/zapros-banka-po-115-fz-kak-otvetit/index.html": ["shtraf-banka-za-dokumenty-115-fz", "otklyuchili-internet-bank"],
     "115-fz/zsk-zony-riska/index.html": ["krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "zagraditelnye-komissii", "isklyuchili-iz-egryul-dolg-s-direktora", "zsk-dolzhnika-sudebnyj-prikaz"],
     "nalogi/statya-54-1-nk-prostymi-slovami/index.html": ["razryv-nds-v-cepochke-krascvetmet", "vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke", "droblenie-uplachennaya-usn-zachityvaetsya", "povtornaya-vyezdnaya-proverka-vs-2026", "podryadchik-ne-vystavil-schet-fakturu"],
-    "nalogi/nds-postavshchika-na-usn-po-inn/index.html": ["podryadchik-ne-vystavil-schet-fakturu"],
+    "nalogi/nds-postavshchika-na-usn-po-inn/index.html": ["nds-postavshchika-usn-cena-dogovora", "podryadchik-ne-vystavil-schet-fakturu"],
     "nalogi/nagruzka/index.html": ["droblenie-uplachennaya-usn-zachityvaetsya", "zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/nagruzka-po-otraslyam-2025/index.html": ["zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/priznaki-tehnicheskoj-kompanii/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke"],
-    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026"],
+    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026"],
     "pasport/index.html": ["proverka-kontragenta-na-datu-sdelki"],
     "nalogi/svezhest-dannyh-proverki-kontragenta/index.html": ["proverka-kontragenta-na-datu-sdelki"],
     "nalogi/pismo-o-smene-rekvizitov-kak-proverit/index.html": ["dvojnik-postavshchika-bank-poluchatelya"],
@@ -26,6 +26,51 @@
     "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"]
   },
   "razbory": [
+    {
+      "razdel": "nalogi",
+      "slug": "nds-postavshchika-usn-cena-dogovora",
+      "h1": "Поставщик на упрощёнке стал платить НДС. Кто доплатит — он или вы?",
+      "title": "Поставщик на УСН стал платить НДС: кто доплатит по договору",
+      "description": "КС в деле ВТБ ограничил надбавку НДС к цене, закон 293-ФЗ ввёл расчётный метод. Но если упрощенец просто перерос порог — решает только договор.",
+      "zapros": "поставщик на усн стал плательщиком ндс цена договора кто платит",
+      "data": "2026-10-20",
+      "minut": 4,
+      "lid": "Поставщик на упрощёнке растёт и в 2027 году может перешагнуть порог 20 млн ₽. Тогда он станет плательщиком НДС — и захочет добавить налог к цене. Конституционный суд и новый закон ограничили такую надбавку, но только когда налог возник из-за изменения закона. Если поставщик просто вырос, всё решает текст договора.",
+      "dela": [
+        {
+          "sud": "Конституционный суд РФ",
+          "sud_kratko": "КС",
+          "akt": "Постановление",
+          "nomer": "№ 41-П",
+          "data": "2025-11-25",
+          "delo": "жалоба ПАО «Банк ВТБ» на нормы НК и ГК о надбавке НДС к цене договора, заключённого до изменения закона",
+          "na_konu": "≈ 141,4 млн ₽ НДС за 2021 год сверх цены лицензионного договора",
+          "na_konu_kratko": "≈ 141,4 млн ₽",
+          "itog": "На новое рассмотрение",
+          "itog_nov": false,
+          "istochnik": "https://www.ksrf.ru/ru/Decision/Pages/default.aspx",
+          "istochnik_podpis": "ksrf.ru — решения Конституционного суда; текст постановления сверен по consultant.ru",
+          "sverka": "2026-10-20"
+        }
+      ],
+      "knopka": {
+        "zagolovok": "Перерастёт ли поставщик порог 20 млн ₽",
+        "tekst": "Проверка по ИНН: режим налогов, выручка по отчётности и суды поставщика по открытым данным на дату проверки.",
+        "knopka": "Проверить поставщика по ИНН",
+        "url": "/",
+        "cel": "razbor23_check",
+        "slezh": {"knopka": "Следить за поставщиком", "url": "/cabinet.html#watch", "cel": "razbor23_slezh"}
+      },
+      "zakon": [
+        ["ст. 145 НК РФ — освобождение от НДС при доходе до 20 млн ₽", "ред. 04.07.2026 № 228-ФЗ", "https://www.consultant.ru/document/cons_doc_LAW_28165/"],
+        ["п. 1 ст. 168 НК РФ — НДС предъявляется дополнительно к цене", "ред. на 20.10.2026", "https://www.consultant.ru/document/cons_doc_LAW_28165/"],
+        ["п. 3.2 ст. 166 НК РФ — расчётный метод, если НДС возник из-за изменения закона после заключения договора", "ред. 04.08.2026 № 293-ФЗ, с 01.10.2026", "https://www.consultant.ru/document/cons_doc_LAW_28165/"],
+        ["п. 1, 2 ст. 424 ГК РФ — цена договора и её изменение", "ред. на 20.10.2026", "https://www.consultant.ru/document/cons_doc_LAW_5142/"],
+        ["Постановление КС РФ от 25.11.2025 № 41-П", "", "https://www.consultant.ru/document/cons_doc_LAW_519609/"],
+        ["п. 17 Постановления Пленума ВАС РФ от 30.05.2014 № 33 — НДС включён в цену, если договор не говорит иное", "", "https://www.consultant.ru/document/cons_doc_LAW_164585/"]
+      ],
+      "pohozhie": ["podryadchik-ne-vystavil-schet-fakturu", "vokfors-rekonstrukciya"]
+    },
     {
       "razdel": "nalogi",
       "slug": "podryadchik-ne-vystavil-schet-fakturu",

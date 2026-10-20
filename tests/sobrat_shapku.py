@@ -76,6 +76,8 @@ RSS_LINK = '<link rel="alternate" type="application/rss+xml" title="Разбор
 MANIFEST_LINK = '<link rel="manifest" href="/manifest.webmanifest">'
 APPLE_IMYA = '<meta name="apple-mobile-web-app-title" content="Делоскоп">'
 PWA_JS = '<script src="/js/pwa.js" defer></script>'
+# noch-2010-schetchik (20.10): свой счёт просмотров без cookie (/politika/, цель 8) — в пакете «yadro»; отдельным тегом — где пакета нет
+SCHETCHIK_JS = '<script src="/js/schetchik.js" defer></script>'
 # vizual-v1 (17.10, «глубина и свет»): последним стилем страницы — тени в три слоя, дышащий фон, стекло
 GLUBINA_LINK = '<link rel="stylesheet" href="/css/glubina.css">'
 # vizual-v3.0b (18.10): тёмная тема — по системе + переключатель в подвале (решение владельца 18.10 15:38).
@@ -366,6 +368,8 @@ def vstavit_shapku(txt, shapka):
         txt = txt.replace("</head>", APPLE_IMYA + "\n</head>", 1)
     if not est(txt, PWA_JS):
         txt = txt.replace("</head>", PWA_JS + "\n</head>", 1)
+    if not est(txt, SCHETCHIK_JS):
+        txt = txt.replace("</head>", SCHETCHIK_JS + "\n</head>", 1)
     if not est(txt, GLUBINA_LINK):
         txt = txt.replace("</head>", GLUBINA_LINK + "\n</head>", 1)
     if not est(txt, TEMA_LINK):

@@ -107,7 +107,8 @@ test('калькулятор: формула та же, что была на г�
   const n = (s) => +s.replace(/\D/g, '');
   assert.strictEqual(n(el['sv-vat'].textContent), 220000);
   assert.strictEqual(n(el['sv-fine'].textContent), 44000);
-  const pen = 220000 * 0.14 * (30 / 300 + 60 / 150 + 640 / 300);
+  const KEY = JSON.parse(chitat('tarify/tarify.json')).raschet.klyuchevaya_stavka;  // stavka-cb-v1: ставка — из tarify.json (tests/novaya_stavka.py)
+  const pen = 220000 * KEY * (30 / 300 + 60 / 150 + 640 / 300);
   assert.strictEqual(n(el['sv-pen'].textContent), Math.round(pen));
   assert.strictEqual(n(el['sv-tot'].textContent), Math.round(220000 + 44000 + pen));
 });

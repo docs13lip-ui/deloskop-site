@@ -53,6 +53,16 @@ class TestPul(unittest.TestCase):
         self.assertEqual(len(v), 1)
         self.assertIn("ниже, чем за", v[0])
 
+    def test_adres_formulirovka_prava(self):
+        # ✏ [Право] 20.10: юридически значимые сообщения можно направить и по адресу ЕГРЮЛ (ст. 165.1 ГК) —
+        # не «по нему направляют», а «удобно направлять»; «надёжный адрес» не писать.
+        v = " ".join(R.un_pered_varianty(fakty()))
+        self.assertIn("удобно направлять претензии и документы", v.replace("\u00a0", " ").replace("&nbsp;", " "))
+        for p in [R.__file__] + list(KOREN.glob("*/index.html")):
+            t = open(p, encoding="utf-8").read()
+            self.assertNotIn("направляют претензии", t, p)
+            self.assertNotIn("надёжный адрес", t, p)
+
     def test_bez_faktov(self):
         f = fakty(V=[], gorod="", razdel="", inn="7700000001")
         self.assertIsNone(R._un_pered_fakt(f))

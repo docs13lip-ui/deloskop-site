@@ -3859,8 +3859,8 @@ def un_pered_varianty(f):
                                                                                        m.group(3))))
             break
     if _zn_v(f, "ok", "Адрес и руководитель в реестре") and f.get("gorod"):
-        var.append("Адрес %s в ЕГРЮЛ (%s) — без отметки о недостоверности: этот же адрес укажите в договоре — по нему "
-                   "направляют претензии и документы." % (im, html.escape(f["gorod"], quote=False)))
+        var.append("Адрес %s в ЕГРЮЛ (%s) — без отметки о недостоверности: этот же адрес укажите в договоре — на этот "
+                   "адрес удобно направлять претензии и документы." % (im, html.escape(f["gorod"], quote=False)))
     if f.get("razdel") in UN_PERED_RAZDEL:
         var.append(UN_PERED_RAZDEL[f["razdel"]] % im)
     return [v for v in var if v]

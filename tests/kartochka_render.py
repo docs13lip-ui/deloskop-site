@@ -3653,14 +3653,22 @@ def sos_otnoshenie(moj, chuzhoj):
 
 
 def sos_podpis(k, x):
-    """Подпись соседа в «Похожих»: сравнение с этой компанией, если оборот обеих — за один год; иначе — город и сумма."""
+    """Подпись соседа в «Похожих»: сравнение с этой компанией, если оборот обеих — за один год; иначе — город, оборот и год."""
     mesto = x.get("gorod") or x.get("region") or ""
     d_k, d_x, g_k, g_x = _dohod_kart(k), _dohod_kart(x), _god_dohoda(k), _god_dohoda(x)
     rel = sos_otnoshenie(d_k, d_x) if (g_k and g_k == g_x) else ""
     if not rel:
-        return e(", ".join(filter(None, [mesto, dengi(d_x) if d_x else ""]))).replace("&nbsp;", NB)
+        # kartochki-unik-v8c: годы разные — оборот с годом («Москва · оборот 289 млрд ₽ за 2024»): без года сумма
+        # читалась как сравнимая с оборотом этой компании
+        if not d_x:
+            return e(mesto)
+        ob = "оборот " + e(dengi(d_x)).replace("&nbsp;", NB) + ((" за%s%d" % (NB, g_x)) if g_x else "")
+        return (e(mesto) + " · " + ob) if mesto else ob
     imya_k = e(un_kratkoe(k.get("name") or ""))
-    nachalo = ("%s, сколько у %s" if rel == "почти столько же" else "%s, чем у %s") % (rel, imya_k)
+    # kartochki-unik-v8c: у сравнения есть подлежащее — «оборот в 2 раза больше, чем у…» (было «в 2 раза больше, чем у…»:
+    # больше чего — не сказано)
+    nachalo = ("оборот почти такой же, как у %s" % imya_k) if rel == "почти столько же" \
+        else "оборот %s, чем у %s" % (rel, imya_k)
     return "%s: %s за%s%d%s" % (nachalo, e(dengi(d_x)).replace("&nbsp;", NB), NB, g_x,
                                 (" · " + e(mesto)) if mesto else "")
 

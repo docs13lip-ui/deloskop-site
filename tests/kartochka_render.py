@@ -1821,7 +1821,12 @@ def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None):
 <meta property="og:title" content="{title}">
 <meta property="og:description" content="{desc}">
 <meta property="og:url" content="{url}">
-<meta property="og:image" content="https://deloskop.ru/ikonka-512.png">
+<meta property="og:image" content="https://deloskop.ru/oblozhka.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Делоскоп: перед оплатой — проверить, если банк спросил — ответить">
+<meta property="og:site_name" content="Делоскоп">
+<meta property="og:locale" content="ru_RU">
 <meta name="theme-color" content="#F5F5F2">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">

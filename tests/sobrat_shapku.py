@@ -60,6 +60,19 @@ FONTS_LINK = '<link rel="stylesheet" href="/css/fonts.css">'
 # Кириллица и латиница (пробелы, цифры, знаки — из латинского набора) начертаний 400 и 600: ~44 КБ, нужны любой странице.
 SHRIFT_PRELOAD = "\n".join('<link rel="preload" href="/fonts/onest-%s.woff2" as="font" type="font/woff2" crossorigin>' % f
                            for f in ("cyrillic-400", "latin-400", "cyrillic-600"))
+# og-v1 (21.10.2026): обложка ссылок 1200×630 вместо квадратного значка 512×512 — ВК, Telegram, Дзен и Яндекс показывают
+# большую карточку (значок они обрезали или ставили мелким сбоку). Картинка — oblozhka.png (tests/oblozhka/: страница,
+# снимок Chromium, сжатие палитрой). Страница со своей картинкой (не значок) — не трогаем. Страницам с canonical, но без
+# og:title (разделы /company/, /obnovleniya/) — блок Open Graph из <title>, description и canonical.
+OG_ZNACHOK = '<meta property="og:image" content="https://deloskop.ru/ikonka-512.png">'
+OG_OBLOZHKA = "\n".join((
+    '<meta property="og:image" content="https://deloskop.ru/oblozhka.png">',
+    '<meta property="og:image:width" content="1200">',
+    '<meta property="og:image:height" content="630">',
+    '<meta property="og:image:alt" content="Делоскоп: перед оплатой — проверить, если банк спросил — ответить">',
+    '<meta property="og:site_name" content="Делоскоп">',
+    '<meta property="og:locale" content="ru_RU">'))
+OG_STARYE = re.compile(r'<meta property="og:(?:image:(?:width|height|alt)|site_name|locale)" content="[^"]*">\n?')
 GLAVNAYA_CANON = '<link rel="canonical" href="https://deloskop.ru/">'
 STARYJ_PRELOAD = re.compile(r'<link rel="preload" href="/fonts/onest-[^"]+" as="font"[^>]*>\n?')
 DS_PAKET = re.compile(r'<link rel="stylesheet" href="/css/b/ds\.[0-9a-f]{10}\.css">')
@@ -463,6 +476,31 @@ def tablica(r):
     return '<div class="table-wrap"><table class="table"><tbody>' + tr + "</tbody></table></div>"
 
 
+def og_oblozhka(txt):
+    """og-v1: обложка ссылок и блок Open Graph там, где его не было (см. OG_OBLOZHKA)."""
+    h = txt.find("</head>")
+    if h < 0:
+        return txt
+    head = txt[:h]
+    if 'property="og:title"' not in head:
+        kanon = re.search(r'<link rel="canonical" href="([^"]+)">', head)
+        zag = re.search(r"<title>(.*?)</title>", head, re.S)
+        opis = re.search(r'<meta name="description" content="([^"]*)">\n?', head)
+        if not (kanon and zag and opis) or 'name="robots" content="noindex' in head:
+            return txt
+        z = html.escape(html.unescape(zag.group(1).strip()), quote=True)
+        blok = ('<meta property="og:type" content="website">\n<meta property="og:title" content="%s">\n'
+                '<meta property="og:description" content="%s">\n<meta property="og:url" content="%s">\n%s\n'
+                % (z, opis.group(1), kanon.group(1), OG_ZNACHOK))
+        txt = txt[:opis.end()] + ("" if opis.group(0).endswith("\n") else "\n") + blok + txt[opis.end():]
+        h = txt.find("</head>")
+    nov = OG_OBLOZHKA.split("\n")[0]
+    if OG_ZNACHOK not in txt[:h] and nov not in txt[:h]:
+        return txt  # своя картинка страницы
+    head = OG_STARYE.sub("", txt[:h]).replace(nov, OG_ZNACHOK).replace(OG_ZNACHOK, OG_OBLOZHKA, 1)
+    return head + txt[h:]
+
+
 def sobrat_stranicu(txt, r, podval, shapka=None):
     # 1) шрифты со своего сервера
     if GOOGLE_FONTS.search(txt):
@@ -491,6 +529,8 @@ def sobrat_stranicu(txt, r, podval, shapka=None):
     # 6) vizual-v3.0b: тёмная тема — цвета, записанные числом в <style> страницы, получают тёмную пару
     #    (<style data-tema> в <head>; tests/tema_temnaya.py). Правки стилей страницы — пересобрать.
     txt = TT.dlya_stranicy(txt)
+    # 6б) og-v1: обложка ссылок 1200×630 и Open Graph на разделах без него
+    txt = og_oblozhka(txt)
     # 7) shrift-v1: предзагрузка шрифта — последней строкой <head> и после всех вставок: так страница, собранная заново
     #    (kartochki perepechatat, сборщики разделов), и пересобранная sobrat_shapku совпадают байт в байт
     txt = STARYJ_PRELOAD.sub("", txt)

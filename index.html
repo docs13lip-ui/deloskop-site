@@ -381,7 +381,7 @@ footer a{color:var(--ink2)}
           <input id="inn" name="inn" type="text" inputmode="search" autocomplete="off" placeholder="ИНН или название компании">
           <button type="submit">Проверить</button>
         </form>
-        <p class="note" id="note" role="status" aria-live="polite">10 проверок в&nbsp;день&nbsp;— бесплатно, без&nbsp;регистрации.</p>
+        <p class="note" id="note" role="status" aria-live="polite">10 проверок в&nbsp;день&nbsp;— бесплатно, без&nbsp;регистрации.</p><script>/* zagruzka-v1: открыто адресом отчёта (/?inn=…) — проверка начнётся сразу, поэтому строка под полем с первого кадра «Проверяем по реестрам…». Иначе на телефоне в первый кадр попадала двухстрочная «10 проверок в день…», а через 100–200 мс — однострочная, и всё ниже прыгало на 22 px (CLS). Прежний текст — в data-def: его возвращает «Назад». */(function(n){if(n&&document.documentElement.classList.contains('rezhim-otcheta')){n.setAttribute('data-def',n.textContent);n.textContent='Проверяем по реестрам…'}})(document.getElementById('note'))</script>
         <p class="doverie-str">У&nbsp;каждого факта&nbsp;— источник и&nbsp;дата. Чего не&nbsp;проверили, так и&nbsp;пишем. <a href="#doverie">Откуда данные&nbsp;→</a></p>
         <p class="note kanaly-glav" data-kanaly-blok hidden><a data-kanal="max" hidden>Написать в&nbsp;MAX</a> <a data-kanal="vk" hidden>Написать во&nbsp;ВКонтакте</a> · <a href="/boty/">что умеет бот</a></p>
       </div>
@@ -583,7 +583,7 @@ footer a{color:var(--ink2)}
 <script>
 (function(){
   var form=document.getElementById('check'), input=document.getElementById('inn'), note=document.getElementById('note');
-  var def=note.textContent;
+  var def=note.getAttribute('data-def')||note.textContent;
   function focusInn(e){e.preventDefault();window.scrollTo({top:0,behavior:'smooth'});setTimeout(function(){input.focus({preventScroll:true})},350);}
   document.querySelectorAll('[data-focus-inn]').forEach(function(a){a.addEventListener('click',focusInn)});
   input.addEventListener('input',function(){note.className='note';note.textContent=def;});
@@ -607,7 +607,10 @@ footer a{color:var(--ink2)}
   });
   function primerUslovij(){
     var ex=document.querySelector('[data-usl-demo]');
-    if(!ex||!window.Usloviya||ex.hasAttribute('data-usl-gotov'))return;ex.setAttribute('data-usl-gotov','');
+    if(!ex||!window.Usloviya||ex.hasAttribute('data-usl-gotov'))return;
+    // zagruzka-v1: в режиме отчёта (/?inn=…) пример заменит отчёт — не дорисовываем его: «Условия сделки» вырастали в примере на 125 px
+    // через ~300 мс после load, пока ждём ответ (CLS). Пример вернулся («Назад», ошибка) — дорисуем тогда (bezOtcheta).
+    if(document.documentElement.classList.contains('rezhim-otcheta'))return;ex.setAttribute('data-usl-gotov','');
     ex.className='';
     try{Usloviya.mount(ex,{risk_level:'low',company:{inn:'0000000000',name_short:'ООО «Пример»',status:'ACTIVE',reg_date:'2019-04-01'},
       signals:[{title:'Руководитель сменился недавно',status:'warn',detail:'Внимание'}]},{compact:true});}catch(e){ex.className='verdict';}
@@ -714,12 +717,12 @@ footer a{color:var(--ink2)}
   function adres(inn,o){if(o&&(o.svoj||o.izIstorii)||!/^\d{10}(\d{2})?$/.test(String(inn))||!history.pushState)return;
     var u=OTCHET_PUT?'/otchet/'+inn+'/':'/?inn='+inn;
     try{if(innIzAdresa()===String(inn))history.replaceState({dlkInn:String(inn)},'',u);else history.pushState({dlkInn:String(inn)},'',u);}catch(e){}}
-  function bezOtcheta(){document.documentElement.classList.remove('rezhim-otcheta')}
+  function bezOtcheta(){document.documentElement.classList.remove('rezhim-otcheta');if(document.readyState==='complete')kogdaModuli(primerUslovij);}
   function vernutPrimer(){bezOtcheta();if(!exUzly||report.classList.contains('ex'))return;
     if(window.DlkLipkaya)try{DlkLipkaya.snyat()}catch(e){}
     perehod(function(){report.textContent='';exUzly.forEach(function(n){report.appendChild(n)});report.className=exAtr.c;
       if(exAtr.a)report.setAttribute('aria-label',exAtr.a);document.body.classList.remove('rezhim-otcheta');}).then(function(){
-      note.className='note';note.textContent=def;if(window.Portfel)try{Portfel.obnovit()}catch(e){}});}
+      note.className='note';note.textContent=def;if(window.Portfel)try{Portfel.obnovit()}catch(e){}kogdaModuli(primerUslovij);});}
   window.addEventListener('popstate',function(){var inn=innIzAdresa();
     if(inn){input.value=inn;runCheck(inn,{izIstorii:true});}else vernutPrimer();});
   function runCheck(v,o){

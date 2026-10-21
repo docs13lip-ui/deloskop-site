@@ -3288,6 +3288,41 @@ def un_istoriya(im, reestr, ruk, a0, p1, ryad=None):
     return "%s: %s выручки в%s%d году и%s%s — в%s%d." % (nach, dengi(r0), NB, g0, NB, dengi(r1), NB, g1)
 
 
+
+# kartochki-unik-v8d ([Ночные-2] 21.10): возраст компании стоял на карточке четыре раза — строка под H1 «с 2006 года
+# (20 лет)», «Работает 20 лет — с 2006 года» в «Коротко», «Зарегистрирована … — 20 лет назад» в «Даты из реестра» и
+# ещё раз «в реестре с 2006 года (20 лет)» первым предложением «Что это значит для вас» (165 из 167). В «Что это
+# значит» возраст теперь только у молодых компаний (до 3 лет — он и есть вывод: «история короткая»); у остальных
+# абзац начинается с того, что из возраста не видно: выручка за годы открытой отчётности и руководитель. Числа — те же.
+def un_istoriya_v8d(im, ruk_god, a0, p1, ryad=None):
+    g0, r0, g1, r1 = a0["god"], a0["dohod"], p1["god"], p1["dohod"]
+    ruk = ("; руководитель тот же с%s%s года" % (NB, ruk_god)) if ruk_god else ""
+    if r1 / r0 >= 1.3:
+        vid, gs, ds = _un_put(ryad or [])
+        if vid == "kazhdyj":
+            return "Выручка %s росла каждый год из%s%d%s%s открытой отчётности — от%s%s в%s%d до%s%s в%s%d%s." % (
+                im, NB, len(ryad), NB, "года" if len(ryad) % 10 == 1 and len(ryad) % 100 != 11 else "лет", NB,
+                dengi(r0), NB, g0, NB, dengi(r1), NB, g1, ruk)
+        if vid == "spad":
+            return "За%s%d–%d%sгоды выручка %s выросла в%s%s, до%s%s; %s%d%sгод — спад на%s%s%s." % (
+                NB, g0, g1, NB, im, NB, _raz(r0, r1), NB, dengi(r1),
+                "последний, " if gs == g1 else "", gs, NB, NB, _zn_proc(ds), ruk)
+        return "С%s%d по%s%d год выручка %s выросла в%s%s — с%s%s до%s%s%s." % (
+            NB, g0, NB, g1, im, NB, _raz(r0, r1), NB, dengi(r0), NB, dengi(r1), ruk)
+    if r1 / r0 <= 0.8:
+        return "Выручка %s за%s%d год — %s, на%s%s меньше, чем в%s%d (%s)%s." % (
+            im, NB, g1, dengi(r1), NB, _zn_proc(1 - r1 / r0), NB, g0, dengi(r0), ruk)
+    return "Выручка %s — %s в%s%d году и%s%s в%s%d%s." % (im, dengi(r0), NB, g0, NB, dengi(r1), NB, g1, ruk)
+
+
+def un_korotkaya_v8d(im, ruk_god, n_let, fns):
+    chast = ("открытой отчётности на странице — %s" % _zn_let(n_let)) if not fns \
+        else "на странице — только доход за год по данным ФНС"
+    if ruk_god:
+        return "Руководитель %s не менялся с%s%s года; %s." % (im, NB, ruk_god, chast)
+    return "У %s %s." % (im, chast) if not fns else "По %s %s." % (im, chast)
+
+
 def _un_let(n):
     return _zn_let(n)
 
@@ -3354,13 +3389,10 @@ def un_frazy(f):
             out.append("%s %s: история короткая, поэтому оплату вперёд лучше ограничить и платить частями по факту "
                        "поставки." % (im, reestr))
         elif glub:
-            out.append(un_istoriya(im, reestr, (", руководитель тот же с %s года" % ruk_s.group(1)) if ruk_s else "",
-                                   a0, p1, [x for x in ryad if not x.get("fns")]))
+            out.append(un_istoriya_v8d(im, ruk_s.group(1) if ruk_s else None,
+                                       a0, p1, [x for x in ryad if not x.get("fns")]))
         else:
-            out.append("%s %s%s; %s." % (
-                im, reestr, (", руководитель не менялся с %s года" % ruk_s.group(1)) if ruk_s else "",
-                ("открытой отчётности на странице — %s" % _zn_let(len(ryad))) if not p1.get("fns")
-                else "на странице — только доход за год по данным ФНС"))
+            out.append(un_korotkaya_v8d(im, ruk_s.group(1) if ruk_s else None, len(ryad), p1.get("fns")))
 
     # 2. Деньги: что это меняет в условиях оплаты
     kap = re.search(r"минус ([^:]+):", _zn_v(f, "warn", "Собственный капитал") or "")

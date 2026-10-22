@@ -1770,7 +1770,7 @@
     return 'Для банков и страховых организаций предел ' + (otg ? 'отсрочки' : 'предоплаты') + ' не считаем: за их устойчивостью следит Банк России.';
   }
   var FINORG_SSYLKA = 'Лицензию и отчётность — на сайте Банка России';
-  function kakPoschitali(f, t, pc, reasonsList, np, napr) {
+  function kakPoschitali(f, t, pc, reasonsList, np, napr, pv) {
     var R = pc.raschet || {}, kak = '', otg = napr === 'otgruzhaem', bankR = false;
     if (t === 'post' || t === 'stop') {
       var pr = f.status === 'LIQUIDATED' ? 'компания ликвидирована' : reorgPrekr(f) ? REORG_PR : (reasonsList[0] || (t === 'stop' ? 'стоп-признак в данных' : 'серьёзное замечание в данных'));
@@ -1795,7 +1795,11 @@
       }
     }
     var ne = '';
-    if (np && np.spisok.length && (t === 'go' || t === 'cap')) {
+    if (pv) {
+      ne = predvTekst(pv, otg) +
+        (np && np.nalogiNa ? ' Долги по налогам — нет в списке ФНС на\u00a0' + np.nalogiNa + '.' : '') +
+        (np && np.provereno != null && np.iz ? ' Из внешних реестров ответили ' + np.provereno + ' из ' + np.iz + (np.data ? ' на ' + dataRu(np.data) : '') + '.' : '');
+    } else if (np && np.spisok.length && (t === 'go' || t === 'cap')) {
       ne = 'Не проверяли: ' + np.spisok.join(', ') + '. Если они есть — ' + (otg ? 'в долг лучше не отгружать.' : 'вперёд лучше не платить.') +
         (np.nalogiNa ? ' Долги по налогам — нет в списке ФНС на\u00a0' + np.nalogiNa + '.' : '') +
         (np.provereno != null && np.iz ? ' Из внешних реестров ответили ' + np.provereno + ' из ' + np.iz + (np.data ? ' на ' + dataRu(np.data) : '') + '.' : '');
@@ -1854,7 +1858,12 @@
     return out.slice(0, 3);
   }
 
-  function headline(f, t, cap, malo) {
+  // predvaritelno-v1 (аудит 22.10, приоритет 1 «Безопасность денежных рекомендаций»): ориентир, посчитанный без выручки
+  // (по возрасту) или при непроверенных судах, приставах, долгах, — предварительный. Неизвестное не считаем безопасным:
+  // заголовок не говорит «работать можно», совет по сумме — «до проверки по факту поставки», число — «после проверки».
+  function headline(f, t, cap, malo, pv) {
+    if (pv && t === 'go') return 'Предварительно: серьёзного не нашли';
+    if (pv && t === 'cap' && !malo && cap != null) return 'Предварительно: есть замечания';
     if (f.status === 'LIQUIDATED') return 'Сделку не заключать';
     if (t === 'stop') return 'Не платите вперёд';
     if (t === 'post' && reorgPrekr(f)) return 'Только оплата по факту\u00a0— до проверки правопреемника';
@@ -1863,7 +1872,9 @@
     if (t === 'cap') return 'Можно, предоплата — до ' + money(cap);
     return 'Работать можно';
   }
-  function headlineOtg(f, t, cap, malo) {
+  function headlineOtg(f, t, cap, malo, pv) {
+    if (pv && t === 'go') return 'Предварительно: серьёзного не нашли';
+    if (pv && t === 'cap' && !malo && cap != null) return 'Предварительно: есть замечания';
     if (f.status === 'LIQUIDATED') return 'Сделку не заключать';
     if (t === 'stop') return 'Отгружайте только после оплаты';
     if (t === 'post' && reorgPrekr(f)) return 'Только по предоплате\u00a0— до проверки правопреемника';
@@ -1908,22 +1919,26 @@
     return { soft: vat * (1 + FINE_SOFT), hard: (vat + profit) * (1 + FINE_HARD), vat: vat };
   }
 
-  function prepayAdvice(amount, cap, t) {
+  function prepayAdvice(amount, cap, t, pv) {
     amount = parseAmount(amount);
     if (!amount) return '';
     if (cap == null && (t === 'go' || t === 'cap')) return '';
     if (t === 'stop' || t === 'post' || cap === 0) return 'Предоплату не вносите: ' + money(amount) + ' — после поставки или через аккредитив.';
+    if (pv) return 'Ориентир предварительный: пока не проверите то, чего мы не видели, — платите по факту поставки. После проверки — ' +
+      (amount <= cap ? 'сумма укладывается в ориентир.' : 'вперёд не больше ' + money(cap) + ' (' + Math.max(1, Math.floor(cap / amount * 100)) + '% суммы).');
     if (t === 'go' && amount <= cap) return 'Сумма в пределах ориентира — обычные условия подойдут.';
     if (amount <= cap) return 'Сумма в пределах ориентира: предоплата допустима.';
     var p = Math.max(1, Math.floor(cap / amount * 100));
     return 'Вперёд — не больше ' + money(cap) + ' (' + p + '% суммы), остальное — после поставки.';
   }
 
-  function otgruzkaAdvice(amount, cap, t) {
+  function otgruzkaAdvice(amount, cap, t, pv) {
     amount = parseAmount(amount);
     if (!amount) return '';
     if (cap == null && (t === 'go' || t === 'cap')) return '';
     if (t === 'stop' || t === 'post' || cap === 0) return 'В долг не отгружайте: ' + money(amount) + ' — после оплаты.';
+    if (pv) return 'Ориентир предварительный: пока не проверите то, чего мы не видели, — отгружайте после оплаты. После проверки — ' +
+      (amount <= cap ? 'сумма укладывается в ориентир.' : 'в долг не больше ' + money(cap) + ' (' + Math.max(1, Math.floor(cap / amount * 100)) + '% суммы).');
     if (amount <= cap) return 'Сумма в пределах ориентира — отсрочка допустима.';
     var p = Math.max(1, Math.floor(cap / amount * 100));
     return 'В долг — не больше ' + money(cap) + ' (' + p + '% суммы), остальное — предоплатой.';
@@ -2022,9 +2037,32 @@
     return { subject: subj, body: body };
   }
 
+  // Почему ориентир предварительный: { baza: 'age'|'unknown'|null, ne: ['арбитражные суды', 'долги у приставов', …] } или null.
+  // Только для тонов go и cap: «по факту» и «стоп» и так ничего не разрешают. Банку и страховой предел не считаем — база не нужна.
+  var PREDV_BAZA = { age: 'выручки в отчётности нет — предел посчитан по возрасту компании', unknown: 'выручка и возраст неизвестны — предел посчитан осторожным потолком' };
+  function predvaritelno(r, f, t, pc, np) {
+    if (t !== 'go' && t !== 'cap') return null;
+    if (pc.malo || pc.cap === 0) return null;            // вперёд и так 0 ₽ — разрешать нечего
+    var R = pc.raschet || {}, baza = !pc.finorg && (R.base === 'age' || R.base === 'unknown') ? R.base : null, ne = [];
+    (np && np.spisok || []).forEach(function (x) { ne.push(x); });
+    neProverenyPodrobno(r).forEach(function (x) {
+      var t2 = x.k === 'fssp' ? 'долги у приставов' : x.t;
+      if (ne.some(function (y) { return y.indexOf(t2) === 0; })) return;
+      ne.push(t2);
+    });
+    if (!baza && !ne.length) return null;
+    return { baza: baza, prichina: baza ? PREDV_BAZA[baza] : '', ne: ne };
+  }
+  function predvTekst(pv, otg) {
+    var a = [];
+    if (pv.ne.length) a.push('не проверяли ' + pv.ne.join(', '));
+    if (pv.prichina) a.push(pv.prichina);
+    return 'Ориентир предварительный: ' + a.join('; ') + '. Не проверено — не значит «в порядке»: ' + (otg ? 'в долг не отгружайте' : 'вперёд не платите') + ', пока не проверите' + (pv.baza && !pv.ne.length ? ' отчётность' : '') + '.';
+  }
   function decide(r, opts) {
     opts = opts || {};
     var f = facts(r), t = tone(f), np = neProvereno(r, f), pc = prepayCap(f, t, np), amount = parseAmount(opts.amount), regime = opts.regime || 'osno';
+    var pv = predvaritelno(r, f, t, pc, np);
     var list = docs(f, t, amount, regime);
     if (opts.napravlenie === 'otgruzhaem') {
       // «Они платят мне»: число то же (pc.cap), меняются слова; ст. 54.1 — про вычеты покупателя, «На кону» не считаем;
@@ -2033,22 +2071,23 @@
       return sFinorg(pc, {
         napravlenie: 'otgruzhaem',
         facts: f, tone: t, cap: pc.cap, malo: !!pc.malo, capRule: pc.rule, raschet: pc.raschet, neProvereno: np,
-        kak: kakPoschitali(f, t, pc, reasons(f), np, 'otgruzhaem'),
-        headline: headlineOtg(f, t, pc.cap, pc.malo), reasons: reasons(f), advice: adviceOtg(f, t, pc.malo),
-        amount: amount, regime: regime, stake: null, prepay: otgruzkaAdvice(amount, pc.cap, t),
+        kak: kakPoschitali(f, t, pc, reasons(f), np, 'otgruzhaem', pv),
+        headline: headlineOtg(f, t, pc.cap, pc.malo, pv), reasons: reasons(f), advice: adviceOtg(f, t, pc.malo),
+        amount: amount, regime: regime, stake: null, prepay: otgruzkaAdvice(amount, pc.cap, t, pv),
         docs: list, letter: letterOtg(f, list, amount)
-      });
+      }, pv);
     }
     return sFinorg(pc, {
       facts: f, tone: t, cap: pc.cap, malo: !!pc.malo, capRule: pc.rule, raschet: pc.raschet, neProvereno: np,
-      kak: kakPoschitali(f, t, pc, reasons(f), np),
-      headline: headline(f, t, pc.cap, pc.malo), reasons: reasons(f), advice: advice(f, t, pc.malo),
-      amount: amount, regime: regime, stake: atStake(amount, regime), prepay: prepayAdvice(amount, pc.cap, t),
+      kak: kakPoschitali(f, t, pc, reasons(f), np, null, pv),
+      headline: headline(f, t, pc.cap, pc.malo, pv), reasons: reasons(f), advice: advice(f, t, pc.malo),
+      amount: amount, regime: regime, stake: atStake(amount, regime), prepay: prepayAdvice(amount, pc.cap, t, pv),
       docs: list, letter: letter(f, list, amount)
-    });
+    }, pv);
   }
-  // finorg — только у банка или страховой: у остальных вывод побайтно прежний (снимок tests/otsrochka_pokupatelyu.test.js)
-  function sFinorg(pc, v) { if (pc.finorg) v.finorg = true; return v; }
+  // finorg — только у банка или страховой: у остальных вывод побайтно прежний (снимок tests/otsrochka_pokupatelyu.test.js);
+  // predvaritelno — только когда ориентир предварительный (predvaritelno-v1)
+  function sFinorg(pc, v, pv) { if (pc.finorg) v.finorg = true; if (pv) v.predvaritelno = pv; return v; }
 
   // ---------- интерфейс ----------
   var CSS = '' +
@@ -2262,7 +2301,7 @@
     decide: decide, mount: mount, rynokStroka: rynokStroka, facts: facts, tone: tone, reorgPrekr: reorgPrekr, REORG_PREKRASHCHENIE: REORG_PREKRASHCHENIE, REORG_SDELAT: REORG_SDELAT, REORG_DOLG: REORG_DOLG, prepayCap: prepayCap, atStake: atStake,
     docs: docs, letter: letter, parseAmount: parseAmount, money: money, moneyKrupno: moneyKrupno, niceFloor: niceFloor, kindOf: kindOf,
     neProvereno: neProvereno, kakPoschitali: kakPoschitali, otgruzkaAdvice: otgruzkaAdvice, NAPR: NAPR, bezPovtora: bezPovtora, chestnoPoyasnenie: chestnoPoyasnenie, neProverenyKlyuchevye: neProverenyKlyuchevye, vVyvode: vVyvode, STATYA: STATYA, FORMULA: FORMULA,
-    METODIKA: { DELITEL: DELITEL, POTOLKI: POTOLKI, OSTOROZHNO: OSTOROZHNO, MINIMUM: MINIMUM },
+    predvaritelno: predvaritelno, METODIKA: { DELITEL: DELITEL, POTOLKI: POTOLKI, OSTOROZHNO: OSTOROZHNO, MINIMUM: MINIMUM },
     RATES: { VAT: VAT, PROFIT: PROFIT, USN_DR: USN_DR }
   };
 });

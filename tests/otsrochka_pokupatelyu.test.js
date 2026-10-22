@@ -36,8 +36,9 @@ test('(б) заголовки «Они платят мне» — дословн�
   assert.strictEqual(otg(F.stop).headline, 'Отгружайте только после оплаты');
   assert.strictEqual(otg(F.post).headline, 'Только по предоплате');
   assert.strictEqual(otg(F.capMalo).headline, 'Можно, но без отсрочки');
-  assert.strictEqual(otg(F.cap).headline, 'Можно, отсрочка — до ' + rub('150000'));
-  assert.strictEqual(otg(F.go).headline, 'Работать можно');
+  // predvaritelno-v1 (аудит 22.10): в образцах go и cap долги не проверены (у cap и выручки нет) — заголовок «Предварительно»
+  assert.strictEqual(otg(F.cap).headline, 'Предварительно: есть замечания');
+  assert.strictEqual(otg(F.go).headline, 'Предварительно: серьёзного не нашли');
 });
 
 test('(б) советы «Они платят мне» — дословно из ТЗ п. 4', () => {
@@ -61,14 +62,14 @@ test('(б) «Как посчитали» и сумма отгрузки — фр
   Object.keys(F).forEach((k) => assert.ok(otg(F[k]).kak.kak.startsWith(NACHALO), k));
   assert.strictEqual(otg(F.post).kak.kak, NACHALO + 'В долг — 0' + NB + '₽: задолженность по налогам: 412' + NB + '000' + NB + '₽ — отгружайте после оплаты.');
   assert.ok(otg(F.go).kak.kak.endsWith(U.decide(F.go).kak.kak), 'строка расчёта та же');
-  assert.strictEqual(otg(F.go, { amount: 1500000 }).prepay, 'Сумма в пределах ориентира — отсрочка допустима.');
-  assert.strictEqual(otg(F.cap, { amount: 500000 }).prepay, 'В долг — не больше ' + rub('150000') + ' (30% суммы), остальное — предоплатой.');
+  assert.strictEqual(otg(F.go, { amount: 1500000 }).prepay, 'Ориентир предварительный: пока не проверите то, чего мы не видели, — отгружайте после оплаты. После проверки — сумма укладывается в ориентир.');
+  assert.strictEqual(otg(F.cap, { amount: 500000 }).prepay, 'Ориентир предварительный: пока не проверите то, чего мы не видели, — отгружайте после оплаты. После проверки — в долг не больше ' + rub('150000') + ' (30% суммы).');
   assert.strictEqual(otg(F.stop, { amount: 500000 }).prepay, 'В долг не отгружайте: ' + rub('500000') + ' — после оплаты.');
   assert.strictEqual(otg(F.capMalo, { amount: 500000 }).prepay, 'В долг не отгружайте: ' + rub('500000') + ' — после оплаты.');
-  // «Не проверяли…»: «в долг лучше не отгружать» вместо «вперёд лучше не платить»
+  // «Не проверяли…»: «в долг не отгружайте» вместо «вперёд не платите» (predvaritelno-v1)
   const ne = otg(F.go).kak.ne, neP = U.decide(F.go).kak.ne;
-  assert.ok(neP && neP.includes('вперёд лучше не платить'), 'в образце должна быть строка «Не проверяли»');
-  assert.ok(ne.includes('в долг лучше не отгружать') && !ne.includes('вперёд'), ne);
+  assert.ok(neP && neP.includes('вперёд не платите') && neP.includes('не проверяли'), 'в образце должна быть строка «не проверяли»: ' + neP);
+  assert.ok(ne.includes('в долг не отгружайте') && !ne.includes('вперёд'), ne);
 });
 
 test('(в) в «Они платят мне» нет «вперёд» и «предоплата —» в заголовке, нет «На кону» и карточки реквизитов', () => {
@@ -190,7 +191,7 @@ test('(е) Chromium 390 и 1280: два сегмента в одну строк�
       assert.ok(w < 641 ? seg[0].h === 44 : seg[0].h >= 36 && seg[0].h <= 40, w + ': высота ' + seg[0].h);
       await p.click('[data-napr=otgruzhaem]');
       const t = await p.$eval('.usl-t', (x) => x.textContent);
-      assert.strictEqual(t, 'Можно, отсрочка — до 150' + NB + '000' + NB + '₽');
+      assert.strictEqual(t, 'Предварительно: есть замечания'); // predvaritelno-v1: выручки нет, долги не проверены
       assert.ok(await p.$('a.usl-watch[href="/cabinet.html#watch"]'), 'ссылка на слежение');
       assert.strictEqual(await p.$('.usl select'), null, 'режим налогов скрыт');
       assert.strictEqual(await p.$eval('.usl-note', (x) => x.textContent), 'Список зависит от суммы отгрузки и найденных признаков.');

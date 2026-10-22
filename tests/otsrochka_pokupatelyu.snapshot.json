@@ -1,12 +1,12 @@
 {
  "_kak": "sha256 от JSON.stringify(Usloviya.decide(...)) до комплекта (main c7bd42c + склейка NBSP в reasonText), по ответам tests/otsrochka_fixtures.js",
  "go": {
-  "bez": "0efbc3c3eb9452f020f4e93112347352949c12f22f98df92f503f97429ae249d",
-  "summa": "5e2ebfbb8471ead36a6c2b07483c356f3c59c61126f354b65e6c0029a363a89a"
+  "bez": "77e112f6d315e8ff8717530f80c1b9252f75051bc76661712f3823b6138f0ca3",
+  "summa": "f88effaf4cf4bc8241e30de34ab59ccdaa27ae7753824931881de4c7539acfc2"
  },
  "cap": {
-  "bez": "d9dda37fcef7ec8603682a94472d32ac06ab990eba263d706b9c29b25df0e468",
-  "summa": "c3ee41e236032ccde29a56dc651adfc3e8b7bb24f367410c748367f22f4a16d9"
+  "bez": "61140f7be3b7e6c21c54696ed7449ead05180bcd3fb3f053b423e697869a0816",
+  "summa": "a7608b802914723b59be6d87fce1a0345ac23601648cd62e425ba686be656941"
  },
  "capMalo": {
   "bez": "43760d94b8c418bfdb153568ea644dbbc940ae0cfc70f67d7ba3ee97159d9858",

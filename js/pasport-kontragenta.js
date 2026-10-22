@@ -508,6 +508,8 @@
       itog.predel_avansa_rub = typeof u.cap === 'number' ? u.cap : null;
       // predel-finorg-v1: банк или страховая организация — предел не считаем (ТЗ [команда] 12.10), строка «не считаем» без тона
       if (u.finorg) fakt('predel', 'Предел аванса', 'не считаем — банк или страховая организация', { ton: 'info', istochnik: 'формула Делоскопа' });
+      // predvaritelno-v1 (аудит 22.10): ориентир без выручки или при непроверенных долгах и судах — «после проверки», тон не зелёный
+      else if (u.predvaritelno && typeof u.cap === 'number') fakt('predel', 'Предел аванса', 'предварительно: ' + U.money(u.cap) + ' — после проверки того, чего мы не видели; до неё — по факту поставки', { ton: 'warn', istochnik: 'формула Делоскопа' });
       else fakt('predel', 'Предел аванса', typeof u.cap === 'number' ? U.money(u.cap) : '—', { ton: u.malo ? 'warn' : u.tone === 'go' ? 'ok' : u.tone === 'cap' ? 'warn' : 'bad', istochnik: 'формула Делоскопа' });
       var kk = u.kak && (typeof u.kak === 'string' ? { kak: u.kak } : u.kak);
       if (kk && kk.kak) fakt('predel', 'Как посчитали', kk.kak.replace(/^Как посчитали:\s*/, ''), { ton: 'info', istochnik: 'формула Делоскопа' });

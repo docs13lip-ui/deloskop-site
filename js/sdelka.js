@@ -510,10 +510,66 @@
       (s.fnsDohody != null ? str2('Доходы по данным ФНС', s.fnsDohody, 'f', 'все доходы, не только выручка') : '') + (s.fnsRashody != null ? str2('Расходы по данным ФНС', s.fnsRashody, 'f', '') : '') +
       '</ul></div>';
   }
+  // ---------- «Против отрасли» (dosje-sdelki-v4): нагрузка и рентабельность активов против средних ФНС по ОКВЭД ----------
+  // NG = { nagruzka: NagruzkaProverka.raschet, rentab: Rentabelnost.raschet + tekst, vsego: {god, n, sv} — строка «ВСЕГО» ФНС, okved, okvedNazv }.
+  // Шкала: компания — точка, средняя по отрасли — черта, зона «ниже средней» (для рентабельности — на 10 % и более, критерий 11) — штриховкой.
+  function pcx(v) { return (Math.round(v * 10) / 10).toString().replace('.', ',') + NB + '%'; }
+  function shkalaHtml(k, o, zona, podK, podO, ref) {
+    var mx = Math.max(k || 0, o || 0, ref ? ref.v : 0, 1) * 1.3, l = function (v) { return Math.max(0, Math.min(100, v / mx * 100)).toFixed(1); };
+    return '<div class="sdo-sk" role="img" aria-label="' + esc((k != null ? podK + ' ' + pcx(k) : '') + (o != null ? ', ' + podO + ' ' + pcx(o) : '')) + '">' +
+      (zona != null ? '<i class="sdo-sk__z" style="width:' + l(zona) + '%"></i>' : '') + (k != null ? '<i class="sdo-sk__f" style="width:' + l(k) + '%"></i>' : '') +
+      (o != null ? '<span class="sdo-sk__o" style="left:' + l(o) + '%"><b>' + pcx(o) + '</b><small>' + esc(podO) + '</small></span>' : '') +
+      (ref ? '<span class="sdo-sk__o ref" style="left:' + l(ref.v) + '%"><b>' + pcx(ref.v) + '</b><small>' + esc(ref.t) + '</small></span>' : '') +
+      (k != null ? '<span class="sdo-sk__k" style="left:' + l(k) + '%"><b>' + pcx(k) + '</b><small>' + esc(podK) + '</small></span>' : '') + '</div>';
+  }
+  var OTR_ST = { 'ne-nizhe': ['ok', 'Не ниже средней по отрасли'], 'ne-nizhe-10': ['ok', 'Не ниже средней по отрасли'], 'nizhe': ['warn', 'Ниже средней по отрасли'], 'nizhe-vdvoe': ['warn', 'Ниже средней более чем вдвое'],
+    'chut-nizhe': ['info', 'Чуть ниже средней — меньше чем на 10 %'], 'usn': ['info', 'Упрощёнка — с общей нормой не сравниваем'], 'spec': ['info', 'Спецрежим — с общей нормой не сравниваем'],
+    'net-normy': ['info', 'ФНС не публикует норму для этой отрасли'], 'otr': ['info', 'Отрасль в целом убыточна'], 'neyasno': ['info', 'Точно сравнить нельзя'] };
+  function otraslHtml(NG) {
+    if (!NG || (!NG.nagruzka && !NG.rentab && !NG.nagruzkaOtr)) return '';
+    var h = '<div class="sdo"><div class="sdf-str__h"><b>Против отрасли</b><span>средние показатели ФНС для самостоятельной оценки рисков (приказ № ММ-3-06/333@)</span></div>' +
+      (NG.okved ? '<p class="sdo-okved">Основной ОКВЭД <b>' + esc(NG.okved) + '</b>' + (NG.okvedNazv ? ' — ' + esc(NG.okvedNazv) : '') + '</p>' : '') + '<div class="sdo-g2">';
+    var A = NG.nagruzka;
+    if (A && A.n != null) {
+      var st = OTR_ST[A.st] || ['info', ''], sr = A.norma != null;
+      h += '<div class="sdo-g ' + st[0] + '"><div class="sdo-g__h"><b>' + (A.sVznosami ? 'Налоги и взносы' : 'Налоговая нагрузка') + ' к ' + (A.vid === 'dohody' ? 'доходам' : 'выручке') + ' · ' + A.god + '</b><span class="sdo-chip ' + st[0] + '">' + esc(st[1]) + '</span></div>' +
+        shkalaHtml(A.n, sr ? A.norma : null, sr ? A.norma : null, 'компания', 'отрасль', !sr && NG.vsego ? { v: A.sVznosami ? NG.vsego.n + NG.vsego.sv : NG.vsego.n, t: 'Россия, справочно' } : null) +
+        (sr ? '<p class="sdo-s">Сравниваем с: ' + esc(A.stroka ? (A.stroka.kod && /^[A-Z]$/.test(A.stroka.kod) ? 'раздел ' + A.stroka.kod + ' «' + A.stroka.nazvanie.replace(/\s*-\s*всего$/i, '') + '»' : 'ОКВЭД ' + A.stroka.kod + ' «' + A.stroka.nazvanie + '»') : '') + (A.sVznosami ? '; норма = налоги ' + pcx(A.normaN) + ' + взносы ' + pcx(A.normaSv) : '') + '.</p>'
+          : ('<p class="sdo-s">По этой отрасли ФНС среднюю нагрузку не публикует' + (NG.vsego ? '. Серая черта — среднее по всем отраслям России за ' + NG.vsego.god + ' (налоги ' + pcx(NG.vsego.n) + ' + взносы ' + pcx(NG.vsego.sv) + '): только для масштаба, не норма для этой компании' : '') + '.</p>')) +
+        (A.st === 'nizhe' || A.st === 'nizhe-vdvoe' || A.st === 'usn' || A.st === 'spec' ? '<p class="sdo-s">' + esc(A.tekst || '') + '</p>' : '') + '</div>';
+    }
+    var O = !A && NG.nagruzkaOtr;
+    if (O) {
+      h += '<div class="sdo-g info"><div class="sdo-g__h"><b>Налоговая нагрузка отрасли · ' + O.god + '</b><span class="sdo-chip info">Уплаченных налогов компании в открытых данных ФНС нет</span></div>' +
+        shkalaHtml(null, O.n + O.sv, null, '', 'отрасль: налоги + взносы') +
+        '<p class="sdo-s">Средняя по ' + (/^[A-Z]$/.test(O.stroka.kod) ? 'разделу ' + esc(O.stroka.kod) : 'ОКВЭД ' + esc(O.stroka.kod)) + ' «' + esc(O.stroka.nazvanie.replace(/\s*-\s*всего$/i, '')) + '»: налоги ' + pcx(O.n) + ' + взносы ' + pcx(O.sv) + ' от оборота. ' +
+        'Сравнить с компанией нельзя: ФНС не раскрыла её уплаченные налоги за год. Запросите у контрагента справку о расчётах с бюджетом или декларации.</p></div>';
+    }
+    var B = NG.rentab;
+    if (B && B.n != null) {
+      var st2 = OTR_ST[B.st] || ['info', ''], sr2 = typeof B.norma === 'number';
+      h += '<div class="sdo-g ' + st2[0] + '"><div class="sdo-g__h"><b>Рентабельность активов · ' + B.god + '</b><span class="sdo-chip ' + st2[0] + '">' + esc(st2[1]) + '</span></div>' +
+        shkalaHtml(B.n, sr2 ? B.norma : null, sr2 ? B.norma * 0.9 : null, 'компания', 'отрасль') +
+        (sr2 && B.stroka ? '<p class="sdo-s">Сравниваем с: ' + (/^[A-Z]$/.test(B.stroka.kod) ? 'раздел ' + esc(B.stroka.kod) : 'ОКВЭД ' + esc(B.stroka.kod)) + ' «' + esc(B.stroka.nazvanie) + '». Штриховка — «ниже средней на 10 % и более»: этот признак ФНС учитывает при отборе на выездную проверку.</p>' : '') +
+        (B.st === 'nizhe' || B.st === 'neyasno' || B.st === 'otr' ? '<p class="sdo-s">' + esc(B.tekst || '') + '</p>' : '') + '<p class="sdo-s">Прибыль ' + (B.sNalogom ? 'до налогообложения' : '(чистая)') + ' ' + esc(krupno(B.rez)) + ' ÷ активы ' + esc(krupno(B.aktivy)) + ' на 31.12.' + B.god + ' — оценка по ГИР БО.</p></div>';
+    }
+    return h + '</div><p class="sd-s">Средние ФНС — ориентир, а не порог: само по себе отклонение не нарушение. Нормы по всем отраслям — <a href="/nalogi/nagruzka-po-otraslyam-2025/">справочник</a>.</p></div>';
+  }
+  function dengiKoroche(M) { // одна строка «Коротко» — только числа из ответа
+    var S = M.stroki, p = S[S.length - 1], q = S[S.length - 2];
+    if (!p || p.vyruchka == null) return '';
+    var t = 'Выручка за ' + p.god + ' — ' + krupno(p.vyruchka);
+    if (q && q.vyruchka > 0) { var d = Math.round((p.vyruchka / q.vyruchka - 1) * 100); t += ' (' + (d >= 0 ? '+' : '−') + Math.abs(d) + NB + '% к ' + q.god + ')'; }
+    if (p.pribyl != null) t += ', ' + (p.pribyl < 0 ? 'убыток ' + krupno(-p.pribyl) : 'прибыль ' + krupno(p.pribyl));
+    if (p.nalogi != null && p.vyruchka > 0) t += '; налоги и взносы — ' + pcx(p.nalogi / p.vyruchka * 100) + ' выручки';
+    var ub = S.filter(function (x) { return x.pribyl != null && x.pribyl < 0; }).map(function (x) { return x.god; });
+    if (ub.length) t += '. Убыточн' + (ub.length > 1 ? 'ые годы: ' : 'ый год: ') + ub.join(', ');
+    return t + '.';
+  }
   function dengiHtml(M, NG) {
     if (!M) return '';
     var S = M.stroki, posl = S.length ? S[S.length - 1] : null, h = '';
-    h += '<section class="sdf" aria-labelledby="sdf-h"><div class="sd-sec-h"><h3 id="sdf-h">Деньги компании</h3><p>Выручка и расходы — линии на одном графике, заливка между ними — прибыль (зелёная) или убыток (красный). Внизу — прибыль и уплаченные налоги каждого года. Нажмите на год — покажем все суммы.</p></div>';
+    h += '<section class="sdf" aria-labelledby="sdf-h"><div class="sd-sec-h"><h3 id="sdf-h">Деньги компании</h3>' + (dengiKoroche(M) ? '<p class="sd-koroche"><b>Коротко.</b> ' + nb(dengiKoroche(M)) + '</p>' : '') + '<p>Выручка и расходы — линии на одном графике, заливка между ними — прибыль (зелёная) или убыток (красный). Внизу — прибыль и уплаченные налоги каждого года. Нажмите на год — покажем все суммы.</p></div>';
     if (S.length) {
       h += '<div class="sdf-leg" role="group" aria-label="Что показать на графике">' +
         [['vyruchka', 'Выручка'], ['rashody', 'Расходы'], ['pribyl', 'Прибыль / убыток'], ['nalogi', 'Налоги и взносы']].map(function (q) {
@@ -540,15 +596,7 @@
         (M.rezhim === 'usn' && !M.nalogiVidy.some(function (q) { return q.k === 'usn'; }) ? '<p class="sd-s">Режим — упрощённая система, а платежа УСН в наборе ФНС нет: он мог быть зачтён из единого налогового платежа позже.</p>' : '') +
         (!M.nalogiVidy.some(function (q) { return q.k === 'nds'; }) && M.rezhim !== 'usn' ? '<p class="sd-s">НДС в наборе ФНС за этот год нет: бывает у освобождённых от НДС операций (ст. 149 НК РФ) или при вычетах, равных начисленному. Спросите контрагента, выставит ли он счёт-фактуру.</p>' : '') + '</div>';
     }
-    // нагрузка против отрасли — расчёт js/nagruzka-proverka.js (наложенные полосы: компания и отрасль)
-    if (NG && NG.n != null) {
-      var sr = NG.norma != null, mx = Math.max(NG.n, NG.norma || 0, 1) * 1.15;
-      function pc(v) { return (Math.round(v * 10) / 10).toString().replace('.', ',') + NB + '%'; }
-      h += '<div class="sdf-ng ' + (NG.st === 'nizhe' || NG.st === 'nizhe-vdvoe' ? 'warn' : NG.st === 'ne-nizhe' ? 'ok' : '') + '"><div class="sdf-str__h"><b>' + (NG.sVznosami ? 'Налоги и взносы' : 'Налоговая нагрузка') + ' против отрасли · ' + NG.god + '</b><span>оценка по открытым данным ФНС; норма — приказ ФНС № ММ-3-06/333@</span></div>' +
-        (sr ? '<div class="sdf-ng__p"><span>Компания</span><div><i class="k" style="width:' + (NG.n / mx * 100).toFixed(1) + '%"></i></div><b>' + pc(NG.n) + '</b></div>' : '<p class="sdf-ng__v"><b>' + pc(NG.n) + '</b> от ' + (NG.vid === 'dohody' ? 'доходов' : 'выручки') + ' за ' + NG.god + '</p>') +
-        (sr ? '<div class="sdf-ng__p"><span>Отрасль</span><div><i class="o" style="width:' + (NG.norma / mx * 100).toFixed(1) + '%"></i></div><b>' + pc(NG.norma) + '</b></div>' : '') +
-        '<p class="sd-s">' + esc(NG.tekst || '') + '</p></div>';
-    }
+    h += otraslHtml(NG);
     if (M.kpi.length) h += '<ul class="sdf-kpi">' + M.kpi.map(function (q) { return '<li><span>' + esc(q.nazv) + '</span><b>' + nb(q.znach) + '</b><small>' + esc(q.pod) + '</small></li>'; }).join('') + '</ul>';
     return h + '<p class="sd-s">Годы — по бухгалтерской отчётности (ГИР БО ФНС, строки 2110 и 2400). Расходы — выручка минус чистая прибыль: все расходы вместе с налогом на прибыль, расчёт Делоскопа. Налоги — то, что компания уплатила по открытым данным ФНС.</p></section>';
   }
@@ -619,12 +667,19 @@
     return '<ul class="sd-puls" aria-label="Главные признаки реальности">' + x.map(function (t) {
       return '<li class="' + esc(t.ton) + '"><a href="#sd-real-h"><i aria-hidden="true"></i>' + esc(t.nazv) + '<span>' + esc(TON_SLOVO[t.ton] || '') + '</span></a></li>'; }).join('') + '</ul>';
   }
+  function realnostKoroche(R) {
+    var I = R.itogo, zam = R.plitki.filter(function (t) { return t.ton === 'warn' || t.ton === 'bad'; }).map(function (t) { return t.nazv.toLowerCase(); }),
+      ne = R.plitki.filter(function (t) { return t.ton === 'off'; }).map(function (t) { return t.nazv.toLowerCase(); });
+    var t = (I.ok || 0) + ' из ' + R.vsego + ' признаков в норме' + (zam.length ? '; есть вопросы: ' + zam.join(', ') : '') + (ne.length ? '; не проверяли: ' + ne.join(', ') : '') + '.';
+    return '<p class="sd-koroche"><b>Коротко.</b> ' + esc(t.charAt(0).toUpperCase() + t.slice(1)) + '</p>';
+  }
   function realnostHtml(R) {
     if (!R || !R.plitki.length) return '';
     var I = R.itogo, v = R.vsego;
     function pol(k, cls) { return I[k] ? '<i class="sd-bar__' + cls + '" style="flex:' + I[k] + '"></i>' : ''; }
     return '<section class="sd-real" aria-labelledby="sd-real-h"><div class="sd-sec-h"><h3 id="sd-real-h">Реальность контрагента</h3>' +
       '<p>То, по чему налоговая и банк судят, есть ли у компании настоящий бизнес: налоги, долги, люди, достоверность записей, отчётность. У каждого признака — источник и дата.</p></div>' +
+      realnostKoroche(R) +
       '<div class="sd-bar" role="img" aria-label="' + esc((I.ok || 0) + ' в норме, ' + ((I.warn || 0) + (I.bad || 0)) + ' с замечаниями, ' + (I.off || 0) + ' не проверяли, ' + (I.info || 0) + ' справочно') + '">' +
         pol('ok', 'ok') + pol('info', 'info') + pol('warn', 'warn') + pol('bad', 'bad') + pol('off', 'off') + '</div>' +
       '<p class="sd-bar__l"><span class="ok">' + (I.ok || 0) + ' в норме</span>' + ((I.warn || 0) + (I.bad || 0) ? '<span class="warn">' + ((I.warn || 0) + (I.bad || 0)) + ' с замечаниями</span>' : '') +
@@ -636,12 +691,18 @@
             (t.ton === 'off' && t.sam ? ' · <a href="' + esc(t.sam) + '" target="_blank" rel="noopener nofollow">проверить самим</a>' : t.spravka ? ' · <a href="' + esc(t.spravka.u) + '">' + esc(t.spravka.t) + '</a>' : '') + '</span></li>';
       }).join('') + '</ul></section>';
   }
+  function svyaziKoroche(S) {
+    var r = S.uzly.filter(function (u) { return u.k === 'rukovoditel'; })[0], u = S.uzly.filter(function (x) { return x.k === 'uchreditel'; }), y = u.filter(function (x) { return x.yur; });
+    var t = (r ? (r.yur ? 'Управляет управляющая компания ' + r.imya : r.rol + ' — ' + r.imya) : '') + (u.length ? (r ? '; ' : '') + 'учредителей: ' + u.length + (y.length ? ', из них юрлиц: ' + y.length : '') : '');
+    return t ? '<p class="sd-koroche"><b>Коротко.</b> ' + nb(t) + '.</p>' : '';
+  }
   function svyaziHtml(S, rez, dop) {
     if (!S) return '';
     rez = rez || {};
     var flagi = (dop || []).concat(S.flagi);
     return '<section class="sd-svz" aria-labelledby="sd-svz-h"><div class="sd-sec-h"><h3 id="sd-svz-h">Связи и группа компаний</h3>' +
       '<p>Кто управляет компанией и кому она принадлежит — по ЕГРЮЛ. Юрлица из связей можно найти по названию и проверить так же, как контрагента.</p></div>' +
+      svyaziKoroche(S) +
       (flagi.length ? '<ul class="sd-flagi">' + flagi.map(function (f) { return '<li class="' + esc(f.ton) + '"><b>' + nb(f.t) + '</b>' + (f.pod ? '<span>' + nb(f.pod) + '</span>' : '') + '</li>'; }).join('') + '</ul>' : '') +
       '<div class="sd-orbit" data-sd-orbit><canvas class="sd-orbit__cv" aria-hidden="true"></canvas></div>' +
       '<ul class="sd-uzly">' + S.uzly.map(function (u, i) {
@@ -653,6 +714,16 @@
             : '<button type="button" class="sd-uzel__b noprint" data-sd-najti="' + i + '">Найти ИНН</button>') : '') + '</li>';
       }).join('') + '</ul>' +
       '<p class="sd-s">Источник: ' + esc(S.ist) + '. ' + esc(S.ne) + ' <a href="' + SAM.svyazi + '" target="_blank" rel="noopener nofollow">pb.nalog.ru</a></p></section>';
+  }
+  // Навигация по досье — липкая строка разделов (подсветку текущего ставит страница)
+  function navHtml(o) {
+    var p = [];
+    if (o.realnost && o.realnost.plitki.length) p.push(['sd-real-h', 'Реальность']);
+    if (o.dengi) p.push(['sdf-h', 'Деньги']);
+    if (o.svyazi) p.push(['sd-svz-h', 'Связи']);
+    p.push(['sd-shagi-h', 'Шаги до оплаты']);
+    if (o.r && istochniki(o.r).length) p.push(['sd-ist-h', 'Источники']);
+    return '<nav class="sd-nav noprint" aria-label="Разделы досье">' + p.map(function (x) { return '<a href="#' + x[0] + '" data-sd-nav="' + x[0] + '">' + x[1] + '</a>'; }).join('') + '</nav>';
   }
   function html(o) {
     o = o || {};
@@ -672,8 +743,8 @@
           '<div class="sd-verdict" role="status" aria-live="polite"><span class="sd-verdict__l">Итог досье</span><b>' + nb(it.zagolovok) + '</b><p>' + nb(it.tekst) + '</p></div></div>' +
         pulsHtml(o.realnost) +
         (o.svezh && o.svezh.tekst ? '<p class="sd-cover__w">' + esc(o.svezh.tekst) + '</p>' : '') + '</div></header>' +
-      realnostHtml(o.realnost) + dengiHtml(o.dengi, o.nagruzka) + svyaziHtml(o.svyazi, o.svyaziNajdeno, svyaziDop(o.svyazi, o.svyaziNajdeno)) +
-      '<div class="sd-sec-h sd-sec-h--shagi"><h3>Шесть шагов до оплаты</h3><p>Закрывайте по порядку: каждый шаг — с отметкой и датой, всё попадёт в PDF.</p></div><ol class="sd-shagi">';
+      navHtml(o) + realnostHtml(o.realnost) + dengiHtml(o.dengi, o.nagruzka) + svyaziHtml(o.svyazi, o.svyaziNajdeno, svyaziDop(o.svyazi, o.svyaziNajdeno)) +
+      '<div class="sd-sec-h sd-sec-h--shagi"><h3 id="sd-shagi-h">Шесть шагов до оплаты</h3><p>Закрывайте по порядку: каждый шаг — с отметкой и датой, всё попадёт в PDF.</p></div><ol class="sd-shagi">';
     // 1. ИНН и сумма
     h += shag(1, 'sd-summa', 'Контрагент и сумма', G[0],
       '<form class="sd-f" data-sd="summa" onsubmit="return false"><label>Сумма сделки, ₽<input type="text" name="sd_summa" inputmode="numeric" autocomplete="off" placeholder="например, 500 000" value="' +

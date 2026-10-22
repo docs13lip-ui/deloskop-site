@@ -271,10 +271,21 @@ test('деньги компании: ряды по годам из ГИР БО, 
   assert.ok((svg.match(/data-sdf-god=/g) || []).length === 3, 'каждый год — область нажатия');
   const bez = S.dengiSvg(M, { vyruchka: 1, rashody: 0, pribyl: 0, nalogi: 0 }, 700);
   assert.ok(!/sdf-l--r|sdf-zl|sdf-p |sdf-n"/.test(bez), 'скрытые ряды не рисуются');
-  const h = S.dengiHtml(M, { n: 8.2, norma: 10.1, st: 'nizhe', god: 2025, sVznosami: true, tekst: 'Ниже средней по отрасли.' });
+  const h = S.dengiHtml(M, { okved: '86.21', okvedNazv: 'Общая врачебная практика',
+    nagruzka: { n: 8.2, norma: 10.1, normaN: 6, normaSv: 4.1, st: 'nizhe', god: 2025, sVznosami: true, vid: 'dohody', stroka: { kod: 'F', nazvanie: 'Строительство' }, tekst: 'Ниже средней по отрасли.' },
+    rentab: { n: 48.2, norma: 10.7, st: 'ne-nizhe', god: 2025, rez: 3096000, aktivy: 6419000, stroka: { kod: 'Q', nazvanie: 'Деятельность в области здравоохранения и социальных услуг' }, tekst: 'Не ниже средней по отрасли.' } });
+  assert.match(h, /Против отрасли/);
+  assert.match(h, /Основной ОКВЭД <b>86\.21<\/b> — Общая врачебная практика/);
+  assert.match(h, /Ниже средней по отрасли<\/span>/, 'нагрузка ниже — жёлтая метка');
+  assert.match(h, /Рентабельность активов · 2025/);
+  assert.match(h, /раздел Q «Деятельность в области здравоохранения/);
+  const bezNormy = S.dengiHtml(M, { nagruzka: { n: 10.6, st: 'net-normy', god: 2025, sVznosami: true, vid: 'dohody', tekst: 'Средней нагрузки… не публикует' }, vsego: { god: 2025, n: 11.9, sv: 3.9 } });
+  assert.match(bezNormy, /среднее по всем отраслям России за 2025 \(налоги 11,9/, 'без нормы — «Россия, справочно», без вывода');
+  assert.match(bezNormy, /Россия, справочно/);
+  assert.match(bezNormy, /ФНС не публикует норму для этой отрасли/);
   assert.match(h, /Из каждых 100 ₽ выручки за 2025/);
   assert.match(h, /Налоги и взносы по видам за 2025/);
-  assert.match(h, /Компания<\/span>.*Отрасль<\/span>/s, 'нагрузка: компания и отрасль — наложенные полосы');
+  assert.match(h, /<small>компания<\/small>.*<small>отрасль<\/small>/s, 'компания и отрасль — на одной шкале');
   assert.match(h, /выручка минус чистая прибыль/i, 'расход — расчёт, так и подписан');
   assert.strictEqual(S.dengi(otvet({ company: { inn: '770000000012', kind: 'INDIVIDUAL' } })), null, 'ИП — без денег');
 });
@@ -292,4 +303,18 @@ test('источники и даты: ЕГРЮЛ, наборы ФНС, ГИР Б
   const h = S.html({ r: r, it: {} });
   assert.match(h, /Источники и даты/);
   assert.match(h, /не ответил/);
+});
+
+test('против отрасли: налогов компании нет в открытых данных — показываем среднюю по ОКВЭД без вывода; активы — из KPI, если баланс без обязательств', () => {
+  const h = S.dengiHtml({ stroki: [], nalogiVidy: [], kpi: [], ist: {} }, { okved: '46.38', nagruzkaOtr: { stroka: { kod: '46', nazvanie: 'торговля оптовая' }, god: 2025, n: 2.6, sv: 0.8 } });
+  assert.match(h, /Налоговая нагрузка отрасли · 2025/);
+  assert.match(h, /Уплаченных налогов компании в открытых данных ФНС нет/);
+  assert.match(h, /налоги 2,6\s%\s\+ взносы 0,8\s%/);
+  assert.ok(!/компания<\/small>/.test(h), 'точки компании нет — сравнивать не с чем');
+  global.DlkNagruzka = require('../js/nagruzka.js');
+  const RN = require('../js/rentabelnost.js'), N = require('../data/fns-normy-2025.json');
+  const r = otvet({ company: Object.assign({}, otvet().company, { okved: '86.21' }), dossier: { charts: { balance: { year: 2025, equity: 2777000, long_debt: 0, short_debt: 0 }, profit: [{ year: 2025, value: 3096000 }] }, kpi: [{ label: 'Активы', value: 6419000 }] } });
+  const o = RN.raschet(r, N);
+  assert.strictEqual(o.aktivy, 6419000, 'итог баланса из KPI «Активы», а не одна строка капитала');
+  assert.strictEqual(o.stroka.kod, 'Q');
 });

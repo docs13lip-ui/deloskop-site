@@ -4568,6 +4568,11 @@
     var kap = chislo(b.equity), dl = chislo(b.long_debt != null ? b.long_debt : b.long_liab), kr = chislo(b.short_debt != null ? b.short_debt : b.short_liab);
     if (!isFinite(kap) || !isFinite(dl) || !isFinite(kr) || dl < 0 || kr < 0) return null;
     var aktivy = kap + dl + kr;
+    // aktivy-kpi-v1 (досье сделки 22.10): в живом ответе бывает balance без обязательств (long_debt = short_debt = 0), а итог
+    // баланса — в KPI «Активы» (у ООО «Доверенный врач» 2025: капитал 2,78 млн, KPI «Активы» 6,42 млн) — без него оценка
+    // рентабельности активов завышалась в 2,3 раза. KPI больше суммы частей — берём его: это строка 1600 той же отчётности.
+    var kA = ((r.dossier && r.dossier.kpi) || []).filter(function (x) { return x && /^Активы(\s|$)/i.test(String(x.label || '')) && isFinite(chislo(x.value)); })[0];
+    if (kA && chislo(kA.value) > aktivy) aktivy = chislo(kA.value);
     if (!(aktivy >= MIN_AKTIVY)) return null;
     var pribyl = zaGod(ch.profit, god);
     if (!isFinite(pribyl)) return null;

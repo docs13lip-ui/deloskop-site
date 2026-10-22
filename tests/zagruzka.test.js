@@ -43,7 +43,8 @@ test('обычная главная: строка под полем не мен�
 });
 
 test('текст первого кадра совпадает с тем, что ставит runCheck (иначе прыжок вернётся)', () => {
-  assert.match(html, /note\.textContent='Проверяем по реестрам…';report\.classList\.add\('loading'\)/);
+  // между ними может стоять только подсветка реестров zhivoj-v2 (DlkZhivoj.zhdu) — текст первого кадра тот же
+  assert.match(html, /note\.textContent='Проверяем по реестрам…';(?:if\(window\.DlkZhivoj\)try\{DlkZhivoj\.zhdu\(note,v\)\}catch\(e\)\{\})?report\.classList\.add\('loading'\)/);
 });
 
 test('«Назад» возвращает прежний текст: def берётся из data-def', () => {

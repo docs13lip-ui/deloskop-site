@@ -251,3 +251,45 @@ test('связи и группа компаний: управляющая ком
   assert.match(h, /data-sd-najti="0"/, 'юрлицо — кнопка «Найти ИНН»');
   assert.match(h, /pb\.nalog\.ru/);
 });
+
+test('деньги компании: ряды по годам из ГИР БО, расходы — выручка минус прибыль, налоги по видам (НДС, УСН, взносы), наложенный график', () => {
+  const r = otvet({ dossier: { data_dates: 'доходы и расходы — на 31.12.2025; уплаченные налоги — на 31.12.2025',
+    charts: { revenue: [{ year: 2023, value: 28871000 }, { year: 2024, value: 32592000 }, { year: 2025, value: 39062000 }], profit: [{ year: 2023, value: 878000 }, { year: 2024, value: -1631000 }, { year: 2025, value: 3096000 }],
+      taxes: [{ name: 'Налог на добавленную стоимость', value: 2000000 }, { name: 'Налог, взимаемый в связи с применением упрощенной системы налогообложения', value: 500000 }, { name: 'Страховые взносы на обязательное медицинское страхование', value: 700000 }, { name: 'Суммы пеней', value: 17 }] },
+    sections: [{ id: 'finance', rows: [['Доходы за год', '39,1 млн ₽'], ['Расходы за год', '36,0 млн ₽'], ['Уплачено налогов и взносов', '3,2 млн ₽']] }, { id: 'dynamics', rows: [['Средний рост выручки в год', '11,6 %']] }] } });
+  const M = S.dengi(r);
+  assert.deepStrictEqual(M.stroki.map((x) => x.god), [2023, 2024, 2025]);
+  assert.strictEqual(M.stroki[1].rashody, 32592000 + 1631000, 'убыток: расходы больше выручки');
+  assert.strictEqual(M.stroki[2].nalogi, 3200017, 'налоги года — точная сумма по видам');
+  assert.deepStrictEqual(M.nalogiVidy.map((q) => q.nazv), ['НДС', 'Страховые взносы', 'УСН', 'Пени и штрафы']);
+  assert.strictEqual(M.stroki[2].fnsDohody, 39100000);
+  const svg = S.dengiSvg(M, null, 700);
+  assert.match(svg, /class="sdf-zl minus"/, 'убыточный год — красная заливка между линиями');
+  assert.match(svg, /class="sdf-zl plus"/);
+  assert.match(svg, /class="sdf-p minus"/);
+  assert.match(svg, /class="sdf-n"/, 'налоги — столбик года');
+  assert.ok((svg.match(/data-sdf-god=/g) || []).length === 3, 'каждый год — область нажатия');
+  const bez = S.dengiSvg(M, { vyruchka: 1, rashody: 0, pribyl: 0, nalogi: 0 }, 700);
+  assert.ok(!/sdf-l--r|sdf-zl|sdf-p |sdf-n"/.test(bez), 'скрытые ряды не рисуются');
+  const h = S.dengiHtml(M, { n: 8.2, norma: 10.1, st: 'nizhe', god: 2025, sVznosami: true, tekst: 'Ниже средней по отрасли.' });
+  assert.match(h, /Из каждых 100 ₽ выручки за 2025/);
+  assert.match(h, /Налоги и взносы по видам за 2025/);
+  assert.match(h, /Компания<\/span>.*Отрасль<\/span>/s, 'нагрузка: компания и отрасль — наложенные полосы');
+  assert.match(h, /выручка минус чистая прибыль/i, 'расход — расчёт, так и подписан');
+  assert.strictEqual(S.dengi(otvet({ company: { inn: '770000000012', kind: 'INDIVIDUAL' } })), null, 'ИП — без денег');
+});
+
+test('источники и даты: ЕГРЮЛ, наборы ФНС, ГИР БО, реестры; не ответивший — «не ответил», не дата', () => {
+  const I = require('../js/istochniki.js');
+  const r = otvet({ dossier: { data_dates: 'ЕГРЮЛ/ЕГРИП — на 22.10.2026; последнее изменение записи ЕГРЮЛ/ЕГРИП — 26.05.2026; задолженность — на 01.09.2026', charts: { revenue: [{ year: 2025, value: 1 }] } } });
+  I.dopolnit(r);
+  const a = S.istochniki(r);
+  assert.ok(a.some((x) => x.nazv === 'ЕГРЮЛ' && x.data === '22.10.2026'));
+  assert.ok(a.some((x) => /последнее изменение/.test(x.nazv) && x.data === '26.05.2026'));
+  assert.ok(a.some((x) => /ГИР БО/.test(x.nazv) && /2025/.test(x.data)));
+  const sudy = a.find((x) => /Арбитражные суды/.test(x.nazv));
+  assert.strictEqual(sudy.st, 'ne');
+  const h = S.html({ r: r, it: {} });
+  assert.match(h, /Источники и даты/);
+  assert.match(h, /не ответил/);
+});

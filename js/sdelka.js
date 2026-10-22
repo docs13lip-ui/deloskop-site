@@ -23,7 +23,7 @@
 })(typeof self !== 'undefined' ? self : this, function (root) {
   'use strict';
   var NB = ' ';
-  var VERSIYA = 'Досье сделки v2';
+  var VERSIYA = 'Досье сделки v3';
   var KEY = 'dlk_sdelki', MAX = 20, STARYJ_DNEJ = 30, DEN = 864e5;
   var BO = { t: 'bo.nalog.gov.ru — отчётность', u: 'https://bo.nalog.gov.ru/' };
   var BI_DO = { t: 'service.nalog.ru/bi.do — решения о приостановке', u: 'https://service.nalog.ru/bi.do' };
@@ -380,6 +380,202 @@
     if (u.yur) { var m = /«([^»]+)»/.exec(t); if (m) return '«' + m[1] + '»'; }
     return t.length > 40 ? t.slice(0, 38) + '…' : t;
   }
+  // ---------- «Деньги компании» (dosje-sdelki-v3, задача владельца 22.10: «графики наложенные друг на друга — доход, расход, прибыль, НДС, УСН») ----------
+  // Один график, где ряды наложены: выручка (площадь, ГИР БО), расходы = выручка − чистая прибыль (линия, ◆ расчёт Делоскопа),
+  // столбик между ними — прибыль или убыток года, налоги и взносы (ФНС, открытые данные) — тонкий столбик в своём году.
+  // Ниже: структура последнего года (выручка → расходы и прибыль, доля налогов), налоги по видам (НДС, УСН, прибыль, взносы…),
+  // нагрузка против отрасли (js/nagruzka-proverka.js — тот же расчёт, что в отчёте). Чисел от себя не добавляем.
+  var NALOG_VIDY = [
+    ['nds', 'НДС', /добавленную стоимость/i], ['pribyl', 'Налог на прибыль', /прибыль организаций|налог на прибыль/i],
+    ['usn', 'УСН', /упрощ[её]нн/i], ['envd', 'ЕНВД', /вмен[её]нн/i], ['eshn', 'ЕСХН', /сельскохозяйственн/i], ['patent', 'Патент', /патент/i],
+    ['vznosy', 'Страховые взносы', /страхов|пенсионн|медицинск|социальн|травматизм/i], ['ndfl', 'НДФЛ', /доходы физических лиц/i],
+    ['imushchestvo', 'Налог на имущество', /имущество организаций/i], ['transport', 'Транспортный налог', /транспортн/i],
+    ['zemlya', 'Земельный налог', /земельн/i], ['peni', 'Пени и штрафы', /(^|\s)пен(и|ей|я)(\s|$)|штраф/i], ['poshlina', 'Госпошлина', /пошлин/i]];
+  var NALOG_CVET = { nds: '#0B63E5', pribyl: '#16723F', usn: '#7A4FD6', envd: '#7A4FD6', eshn: '#7A4FD6', patent: '#7A4FD6', vznosy: '#2FA3B5', ndfl: '#C27A00', imushchestvo: '#8A6D3B', transport: '#8A6D3B', zemlya: '#8A6D3B', peni: '#B3261E', poshlina: '#8E8E93', drugoe: '#B5B5AE' };
+  function rubIz(t) { // «39,1 млн ₽» → 39100000; «4 125 161 ₽» → 4125161
+    var m = /(-|−|\+)?\s*([\d\s ]+(?:[.,]\d+)?)\s*(трлн|млрд|млн|тыс)?/i.exec(str(t)); if (!m) return null;
+    var v = parseFloat(m[2].replace(/[\s ]/g, '').replace(',', '.')); if (!isFinite(v)) return null;
+    var k = { 'трлн': 1e12, 'млрд': 1e9, 'млн': 1e6, 'тыс': 1e3 }[String(m[3] || '').toLowerCase()] || 1;
+    return (m[1] === '-' || m[1] === '−' ? -1 : 1) * v * k;
+  }
+  function krupno(v) {
+    if (v == null || !isFinite(v)) return '—';
+    var a = Math.abs(v), z = v < 0 ? '−' : '';
+    function f(x) { return (Math.round(x * 10) / 10).toString().replace('.', ','); }
+    if (a >= 1e9) return z + f(a / 1e9) + NB + 'млрд' + NB + '₽';
+    if (a >= 1e6) return z + f(a / 1e6) + NB + 'млн' + NB + '₽';
+    if (a >= 1e3) return z + Math.round(a / 1e3) + NB + 'тыс.' + NB + '₽';
+    return z + Math.round(a) + NB + '₽';
+  }
+  function os(v) { var a = Math.abs(v); return a >= 1e9 ? (Math.round(v / 1e8) / 10).toString().replace('.', ',') + ' млрд' : a >= 1e6 ? (Math.round(v / 1e5) / 10).toString().replace('.', ',') + ' млн' : a >= 1e3 ? Math.round(v / 1e3) + ' тыс.' : String(Math.round(v)); }
+  function dengi(r) {
+    r = r || {};
+    var c = r.company || {}, D = r.dossier || {}, ch = D.charts || {}, sec = sekcii(r);
+    if (c.kind === 'INDIVIDUAL' || String(c.inn || '').length === 12) return null;    // данные ИП не показываем
+    function ryad(a) { var o = {}; (Array.isArray(a) ? a : []).forEach(function (x) { var g = parseInt(x && x.year, 10), v = Number(x && x.value); if (isFinite(g) && isFinite(v)) o[g] = v; }); return o; }
+    var V = ryad(ch.revenue), P = ryad(ch.profit), N = ryad(ch.taxes_paid);
+    var gody = Object.keys(V).concat(Object.keys(P)).map(Number).filter(function (g, i, a) { return a.indexOf(g) === i; }).sort().slice(-6);
+    var data = /доходы и расходы — на (\d{2})\.(\d{2})\.(\d{4})/.exec(str(D.data_dates)), dataN = /уплаченные налоги — на (\d{2})\.(\d{2})\.(\d{4})/.exec(str(D.data_dates));
+    var godF = data ? +data[3] : null, godN = dataN ? +dataN[3] : godF;
+    var fd = rubIz(stroka(sec.finance, /^Доходы за год/i)), fr = rubIz(stroka(sec.finance, /^Расходы за год/i)), upl = rubIz(stroka(sec.finance, /^Уплачено налогов/i));
+    if (godN && upl != null && N[godN] == null) N[godN] = upl;
+    // налоги по видам за последний год набора ФНС
+    var vidy = {}, vsego = 0;
+    (Array.isArray(ch.taxes) ? ch.taxes : []).forEach(function (x) {
+      var v = Number(x && x.value); if (!isFinite(v) || v <= 0) return;
+      var n = str(x.name), m = NALOG_VIDY.filter(function (q) { return q[2].test(n); })[0], k = m ? m[0] : 'drugoe';
+      if (!vidy[k]) vidy[k] = { k: k, nazv: m ? m[1] : 'Другие платежи', summa: 0, cvet: NALOG_CVET[k] };
+      vidy[k].summa += v; vsego += v;
+    });
+    if (godN && vsego > 0) N[godN] = vsego;                // точнее, чем «4,1 млн ₽» из строки раздела
+    var stroki = gody.map(function (g) {
+      var v = V[g] != null ? V[g] : null, p = P[g] != null ? P[g] : null;
+      return { god: g, vyruchka: v, pribyl: p, rashody: v != null && p != null ? v - p : null, nalogi: N[g] != null ? N[g] : null,
+        fnsDohody: g === godF ? fd : null, fnsRashody: g === godF ? fr : null };
+    });
+    var nalogiVidy = Object.keys(vidy).map(function (k) { return vidy[k]; }).sort(function (a, b) { return b.summa - a.summa; });
+    var dyn = sec.dynamics || [];
+    var K = [];
+    function kp(nazv, t, pod) { if (str(t)) K.push({ nazv: nazv, znach: str(t), pod: pod || '' }); }
+    kp('Рост выручки в год', stroka(dyn, /^Средний рост выручки/i), 'в среднем, ГИР БО');
+    kp('Рентабельность', stroka(sec.finance, /^Рентабельность/i), 'прибыль ÷ доходы, ФНС');
+    kp('Доля заёмных средств', stroka(dyn, /^Доля заёмных/i), 'в пассивах, ГИР БО');
+    kp('Деньги на счетах', stroka(dyn, /^Деньги на счетах/i), 'на конец года, ГИР БО');
+    kp('Должна поставщикам', stroka(dyn, /кредиторская задолженность/i), 'кредиторка, ГИР БО');
+    kp('Кредиты и займы', stroka(dyn, /^Кредиты и займы/i), 'ГИР БО');
+    var NP = modul('NagruzkaProverka', './nagruzka-proverka.js'), rezh = null;
+    try { rezh = NP && NP.rezhim ? NP.rezhim(r) : null; } catch (e) { rezh = null; }
+    if (!stroki.length && !nalogiVidy.length) return null;
+    return { stroki: stroki, nalogiVidy: nalogiVidy, nalogiVsego: vsego, godN: godN, godF: godF, kpi: K, rezhim: rezh,
+      ist: { vyruchka: 'ГИР БО ФНС, бухотчётность', nalogi: 'ФНС, открытые данные' + (godN ? ' за ' + godN : ''), fns: 'ФНС, открытые данные' + (godF ? ' за ' + godF : '') } };
+  }
+  // SVG графика (ширина — по экрану): верхняя панель — выручка и расходы наложены, заливка между ними — прибыль (зелёная) или убыток (красный);
+  // нижняя панель — столбики года: чистая прибыль и уплаченные налоги и взносы, своя шкала от нуля. vis — какие ряды показаны.
+  function shkala(lo, hi, n) { var d = (hi - lo) / n || 1, p = Math.pow(10, Math.floor(Math.log10(d))), k = [1, 2, 2.5, 5, 10].filter(function (q) { return q * p >= d; })[0] * p; return { lo: Math.floor(lo / k) * k, hi: Math.ceil(hi / k) * k, shag: k }; }
+  function dengiSvg(M, vis, shirina) {
+    vis = vis || { vyruchka: 1, rashody: 1, pribyl: 1, nalogi: 1 };
+    var S = M.stroki, n = S.length; if (!n) return '';
+    var uz = shirina && shirina < 560, W0 = shirina ? Math.max(300, Math.round(shirina)) : 720, H0 = uz ? 300 : 360, L = uz ? 48 : 64, R = uz ? 8 : 18, T = 14, B = 30, G = 40;
+    var w = W0 - L - R, hAll = H0 - T - B - G, h1 = Math.round(hAll * 0.62), h2 = hAll - h1, T2 = T + h1 + G;
+    var vals = []; S.forEach(function (s) { if (s.vyruchka != null) vals.push(s.vyruchka); if (s.rashody != null) vals.push(s.rashody); });
+    var mx = vals.length ? Math.max.apply(null, vals) : 1, mn = vals.length ? Math.min.apply(null, vals) : 0;
+    var lo0 = mn - (mx - mn) * 0.25; if (lo0 < mx * 0.3 || lo0 < 0) lo0 = Math.min(0, mn);
+    var sk = shkala(lo0, mx + (mx - mn) * 0.08 || mx * 1.1, 3);
+    function x(i) { return L + w * (i + 0.5) / n; }
+    function y(v) { return T + h1 - (v - sk.lo) / (sk.hi - sk.lo) * h1; }
+    var b2 = 0; S.forEach(function (s) { if (s.pribyl != null) b2 = Math.max(b2, Math.abs(s.pribyl)); if (s.nalogi != null) b2 = Math.max(b2, s.nalogi); }); if (!b2) b2 = 1;
+    var est_minus = S.some(function (s) { return s.pribyl != null && s.pribyl < 0; });
+    var z2 = est_minus ? T2 + h2 * 0.62 : T2 + h2, kv = (est_minus ? h2 * 0.62 : h2) / b2;
+    var o = '<svg class="sdf-svg" viewBox="0 0 ' + W0 + ' ' + H0 + '" width="' + W0 + '" height="' + H0 + '" role="img" aria-label="График: выручка и расходы по годам, заливка между ними — прибыль или убыток; ниже — прибыль и налоги">' +
+      '<defs><linearGradient id="sdfV" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0B63E5" stop-opacity=".16"/><stop offset="1" stop-color="#0B63E5" stop-opacity="0"/></linearGradient>' +
+      '<filter id="sdfTen" x="-10%" y="-30%" width="120%" height="160%"><feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#0B63E5" flood-opacity=".28"/></filter></defs>';
+    for (var t = sk.lo; t <= sk.hi + 1e-9; t += sk.shag) o += '<line class="sdf-set" x1="' + L + '" x2="' + (W0 - R) + '" y1="' + y(t).toFixed(1) + '" y2="' + y(t).toFixed(1) + '"/><text class="sdf-ox" x="' + (L - 8) + '" y="' + (y(t) + 4).toFixed(1) + '" text-anchor="end">' + esc(os(t)) + '</text>';
+    o += '<text class="sdf-pod" x="' + (W0 - R) + '" y="' + (T2 - 18) + '" text-anchor="end">Прибыль и налоги года</text><line class="sdf-nol" x1="' + L + '" x2="' + (W0 - R) + '" y1="' + z2.toFixed(1) + '" y2="' + z2.toFixed(1) + '"/>' +
+      '<text class="sdf-ox" x="' + (L - 8) + '" y="' + (z2 + 4).toFixed(1) + '" text-anchor="end">0</text><text class="sdf-ox" x="' + (L - 8) + '" y="' + (z2 - b2 * kv + 4).toFixed(1) + '" text-anchor="end">' + esc(os(b2)) + '</text>';
+    S.forEach(function (s, i) { o += '<text class="sdf-ox sdf-ox--g" x="' + x(i).toFixed(1) + '" y="' + (H0 - 10) + '" text-anchor="middle">' + s.god + '</text>'; });
+    var V = S.map(function (s, i) { return s.vyruchka != null ? [x(i), y(s.vyruchka), s] : null; }), Rr = S.map(function (s, i) { return s.rashody != null ? [x(i), y(s.rashody), s] : null; });
+    o += '<g class="sdf-ris">';
+    // заливка между линиями по отрезкам; в точке пересечения — делим отрезок
+    if (vis.pribyl) for (var i = 0; i < n - 1; i++) {
+      var a1 = V[i], a2 = V[i + 1], b1 = Rr[i], c2 = Rr[i + 1]; if (!a1 || !a2 || !b1 || !c2) continue;
+      var d1 = a1[1] - b1[1], d2 = a2[1] - c2[1];  // < 0 — выручка выше расходов (прибыль)
+      if (d1 * d2 >= 0) o += '<polygon class="sdf-zl ' + (d1 + d2 <= 0 ? 'plus' : 'minus') + '" points="' + [a1, a2, c2, b1].map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' ') + '"/>';
+      else { var tt = d1 / (d1 - d2), xm = a1[0] + (a2[0] - a1[0]) * tt, ym = a1[1] + (a2[1] - a1[1]) * tt;
+        o += '<polygon class="sdf-zl ' + (d1 < 0 ? 'plus' : 'minus') + '" points="' + [a1, [xm, ym], b1].map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' ') + '"/>' +
+          '<polygon class="sdf-zl ' + (d2 < 0 ? 'plus' : 'minus') + '" points="' + [[xm, ym], a2, c2].map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' ') + '"/>'; }
+    }
+    var pv = V.filter(Boolean), pr = Rr.filter(Boolean);
+    function put(a) { return 'M' + a.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' L'); }
+    if (vis.vyruchka && pv.length) o += '<path class="sdf-area" d="' + put(pv) + ' L' + pv[pv.length - 1][0].toFixed(1) + ',' + (T + h1) + ' L' + pv[0][0].toFixed(1) + ',' + (T + h1) + ' Z" fill="url(#sdfV)"/>';
+    if (vis.rashody && pr.length > 1) o += '<path class="sdf-l sdf-l--r" d="' + put(pr) + '"/>';
+    if (vis.vyruchka && pv.length > 1) o += '<path class="sdf-l sdf-l--v" d="' + put(pv) + '" filter="url(#sdfTen)"/>';
+    o += '</g>';
+    S.forEach(function (s, i) {
+      var bw = uz ? 9 : 14, gap = 3;
+      if (vis.pribyl && s.pribyl != null) { var hp = Math.max(1.5, Math.abs(s.pribyl) * kv); o += '<rect class="sdf-p ' + (s.pribyl >= 0 ? 'plus' : 'minus') + '" x="' + (x(i) - bw - gap / 2).toFixed(1) + '" y="' + (s.pribyl >= 0 ? z2 - hp : z2).toFixed(1) + '" width="' + bw + '" height="' + hp.toFixed(1) + '" rx="2" style="--i:' + i + '"/>'; }
+      if (vis.nalogi && s.nalogi != null) { var hn = Math.max(1.5, s.nalogi * kv); o += '<rect class="sdf-n" x="' + (x(i) + gap / 2).toFixed(1) + '" y="' + (z2 - hn).toFixed(1) + '" width="' + bw + '" height="' + hn.toFixed(1) + '" rx="2" style="--i:' + i + '"/>'; }
+      if (vis.rashody && s.rashody != null) o += '<circle class="sdf-t sdf-t--r" cx="' + x(i).toFixed(1) + '" cy="' + y(s.rashody).toFixed(1) + '" r="3.5"/>';
+      if (vis.vyruchka && s.vyruchka != null) o += '<circle class="sdf-t sdf-t--v" cx="' + x(i).toFixed(1) + '" cy="' + y(s.vyruchka).toFixed(1) + '" r="4.5"/>';
+      o += '<rect class="sdf-hit" data-sdf-god="' + i + '" x="' + (x(i) - w / n / 2).toFixed(1) + '" y="' + T + '" width="' + (w / n).toFixed(1) + '" height="' + (H0 - T - B + 4) + '"/>';
+    });
+    return o + '</svg>';
+  }
+  function dengiGod(M, i) { // карточка года под графиком
+    var s = M.stroki[i]; if (!s) return '';
+    function str2(nazv, v, cls, ist) { return v == null ? '' : '<li class="' + cls + '"><i aria-hidden="true"></i><span>' + esc(nazv) + '</span><b>' + esc(krupno(v)) + '</b>' + (ist ? '<small>' + esc(ist) + '</small>' : '') + '</li>'; }
+    return '<div class="sdf-god"><b class="sdf-god__g">' + s.god + '</b><ul>' +
+      str2('Выручка', s.vyruchka, 'v', 'ГИР БО') + str2('Расходы', s.rashody, 'r', 'выручка − чистая прибыль, расчёт') +
+      str2(s.pribyl != null && s.pribyl < 0 ? 'Убыток' : 'Чистая прибыль', s.pribyl, s.pribyl != null && s.pribyl < 0 ? 'm' : 'p', 'ГИР БО') +
+      str2('Налоги и взносы', s.nalogi, 'n', 'ФНС, уплачено') +
+      (s.fnsDohody != null ? str2('Доходы по данным ФНС', s.fnsDohody, 'f', 'все доходы, не только выручка') : '') + (s.fnsRashody != null ? str2('Расходы по данным ФНС', s.fnsRashody, 'f', '') : '') +
+      '</ul></div>';
+  }
+  function dengiHtml(M, NG) {
+    if (!M) return '';
+    var S = M.stroki, posl = S.length ? S[S.length - 1] : null, h = '';
+    h += '<section class="sdf" aria-labelledby="sdf-h"><div class="sd-sec-h"><h3 id="sdf-h">Деньги компании</h3><p>Выручка и расходы — линии на одном графике, заливка между ними — прибыль (зелёная) или убыток (красный). Внизу — прибыль и уплаченные налоги каждого года. Нажмите на год — покажем все суммы.</p></div>';
+    if (S.length) {
+      h += '<div class="sdf-leg" role="group" aria-label="Что показать на графике">' +
+        [['vyruchka', 'Выручка'], ['rashody', 'Расходы'], ['pribyl', 'Прибыль / убыток'], ['nalogi', 'Налоги и взносы']].map(function (q) {
+          return '<button type="button" class="sdf-chip sdf-chip--' + q[0] + '" data-sdf-ryad="' + q[0] + '" aria-pressed="true"><i aria-hidden="true"></i>' + q[1] + '</button>'; }).join('') + '</div>' +
+        '<div class="sdf-kanva" data-sdf>' + dengiSvg(M) + '</div>' +
+        '<div class="sdf-gody" role="tablist" aria-label="Годы">' + S.map(function (s, i) { return '<button type="button" role="tab" data-sdf-god="' + i + '" aria-selected="' + (i === S.length - 1) + '">' + s.god + '</button>'; }).join('') + '</div>' +
+        '<div data-sdf-karta aria-live="polite">' + dengiGod(M, S.length - 1) + '</div>';
+    }
+    // структура последнего года: выручка = расходы + прибыль; налоги — доля выручки (наложены поверх)
+    if (posl && posl.vyruchka > 0 && posl.rashody != null) {
+      var pr = Math.max(0, Math.min(100, posl.rashody / posl.vyruchka * 100)), pp = Math.max(0, 100 - pr), pn = posl.nalogi != null ? Math.min(100, posl.nalogi / posl.vyruchka * 100) : null;
+      function p1(v) { return (Math.round(v * 10) / 10).toString().replace('.', ',') + NB + '%'; }
+      h += '<div class="sdf-str"><div class="sdf-str__h"><b>Из каждых 100 ₽ выручки за ' + posl.god + '</b><span>' + esc(M.ist.vyruchka) + (pn != null ? '; налоги — ' + esc(M.ist.nalogi) : '') + '</span></div>' +
+        '<div class="sdf-bar" role="img" aria-label="Расходы ' + p1(pr) + ', прибыль ' + p1(pp) + (pn != null ? ', налоги и взносы ' + p1(pn) : '') + '"><i class="r" style="width:' + pr.toFixed(2) + '%"></i><i class="' + (posl.pribyl < 0 ? 'm' : 'p') + '" style="width:' + (posl.pribyl < 0 ? 0 : pp).toFixed(2) + '%"></i>' +
+          (pn != null ? '<em style="width:' + pn.toFixed(2) + '%"></em>' : '') + '</div>' +
+        '<ul class="sdf-str__l"><li class="r"><i></i>Расходы <b>' + p1(pr) + '</b></li><li class="' + (posl.pribyl < 0 ? 'm' : 'p') + '"><i></i>' + (posl.pribyl < 0 ? 'Убыток <b>' + esc(krupno(posl.pribyl)) + '</b>' : 'Прибыль <b>' + p1(pp) + '</b>') + '</li>' +
+          (pn != null ? '<li class="n"><i></i>Налоги и взносы <b>' + p1(pn) + '</b> <small>входят в расходы</small></li>' : '') + '</ul></div>';
+    }
+    // налоги по видам
+    if (M.nalogiVidy.length) {
+      h += '<div class="sdf-nv"><div class="sdf-str__h"><b>Налоги и взносы по видам' + (M.godN ? ' за ' + M.godN : '') + ': ' + esc(krupno(M.nalogiVsego)) + '</b><span>' + esc(M.ist.nalogi) + ', уплачено; НДФЛ за работников в наборе может не быть</span></div>' +
+        '<div class="sdf-bar sdf-bar--nv">' + M.nalogiVidy.map(function (q) { return '<i style="width:' + (q.summa / M.nalogiVsego * 100).toFixed(2) + '%;background:' + q.cvet + '"></i>'; }).join('') + '</div>' +
+        '<ul class="sdf-nv__l">' + M.nalogiVidy.map(function (q) { return '<li><i style="background:' + q.cvet + '"></i><span>' + esc(q.nazv) + '</span><b>' + esc(krupno(q.summa)) + '</b><small>' + (Math.round(q.summa / M.nalogiVsego * 1000) / 10).toString().replace('.', ',') + NB + '%</small></li>'; }).join('') + '</ul>' +
+        (M.rezhim === 'usn' && !M.nalogiVidy.some(function (q) { return q.k === 'usn'; }) ? '<p class="sd-s">Режим — упрощённая система, а платежа УСН в наборе ФНС нет: он мог быть зачтён из единого налогового платежа позже.</p>' : '') +
+        (!M.nalogiVidy.some(function (q) { return q.k === 'nds'; }) && M.rezhim !== 'usn' ? '<p class="sd-s">НДС в наборе ФНС за этот год нет: бывает у освобождённых от НДС операций (ст. 149 НК РФ) или при вычетах, равных начисленному. Спросите контрагента, выставит ли он счёт-фактуру.</p>' : '') + '</div>';
+    }
+    // нагрузка против отрасли — расчёт js/nagruzka-proverka.js (наложенные полосы: компания и отрасль)
+    if (NG && NG.n != null) {
+      var sr = NG.norma != null, mx = Math.max(NG.n, NG.norma || 0, 1) * 1.15;
+      function pc(v) { return (Math.round(v * 10) / 10).toString().replace('.', ',') + NB + '%'; }
+      h += '<div class="sdf-ng ' + (NG.st === 'nizhe' || NG.st === 'nizhe-vdvoe' ? 'warn' : NG.st === 'ne-nizhe' ? 'ok' : '') + '"><div class="sdf-str__h"><b>' + (NG.sVznosami ? 'Налоги и взносы' : 'Налоговая нагрузка') + ' против отрасли · ' + NG.god + '</b><span>оценка по открытым данным ФНС; норма — приказ ФНС № ММ-3-06/333@</span></div>' +
+        (sr ? '<div class="sdf-ng__p"><span>Компания</span><div><i class="k" style="width:' + (NG.n / mx * 100).toFixed(1) + '%"></i></div><b>' + pc(NG.n) + '</b></div>' : '<p class="sdf-ng__v"><b>' + pc(NG.n) + '</b> от ' + (NG.vid === 'dohody' ? 'доходов' : 'выручки') + ' за ' + NG.god + '</p>') +
+        (sr ? '<div class="sdf-ng__p"><span>Отрасль</span><div><i class="o" style="width:' + (NG.norma / mx * 100).toFixed(1) + '%"></i></div><b>' + pc(NG.norma) + '</b></div>' : '') +
+        '<p class="sd-s">' + esc(NG.tekst || '') + '</p></div>';
+    }
+    if (M.kpi.length) h += '<ul class="sdf-kpi">' + M.kpi.map(function (q) { return '<li><span>' + esc(q.nazv) + '</span><b>' + nb(q.znach) + '</b><small>' + esc(q.pod) + '</small></li>'; }).join('') + '</ul>';
+    return h + '<p class="sd-s">Годы — по бухгалтерской отчётности (ГИР БО ФНС, строки 2110 и 2400). Расходы — выручка минус чистая прибыль: все расходы вместе с налогом на прибыль, расчёт Делоскопа. Налоги — то, что компания уплатила по открытым данным ФНС.</p></section>';
+  }
+  // ---------- «Источники и даты» — последняя страница досье: откуда каждая цифра и на какую дату ----------
+  function istochniki(r) {
+    r = r || {};
+    var out = [], D = r.dossier || {}, dm = r.damia || {};
+    str(D.data_dates).split(';').map(str).filter(Boolean).forEach(function (t) {
+      var m = /^(.+?)\s+—\s+(?:на\s+)?(\d{2}\.\d{2}\.\d{4})$/.exec(t); if (!m) return;
+      var k = m[1], nazv = /ЕГРЮЛ|ЕГРИП/.test(k) ? (/изменение/.test(k) ? 'ЕГРЮЛ — последнее изменение записи' : 'ЕГРЮЛ') : 'ФНС, открытые данные: ' + k;
+      out.push({ nazv: nazv, data: m[2], st: 'ok' });
+    });
+    var gv = ((D.charts || {}).revenue || []).map(function (x) { return +x.year; }).filter(isFinite).sort().pop();
+    if (gv) out.push({ nazv: 'ГИР БО ФНС — бухгалтерская отчётность', data: 'за ' + gv + ' год', st: 'ok' });
+    Object.keys(dm).forEach(function (k) {
+      var b = dm[k]; if (!b || typeof b !== 'object' || !b.nazvanie) return;
+      var st = b.status === 'found' || b.status === 'not_found' || b.sostoyanie === 'found' || b.sostoyanie === 'not_found' ? 'ok' : b.status === 'not_applicable' ? 'na' : 'ne';
+      var ik = str(b.istochnik).replace(/\s*\(через DaMIA\)/, '').split(':')[0];
+      out.push({ nazv: b.nazvanie + (ik && ik.toLowerCase() !== str(b.nazvanie).toLowerCase() ? ' — ' + ik : ''), data: dmyIso(b.data_svedeniy), st: st, sam: st === 'ne' ? b.proverit_samim || '' : '' });
+    });
+    return out;
+  }
+  function istochnikiHtml(r) {
+    var a = istochniki(r); if (!a.length) return '';
+    return '<section class="sd-ist" aria-labelledby="sd-ist-h"><div class="sd-sec-h"><h3 id="sd-ist-h">Источники и даты</h3><p>Откуда сведения этого досье и на какую дату. «Не ответил» — значит не проверяли, а не «ничего нет».</p></div><ul>' +
+      a.map(function (x) { return '<li class="' + x.st + '"><i aria-hidden="true"></i><span>' + esc(x.nazv) + '</span><b>' + (x.st === 'ok' ? esc(x.data || '—') : x.st === 'na' ? 'не применяется' : 'не ответил' + (x.sam ? ' · <a href="' + esc(x.sam) + '" target="_blank" rel="noopener nofollow">проверить самим</a>' : '')) + '</b></li>'; }).join('') + '</ul></section>';
+  }
   // ---------- разметка блока (страница Паспорта) ----------
   // Только строки с экранированием: ни одного текста из счёта или ответа API без esc.
   function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -476,7 +672,7 @@
           '<div class="sd-verdict" role="status" aria-live="polite"><span class="sd-verdict__l">Итог досье</span><b>' + nb(it.zagolovok) + '</b><p>' + nb(it.tekst) + '</p></div></div>' +
         pulsHtml(o.realnost) +
         (o.svezh && o.svezh.tekst ? '<p class="sd-cover__w">' + esc(o.svezh.tekst) + '</p>' : '') + '</div></header>' +
-      realnostHtml(o.realnost) + svyaziHtml(o.svyazi, o.svyaziNajdeno, svyaziDop(o.svyazi, o.svyaziNajdeno)) +
+      realnostHtml(o.realnost) + dengiHtml(o.dengi, o.nagruzka) + svyaziHtml(o.svyazi, o.svyaziNajdeno, svyaziDop(o.svyazi, o.svyaziNajdeno)) +
       '<div class="sd-sec-h sd-sec-h--shagi"><h3>Шесть шагов до оплаты</h3><p>Закрывайте по порядку: каждый шаг — с отметкой и датой, всё попадёт в PDF.</p></div><ol class="sd-shagi">';
     // 1. ИНН и сумма
     h += shag(1, 'sd-summa', 'Контрагент и сумма', G[0],
@@ -523,7 +719,7 @@
       '<div class="sd-btns noprint"><button class="btn primary" type="button" data-sd-act="save">' + (s ? 'Обновить сохранённое' : 'Сохранить на этом устройстве') + '</button>' +
         '<button class="btn" type="button" data-sd-act="povtor">Проверить заново</button>' + (s ? '<button class="btn sd-del" type="button" data-sd-act="del">Удалить с устройства</button>' : '') + '</div>' +
       '<p class="sd-s noprint" data-sd-msg role="status" aria-live="polite">Сохраняем только в этом браузере — Делоскоп досье не получает. Повторная проверка — одна из бесплатных проверок дня: сравним с сохранённым.</p>', s ? 'есть изменения' : 'не сохранено');
-    h += '</ol><p class="stroka">' + esc(OGOVORKA) + ' ' + esc(OGOVORKA_OTM) + ' ' + esc(VERSIYA) + '.</p></section>';
+    h += '</ol>' + istochnikiHtml(o.r) + '<p class="stroka">' + esc(OGOVORKA) + ' ' + esc(OGOVORKA_OTM) + ' ' + esc(VERSIYA) + '.</p></section>';
     return h;
   }
 
@@ -541,6 +737,6 @@
     VERSIYA: VERSIYA, KEY: KEY, MAX: MAX, KLYUCH: KLYUCH, OGOVORKA: OGOVORKA, OGOVORKA_OTM: OGOVORKA_OTM, STARYJ_DNEJ: STARYJ_DNEJ,
     rekvizity: rekvizity, nedostaet: nedostaet, problemy: problemy, itog: itog, delopisSsylka: delopisSsylka,
     snimok: snimok, sravnit: sravnit, svezhest: svezhest, spisok: spisok, najti: najti, sohranit: sohranit, udalit: udalit,
-    mskData: mskData, mskVremya: mskVremya, html: html, spisokHtml: spisokHtml, esc: esc, realnost: realnost, svyazi: svyazi, obshchijAdres: obshchijAdres, adresKlyuch: adresKlyuch, kratko: kratko, zaprosImeni: zaprosImeni, kratkoGraf: kratkoGraf, svyaziDop: svyaziDop
+    mskData: mskData, mskVremya: mskVremya, html: html, spisokHtml: spisokHtml, esc: esc, realnost: realnost, svyazi: svyazi, obshchijAdres: obshchijAdres, adresKlyuch: adresKlyuch, kratko: kratko, zaprosImeni: zaprosImeni, kratkoGraf: kratkoGraf, svyaziDop: svyaziDop, dengi: dengi, dengiSvg: dengiSvg, dengiGod: dengiGod, dengiHtml: dengiHtml, rubIz: rubIz, krupno: krupno, istochniki: istochniki
   };
 });

@@ -709,6 +709,8 @@ class TestObshchijRender(unittest.TestCase):
         self.assertEqual(len(pervye), len(kart))
         for adres, txt in pervye.items():
             fajl = pathlib.Path(d, adres.strip("/"), "index.html").read_text(encoding="utf-8")
+            # kartochki-unik-v9: WebPage с датой изменения текста ставит только сборка сайта (дату знает файл, не API)
+            fajl = K._WP_BLOK.sub("", fajl)
             self.assertEqual(K.bez_nevidimyh(txt), fajl, adres)  # API отдаёт знаки, сайт хранит сущности — браузер видит одно и то же
 
     def test_api_ip_i_vorota(self):

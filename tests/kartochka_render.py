@@ -2695,14 +2695,18 @@ def zn_frazy(f):
     return out
 
 
+# kartochki-unik-v9 (ТЗ [Продукт] 23.10 п. 3Б, ✓ [Арт-директор]): подпись «◆» короче — 24 слова на всех 167 карточках
+# были самым частым повтором после оговорок. «Условия сделки решаете вы» оставлена: в оговорке карточки этой фразы нет.
+ROMB_PODPIS = "◆ Расчёт Делоскопа по открытым данным. Условия сделки решаете вы — проверка на сегодня — "
+
+
 def zn_blok_html(fr, inn=""):
     if not fr:
         return ""
     e = lambda s: html.escape(s, quote=False)
     return ('<section class="co-sec co-znachit" aria-labelledby="znachit"><h2 id="znachit">Что это значит для вас</h2>%s'
-            '<p class="caption">◆ рассчитано Делоскопом по сведениям этой страницы. Условия сделки решаете вы — '
-            'полная проверка на сегодня — <a href="/?inn=%s">в отчёте</a>.</p></section>\n' % (
-                "".join("<p>%s</p>" % e(x) for x in fr), inn))
+            '<p class="caption">' + ROMB_PODPIS.replace("%", "%%") + '<a href="/?inn=%s">в отчёте</a>.</p></section>\n') % (
+                "".join("<p>%s</p>" % e(x) for x in fr), inn)
 
 
 def vstavit_znachit(t):
@@ -3535,10 +3539,8 @@ def un_blok_html(f):
     e_ = lambda s: html.escape(s, quote=False)
     otl = un_otlichie_html(f)
     return ('<section class="co-sec co-znachit" aria-labelledby="znachit"><h2 id="znachit">Что это значит для вас</h2>%s%s'
-            '<p class="caption">◆ рассчитано Делоскопом по сведениям этой страницы%s. Условия сделки решаете вы — '
-            'полная проверка на сегодня — <a href="/?inn=%s">в отчёте</a>.</p></section>\n' % (
-                otl, "".join("<p>%s</p>" % e_(x) for x in fr),
-                " и других карточек Делоскопа" if otl else "", f.get("inn", "")))
+            '<p class="caption">' + ROMB_PODPIS.replace("%", "%%") + '<a href="/?inn=%s">в отчёте</a>.</p></section>\n') % (
+                otl, "".join("<p>%s</p>" % e_(x) for x in fr), f.get("inn", ""))
 
 
 def _un_vstavit(t):
@@ -3917,3 +3919,4 @@ def _un_pered_fakt(f):  # noqa: F811
         return None
     inn = f.get("inn", "") or ""
     return var[int(inn[-3:]) % len(var)] if inn[-3:].isdigit() else var[0]
+

@@ -11,11 +11,22 @@ function resp(o) {
   return Object.assign({ checked_at: NOW, risk_level: 'low', company: { inn: '7700000000', name_short: 'ООО «Тест»', status: 'ACTIVE', reg_date: '2015-03-01' }, signals: [] }, o || {});
 }
 
-t('чистая старая компания → «Работать можно», предел 3 млн по возрасту', function () {
-  var v = U.decide(resp({ signals: [sig('Недостоверные сведения в ЕГРЮЛ', 'ok', 'Нет')] }));
+// predvaritelno-v1 (аудит 22.10): без выручки и без проверенных долгов ориентир предварительный — «работать можно» не говорим
+t('чистая старая компания без выручки и проверок → «Предварительно», предел 3 млн по возрасту — только «после проверки»', function () {
+  var v = U.decide(resp({ signals: [sig('Недостоверные сведения в ЕГРЮЛ', 'ok', 'Нет')] }), { amount: 500000 });
+  assert.strictEqual(v.tone, 'go');
+  assert.strictEqual(v.headline, 'Предварительно: серьёзного не нашли');
+  assert.strictEqual(v.cap, 3000000);
+  assert.ok(v.predvaritelno && v.predvaritelno.baza === 'age', JSON.stringify(v.predvaritelno));
+  assert.ok(/платите по факту поставки/.test(v.prepay) && !/допустима|подойдут/.test(v.prepay), v.prepay);
+});
+t('чистая компания с выручкой и проверенными долгами → «Работать можно» (без «предварительно»)', function () {
+  var v = U.decide(resp({ signals: [sig('Недостоверные сведения в ЕГРЮЛ', 'ok', 'Нет')], dossier: { kpi: [{ label: 'Выручка', value: 52000000 }] },
+    damia: { fssp: { status: 'not_found' }, nalogi: { status: 'not_found' } } }), { amount: 500000 });
   assert.strictEqual(v.tone, 'go');
   assert.strictEqual(v.headline, 'Работать можно');
-  assert.strictEqual(v.cap, 3000000);
+  assert.strictEqual(v.predvaritelno, undefined);
+  assert.strictEqual(v.prepay, 'Сумма в пределах ориентира — обычные условия подойдут.');
 });
 
 t('выручка известна → предел = две недели выручки, округлён вниз', function () {
@@ -28,7 +39,7 @@ t('пример из стратегии: 7 месяцев + смена дире�
     signals: [sig('Руководитель сменился недавно', 'warn', 'Внимание')] }));
   assert.strictEqual(v.tone, 'cap');
   assert.strictEqual(v.cap, 150000); // 300 000 / 2
-  assert.strictEqual(v.headline, 'Можно, предоплата — до' + NB + '150' + NB + '000' + NB + '₽');
+  assert.strictEqual(v.headline, 'Предварительно: есть замечания'); // predvaritelno-v1: выручки нет — число только «после проверки»
   assert.ok(v.reasons.some(function (r) { return /компании 7/.test(r); }), v.reasons.join('|'));
   assert.ok(v.docs.some(function (d) { return d.id === 'powerNew'; }));
 });

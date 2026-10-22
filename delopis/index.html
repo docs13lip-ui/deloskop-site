@@ -539,6 +539,13 @@ footer a{color:var(--muted)}
   function init() {
     if (!$('dp-go')) return;
     var d = new Date(); $('dp-date').value = d.toISOString().slice(0, 10);
+    // dosje-sdelki-v1: из «Досье сделки» — ИНН контрагента и доля предоплаты (0 %, пока досье не закрыто). Только подставляем поля:
+    // проверку обеих сторон запускает человек кнопкой «Собрать договор», как и без ссылки.
+    try {
+      var q = new URLSearchParams(location.search), kp = (q.get('kontragent') || '').replace(/\D/g, ''), pp = q.get('predoplata');
+      if (/^\d{10}(\d{2})?$/.test(kp)) $('dp-cp').value = kp;
+      if (pp != null && /^\d{1,3}$/.test(pp)) $('dp-prepay').value = String(Math.min(100, +pp));
+    } catch (e) {}
     $('dp-go').addEventListener('click', go);
     ['dp-num', 'dp-city', 'dp-date', 'dp-subj', 'dp-prepay', 'dp-days'].forEach(function (id) { $(id).addEventListener('input', draw); });
     document.querySelectorAll('input[name=dp-kind]').forEach(function (i) { i.addEventListener('change', draw); });

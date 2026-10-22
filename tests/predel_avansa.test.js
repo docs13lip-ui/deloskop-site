@@ -43,7 +43,8 @@ test('выручки нет → потолок по возрасту; «стоп
 test('не проверено ≠ не найдено: без статуса источника — «Не проверяли» оба вида долгов', () => {
   const v = U.decide(resp({ signals: [sig('Задолженность по налогам', 'ok', 'Нет')] }));
   assert.deepStrictEqual(v.neProvereno.spisok, ['долги у приставов', 'долги по налогам']);
-  assert.match(v.kak.ne, /^Не проверяли: долги у приставов, долги по налогам\. Если они есть — вперёд лучше не платить\./);
+  // predvaritelno-v1: непроверенные долги делают ориентир предварительным — «не проверяли» и запрет платить вперёд до проверки
+  assert.match(v.kak.ne, /^Ориентир предварительный: не проверяли долги у приставов, долги по налогам; .*вперёд не платите, пока не проверите\./);
 });
 
 test('источник прямо сказал not_found → строка его не называет; полнота — с датой', () => {
@@ -51,7 +52,7 @@ test('источник прямо сказал not_found → строка его
     istochniki: [{ kod: 'fns_debt', status: 'not_checked' }] }));
   assert.deepStrictEqual(v.neProvereno.spisok, ['долги по налогам']);
   assert.match(v.kak.ne, / Из внешних реестров ответили 6 из 7 на 28\.09\.2026\.$/);
-  const vse = U.decide(resp({ damia: { fssp: { status: 'found' } }, istochniki: [{ kod: 'nalogi', status: 'not_found' }] }));
+  const vse = U.decide(resp({ damia: { fssp: { status: 'found' } }, istochniki: [{ kod: 'nalogi', status: 'not_found' }], dossier: { kpi: [{ label: 'Выручка', value: 13000000 }] } }));
   assert.strictEqual(vse.kak.ne, '');
 });
 

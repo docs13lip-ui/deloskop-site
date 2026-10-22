@@ -56,7 +56,9 @@ test('карточка «Условий сделки»: под «Работат�
   const src = fs.readFileSync(path.join(KOREN, 'js', 'usloviya.js'), 'utf8');
   assert.ok(src.includes('chestnoPoyasnenie(r, bezPovtora(r && r.verdict, v.headline))'), 'draw() берёт пояснение через chestnoPoyasnenie');
   const v = U.decide(otvet(VSE_NE), {});
-  assert.strictEqual(v.headline, 'Работать можно');
+  // predvaritelno-v1 (аудит 22.10): суды, банкротство, приставы не проверены — «Работать можно» не говорим
+  assert.strictEqual(v.headline, 'Предварительно: серьёзного не нашли');
+  assert.ok(v.predvaritelno && v.predvaritelno.ne.length >= 2, JSON.stringify(v.predvaritelno));
   assert.deepStrictEqual(v.reasons, []);
 });
 

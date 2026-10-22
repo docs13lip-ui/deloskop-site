@@ -456,11 +456,18 @@
 
     // 8–11. Блоки DaMIA по контракту Арт-директора 27.09 (status, itog, znachenie, prichina, istochnik, data_svedeniy)
     var dm = r.damia || {};
+    var NAZV_DAMIA = { sudy: 'Арбитражные суды', bankrotstvo: 'Банкротство', fssp: 'Исполнительные производства', priostanovki: 'Решения о приостановлении', mery: 'Обеспечительные меры', rnp: 'РНП', kontrakty: 'Госконтракты' };
     spisok.forEach(function (x) {
       var def = RAZDELY[x.n - 1]; if (!def.damia) return;
-      var st = [], ist = [];
+      var st = [], ist = [], ne = [];
       def.damia.forEach(function (k) {
-        var b = dm[k]; if (!b || !b.status) return;
+        var b = dm[k];
+        // chastichno-damia-v1 (досье сделки 22.10): источник раздела не ответил или его нет в ответе — раздел не «не найдено».
+        // Было: банкротство по ЕГРЮЛ «нет» закрывало весь раздел 8 зелёным «Не найдено», хотя картотеку судов не проверяли.
+        if (!b || !b.status || b.sostoyanie === 'not_checked' || ['found', 'not_found', 'not_applicable'].indexOf(b.status) < 0) {
+          ne.push({ k: k, nazvanie: b && b.nazvanie || NAZV_DAMIA[k] || k, prichina: b && (b.itog_ne_provereno || b.prichina) || '' });
+          if (!b || !b.status) return;
+        }
         st.push(b.status); if (b.istochnik) ist.push(b.istochnik);
         if (b.status === 'found') fakt(x.id, b.itog || b.metka || 'Сведения найдены', b.znachenie || '', { ton: b.uroven === 'bad' || b.uroven === 'high' ? 'bad' : 'warn', data: b.data_svedeniy || null, istochnik: b.istochnik || null });
         else if (b.status === 'not_found' && b.data_svedeniy && x.status !== 'found') {
@@ -471,6 +478,13 @@
         else if (b.status === 'not_checked' && x.status === 'not_checked' && b.prichina) x.prichina = b.prichina;
       });
       if (ist.length) x.istochnik = ist.filter(function (v, i) { return ist.indexOf(v) === i; }).join('; ');
+      if (ne.length && ne.length < def.damia.length) {
+        var neT = ne.map(function (z) { return z.nazvanie.toLowerCase(); }).join(', ');
+        if (x.status === 'not_found') {
+          x.status = 'not_checked'; x.ton = 'info';
+          x.prichina = 'Не проверяли ' + neT + (ne[0].prichina ? ': ' + ne[0].prichina.replace(/^Не проверяли:\s*/i, '').replace(/\.$/, '') : '') + '. Остальное — в сведениях выше.';
+        } else if (x.status === 'found') x.chastichno = x.chastichno ? x.chastichno + '; не проверяли: ' + neT : 'не проверяли: ' + neT;
+      }
     });
 
     // 13. Индекс — только за воротами полноты (п. 71)
@@ -508,6 +522,8 @@
       itog.predel_avansa_rub = typeof u.cap === 'number' ? u.cap : null;
       // predel-finorg-v1: банк или страховая организация — предел не считаем (ТЗ [команда] 12.10), строка «не считаем» без тона
       if (u.finorg) fakt('predel', 'Предел аванса', 'не считаем — банк или страховая организация', { ton: 'info', istochnik: 'формула Делоскопа' });
+      // predvaritelno-v1 (аудит 22.10): ориентир без выручки или при непроверенных долгах и судах — «после проверки», тон не зелёный
+      else if (u.predvaritelno && typeof u.cap === 'number') fakt('predel', 'Предел аванса', 'предварительно: ' + U.money(u.cap) + ' — после проверки того, чего мы не видели; до неё — по факту поставки', { ton: 'warn', istochnik: 'формула Делоскопа' });
       else fakt('predel', 'Предел аванса', typeof u.cap === 'number' ? U.money(u.cap) : '—', { ton: u.malo ? 'warn' : u.tone === 'go' ? 'ok' : u.tone === 'cap' ? 'warn' : 'bad', istochnik: 'формула Делоскопа' });
       var kk = u.kak && (typeof u.kak === 'string' ? { kak: u.kak } : u.kak);
       if (kk && kk.kak) fakt('predel', 'Как посчитали', kk.kak.replace(/^Как посчитали:\s*/, ''), { ton: 'info', istochnik: 'формула Делоскопа' });

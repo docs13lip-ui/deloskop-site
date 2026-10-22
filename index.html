@@ -706,7 +706,7 @@ footer a{color:var(--ink2)}
   // vizual-v3.0a: модули отчёта (~450 КБ) — одним пакетом и только когда нужны: при проверке, при намерении проверить
   // (фокус в поле, наведение или касание кнопки) и после загрузки страницы, когда браузер свободен (пример «Условий сделки»).
   // Пакет не загрузился — отчёт рисуется как раньше без модулей (каждый вызов — через window.X).
-  var OTCHET_JS='/js/b/otchet.d3ec8d5b17.js', moduliP=null;
+  var OTCHET_JS='/js/b/otchet.6db5f809be.js', moduliP=null;
   function gruzitModuli(){if(moduliP)return moduliP;moduliP=new Promise(function(ok){var s=document.createElement('script');s.src=OTCHET_JS;s.onload=s.onerror=function(){ok()};document.head.appendChild(s);});return moduliP;}
   function kogdaModuli(f){gruzitModuli().then(function(){if(moduliGotovy)f();else document.addEventListener('DOMContentLoaded',function(){f()},{once:true});});}
   ['focus','input','pointerenter','touchstart'].forEach(function(ev){form.addEventListener(ev,function(){gruzitModuli()},{once:true,passive:true,capture:true});});

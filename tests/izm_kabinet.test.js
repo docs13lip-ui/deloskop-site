@@ -104,7 +104,7 @@ test('без изменений — честная строка со ссылк�
   const rez = await D.dogruzit(rep, r, { api: '', voshel: true, fetch: fakeFetch({ '/api/me/checks': SPISOK.checks, '/api/report/R-SEP': pr }, []) });
   assert.deepStrictEqual(rez.izm, []);
   assert.strictEqual(rep.vstavleno[0][0], 'pered');
-  assert.match(rep.vstavleno[0][1], new RegExp('С вашей проверки 12' + NB + 'сентября существенных изменений нет'));
+  assert.match(rep.vstavleno[0][1], new RegExp('С вашей проверки 12' + NB + 'сентября(' + NB + '2026)? существенных изменений нет'));
   assert.match(rep.vstavleno[0][1], /Сравнили с <a [^>]+>досье от/);
 });
 

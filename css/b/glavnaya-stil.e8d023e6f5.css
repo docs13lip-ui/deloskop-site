@@ -238,7 +238,10 @@ dialog.po::backdrop{background:rgba(17,17,19,.4)}
  .report.ot summary{min-height:44px;display:flex;align-items:center;flex-wrap:wrap}
  .report.ot .ot-ix__pch>summary{display:inline-flex}
 }
-@media (max-width:979px){.rezhim-otcheta .hero-text .note.ok{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}}
+/* bez-pryzhka-v1 (21.10.2026): строка «Готово» на телефоне гаснет, а не схлопывается. Схлопывание (1 px, position:absolute)
+   поднимало всё ниже на ~29 px в кадре, где появился отчёт: CLS проверки на 390 px 0,034, по ссылке /?inn= — 0,024.
+   opacity:0 — место строки остаётся (после прокрутки к отчёту оно над краем экрана), роль status по-прежнему озвучивает готовность. */
+@media (max-width:979px){.rezhim-otcheta .hero-text .note.ok{opacity:0}}
 .ot-nom{margin:10px 0 0;font-size:12px;color:var(--muted,#6B6B70)}
 .ot-nom .rkv__nom{font-size:inherit}
 .ot-dr{margin:0;padding:16px 40px 20px;border-top:1px solid var(--line,#E6E6E1)}
@@ -258,6 +261,24 @@ dialog.po::backdrop{background:rgba(17,17,19,.4)}
 @media print{.ot-dr{display:none}}
 .rkv.rkv--nechet>div:last-child{grid-column:1/-1}
 @media print{.report.ot .ot-foot:has(.ot-nom){display:block!important;border:0;padding:4px 0 0}}
+/* zhivoj-v2 (js/zhivoj-otchet.js): ожидание ответа и проявление вывода. Только opacity/transform; «Уменьшить движение» — ничего не движется.
+   (1) строка состояния: по названиям реестров бежит свет — второй слой того же слова цветом текста (::after, opacity), основной слой не тускнеет (контраст как у строки);
+   (2) пример под ней — полоса «перелива» через карточку (::after, transform), с задержкой 250 мс — на быстром ответе не мелькает;
+   (3) вывод и действия полосы — снизу вверх по очереди после кольца; (4) раскрытые блоки отчёта — содержимое проявляется. */
+.zh-ist__i{position:relative;white-space:nowrap;color:var(--ink2)}
+.zh-ist__r{color:var(--muted)}
+@media (max-width:520px){.zh-ist__p{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}}
+.zh-ist__i::after{content:attr(data-t);position:absolute;right:0;top:0;color:var(--ink);opacity:0;animation:zh-ist 1.8s ease-in-out calc(var(--i,0)*180ms) infinite;pointer-events:none}
+@keyframes zh-ist{0%,55%,100%{opacity:0}20%{opacity:1}}
+.report.loading{position:relative;--zh-pereliv:rgba(255,255,255,.55)}
+.report.loading::after{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;background:linear-gradient(100deg,transparent 35%,var(--zh-pereliv) 50%,transparent 65%);transform:translateX(-100%);animation:zh-pereliv 1.5s cubic-bezier(.4,0,.2,1) .25s infinite}
+@keyframes zh-pereliv{to{transform:translateX(100%)}}
+[data-theme=dark] .report.loading::after{--zh-pereliv:rgba(255,255,255,.07)}
+.ot-vd--pojav .ot-vt>*,.ot-vd--pojav .ot-act>*{animation:zh-pojav .44s cubic-bezier(.2,.7,.2,1) backwards;animation-delay:calc(160ms + var(--zh-i,0)*70ms)}
+@keyframes zh-pojav{from{opacity:0;transform:translateY(16px)}}
+.report.ot details[open]>:not(summary){animation:zh-akk .26s cubic-bezier(.2,.7,.2,1) backwards}
+@keyframes zh-akk{from{opacity:0;transform:translateY(-6px)}}
+@media (prefers-reduced-motion:reduce){.zh-ist__i::after,.report.loading::after{animation:none;opacity:0}.ot-vd--pojav .ot-vt>*,.ot-vd--pojav .ot-act>*,.report.ot details[open]>:not(summary){animation:none}}
 /* --- /css/perehod.css --- */
 /* Делоскоп — vizual-v3.1a «Инструмент» (18.10.2026): переход «пример → отчёт» и подсказки у поля ИНН.
    Визуал v3 §7, волна 3.1 (а, б). Без поддержки — правила просто не действуют, всё работает как раньше. */

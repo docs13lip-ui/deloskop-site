@@ -53,7 +53,8 @@ class Podpis(unittest.TestCase):
         x = kart("ООО «О’КЕЙ»", 210e9, 2025, inn="7700000002", gorod="Санкт-Петербург")
         p = R.sos_podpis(k, x)
         self.assertNotIn("чем у", p)
-        self.assertTrue(p.startswith("Санкт-Петербург, 210"), p)
+        self.assertTrue(p.startswith("Санкт-Петербург · оборот 210"), p)  # v8c: с годом
+        self.assertIn("за" + NB + "2025", p)
 
     def test_net_goda_bez_sravneniya(self):
         k = kart("ООО «Лента»", 100e9, None)

@@ -70,7 +70,7 @@ ok('окупаемость на ОСН совпадает с калькулят�
   const o = T.okupaemost(D, { summa: 3000000, rezhim: 'osn', oborot: 0 }, 14300);
   assert.strictEqual(Math.round(o.nalog), 540984);
   assert.strictEqual(Math.round(o.shtraf), 108197);
-  const pen = 0.14 * (30 / 300 + 60 / 150 + 640 / 300);
+  const pen = D.raschet.klyuchevaya_stavka * (30 / 300 + 60 / 150 + 640 / 300);  // stavka-cb-v1: ставка — из tarify.json
   assert.strictEqual(Math.round(o.peni), Math.round(540983.6 * pen));
   assert.ok(o.razVLet >= 50 && o.razVLet < 100);
 });

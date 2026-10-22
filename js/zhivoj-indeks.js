@@ -112,7 +112,10 @@
   vsyo();
   if (W.MutationObserver) {
     var zh = 0;
-    new MutationObserver(function () { if (!zh) zh = setTimeout(function () { zh = 0; vsyo(); }, 50); })
+    // bez-pryzhka-v1: кольцо отчёта — в том же кадре, что и сам отчёт (колбэк наблюдателя идёт до отрисовки и до снимка
+    // View Transition). Раньше кольцо вставало через 50 мс таймера и сдвигал уровень, подпись и вывод на 68 px вниз —
+    // CLS проверки на 390 px 0,04. Остальное (сборка при прокрутке) — по-прежнему пачкой через 50 мс.
+    new MutationObserver(function () { otchety(); if (!zh) zh = setTimeout(function () { zh = 0; vsyo(); }, 50); })
       .observe(d.body, { childList: true, subtree: true });
   }
 })(window, document);

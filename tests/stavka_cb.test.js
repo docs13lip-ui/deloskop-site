@@ -4,6 +4,8 @@
 // klyuchevaya_stavka, klyuchevaya_stavka_istochnik и klyuchevaya_stavka_sleduyushchee_reshenie в tarify/tarify.json,
 // затем python3 tests/sobrat_tarify.py . && python3 tests/sobrat_shapku.py
 // Срочная выкладка в день решения: «Проверка и выкладка» → Run workflow → bez_testov.
+// stavka-cb-v1: всё это одной командой — python3 tests/novaya_stavka.py --stavka 13 --s 2026-10-27 --reshenie 2026-10-23 --sled 2026-12-18
+// (ставку сохранили — без --s; --proba — только показать). Меняет tarify.json, sroki.json, калькулятор /nalogi/…, пересобирает /tarify/.
 // Запуск: node --test tests/stavka_cb.test.js
 const test = require('node:test');
 const assert = require('node:assert');
@@ -31,7 +33,8 @@ test('ставка ЦБ: сверена после последнего реше
   const sled = R.klyuchevaya_stavka_sleduyushchee_reshenie;
   assert.ok(!ustarela(sled, segodnyaMsk()),
     `Банк России принял решение по ставке ${sled}. Сверьте ставку на https://www.cbr.ru/hd_base/KeyRate/ ` +
-    'и обновите в tarify/tarify.json ставку, источник и дату следующего решения (https://cbr.ru/dkp/cal_mp/).');
+    'и обновите в tarify/tarify.json ставку, источник и дату следующего решения (https://cbr.ru/dkp/cal_mp/) — ' +
+    'одной командой: python3 tests/novaya_stavka.py --stavka N --s ГГГГ-ММ-ДД --reshenie ' + sled + ' --sled ГГГГ-ММ-ДД');
 });
 
 test('ставка ЦБ: одна и та же цифра в данных и на странице тарифов', () => {

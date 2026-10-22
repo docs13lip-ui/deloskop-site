@@ -14,7 +14,12 @@
 <meta property="og:title" content="Делоскоп — перед оплатой проверить. Если банк спросил — ответить.">
 <meta property="og:description" content="Проверьте поставщика по ИНН перед оплатой: что видят банк и налоговая, с источником и датой. Банк спросил по 115-ФЗ — план ответа по дням.">
 <meta property="og:url" content="https://deloskop.ru/">
-<meta property="og:image" content="https://deloskop.ru/ikonka-512.png">
+<meta property="og:image" content="https://deloskop.ru/oblozhka.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Делоскоп: перед оплатой — проверить, если банк спросил — ответить">
+<meta property="og:site_name" content="Делоскоп">
+<meta property="og:locale" content="ru_RU">
 <meta name="theme-color" content="#F5F5F2">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -282,10 +287,10 @@ footer a{color:var(--ink2)}
 .yakor{position:absolute}
 </style>
 <!-- vizual-v3.0a: стили и скрипты главной — пятью файлами вместо 17 (partials/sborka.json, tests/sobrat_js.py) -->
-<link rel="stylesheet" href="/css/b/ds.bc677a80d7.css">
-<link rel="stylesheet" href="/css/b/glavnaya-stil.11f20b8baa.css">
-<script src="/js/b/yadro.b822d904f0.js" defer></script>
-<script src="/js/b/glavnaya.b9e34ee213.js" defer></script>
+<link rel="stylesheet" href="/css/b/ds.fd7504a069.css">
+<link rel="stylesheet" href="/css/b/glavnaya-stil.e8d023e6f5.css">
+<script src="/js/b/yadro.15df1b52ab.js" defer></script>
+<script src="/js/b/glavnaya.e01b0307e2.js" defer></script>
 <link rel="icon" type="image/png" sizes="120x120" href="/favicon-120.png">
 <link rel="alternate" type="application/rss+xml" title="Разборы дел — Делоскоп" href="/praktika/rss.xml">
 <link rel="manifest" href="/manifest.webmanifest">
@@ -381,7 +386,7 @@ footer a{color:var(--ink2)}
           <input id="inn" name="inn" type="text" inputmode="search" autocomplete="off" placeholder="ИНН или название компании">
           <button type="submit">Проверить</button>
         </form>
-        <p class="note" id="note" role="status" aria-live="polite">10 проверок в&nbsp;день&nbsp;— бесплатно, без&nbsp;регистрации.</p>
+        <p class="note" id="note" role="status" aria-live="polite">10 проверок в&nbsp;день&nbsp;— бесплатно, без&nbsp;регистрации.</p><script>/* zagruzka-v1: открыто адресом отчёта (/?inn=…) — проверка начнётся сразу, поэтому строка под полем с первого кадра «Проверяем по реестрам…». Иначе на телефоне в первый кадр попадала двухстрочная «10 проверок в день…», а через 100–200 мс — однострочная, и всё ниже прыгало на 22 px (CLS). Прежний текст — в data-def: его возвращает «Назад». */(function(n){if(n&&document.documentElement.classList.contains('rezhim-otcheta')){n.setAttribute('data-def',n.textContent);n.textContent='Проверяем по реестрам…'}})(document.getElementById('note'))</script>
         <p class="doverie-str">У&nbsp;каждого факта&nbsp;— источник и&nbsp;дата. Чего не&nbsp;проверили, так и&nbsp;пишем. <a href="#doverie">Откуда данные&nbsp;→</a></p>
         <p class="note kanaly-glav" data-kanaly-blok hidden><a data-kanal="max" hidden>Написать в&nbsp;MAX</a> <a data-kanal="vk" hidden>Написать во&nbsp;ВКонтакте</a> · <a href="/boty/">что умеет бот</a></p>
       </div>
@@ -475,7 +480,7 @@ footer a{color:var(--ink2)}
         <h2 class="h2" id="praktika-h">Как решают суды: разборы дел</h2>
         <p class="lead">Настоящие дела с&nbsp;номером и&nbsp;датой: о&nbsp;чём спорили, чем кончилось и&nbsp;что из&nbsp;этого следует для&nbsp;вас.</p>
       </div>
-      <!--praktika-glavnaya--><div class="pr-gl"><a href="/praktika/nalogi/podryadchik-ne-vystavil-schet-fakturu/"><small>Налоги</small><b>Подрядчик не выставил счёт-фактуру. Верховный суд: заставить можно через суд</b><span>Верховный суд РФ · определение СКЭС № 305-ЭС25-14104 · 3 апреля 2026</span></a><a href="/praktika/nalogi/povtornaya-vyezdnaya-proverka-vs-2026/"><small>Налоги</small><b>Налоговая уже проверила год, вы заплатили. Могут проверить его снова?</b><span>Верховный суд РФ · определение СКЭС № 309-ЭС25-9697 · 18 марта 2026</span></a><a href="/praktika/115-fz/zsk-dolzhnika-sudebnyj-prikaz/"><small>115&#8209;ФЗ</small><b>Должник в «красной зоне» ЗСК. Банк вправе не исполнять судебный приказ?</b><span>Верховный суд РФ, Судебная коллегия по экономическим спорам · определение № 305-ЭС25-1505 · 24 июля 2025</span></a></div><!--/praktika-glavnaya-->
+      <!--praktika-glavnaya--><div class="pr-gl"><a href="/praktika/nalogi/nds-postavshchika-usn-cena-dogovora/"><small>Налоги</small><b>Поставщик на упрощёнке стал платить НДС. Кто доплатит — он или вы?</b><span>Конституционный суд РФ · постановление № 41-П · 25 ноября 2025</span></a><a href="/praktika/nalogi/podryadchik-ne-vystavil-schet-fakturu/"><small>Налоги</small><b>Подрядчик не выставил счёт-фактуру. Верховный суд: заставить можно через суд</b><span>Верховный суд РФ · определение СКЭС № 305-ЭС25-14104 · 3 апреля 2026</span></a><a href="/praktika/115-fz/zsk-dolzhnika-sudebnyj-prikaz/"><small>115&#8209;ФЗ</small><b>Должник в «красной зоне» ЗСК. Банк вправе не исполнять судебный приказ?</b><span>Верховный суд РФ, Судебная коллегия по экономическим спорам · определение № 305-ЭС25-1505 · 24 июля 2025</span></a></div><!--/praktika-glavnaya-->
       <p class="vse"><a href="/praktika/" data-praktika-gl>Все разборы&nbsp;→</a></p>
     </div>
   </section>
@@ -583,7 +588,7 @@ footer a{color:var(--ink2)}
 <script>
 (function(){
   var form=document.getElementById('check'), input=document.getElementById('inn'), note=document.getElementById('note');
-  var def=note.textContent;
+  var def=note.getAttribute('data-def')||note.textContent;
   function focusInn(e){e.preventDefault();window.scrollTo({top:0,behavior:'smooth'});setTimeout(function(){input.focus({preventScroll:true})},350);}
   document.querySelectorAll('[data-focus-inn]').forEach(function(a){a.addEventListener('click',focusInn)});
   input.addEventListener('input',function(){note.className='note';note.textContent=def;});
@@ -607,7 +612,10 @@ footer a{color:var(--ink2)}
   });
   function primerUslovij(){
     var ex=document.querySelector('[data-usl-demo]');
-    if(!ex||!window.Usloviya||ex.hasAttribute('data-usl-gotov'))return;ex.setAttribute('data-usl-gotov','');
+    if(!ex||!window.Usloviya||ex.hasAttribute('data-usl-gotov'))return;
+    // zagruzka-v1: в режиме отчёта (/?inn=…) пример заменит отчёт — не дорисовываем его: «Условия сделки» вырастали в примере на 125 px
+    // через ~300 мс после load, пока ждём ответ (CLS). Пример вернулся («Назад», ошибка) — дорисуем тогда (bezOtcheta).
+    if(document.documentElement.classList.contains('rezhim-otcheta'))return;ex.setAttribute('data-usl-gotov','');
     ex.className='';
     try{Usloviya.mount(ex,{risk_level:'low',company:{inn:'0000000000',name_short:'ООО «Пример»',status:'ACTIVE',reg_date:'2019-04-01'},
       signals:[{title:'Руководитель сменился недавно',status:'warn',detail:'Внимание'}]},{compact:true});}catch(e){ex.className='verdict';}
@@ -714,12 +722,12 @@ footer a{color:var(--ink2)}
   function adres(inn,o){if(o&&(o.svoj||o.izIstorii)||!/^\d{10}(\d{2})?$/.test(String(inn))||!history.pushState)return;
     var u=OTCHET_PUT?'/otchet/'+inn+'/':'/?inn='+inn;
     try{if(innIzAdresa()===String(inn))history.replaceState({dlkInn:String(inn)},'',u);else history.pushState({dlkInn:String(inn)},'',u);}catch(e){}}
-  function bezOtcheta(){document.documentElement.classList.remove('rezhim-otcheta')}
+  function bezOtcheta(){document.documentElement.classList.remove('rezhim-otcheta');if(document.readyState==='complete')kogdaModuli(primerUslovij);}
   function vernutPrimer(){bezOtcheta();if(!exUzly||report.classList.contains('ex'))return;
     if(window.DlkLipkaya)try{DlkLipkaya.snyat()}catch(e){}
     perehod(function(){report.textContent='';exUzly.forEach(function(n){report.appendChild(n)});report.className=exAtr.c;
       if(exAtr.a)report.setAttribute('aria-label',exAtr.a);document.body.classList.remove('rezhim-otcheta');}).then(function(){
-      note.className='note';note.textContent=def;if(window.Portfel)try{Portfel.obnovit()}catch(e){}});}
+      note.className='note';note.textContent=def;if(window.Portfel)try{Portfel.obnovit()}catch(e){}kogdaModuli(primerUslovij);});}
   window.addEventListener('popstate',function(){var inn=innIzAdresa();
     if(inn){input.value=inn;runCheck(inn,{izIstorii:true});}else vernutPrimer();});
   function runCheck(v,o){
@@ -728,7 +736,7 @@ footer a{color:var(--ink2)}
     // vizual-v3.1b: компактная шапка отчёта — сразу по нажатию «Проверить», а не когда придёт ответ: сдвиг вёрстки — в ответ на действие человека (не CLS),
     // а ответ API только меняет пример на отчёт на том же месте. Ошибка — шапка возвращается (bezOtcheta).
     document.documentElement.classList.add('rezhim-otcheta');
-    note.className='note';note.textContent='Проверяем по реестрам…';report.classList.add('loading');report.setAttribute('aria-busy','true');if(window.dlkGoal)dlkGoal('check_started');
+    note.className='note';note.textContent='Проверяем по реестрам…';if(window.DlkZhivoj)try{DlkZhivoj.zhdu(note,v)}catch(e){}report.classList.add('loading');report.setAttribute('aria-busy','true');if(window.dlkGoal)dlkGoal('check_started');
     fetch(CAPI+'/api/check?q='+encodeURIComponent(v),{credentials:'include'})
       .then(function(res){return res.json().then(function(j){return {ok:res.ok,s:res.status,j:j}},function(){return {ok:false,s:res.status,j:{}}})})
       .then(function(x){kogdaModuli(function(){report.classList.remove('loading');
@@ -740,7 +748,7 @@ footer a{color:var(--ink2)}
         // kavychki-v1: ПАО "РОССЕТИ ЮГ" → ПАО «РОССЕТИ ЮГ» — до всех модулей отчёта (js/imya.js; буквы — как в ЕГРЮЛ)
         if(window.DlkImya)DlkImya.ispravitOtvet(x.j);
         // vizual-v3.1a: пример перетекает в отчёт (js/perehod.js — View Transitions; нет поддержки или «уменьшить движение» — сразу)
-        perehod(function(){render(x.j,o)}).then(function(){report.removeAttribute('aria-busy');note.className='note ok';note.textContent='Готово. Отчёт — рядом.';
+        perehod(function(){render(x.j,o);if(window.DlkZhivoj)try{DlkZhivoj.pojav(report)}catch(e){}}).then(function(){report.removeAttribute('aria-busy');note.className='note ok';note.textContent='Готово. Отчёт — рядом.';
         adres((x.j.company&&x.j.company.inn)||v,o);
         if(window.Otchet&&report.classList.contains('ot'))Otchet.prokrutit(report);else if(window.innerWidth<980)report.scrollIntoView({behavior:'smooth',block:'start'});});});})
       .catch(function(){bezOtcheta();report.classList.remove('loading');report.removeAttribute('aria-busy');note.className='note err';

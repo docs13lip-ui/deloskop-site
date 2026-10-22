@@ -276,7 +276,7 @@ dialog.dlo::backdrop{background:rgba(17,17,19,.55)}
 [data-theme=dark] .report.ex{background:rgba(28,28,31,0.78);box-shadow:var(--shadow),inset 0 0 0 1px rgba(255,255,255,0.06)}
 @media (hover:hover){[data-theme=dark] .report.ex:hover{box-shadow:var(--shadow-hover),inset 0 0 0 1px rgba(255,255,255,0.06)}
 }
-[data-theme=dark] .report.ex.loading,[data-theme=dark] .rezhim-otcheta .report.ex{background:#1C1C1F}
+[data-theme=dark] .report.ex.loading,[data-theme=dark] .rezhim-otcheta .report.ex,[data-theme=dark].rezhim-otcheta .report.ex{background:#1C1C1F}
 }
 [data-theme=dark] .zhi__strelka::after{box-shadow:0 0 0 3px rgba(255,255,255,0.1)}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){[data-theme=dark] .report.ex{background:#1C1C1F}
@@ -286,7 +286,7 @@ dialog.dlo::backdrop{background:rgba(17,17,19,.55)}
 [data-theme=dark] .ex-flip__in[data-vid=nalog] .ex-zad{background:#2E220C}
 [data-theme=dark] .ex-zad .ex-r{border-color:rgba(255,255,255,0.132)}
 [data-theme=dark] .ot-main .ex-zad .ex-r,[data-theme=dark] .ot-main .ex-zad .sut__r{border-color:rgba(255,255,255,0.132)}
-@media (min-width:901px){[data-theme=dark] .rezhim-otcheta .hero-text{background:rgba(17,17,19,0.92)}
+@media (min-width:901px){[data-theme=dark] .rezhim-otcheta .hero-text,[data-theme=dark].rezhim-otcheta .hero-text{background:rgba(17,17,19,0.92)}
 }
 [data-theme=dark] .ot-ix{border-right:1px solid rgba(255,255,255,0.132)}
 [data-theme=dark] .ot-ix__rs li{border-bottom:1px solid rgba(255,255,255,0.104)}
@@ -319,6 +319,7 @@ dialog.dlo::backdrop{background:rgba(17,17,19,.55)}
 [data-theme=dark] .pf__da{background:#3A1513!important;color:#FF7B72!important}
 @media (max-width:520px){[data-theme=dark] .pf__d--star{color:#E8A23A}
 }
+[data-theme=dark] .report.loading{--zh-pereliv:rgba(28,28,31,0.55)}
 [data-theme=dark] .co .kom{background:#19191C}
 [data-theme=dark] body{background:#111113}
 [data-theme=dark] .pr .primer{border:1px dashed #48484E}

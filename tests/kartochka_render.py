@@ -1821,7 +1821,12 @@ def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None):
 <meta property="og:title" content="{title}">
 <meta property="og:description" content="{desc}">
 <meta property="og:url" content="{url}">
-<meta property="og:image" content="https://deloskop.ru/ikonka-512.png">
+<meta property="og:image" content="https://deloskop.ru/oblozhka.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Делоскоп: перед оплатой — проверить, если банк спросил — ответить">
+<meta property="og:site_name" content="Делоскоп">
+<meta property="og:locale" content="ru_RU">
 <meta name="theme-color" content="#F5F5F2">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -3288,6 +3293,41 @@ def un_istoriya(im, reestr, ruk, a0, p1, ryad=None):
     return "%s: %s выручки в%s%d году и%s%s — в%s%d." % (nach, dengi(r0), NB, g0, NB, dengi(r1), NB, g1)
 
 
+
+# kartochki-unik-v8d ([Ночные-2] 21.10): возраст компании стоял на карточке четыре раза — строка под H1 «с 2006 года
+# (20 лет)», «Работает 20 лет — с 2006 года» в «Коротко», «Зарегистрирована … — 20 лет назад» в «Даты из реестра» и
+# ещё раз «в реестре с 2006 года (20 лет)» первым предложением «Что это значит для вас» (165 из 167). В «Что это
+# значит» возраст теперь только у молодых компаний (до 3 лет — он и есть вывод: «история короткая»); у остальных
+# абзац начинается с того, что из возраста не видно: выручка за годы открытой отчётности и руководитель. Числа — те же.
+def un_istoriya_v8d(im, ruk_god, a0, p1, ryad=None):
+    g0, r0, g1, r1 = a0["god"], a0["dohod"], p1["god"], p1["dohod"]
+    ruk = ("; руководитель тот же с%s%s года" % (NB, ruk_god)) if ruk_god else ""
+    if r1 / r0 >= 1.3:
+        vid, gs, ds = _un_put(ryad or [])
+        if vid == "kazhdyj":
+            return "Выручка %s росла каждый год из%s%d%s%s открытой отчётности — от%s%s в%s%d до%s%s в%s%d%s." % (
+                im, NB, len(ryad), NB, "года" if len(ryad) % 10 == 1 and len(ryad) % 100 != 11 else "лет", NB,
+                dengi(r0), NB, g0, NB, dengi(r1), NB, g1, ruk)
+        if vid == "spad":
+            return "За%s%d–%d%sгоды выручка %s выросла в%s%s, до%s%s; %s%d%sгод — спад на%s%s%s." % (
+                NB, g0, g1, NB, im, NB, _raz(r0, r1), NB, dengi(r1),
+                "последний, " if gs == g1 else "", gs, NB, NB, _zn_proc(ds), ruk)
+        return "С%s%d по%s%d год выручка %s выросла в%s%s — с%s%s до%s%s%s." % (
+            NB, g0, NB, g1, im, NB, _raz(r0, r1), NB, dengi(r0), NB, dengi(r1), ruk)
+    if r1 / r0 <= 0.8:
+        return "Выручка %s за%s%d год — %s, на%s%s меньше, чем в%s%d (%s)%s." % (
+            im, NB, g1, dengi(r1), NB, _zn_proc(1 - r1 / r0), NB, g0, dengi(r0), ruk)
+    return "Выручка %s — %s в%s%d году и%s%s в%s%d%s." % (im, dengi(r0), NB, g0, NB, dengi(r1), NB, g1, ruk)
+
+
+def un_korotkaya_v8d(im, ruk_god, n_let, fns):
+    chast = ("открытой отчётности на странице — %s" % _zn_let(n_let)) if not fns \
+        else "на странице — только доход за год по данным ФНС"
+    if ruk_god:
+        return "Руководитель %s не менялся с%s%s года; %s." % (im, NB, ruk_god, chast)
+    return "У %s %s." % (im, chast) if not fns else "По %s %s." % (im, chast)
+
+
 def _un_let(n):
     return _zn_let(n)
 
@@ -3354,13 +3394,10 @@ def un_frazy(f):
             out.append("%s %s: история короткая, поэтому оплату вперёд лучше ограничить и платить частями по факту "
                        "поставки." % (im, reestr))
         elif glub:
-            out.append(un_istoriya(im, reestr, (", руководитель тот же с %s года" % ruk_s.group(1)) if ruk_s else "",
-                                   a0, p1, [x for x in ryad if not x.get("fns")]))
+            out.append(un_istoriya_v8d(im, ruk_s.group(1) if ruk_s else None,
+                                       a0, p1, [x for x in ryad if not x.get("fns")]))
         else:
-            out.append("%s %s%s; %s." % (
-                im, reestr, (", руководитель не менялся с %s года" % ruk_s.group(1)) if ruk_s else "",
-                ("открытой отчётности на странице — %s" % _zn_let(len(ryad))) if not p1.get("fns")
-                else "на странице — только доход за год по данным ФНС"))
+            out.append(un_korotkaya_v8d(im, ruk_s.group(1) if ruk_s else None, len(ryad), p1.get("fns")))
 
     # 2. Деньги: что это меняет в условиях оплаты
     kap = re.search(r"минус ([^:]+):", _zn_v(f, "warn", "Собственный капитал") or "")
@@ -3653,14 +3690,22 @@ def sos_otnoshenie(moj, chuzhoj):
 
 
 def sos_podpis(k, x):
-    """Подпись соседа в «Похожих»: сравнение с этой компанией, если оборот обеих — за один год; иначе — город и сумма."""
+    """Подпись соседа в «Похожих»: сравнение с этой компанией, если оборот обеих — за один год; иначе — город, оборот и год."""
     mesto = x.get("gorod") or x.get("region") or ""
     d_k, d_x, g_k, g_x = _dohod_kart(k), _dohod_kart(x), _god_dohoda(k), _god_dohoda(x)
     rel = sos_otnoshenie(d_k, d_x) if (g_k and g_k == g_x) else ""
     if not rel:
-        return e(", ".join(filter(None, [mesto, dengi(d_x) if d_x else ""]))).replace("&nbsp;", NB)
+        # kartochki-unik-v8c: годы разные — оборот с годом («Москва · оборот 289 млрд ₽ за 2024»): без года сумма
+        # читалась как сравнимая с оборотом этой компании
+        if not d_x:
+            return e(mesto)
+        ob = "оборот " + e(dengi(d_x)).replace("&nbsp;", NB) + ((" за%s%d" % (NB, g_x)) if g_x else "")
+        return (e(mesto) + " · " + ob) if mesto else ob
     imya_k = e(un_kratkoe(k.get("name") or ""))
-    nachalo = ("%s, сколько у %s" if rel == "почти столько же" else "%s, чем у %s") % (rel, imya_k)
+    # kartochki-unik-v8c: у сравнения есть подлежащее — «оборот в 2 раза больше, чем у…» (было «в 2 раза больше, чем у…»:
+    # больше чего — не сказано)
+    nachalo = ("оборот почти такой же, как у %s" % imya_k) if rel == "почти столько же" \
+        else "оборот %s, чем у %s" % (rel, imya_k)
     return "%s: %s за%s%d%s" % (nachalo, e(dengi(d_x)).replace("&nbsp;", NB), NB, g_x,
                                 (" · " + e(mesto)) if mesto else "")
 
@@ -3813,3 +3858,62 @@ def un_pered(f):  # noqa: F811
     im = html.escape(un_kratkoe(f["imya"]), quote=False)
     return [fakt, 'Счёт от %s: сверьте ИНН%s%s, название и банк. <a href="/proverit-schet/">Проверить счёт</a>'
             % (im, NB, inn)]
+
+
+# kartochki-unik-v8 ([Ночные-2] 20.10): «Перед оплатой» у карточек без замечаний — два совета чередовались по чётности
+# ИНН («Налогового долга … не было» — 47, «… в реестре с N года. При первой сделке сверьте реквизиты…» — 40 карточек).
+# Теперь пул шире — каждый совет опирается на факт этой же страницы: прибыль заметно упала (из «Коротко»), адрес без
+# отметки о недостоверности (город из реестра), документ приёмки по разделу ОКВЭД. Выбор — по ИНН, ровно по пулу.
+# Слова — без оценок (STOP_SLOVA). ✎ [Право] — формулировки (словарь UN_PERED_RAZDEL, одна строка на раздел).
+UN_PERED_RAZDEL = {
+    "Торговля": "Товар от %s принимайте по УПД и сверяйте количество при приёмке: расхождение оформите актом в тот же "
+                "день, а оплату — по подписанному УПД.",
+    "Обрабатывающие производства": "Для продукции %s пропишите в договоре, как принимают партию по качеству и кто "
+                                   "оплачивает возврат брака, — до того как платить за неё.",
+    "Транспорт и хранение": "Перевозку или хранение у %s подтверждайте транспортной накладной или актом с маршрутом и "
+                            "датами — без них расход сложно подтвердить.",
+    "Информация и связь": "Услуги %s принимайте по акту с перечнем сделанного за период — для услуг без вещественного "
+                          "результата акт и отчёт и есть подтверждение расхода.",
+    "Строительство": "Работы %s принимайте по актам КС-2 и справке КС-3, а оплату этапа привяжите к подписанному акту.",
+    "Энергетика": "В договоре с %s сверьте точки поставки и порядок снятия показаний — от них зависит сумма каждого "
+                  "счёта.",
+}
+_UN_PRIB_MINUS = re.compile(r"^Чистая прибыль за (\d{4}) — (.+?₽), на (\d+(?:,\d+)?) % меньше, чем годом раньше")
+_un_pered_fakt_do_v8 = _un_pered_fakt
+
+
+def un_pered_varianty(f):
+    """Все советы «Перед оплатой» по фактам страницы без замечаний (HTML-строки, порядок постоянный)."""
+    im = html.escape(un_kratkoe(f["imya"]), quote=False)
+    ryad = [x for x in f["ryad"] if x.get("dohod") and x["dohod"] > 0]
+    p1 = ryad[-1] if ryad else {}
+    p0 = ryad[-2] if len(ryad) >= 2 and ryad[-2].get("god") == (p1.get("god") or 0) - 1 else None
+    if p0 and p1.get("dohod") and (p1["dohod"] / p0["dohod"] - 1 <= -0.05 or p1["dohod"] / p0["dohod"] - 1 >= 0.3):
+        return [_un_pered_fakt_do_v8(f)]  # заметное движение выручки — по-прежнему первым и единственным
+    var = []
+    inn = f.get("inn", "") or ""
+    for chet in ("0", "1"):  # оба прежних совета (налоги / руководитель или возраст в реестре)
+        s = _un_pered_fakt_do_v8(dict(f, inn=inn[:-1] + chet if inn else chet))
+        if s and s not in var:
+            var.append(s)
+    for ton, x in f["V"]:
+        m = _UN_PRIB_MINUS.match(x.replace(NB, " "))
+        if m and float(m.group(3).replace(",", ".")) >= 20:
+            var.append(_zn_nb("Чистая прибыль %s за %s год — %s, на %s %% меньше, чем годом раньше: крупный аванс "
+                              "разбейте на этапы и платите за каждый после приёмки." % (im, m.group(1), m.group(2),
+                                                                                       m.group(3))))
+            break
+    if _zn_v(f, "ok", "Адрес и руководитель в реестре") and f.get("gorod"):
+        var.append("Адрес %s в ЕГРЮЛ (%s) — без отметки о недостоверности: этот же адрес укажите в договоре — на этот "
+                   "адрес удобно направлять претензии и документы." % (im, html.escape(f["gorod"], quote=False)))
+    if f.get("razdel") in UN_PERED_RAZDEL:
+        var.append(UN_PERED_RAZDEL[f["razdel"]] % im)
+    return [v for v in var if v]
+
+
+def _un_pered_fakt(f):  # noqa: F811
+    var = un_pered_varianty(f)
+    if not var:
+        return None
+    inn = f.get("inn", "") or ""
+    return var[int(inn[-3:]) % len(var)] if inn[-3:].isdigit() else var[0]

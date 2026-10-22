@@ -158,12 +158,14 @@ test('разметка: дата досье и сведений, источни�
   const h = S.html({ nazvanie: '<b>ООО</b>', inn: INN, summa: 1500000, svedeniyaNa: '22.10.2026 в 20:09 МСК', sobrano: '22.10.2026 в 20:33 МСК', it: x.it, ned: x.o.nedostaet, pr: [],
     rekv: rk, rekvTekst: '<img src=x onerror=alert(1)>', galki: {}, docs: x.v.docs, fakty: [{ n: 1, title: 'Реквизиты и статус', tekst: 'сведения на 22.10.2026 · ЕГРЮЛ', mark: 'm-ist' }], delopis: S.delopisSsylka(INN, x.it) });
   assert.ok(!/<img/.test(h) && !/<b>ООО/.test(h), 'текст счёта и названия — только экранированным');
-  assert.match(h, /Сведения о компании — на 22\.10\.2026 в 20:09 МСК\. Досье собрано 22\.10\.2026 в 20:33 МСК\./);
+  assert.match(h, /Сведения на 22\.10\.2026 в 20:09 МСК/);
+  assert.match(h, /собрано 22\.10\.2026 в 20:33 МСК/);
   assert.match(h, /сведения на 22\.10\.2026 · ЕГРЮЛ/);
   assert.match(h, /из ЕГРЮЛ — наш расчёт/);
   assert.ok(h.includes(S.OGOVORKA_OTM));
   assert.match(h, /\/delopis\/\?kontragent=7707049388&amp;predoplata=0/);
-  for (let i = 1; i <= 6; i++) assert.ok(h.includes('<span class="sd-n" aria-hidden="true">') && h.includes('>' + i + '. '), 'шаг ' + i);
+  ['Контрагент и сумма', 'Факты, источники и даты', 'Реквизиты для оплаты', 'Чего не хватает', 'Договор и документы', 'Сохранение и повторная проверка'].forEach((t) => assert.ok(h.includes('<h4>' + t), t));
+  assert.match(h, /aria-label="Готово \d из 6 шагов досье"/, 'кольцо готовности подписано для экранного диктора');
 });
 
 test('один сценарий: отчёт, PDF-досье и «Проверь счёт» ведут в досье по номеру проверки, сумма — с собой; Делопись подхватывает ИНН и долю', () => {
@@ -188,10 +190,64 @@ test('один сценарий: отчёт, PDF-досье и «Проверь 
   assert.match(pk, /id="rs-w"/, '«Платить» при незакрытом досье — предупреждение');
 });
 
-test('телефон: поля 17 px (без зума iOS), кнопки 44 px, длинные номера переносятся; печать — без полей ввода', () => {
+test('телефон и печать: поля 17 px, кнопки 44 px, плитки в две колонки, обложка печатается светлой, без холста', () => {
   const pk = chitat('pasport/kontragent/index.html');
   assert.match(pk, /\.sd-f input\[type=text\],\.sd-f textarea\{[^}]*font-size:17px/);
-  assert.match(pk, /@media \(max-width:640px\)\{\.sd\{[^}]*\}[^@]*\.sd-btns \.btn,\.sd-f \.btn\{min-height:44px/);
-  assert.match(pk, /\.sd-p\{[^}]*overflow-wrap:anywhere/);
-  assert.match(pk, /@media print\{\.sd\{[^}]*\}\.sd-g input\{display:none\}/);
+  const mob = pk.slice(pk.indexOf('@media (max-width:640px){\n  .sd-cover'));
+  assert.match(mob, /\.sd-btns \.btn,\.sd-f \.btn\{min-height:44px/);
+  assert.match(mob, /\.sd-tiles\{grid-template-columns:1fr 1fr/);
+  const pe = pk.slice(pk.indexOf('@media print{\n  .sd{break-before:page}'));
+  assert.match(pe, /\.sd-cover\{margin:0;padding:14px 0 12px;background:none/);
+  assert.match(pe, /\.sd-cover__fon,\.sd-orbit\{display:none!important\}/);
+  assert.match(pe, /\.sd-g input\{display:none\}/);
+  assert.match(pk, /prefers-reduced-motion:no-preference/, 'движение — только если человек не просил его убрать');
+});
+
+test('обложка одинакова в светлой и тёмной теме: цвета обложки — hsl, тёмный слой их не перекрашивает', () => {
+  const pk = chitat('pasport/kontragent/index.html');
+  assert.ok(!/\[data-theme=dark\] \.sd-(cover|ring|puls|chips)/.test(pk), 'тёмный слой не трогает обложку');
+});
+
+test('реальность контрагента: налоги, долги, штат, достоверность — первыми; у каждого признака источник и дата или «не проверяли»', () => {
+  const I = require('../js/istochniki.js'); global.Sushchestvennoe = require('../js/sushchestvennoe.js');
+  const r = otvet({ signals: otvet().signals.concat([{ id: 'employees', title: 'Сотрудники', status: 'ok', detail: '17 чел.', source: 'ФНС, открытые данные', as_of: '2025-12-31' }]),
+    dossier: { sections: [{ id: 'finance', rows: [['Уплачено налогов и взносов', '4,1 млн ₽'], ['Данные на', '31.12.2025']] }] } });
+  I.dopolnit(r);
+  const R = S.realnost(r);
+  assert.deepStrictEqual(R.plitki.slice(0, 4).map((t) => t.k), ['nalogi', 'dolgi', 'shtat', 'dostovernost']);
+  R.plitki.forEach((t) => { if (t.ton !== 'off') assert.ok(t.ist && t.data, t.k + ': источник и дата'); else assert.match(t.znach, /^Не проверяли/, t.k); });
+  const nal = R.plitki.find((t) => t.k === 'nalogi');
+  assert.match(nal.znach, /^Нет в списке ФНС на/);
+  assert.match(nal.pod, /Уплачено налогов и взносов за год: 4,1 млн ₽/);
+  const dl = R.plitki.find((t) => t.k === 'dolgi');
+  assert.strictEqual(dl.ton, 'off', 'приставы и суды не ответили — «не проверяли», не «норма»');
+  assert.strictEqual(R.plitki.find((t) => t.k === 'shtat').znach, '17 чел.');
+  const h = S.html({ realnost: R, it: { kod: 'predv', zagolovok: 'Досье не закрыто', tekst: '' } });
+  assert.match(h, /Реальность контрагента/);
+  assert.ok(h.indexOf('sd-puls') < h.indexOf('sd-real'), 'главные признаки — на обложке, до всего остального');
+});
+
+test('связи и группа компаний: управляющая компания, учредитель-юрлицо, доля > 25 % — факты ЕГРЮЛ, без квалификаций', () => {
+  const r = otvet({ dossier: { sections: [{ id: 'management', rows: [['Руководитель', 'ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ УПРАВЛЯЮЩАЯ КОМПАНИЯ "ЛУЧ"'], ['Руководит с', '28.07.2025'],
+    ['Учредитель', 'ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ "ЛУЧ-ГРУПП" — 40 %'], ['Учредитель', 'Иванова Анна Петровна — 60 %'], ['Уставный капитал', '10 000 ₽']] },
+    { id: 'profile', rows: [['Юридический адрес', '630055, г Новосибирск, ул Гнесиных, д 10/1, помещ 405']] }] } });
+  const V = S.svyazi(r);
+  const uk = V.uzly.find((u) => u.k === 'rukovoditel');
+  assert.ok(uk.yur && uk.imya === 'ООО УК «ЛУЧ»', JSON.stringify(uk));
+  assert.ok(V.uzly.some((u) => u.k === 'uchreditel' && u.yur && u.dolya === 40));
+  const t = V.flagi.map((f) => f.t).join(' | ');
+  assert.match(t, /управляющая компания/);
+  assert.match(t, /учредител\S* с долей больше 25/);
+  assert.match(t, /Среди учредителей — юрлицо/);
+  assert.ok(!/аффилир|подконтрол|номинальн/i.test(JSON.stringify(V)), 'без квалификаций');
+  assert.match(V.ne, /неполную картину за полную не выдаём/);
+  // найденные по названию юрлица по одному адресу — флаг группы; адрес контрагента совпал — флаг «тот же адрес»
+  assert.ok(S.obshchijAdres('г Новосибирск, ул Николаева, д 12/3, помещ 103', '630090, Новосибирская обл, г Новосибирск, ул Николаева, д 12/3, помещ 1'));
+  assert.ok(!S.obshchijAdres('г Новосибирск, ул Николаева, д 12/3', 'г Новосибирск, ул Гнесиных, д 10/1'));
+  const dop = S.svyaziDop(V, { 0: { inn: '5446018460', adres: 'г Новосибирск, ул Николаева, д 12/3, помещ 103' }, 1: { inn: '5446019209', adres: 'г Новосибирск, ул Николаева, д 12/3, помещ 1', obshchij: true } });
+  assert.ok(dop.some((f) => /по одному адресу/.test(f.t)) && dop.some((f) => /тот же адрес|тому же адресу/.test(f.t)));
+  assert.strictEqual(S.kratkoGraf({ imya: 'Иванова Анна Петровна' }), 'Иванова А. П.');
+  const h = S.html({ svyazi: V, it: {} });
+  assert.match(h, /data-sd-najti="0"/, 'юрлицо — кнопка «Найти ИНН»');
+  assert.match(h, /pb\.nalog\.ru/);
 });

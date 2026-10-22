@@ -23,7 +23,7 @@
 })(typeof self !== 'undefined' ? self : this, function (root) {
   'use strict';
   var NB = ' ';
-  var VERSIYA = 'Досье сделки v1';
+  var VERSIYA = 'Досье сделки v2';
   var KEY = 'dlk_sdelki', MAX = 20, STARYJ_DNEJ = 30, DEN = 864e5;
   var BO = { t: 'bo.nalog.gov.ru — отчётность', u: 'https://bo.nalog.gov.ru/' };
   var BI_DO = { t: 'service.nalog.ru/bi.do — решения о приостановке', u: 'https://service.nalog.ru/bi.do' };
@@ -45,7 +45,7 @@
   function z2(n) { return (n < 10 ? '0' : '') + n; }
   // Дата и время по Москве (UTC+3 круглый год) — как в js/papka-proverok.js
   function mskData(t) { var d = new Date(+new Date(t) + 3 * 3600e3); if (isNaN(d)) return ''; return z2(d.getUTCDate()) + '.' + z2(d.getUTCMonth() + 1) + '.' + d.getUTCFullYear(); }
-  function mskVremya(t) { var d = new Date(+new Date(t) + 3 * 3600e3); if (isNaN(d)) return ''; return mskData(t) + ' в ' + z2(d.getUTCHours()) + ':' + z2(d.getUTCMinutes()) + ' МСК'; }
+  function mskVremya(t) { var d = new Date(+new Date(t) + 3 * 3600e3); if (isNaN(d)) return ''; return mskData(t) + ' в ' + z2(d.getUTCHours()) + ':' + z2(d.getUTCMinutes()) + NB + 'МСК'; }
 
   // ---------- 3. Реквизиты ----------
   // vvod — текст счёта/письма или {inn, bik, acc}; r — ответ API. Строки — в формате js/acc.js (cls, nazv, verdikt, meta, ssylka).
@@ -224,79 +224,309 @@
   }
   function udalit(ls, inn) { inn = cifry(inn); return pisat(ls, chitat(ls).filter(function (x) { return x.inn !== inn; })); }
 
+  // ---------- «Реальность контрагента» (dosje-sdelki-v2, задача владельца 22.10: «самые важные факторы — в самом начале») ----------
+  // Признаки, по которым налоговая и банк судят, существует ли бизнес на самом деле: налоги, долги, штат, достоверность записей,
+  // отчётность, руководитель, возраст, счета. Слова и числа — из ответа проверки (js/sushchestvennoe.js — тот же список фактов,
+  // что в отчёте; разделы досье; блоки реестров). Своих выводов не добавляем; нет сведений — «не проверяли», серым, со ссылкой.
+  var RE_YUR = /^(ООО|АО|ПАО|ЗАО|ОАО|НАО|АНО|ФГУП|МУП|ГУП|ОБЩЕСТВО|АКЦИОНЕРНОЕ|ПУБЛИЧНОЕ|НЕПУБЛИЧНОЕ|ЗАКРЫТОЕ|ОТКРЫТОЕ|ФЕДЕРАЛЬН|ГОСУДАРСТВЕНН|МУНИЦИПАЛЬН|ФОНД|ТОВАРИЩЕСТВО|КООПЕРАТИВ|АССОЦИАЦИЯ|СОЮЗ|ПАРТНЕРСТВО|УЧРЕЖДЕНИЕ|КОМПАНИЯ|РОССИЙСКАЯ ФЕДЕРАЦИЯ|СУБЪЕКТ|ДЕПАРТАМЕНТ|МИНИСТЕРСТВО|КОМИТЕТ|АДМИНИСТРАЦИЯ)(\s|\b|«|")/i;
+  function str(v) { return v == null ? '' : String(v).trim(); }
+  function dmyIso(v) { var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(str(v)); return m ? m[3] + '.' + m[2] + '.' + m[1] : str(v); }
+  function sekcii(r) { var o = {}; ((r && r.dossier || {}).sections || []).forEach(function (s) { if (s && s.id) o[s.id] = s.rows || []; }); return o; }
+  function stroka(rows, re) { var x = (rows || []).filter(function (z) { return z && re.test(str(z[0])) && str(z[1]); })[0]; return x ? str(x[1]) : ''; }
+  var SAM = { nalogi: 'https://service.nalog.ru/zd.do', fssp: 'https://fssp.gov.ru/iss/ip/', sudy: 'https://kad.arbitr.ru/', shtat: 'https://pb.nalog.ru/',
+    dostovernost: 'https://egrul.nalog.ru/', otchetnost: 'https://bo.nalog.gov.ru/', scheta: 'https://service.nalog.ru/bi.do', svyazi: 'https://pb.nalog.ru/' };
+  function realnost(r) {
+    r = r || {};
+    var SU = modul('Sushchestvennoe', './sushchestvennoe.js'), F = {}, c = r.company || {}, sec = sekcii(r), dm = r.damia || {};
+    try { var fx = SU ? SU.fakty(r) : null; if (fx) fx.spisok.concat(fx.eshche).forEach(function (f) { F[f.k] = f; }); } catch (e) { F = {}; }
+    function b(k) { var x = dm[k]; return x && typeof x === 'object' ? x : null; }
+    function ok(x) { return x && (x.status === 'found' || x.status === 'not_found' || x.sostoyanie === 'found' || x.sostoyanie === 'not_found'); }
+    function naiden(x) { return x && (x.status === 'found' || x.sostoyanie === 'found'); }
+    var T = [];
+    function plitka(k, nazv, f, dop) {
+      var t = { k: k, nazv: nazv, znach: '', pod: '', ton: 'off', ist: '', data: '', sam: SAM[k] || '' };
+      if (f) { t.znach = f.znach; t.ton = f.ton === 'neutral' ? 'info' : f.ton; t.ist = f.ist || ''; t.data = f.data || ''; t.pod = f.pod || ''; t.spravka = f.spravka ? { t: f.spravkaT || 'справка', u: f.spravka } : null; }
+      if (dop) for (var z in dop) if (dop[z] != null && dop[z] !== '') t[z] = dop[z];
+      if (!t.znach) { t.znach = 'Не проверяли'; t.ton = 'off'; }
+      if (/^Не проверяли/.test(t.znach)) t.ton = 'off';
+      T.push(t);
+    }
+    // 1. Налоги: долг по открытым данным ФНС + сколько уплачено за год
+    var upl = stroka(sec.finance, /^Уплачено налогов/i), fin = stroka(sec.finance, /^Данные на/i);
+    plitka('nalogi', 'Налоги', F.tax_debt, { pod: upl ? 'Уплачено налогов и взносов за год: ' + upl + (fin ? ' (на ' + fin + ')' : '') : '' });
+    // 2. Долги и суды: приставы (ФССП) + незавершённые дела, где компания — ответчик
+    var fs = b('fssp'), su = b('sudy'), dl = { ton: 'off', znach: '', pod: '', ist: [], data: '' }, ne = [];
+    if (ok(fs)) {
+      var fd = fs.dannye || {};
+      if (naiden(fs) && +fd.otkryto > 0) { dl.znach = 'У приставов ' + fd.otkryto + ' ' + plural(+fd.otkryto, 'открытое производство', 'открытых производства', 'открытых производств') + (fd.ostatok ? ' · остаток ' + money(+fd.ostatok) : ''); dl.ton = 'bad'; }
+      else if (naiden(fs)) { dl.znach = 'Есть сведения у приставов'; dl.ton = 'warn'; }
+      else { dl.znach = 'У приставов — нет открытых производств'; dl.ton = 'ok'; }
+      dl.ist.push('ФССП'); dl.data = dmyIso(fs.data_svedeniy);
+    } else ne.push('приставов');
+    if (ok(su)) {
+      var sd = su.dannye || {}, nz = +sd.otvetchik_nezaversheno || 0;
+      var t2 = nz > 0 ? nz + ' ' + plural(nz, 'незавершённое дело', 'незавершённых дела', 'незавершённых дел') + ' ответчиком' + (+sd.otvetchik_summa_nezaversheno ? ' на ' + money(+sd.otvetchik_summa_nezaversheno) : '') : 'Незавершённых дел ответчиком нет';
+      if (dl.znach) dl.pod = 'Арбитраж: ' + t2.charAt(0).toLowerCase() + t2.slice(1); else { dl.znach = 'Арбитраж: ' + t2.charAt(0).toLowerCase() + t2.slice(1); dl.ton = 'ok'; }
+      if (nz > 0 && dl.ton === 'ok') dl.ton = 'warn';
+      dl.ist.push('картотека арбитражных дел'); dl.data = dl.data || dmyIso(su.data_svedeniy);
+    } else ne.push('арбитражные суды');
+    if (ne.length && dl.znach) { dl.pod = (dl.pod ? dl.pod + '. ' : '') + 'Не проверяли: ' + ne.join(', '); if (dl.ton === 'ok') dl.ton = 'warn'; }
+    plitka('dolgi', 'Долги и суды', null, dl.znach ? { znach: dl.znach, pod: dl.pod, ton: dl.ton, ist: dl.ist.join(', '), data: dl.data, sam: ne.length ? (ne[0] === 'приставов' ? SAM.fssp : SAM.sudy) : '' } : { pod: 'Приставы и арбитражные суды — источник не ответил', sam: SAM.fssp });
+    // 3. Сотрудники: среднесписочная численность (ФНС) + доход на сотрудника
+    var dns = stroka(sec.finance, /^Доход на одного сотрудника/i);
+    plitka('shtat', 'Сотрудники', F.employees || F.staff, { pod: dns ? 'Доход на сотрудника: ' + dns : '' });
+    // 4. Достоверность записей ЕГРЮЛ
+    var mass = (r.signals || []).filter(function (s) { return s && /^Массов/i.test(str(s.title)) && (s.status === 'bad' || s.status === 'warn'); });
+    if (F.address && /^Нет$/.test(str(F.address.znach))) F.address.znach = 'Отметок о недостоверности нет';
+    plitka('dostovernost', 'Достоверность ЕГРЮЛ', F.address, mass.length ? { pod: mass.map(function (s) { return str(s.title) + (s.detail ? ': ' + str(s.detail) : ''); }).join('; '), ton: 'warn' } : null);
+    // 5. Статус
+    plitka('status', 'Статус', F.status);
+    // 6. Отчётность и выручка
+    plitka('otchetnost', 'Отчётность', F.otchetnost, F.kapital ? { pod: F.kapital.znach, ton: 'warn' } : null);
+    // 7. Руководитель (управляющая компания — отдельной строкой)
+    var ruk = (sec.management || []).filter(function (x) { return x && str(x[1]) && !/^(Руководит с|Уставный капитал)/i.test(str(x[0])) && !/учредит|участник|акционер|собственник/i.test(str(x[0])); })[0];
+    plitka('rukovoditel', 'Руководитель', F.rukovoditel, ruk && RE_YUR.test(str(ruk[1])) ? { pod: 'Управляет другое юрлицо — ' + kratko(ruk[1]) + '. Подробнее — в «Связях»' } : null);
+    // 8. На рынке
+    plitka('vozrast', 'На рынке', F.age);
+    // 9. Счета: решения ФНС о приостановке операций
+    var pr = b('priostanovki');
+    plitka('scheta', 'Счета', null, ok(pr) ? (naiden(pr) ? { znach: 'Есть решения ФНС о приостановке операций', ton: 'bad', ist: pr.istochnik || 'ФНС', data: dmyIso(pr.data_svedeniy) }
+      : { znach: 'Решений ФНС о приостановке нет', ton: 'ok', ist: 'ФНС', data: dmyIso(pr.data_svedeniy) }) : { pod: 'Решения ФНС о приостановке операций — проверьте по ИНН и БИК' });
+    // 10. Опыт: госконтракты (справочно — отсутствие нормально для многих)
+    var kt = b('kontrakty');
+    if (ok(kt)) { var kd = kt.dannye || {}; plitka('opyt', 'Госконтракты', null, { znach: +kd.za_3_goda > 0 ? kd.za_3_goda + ' ' + plural(+kd.za_3_goda, 'контракт', 'контракта', 'контрактов') + ' за 3 года' + (+kd.summa_3_goda ? ' · ' + money(+kd.summa_3_goda) : '') : 'За 3 года не найдено — для многих компаний это нормально', ton: 'info', ist: 'ЕИС', data: dmyIso(kt.data_svedeniy) }); }
+    var I = { ok: 0, warn: 0, bad: 0, off: 0, info: 0 };
+    T.forEach(function (t) { I[t.ton] = (I[t.ton] || 0) + 1; });
+    return { plitki: T, itogo: I, vsego: T.length };
+  }
+
+  // ---------- «Связи и группа компаний» (связи — факт ЕГРЮЛ, без квалификаций: tests/slovar_222.test.js) ----------
+  // Из ЕГРЮЛ в ответе проверки: руководитель (или управляющая компания), учредители с долями, адрес, филиалы; признаки массовости.
+  // Юрлица из связей — с кнопкой «Найти ИНН»: страница спрашивает подсказки API по названию (бесплатно, без траты проверок).
+  // Взаимозависимость — только как признак по доле (ст. 105.1 НК РФ), без выводов: решение — у юриста.
+  function dolyaIz(t) { var m = /—\s*([\d.,]+)\s*%/.exec(str(t)); return m ? parseFloat(m[1].replace(',', '.')) : null; }
+  function bezDoli(t) { return str(t).replace(/\s*—\s*[\d.,]+\s*%\s*$/, ''); }
+  // Короткое имя юрлица: «ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ "РОМАШКА"» → ООО «Ромашка»-стиль без смены регистра
+  var KR = [[/ПУБЛИЧНОЕ АКЦИОНЕРНОЕ ОБЩЕСТВО/i, 'ПАО'], [/НЕПУБЛИЧНОЕ АКЦИОНЕРНОЕ ОБЩЕСТВО/i, 'АО'], [/ЗАКРЫТОЕ АКЦИОНЕРНОЕ ОБЩЕСТВО/i, 'ЗАО'], [/ОТКРЫТОЕ АКЦИОНЕРНОЕ ОБЩЕСТВО/i, 'ОАО'],
+    [/АКЦИОНЕРНОЕ ОБЩЕСТВО/i, 'АО'], [/ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ/i, 'ООО'], [/УПРАВЛЯЮЩАЯ КОМПАНИЯ/i, 'УК'], [/АВТОНОМНАЯ НЕКОММЕРЧЕСКАЯ ОРГАНИЗАЦИЯ/i, 'АНО']];
+  function kratko(t) {
+    var x = str(t); KR.forEach(function (p) { x = x.replace(p[0], p[1]); });
+    return x.replace(/"([^"]+)"/g, '«$1»').replace(/\s{2,}/g, ' ');
+  }
+  // Запрос для подсказок API: название в кавычках (ядро) или короткое имя
+  function zaprosImeni(t) { var m = /"([^"]{3,})"/.exec(str(t)) || /«([^»]{3,})»/.exec(str(t)); return m ? m[1] : kratko(t); }
+  function svyazi(r) {
+    r = r || {};
+    var c = r.company || {}, sec = sekcii(r), uzly = [], flagi = [];
+    if (c.kind && c.kind !== 'LEGAL') return null;
+    var rows = sec.management || [];
+    var ruk = rows.filter(function (x) { return x && str(x[1]) && !/^(Руководит с|Уставный капитал)/i.test(str(x[0])) && !/учредит|участник|акционер|собственник/i.test(str(x[0])); })[0];
+    var s1 = stroka(rows, /^Руководит с/i), kap = stroka(rows, /^Уставный капитал/i);
+    var massRuk = (r.signals || []).filter(function (s) { return s && /^Массовый руководитель/i.test(str(s.title)) && (s.status === 'bad' || s.status === 'warn'); })[0];
+    var massUchr = (r.signals || []).filter(function (s) { return s && /^Массов\S* учредит/i.test(str(s.title)) && (s.status === 'bad' || s.status === 'warn'); })[0];
+    var massAdr = (r.signals || []).filter(function (s) { return s && /^Массовый адрес/i.test(str(s.title)) && (s.status === 'bad' || s.status === 'warn'); })[0];
+    var rukImya = ruk ? str(ruk[1]) : str(c.director_name);
+    if (rukImya) {
+      var yur = RE_YUR.test(rukImya);
+      uzly.push({ k: 'rukovoditel', rol: yur ? 'Управляющая компания' : str(ruk && ruk[0]) || str(c.director_post) || 'Руководитель', imya: yur ? kratko(rukImya) : rukImya, polnoe: rukImya, yur: yur,
+        pod: (s1 ? 'с ' + s1 : '') + (massRuk ? (s1 ? ' · ' : '') + str(massRuk.title) + (massRuk.detail ? ': ' + str(massRuk.detail) : '') : ''), ton: massRuk ? 'warn' : 'neutral' });
+      if (yur) flagi.push({ t: 'Компанией управляет другое юрлицо — управляющая компания', pod: 'У неё полномочия единоличного исполнительного органа: она подписывает договоры и распоряжается деньгами. Проверьте и её.', ton: 'info' });
+    }
+    var uchr = rows.filter(function (x) { return x && /учредит|участник|акционер|собственник/i.test(str(x[0])) && str(x[1]); });
+    uchr.slice(0, 8).forEach(function (x) {
+      var d = dolyaIz(x[1]), imya = bezDoli(x[1]), yur = RE_YUR.test(imya);
+      uzly.push({ k: 'uchreditel', rol: yur ? 'Учредитель — юрлицо' : 'Учредитель', imya: yur ? kratko(imya) : imya, polnoe: imya, dolya: d, yur: yur, pod: d != null ? 'доля ' + String(d).replace('.', ',') + NB + '%' : '', ton: 'neutral' });
+    });
+    var bolshe25 = uzly.filter(function (u) { return u.k === 'uchreditel' && u.dolya != null && u.dolya > 25; });
+    if (bolshe25.length) flagi.push({ t: bolshe25.length === 1 ? 'Один учредитель с долей больше 25 %' : bolshe25.length + ' учредителя с долей больше 25 %', pod: bolshe25.map(function (u) { return u.imya + ' — ' + String(u.dolya).replace('.', ',') + NB + '%'; }).join('; ') + '. Доля больше 25 % — признак взаимозависимости (ст. 105.1 НК РФ).', ton: 'info' });
+    var yurU = uzly.filter(function (u) { return u.k === 'uchreditel' && u.yur; });
+    if (yurU.length) flagi.push({ t: 'Среди учредителей — ' + (yurU.length === 1 ? 'юрлицо' : yurU.length + ' юрлица'), pod: 'Компания — часть группы. Найдите ИНН учредителя и проверьте его так же, как контрагента.', ton: 'info' });
+    // руководитель — он же учредитель (совпадение ФИО в ЕГРЮЛ)
+    var sovp = rukImya && !RE_YUR.test(rukImya) ? uzly.filter(function (u) { return u.k === 'uchreditel' && u.imya.toUpperCase() === rukImya.toUpperCase(); })[0] : null;
+    if (sovp) flagi.push({ t: 'Руководитель — и учредитель', pod: sovp.dolya != null ? 'Доля руководителя — ' + String(sovp.dolya).replace('.', ',') + NB + '%.' : '', ton: 'info' });
+    if (uchr.length === 1 && dolyaIz(uchr[0][1]) === 100) flagi.push({ t: 'Единственный учредитель', pod: bezDoli(uchr[0][1]) + ' — 100 %', ton: 'info' });
+    if (massUchr) flagi.push({ t: str(massUchr.title), pod: str(massUchr.detail), ton: 'warn' });
+    if (massAdr) flagi.push({ t: str(massAdr.title), pod: str(massAdr.detail), ton: 'warn' });
+    var adr = stroka(sec.profile, /^Юридический адрес/i) || str(c.address), fil = stroka(sec.profile, /^Филиалы/i);
+    if (adr) uzly.push({ k: 'adres', rol: 'Юридический адрес', imya: adr, pod: massAdr ? str(massAdr.title) : '', ton: massAdr ? 'warn' : 'neutral', adres: true });
+    if (fil && !/^(нет|0)$/i.test(fil)) uzly.push({ k: 'filialy', rol: 'Филиалы и представительства', imya: fil, pod: '', ton: 'neutral' });
+    if (kap) uzly.push({ k: 'kapital', rol: 'Уставный капитал', imya: kap, pod: '', ton: 'neutral' });
+    if (!uzly.length) return null;
+    var dt = /^(\d{4})-(\d{2})-(\d{2})/.exec(str(c.fetched_at || r.checked_at));
+    return { uzly: uzly, flagi: flagi, adres: adr, ist: 'ЕГРЮЛ' + (dt ? ' на ' + dt[3] + '.' + dt[2] + '.' + dt[1] : ''),
+      ne: 'Другие компании руководителя и учредителей по всей базе ЕГРЮЛ покажем, когда загрузим её целиком: неполную картину за полную не выдаём. Сейчас — проверьте сами в сервисе ФНС «Прозрачный бизнес».' };
+  }
+  // Совпадение адресов (без квартиры, офиса, помещения): найденный по названию учредитель или УК по тому же адресу — общий адрес
+  function adresKlyuch(a) {
+    return str(a).toUpperCase().replace(/Ё/g, 'Е').replace(/\b\d{6}\b,?/g, '').replace(/,?\s*(ПОМЕЩ|ПОМ|ОФ|ОФИС|КВ|КОМН|КАБ|ЭТАЖ)\.?\s*[\w\/-]+.*$/i, '')
+      .replace(/(ОБЛ|Г|УЛ|Д|ПР-КТ|ПР|ПЕР|Ш|НАБ|ПЛ|Б-Р)\.?\s/g, '').replace(/[^А-ЯA-Z0-9\/]+/g, ' ').trim();
+  }
+  function obshchijAdres(a, b) { var x = adresKlyuch(a), y = adresKlyuch(b); if (!x || !y) return false; var tx = x.split(' ').slice(-3).join(' '), ty = y.split(' ').slice(-3).join(' '); return tx.length > 4 && tx === ty; }
+
+  // Найденные по названию юрлица связей: общий адрес между ними или с контрагентом — факт из сведений ФНС (адрес в подсказке API)
+  function svyaziDop(S, rez) {
+    if (!S || !rez) return [];
+    var out = [], gr = {};
+    Object.keys(rez).forEach(function (i) { var n = rez[i], u = S.uzly[+i]; if (!n || !n.inn || !u) return; if (n.obshchij) out.push({ t: u.imya + ' — по тому же адресу, что и контрагент', pod: 'Общий адрес — признак связанности компаний. Узнайте, кто фактически занимает помещение.', ton: 'warn' });
+      var k = adresKlyuch(n.adres || ''); k = k.split(' ').slice(-3).join(' '); if (k.length > 4) (gr[k] = gr[k] || []).push(u.imya); });
+    Object.keys(gr).forEach(function (k) { if (gr[k].length > 1) out.push({ t: gr[k].join(' и ') + ' — по одному адресу', pod: 'Общий адрес регистрации — признак группы компаний. Адреса — по сведениям ЕГРЮЛ в поиске по названию.', ton: 'info' }); });
+    return out;
+  }
+  // Подпись узла на 3D-орбите: человек — «Фамилия И. О.», адрес — улица и дом, юрлицо — короткое имя
+  function kratkoGraf(u) {
+    var t = str(u.imya);
+    if (u.adres) { var ch = t.split(',').map(str).filter(function (x) { return x && !/^\d{6}$/.test(x) && !/^(помещ|пом|оф|кв|комн)/i.test(x); }); return ch.slice(-2).join(', '); }
+    if (!u.yur && /^[А-ЯЁ][а-яё-]+\s+[А-ЯЁ][а-яё-]+(\s+[А-ЯЁ][а-яё-]+)?$/.test(t)) { var p = t.split(/\s+/); return p[0] + ' ' + p.slice(1).map(function (x) { return x.charAt(0) + '.'; }).join(' '); }
+    if (u.yur) { var m = /«([^»]+)»/.exec(t); if (m) return '«' + m[1] + '»'; }
+    return t.length > 40 ? t.slice(0, 38) + '…' : t;
+  }
   // ---------- разметка блока (страница Паспорта) ----------
   // Только строки с экранированием: ни одного текста из счёта или ответа API без esc.
   function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function nb(t) { return esc(t).replace(/(\d) (?=\d{3}\b)/g, '$1&nbsp;').replace(/(\d) (₽|%)/g, '$1&nbsp;$2'); }
   var MARK = { 'is-fact': ['m-ist', 'подтверждено источником'], 'is-calc': ['m-ras', 'наш расчёт'], 'is-none': ['m-net', 'не проверено'], 'is-bad': ['m-bad', 'ошибка'], 'is-high': ['m-bad', 'найдено'] };
-  function galka(name, on, tekst, data) {
-    return '<label class="sd-g"><input type="checkbox" name="' + esc(name) + '"' + (on ? ' checked' : '') + '><span>' + esc(tekst) + '</span>' +
+  var TON_SLOVO = { ok: 'норма', warn: 'есть вопросы', bad: 'риск', off: 'не проверяли', info: 'справочно' };
+  var IKONKI = { // линейные знаки 24×24, одна толщина штриха, без заливки — в духе дизайн-системы
+    nalogi: '<path d="M5 20V9l7-5 7 5v11"/><path d="M9 20v-6h6v6"/>',
+    dolgi: '<path d="M4 7h16v10H4z"/><path d="M4 11h16"/><path d="M8 15h3"/>',
+    shtat: '<circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.2A4.5 4.5 0 0 1 21 19"/>',
+    dostovernost: '<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M8.5 12l2.4 2.4 4.6-4.8"/>',
+    status: '<circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2.5"/>',
+    otchetnost: '<path d="M5 19V5"/><path d="M5 19h14"/><path d="M9 16v-4"/><path d="M13 16V9"/><path d="M17 16v-6"/>',
+    rukovoditel: '<circle cx="12" cy="7.5" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/>',
+    vozrast: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',
+    scheta: '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/><path d="M7 15h4"/>',
+    opyt: '<path d="M8 4h8l1 4H7z"/><path d="M5 8h14v12H5z"/><path d="M9 13h6"/>'
+  };
+  function ikonka(k) { return '<svg class="sd-ik" viewBox="0 0 24 24" aria-hidden="true">' + (IKONKI[k] || IKONKI.status) + '</svg>'; }
+  function galka(name, on, tekst) {
+    return '<label class="sd-g"><input type="checkbox" name="' + esc(name) + '"' + (on ? ' checked' : '') + '><span class="sd-g__b" aria-hidden="true"></span><span class="sd-g__t">' + esc(tekst) + '</span>' +
       '<span class="sd-gp pechat">' + (on ? '☑' : '☐') + '</span></label>';
   }
-  function shag(n, id, h, gotov, telo) {
-    return '<li class="sd-sh' + (gotov ? ' gotov' : '') + '" id="' + id + '"><span class="sd-n" aria-hidden="true">' + (gotov ? '✓' : n) + '</span><div class="sd-b"><h3>' + n + '. ' + esc(h) +
-      '<span class="sd-st">' + (gotov ? 'готово' : 'не закрыто') + '</span></h3>' + telo + '</div></li>';
+  function shag(n, id, h, gotov, telo, kratko) {
+    return '<li class="sd-sh' + (gotov ? ' gotov' : '') + '" id="' + id + '"><span class="sd-n" aria-hidden="true">' + (gotov ? '<svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg>' : n) + '</span><div class="sd-b"><h4>' + esc(h) +
+      '<span class="sd-st">' + (gotov ? 'готово' : esc(kratko || 'не закрыто')) + '</span></h4>' + telo + '</div></li>';
+  }
+  // Кольцо готовности: 6 сегментов (шаги досье), закрытые — цветом итога; вид — объёмный диск (наклон CSS, тень)
+  function kolco(gotovo, vsego, kod) {
+    var R = 46, C = 2 * Math.PI * R, seg = C / vsego, zaz = 3.2, h = '';
+    for (var i = 0; i < vsego; i++) h += '<circle class="sd-ring__s' + (i < gotovo ? ' on' : '') + '" cx="60" cy="60" r="' + R + '" stroke-dasharray="' + (seg - zaz).toFixed(2) + ' ' + (C - seg + zaz).toFixed(2) + '" stroke-dashoffset="' + (-i * seg).toFixed(2) + '" style="--i:' + i + '"/>';
+    return '<div class="sd-ring ' + esc(kod) + '" role="img" aria-label="Готово ' + gotovo + ' из ' + vsego + ' шагов досье"><div class="sd-ring__disk"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="sd-ring__t" cx="60" cy="60" r="' + R + '"/>' + h + '</svg>' +
+      '<div class="sd-ring__c"><b>' + gotovo + '<i>/' + vsego + '</i></b><small>шагов</small></div></div></div>';
+  }
+  // Пульс на обложке: пять признаков реальности, которые решают первыми, — цветом и словом
+  var PULS = ['nalogi', 'dolgi', 'shtat', 'dostovernost', 'scheta'];
+  function pulsHtml(R) {
+    if (!R) return '';
+    var x = PULS.map(function (k) { return R.plitki.filter(function (t) { return t.k === k; })[0]; }).filter(Boolean);
+    if (!x.length) return '';
+    return '<ul class="sd-puls" aria-label="Главные признаки реальности">' + x.map(function (t) {
+      return '<li class="' + esc(t.ton) + '"><a href="#sd-real-h"><i aria-hidden="true"></i>' + esc(t.nazv) + '<span>' + esc(TON_SLOVO[t.ton] || '') + '</span></a></li>'; }).join('') + '</ul>';
+  }
+  function realnostHtml(R) {
+    if (!R || !R.plitki.length) return '';
+    var I = R.itogo, v = R.vsego;
+    function pol(k, cls) { return I[k] ? '<i class="sd-bar__' + cls + '" style="flex:' + I[k] + '"></i>' : ''; }
+    return '<section class="sd-real" aria-labelledby="sd-real-h"><div class="sd-sec-h"><h3 id="sd-real-h">Реальность контрагента</h3>' +
+      '<p>То, по чему налоговая и банк судят, есть ли у компании настоящий бизнес: налоги, долги, люди, достоверность записей, отчётность. У каждого признака — источник и дата.</p></div>' +
+      '<div class="sd-bar" role="img" aria-label="' + esc((I.ok || 0) + ' в норме, ' + ((I.warn || 0) + (I.bad || 0)) + ' с замечаниями, ' + (I.off || 0) + ' не проверяли, ' + (I.info || 0) + ' справочно') + '">' +
+        pol('ok', 'ok') + pol('info', 'info') + pol('warn', 'warn') + pol('bad', 'bad') + pol('off', 'off') + '</div>' +
+      '<p class="sd-bar__l"><span class="ok">' + (I.ok || 0) + ' в норме</span>' + ((I.warn || 0) + (I.bad || 0) ? '<span class="warn">' + ((I.warn || 0) + (I.bad || 0)) + ' с замечаниями</span>' : '') +
+        (I.off ? '<span class="off">' + I.off + ' не проверяли</span>' : '') + (I.info ? '<span class="info">' + I.info + ' справочно</span>' : '') + '<span class="vsego">из ' + v + '</span></p>' +
+      '<ul class="sd-tiles">' + R.plitki.map(function (t, i) {
+        return '<li class="sd-tile ' + esc(t.ton) + '" style="--i:' + i + '"><div class="sd-tile__h">' + ikonka(t.k) + '<span class="sd-tile__k">' + esc(t.nazv) + '</span><span class="sd-tile__t">' + esc(TON_SLOVO[t.ton] || '') + '</span></div>' +
+          '<b class="sd-tile__v">' + nb(t.znach) + '</b>' + (t.pod ? '<span class="sd-tile__p">' + nb(t.pod) + '</span>' : '') +
+          '<span class="sd-tile__s">' + (t.ist ? esc(t.ist) + (t.data ? ' · ' + esc(t.data) : '') : 'источник не ответил') +
+            (t.ton === 'off' && t.sam ? ' · <a href="' + esc(t.sam) + '" target="_blank" rel="noopener nofollow">проверить самим</a>' : t.spravka ? ' · <a href="' + esc(t.spravka.u) + '">' + esc(t.spravka.t) + '</a>' : '') + '</span></li>';
+      }).join('') + '</ul></section>';
+  }
+  function svyaziHtml(S, rez, dop) {
+    if (!S) return '';
+    rez = rez || {};
+    var flagi = (dop || []).concat(S.flagi);
+    return '<section class="sd-svz" aria-labelledby="sd-svz-h"><div class="sd-sec-h"><h3 id="sd-svz-h">Связи и группа компаний</h3>' +
+      '<p>Кто управляет компанией и кому она принадлежит — по ЕГРЮЛ. Юрлица из связей можно найти по названию и проверить так же, как контрагента.</p></div>' +
+      (flagi.length ? '<ul class="sd-flagi">' + flagi.map(function (f) { return '<li class="' + esc(f.ton) + '"><b>' + nb(f.t) + '</b>' + (f.pod ? '<span>' + nb(f.pod) + '</span>' : '') + '</li>'; }).join('') + '</ul>' : '') +
+      '<div class="sd-orbit" data-sd-orbit><canvas class="sd-orbit__cv" aria-hidden="true"></canvas></div>' +
+      '<ul class="sd-uzly">' + S.uzly.map(function (u, i) {
+        var nr = rez[i];
+        return '<li class="sd-uzel ' + esc(u.ton) + (u.yur ? ' yur' : '') + '" data-uzel="' + i + '"><span class="sd-uzel__r">' + esc(u.rol) + '</span><b class="sd-uzel__i">' + nb(u.imya) + '</b>' +
+          (u.pod ? '<span class="sd-uzel__p">' + nb(u.pod) + '</span>' : '') +
+          (u.yur ? (nr ? (nr.inn ? '<span class="sd-uzel__n">ИНН ' + esc(nr.inn) + (nr.status && nr.status !== 'ACTIVE' ? ' · ' + esc(ST[nr.status] || nr.status) : '') + (nr.obshchij ? ' · <em>тот же адрес, что у контрагента</em>' : '') +
+              ' <a href="/?inn=' + esc(nr.inn) + '" class="noprint">Проверить&nbsp;→</a></span>' : '<span class="sd-uzel__n">По названию не нашли — проверьте в ЕГРЮЛ</span>')
+            : '<button type="button" class="sd-uzel__b noprint" data-sd-najti="' + i + '">Найти ИНН</button>') : '') + '</li>';
+      }).join('') + '</ul>' +
+      '<p class="sd-s">Источник: ' + esc(S.ist) + '. ' + esc(S.ne) + ' <a href="' + SAM.svyazi + '" target="_blank" rel="noopener nofollow">pb.nalog.ru</a></p></section>';
   }
   function html(o) {
     o = o || {};
     var it = o.it || {}, ned = o.ned || [], pr = o.pr || [], rk = o.rekv || {}, g = o.galki || {}, dg = g.docs || {}, U = modul('Usloviya', './usloviya.js');
     var po = {}; ned.forEach(function (x) { (po[x.gruppa] = po[x.gruppa] || []).push(x); });
-    var h = '<section class="sd" id="sd" aria-labelledby="sd-h"><div class="sd-top"><h2 id="sd-h">Досье сделки</h2>' +
-      '<p class="sd-kogda">Сведения о компании — на ' + esc(o.svedeniyaNa || '') + '. Досье собрано ' + esc(o.sobrano || '') + '.</p></div>' +
-      '<div class="sd-itog ' + esc(it.kod || 'predv') + '" role="status" aria-live="polite"><b>' + nb(it.zagolovok) + '</b><span>' + nb(it.tekst) + '</span></div>' +
-      (o.svezh && o.svezh.tekst ? '<p class="sd-w">' + esc(o.svezh.tekst) + '</p>' : '') +
-      '<ol class="sd-shagi">';
+    var docs = o.docs || [], s = o.sohraneno;
+    var G = [o.summa > 0, !(po.fakty || []).length, rk.vvedeny && !rk.oshibka && !rk.priostanovka && !(po.rekvizity || []).length, !ned.length && !pr.length,
+      !(po.dokumenty || []).length && !ned.some(function (x) { return x.k === 'vyruchka'; }), !!s && !(o.izm && o.izm.length) && !(o.svezh && o.svezh.staroe)];
+    var gotovo = G.filter(Boolean).length, kod = it.kod || 'predv';
+    var h = '<section class="sd" id="sd" aria-labelledby="sd-h">' +
+      // обложка: вердикт, кольцо готовности, реквизиты документа
+      '<header class="sd-cover ' + esc(kod) + '" data-sd-tilt><div class="sd-cover__fon" aria-hidden="true"><i class="sd-cover__setka"></i><i class="sd-cover__blik"></i></div>' +
+        '<div class="sd-cover__in"><div class="sd-cover__top"><span class="sd-eyebrow">Досье сделки</span><span class="sd-stamp">' + (o.nomer ? 'Проверка № ' + esc(o.nomer) + ' · ' : '') + 'собрано ' + esc(o.sobrano || '') + '</span></div>' +
+        '<h2 id="sd-h" class="sd-cover__name">' + esc(o.nazvanie || '') + '</h2>' +
+        '<div class="sd-chips"><span>ИНН ' + esc(o.inn || '') + '</span>' + (o.summa > 0 ? '<span>Сделка ' + nb(money(o.summa, U)) + '</span>' : '<a href="#sd-summa">Указать сумму</a>') + '<span>Сведения на ' + esc(o.svedeniyaNa || '') + '</span></div>' +
+        '<div class="sd-cover__main">' + kolco(gotovo, 6, kod) +
+          '<div class="sd-verdict" role="status" aria-live="polite"><span class="sd-verdict__l">Итог досье</span><b>' + nb(it.zagolovok) + '</b><p>' + nb(it.tekst) + '</p></div></div>' +
+        pulsHtml(o.realnost) +
+        (o.svezh && o.svezh.tekst ? '<p class="sd-cover__w">' + esc(o.svezh.tekst) + '</p>' : '') + '</div></header>' +
+      realnostHtml(o.realnost) + svyaziHtml(o.svyazi, o.svyaziNajdeno, svyaziDop(o.svyazi, o.svyaziNajdeno)) +
+      '<div class="sd-sec-h sd-sec-h--shagi"><h3>Шесть шагов до оплаты</h3><p>Закрывайте по порядку: каждый шаг — с отметкой и датой, всё попадёт в PDF.</p></div><ol class="sd-shagi">';
     // 1. ИНН и сумма
-    h += shag(1, 'sd-summa', 'Контрагент и сумма', o.summa > 0,
-      '<p class="sd-p">' + esc(o.nazvanie || '') + ' · ИНН ' + esc(o.inn || '') + '</p>' +
+    h += shag(1, 'sd-summa', 'Контрагент и сумма', G[0],
       '<form class="sd-f" data-sd="summa" onsubmit="return false"><label>Сумма сделки, ₽<input type="text" name="sd_summa" inputmode="numeric" autocomplete="off" placeholder="например, 500 000" value="' +
-        (o.summa > 0 ? esc(money(o.summa, U).replace(/\s?₽$/, '')) : '') + '"></label><button class="btn noprint" type="submit">Пересчитать</button></form>');
+        (o.summa > 0 ? esc(money(o.summa, U).replace(/\s?₽$/, '')) : '') + '"></label><button class="btn noprint" type="submit">Пересчитать</button></form>', 'нужна сумма');
     // 2. Факты, источники, даты
     var fk = o.fakty || [];
-    h += shag(2, 'sd-fakty', 'Факты, источники и даты', !(po.fakty || []).length,
+    h += shag(2, 'sd-fakty', 'Факты, источники и даты', G[1],
       '<ul class="sd-l">' + fk.map(function (x) {
-        return '<li><span class="m ' + esc(x.mark) + '" aria-hidden="true"></span><a href="#r' + esc(x.n) + '">' + esc(x.n + '. ' + x.title) + '</a> — ' + esc(x.tekst) + '</li>';
-      }).join('') + '</ul><p class="sd-s">Каждый раздел Паспорта ниже — с источником и датой сведений. Раздел «не проверяли» закрывается вашей отметкой самопроверки в нём.</p>');
+        return '<li><span class="m ' + esc(x.mark) + '" aria-hidden="true"></span><div><a href="#r' + esc(x.n) + '">' + esc(x.n + '. ' + x.title) + '</a><span>' + esc(x.tekst) + '</span></div></li>';
+      }).join('') + '</ul><p class="sd-s">Раздел «не проверяли» закрывается вашей отметкой самопроверки в нём — со ссылкой на первоисточник и временем.</p>', (po.fakty || []).length + ' не проверено');
     // 3. Реквизиты
     var rRows = (rk.stroki || []).map(function (x) {
       var mk = MARK[x.cls] || MARK['is-none'];
       return '<li class="' + esc(x.cls) + '"><span class="m ' + mk[0] + '" role="img" aria-label="' + esc(mk[1]) + '"></span><div><b>' + nb(x.nazv) + '</b> <span class="sd-v">' + nb(x.verdikt) + '</span>' +
         '<small>' + nb(x.meta) + (x.ssylka ? ' <a href="' + esc(x.ssylka.href) + '" target="_blank" rel="noopener nofollow">' + esc(x.ssylka.text) + '</a>' : '') + '</small></div></li>';
     }).join('');
-    h += shag(3, 'sd-rekv', 'Реквизиты для оплаты', rk.vvedeny && !rk.oshibka && !rk.priostanovka && !(po.rekvizity || []).length,
+    h += shag(3, 'sd-rekv', 'Реквизиты для оплаты', G[2],
       '<form class="sd-f noprint" data-sd="rekv" onsubmit="return false"><label class="sd-w100">Реквизиты из счёта или письма<textarea name="sd_rekv" rows="3" autocomplete="off" spellcheck="false" placeholder="ИНН 7700000000, р/с 40702…, БИК 04…">' + esc(o.rekvTekst || '') + '</textarea></label>' +
         '<button class="btn" type="submit">Сверить реквизиты</button><small>Сверяем в вашем браузере — реквизиты никуда не отправляются. Счёт целиком (PDF) — в <a href="/proverit-schet/">«Проверь счёт»</a>.</small></form>' +
       (rk.vvedeny ? '<p class="sd-p">ИНН ' + esc(rk.vvod.inn || '—') + ' · БИК ' + esc(rk.vvod.bik || '—') + ' · счёт ' + esc(rk.vvod.acc || '—') + ' — сверено ' + esc(o.rekvKogda || o.sobrano || '') + '</p><ul class="sd-acc">' + rRows + '</ul>' +
         galka('svereny', g.svereny, 'Сверили банк, БИК и номер счёта с договором или карточкой за подписью директора') +
-        galka('telefon', g.telefon, 'Подтвердили реквизиты у поставщика по телефону из договора или с сайта — не из письма со счётом') : ''));
+        galka('telefon', g.telefon, 'Подтвердили реквизиты у поставщика по телефону из договора или с сайта — не из письма со счётом') : ''),
+      rk.oshibka ? 'ошибка в реквизитах' : rk.vvedeny ? 'нужны отметки' : 'не сверены');
     // 4. Чего не хватает
-    h += shag(4, 'sd-ned', 'Чего не хватает', !ned.length && !pr.length,
+    h += shag(4, 'sd-ned', 'Чего не хватает', G[3],
       (pr.length ? '<ul class="sd-pr">' + pr.map(function (x) { return '<li><b>' + nb(x.t) + '</b>' + (x.kak ? '<small>' + nb(x.kak) + '</small>' : '') + '</li>'; }).join('') + '</ul>' : '') +
       (ned.length ? '<ul class="sd-ned">' + ned.map(function (x) {
-        return '<li><b>' + nb(x.t) + '</b><small>' + nb(x.kak || '') + (x.ssylka ? ' <a href="' + esc(x.ssylka.u) + '"' + (/^https:/.test(x.ssylka.u) ? ' target="_blank" rel="noopener nofollow"' : '') + '>' + esc(x.ssylka.t) + '</a>' : '') +
-          (x.do ? ' <a class="noprint" href="' + esc(x.do) + '">Перейти&nbsp;↓</a>' : '') + '</small></li>';
-      }).join('') + '</ul>' : (pr.length ? '' : '<p class="sd-p">Открытых пунктов нет.</p>')));
+        return '<li class="g-' + esc(x.gruppa) + '"><b>' + nb(x.t) + '</b><small>' + nb(x.kak || '') + (x.ssylka ? ' <a href="' + esc(x.ssylka.u) + '"' + (/^https:/.test(x.ssylka.u) ? ' target="_blank" rel="noopener nofollow"' : '') + '>' + esc(x.ssylka.t) + '</a>' : '') +
+          (x.do ? ' <a class="noprint sd-k" href="' + esc(x.do) + '">к пункту</a>' : '') + '</small></li>';
+      }).join('') + '</ul>' : (pr.length ? '' : '<p class="sd-p">Открытых пунктов нет.</p>')), (ned.length + pr.length) + ' ' + plural(ned.length + pr.length, 'пункт', 'пункта', 'пунктов'));
     // 5. Договор и документы
-    var docs = o.docs || [];
-    h += shag(5, 'sd-dok', 'Договор и документы', !(po.dokumenty || []).length && !ned.some(function (x) { return x.k === 'vyruchka'; }),
-      '<p class="sd-s">Что запросить — соразмерно сумме (п. 16 письма ФНС от 10.03.2021 № БВ-4-7/3060@). Отметьте, что получили.</p>' +
+    h += shag(5, 'sd-dok', 'Договор и документы', G[4],
+      '<p class="sd-s">Что запросить — соразмерно сумме (п. 16 письма ФНС от 10.03.2021 № БВ-4-7/3060@). Отметьте, что получили.</p><div class="sd-gs">' +
       docs.map(function (d) { return galka('doc_' + d.id, !!dg[d.id], d.title); }).join('') +
       (o.pvBaza && !docs.some(function (d) { return d.id === 'otchetnost'; }) ? galka('doc_otchetnost', !!dg.otchetnost, 'Бухгалтерская отчётность за последний год с квитанцией о сдаче') : '') +
-      galka('dogovor', g.dogovor, 'Договор подписан обеими сторонами') +
-      '<p class="sd-s noprint"><a href="' + esc(o.delopis || '/delopis/') + '">Собрать договор в Делописи</a> — с реквизитами из ЕГРЮЛ и защитными пунктами под найденные риски' +
-        (it.kod === 'sobrano' ? '' : '; пока досье не закрыто, договор соберётся с оплатой по факту') + '. Опись приложений — кнопка «Папка к договору» наверху.</p>');
+      galka('dogovor', g.dogovor, 'Договор подписан обеими сторонами') + '</div>' +
+      '<a class="sd-cta noprint" href="' + esc(o.delopis || '/delopis/') + '"><b>Собрать договор в Делописи</b><span>реквизиты из ЕГРЮЛ и защитные пункты под найденные риски' + (it.kod === 'sobrano' ? '' : '; пока досье не закрыто — с оплатой по факту') + '</span></a>', 'документы не получены');
     // 6. Сохранение и повторная проверка
-    var s = o.sohraneno;
-    h += shag(6, 'sd-hran', 'Сохранение и повторная проверка', !!s && !(o.izm && o.izm.length) && !(o.svezh && o.svezh.staroe),
+    h += shag(6, 'sd-hran', 'Сохранение и повторная проверка', G[5],
       (s ? '<p class="sd-p">Сохранено на этом устройстве ' + esc(mskVremya(s.t)) + (s.snimok && s.snimok.checked_at ? ' · проверка от ' + esc(mskData(s.snimok.checked_at)) : '') + '.</p>' : '<p class="sd-p">Пока не сохранено.</p>') +
       (o.izm ? (o.izm.length ? '<div class="sd-izm"><b>С сохранения изменилось:</b><ul>' + o.izm.map(function (x) { return '<li>' + nb(x) + '</li>'; }).join('') + '</ul></div>'
         : '<p class="sd-p">С сохранения статус, итог и замечания не изменились.</p>') : '') +
-      '<div class="sd-btns noprint"><button class="btn" type="button" data-sd-act="save">' + (s ? 'Обновить сохранённое' : 'Сохранить на этом устройстве') + '</button>' +
+      '<div class="sd-btns noprint"><button class="btn primary" type="button" data-sd-act="save">' + (s ? 'Обновить сохранённое' : 'Сохранить на этом устройстве') + '</button>' +
         '<button class="btn" type="button" data-sd-act="povtor">Проверить заново</button>' + (s ? '<button class="btn sd-del" type="button" data-sd-act="del">Удалить с устройства</button>' : '') + '</div>' +
-      '<p class="sd-s noprint" data-sd-msg role="status" aria-live="polite">Сохраняем только в этом браузере — Делоскоп досье не получает. Повторная проверка — одна из бесплатных проверок дня: сравним с сохранённым.</p>');
+      '<p class="sd-s noprint" data-sd-msg role="status" aria-live="polite">Сохраняем только в этом браузере — Делоскоп досье не получает. Повторная проверка — одна из бесплатных проверок дня: сравним с сохранённым.</p>', s ? 'есть изменения' : 'не сохранено');
     h += '</ol><p class="stroka">' + esc(OGOVORKA) + ' ' + esc(OGOVORKA_OTM) + ' ' + esc(VERSIYA) + '.</p></section>';
     return h;
   }
+
   // Сохранённые досье — список для страницы без номера проверки
   function spisokHtml(a) {
     a = a || [];
@@ -311,6 +541,6 @@
     VERSIYA: VERSIYA, KEY: KEY, MAX: MAX, KLYUCH: KLYUCH, OGOVORKA: OGOVORKA, OGOVORKA_OTM: OGOVORKA_OTM, STARYJ_DNEJ: STARYJ_DNEJ,
     rekvizity: rekvizity, nedostaet: nedostaet, problemy: problemy, itog: itog, delopisSsylka: delopisSsylka,
     snimok: snimok, sravnit: sravnit, svezhest: svezhest, spisok: spisok, najti: najti, sohranit: sohranit, udalit: udalit,
-    mskData: mskData, mskVremya: mskVremya, html: html, spisokHtml: spisokHtml, esc: esc
+    mskData: mskData, mskVremya: mskVremya, html: html, spisokHtml: spisokHtml, esc: esc, realnost: realnost, svyazi: svyazi, obshchijAdres: obshchijAdres, adresKlyuch: adresKlyuch, kratko: kratko, zaprosImeni: zaprosImeni, kratkoGraf: kratkoGraf, svyaziDop: svyaziDop
   };
 });

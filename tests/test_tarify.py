@@ -82,7 +82,7 @@ ids = [o['id'] for o in ob]
 ok('лента: запись тарифов есть, id уникальны', '2026-09-26-3' in ids and len(ids) == len(set(ids)))
 ok('лента: есть что проверить со ссылками', all(x.get('ssylka') for x in ob[0]['chto_proverit']))
 for f in ('115-fz/zablokirovali-schet-chto-delat/index.html', '115-fz/zsk-zony-riska/index.html'):
-    ok(f'{f}: МВК — до 20 рабочих дней', not re.search(r'(комиссия рассматривает её|рассмотрение —) 15', rd(f)) and re.search(r'до 20(\u00a0|&nbsp;| )рабочих', rd(f)))
+    ok(f'{f}: МВК — до 20 рабочих дней', not re.search(r'(комиссия рассматривает её|рассмотрение —) 15', rd(f)) and re.search(r'(до|не(\u00a0|&nbsp;| )дольше) 20(\u00a0|&nbsp;| )рабочих', rd(f)))  # [Право] 23.10: «не дольше 20 р. д.», по данным Банка России
 # ---------- п. 23: кнопки тарифов ведут на форму «Получить счёт», а не в mailto ----------
 import re as _re2
 for _nm, _html in (('страница', _platnyj(pg)),):  # glavnaya-v2: на главной кнопок тарифов больше нет

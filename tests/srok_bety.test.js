@@ -49,6 +49,9 @@ test('(а) дат беты текстом нет нигде, кроме выво
     // п. 3.9 оферты «Стартовая цена»: окно первой оплаты «с 14 октября по 31 декабря» — из tarify.json → startovaya.pervaya_oplata_s
     // (tests/startovaya.py), это не срок беты; блок появляется только при "beta": false.
     .replace(/<!--start-->[\s\S]*?<!--\/start-->/g, '')
+    // kartochki-svezhest-v1 (Ночные-2, 23.10): «сведения на 14.10.2026» / «ФССП … на 14.10.2026, 05:49» — дата сведений источника
+    // на карточке компании (ДНС Ритейл), не срок беты; срок беты с годом через «на» не пишется.
+    .replace(/(?<![А-Яа-яЁё])на(?: |&nbsp;|\u00a0)\d{2}\.\d{2}\.\d{4}/g, '')
     .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '').replace(/<!--[\s\S]*?-->/g, '');
   const plohie = [];
   for (const f of obojti(KOREN, []).concat([path.join(KOREN, 'tests', 'kartochka_render.py')])) {

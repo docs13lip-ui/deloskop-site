@@ -11,6 +11,9 @@
     python3 tests/kartochki.py proverka --vhod kartochki.jsonl [--podrobno]  # только отчёт «сколько проходит ворота», файлы не трогает
     python3 tests/kartochki.py iz-api  --inn spisok.txt --vyhod kartochki.jsonl [--pauza 6] [--maks 300] [--zanovo]  # живой /api/check; 429 — стоп;
         # опубликованные и отсев (tests/kartochki_otsev.txt) не спрашиваются (kartochki-vybor-v1)
+    python3 tests/kartochki.py svezhest [--pokazat 10]  # даты сведений опубликованных карточек, старейшие первыми
+    python3 tests/kartochki.py iz-api  --osvezhit 150 --vyhod svezhie.jsonl  # освежить N старейших (анонимно — до 10 в сутки),
+        # затем sobrat --dobavit --vhod svezhie.jsonl; ответ без финансов карточку не снимает (kartochki-svezhest-v1)
     python3 tests/kartochki.py vybor   --revexp data-….zip [--n 500] [--vyhod spisok.txt]  # кандидаты из набора ФНС revexp (ТЗ 3.1)
     python3 tests/kartochki.py otsev   --vhod kartochki.jsonl  # отказы ворот публикации → отсев на 90 дней
         # служебный доступ — DELOSKOP_SERVICE_TOKEN в окружении запуска (заголовок X-Deloskop-Service; не в файлы)
@@ -367,6 +370,17 @@ def un_zagruzit(koren=KOREN):
     return un_ustanovit(stranicy)
 
 
+# kartochki-svezhest-v1 ([Ночные-2] 23.10): анонимный /api/check отдаёт реестр без финансов. Если такой ответ попал в
+# добор по уже опубликованной карточке, ворота говорили «нет финансов» — и карточка удалялась. Финансы из ГИР БО не
+# исчезают: это неполный ответ, а не новость о компании. Такую карточку оставляем как есть (другие причины — снимают).
+NET_FIN = "нет финансов (доход > 0 по ФНС / ГИР БО)"
+
+
+def nepolnye_otvety(otchet, opublikovannye):
+    """→ ИНН опубликованных карточек, по которым свежий ответ не прошёл ворота только из-за «нет финансов»."""
+    return {inn for inn, pr, _ in otchet.get("po_inn", []) if pr == NET_FIN and inn in opublikovannye}
+
+
 def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, dobavit=False,
            partiya=PARTIYA_V_SUTKI, segodnya=None):
     kart, otchet = otobrat(zapisi, limit, spros, kontrol)
@@ -377,8 +391,11 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
     starye, svezhie = [], set()
     if dobavit:
         # свежие сведения главнее страницы; ИНН, который сейчас не прошёл ворота, уходит, как при полной сборке
-        svezhie = {inn for inn, _, _ in otchet.get("po_inn", [])}
-        starye = [x for inn, x in sorted(kartochki_na_diske(koren).items()) if inn not in svezhie]
+        na_diske = kartochki_na_diske(koren)
+        nepolnye = nepolnye_otvety(otchet, na_diske)  # kartochki-svezhest-v1: неполный ответ карточку не снимает
+        otchet["nepolnye"] = len(nepolnye)
+        svezhie = {inn for inn, _, _ in otchet.get("po_inn", [])} - nepolnye
+        starye = [x for inn, x in sorted(na_diske.items()) if inn not in svezhie]
         nuzhnye |= {x["_papka"] for x in starye}
     vse = kart + starye
     # карточки, которые больше не проходят ворота, убираем — адрес уйдёт в «мягкую 404» → живую проверку
@@ -578,7 +595,41 @@ def zagolovki_dostupa(env=None):
     return zag
 
 
-def iz_api(spisok, vyhod, api="https://api.deloskop.ru", pauza=6.0, maks=MAKS_ZAPROSOV, zanovo=False):
+def svezhest(koren=KOREN, segodnya=None):
+    """kartochki-svezhest-v1: опубликованные карточки по дате сведений, старейшие первыми → [(ИНН, дата|None, дней|None)]."""
+    segodnya = segodnya or segodnya_msk()
+    na_d = kartochki_na_diske(koren)
+    out = [(inn, k.get("_lastmod"), (segodnya - k["_lastmod"]).days if k.get("_lastmod") else None) for inn, k in na_d.items()]
+    return sorted(out, key=lambda x: (x[1] or dt.date.min, x[0]))
+
+
+def k_osvezheniyu(n, vyhod=None, koren=KOREN):
+    """kartochki-svezhest-v1: N опубликованных карточек со старейшими сведениями, ещё не спрошенных в vyhod."""
+    gotovo = set()
+    if vyhod and os.path.exists(vyhod):
+        gotovo = {re.sub(r"\D", "", str((r.get("company") or {}).get("inn") or "")) for r in chitat_jsonl(vyhod)}
+    return [inn for inn, _, _ in svezhest(koren) if inn not in gotovo][:max(0, int(n))]
+
+
+def pechat_svezhesti(spisok, pokazat=10):
+    dni = [d for _, _, d in spisok if d is not None]
+    if not spisok:
+        print("Опубликованных карточек нет.")
+        return
+    korz = [("до 7 дней", 0, 7), ("8–14 дней", 8, 14), ("15–30 дней", 15, 30), ("старше 30 дней", 31, 10 ** 6)]
+    print("Карточек: %d · сведения: самые старые — %s дн., самые свежие — %s дн." % (
+        len(spisok), max(dni) if dni else "?", min(dni) if dni else "?"))
+    for imya_, ot, do in korz:
+        print("  %s: %d" % (imya_, sum(1 for d in dni if ot <= d <= do)))
+    bez = sum(1 for d in spisok if d[2] is None)
+    if bez:
+        print("  без даты сведений: %d" % bez)
+    print("Старейшие %d (освежить первыми — iz-api --osvezhit N):" % min(pokazat, len(spisok)))
+    for inn, d, n in spisok[:pokazat]:
+        print("  %s — сведения на %s (%s дн.)" % (inn, d.strftime("%d.%m.%Y") if d else "—", n if n is not None else "?"))
+
+
+def iz_api(spisok, vyhod, api="https://api.deloskop.ru", pauza=6.0, maks=MAKS_ZAPROSOV, zanovo=False, osvezhit=None):
     """Берёт ИНН из файла (по одному в строке), спрашивает /api/check и дописывает ответы в vyhod (.jsonl).
     Возобновляется с места обрыва. ИНН из 12 цифр не запрашиваются вовсе. Каждый запрос — это одна
     живая проверка (DaData findById + базы) — не больше 1 000 за ночь (Данные §1.4, бюджет DaData).
@@ -590,9 +641,19 @@ def iz_api(spisok, vyhod, api="https://api.deloskop.ru", pauza=6.0, maks=MAKS_ZA
     if os.path.exists(vyhod):
         for r in chitat_jsonl(vyhod):
             gotovo.add(re.sub(r"\D", "", str((r.get("company") or {}).get("inn") or "")))
+    zag = {"Accept": "application/json", "User-Agent": "Deloskop-kartochki/1"}
+    zag.update(zagolovki_dostupa())
+    sluzhebnyj = "X-Deloskop-Service" in zag or "Cookie" in zag
     inns = []
-    with open(spisok, encoding="utf-8") as fh:
-        stroki = fh.read().splitlines()
+    if osvezhit is not None:
+        # kartochki-svezhest-v1: освежаем опубликованные, старейшие сведения первыми (опубликованные спрашиваем намеренно).
+        # Анонимно — не больше 10 в сутки (на 429 — стоп); если ответ придёт без финансов, sobrat --dobavit карточку не снимет.
+        inns = k_osvezheniyu(osvezhit, vyhod)
+        zanovo = True
+    stroki = []
+    if spisok:
+        with open(spisok, encoding="utf-8") as fh:
+            stroki = fh.read().splitlines()
     for s in stroki:
         s = re.sub(r"\D", "", s)
         if len(s) == 10 and inn_ok(s) and s not in gotovo and s not in inns:
@@ -606,9 +667,6 @@ def iz_api(spisok, vyhod, api="https://api.deloskop.ru", pauza=6.0, maks=MAKS_ZA
         print("Пропущено: уже на сайте %d · в отсеве %d (не прошли ворота за последние %d дней; спросить всё — --zanovo)" % (
             propusk["opub"], propusk["otsev"], kv.OTSEV_DNEJ))
     inns = inns[:max(0, int(maks))]
-    zag = {"Accept": "application/json", "User-Agent": "Deloskop-kartochki/1"}
-    zag.update(zagolovki_dostupa())
-    sluzhebnyj = "X-Deloskop-Service" in zag or "Cookie" in zag
     print("Служебный доступ: %s · к запросу: %d ИНН (не больше %d за запуск)" % ("да" if sluzhebnyj else "нет — анонимно, 10 проверок в день", len(inns), maks))
     ok = oshibki = 0
     with open(vyhod, "a", encoding="utf-8") as fh:
@@ -647,6 +705,7 @@ def iz_api(spisok, vyhod, api="https://api.deloskop.ru", pauza=6.0, maks=MAKS_ZA
                 print("  … %d из %d" % (i, len(inns)))
             time.sleep(pauza)
     print("Получено: %d · ошибок: %d · файл: %s" % (ok, oshibki, vyhod))
+    return 0
 
 
 def _arg(argv, imya_, po_umolch=None):
@@ -674,18 +733,25 @@ def otsev(vhod, segodnya=None, put=None):
 
 
 def main(argv):
-    if not argv or argv[0] not in ("sobrat", "proverka", "iz-api", "vybor", "otsev", "perepechatat"):
+    if not argv or argv[0] not in ("sobrat", "proverka", "iz-api", "vybor", "otsev", "perepechatat", "svezhest"):
         print(__doc__)
         return 2
     if argv[0] == "perepechatat":
         # kartochki-shablon-v1: опубликованные карточки — по текущему шаблону, без сведений и без API (= sobrat --dobavit
         # с пустым входом): «Похожие», H1, строка под H1, description и прочие pochinit_* — как у новых карточек
         argv = ["sobrat", "--dobavit", "--vhod", os.devnull]
-    if argv[0] == "iz-api":
-        iz_api(_arg(argv, "--inn"), _arg(argv, "--vyhod", "tests/kartochki_dannye/kartochki.jsonl"),
-               _arg(argv, "--api", "https://api.deloskop.ru"), max(6.0, float(_arg(argv, "--pauza", "6"))),
-               int(_arg(argv, "--maks", str(MAKS_ZAPROSOV))), zanovo="--zanovo" in argv)
+    if argv[0] == "svezhest":
+        pechat_svezhesti(svezhest(), int(_arg(argv, "--pokazat", "10")))
         return 0
+    if argv[0] == "iz-api":
+        osv = _arg(argv, "--osvezhit")
+        if not _arg(argv, "--inn") and osv is None:
+            print("Нужен --inn <файл со списком ИНН> или --osvezhit N.")
+            return 2
+        return iz_api(_arg(argv, "--inn"), _arg(argv, "--vyhod", "tests/kartochki_dannye/kartochki.jsonl"),
+                      _arg(argv, "--api", "https://api.deloskop.ru"), max(6.0, float(_arg(argv, "--pauza", "6"))),
+                      int(_arg(argv, "--maks", str(MAKS_ZAPROSOV))), zanovo="--zanovo" in argv,
+                      osvezhit=int(osv) if osv is not None else None)
     if argv[0] == "vybor":
         return kv.main_vybor(argv, _arg, segodnya_msk())
     if argv[0] == "otsev":
@@ -714,6 +780,8 @@ def main(argv):
     pechat_otcheta(o)
     if o.get("s_diska"):
         print("Добор (--dobavit): опубликованных карточек оставлено как есть: %d." % o["s_diska"])
+    if o.get("nepolnye"):
+        print("Из них по неполному ответу (реестр без финансов — анонимный доступ?): %d — не сняты, сведения прежние." % o["nepolnye"])
     if "sitemap_vsego" in o:
         print("Sitemap: %d адресов карточек · новых в этой сборке: %d · ждут следующей партии: %d (не больше %s в сутки)." % (
             o["sitemap_vsego"], o["sitemap_novyh"], o["sitemap_zhdut"], _arg(argv, "--partiya", str(PARTIYA_V_SUTKI))))

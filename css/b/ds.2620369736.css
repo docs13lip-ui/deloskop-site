@@ -108,6 +108,8 @@ a.skip:focus{top:var(--s-2);color:var(--on-accent)}
  .shapka .shapka__right{margin-left:auto}
 }
 @media (max-width:640px){.shapka__word{font-size:20px}}
+/* uzkij-360-v1: 360–399 px (частые Android) — шапка влезает без сдвига вбок (было +24 px на 360) */
+@media (max-width:399px){.shapka .shapka__btn{margin-left:4px;padding:0 13px}.shapka .shapka__right{gap:0}.shapka__word{font-size:17px}}
 @media (max-width:359px){.shapka .shapka__btn{display:none}}
 @media print{.shapka,.mnav,.skip,.wn-bar{display:none!important}}
 

@@ -160,7 +160,7 @@ td b{font-weight:600}
 .sd-spisok small{display:block;color:var(--muted);font-size:13px}
 .rs-w{margin:8px 0 0;padding:8px 12px;border-radius:10px;background:var(--bad-bg);color:var(--bad);font-size:15px}
 @media (max-width:640px){.sd{padding:16px 14px 12px;margin-left:-4px;margin-right:-4px}.sd-sh{grid-template-columns:24px minmax(0,1fr);gap:8px}.sd-btns .btn,.sd-f .btn{min-height:44px;flex:1 1 auto}.sd-g{padding:9px 0}}
-@media print{.sd{border-color:#D9D9D4;padding:12px 14px}.sd-g input{display:none}.sd-g .sd-gp{display:inline;order:-1}.sd-ned li,.sd-pr li,.sd-itog,.sd-izm{-webkit-print-color-adjust:exact;print-color-adjust:exact}.sd-sh{break-inside:avoid}.sd-f input[type=text]{border:0;padding:0;background:none}}
+@media print{.sd{border-color:#D9D9D4;padding:12px 14px}.sd-g input{display:none}.sd-g .sd-gp{display:inline;order:-1}.sd-ned li,.sd-pr li,.sd-itog,.sd-izm{-webkit-print-color-adjust:exact;print-color-adjust:exact}.sd h3{break-after:avoid}.sd-acc li,.sd-ned li,.sd-pr li,.sd-g{break-inside:avoid}.sd-f input[type=text]{border:0;padding:0;background:none}}
 .rs{margin:40px 0 0;padding:18px 20px 16px;border:1px solid var(--line);border-radius:16px;break-inside:avoid}
 .rs h2{margin:0 0 4px;font-size:20px;letter-spacing:-.015em;font-weight:600}
 .rs-p{margin:0 0 14px;font-size:15px;color:var(--ink2)}
@@ -833,6 +833,9 @@ td b{font-weight:600}
     });
   }
   function pereschitat(v,rezhim){rsZapomnit();RS.summa='';var o=TEK.opts;render(TEK.r,{usloviya:U,indeksVorota:window.IndeksVorota,nomer:o.nomer,dostup:o.dostup,summa:v||null,rezhim:rezhim||o.rezhim});}
+  // pechat-svetlaya-v1: PDF и бумага — всегда в светлой теме: тёмный лист печатался бы светлым текстом на белом
+  window.addEventListener('beforeprint',function(){var d=document.documentElement;if(d.dataset.theme==='dark'){d.dataset.pechatTema='dark';d.dataset.theme='light';}});
+  window.addEventListener('afterprint',function(){var d=document.documentElement;if(d.dataset.pechatTema){d.dataset.theme=d.dataset.pechatTema;delete d.dataset.pechatTema;}});
   var summa=U?U.parseAmount(q.get('summa')):null;
   if(demo){
     var r=JSON.parse(JSON.stringify(PasportEngine.DEMO)); r.checked_at=new Date().toISOString();

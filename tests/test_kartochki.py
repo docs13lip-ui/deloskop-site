@@ -755,8 +755,18 @@ class TestKommentariiKartochki(unittest.TestCase):
         self.assertNotIn("kom", re.sub(r"kommentar", "", t.split("<main", 1)[1]))
 
     def test_chernovik_ne_vyhodit(self):
-        # численность «ok» — зелёный тон у записи shtat ждёт [Право] → комментария нет
+        # зелёные тоны shtat и nalogi утверждены [Право] 23.10 — черновик проверяем на копии библиотеки:
+        # тон, вернувшийся в «zhdet_prava», на карточку не выходит
+        import copy
         t = self._html(O.zapis(3))
+        self.assertIn('data-kom="shtat"', t)
+        self.assertIn('data-kom="nalogi"', t)
+        kom = copy.deepcopy(self.kom)
+        for x in kom["signaly"]:
+            if x["id"] in ("shtat", "nalogi"):
+                x["tony"]["zel"]["status"] = "zhdet_prava"
+        k = K.iz_check(O.zapis(3))
+        t = K.html_kartochki(k, K.vyvody(k), [], kom)
         self.assertNotIn('data-kom="shtat"', t)
         self.assertNotIn('data-kom="nalogi"', t)
 

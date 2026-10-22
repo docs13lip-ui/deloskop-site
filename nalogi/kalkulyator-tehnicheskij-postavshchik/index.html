@@ -193,14 +193,14 @@ main.shire article,main.shire .faq,main.shire .check,main.shire .src,main.shire 
           <div class="row"><span>Штраф, ст. 122 НК (<span id="sv-fp">20</span>%)</span><b id="sv-fine">—</b></div>
           <div class="row"><span>Пени за 2 года, ст. 75 НК</span><b id="sv-pen">—</b></div>
           <div class="tot"><span>Итого заплатите вы</span><b id="sv-tot">—</b></div>
-          <div class="vs">Год тарифа «Про» — <b><span data-cena="pro.god">14 300</span> ₽</b>. Это <b id="sv-x">—</b> от суммы, которую вы рискуете потерять на одной сделке.</div>
+          <div class="vs"><!--oplata--><template data-oplata>Год тарифа «Про» — <b><span data-cena="pro.god">14 300</span> ₽</b>. Это <b id="sv-x">—</b> от суммы, которую вы рискуете потерять на одной сделке.</template><!--/oplata--><!--v-bete-->Сейчас проверка бесплатна&nbsp;— <a href="#proverka">проверьте поставщика до&nbsp;оплаты&nbsp;↓</a><!--/v-bete--></div>
           <p class="note">Это пример расчёта по нормам Налогового кодекса, а не прогноз по вашей компании. Сколько налоговая доначислит в вашем случае, зависит от проверки.</p>
         </div>
       </div>
 </section>
 <!--faq-mesto-->
 <!--faq--><section class="faq" aria-label="Частые вопросы"><h2>Частые вопросы</h2><details><summary>За&nbsp;какой срок калькулятор считает пени?</summary><p>Пени считаем за&nbsp;2&nbsp;года: выездная проверка обычно приходит позже сделки.</p></details><details><summary>Изменится ли&nbsp;расчёт пеней с&nbsp;2027&nbsp;года?</summary><p>Пени посчитаны по&nbsp;правилам 2025–2026&nbsp;годов (п.&nbsp;5.1 ст.&nbsp;75 НК РФ, действует до&nbsp;31.12.2026). Если их&nbsp;не&nbsp;продлят, с&nbsp;2027&nbsp;года пени с&nbsp;31-го дня просрочки&nbsp;— 1/150 ставки ЦБ, и&nbsp;сумма будет выше.</p></details><details><summary>Это точная сумма доначислений по&nbsp;моей компании?</summary><p>Это пример расчёта по&nbsp;нормам Налогового кодекса, а&nbsp;не&nbsp;прогноз по&nbsp;вашей компании. Сколько налоговая доначислит в&nbsp;вашем случае, зависит от&nbsp;проверки.</p></details></section><!--/faq-->
-<section class="check" aria-label="Проверка компании">
+<section class="check" id="proverka" aria-label="Проверка компании">
   <h2>Проверьте поставщика до оплаты</h2>
   <p>Введите ИНН — покажем, что известно о компании, с источником и датой, и что запросить у поставщика перед оплатой. Бесплатно.</p>
   <form action="/" method="get" data-goal="article_to_tool" data-otkuda="kalkulyator"><input name="inn" inputmode="numeric" maxlength="12" pattern="\d{10}|\d{12}" required placeholder="ИНН компании"><button type="submit">Проверить</button></form>
@@ -223,7 +223,7 @@ main.shire article,main.shire .faq,main.shire .check,main.shire .src,main.shire 
     $('sv-tot').textContent=rub(tot);
     var pg=document.querySelector('[data-cena="pro.god"]'), GOD=pg?+pg.textContent.replace(/\D/g,''):14300;
     var pct=tot?GOD/tot*100:0;
-    $('sv-x').textContent=tot?(pct<1?'меньше 1%':Math.round(pct)+'%'):'—';
+    var sx=$('sv-x'); if(sx) sx.textContent=tot?(pct<1?'меньше 1%':Math.round(pct)+'%'):'—';  /* в бете строки с ценой нет (<!--oplata-->) */
   }
   sum.addEventListener('input',calc); $('sv-exp').addEventListener('change',calc); $('sv-int').addEventListener('change',calc);
   calc();

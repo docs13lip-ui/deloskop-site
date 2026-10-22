@@ -160,7 +160,7 @@ const NA_ZHIVOM = [
   // kommentarii-isklyucheno-v1 ([Ночные запуски] 03.10 13:40): 407/414/415/418/420 — «Компания исключена из ЕГРЮЛ» (уже исключена) —
   // не текст «на пути к исключению … заберите долг до исключения»; свой текст — запись isklyuchena (тест ниже, kommentarii-isklyuchena-v2).
   [["Статус", "Исключение из ЕГРЮЛ (недействующая)", "bad"], ["isklyuchenie", "kras"]],
-  [["Статус", "Действует", "ok"], null],
+  [["Статус", "Действует", "ok"], ["status", "zel"]], // [Право] 23.10 00:30, разд. 3
   [["Возраст компании", "8 месяцев", "warn"], ["molodaya", "zhel"]],
   [["Возраст компании", "1 год 8 месяцев", "warn"], null],
   [["Среднесписочная численность", "0 человек за 2025 год", "warn"], ["net_sotrudnikov", "zhel"]],
@@ -174,6 +174,9 @@ const NA_ZHIVOM = [
   [["Дисквалификация руководителя", "да", "bad"], ["diskval", "kras"]],
 ];
 
+// [Право] 23.10 00:30 разд. 3 (п. 373): зелёные тоны статуса, возраста, штата и налогов утверждены
+const ZEL_2310 = ["status", "vozrast", "shtat", "nalogi"];
+
 test("v2: живые строки → свой текст [Право]; неясные — без комментария", () => {
   for (const [[title, detail, status], ozh] of NA_ZHIVOM) {
     const k = K.najti(SPRAV, { title, detail, status });
@@ -182,7 +185,7 @@ test("v2: живые строки → свой текст [Право]; неяс
     const id = ozh[0];
     assert.ok(k, "нет комментария: " + gde);
     assert.deepStrictEqual([k.id, k.ton], [id, ozh[1]], gde);
-    assert.strictEqual(k.data, "02.10.2026");
+    assert.strictEqual(k.data, ZEL_2310.includes(id) && ozh[1] === "zel" ? "23.10.2026" : "02.10.2026");
     assert.ok(k.bank && k.nalog && k.sdelat, gde);
   }
 });
@@ -208,9 +211,10 @@ test("v2+v4+v5: 28 тонов утверждены (22 + 5 зелёных [Пр�
       continue;
     }
     assert.strictEqual(t.proveril, "Право · Юрист 115-ФЗ и Налоговый юрист");
+    if (ZEL_2310.includes(x.id) && t === x.tony.zel) { assert.strictEqual(t.data_proverki, "2026-10-23"); continue; }
     assert.strictEqual(t.data_proverki, "2026-10-02");
   }
-  assert.strictEqual(n, 34); // +3 kommentarii-108-110-v1 (108, 110, реорганизация)
+  assert.strictEqual(n, 38); // +4 зелёных [Право] 23.10 (статус, возраст, штат, налоги) // +3 kommentarii-108-110-v1 (108, 110, реорганизация)
 });
 
 test("v5: uslovie у тона — «Внимание» у дисквалификации только при совпадении по ФИО без ИНН ([Право] 21:25)", () => {
@@ -245,7 +249,9 @@ test("Паспорт: образец — комментарии под масс�
   assert.strictEqual(po[gde("svyazi", "Массовый адрес")], "massovyj_adres:zhel");
   assert.strictEqual(po[gde("rekvizity", "Недостоверность адреса или руководителя")], "nedostovernost:zel");
   assert.strictEqual(po[gde("nalogi", "Долги по налогам")], "nedoimka:zel");
-  assert.strictEqual(sp.length, 3);
+  // + зелёные [Право] 23.10: штат и уплаченные налоги образца
+  assert.deepStrictEqual(sp.map((v) => v.k.id + ":" + v.k.ton).filter((x) => /^(shtat|nalogi):/.test(x)).sort(), ["nalogi:zel", "shtat:zel"]);
+  assert.strictEqual(sp.length, 5);
 });
 
 test("Паспорт: без библиотеки, в служебных и расчётных разделах и у строк ЕГРЮЛ — комментариев нет", () => {
@@ -554,7 +560,7 @@ const V6 = [
   [["ФНС готовит исключение из ЕГРЮЛ — компания недействующая", "", "bad"], ["isklyuchenie", "kras"]],
   [["Статус", "Компания исключена из ЕГРЮЛ", "bad"], ["isklyuchena", "kras"]],
   [["Статус", "Ликвидирована", "bad"], ["likvidaciya", "kras"]],
-  [["Статус", "Действует", "ok"], null],
+  [["Статус", "Действует", "ok"], ["status", "zel"]],
 ];
 
 test("v6: 108, 110, реорганизация — тексты [Право] 04.10 дословно, только своим строкам", () => {
@@ -606,4 +612,36 @@ test("isklyuchenie-v1.1: коды 105–107 (ФНС готовит исключ�
   // уже исключённая — своя запись (isklyuchena), её текст не трогали
   const z = SPRAV.signaly.find((x) => x.id === "isklyuchena");
   assert.ok(z);
+});
+
+// ── [Право] 23.10 00:30 (pravo-2310-v1): зелёные тоны п. 373 и нормы без «5348-У» ──
+test("п. 373: зелёные тоны статуса, возраста, штата и налогов — дословно, ≤ 300 знаков; «Норма» штата — только при ≥ 2 сотрудниках", () => {
+  const ozh = {
+    status: ["В ЕГРЮЛ компания значится действующей — на дату проверки.", "Статус — только запись реестра: о реальности сделки он не говорит (ст. 54.1 НК).", "Перед подписанием договора сверьте ИНН и название по свежей выписке ЕГРЮЛ.", "129-ФЗ"],
+    vozrast: ["Компании больше года — банку есть с чем сравнить её обороты.", "Возраст не доказывает реальность поставщика: налоговая смотрит на ресурсы и исполнение (ст. 54.1 НК).", "Сверьте, что вид деятельности компании совпадает с вашим заказом.", "ст. 54.1 НК РФ"],
+    shtat: ["Сотрудники в сведениях ФНС есть — оборот банку есть чем объяснить.", "Численность налоговая сверяет с объёмом работ по договору (ст. 54.1 НК).", "Для работ и услуг уточните, кто исполнитель и сколько людей занято.", "ст. 54.1 НК РФ"],
+    nalogi: ["Компания платит налоги и взносы — для банка это признак реальной работы.", "Сумма — по открытым данным ФНС за прошлый год; соразмерность обороту налоговая оценивает отдельно.", "Сравните налоги с выручкой из отчётности: важна доля, а не сумма.", "приказ ФНС № ММ-3-06/333@"],
+  };
+  const stroki = { status: ["Статус", "Действует"], vozrast: ["Возраст компании", "5 лет"], shtat: ["Среднесписочная численность", "14 человек за 2025 год"], nalogi: ["Уплаченные налоги и взносы", "1,2 млн ₽ за 2025 год"] };
+  for (const [id, [b, n, sd, norma]] of Object.entries(ozh)) {
+    const k = K.najti(SPRAV, { title: stroki[id][0], detail: stroki[id][1], status: "ok" });
+    assert.ok(k, id);
+    assert.deepStrictEqual([k.id, k.ton, k.bank, k.nalog, k.sdelat, k.norma, k.data], [id, "zel", b, n, sd, norma, "23.10.2026"], id);
+    assert.ok((b + n + sd).length <= 300, id);
+  }
+  for (const d of ["1 человек за 2025 год", "0 человек", "нет"]) {
+    const k = K.najti(SPRAV, { title: "Среднесписочная численность", detail: d, status: "ok" });
+    assert.ok(!k || k.id !== "shtat", "при 0–1 сотруднике «Норма» штата не показывается: " + d);
+  }
+  assert.strictEqual(K.najti(SPRAV, { title: "Возраст компании", detail: "8 месяцев", status: "ok" }), null, "молодой компании зелёного текста о возрасте нет");
+});
+
+test("нормы: «5348-У» (правила наличных расчётов) — только у записей о наличных", () => {
+  for (const x of SPRAV.signaly) {
+    const normy = [x.norma || ""].concat(Object.values(x.tony || {}).map((t) => t.norma || "")).join(" ");
+    if (!/5348/.test(normy)) continue;
+    assert.match(x.nazv + " " + x.re, /налич|снят|касс|cash/i, x.id + ": «5348-У» не к месту");
+  }
+  const po = Object.fromEntries(SPRAV.signaly.map((x) => [x.id, x.norma]));
+  assert.deepStrictEqual([po.smena_rukovoditelya, po.rukovodstvo, po.molodaya, po.vozrast, po.okved], ["115-ФЗ", "115-ФЗ", "ст. 54.1 НК РФ", "115-ФЗ", "115-ФЗ"]);
 });

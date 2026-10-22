@@ -5361,7 +5361,9 @@
   function sostoyanie(o) {
     o = o || {};
     var T = o.tarify, u = o.user || null, inn = String(o.inn || '').replace(/\D/g, '');
-    var put = '/pasport/kontragent/?inn=' + inn;
+    // dosje-sdelki-v1: номер проверки есть — открываем Паспорт с досье сделки по нему, без второй проверки по ИНН
+    var rid = /^[A-Za-z0-9_-]{8,24}$/.test(String(o.reportId || '')) ? String(o.reportId) : '';
+    var put = rid ? '/pasport/kontragent/?id=' + rid + '#sd' : '/pasport/kontragent/?inn=' + inn;
     var g = o.gotov;
     if (g && g.nomer) {
       var kogda = vremyaRu(g.sformirovan);
@@ -5371,7 +5373,7 @@
       var s = 'В бете — бесплатно.';
       var srok = srokBety(T && T.betaDo, o.sejchas);
       if (T && T.start && srok) s += ' После ' + srok.kratko + ' — ' + rub(T.cena) + ' или в тарифе «' + T.start + '»' + (startVygodnee(T) ? ': ' + startPodskazka(T) : '') + '.';
-      return { sost: 'beta', knopka: 'Паспорт контрагента', stroka: s, href: put };
+      return { sost: 'beta', knopka: rid ? 'Досье сделки' : 'Паспорт контрагента', stroka: s, href: put };
     }
     var plan = u && u.plan ? String(u.plan) : '';
     if (PLATNYE[plan]) return { sost: 'tarif', knopka: 'Сформировать Паспорт', stroka: 'Входит в ваш тариф', href: put };
@@ -5456,7 +5458,7 @@
     var user = o.user ? Promise.resolve(o.user) : (beta || !o.api ? Promise.resolve(null)
       : doc.defaultView.fetch(o.api + '/api/me', { credentials: 'include' }).then(function (r) { return r.json(); }).then(function (j) { return j && j.user || null; }).catch(function () { return null; }));
     return Promise.all([zagruzit(doc), user]).then(function (x) {
-      return primenit(a, sostoyanie({ tarify: iz(x[0]), beta: beta, user: x[1], gotov: o.gotov, inn: o.inn }), mesto, o.nazvanie);
+      return primenit(a, sostoyanie({ tarify: iz(x[0]), beta: beta, user: x[1], gotov: o.gotov, inn: o.inn, reportId: o.reportId }), mesto, o.nazvanie);
     }).catch(function () { return null; });
   }
 
@@ -6142,7 +6144,9 @@
     var a = [svoj && g && g.href && !g.sled
       ? { t: g.knopka || 'Что сделать', href: g.href, glavnaya: true, cel: 'shchit_shag', ext: !!g.ext }
       : { t: svoj ? 'Следить за своей компанией' : 'Следить за компанией', href: '/cabinet.html#watch', glavnaya: true, cel: svoj ? 'shchit_sled' : 'otchet_sled' }];
-    if (!svoj && inn.length === 10) a.push({ t: 'Паспорт контрагента', href: '/pasport/kontragent/?inn=' + inn, cel: 'otchet_pasport' });
+    // dosje-sdelki-v1: с номером проверки — «Досье сделки» на странице Паспорта по этому номеру (без второй проверки)
+    var rid = /^[A-Za-z0-9_-]{8,24}$/.test(String(r && r.report_id || '')) ? String(r.report_id) : '';
+    if (!svoj && inn.length === 10) a.push(rid ? { t: 'Досье сделки', href: '/pasport/kontragent/?id=' + rid + '#sd', cel: 'otchet_pasport' } : { t: 'Паспорт контрагента', href: '/pasport/kontragent/?inn=' + inn, cel: 'otchet_pasport' });
     return a;
   }
 
@@ -6172,6 +6176,14 @@
   }
   function modulIO() { return typeof self !== 'undefined' && self.IndeksOtvet ? self.IndeksOtvet : null; }
 
+  function summaVSsylku(a, report) {
+    var h = a.getAttribute('href') || '';
+    if (!/^\/pasport\/kontragent\/\?id=/.test(h)) return;
+    var i = report.querySelector('.usl-in input'), U = typeof self !== 'undefined' ? self.Usloviya : null;
+    var v = U && i ? U.parseAmount(i.value) : 0;
+    h = h.replace(/&summa=\d+/, '');
+    a.setAttribute('href', v > 0 ? h.replace(/(#sd)?$/, '&summa=' + Math.round(v) + '$1') : h);
+  }
   function htmlDejstviya(r, svoj, g) {
     return dejstviya(r, svoj, g).map(function (d) {
       return '<a class="ot-btn ' + (d.glavnaya ? 'p' : 's') + '" href="' + esc(d.href) + '" data-cel="' + d.cel + '"' + (d.ext ? ' target="_blank" rel="noopener"' : '') + '>' + esc(d.t) + '</a>';
@@ -6370,8 +6382,10 @@
     // «Паспорт 490 ₽ в один шаг»: кнопка Паспорта по состояниям из tarify.json (js/pasport-cta.js); нет модуля — как было
     var pa = vd.querySelector('[data-cel="otchet_pasport"]');
     if (pa && doc.defaultView && doc.defaultView.PasportCta) {
-      try { doc.defaultView.PasportCta.mount(pa, { inn: r.company.inn, mesto: 'list', api: o.api || '', nazvanie: r.company.name_short || r.company.name_full || '' }); } catch (e) { /* кнопка остаётся как была */ }
+      try { doc.defaultView.PasportCta.mount(pa, { inn: r.company.inn, mesto: 'list', reportId: r.report_id, api: o.api || '', nazvanie: r.company.name_short || r.company.name_full || '' }); } catch (e) { /* кнопка остаётся как была */ }
     }
+    // сумма из «Условий сделки» — в досье сделки (шаг 1), в момент нажатия: человек мог вписать её после показа отчёта
+    if (pa) pa.addEventListener('click', function () { summaVSsylku(pa, report); });
     if (doc.body) doc.body.classList.add('rezhim-otcheta');
     return true;
   }

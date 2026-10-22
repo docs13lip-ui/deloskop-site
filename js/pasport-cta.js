@@ -102,7 +102,9 @@
   function sostoyanie(o) {
     o = o || {};
     var T = o.tarify, u = o.user || null, inn = String(o.inn || '').replace(/\D/g, '');
-    var put = '/pasport/kontragent/?inn=' + inn;
+    // dosje-sdelki-v1: номер проверки есть — открываем Паспорт с досье сделки по нему, без второй проверки по ИНН
+    var rid = /^[A-Za-z0-9_-]{8,24}$/.test(String(o.reportId || '')) ? String(o.reportId) : '';
+    var put = rid ? '/pasport/kontragent/?id=' + rid + '#sd' : '/pasport/kontragent/?inn=' + inn;
     var g = o.gotov;
     if (g && g.nomer) {
       var kogda = vremyaRu(g.sformirovan);
@@ -112,7 +114,7 @@
       var s = 'В бете — бесплатно.';
       var srok = srokBety(T && T.betaDo, o.sejchas);
       if (T && T.start && srok) s += ' После ' + srok.kratko + ' — ' + rub(T.cena) + ' или в тарифе «' + T.start + '»' + (startVygodnee(T) ? ': ' + startPodskazka(T) : '') + '.';
-      return { sost: 'beta', knopka: 'Паспорт контрагента', stroka: s, href: put };
+      return { sost: 'beta', knopka: rid ? 'Досье сделки' : 'Паспорт контрагента', stroka: s, href: put };
     }
     var plan = u && u.plan ? String(u.plan) : '';
     if (PLATNYE[plan]) return { sost: 'tarif', knopka: 'Сформировать Паспорт', stroka: 'Входит в ваш тариф', href: put };
@@ -197,7 +199,7 @@
     var user = o.user ? Promise.resolve(o.user) : (beta || !o.api ? Promise.resolve(null)
       : doc.defaultView.fetch(o.api + '/api/me', { credentials: 'include' }).then(function (r) { return r.json(); }).then(function (j) { return j && j.user || null; }).catch(function () { return null; }));
     return Promise.all([zagruzit(doc), user]).then(function (x) {
-      return primenit(a, sostoyanie({ tarify: iz(x[0]), beta: beta, user: x[1], gotov: o.gotov, inn: o.inn }), mesto, o.nazvanie);
+      return primenit(a, sostoyanie({ tarify: iz(x[0]), beta: beta, user: x[1], gotov: o.gotov, inn: o.inn, reportId: o.reportId }), mesto, o.nazvanie);
     }).catch(function () { return null; });
   }
 

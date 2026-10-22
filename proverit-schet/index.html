@@ -383,10 +383,12 @@ function render(r,sel,local,remote,remoteErr){
     '<div id="accHost"></div><div class="rows">'+rows+'</div>'+rem+
     (r.bank||r.total?'<p class="meta2">'+(r.bank?'Банк: '+esc(r.bank)+'. ':'')+(r.total?'Сумма к оплате: '+money(r.total)+' ₽.':'')+'</p>':'')+
     '<div class="pur"><b>Назначение платежа</b><div id="purText">'+esc(pur)+'</div><button type="button" id="copyPur">Скопировать</button></div>'+
-    (remote&&remote.report_id?'<p class="meta2"><a href="/report.html?id='+encodeURIComponent(remote.report_id)+'" target="_blank" rel="noopener">Полное досье поставщика (PDF)</a></p>':'')+
+    (remote&&remote.report_id?'<p class="meta2">'+(String(remote.company&&remote.company.inn||'').length===10?'<a class="sd-vhod" id="sdVhod" href="/pasport/kontragent/?id='+encodeURIComponent(remote.report_id)+(r.total>0?'&summa='+Math.round(r.total):'')+'#sd">Собрать досье сделки →</a> — реквизиты, документы и договор в одном месте. ':'')+'<a href="/report.html?id='+encodeURIComponent(remote.report_id)+'" target="_blank" rel="noopener">Полное досье поставщика (PDF)</a></p>':'')+
     '<p class="small">Это автоматическая проверка реквизитов и открытых данных ФНС, а не гарантия. Если поставщик прислал новые реквизиты письмом — перезвоните ему по известному номеру и <a href="#smena">сравните реквизиты</a>.</p>';
   out.hidden=false;
   if(window.DlkAcc)DlkAcc.render(document,$('accHost'),AD);
+  // dosje-sdelki-v1: реквизиты этого счёта — в «Досье сделки» через sessionStorage вкладки (не через адресную строку)
+  var sdv=$('sdVhod');if(sdv)sdv.addEventListener('click',function(){try{sessionStorage.setItem('dlk_sdelka_vhod',JSON.stringify({inn:remote.company.inn,rekv:{inn:sel&&sel.inn||null,bik:r.bik||null,acc:r.acc||null},summa:r.total>0?r.total:null}))}catch(_){}});
   if(lim){var dop='Реквизиты выше проверены и без лимита.';
     if(window.dlkLimit)dlkLimit.pokazat($('limitHost'),{stranica:'schet',inn:sel&&sel.inn,dop:dop});
     else $('limitHost').innerHTML='<p class="note warn">На сегодня бесплатные проверки закончились. Завтра — снова 10. '+dop+'</p>';}

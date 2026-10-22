@@ -106,6 +106,61 @@ td b{font-weight:600}
 .podl{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:start}
 .podl .qr svg{display:block;width:132px;height:132px}
 .hash{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;word-break:break-all;color:var(--ink2)}
+.sd{margin:26px 0 8px;border:1px solid var(--line);border-radius:16px;padding:18px 20px 14px;break-inside:auto;scroll-margin-top:88px}
+.sd-sh{scroll-margin-top:88px}
+.sd-top{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 16px}
+.sd h2{margin:0;font-size:20px;letter-spacing:-.015em;font-weight:600}
+.sd-kogda{margin:0;font-size:13px;color:var(--muted)}
+.sd-itog{margin:12px 0 0;padding:12px 14px;border-radius:10px;display:grid;gap:2px;background:var(--warn-bg);color:var(--warn);break-inside:avoid}
+.sd-itog b{font-size:17px;font-weight:600;letter-spacing:-.01em}
+.sd-itog span{font-size:15px;color:var(--ink2)}
+.sd-itog.stop,.sd-itog.post{background:var(--bad-bg);color:var(--bad)}
+.sd-itog.sobrano{background:#F0F0EC;color:var(--ink)}
+.sd-w{margin:8px 0 0;font-size:15px;color:var(--warn)}
+.sd-shagi{list-style:none;margin:14px 0 0;padding:0}
+.sd-sh{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;padding:14px 0;border-top:1px solid var(--line)}
+.sd-n{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--off);color:var(--muted);font-size:13px;font-weight:600;display:grid;place-items:center;margin-top:1px}
+.sd-sh.gotov .sd-n{border-color:var(--ok);background:var(--ok);color:#fff}
+.sd-b{min-width:0}
+.sd h3{margin:0 0 6px;font-size:15px;font-weight:600;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.sd-st{font-size:13px;font-weight:400;color:var(--muted)}
+.sd-sh.gotov .sd-st{color:var(--ok)}
+.sd-p{margin:0 0 6px;font-size:15px;color:var(--ink2);overflow-wrap:anywhere}
+.sd-s{margin:6px 0 0;font-size:13px;color:var(--muted)}
+.sd-l,.sd-acc,.sd-ned,.sd-pr{list-style:none;margin:0;padding:0}
+.sd-l li{padding:3px 0;font-size:15px;overflow-wrap:anywhere}
+.sd-l a{color:var(--ink)}
+.sd-acc li{display:grid;grid-template-columns:16px minmax(0,1fr);gap:8px;padding:7px 0;border-top:1px dotted var(--line);font-size:15px}
+.sd-acc li:first-child{border-top:0}
+.sd-acc .m{margin-top:6px}
+.sd-acc small,.sd-ned small,.sd-pr small{display:block;font-size:13px;color:var(--ink2);overflow-wrap:anywhere}
+.sd-v{font-size:13px;color:var(--muted)}
+.sd-acc .is-bad b,.sd-acc .is-bad .sd-v,.sd-acc .is-high b{color:var(--bad)}
+.m.m-bad{background:var(--bad);border-radius:2px}
+.sd-ned li{padding:7px 0 7px 14px;border-left:3px solid var(--warn);margin:6px 0;background:#FFFCF5;border-radius:0 10px 10px 0;padding-right:10px}
+.sd-pr li{padding:7px 10px 7px 14px;border-left:3px solid var(--bad);margin:6px 0;background:var(--bad-bg);border-radius:0 10px 10px 0}
+.sd-ned b,.sd-pr b{font-weight:600;font-size:15px}
+.sd-f{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin:4px 0 8px}
+.sd-f label{display:grid;gap:4px;font-size:13px;color:var(--muted);flex:1 1 200px;min-width:0}
+.sd-f .sd-w100{flex-basis:100%}
+.sd-f input[type=text],.sd-f textarea{font:inherit;font-size:17px;color:var(--ink);padding:9px 10px;border:1px solid #D9D9D4;border-radius:10px;background:#fff;width:100%;box-sizing:border-box;min-width:0}
+.sd-f textarea{resize:vertical;font-variant-numeric:tabular-nums}
+.sd-f input:focus,.sd-f textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(11,99,229,.15)}
+.sd-f small{flex-basis:100%;font-size:13px;color:var(--muted)}
+.sd-g{display:flex;gap:9px;align-items:flex-start;font-size:15px;padding:6px 0;cursor:pointer;color:var(--ink)}
+.sd-g input{width:18px;height:18px;margin:2px 0 0;flex:none;accent-color:var(--accent)}
+.sd-izm{margin:6px 0;padding:10px 12px;border-radius:10px;background:var(--warn-bg);font-size:15px}
+.sd-izm ul{margin:4px 0 0;padding-left:18px}
+.sd-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.sd-btns .sd-del{color:var(--ink2);font-weight:500}
+.sd .stroka{margin-top:10px}
+.sd-spisok{margin-top:24px;font-size:15px}
+.sd-spisok ul{margin:8px 0 0;padding:0;list-style:none}
+.sd-spisok li{padding:8px 0;border-top:1px solid var(--line)}
+.sd-spisok small{display:block;color:var(--muted);font-size:13px}
+.rs-w{margin:8px 0 0;padding:8px 12px;border-radius:10px;background:var(--bad-bg);color:var(--bad);font-size:15px}
+@media (max-width:640px){.sd{padding:16px 14px 12px;margin-left:-4px;margin-right:-4px}.sd-sh{grid-template-columns:24px minmax(0,1fr);gap:8px}.sd-btns .btn,.sd-f .btn{min-height:44px;flex:1 1 auto}.sd-g{padding:9px 0}}
+@media print{.sd{border-color:#D9D9D4;padding:12px 14px}.sd-g input{display:none}.sd-g .sd-gp{display:inline;order:-1}.sd-ned li,.sd-pr li,.sd-itog,.sd-izm{-webkit-print-color-adjust:exact;print-color-adjust:exact}.sd-sh{break-inside:avoid}.sd-f input[type=text]{border:0;padding:0;background:none}}
 .rs{margin:40px 0 0;padding:18px 20px 16px;border:1px solid var(--line);border-radius:16px;break-inside:avoid}
 .rs h2{margin:0 0 4px;font-size:20px;letter-spacing:-.015em;font-weight:600}
 .rs-p{margin:0 0 14px;font-size:15px;color:var(--ink2)}
@@ -238,7 +293,7 @@ td b{font-weight:600}
 <link rel="stylesheet" href="/css/glubina.css">
 <script>!function(d,t){try{t=localStorage.tema}catch(e){}t=t=="auto"?(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light"):t=="light"?t:"dark";d.dataset.theme=t;if(t=="dark"&&(t=document.querySelector("meta[name=theme-color]")))t.content="#111113"}(document.documentElement)</script>
 <meta name="deloskop-rezhim" content="beta">
-<style data-tema>[data-theme=dark] .btn{border:1px solid #2E2E33}[data-theme=dark] .btn.primary{color:#0B0B0C}[data-theme=dark] .itog h2{background:#19191C}[data-theme=dark] .summa select{border:1px solid #2E2E33;background:#1C1C1F}[data-theme=dark] .summa input{border:1px solid #2E2E33}[data-theme=dark] .zn.info{background:#26262A}[data-theme=dark] .zn.off{background:#19191C}[data-theme=dark] .kom{background:#19191C}[data-theme=dark] .net{background:#19191C}[data-theme=dark] .sam .kinn{background:#1C1C1F}[data-theme=dark] .otm-f{background:#19191C}[data-theme=dark] .otm-f input[type=text],[data-theme=dark] .otm-f select{border:1px solid #2E2E33;background:#1C1C1F}[data-theme=dark] .otm-l{background:#19191C}[data-theme=dark] .pp .pp-w{background:#35190D;color:#FFBE70}[data-theme=dark] .pp .pp-z{background:#19191C}[data-theme=dark] .pp .pp-z.warn{background:#35190D;border-color:#4B2F23;color:#FFBE70}[data-theme=dark] .rkv-ps>div:nth-child(even){border-left:1px solid #2E2E33}[data-theme=dark] .rkv-ps>div:nth-child(n+3){border-top:1px solid #2E2E33}[data-theme=dark] .vd-ix{border-right:1px solid rgba(255,255,255,0.132)}@media (max-width:600px){[data-theme=dark] .vd-ix{border-bottom:1px solid rgba(255,255,255,0.132)}[data-theme=dark] .vd-ix{border-right:0}}[data-theme=dark] .pbal--kor{background:#26262A}</style>
+<style data-tema>[data-theme=dark] .btn{border:1px solid #2E2E33}[data-theme=dark] .btn.primary{color:#0B0B0C}[data-theme=dark] .itog h2{background:#19191C}[data-theme=dark] .summa select{border:1px solid #2E2E33;background:#1C1C1F}[data-theme=dark] .summa input{border:1px solid #2E2E33}[data-theme=dark] .zn.info{background:#26262A}[data-theme=dark] .zn.off{background:#19191C}[data-theme=dark] .kom{background:#19191C}[data-theme=dark] .net{background:#19191C}[data-theme=dark] .sam .kinn{background:#1C1C1F}[data-theme=dark] .otm-f{background:#19191C}[data-theme=dark] .otm-f input[type=text],[data-theme=dark] .otm-f select{border:1px solid #2E2E33;background:#1C1C1F}[data-theme=dark] .otm-l{background:#19191C}[data-theme=dark] .sd-itog.sobrano{background:#26262A}[data-theme=dark] .sd-ned li{background:#1C1C1F}[data-theme=dark] .sd-f input[type=text],[data-theme=dark] .sd-f textarea{border:1px solid #2E2E33;background:#1C1C1F}[data-theme=dark] .pp .pp-w{background:#35190D;color:#FFBE70}[data-theme=dark] .pp .pp-z{background:#19191C}[data-theme=dark] .pp .pp-z.warn{background:#35190D;border-color:#4B2F23;color:#FFBE70}[data-theme=dark] .rkv-ps>div:nth-child(even){border-left:1px solid #2E2E33}[data-theme=dark] .rkv-ps>div:nth-child(n+3){border-top:1px solid #2E2E33}[data-theme=dark] .vd-ix{border-right:1px solid rgba(255,255,255,0.132)}@media (max-width:600px){[data-theme=dark] .vd-ix{border-bottom:1px solid rgba(255,255,255,0.132)}[data-theme=dark] .vd-ix{border-right:0}}[data-theme=dark] .pbal--kor{background:#26262A}</style>
 </head>
 <body>
 <!--shapka-->
@@ -326,6 +381,9 @@ td b{font-weight:600}
 <script src="/js/usloviya.js"></script>
 <script src="/js/lestnica.js"></script>
 <script src="/js/papka.js"></script>
+<script src="/js/smena.js"></script>
+<script src="/js/acc.js"></script>
+<script src="/js/sdelka.js"></script>
 <script src="/js/indeks-vorota.js"></script>
 <script src="/indeks/indeks.js"></script>
 <script src="/js/indeks-otvet.js"></script>
@@ -541,7 +599,7 @@ td b{font-weight:600}
       '<div class="stroka">'+esc(o.ogovorka)+' '+esc(K.VERSIYA)+'.</div>'+
       '<p class="pp-p noprint">В PDF опись попадёт отдельной страницей по кнопке «Папка к договору» наверху.</p>';
   }
-  function papkaObnovit(){var e=document.getElementById('papka-r');if(e)e.innerHTML=papkaHtml(papkaOpis());}
+  function papkaObnovit(){var e=document.getElementById('papka-r');if(e)e.innerHTML=papkaHtml(papkaOpis());if(document.getElementById('sd'))sdObnovit();}
   function papkaPechat(){
     var o=papkaOpis(), li=pk.querySelectorAll('.ls-l .pril'), bylo=[];
     papkaObnovit();
@@ -559,7 +617,7 @@ td b{font-weight:600}
       '<div class="rs-g">'+
         pole('dok','Документ','Счёт № 118 от 29.09.2026')+
         pole('summa','Сумма, ₽','250 000',null,summa?U.money(summa).replace(/\s?₽$/,''):'')+
-        '<fieldset><legend>Решение</legend><div class="rs-r">'+RS_RESH.map(function(x){return '<label><input type="radio" name="resh" value="'+x[0]+'"'+(RS.resh===x[0]?' checked':'')+'>'+esc(x[1])+'</label>'}).join('')+'</div></fieldset>'+
+        '<fieldset><legend>Решение</legend><div class="rs-r">'+RS_RESH.map(function(x){return '<label><input type="radio" name="resh" value="'+x[0]+'"'+(RS.resh===x[0]?' checked':'')+'>'+esc(x[1])+'</label>'}).join('')+'</div><p class="rs-w" id="rs-w" role="alert" hidden></p></fieldset>'+
         pole('dokumenty','Запросили у контрагента','Приказ о директоре, доверенность подписанта','wide')+
         pole('dolzhnost','Решение принял (должность)','Финансовый директор')+
         pole('data','Дата решения','',null,segodnya())+
@@ -598,8 +656,9 @@ td b{font-weight:600}
     return '<div class="vd-ix"><span class="vd-ix__l">Индекс Делоскопа</span><span class="vd-ix__s">считаем</span><span class="vd-ix__p">'+(ix.sobrano!=null?'собрано '+esc(ix.sobrano)+'% данных, для балла нужно 60%':'для балла нужно собрать 60% данных')+'</span></div>';
   }
   function render(r,opts){
+    if(!SD.zagr){SD.zagr=true;sdVosstanovit(r,opts);}
     var p=P.sobrat(r,opts), m=p.meta; INN=m.inn||"";
-    TEK={r:r,opts:opts,ix:ixKlyuch(p)};
+    TEK={r:r,opts:opts,ix:ixKlyuch(p)};TEK.p=p;
     document.title='Паспорт контрагента: '+m.nazvanie+' — Делоскоп';
     // Ссылка «для коллеги» — по ИНН, не по номеру досье: получатель соберёт Паспорт заново, на день открытия,
     // а номер досье (ключ к сведениям этой проверки) из рук не уходит (команда 29.09 19:07, Прорыв «Я-2»).
@@ -625,6 +684,7 @@ td b{font-weight:600}
             '<select name="rezhim" aria-label="Режим налогообложения вашей компании">'+['osn','usn_dr','usn_d'].map(function(k){return '<option value="'+k+'"'+((opts.rezhim||'osn')===k?' selected':'')+'>'+esc(REZH_IMYA[k])+'</option>'}).join('')+'</select>'+
             '<button class="btn" type="submit">Посчитать</button></form></div></li>'+
         '</ol></div>'+
+        (SDK&&!m.demo?'<div id="sd-mesto"></div>':'')+
         '<div class="polnota"><span>'+esc(pol)+'</span><span>'+esc(m.versiya)+'</span></div>'+
         '<div class="legenda"><span><span class="m m-ist"></span>подтверждено источником</span><span><span class="m m-ras"></span>рассчитано Делоскопом</span><span><span class="m m-net"></span>не проверяли — причина в разделе</span></div>'+
         '<ol class="ogl" aria-label="Разделы Паспорта">'+p.razdely.map(function(x){var z=znachok(x);return '<li>'+mark(x)+'<a href="#r'+x.n+'">'+x.n+'. '+esc(x.title)+'</a><span class="st '+z[0]+'">'+esc(z[1])+'</span></li>'}).join('')+'</ol>'+
@@ -660,8 +720,10 @@ td b{font-weight:600}
       lestnicaSvyazat(it.na_konu&&it.na_konu.summa,r);
       var rsf=document.getElementById('rs');if(rsf)rsf.addEventListener('input',function(e){if((e.target.name||'')==='dokumenty')papkaObnovit();});
       papkaObnovit();
+      sdSvyazat();sdObnovit();
+      if(location.hash==='#sd'&&!PECHAT){var sdE=document.getElementById('sd');if(sdE&&sdE.scrollIntoView)sdE.scrollIntoView();}
       var f=document.getElementById('summa');
-      if(f)f.onsubmit=function(e){e.preventDefault();var v=U.parseAmount(f.summa.value);rsZapomnit();RS.summa='';render(r,{usloviya:U,indeksVorota:window.IndeksVorota,nomer:opts.nomer,dostup:opts.dostup,summa:v||null,rezhim:f.rezhim.value});};
+      if(f)f.onsubmit=function(e){e.preventDefault();pereschitat(U.parseAmount(f.summa.value)||null,f.rezhim.value);};
       var pdf=document.getElementById('pdf'), share=document.getElementById('share'), pb=document.getElementById('papka');
       pdf.hidden=share.hidden=false; pdf.onclick=function(){window.print()};
       if(pb&&K){pb.hidden=false;pb.onclick=papkaPechat;}
@@ -670,6 +732,107 @@ td b{font-weight:600}
     });
   }
 
+  // «Досье сделки» (dosje-sdelki-v1, задача владельца 22.10): ИНН и сумма → факты с источниками и датами → реквизиты →
+  // чего не хватает → договор и документы → сохранение и повторная проверка. Логика и разметка — js/sdelka.js (чистые функции);
+  // здесь — только связка с Паспортом: сумма, отметки самопроверки (OTM), «Решение о сделке». Сохраняем в localStorage только по кнопке.
+  var SDK=window.Sdelka||null, SD={zagr:false,rekvTekst:'',rekvKogda:'',galki:{docs:{}},sohraneno:null}, LS=null;
+  try{LS=window.localStorage}catch(_){LS=null}
+  function sdRekvTekst(x){return x?[x.inn?'ИНН '+x.inn:'',x.bik?'БИК '+x.bik:'',x.acc?'р/с '+x.acc:''].filter(Boolean).join(', '):''}
+  function sdVosstanovit(r,opts){
+    if(!SDK)return;
+    var inn=String(r&&r.company&&r.company.inn||'');
+    var z=SDK.najti(LS,inn);
+    if(z){SD.sohraneno=z;SD.galki={svereny:!!z.galki.svereny,telefon:!!z.galki.telefon,dogovor:!!z.galki.dogovor,docs:z.galki.docs||{}};
+      if(z.rekv){SD.rekvTekst=sdRekvTekst(z.rekv);SD.rekvKogda='при сохранении '+SDK.mskVremya(z.t);}
+      (z.otm||[]).forEach(function(o){if(o&&o.ok&&o.razdel&&!OTM[o.razdel])OTM[o.razdel]=o;});
+      if(!opts.summa&&z.summa)opts.summa=z.summa;}
+    // из «Проверь счёт»: реквизиты и сумма счёта — через sessionStorage этой вкладки, не через адресную строку
+    var vh=null;try{vh=JSON.parse(sessionStorage.getItem('dlk_sdelka_vhod')||'null');sessionStorage.removeItem('dlk_sdelka_vhod');}catch(_){vh=null}
+    if(vh&&String(vh.inn||'')===inn){if(vh.rekv){SD.rekvTekst=sdRekvTekst(vh.rekv);SD.rekvKogda='';}if(!opts.summa&&vh.summa>0)opts.summa=vh.summa;}
+  }
+  var SD_FAKTY=['rekvizity','finansy','nalogi','sudy','scheta','pristavy','stoplisty'];
+  function sdFakty(p){
+    return (p.razdely||[]).filter(function(x){return SD_FAKTY.indexOf(x.id)>=0}).map(function(x){
+      var z=znachok(x),o=OTM[x.n],t=z[1];
+      if(x.status==='not_checked'&&o&&o.ok)t='не проверяли; ваша отметка — '+P.OTM_REZ[o.rez]+' ('+o.data+')';
+      else if(x.status==='found'||x.status==='not_found')t=t+(x.data_svedeniy&&x.status==='found'?' · сведения на '+P.dataRu(x.data_svedeniy):'')+(x.istochnik?' · '+x.istochnik:'');
+      else if(x.status==='not_checked')t='не проверяли';
+      return {n:x.n,title:x.title,tekst:t,mark:x.status==='not_checked'||x.status==='locked'?'m-net':x.vid==='raschet'?'m-ras':'m-ist'};});
+  }
+  function sdDannye(){
+    if(!SDK||!TEK)return null;
+    var r=TEK.r,opts=TEK.opts,p=TEK.p,summa=opts.summa||null;
+    var v=U.decide(r,{amount:summa,regime:opts.rezhim});        // как раздел 14–15 Паспорта (P.sobrat)
+    var rk=SD.rekvTekst?SDK.rekvizity(SD.rekvTekst,r):{vvedeny:false,stroki:[]};
+    var inn=String(r.company&&r.company.inn||'');
+    var o={r:r,v:v,p:p,summa:summa,rekv:rk,otm:OTM,galki:SD.galki};
+    var ned=SDK.nedostaet(o),pr=SDK.problemy(o);o.nedostaet=ned;o.problemy=pr;
+    var it=SDK.itog(o);
+    o.delopis=SDK.delopisSsylka(inn,it);
+    ned=SDK.nedostaet(o);o.nedostaet=ned;
+    var sn=SDK.snimok(r,v,it), z=SD.sohraneno;
+    var izm=z&&z.snimok&&z.snimok.id&&sn.id&&z.snimok.id!==sn.id?SDK.sravnit(z.snimok,sn,U):null;
+    return {r:r,v:v,rk:rk,ned:ned,pr:pr,it:it,sn:sn,izm:izm,inn:inn,summa:summa,delopis:o.delopis};
+  }
+  function sdObnovit(fokus){
+    var mesto=document.getElementById('sd')||document.getElementById('sd-mesto');if(!mesto||!SDK)return;
+    var d=sdDannye();if(!d)return;
+    var m=TEK.p.meta;
+    mesto.outerHTML=SDK.html({nazvanie:m.nazvanie,inn:d.inn,summa:d.summa,svedeniyaNa:vremya(m.sformirovan),sobrano:SDK.mskVremya(Date.now()),
+      it:d.it,ned:d.ned,pr:d.pr,rekv:d.rk,rekvTekst:SD.rekvTekst,rekvKogda:SD.rekvKogda,galki:SD.galki,docs:d.v.docs,pvBaza:!!(d.v.predvaritelno&&d.v.predvaritelno.baza),
+      fakty:sdFakty(TEK.p),sohraneno:SD.sohraneno,izm:d.izm,svezh:SDK.svezhest(d.r.checked_at),delopis:d.delopis});
+    // «Решение о сделке»: «Платить» при незакрытом досье — предупреждение на экране и в PDF
+    var w=document.getElementById('rs-w');
+    if(w){var bad=RS.resh==='platit'&&d.it.kod!=='sobrano';w.hidden=!bad;w.textContent=bad?('Решение «Платить» принято при незакрытом досье сделки: '+d.it.zagolovok.toLowerCase()+'. '+(d.it.kod==='predv'?'Не проверено — не значит «в порядке».':d.it.tekst)):'';}
+    if(fokus){var e=document.querySelector('#sd [name="'+fokus+'"]');if(e)e.focus();}
+    SD.posl=d;
+  }
+  function sdMsg(t){var e=document.querySelector('#sd [data-sd-msg]');if(e)e.textContent=t;}
+  function sdSohranit(){
+    var d=SD.posl||sdDannye();if(!d)return false;
+    var z=SDK.sohranit(LS,{inn:d.inn,nazvanie:TEK.p.meta.nazvanie,id:d.r.report_id||id,summa:d.summa,rekv:d.rk.vvedeny?d.rk.vvod:null,galki:SD.galki,
+      otm:Object.keys(OTM).map(function(k){return OTM[k]}),snimok:d.sn});
+    if(z)SD.sohraneno=z;
+    return !!z;
+  }
+  function sdPovtor(b){
+    if(!API){sdMsg('Повторная проверка работает на deloskop.ru.');return;}
+    var d=SD.posl||sdDannye();if(!d)return;
+    if(!sdSohranit()){sdMsg('Браузер не дал сохранить досье — сравнить с прошлым не получится. Повторная проверка всё равно покажет сведения на сегодня.');}
+    b.disabled=true;b.textContent='Сверяем с реестрами…';
+    fetch(API+'/api/check?q='+encodeURIComponent(d.inn)+'&from=sdelka-povtor',{credentials:'include'})
+      .then(function(res){return res.json().then(function(j){return {ok:res.ok,status:res.status,j:j}},function(){return {ok:false,status:res.status,j:{}}})})
+      .then(function(x){
+        if(x.ok&&x.j&&x.j.report_id){location.replace('/pasport/kontragent/?id='+encodeURIComponent(x.j.report_id)+(d.summa?'&summa='+Math.round(d.summa):'')+'#sd');return;}
+        b.disabled=false;b.textContent='Проверить заново';
+        if(x.status===429){var e=document.querySelector('#sd [data-sd-msg]');if(e&&window.dlkLimit){e.textContent='';dlkLimit.pokazat(e,{stranica:'pasport',inn:d.inn});}else sdMsg('На сегодня бесплатные проверки закончились — проверьте заново завтра. Досье сохранено.');return;}
+        sdMsg((x.j&&x.j.detail)||'Не получилось проверить заново. Попробуйте через минуту — досье сохранено.');})
+      .catch(function(){b.disabled=false;b.textContent='Проверить заново';sdMsg('Сервис не ответил. Проверьте интернет и попробуйте ещё раз — досье сохранено.');});
+  }
+  var SD_SVYAZANO=false;
+  function sdSvyazat(){
+    if(SD_SVYAZANO||!SDK)return;SD_SVYAZANO=true;
+    pk.addEventListener('submit',function(e){
+      var f=e.target;if(!f.closest||!f.closest('#sd'))return;e.preventDefault();
+      if(f.getAttribute('data-sd')==='summa'){var v=U.parseAmount(f.sd_summa.value);pereschitat(v||null,TEK.opts.rezhim);location.hash='sd';return;}
+      if(f.getAttribute('data-sd')==='rekv'){SD.rekvTekst=String(f.sd_rekv.value||'').slice(0,2000);SD.rekvKogda='';sdObnovit();var a=document.querySelector('#sd-rekv .sd-acc');if(a&&a.scrollIntoView)a.scrollIntoView({block:'nearest'});}
+    });
+    pk.addEventListener('change',function(e){
+      var t=e.target;if(!t||!t.name)return;
+      if(t.name==='resh'){rsZapomnit();sdObnovit();return;}
+      if(!t.closest||!t.closest('#sd')||t.type!=='checkbox')return;
+      if(t.name.indexOf('doc_')===0)SD.galki.docs[t.name.slice(4)]=t.checked;else SD.galki[t.name]=t.checked;
+      sdObnovit(t.name);
+    });
+    pk.addEventListener('click',function(e){
+      var b=e.target.closest&&e.target.closest('[data-sd-act]');if(!b)return;
+      var a=b.getAttribute('data-sd-act');
+      if(a==='save'){var ok=sdSohranit();sdObnovit();sdMsg(ok?'Досье сохранено на этом устройстве '+SDK.mskVremya(Date.now())+'.':'Браузер не дал сохранить (приватный режим или запрет хранилища). Сохраните PDF — кнопка наверху.');return;}
+      if(a==='del'){SDK.udalit(LS,TEK.p.meta.inn);SD.sohraneno=null;sdObnovit();sdMsg('Удалили с этого устройства.');return;}
+      if(a==='povtor')sdPovtor(b);
+    });
+  }
+  function pereschitat(v,rezhim){rsZapomnit();RS.summa='';var o=TEK.opts;render(TEK.r,{usloviya:U,indeksVorota:window.IndeksVorota,nomer:o.nomer,dostup:o.dostup,summa:v||null,rezhim:rezhim||o.rezhim});}
   var summa=U?U.parseAmount(q.get('summa')):null;
   if(demo){
     var r=JSON.parse(JSON.stringify(PasportEngine.DEMO)); r.checked_at=new Date().toISOString();
@@ -681,7 +844,7 @@ td b{font-weight:600}
   // Паспорт по ссылке: /pasport/kontragent/?inn=… (карточка компании, письмо бухгалтера, «Ссылка для коллеги»).
   // Проверку тратим только по нажатию: ссылку могли открыть почтовый сканер или превью — без человека запросов нет.
   if(!id&&inn){poInn(inn);return;}
-  if(!id||!/^[A-Za-z0-9_-]{8,24}$/.test(id)){fail('Паспорт открывается из досье компании. <a href="/">Проверить компанию</a> — затем в досье нажмите «Паспорт контрагента». <a href="?demo=1">Посмотреть образец</a>');return;}
+  if(!id||!/^[A-Za-z0-9_-]{8,24}$/.test(id)){fail('Паспорт и досье сделки открываются из проверки компании. <a href="/">Проверить компанию</a> — затем нажмите «Досье сделки». <a href="?demo=1">Посмотреть образец</a>'+(SDK?SDK.spisokHtml(SDK.spisok(LS)):''));return;}
   document.getElementById('nazad').href='/report.html?id='+encodeURIComponent(id);
   if(!API){fail('Паспорт открывается на deloskop.ru. <a href="?demo=1">Посмотреть образец</a>');return;}
   function poInn(v){

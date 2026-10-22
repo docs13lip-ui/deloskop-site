@@ -224,10 +224,93 @@
   }
   function udalit(ls, inn) { inn = cifry(inn); return pisat(ls, chitat(ls).filter(function (x) { return x.inn !== inn; })); }
 
+  // ---------- разметка блока (страница Паспорта) ----------
+  // Только строки с экранированием: ни одного текста из счёта или ответа API без esc.
+  function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function nb(t) { return esc(t).replace(/(\d) (?=\d{3}\b)/g, '$1&nbsp;').replace(/(\d) (₽|%)/g, '$1&nbsp;$2'); }
+  var MARK = { 'is-fact': ['m-ist', 'подтверждено источником'], 'is-calc': ['m-ras', 'наш расчёт'], 'is-none': ['m-net', 'не проверено'], 'is-bad': ['m-bad', 'ошибка'], 'is-high': ['m-bad', 'найдено'] };
+  function galka(name, on, tekst, data) {
+    return '<label class="sd-g"><input type="checkbox" name="' + esc(name) + '"' + (on ? ' checked' : '') + '><span>' + esc(tekst) + '</span>' +
+      '<span class="sd-gp pechat">' + (on ? '☑' : '☐') + '</span></label>';
+  }
+  function shag(n, id, h, gotov, telo) {
+    return '<li class="sd-sh' + (gotov ? ' gotov' : '') + '" id="' + id + '"><span class="sd-n" aria-hidden="true">' + (gotov ? '✓' : n) + '</span><div class="sd-b"><h3>' + n + '. ' + esc(h) +
+      '<span class="sd-st">' + (gotov ? 'готово' : 'не закрыто') + '</span></h3>' + telo + '</div></li>';
+  }
+  function html(o) {
+    o = o || {};
+    var it = o.it || {}, ned = o.ned || [], pr = o.pr || [], rk = o.rekv || {}, g = o.galki || {}, dg = g.docs || {}, U = modul('Usloviya', './usloviya.js');
+    var po = {}; ned.forEach(function (x) { (po[x.gruppa] = po[x.gruppa] || []).push(x); });
+    var h = '<section class="sd" id="sd" aria-labelledby="sd-h"><div class="sd-top"><h2 id="sd-h">Досье сделки</h2>' +
+      '<p class="sd-kogda">Сведения о компании — на ' + esc(o.svedeniyaNa || '') + '. Досье собрано ' + esc(o.sobrano || '') + '.</p></div>' +
+      '<div class="sd-itog ' + esc(it.kod || 'predv') + '" role="status" aria-live="polite"><b>' + nb(it.zagolovok) + '</b><span>' + nb(it.tekst) + '</span></div>' +
+      (o.svezh && o.svezh.tekst ? '<p class="sd-w">' + esc(o.svezh.tekst) + '</p>' : '') +
+      '<ol class="sd-shagi">';
+    // 1. ИНН и сумма
+    h += shag(1, 'sd-summa', 'Контрагент и сумма', o.summa > 0,
+      '<p class="sd-p">' + esc(o.nazvanie || '') + ' · ИНН ' + esc(o.inn || '') + '</p>' +
+      '<form class="sd-f" data-sd="summa" onsubmit="return false"><label>Сумма сделки, ₽<input type="text" name="sd_summa" inputmode="numeric" autocomplete="off" placeholder="например, 500 000" value="' +
+        (o.summa > 0 ? esc(money(o.summa, U).replace(/\s?₽$/, '')) : '') + '"></label><button class="btn noprint" type="submit">Пересчитать</button></form>');
+    // 2. Факты, источники, даты
+    var fk = o.fakty || [];
+    h += shag(2, 'sd-fakty', 'Факты, источники и даты', !(po.fakty || []).length,
+      '<ul class="sd-l">' + fk.map(function (x) {
+        return '<li><span class="m ' + esc(x.mark) + '" aria-hidden="true"></span><a href="#r' + esc(x.n) + '">' + esc(x.n + '. ' + x.title) + '</a> — ' + esc(x.tekst) + '</li>';
+      }).join('') + '</ul><p class="sd-s">Каждый раздел Паспорта ниже — с источником и датой сведений. Раздел «не проверяли» закрывается вашей отметкой самопроверки в нём.</p>');
+    // 3. Реквизиты
+    var rRows = (rk.stroki || []).map(function (x) {
+      var mk = MARK[x.cls] || MARK['is-none'];
+      return '<li class="' + esc(x.cls) + '"><span class="m ' + mk[0] + '" role="img" aria-label="' + esc(mk[1]) + '"></span><div><b>' + nb(x.nazv) + '</b> <span class="sd-v">' + nb(x.verdikt) + '</span>' +
+        '<small>' + nb(x.meta) + (x.ssylka ? ' <a href="' + esc(x.ssylka.href) + '" target="_blank" rel="noopener nofollow">' + esc(x.ssylka.text) + '</a>' : '') + '</small></div></li>';
+    }).join('');
+    h += shag(3, 'sd-rekv', 'Реквизиты для оплаты', rk.vvedeny && !rk.oshibka && !rk.priostanovka && !(po.rekvizity || []).length,
+      '<form class="sd-f noprint" data-sd="rekv" onsubmit="return false"><label class="sd-w100">Реквизиты из счёта или письма<textarea name="sd_rekv" rows="3" autocomplete="off" spellcheck="false" placeholder="ИНН 7700000000, р/с 40702…, БИК 04…">' + esc(o.rekvTekst || '') + '</textarea></label>' +
+        '<button class="btn" type="submit">Сверить реквизиты</button><small>Сверяем в вашем браузере — реквизиты никуда не отправляются. Счёт целиком (PDF) — в <a href="/proverit-schet/">«Проверь счёт»</a>.</small></form>' +
+      (rk.vvedeny ? '<p class="sd-p">ИНН ' + esc(rk.vvod.inn || '—') + ' · БИК ' + esc(rk.vvod.bik || '—') + ' · счёт ' + esc(rk.vvod.acc || '—') + ' — сверено ' + esc(o.rekvKogda || o.sobrano || '') + '</p><ul class="sd-acc">' + rRows + '</ul>' +
+        galka('svereny', g.svereny, 'Сверили банк, БИК и номер счёта с договором или карточкой за подписью директора') +
+        galka('telefon', g.telefon, 'Подтвердили реквизиты у поставщика по телефону из договора или с сайта — не из письма со счётом') : ''));
+    // 4. Чего не хватает
+    h += shag(4, 'sd-ned', 'Чего не хватает', !ned.length && !pr.length,
+      (pr.length ? '<ul class="sd-pr">' + pr.map(function (x) { return '<li><b>' + nb(x.t) + '</b>' + (x.kak ? '<small>' + nb(x.kak) + '</small>' : '') + '</li>'; }).join('') + '</ul>' : '') +
+      (ned.length ? '<ul class="sd-ned">' + ned.map(function (x) {
+        return '<li><b>' + nb(x.t) + '</b><small>' + nb(x.kak || '') + (x.ssylka ? ' <a href="' + esc(x.ssylka.u) + '"' + (/^https:/.test(x.ssylka.u) ? ' target="_blank" rel="noopener nofollow"' : '') + '>' + esc(x.ssylka.t) + '</a>' : '') +
+          (x.do ? ' <a class="noprint" href="' + esc(x.do) + '">Перейти&nbsp;↓</a>' : '') + '</small></li>';
+      }).join('') + '</ul>' : (pr.length ? '' : '<p class="sd-p">Открытых пунктов нет.</p>')));
+    // 5. Договор и документы
+    var docs = o.docs || [];
+    h += shag(5, 'sd-dok', 'Договор и документы', !(po.dokumenty || []).length && !ned.some(function (x) { return x.k === 'vyruchka'; }),
+      '<p class="sd-s">Что запросить — соразмерно сумме (п. 16 письма ФНС от 10.03.2021 № БВ-4-7/3060@). Отметьте, что получили.</p>' +
+      docs.map(function (d) { return galka('doc_' + d.id, !!dg[d.id], d.title); }).join('') +
+      (o.pvBaza && !docs.some(function (d) { return d.id === 'otchetnost'; }) ? galka('doc_otchetnost', !!dg.otchetnost, 'Бухгалтерская отчётность за последний год с квитанцией о сдаче') : '') +
+      galka('dogovor', g.dogovor, 'Договор подписан обеими сторонами') +
+      '<p class="sd-s noprint"><a href="' + esc(o.delopis || '/delopis/') + '">Собрать договор в Делописи</a> — с реквизитами из ЕГРЮЛ и защитными пунктами под найденные риски' +
+        (it.kod === 'sobrano' ? '' : '; пока досье не закрыто, договор соберётся с оплатой по факту') + '. Опись приложений — кнопка «Папка к договору» наверху.</p>');
+    // 6. Сохранение и повторная проверка
+    var s = o.sohraneno;
+    h += shag(6, 'sd-hran', 'Сохранение и повторная проверка', !!s && !(o.izm && o.izm.length) && !(o.svezh && o.svezh.staroe),
+      (s ? '<p class="sd-p">Сохранено на этом устройстве ' + esc(mskVremya(s.t)) + (s.snimok && s.snimok.checked_at ? ' · проверка от ' + esc(mskData(s.snimok.checked_at)) : '') + '.</p>' : '<p class="sd-p">Пока не сохранено.</p>') +
+      (o.izm ? (o.izm.length ? '<div class="sd-izm"><b>С сохранения изменилось:</b><ul>' + o.izm.map(function (x) { return '<li>' + nb(x) + '</li>'; }).join('') + '</ul></div>'
+        : '<p class="sd-p">С сохранения статус, итог и замечания не изменились.</p>') : '') +
+      '<div class="sd-btns noprint"><button class="btn" type="button" data-sd-act="save">' + (s ? 'Обновить сохранённое' : 'Сохранить на этом устройстве') + '</button>' +
+        '<button class="btn" type="button" data-sd-act="povtor">Проверить заново</button>' + (s ? '<button class="btn sd-del" type="button" data-sd-act="del">Удалить с устройства</button>' : '') + '</div>' +
+      '<p class="sd-s noprint" data-sd-msg role="status" aria-live="polite">Сохраняем только в этом браузере — Делоскоп досье не получает. Повторная проверка — одна из бесплатных проверок дня: сравним с сохранённым.</p>');
+    h += '</ol><p class="stroka">' + esc(OGOVORKA) + ' ' + esc(OGOVORKA_OTM) + ' ' + esc(VERSIYA) + '.</p></section>';
+    return h;
+  }
+  // Сохранённые досье — список для страницы без номера проверки
+  function spisokHtml(a) {
+    a = a || [];
+    if (!a.length) return '';
+    return '<div class="sd-spisok"><b>Сохранённые досье на этом устройстве</b><ul>' + a.slice(0, 10).map(function (x) {
+      return '<li>' + (x.id ? '<a href="/pasport/kontragent/?id=' + encodeURIComponent(x.id) + (x.summa ? '&amp;summa=' + x.summa : '') + '#sd">' : '') + esc(x.nazvanie || ('ИНН ' + x.inn)) + (x.id ? '</a>' : '') +
+        ' <small>ИНН ' + esc(x.inn) + (x.summa ? ' · ' + nb(money(x.summa)) : '') + ' · сохранено ' + esc(mskData(x.t)) + '</small></li>';
+    }).join('') + '</ul></div>';
+  }
+
   return {
     VERSIYA: VERSIYA, KEY: KEY, MAX: MAX, KLYUCH: KLYUCH, OGOVORKA: OGOVORKA, OGOVORKA_OTM: OGOVORKA_OTM, STARYJ_DNEJ: STARYJ_DNEJ,
     rekvizity: rekvizity, nedostaet: nedostaet, problemy: problemy, itog: itog, delopisSsylka: delopisSsylka,
     snimok: snimok, sravnit: sravnit, svezhest: svezhest, spisok: spisok, najti: najti, sohranit: sohranit, udalit: udalit,
-    mskData: mskData, mskVremya: mskVremya
+    mskData: mskData, mskVremya: mskVremya, html: html, spisokHtml: spisokHtml, esc: esc
   };
 });

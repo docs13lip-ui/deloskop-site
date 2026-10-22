@@ -24,26 +24,41 @@
     }
     z.setAttribute('data-zona', zn);
     kolca.push(z);
-    if (tiho) { z.style.setProperty('--p', n); return z; }
-    uzel.nodeValue = '0';
+    // indeks-srazu-v1 (23.10): итог — в разметке сразу (число и дуга верны, даже если докрутка не начнётся).
+    // На живом 22–23.10 отчёт стоял на «0 / 99»: число обнулялось заранее, а наблюдатель видимости, поставленный
+    // во время View Transition, так и не присылал «видно» (390 и 1280, оба пути — по ссылке и вводом ИНН).
+    // пример на главной (uzel — пустышка) не в переходе — у него дуга по-прежнему растёт с пустой, без мигания
+    if (tiho || uzel.nodeType === 3) z.style.setProperty('--p', n);
+    if (tiho) return z;
     z.addEventListener('pointermove', function (e) {
       var r = z.getBoundingClientRect();
       if (e.pointerType == 'mouse') kadr(z, ((e.clientY - r.top) / r.height - 0.5) * -16, ((e.clientX - r.left) / r.width - 0.5) * 20);
     }, { passive: true });
     z.addEventListener('pointerleave', function () { kadr(z, 0, 0); });
+    function itog() { uzel.nodeValue = String(n); z.style.setProperty('--p', n); }
+    // докрутка с нуля — только когда кольцо на экране и переход между видами уже закончился
     function start() {
+      if (z.idet || !z.isConnected) return;
+      z.idet = 1;
       var t0;
+      z.style.setProperty('--p', 0);
+      uzel.nodeValue = '0';
+      void z.offsetWidth;
       z.classList.add('is-idet');
       raf(function () { z.style.setProperty('--p', n); });
       raf(function shag(t) {
         t0 = t0 || t;
         var x = Math.min(1, (t - t0) / 1200);
-        uzel.nodeValue = Math.round(n * x * (2 - x));
+        uzel.nodeValue = String(Math.round(n * x * (2 - x)));
         if (x < 1) raf(shag);
       });
+      setTimeout(itog, 1500); // страховка: вкладка в фоне — кадры не идут, итог всё равно ставим
     }
-    if (!IO) start();
-    else { var io = new IO(function (e) { if (e[0].isIntersecting) { io.disconnect(); start(); } }, { threshold: 0.4 }); io.observe(z); }
+    function posle(f) { var vt = d.activeViewTransition; if (vt && vt.finished) vt.finished.then(f, f); else f(); }
+    if (!IO) { posle(start); return z; }
+    var io = new IO(function (e) { if (e[e.length - 1].isIntersecting) { io.disconnect(); posle(start); } }, { threshold: 0.4 });
+    io.observe(z);
+    setTimeout(function () { io.disconnect(); }, 1200); // страховка 1 200 мс: не увидели — докрутки нет, итог уже на месте
     return z;
   }
 

@@ -302,7 +302,11 @@ class TestVolnaPartiiIStranicy(unittest.TestCase):
             vse = [chitat(pathlib.Path(d, "company", "index.html"))] + [
                 chitat(p) for p in sorted(pathlib.Path(d, "company", "stranica").glob("*/index.html"))]
             n = len(vse)
-            self.assertEqual(n, -(-len(kart) // 10))
+            # kartochki-hab-v3: страница 1 — карточки из sitemap (все), 2… — остальные по HAB_NA_STRANICE
+            sm_ = pathlib.Path(d, "sitemap-companies.xml").read_text(encoding="utf-8")
+            v_sm = len(re.findall(r"<loc>[^<]+/company/\d{10}-", sm_))
+            self.assertEqual(n, 1 + -(-(len(kart) - v_sm) // 10))
+            self.assertEqual(len(re.findall(r'<li><a href="/company/\d{10}-', s1)), v_sm)
             ssylki = [a for t in vse for a in re.findall(r'<li><a href="(/company/\d{10}-[^"]+)"', t)]
             self.assertEqual(sorted(ssylki), sorted(K.adres_str(k) for k in kart), "каждая карточка — ровно на одной странице")
             self.assertIn('rel="canonical" href="https://deloskop.ru/company/stranica/2/"', s2)

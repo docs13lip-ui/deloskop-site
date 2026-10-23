@@ -79,3 +79,7 @@
 .co-h1-inn{font-weight:400;color:var(--ink-2);white-space:nowrap}
 .co-sos__h{margin:var(--s-4) 0 var(--s-1)}
 .co .co-zel__s{list-style:none;margin:0;padding:0}.co .co-zel__f{font-weight:600}
+/* kartochki-hab-v3: хаб /company/ — длинная отрасль раскрывается «Ещё N компаний» (<details>, без JS); цель касания 44 px */
+.co-esche>summary{display:flex;align-items:center;min-height:44px;cursor:pointer;list-style:none;color:var(--accent);font-size:var(--t-small)}
+.co-esche>summary::-webkit-details-marker{display:none}.co-esche>summary::after{content:"\00a0›";transition:transform .2s}
+.co-esche[open]>summary::after{transform:rotate(90deg)}.co-esche>summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:var(--r-s,10px)}

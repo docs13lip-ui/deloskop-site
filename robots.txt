@@ -6,6 +6,7 @@ Disallow: /cabinet.html
 Disallow: /admin.html
 Disallow: /schet/dokument/
 Clean-param: ref /
+Clean-param: utm_source&utm_medium&utm_campaign&utm_content&utm_term&yclid&ysclid&yrclid /
 
 Sitemap: https://deloskop.ru/sitemap.xml
 Sitemap: https://deloskop.ru/sitemap-companies.xml

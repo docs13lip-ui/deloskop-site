@@ -71,7 +71,7 @@ class TestPravila(unittest.TestCase):
     def test_padenie_vyruchki_i_staraya_otchetnost(self):
         f = " ".join(frazy_bloka(K.vstavit_znachit(stranica(V=[("ok", "Работает 16 лет — с 2010 года")], ryad=[(2021, "10 млрд ₽", None), (2022, "6 млрд ₽", None)])))).replace(NB, " ")
         self.assertIn("Выручка «Ромашка» за 2022 год — 6 млрд ₽, на 40 % меньше, чем годом раньше", f)
-        self.assertIn("У «Ромашка» последняя открытая отчётность — за 2022 год, о 2025 годе она ничего не говорит", f)
+        self.assertIn("Последняя открытая отчётность «Ромашка» — за 2022 год. За 2023–2025 годы в открытой части ГИР БО её нет", f)  # kartochki-zakrytye-v1
 
     def test_pribyl_rentabelnost(self):
         f = " ".join(frazy_bloka(K.vstavit_znachit(stranica(

@@ -68,6 +68,10 @@
     ],
     "nebo": [
       "js/nebo.js"
+    ],
+    "sravnit": [
+      "js/imya.js",
+      "js/sravnenie.js"
     ]
   },
   "stranicy": {
@@ -78,6 +82,11 @@
       "glavnaya",
       "glavnaya-sinhr",
       "otchet"
+    ],
+    "sravnit/index.html": [
+      "glavnaya-sinhr",
+      "otchet",
+      "sravnit"
     ]
   }
 }

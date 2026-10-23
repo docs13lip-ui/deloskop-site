@@ -839,7 +839,10 @@ footer a{color:var(--ink2)}
       setTimeout(function(){t.remove()},12000); },8000); }
   form.addEventListener('submit',askLater);
   // ИНН из адреса (?inn=…) — например, «Проверить снова» из кабинета
-  var qi=innIzAdresa()||new URLSearchParams(location.search).get('inn');
+  // sravnit-v1: /?inn=A&vs=B — сравнение двух компаний живёт на /sravnit/ (здесь проверку не запускаем — не тратим лимит)
+  var qvs=new URLSearchParams(location.search).get('vs')||'', svs=/^\d{10}$/.test(qvs)&&/^\d{10}$/.test(innIzAdresa());
+  if(svs)location.replace('/sravnit/?a='+innIzAdresa()+'&b='+qvs);
+  var qi=svs?'':innIzAdresa()||new URLSearchParams(location.search).get('inn');
   if(qi&&/^\d{10}(\d{2})?$/.test(qi)){input.value=qi;
     if(window.DlkInn&&!DlkInn.ok(qi)){bezOtcheta();note.className='note err';note.textContent=DlkInn.OPECHATKA;}else runCheck(qi);}
   // не ИНН (поиск по сайту из выдачи, SearchAction) — подставляем запрос в поле, проверку человек запускает сам

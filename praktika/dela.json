@@ -14,7 +14,7 @@
     "nalogi/nagruzka/index.html": ["droblenie-uplachennaya-usn-zachityvaetsya", "zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/nagruzka-po-otraslyam-2025/index.html": ["zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/priznaki-tehnicheskoj-kompanii/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke"],
-    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026"],
+    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026"],
     "pasport/index.html": ["proverka-kontragenta-na-datu-sdelki"],
     "nalogi/svezhest-dannyh-proverki-kontragenta/index.html": ["proverka-kontragenta-na-datu-sdelki"],
     "nalogi/pismo-o-smene-rekvizitov-kak-proverit/index.html": ["dvojnik-postavshchika-bank-poluchatelya"],
@@ -22,10 +22,86 @@
     "nalogi/izmeneniya-egryul-kontragenta/index.html": ["reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p"],
     "nalogi/kody-statusa-egryul/index.html": ["reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p"],
     "nalogi/nedostovernyj-adres-egryul/index.html": ["isklyuchili-iz-egryul-dolg-s-direktora"],
-    "nalogi/skolko-platit-vpered-neznakomoj-kompanii/index.html": ["isklyuchili-iz-egryul-dolg-s-direktora"],
+    "nalogi/skolko-platit-vpered-neznakomoj-kompanii/index.html": ["nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "isklyuchili-iz-egryul-dolg-s-direktora"],
     "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"]
   },
   "razbory": [
+    {
+      "razdel": "nalogi",
+      "slug": "nalogovyj-arest-zalog-v-bankrotstve-postavshchika",
+      "h1": "Налоговая «заморозила» имущество поставщика. Что останется вам, если он обанкротится?",
+      "title": "Налоговая арестовала имущество поставщика: она получит деньги первой",
+      "description": "Если налоговая наложила арест или запрет на имущество должника, в банкротстве она — залоговый кредитор. Как ВС пришёл к этому в 2025–2026 годах.",
+      "zapros": "налоговый арест имущества залог в банкротстве",
+      "data": "2026-10-23",
+      "minut": 4,
+      "lid": "Поставщик взял аванс, не отгрузил и идёт к банкротству, а его имущество под запретом налоговой. Верховный суд за полгода дважды менял ответ и в итоге решил: такая налоговая — залоговый кредитор и получает деньги от продажи этого имущества раньше вас. Разбираем, где грань и что делать до аванса.",
+      "dela": [
+        {
+          "sud": "Верховный суд РФ, экономическая коллегия",
+          "sud_kratko": "ВС",
+          "akt": "Определение",
+          "nomer": "№ 306-ЭС24-23083(2)",
+          "data": "2025-12-25",
+          "delo": "банкротство деревообрабатывающего завода (№ А72-19547/2022): залог налоговой после её обеспечительных мер",
+          "na_konu": "109 751 549,31 ₽ недоимки как требование, обеспеченное залогом",
+          "na_konu_kratko": "≈ 109,8 млн ₽",
+          "itog": "В пользу налоговой",
+          "itog_nov": false,
+          "istochnik": "https://vsrf.ru/lk/practice/stor_pdf_ec/2511922",
+          "istochnik_podpis": "vsrf.ru — текст определения; сверено 23.10",
+          "sverka": "2026-10-23"
+        },
+        {
+          "sud": "Верховный суд РФ",
+          "sud_kratko": "ВС",
+          "akt": "Определение",
+          "nomer": "№ 190-ПЭК25(3)",
+          "data": "2026-02-11",
+          "delo": "надзорная жалоба Сбербанка (кредитора завода) на определение от 25.12.2025",
+          "na_konu": "очередь кредиторов завода",
+          "itog": "Жалоба не принята",
+          "itog_nov": false,
+          "istochnik": "https://vsrf.ru/lk/practice/stor_pdf_ec/2520576",
+          "istochnik_podpis": "vsrf.ru — текст определения; сверено 23.10",
+          "sverka": "2026-10-23"
+        }
+      ],
+      "knopka": {
+        "zagolovok": "Нет ли у поставщика налоговых проблем",
+        "tekst": "Проверка по ИНН: приостановка операций по счетам и недоимка по открытым наборам ФНС на дату проверки.",
+        "knopka": "Проверить поставщика по ИНН",
+        "url": "/",
+        "cel": "razbor25_check",
+        "slezh": {
+          "knopka": "Следить за поставщиком",
+          "url": "/cabinet.html#watch",
+          "cel": "razbor25_slezh"
+        }
+      },
+      "zakon": [
+        [
+          "п. 2.1 ст. 73 НК РФ — залог имущества, арестованного или под обеспечительной мерой налоговой",
+          "ред. 14.07.2022 № 263-ФЗ, с 01.01.2023",
+          "https://www.consultant.ru/document/cons_doc_LAW_19671/"
+        ],
+        [
+          "п. 10 ст. 101 НК РФ — запрет отчуждать имущество без согласия налоговой; ст. 77 НК РФ — арест имущества",
+          "ред. на 23.10.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_19671/"
+        ],
+        [
+          "ст. 138 Федерального закона № 127-ФЗ «О несостоятельности (банкротстве)» — требования залоговых кредиторов",
+          "ред. на 23.10.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_39331/"
+        ]
+      ],
+      "pohozhie": [
+        "isklyuchili-iz-egryul-dolg-s-direktora",
+        "povtornaya-vyezdnaya-proverka-vs-2026",
+        "proverka-kontragenta-na-datu-sdelki"
+      ]
+    },
     {
       "razdel": "115-fz",
       "slug": "kriterii-zsk-ne-otmenit-vs",

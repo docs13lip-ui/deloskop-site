@@ -69,7 +69,9 @@ p{margin:0}
 .hero{padding-block:clamp(40px,5vw,72px) clamp(56px,8vw,112px)}
 .hero .wrap{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:start}
 .hero-text{display:flex;flex-direction:column;gap:26px}
-.hero h1{font-size:clamp(48px,4.6vw,60px);line-height:1.04;letter-spacing:-0.035em}
+/* glavnaya-h1-v1 (Продукт 23.10 С1 + Д2): h1 — главный запрос «Проверка контрагента по ИНН» видом надзаголовка (15 px, акцент) на месте метки беты (дублировала полосу); лозунг — тем же видом, что был у h1, но по шкале: 48 px (было clamp до 60). */
+.hero h1.hero-h1{font-size:15px;font-weight:600;line-height:1.4;letter-spacing:0;color:var(--accent)}
+.glavnaya-display{font-size:48px;font-weight:600;line-height:1.06;letter-spacing:-0.035em;color:var(--ink);text-wrap:balance}
 .hero .lead{max-width:540px}
 .check{display:flex;gap:10px;background:var(--card);border-radius:var(--r-md);padding:8px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.06);max-width:560px}
 .check input{flex:1;min-width:0;border:0;outline:none;font:inherit;font-size:17px;padding:0 14px;background:transparent;color:var(--ink);min-height:52px}
@@ -81,7 +83,7 @@ p{margin:0}
 .note.ok{color:var(--ok)}
 @media (max-width:980px){.hero .wrap{grid-template-columns:1fr;gap:40px}}
 /* vitrina-primer-v1: телефон — поле ИНН на первом экране (было ниже сгиба на 390×844: заголовок 48 px в 5 строк) */
-@media (max-width:520px){.hero{padding-block:24px 48px}.hero-text{gap:18px}.hero h1{font-size:32px;line-height:1.08;letter-spacing:-0.03em}}
+@media (max-width:520px){.hero{padding-block:24px 48px}.hero-text{gap:18px}.glavnaya-display{font-size:32px;line-height:1.08;letter-spacing:-0.03em}}
 @media (max-width:520px){.check{flex-direction:column}.check input{padding:0 12px}}
 
 /* report card */
@@ -289,9 +291,9 @@ footer a{color:var(--ink2)}
 .yakor{position:absolute}
 </style>
 <!-- vizual-v3.0a: стили и скрипты главной — пятью файлами вместо 17 (partials/sborka.json, tests/sobrat_js.py) -->
-<link rel="stylesheet" href="/css/b/ds.2620369736.css">
-<link rel="stylesheet" href="/css/b/glavnaya-stil.e8d023e6f5.css">
-<script src="/js/b/yadro.15df1b52ab.js" defer></script>
+<link rel="stylesheet" href="/css/b/ds.2d1cc05b79.css">
+<link rel="stylesheet" href="/css/b/glavnaya-stil.8a31524843.css">
+<script src="/js/b/yadro.a2940b479f.js" defer></script>
 <script src="/js/b/glavnaya.4ce8aa43b6.js" defer></script>
 <link rel="icon" type="image/png" sizes="120x120" href="/favicon-120.png">
 <link rel="alternate" type="application/rss+xml" title="Разборы дел — Делоскоп" href="/praktika/rss.xml">
@@ -373,15 +375,15 @@ footer a{color:var(--ink2)}
  </nav>
 </dialog>
 <!--/shapka-->
-<!--beta-polosa--><div class="beta-bar" role="region" aria-label="Открытая бета" data-beta-rezhim="b" data-beta-do="" data-beta-bar><div class="beta-bar__in"><span class="beta-bar__metka">бета</span><p class="beta-bar__t"><b>Открытая бета продолжается:</b> <span class="beta-bar__dop">всё бесплатно. О&nbsp;начале тарифов скажем здесь не&nbsp;позже чем за&nbsp;3&nbsp;дня; быстрая проверка останется бесплатной, 10&nbsp;в&nbsp;день. </span><a href="mailto:help@deloskop.ru?subject=%D0%91%D0%B5%D1%82%D0%B0%20%D0%94%D0%B5%D0%BB%D0%BE%D1%81%D0%BA%D0%BE%D0%BF%D0%B0">Нашли ошибку&nbsp;— напишите</a></p><button class="beta-bar__x" type="button" aria-label="Скрыть на неделю" data-beta-x><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div></div><script>try{(function(b){var r=b.getAttribute("data-beta-rezhim"),d=b.getAttribute("data-beta-do"),k=d?Date.parse(d+"T00:00:00+03:00")+864e5:0,n=Date.now();if(r==="c"){if(n>=k+6048e5)b.hidden=true;return}if(r==="a"&&n>=k){var t=b.querySelector("template[data-beta-b]");if(t){b.querySelector(".beta-bar__t").innerHTML=t.innerHTML;b.setAttribute("data-beta-rezhim","b")}}if(+localStorage.getItem("dlk_beta_skryt_"+(d||"net"))>n)b.hidden=true})(document.querySelector("[data-beta-bar]"))}catch(e){}</script><!--/beta-polosa-->
+<!--beta-polosa--><div class="beta-bar" role="region" aria-label="Открытая бета" data-beta-rezhim="b" data-beta-do="" data-beta-bar><div class="beta-bar__in"><span class="beta-bar__metka">бета</span><details class="beta-bar__d" data-beta-d><summary class="beta-bar__kr"><span>Всё бесплатно&nbsp;· 10&nbsp;проверок в&nbsp;день</span></summary><p class="beta-bar__t"><b>Открытая бета продолжается:</b> <span class="beta-bar__dop">всё бесплатно. О&nbsp;начале тарифов скажем здесь не&nbsp;позже чем за&nbsp;3&nbsp;дня; быстрая проверка останется бесплатной, 10&nbsp;в&nbsp;день. </span><a href="mailto:help@deloskop.ru?subject=%D0%91%D0%B5%D1%82%D0%B0%20%D0%94%D0%B5%D0%BB%D0%BE%D1%81%D0%BA%D0%BE%D0%BF%D0%B0">Нашли ошибку&nbsp;— напишите</a></p></details><button class="beta-bar__x" type="button" aria-label="Скрыть на неделю" data-beta-x><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div></div><script>try{(function(d){if(d&&!matchMedia("(max-width:640px)").matches)d.open=true})(document.querySelector("[data-beta-bar] [data-beta-d]"))}catch(e){}try{(function(b){var r=b.getAttribute("data-beta-rezhim"),d=b.getAttribute("data-beta-do"),k=d?Date.parse(d+"T00:00:00+03:00")+864e5:0,n=Date.now();if(r==="c"){if(n>=k+6048e5)b.hidden=true;return}if(r==="a"&&n>=k){var t=b.querySelector("template[data-beta-b]");if(t){b.querySelector(".beta-bar__t").innerHTML=t.innerHTML;var q=b.querySelector("template[data-beta-b-kr]"),s=b.querySelector(".beta-bar__kr>span");if(q&&s)s.innerHTML=q.innerHTML;b.setAttribute("data-beta-rezhim","b")}}if(+localStorage.getItem("dlk_beta_skryt_"+(d||"net"))>n)b.hidden=true})(document.querySelector("[data-beta-bar]"))}catch(e){}</script><!--/beta-polosa-->
 <span id="main" tabindex="-1"></span>
 
 <main id="top">
   <section class="hero" data-set data-set-pole="inn">
     <div class="wrap">
       <div class="hero-text">
-        <div class="eyebrow"><!--oplata--><template data-oplata>Проверка контрагентов для бизнеса и частных лиц</template><!--/oplata--><!--v-bete-->Открытая бета · всё бесплатно<span data-beta-srok></span><!--/v-bete--></div>
-        <h1>Перед оплатой&nbsp;— проверить. Если банк спросил&nbsp;— ответить.</h1>
+        <h1 class="hero-h1">Проверка контрагента по&nbsp;ИНН</h1>
+        <p class="glavnaya-display">Перед оплатой&nbsp;— проверить. Если банк спросил&nbsp;— ответить.</p>
         <p class="lead">Делоскоп проверяет компанию по&nbsp;открытым госреестрам и&nbsp;простыми словами говорит, что может пойти не&nbsp;так&nbsp;— блокировка счёта по&nbsp;115&#8209;ФЗ или доначисление налогов&nbsp;— и&nbsp;что сделать заранее.</p>
         <form class="check" id="check" novalidate>
           <label for="inn" class="sr-only">ИНН или название компании</label>
@@ -663,6 +665,8 @@ footer a{color:var(--ink2)}
     if(window.Otkuda){try{Otkuda.mount(report.querySelector('.src'),r)}catch(e){}}
     // реквизиты проверки (№, дата и время МСК, самые давние сведения, год бухотчётности) + печать только отчёта — js/rekvizity-proverki.js
     if(window.RekvizityProverki){try{RekvizityProverki.mount(report,r,{polucheno:new Date()})}catch(e){}}
+    // «Перепроверить до {дата + 30 дней}» + «Напомнить в календаре» (.ics собирается в браузере) — js/perepoverit.js; своя компания — без строки
+    if(!svoj&&window.Perepoverit){try{Perepoverit.mount(report,r)}catch(e){}}
     var shR=null;
     // «Только существенные факты» (≤ 7, источник и дата) + свёрнутая «Все данные из реестров» — js/sushchestvennoe.js; нет модуля — строки светофора как были
     if(window.Svyazi){try{Svyazi.zapomnit(report,svoj?null:r)}catch(e){}}
@@ -710,7 +714,7 @@ footer a{color:var(--ink2)}
   // vizual-v3.0a: модули отчёта (~450 КБ) — одним пакетом и только когда нужны: при проверке, при намерении проверить
   // (фокус в поле, наведение или касание кнопки) и после загрузки страницы, когда браузер свободен (пример «Условий сделки»).
   // Пакет не загрузился — отчёт рисуется как раньше без модулей (каждый вызов — через window.X).
-  var OTCHET_JS='/js/b/otchet.6db5f809be.js', moduliP=null;
+  var OTCHET_JS='/js/b/otchet.03933527ae.js', moduliP=null;
   function gruzitModuli(){if(moduliP)return moduliP;moduliP=new Promise(function(ok){var s=document.createElement('script');s.src=OTCHET_JS;s.onload=s.onerror=function(){ok()};document.head.appendChild(s);});return moduliP;}
   function kogdaModuli(f){gruzitModuli().then(function(){if(moduliGotovy)f();else document.addEventListener('DOMContentLoaded',function(){f()},{once:true});});}
   ['focus','input','pointerenter','touchstart'].forEach(function(ev){form.addEventListener(ev,function(){gruzitModuli()},{once:true,passive:true,capture:true});});

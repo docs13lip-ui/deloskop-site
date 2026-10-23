@@ -32,7 +32,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import sobrat_shapku as SH  # noqa: E402
 import tipograf_statej as TS  # noqa: E402
-from sobrat_praktika import tipograf, nerazryv, data_ru, kroshki_ld, kroshki_html  # noqa: E402
+from sobrat_praktika import tipograf, nerazryv, data_ru, kroshki_ld, kroshki_html, AVTOR  # noqa: E402
 
 KOREN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SAJT = "https://deloskop.ru"
@@ -381,7 +381,7 @@ def stranica_vypuska(V, pdf_=None):
         description = description[:157].rsplit(" ", 1)[0] + "…"
     ld = [{"@context": "https://schema.org", "@type": "Article", "headline": title[:110],
            "datePublished": V["data"], "dateModified": V["data"], "inLanguage": "ru",
-           "author": {"@type": "Organization", "name": "Делоскоп", "url": SAJT + "/"},
+           "author": AVTOR,
            "publisher": {"@type": "Organization", "name": "Делоскоп", "url": SAJT + "/"},
            "isPartOf": {"@type": "Periodical", "name": NAZVANIE, "url": SAJT + "/zhurnal/"},
            "mainEntityOfPage": SAJT + url},

@@ -26,9 +26,11 @@ body::after{content:"";position:fixed;z-index:-1;inset:0;pointer-events:none;opa
  .search:focus-within,.check:focus-within{box-shadow:var(--shadow-hover),0 0 0 3px var(--accent,#0B63E5)}
 }
 
+/* shapka-plotnee-v1: при 72 % текст полосы и страницы читался сквозь шапку (просвет 14–17 из 255). 94 % фона темы с размытием —
+   просвет не больше 3; 94 % без размытия — 14, поэтому размытие оставлено. */
 /* стекло: шапка после 8 px прокрутки (класс ставит shapka.js) и пример отчёта на главной */
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
- .shapka.is-scrolled{background:rgba(245,245,242,.72);-webkit-backdrop-filter:saturate(160%) blur(14px);backdrop-filter:saturate(160%) blur(14px);border-bottom-color:rgba(29,29,31,.06)}
+ .shapka.is-scrolled{background:color-mix(in srgb,var(--bg) 94%,transparent);-webkit-backdrop-filter:saturate(160%) blur(14px);backdrop-filter:saturate(160%) blur(14px);border-bottom-color:rgba(29,29,31,.06)}
  .report.ex{background:rgba(255,255,255,.78);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:var(--shadow),inset 0 0 0 1px rgba(255,255,255,.6)}
  @media (hover:hover){.report.ex:hover{box-shadow:var(--shadow-hover),inset 0 0 0 1px rgba(255,255,255,.6)}}
  /* vizual-v3.1b: пока ждём ответ (и при заходе по адресу отчёта) стекло снимаем — Chromium считает границы блока с backdrop-filter

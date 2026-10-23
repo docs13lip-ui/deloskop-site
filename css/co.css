@@ -78,3 +78,4 @@
 /* kartochki-shablon-v1: ИНН в H1 — тише имени; «Ещё в регионе» — второй список под «Похожими» */
 .co-h1-inn{font-weight:400;color:var(--ink-2);white-space:nowrap}
 .co-sos__h{margin:var(--s-4) 0 var(--s-1)}
+.co .co-zel__s{list-style:none;margin:0;padding:0}.co .co-zel__f{font-weight:600}

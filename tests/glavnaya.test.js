@@ -24,7 +24,15 @@ test('порядок блоков: hero → входы → витрина → Щ
 });
 
 test('первый экран: H1, title и description по ТЗ', () => {
-  assert.match(G, /<h1>Перед оплатой&nbsp;— проверить\. Если банк спросил&nbsp;— ответить\.<\/h1>/);
+  // glavnaya-h1-v1 (Продукт 23.10, С1): H1 — главный запрос, как начало title; лозунг — крупной строкой под ним (не заголовок)
+  assert.match(G, /<h1 class="hero-h1">Проверка контрагента по&nbsp;ИНН<\/h1>/);
+  assert.strictEqual((G.match(/<h1\b/g) || []).length, 1, 'на главной один H1');
+  assert.match(G, /<p class="glavnaya-display">Перед оплатой&nbsp;— проверить\. Если банк спросил&nbsp;— ответить\.<\/p>/);
+  assert.ok(/^Проверка контрагента по ИНН/.test(/<title>([^<]+)<\/title>/.exec(G)[1]), 'title начинается с того же запроса, что H1');
+  // Д2: размеры лозунга — по шкале ДС (48 / 32), не clamp до 60
+  assert.match(G, /\.glavnaya-display\{font-size:48px;/);
+  assert.match(G, /@media \(max-width:520px\)\{[^\n]*\.glavnaya-display\{font-size:32px;/);
+  assert.ok(/\.rezhim-otcheta \.hero-text>\.glavnaya-display/.test(fs.readFileSync(path.join(__dirname, '..', 'css', 'otchet.css'), 'utf8')), 'в режиме отчёта лозунг скрыт, как прежний H1');
   const title = /<title>([^<]+)<\/title>/.exec(G)[1];
   const desc = /<meta name="description" content="([^"]+)"/.exec(G)[1];
   assert.ok(title.length <= 70, 'title ' + title.length);

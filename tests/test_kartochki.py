@@ -709,6 +709,8 @@ class TestObshchijRender(unittest.TestCase):
         self.assertEqual(len(pervye), len(kart))
         for adres, txt in pervye.items():
             fajl = pathlib.Path(d, adres.strip("/"), "index.html").read_text(encoding="utf-8")
+            # kartochki-unik-v9: WebPage с датой изменения текста ставит только сборка сайта (дату знает файл, не API)
+            fajl = K._WP_BLOK.sub("", fajl)
             self.assertEqual(K.bez_nevidimyh(txt), fajl, adres)  # API отдаёт знаки, сайт хранит сущности — браузер видит одно и то же
 
     def test_api_ip_i_vorota(self):
@@ -739,11 +741,13 @@ class TestKommentariiKartochki(unittest.TestCase):
         return K.html_kartochki(k, K.vyvody(k), [], self.kom if kom else None)
 
     def test_pod_proverennym_faktom_i_ogovorka_odin_raz(self):
+        # kartochki-svodka-v1: зелёный комментарий — в сводном блоке под реестрами ([Право] 23.10 п. 373б), а не под строкой
         t = self._html(O.zapis(3))
         i = t.index("<span>Долги по налогам</span>")
+        z = t.index('class="co-sec co-zel"')
         j = t.index('data-kom="nedoimka"')
-        self.assertLess(i, j)
-        self.assertNotIn('class="fact"', t[i + 30:j])  # сразу под своей строкой
+        self.assertLess(i, z)
+        self.assertLess(z, j)
         self.assertIn('data-kom="nedostovernost"', t)
         self.assertEqual(t.count('class="kom-og"'), 1)
         self.assertIn(K.KOM_OGOVORKA, t)

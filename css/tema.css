@@ -41,7 +41,7 @@
 [data-theme=dark] .report.ex{box-shadow:var(--shadow)}
 @media (hover:hover){[data-theme=dark] .report.ex:hover{box-shadow:var(--shadow-hover)}
 }
-@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){[data-theme=dark] .shapka.is-scrolled{background:rgba(17,17,19,0.72);border-bottom-color:rgba(255,255,255,0.104)}
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){[data-theme=dark] .shapka.is-scrolled{border-bottom-color:rgba(255,255,255,0.104)}
 [data-theme=dark] .report.ex{background:rgba(28,28,31,0.78);box-shadow:var(--shadow),inset 0 0 0 1px rgba(255,255,255,0.06)}
 @media (hover:hover){[data-theme=dark] .report.ex:hover{box-shadow:var(--shadow-hover),inset 0 0 0 1px rgba(255,255,255,0.06)}
 }

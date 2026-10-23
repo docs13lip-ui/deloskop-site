@@ -195,6 +195,9 @@
     var hd = el(doc, 'header', 'ot-hd'), whoBox = el(doc, 'div', 'ot-who'), rq = el(doc, 'div', 'ot-rq');
     if (who) whoBox.appendChild(who);
     if (rkv) rq.appendChild(rkv);
+    // «Перепроверить до…» (js/perepoverit.js) — срок годности проверки: реквизит документа, под реквизитами
+    var ppEl = vzyat(report, '.pp');
+    if (ppEl) rq.appendChild(ppEl);
     hd.appendChild(whoBox); hd.appendChild(rq);
     // otchet-detali-v1: номер проверки нужен поддержке, а не читателю — из шапки в строку под действиями (и на печати)
     var nom = null, nomEl = rkv && rkv.querySelector('.rkv__nom');

@@ -28,11 +28,13 @@
   * Индекс — числом только за воротами полноты (≥ 60 %, те же правила, что js/indeks-vorota.js); иначе «Индекс — считаем»;
   * у каждого вывода и строки реестра — источник, дата сведений и статус ● подтверждено / ◆ рассчитано / ○ не проверяли;
   * «не проверяли» ≠ «не нашли»: строка без даты сведений не считается проверенной;
-  * телефонов и e-mail нет; aggregateRating нет; JSON-LD — Organization + BreadcrumbList;
-  * lastmod — самая свежая дата сведений карточки, не дата сборки; сборка детерминирована (те же данные → те же байты).
+  * телефонов и e-mail нет; aggregateRating нет; JSON-LD — Organization + BreadcrumbList + WebPage (dateModified — день
+    последнего изменения видимого текста, kartochki-unik-v9);
+  * lastmod — самая свежая из дат: сведений карточки и изменения её текста (не дата сборки); сборка детерминирована (те же данные → те же байты).
 
 Данные в репозиторий не кладём: файл .jsonl живёт у того, кто собирает (папка tests/kartochki_dannye/ — в .gitignore).
 """
+import hashlib
 import html
 import json
 import os
@@ -272,6 +274,94 @@ def kartochki_na_diske(koren=KOREN):
     return out
 
 
+# ---------------------------------------------------------------- kartochki-unik-v9: WebPage и дата изменения текста
+# ТЗ [Продукт] 23.10 п. 3В (Маркетинг 11.10): у карточек не было WebPage с dateModified, а lastmod в sitemap стоял по дате
+# сведений (03–12.10), хотя текст менялся 18–22.10 — Яндекс не видел обновлений. Теперь у карточки отпечаток видимого
+# текста <main> (без скриптов и «Похожих компаний») — комментарием рядом с WebPage. Сборка меняет дату, только если
+# отпечаток другой; та же сборка в другой день — те же байты. Шапка и подвал в отпечаток не входят (общие для сайта — не изменение карточки).
+WP_ISTOCHNIKI = ["https://egrul.nalog.gov.ru/", "https://bo.nalog.gov.ru/", "https://www.nalog.gov.ru/opendata/"]
+_WP_BLOK = re.compile(r'<!--tekst:([0-9a-f]{16})-->\n?<script type="application/ld\+json" data-dlk="webpage">(.*?)</script>\n?', re.S)
+_WP_MAIN = re.compile(r"<main\b[^>]*>(.*?)</main>", re.S)
+_WP_SKRIPT = re.compile(r"<script\b.*?</script>|<style\b.*?</style>", re.S)
+# «Похожие компании» — подписи соседей меняются с каждым добором; это не изменение сведений о самой компании
+_WP_SOSEDI = re.compile(r'<aside class="co-side card" aria-labelledby="sos">.*?</aside>', re.S)
+_WP_LD = re.compile(r'<script type="application/ld\+json">(.*?)</script>\n?', re.S)
+_WP_TITLE = re.compile(r"<title>(.*?)</title>", re.S)
+_WP_CANON = re.compile(r'<link rel="canonical" href="([^"]+)"')
+
+
+def otpechatok_teksta(t):
+    """16 знаков sha256 видимого текста <main> карточки (без тегов, скриптов, вида пробелов); нет <main> — None."""
+    t = _WP_BLOK.sub("", t)
+    m = _WP_MAIN.search(t)
+    if not m:
+        return None
+    tx = html.unescape(re.sub(r"<[^>]+>", " ", _WP_SKRIPT.sub(" ", _WP_SOSEDI.sub(" ", m.group(1)))))
+    tx = " ".join(tx.replace(NB, " ").split())
+    return hashlib.sha256(tx.encode("utf-8")).hexdigest()[:16]
+
+
+def data_teksta(t):
+    """(отпечаток, дата dateModified) из блока WebPage страницы или (None, None)."""
+    m = _WP_BLOK.search(t)
+    if not m:
+        return None, None
+    try:
+        d = json.loads(m.group(2)).get("dateModified") or ""
+        return m.group(1), dt.date.fromisoformat(d[:10])
+    except (ValueError, AttributeError):
+        return m.group(1), None
+
+
+def vstavit_webpage(t, den, prezhnij=None):
+    """→ (страница, дата изменения текста). WebPage ставится сразу за JSON-LD карточки; нет Organization — без изменений.
+    prezhnij — (отпечаток, дата) опубликованной версии до этой сборки: с ней и сравниваем (сборка пишет файл по нескольку
+    раз — промежуточный текст датой не считается)."""
+    h = otpechatok_teksta(t)
+    ld = _WP_LD.search(t)
+    if not h or not ld:
+        return t, None
+    try:
+        graf = json.loads(ld.group(1)).get("@graph") or []
+    except ValueError:
+        return t, None
+    org = next((x for x in graf if isinstance(x, dict) and x.get("@type") == "Organization"), None)
+    kan = _WP_CANON.search(t)
+    if not org or not org.get("taxID") or not kan:
+        return t, None
+    h_byl, d_byl = prezhnij if prezhnij else data_teksta(t)
+    d = d_byl if (h_byl == h and d_byl) else den
+    tit = _WP_TITLE.search(t)
+    wp = {"@context": "https://schema.org", "@type": "WebPage", "url": kan.group(1),
+          "name": html.unescape(tit.group(1)).strip() if tit else org.get("name"),
+          "inLanguage": "ru", "dateModified": d.isoformat(), "isBasedOn": WP_ISTOCHNIKI,
+          "publisher": {"@type": "Organization", "name": "Делоскоп", "url": SAJT + "/"},
+          "about": {"@type": "Organization", "name": org.get("name"), "taxID": org["taxID"]}}
+    blok = '<!--tekst:%s-->\n<script type="application/ld+json" data-dlk="webpage">%s</script>\n' % (
+        h, json.dumps(wp, ensure_ascii=False, sort_keys=True).replace("</", "<\\/"))
+    bez = _WP_BLOK.sub("", t)
+    ld = _WP_LD.search(bez)
+    kon = ld.end()
+    novyj = bez[:kon] + ("" if ld.group(0).endswith("\n") else "\n") + blok + bez[kon:]
+    return novyj, d
+
+
+def prezhnie_otpechatki(koren=KOREN):
+    """kartochki-unik-v9: {папка карточки: (отпечаток текста, dateModified)} — до сборки, с опубликованных страниц."""
+    papka = os.path.join(koren, PAPKA)
+    out = {}
+    if not os.path.isdir(papka):
+        return out
+    for d in os.listdir(papka):
+        put = os.path.join(papka, d, "index.html")
+        if re.match(r"^\d{10}-", d) and os.path.isfile(put):
+            with open(put, encoding="utf-8") as fh:
+                h, dd = data_teksta(fh.read())
+            if h and dd:
+                out[d] = (h, dd)
+    return out
+
+
 # ---------------------------------------------------------------- kartochki-volna-v1: партии sitemap (ТЗ [Данные] 03.10 разд. 3.3)
 # Новые адреса карточек идут в sitemap-companies.xml не больше PARTIYA_V_SUTKI в сутки (по Москве) — темп волны 5 000 без
 # всплеска «малоценных» в Вебмастере. Счёт партии — строка-комментарий в самом sitemap (отдельного файла состояния нет):
@@ -384,6 +474,17 @@ def nepolnye_otvety(otchet, opublikovannye):
 def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, dobavit=False,
            partiya=PARTIYA_V_SUTKI, segodnya=None):
     kart, otchet = otobrat(zapisi, limit, spros, kontrol)
+    # kartochki-unik-v9: каждая запись карточки — с WebPage; дата изменения текста сравнивается с версией до этой сборки
+    prezhnie = prezhnie_otpechatki(koren)
+    daty_teksta = {}
+    den_ = segodnya or segodnya_msk()
+
+    def zapisat_k(put, txt):
+        p_ = os.path.basename(os.path.dirname(put))
+        txt, d_t = vstavit_webpage(bez_nevidimyh(txt), den_, prezhnie.get(p_))
+        if d_t:
+            daty_teksta["/%s/%s/" % (PAPKA, p_)] = d_t
+        return zapisat(put, txt)
     un_zagruzit(koren)  # kartochki-unik-v2: сравнение с уже опубликованными (после записи — ещё раз, по свежему составу)
     r = ss.rekv_sajta()  # beta-v1: режим сайта (в бете — без реквизитов ИП и с полосой беты)
     papka = os.path.join(koren, PAPKA)
@@ -424,7 +525,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         txt = ssylki_kroshek(txt, kg)
         txt = pochinit_vozrast(txt, den)
         k["_noindex"] = noindex_html(txt)
-        izm += zapisat(os.path.join(koren, adres_str(k).strip("/"), "index.html"), txt)
+        izm += zapisat_k(os.path.join(koren, adres_str(k).strip("/"), "index.html"), txt)
     # v3.8b: у опубликованных — свежие «Похожие компании», остальное байт в байт
     for x in starye:
         put = os.path.join(papka, x["_papka"], "index.html")
@@ -444,6 +545,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         t2 = ssylki_kroshek(t2, kg)  # kartochki-haby-v1: регион и раздел в крошках — ссылкой на хаб группы
         t2 = shablon_v2(t2)  # kartochki-shablon-v1: H1 с ИНН, строка под H1, description — как у новых
         t2 = pochinit_imya(t2)  # kartochki-imya-v1: советы и заголовок реестров — с названием, как у новых
+        t2 = svodka_zel(t2)  # kartochki-svodka-v1: зелёные комментарии — одним блоком под реестрами, как у новых
         t2 = pochinit_pered(t2)  # kartochki-unik-v2: «Перед оплатой» — по признакам страницы, как у новых
         t2 = pochinit_razbor(t2)  # kartochki-unik-v2: «… в цифрах» — с названием, как у новых
         t2 = pochinit_vozrast(t2, den)  # vozrast-segodnya-v1: возраст — на сегодня, число пересчитывает и браузер
@@ -451,7 +553,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         if BEZ_OBOLOCHKI in t2:
             # «голое» тело из комплекта — оболочка той же sobrat_stranicu
             t2 = ss.sobrat_stranicu(t2, r, podval, shapka)
-        izm += zapisat(put, t2)
+        izm += zapisat_k(put, t2)
     # kartochki-unik-v2: «Чем {Имя} отличается» сравнивает карточку с остальными — после записи всех карточек
     # пересобираем блок «Что это значит для вас» по свежему составу (новые карточки получают абзац, у старых — места)
     un_zagruzit(koren)
@@ -459,7 +561,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         put = os.path.join(papka, k_["_papka"], "index.html")
         with open(put, encoding="utf-8") as fh:
             t = fh.read()
-        izm += zapisat(put, vstavit_znachit(t))
+        izm += zapisat_k(put, vstavit_znachit(t))
     # kartochki-unik-v3: «Похожие» (подпись — сравнение по обороту) — по напечатанному на всех карточках, как у добора:
     # первая сборка из сведений и следующий добор дают одни и те же байты
     na_d = kartochki_na_diske(koren)
@@ -469,7 +571,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         with open(put, encoding="utf-8") as fh:
             t = fh.read()
         sos_ = pohozhie(x, vse_d)
-        izm += zapisat(put, _SOS.sub(lambda m: m.group(1) + sosedi_html(x, sos_, eshche_kompanii(x, vse_d, sos_)) + m.group(3), t, count=1))
+        izm += zapisat_k(put, _SOS.sub(lambda m: m.group(1) + sosedi_html(x, sos_, eshche_kompanii(x, vse_d, sos_)) + m.group(3), t, count=1))
     # kartochki-volna-v1: хаб — по HAB_NA_STRANICE карточек; лишние страницы прошлой сборки убираем
     str_haba = stranicy_haba(vse, HAB_NA_STRANICE) if vse else []
     # kartochki-v4.5: ссылки «Как читать карточку» — только на статьи, которые уже есть в этой сборке сайта
@@ -497,6 +599,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         # kartochki-indeks-v1: карточка с noindex в sitemap не идёт (ворота индексации, ТЗ [Данные] 03.10 разд. 3.2)
         lm = {adres_str(k): (k["_lastmod"] if k.get("_s_diska") else lastmod(k, k["_V"])) for k in vse if not k.get("_noindex")}
         lm = {a: d for a, d in lm.items() if d}
+        lm = {a: max(d, daty_teksta.get(a, d)) for a, d in lm.items()}  # kartochki-unik-v9: и дата изменения текста
         # kartochki-volna-v1: новые адреса — партиями, не больше `partiya` в сутки (по Москве); остальные ждут завтра
         staryj = open(sm, encoding="utf-8").read() if os.path.exists(sm) else ""
         dohod = {adres_str(k): ((k.get("fakty") or {}).get("dohod") or {}).get("znachenie") or 0 for k in vse}

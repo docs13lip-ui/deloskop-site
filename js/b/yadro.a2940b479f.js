@@ -84,6 +84,15 @@
         if (window.dlkGoal) window.dlkGoal("beta_bar_close");
       });
     }
+    // beta-odna-stroka-v1: телефон — короткая строка (полный текст по нажатию), широкий экран — полный текст;
+    // поворот планшета / смена ширины окна — тот же выбор, что сделал скрипт полосы при загрузке
+    var det = bar.querySelector("[data-beta-d]");
+    if (det && window.matchMedia) {
+      var mq = window.matchMedia("(max-width:640px)");
+      var smena = function () { det.open = !mq.matches; };
+      if (mq.addEventListener) mq.addEventListener("change", smena); else if (mq.addListener) mq.addListener(smena);
+      det.addEventListener("toggle", function () { if (det.open && mq.matches && window.dlkGoal) window.dlkGoal("beta_bar_open"); });
+    }
     osnProverit(bar);
   }
   window.dlkBeta = { srokSkrytiya: srokSkrytiya, nadpisKrestika: nadpisKrestika, osnSsylka: osnSsylka, klyuch: klyuch,
@@ -526,7 +535,43 @@
     }
   };
 
-  function ubratBanner() { var b = document.querySelector(".ck-bar"); if (b) b.remove(); }
+  // ck-mesto-v1: пока окно cookies открыто, оно не прячет низ страницы (подвал, переключатель темы) и форму, в которую человек
+  // вводит ИНН: высота окна → --ck-h у <html> (место снизу и scroll-padding — в partials/shapka.css), поле в фокусе — над окном
+  var root = document.documentElement, ckRo = null;
+  function ckMera() {
+    if (!root || !root.classList || !root.style) return;
+    var b = document.querySelector(".ck-bar");
+    if (!b || !b.getBoundingClientRect) { root.classList.remove("est-ck"); root.style.removeProperty("--ck-h"); return; }
+    var h = Math.max(0, Math.ceil(window.innerHeight - b.getBoundingClientRect().top));
+    root.style.setProperty("--ck-h", h + "px");
+    root.classList.add("est-ck");
+  }
+  function ckFokus(e) {
+    var b = document.querySelector(".ck-bar"), t = e.target;
+    if (!b || !t || !t.closest || t.closest(".ck-bar") || !/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
+    // после кадра: браузер сам докручивает поле в фокусе (с учётом scroll-padding) — считаем уже от его места
+    (window.requestAnimationFrame || setTimeout)(function () { ckNad(b, t); });
+  }
+  function ckNad(b, t) {
+    if (!b.isConnected) return;
+    var o = b.getBoundingClientRect(), shapka = 72;
+    [t.closest("form"), t].some(function (el) {
+      if (!el) return false;
+      var r = el.getBoundingClientRect(), nado = Math.ceil(r.bottom - o.top + 12);
+      if (nado <= 0 || r.right <= o.left || r.left >= o.right) return true; // не под окном (на широком экране окно сбоку)
+      if (r.top - nado < shapka) return false;
+      var tiho = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      window.scrollBy({ top: nado, behavior: tiho ? "auto" : "smooth" });
+      return true;
+    });
+  }
+  function ubratBanner() {
+    var b = document.querySelector(".ck-bar"); if (b) b.remove();
+    if (ckRo) { ckRo.disconnect(); ckRo = null; }
+    if (window.removeEventListener) window.removeEventListener("resize", ckMera);
+    document.removeEventListener("focusin", ckFokus);
+    ckMera();
+  }
 
   function banner() {
     if (document.querySelector(".ck-bar")) return;
@@ -543,6 +588,10 @@
       if (b.getAttribute("data-ck") === "all") window.dlkCookies.prinyat(); else window.dlkCookies.tolkoNuzhnye();
     });
     document.body.appendChild(d);
+    ckMera();
+    if (typeof window.ResizeObserver === "function") { ckRo = new ResizeObserver(ckMera); ckRo.observe(d); }
+    if (window.addEventListener) window.addEventListener("resize", ckMera);
+    document.addEventListener("focusin", ckFokus);
   }
 
   // на /cookies/ — текущий выбор и кнопки его поменять

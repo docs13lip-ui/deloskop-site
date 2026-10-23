@@ -82,3 +82,12 @@ test('хабы /praktika/: лид без сводки, сводка — из del
   assert.match(css, /\.pr \.svodka\{[^}]*font-size:13px[^}]*color:var\(--muted\)/);
   assert.match(css, /@media \(max-width:600px\)\{\.pr \.lid--hab\{font-size:17px\}\}/);
 });
+
+// pravo-2310-razd1 (23.10, [Ночные запуски]; ответ [Право] 23.10 на ✎ 04:50): в лиде хаба /praktika/ — реквизиты источника,
+// верно и для разборов по письмам Минфина/ФНС (прежнее «номер дела и ссылка на текст акта» — нет).
+test('хаб /praktika/: в лиде — «реквизиты источника: номер дела или письма»', () => {
+  const s = fs.readFileSync(path.join(KOREN, 'praktika/index.html'), 'utf8');
+  const lid = s.match(/<p class="lid lid--hab">([\s\S]*?)<\/p>/)[1].replace(/&nbsp;| /g, ' ');
+  assert.ok(lid.includes('У каждого разбора — реквизиты источника: номер дела или письма и ссылка на текст.'), lid);
+  assert.ok(!lid.includes('текст акта'), lid);
+});

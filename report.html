@@ -306,6 +306,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
     if(window.DlkInn&&DlkInn.vstavka&&!i.dataset.vstavka){i.dataset.vstavka='1';DlkInn.vstavka(i,true);}
     f.onsubmit=function(e){e.preventDefault();
       var rk=window.DlkInn&&DlkInn.pohozh&&DlkInn.pohozh(i.value), v=(rk&&DlkInn.izTeksta(i.value))||i.value.replace(/\D/g,'');
+      var vn=!rk&&window.DlkInn&&DlkInn.vNazvanii&&DlkInn.vNazvanii(i.value);if(vn){rk=true;v=vn;} // inn-nazvanie-v1
       if(!rk&&/[A-Za-zА-Яа-яЁё]/.test(i.value)){n.className='pusto__note err';n.textContent='Здесь — только ИНН. По названию найдём на главной.';i.focus();return;}
       var oi=window.DlkInn?DlkInn.oshibka(v):((v.length!==10&&v.length!==12)?'ИНН компании — 10 цифр, ИНН ИП — 12.':'');
       if(oi){n.className='pusto__note err';n.textContent=oi;i.focus();return;}

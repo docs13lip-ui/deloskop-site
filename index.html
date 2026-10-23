@@ -590,7 +590,7 @@ footer a{color:var(--ink2)}
 <!-- vizual-v3.0a: куда чаще всего идут с главной — браузер готовит заранее при наведении или касании ссылки: тарифы, Паспорт, методику и карточки компаний открывает целиком (prerender; Метрика ждёт показа — js/metrika.js), статьи — только скачивает -->
 <script type="speculationrules">{"prerender":[{"where":{"and":[{"or":[{"href_matches":"/tarify/"},{"href_matches":"/pasport/"},{"href_matches":"/indeks/"},{"href_matches":"/company/*"}]},{"not":{"href_matches":"/*\\?*"}}]},"eagerness":"moderate"}],"prefetch":[{"where":{"or":[{"href_matches":"/115-fz/*"},{"href_matches":"/nalogi/*"}]},"eagerness":"moderate"}]}</script>
 <style>[data-kanal][hidden],[data-kanaly-blok][hidden]{display:none!important}</style>
-<script src="/js/b/glavnaya-sinhr.ecd5ffb427.js"></script>
+<script src="/js/b/glavnaya-sinhr.e7e08623b3.js"></script>
 <script>
 (function(){
   var form=document.getElementById('check'), input=document.getElementById('inn'), note=document.getElementById('note');
@@ -608,6 +608,8 @@ footer a{color:var(--ink2)}
     if(window.DlkInn&&DlkInn.pohozh&&DlkInn.pohozh(v)){var ti=DlkInn.izTeksta(v);
       if(!ti){note.className='note err';note.textContent=DlkInn.DLINA;input.focus();return;}
       v=digits=ti;if(input.value!==ti)input.value=ti;}
+    // inn-nazvanie-v1: «ПАО Сбербанк ИНН 7707083893» — в названии есть ИНН: проверяем его, а не ищем текст целиком
+    else if(window.DlkInn&&DlkInn.vNazvanii){var tn=DlkInn.vNazvanii(v);if(tn){v=digits=tn;input.value=tn;}}
     if(/^\d+$/.test(v.replace(/\s/g,''))){
       var oi=window.DlkInn?DlkInn.oshibka(digits):((digits.length!==10&&digits.length!==12)?'ИНН компании — 10 цифр, ИНН ИП или человека — 12.':'');
       if(oi){note.className='note err';note.textContent=oi;input.focus();return;}
@@ -787,7 +789,8 @@ footer a{color:var(--ink2)}
   list.addEventListener('mousedown',function(e){var li=e.target.closest('li');if(li){e.preventDefault();pickItem(+li.dataset.i)}});
   input.addEventListener('input',function(){clearTimeout(tmr);var q=input.value.trim();
     if(!CAPI||q.length<3||/^\d+$/.test(q)||(window.DlkInn&&DlkInn.pohozh&&DlkInn.pohozh(q))){hide();return;}
-    tmr=setTimeout(function(){lastQ=q;fetch(CAPI+'/api/suggest?q='+encodeURIComponent(q)).then(function(r){return r.ok?r.json():{items:[]}})
+    var qn=(window.DlkInn&&DlkInn.vNazvanii&&DlkInn.vNazvanii(q))||q; // inn-nazvanie-v1: подсказка по ИНН из названия
+    tmr=setTimeout(function(){lastQ=q;fetch(CAPI+'/api/suggest?q='+encodeURIComponent(qn)).then(function(r){return r.ok?r.json():{items:[]}})
       .then(function(j){if(lastQ===input.value.trim())show(j.items)}).catch(hide)},250);});
   input.addEventListener('keydown',function(e){if(POP?!list.matches(':popover-open'):list.hidden)return;
     if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();sel=(sel+(e.key==='ArrowDown'?1:-1)+items.length)%items.length;
@@ -857,7 +860,7 @@ footer a{color:var(--ink2)}
   // Щит: своя компания глазами банка и налоговой (js/shchit.js) — в том же окне отчёта, наверху страницы
   var sf=document.getElementById('shieldForm');
   if(sf)sf.addEventListener('submit',function(e){e.preventDefault();
-    var mi=document.getElementById('myinn'), d=(window.DlkInn&&DlkInn.izTeksta&&DlkInn.izTeksta(mi.value))||mi.value.replace(/\D/g,'');
+    var mi=document.getElementById('myinn'), d=(window.DlkInn&&DlkInn.izTeksta&&DlkInn.izTeksta(mi.value))||(window.DlkInn&&DlkInn.vNazvanii&&DlkInn.vNazvanii(mi.value))||mi.value.replace(/\D/g,'');
     var sn=sf.nextElementSibling; if(!sn.dataset.t)sn.dataset.t=sn.textContent;
     var so=window.DlkInn?DlkInn.oshibka(d):((d.length!==10&&d.length!==12)?'ИНН компании — 10 цифр, ИНН ИП — 12.':'');
     if(so){sn.textContent=so;sn.style.color='#B3261E';mi.focus();return;}

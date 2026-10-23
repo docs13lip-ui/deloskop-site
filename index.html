@@ -598,11 +598,16 @@ footer a{color:var(--ink2)}
   function focusInn(e){e.preventDefault();window.scrollTo({top:0,behavior:'smooth'});setTimeout(function(){input.focus({preventScroll:true})},350);}
   document.querySelectorAll('[data-focus-inn]').forEach(function(a){a.addEventListener('click',focusInn)});
   input.addEventListener('input',function(){note.className='note';note.textContent=def;});
+  if(window.DlkInn&&DlkInn.vstavka){DlkInn.vstavka(input);DlkInn.vstavka(document.getElementById('myinn'),true);}
   form.addEventListener('submit',function(e){
     e.preventDefault();
     var v=input.value.trim(), digits=v.replace(/\D/g,'');
     note.className='note';
     if(!v){note.className='note err';note.textContent='Введите ИНН или название компании.';input.focus();return;}
+    // inn-tekst-v1: реквизит из договора («ИНН 7707083893», «7707 083 893», «ИНН/КПП …/…») — проверяем сам ИНН, а не ищем по названию
+    if(window.DlkInn&&DlkInn.pohozh&&DlkInn.pohozh(v)){var ti=DlkInn.izTeksta(v);
+      if(!ti){note.className='note err';note.textContent=DlkInn.DLINA;input.focus();return;}
+      v=digits=ti;if(input.value!==ti)input.value=ti;}
     if(/^\d+$/.test(v.replace(/\s/g,''))){
       var oi=window.DlkInn?DlkInn.oshibka(digits):((digits.length!==10&&digits.length!==12)?'ИНН компании — 10 цифр, ИНН ИП или человека — 12.':'');
       if(oi){note.className='note err';note.textContent=oi;input.focus();return;}
@@ -781,7 +786,7 @@ footer a{color:var(--ink2)}
     if(POP){try{if(!list.matches(':popover-open'))list.showPopover()}catch(e){}}else list.hidden=false;input.setAttribute('aria-expanded','true');}
   list.addEventListener('mousedown',function(e){var li=e.target.closest('li');if(li){e.preventDefault();pickItem(+li.dataset.i)}});
   input.addEventListener('input',function(){clearTimeout(tmr);var q=input.value.trim();
-    if(!CAPI||q.length<3||/^\d+$/.test(q)){hide();return;}
+    if(!CAPI||q.length<3||/^\d+$/.test(q)||(window.DlkInn&&DlkInn.pohozh&&DlkInn.pohozh(q))){hide();return;}
     tmr=setTimeout(function(){lastQ=q;fetch(CAPI+'/api/suggest?q='+encodeURIComponent(q)).then(function(r){return r.ok?r.json():{items:[]}})
       .then(function(j){if(lastQ===input.value.trim())show(j.items)}).catch(hide)},250);});
   input.addEventListener('keydown',function(e){if(POP?!list.matches(':popover-open'):list.hidden)return;
@@ -852,7 +857,7 @@ footer a{color:var(--ink2)}
   // Щит: своя компания глазами банка и налоговой (js/shchit.js) — в том же окне отчёта, наверху страницы
   var sf=document.getElementById('shieldForm');
   if(sf)sf.addEventListener('submit',function(e){e.preventDefault();
-    var mi=document.getElementById('myinn'), d=mi.value.replace(/\D/g,'');
+    var mi=document.getElementById('myinn'), d=(window.DlkInn&&DlkInn.izTeksta&&DlkInn.izTeksta(mi.value))||mi.value.replace(/\D/g,'');
     var sn=sf.nextElementSibling; if(!sn.dataset.t)sn.dataset.t=sn.textContent;
     var so=window.DlkInn?DlkInn.oshibka(d):((d.length!==10&&d.length!==12)?'ИНН компании — 10 цифр, ИНН ИП — 12.':'');
     if(so){sn.textContent=so;sn.style.color='#B3261E';mi.focus();return;}

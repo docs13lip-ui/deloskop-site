@@ -355,7 +355,11 @@
   function cifry(s) { return String(s == null ? "" : s).replace(/\D/g, ""); }
   function izTeksta(s) {
     var g = String(s || "").match(/\d(?:[\s \-]*\d)*/g) || [], i, d;
-    for (i = 0; i < g.length; i++) { d = cifry(g[i]); if (d.length === 10 || d.length === 12) return d; }
+    for (i = 0; i < g.length; i++) {
+      d = cifry(g[i]); if (d.length === 10 || d.length === 12) return d;
+      // inn-tekst-v1: «7707083893 770701001» — ИНН и КПП через пробел склеились в 19 цифр; берём слово из 10/12
+      var t = g[i].split(/[\s\u00a0]+/), j; for (j = 0; j < t.length; j++) { d = cifry(t[j]); if (d.length === 10 || d.length === 12) return d; }
+    }
     return cifry(s);
   }
   function tolkoOrg(p) { return p.getAttribute("maxlength") === "10"; }

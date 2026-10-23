@@ -56,11 +56,11 @@ test('2.2: хабы «Разборов» — вводная строка из de
   const forma = (n) => (n % 10 === 1 && n % 100 !== 11 ? 'разбор' : n % 10 >= 2 && n % 10 <= 4 && !(n % 100 >= 12 && n % 100 <= 14) ? 'разбора' : 'разборов');
   for (const [f, rz] of [['praktika/index.html', null], ['praktika/115-fz/index.html', '115-fz'], ['praktika/nalogi/index.html', 'nalogi']]) {
     const sp = D.razbory.filter((r) => !rz || r.razdel === rz);
-    const lid = chitat(f).match(/<p class="lid">([\s\S]*?)<\/p>/)[1].replace(/<[^>]+>/g, '').replace(/\u00a0|&nbsp;/g, ' ');
+    const lid = chitat(f).match(/<p class="svodka">([\s\S]*?)<\/p>/)[1].replace(/<[^>]+>/g, '').replace(/\u00a0|&nbsp;/g, ' ');
     // [Право] 03.10 10:20 разд. 4 и 14:30 разд. 2: обзор Президиума ВС (vid: obzor) или карточка без суда — «…судебных решений и позиций ведомств»
     const vid = sp.every((r) => r.dela.every((d) => (d.sud || '').trim() && d.vid !== 'obzor')) ? ' решений ВС, КС и арбитражных судов' : ' судебных решений и позиций ведомств';
     assert.ok(lid.includes(sp.length + ' ' + forma(sp.length) + vid), f + ': ' + lid);
-    assert.ok(lid.includes('Последний — «' + sp[0].h1.replace(/\u00a0/g, ' ').replace(/«/g, '„').replace(/»/g, '“')), f);
+    assert.ok(lid.includes('последний — «' + sp[0].h1.replace(/\u00a0/g, ' ').replace(/«/g, '„').replace(/»/g, '“')), f);
   }
   execFileSync('python3', [path.join(K, 'tests/sobrat_praktika.py'), '--check'], { stdio: 'pipe' });
 });

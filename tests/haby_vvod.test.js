@@ -39,22 +39,23 @@ test('в абзацах нет снятых [Право] формулирово�
 
 test('строка хабов «Практики»: «опубликован {дата}»; без судебного акта — «судебных решений и позиций ведомств»', () => {
   for (const f of ['praktika/index.html', 'praktika/115-fz/index.html', 'praktika/nalogi/index.html']) {
-    const lid = tekst(chitat(f).match(/<p class="lid">([\s\S]*?)<\/p>/)[1]);
-    assert.ok(/Последний — «[^»]+», опубликован \d{1,2} [а-я]+ \d{4}/.test(lid), f + ': ' + lid);
+    // 23.10: сводка переехала из лида в строку .svodka под ним (ТЗ [Продукт] Д6) — правило [Право] то же
+    const lid = tekst(chitat(f).match(/<p class="svodka">([\s\S]*?)<\/p>/)[1]);
+    assert.ok(/последний — «[^»]+», опубликован \d{1,2} [а-я]+ \d{4}/.test(lid), f + ': ' + lid);
   }
   const kod = `
 import sys, importlib.util
 sys.path.insert(0, ${JSON.stringify(path.join(K, 'tests'))})
 spec = importlib.util.spec_from_file_location("sp", ${JSON.stringify(path.join(K, 'tests/sobrat_praktika.py'))})
 sp = importlib.util.module_from_spec(spec); spec.loader.exec_module(sp)
-sud = {"h1": "А", "data": "2026-10-03", "dela": [{"sud": "Верховный суд РФ"}]}
-min_ = {"h1": "Б", "data": "2026-10-02", "dela": [{"organ": "Минфин России"}]}
-bez = {"h1": "В", "data": "2026-10-01"}
+sud = {"h1": "А", "razdel": "nalogi", "slug": "a", "data": "2026-10-03", "dela": [{"sud": "Верховный суд РФ"}]}
+min_ = {"h1": "Б", "razdel": "nalogi", "slug": "b", "data": "2026-10-02", "dela": [{"organ": "Минфин России"}]}
+bez = {"h1": "В", "razdel": "nalogi", "slug": "v", "data": "2026-10-01"}
 print(sp.svodka_haba([sud]))
 print(sp.svodka_haba([sud, min_]))
 print(sp.svodka_haba([bez]))
 `;
-  const [a, b, c] = execFileSync('python3', ['-c', kod], { encoding: 'utf8' }).trim().split('\n');
+  const [a, b, c] = execFileSync('python3', ['-c', kod], { encoding: 'utf8' }).trim().split('\n').map(tekst);
   assert.ok(a.includes('1 разбор решений ВС, КС и арбитражных судов') && a.includes('опубликован 3 октября 2026'), a);
   assert.ok(b.includes('2 разбора судебных решений и позиций ведомств'), b);
   assert.ok(c.includes('судебных решений и позиций ведомств'), 'без поля — второй вариант: ' + c);

@@ -24,6 +24,10 @@ import sobrat_faq as FAQ  # noqa: E402
 import tipograf_statej as TS  # noqa: E402
 
 SAJT = "https://deloskop.ru"
+# [Ночные запуски] 23.10 (ТЗ [Продукт · Маркетинг] С3; решение владельца 11.10 — «Команда Делоскопа»): один автор на всём сайте.
+# Тот же объект — в статьях /115-fz/, /nalogi/, /indeks/, /tochnost/, /kak-vidit-bank/ и журнале; узел с этим @id — на /o-proekte/.
+# Сторож — tests/avtor.test.js (прежней подписи «Редакция …» — 0 раз, у каждого Article автор = AVTOR).
+AVTOR = {"@type": "Organization", "@id": SAJT + "/o-proekte/#komanda", "name": "Команда Делоскопа", "url": SAJT + "/o-proekte/"}
 MES = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"]
 NB = " "
 
@@ -256,7 +260,7 @@ def razbor(r, D, po_slug, F=None):
     kr = [("Делоскоп", "/"), ("Практика", "/praktika/"), (rz["kratko"], "/praktika/%s/" % r["razdel"]), (r["h1"], url)]
     ld = [{"@context": "https://schema.org", "@type": "Article", "headline": r["h1"][:110], "description": r["description"],
            "datePublished": r["data"], "dateModified": izmeneno(r), "inLanguage": "ru",
-           "author": {"@type": "Organization", "name": "Редакция Делоскопа", "url": SAJT},
+           "author": AVTOR,
            "publisher": {"@type": "Organization", "name": "Делоскоп", "url": SAJT + "/", "logo": {"@type": "ImageObject", "url": SAJT + "/ikonka-512.png"}},
            "mainEntityOfPage": SAJT + url, "articleSection": rz["kratko"],
            "about": "; ".join(("%s %s от %s %s" % (d["akt"], d["sud"], data_ch(d["data"]), d["nomer"])).strip() for d in r["dela"])},
@@ -278,7 +282,7 @@ def razbor(r, D, po_slug, F=None):
 %(kr)s
 <p class="rubr">Разбор дела</p>
 <h1>%(h1)s</h1>
-<p class="meta">Редакция Делоскопа · <time datetime="%(data)s">%(data_ru)s</time> · %(min)s чтения</p>
+<p class="meta">Команда Делоскопа · <time datetime="%(data)s">%(data_ru)s</time> · %(min)s чтения</p>
 <p class="lid">%(lid)s</p>
 %(kart)s
 <article>
@@ -351,8 +355,10 @@ def svodka_haba(spisok):
     # судебные акты (поле `sud` заполнено). Разбор по письму Минфина/ФНС (карточка без `sud`) или без поля → «судебных решений и позиций ведомств».
     # Дата — публикации разбора («опубликован»), а не акта суда.
     vid = "решений ВС, КС и арбитражных судов" if vse_sudebnye(spisok) else "судебных решений и позиций ведомств"
-    return "%d %s %s: суть, сколько на кону, что сделать. Последний — «%s», опубликован %s." % (
-        len(spisok), chislo_razborov(len(spisok)), vid, h, data_ru(r["data"]))
+    # [Ночные запуски] 23.10 (ТЗ [Продукт · Арт-директор] Д6): сводка — отдельной строкой-метой под лидом (13 px, --muted),
+    # название последнего разбора — ссылкой на него. HTML: части экранированы здесь, вызывающий не экранирует.
+    return '%d %s %s · последний — <a href="%s">«%s»</a>, опубликован <time datetime="%s">%s</time>' % (
+        len(spisok), chislo_razborov(len(spisok)), vid, e(url_razbora(r)), e(h), e(r["data"]), data_ru(r["data"]))
 
 
 def vse_sudebnye(spisok):
@@ -370,10 +376,9 @@ def hab(D, razdel=None):
         url, h1 = "/praktika/", "Как решают суды"
         title = "Судебная практика для бизнеса: разборы дел — Делоскоп"
         desc = "Разборы решений ВС, КС и арбитражных судов о блокировках счетов, комиссиях банков и налогах: номер дела, первоисточник, что делать и сколько на кону."
-        lid = "Одно дело — одна страница: что случилось, что решил суд, где грань и что сделать завтра утром. У каждого разбора — номер дела и ссылка на текст акта."
+        lid = "Одно дело — одна страница: что случилось, что решил суд, где грань и что сделать завтра утром."
         kr = [("Делоскоп", "/"), ("Практика", url)]
         spisok = list(D["razbory"])
-    lid = lid + " " + svodka_haba(spisok)
     ld = [{"@context": "https://schema.org", "@type": "CollectionPage", "name": h1, "description": desc, "url": SAJT + url, "inLanguage": "ru",
            "hasPart": [{"@type": "Article", "headline": r["h1"][:110], "url": SAJT + url_razbora(r)} for r in spisok]}, kroshki_ld(kr)]
     razd = [("Все", "/praktika/")] + [(v["nazvanie"], "/praktika/%s/" % k) for k, v in D["razdely"].items()]
@@ -382,7 +387,8 @@ def hab(D, razdel=None):
 %(kr)s
 <p class="rubr">Практика</p>
 <h1>%(h1)s</h1>
-<p class="lid">%(lid)s</p>
+<p class="lid lid--hab">%(lid)s</p>
+<p class="svodka">%(sv)s</p>
 <nav class="razd" aria-label="Разделы практики">%(razd)s</nav>
 <h2>%(n)s</h2>
 <div class="sos">
@@ -394,7 +400,7 @@ def hab(D, razdel=None):
 <!--podval--><!--/podval-->
 </body>
 </html>
-""" % {"kr": kroshki_html(kr), "h1": e(h1), "lid": e(lid), "razd": razd_html, "sp": "\n".join(pk(r) for r in spisok),
+""" % {"kr": kroshki_html(kr), "h1": e(h1), "lid": e(lid), "sv": svodka_haba(spisok), "razd": razd_html, "sp": "\n".join(pk(r) for r in spisok),
        "n": "Разборы: %d" % len(spisok)}
     return url, stranica
 

@@ -70,12 +70,16 @@ test('(3) источник CSS: место снизу, scroll-padding тольк
   assert.match(CSS, /@media \(max-width:1024px\)\{html\.est-ck\{scroll-padding-bottom:calc\(var\(--ck-h,0px\) \+ 12px\)\}\}/);
   assert.match(CSS, /@media print\{html\.est-ck body\{padding-bottom:0\}\}/);
   assert.match(CSS, /max-width:640px\)\{\.ck-bar \.ck-bar__in\{[^}]*padding:var\(--s-2\) var\(--gutter\) calc\(var\(--s-2\) \+ env\(safe-area-inset-bottom\)\)/);
-  assert.match(CSS, /\.ck-bar \.ck-bar__b button\{flex:1;min-height:44px/);
+  assert.match(CSS, /\.ck-bar \.ck-bar__b button\{flex:1 1 164px;min-height:44px/);
   const sobrano = fs.readFileSync(path.join(KOREN, 'css', 'shapka.css'), 'utf8');
   assert.ok(sobrano.includes('html.est-ck body{padding-bottom:var(--ck-h,0px)}'), 'css/shapka.css пересобран (sobrat_shapku)');
 });
 
-test('(4) текст окна не меняется (согласие — слово в слово)', () => {
-  assert.ok(KOD.includes('Cookies\\u00a0— для работы сайта, Метрика\\u00a0— только с\\u00a0вашего согласия.'));
-  assert.ok(KOD.includes('>Принять</button>') && KOD.includes('>Только необходимые</button>'));
+test('(4) текст окна — слово в слово по [Право] 23.10 (ck-korotko-v1; 152-ФЗ, 4 условия)', () => {
+  assert.ok(KOD.includes('<p class="ck-bar__t">Яндекс Метрику и\\u00a0её cookies включим только с\\u00a0вашего согласия. <a href="/cookies/">Подробнее</a></p>'), '(1) Метрика и cookies названы, (2) «Подробнее» в той же строке');
+  assert.ok(KOD.includes('class="ck-bar__ok" data-ck="all">Разрешить</button>') && KOD.includes('class="ck-bar__no" data-ck="need">Только необходимые</button>'), '(3) отказ — кнопка, не ссылка');
+  const kn = CSS.match(/\.ck-bar button\{[^}]*\}/)[0];
+  assert.ok(/font:600 15px/.test(kn) && !/\.ck-bar__no\{[^}]*(font|min-height|padding|opacity)/.test(CSS), '(3) кнопки одного размера и веса: у «Только необходимые» своих размера, шрифта и прозрачности нет');
+  assert.ok(/\.ck-bar \.ck-bar__no\{background:var\(--surface-2\);color:var\(--ink\)\}/.test(CSS), '(3) текст отказа — основной цвет, не серый');
+  assert.match(CSS, /\.ck-bar \.ck-bar__b\{flex-wrap:wrap\}\.ck-bar \.ck-bar__b button\{flex:1 1 164px;min-height:44px;padding:0 4px\}/, '(3) на телефоне кнопки равной ширины: рядом, а если не влезают — одна под другой во всю ширину');
 });

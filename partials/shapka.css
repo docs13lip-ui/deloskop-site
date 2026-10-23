@@ -158,9 +158,8 @@ dialog.dlo::backdrop{background:rgba(17,17,19,.55)}
 .ck-bar .ck-bar__ok{background:var(--accent);color:var(--on-accent)}
 .ck-bar .ck-bar__ok:hover{background:var(--accent-hover)}
 .ck-bar .ck-bar__no{background:var(--surface-2);color:var(--ink)}
-.ck-bar .ck-bar__kr{display:none}
 .ck-bar :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-@media (max-width:640px){.ck-bar .ck-bar__in{flex-direction:column;align-items:stretch;gap:var(--s-2);padding:var(--s-2) var(--gutter) calc(var(--s-2) + env(safe-area-inset-bottom))}.ck-bar .ck-bar__t{font-size:var(--t-caption)}.ck-bar .ck-bar__dl{display:none}.ck-bar .ck-bar__kr{display:inline}.ck-bar .ck-bar__b button{flex:1;min-height:44px;padding:0 12px}}
+@media (max-width:640px){.ck-bar .ck-bar__in{flex-direction:column;align-items:stretch;gap:var(--s-2);padding:var(--s-2) var(--gutter) calc(var(--s-2) + env(safe-area-inset-bottom))}.ck-bar .ck-bar__t{font-size:var(--t-caption)}.ck-bar .ck-bar__b{flex-wrap:wrap}.ck-bar .ck-bar__b button{flex:1 1 164px;min-height:44px;padding:0 4px}}
 @media print{.ck-bar{display:none!important}}
 /* ck-mesto-v1: пока окно открыто, низ страницы и форма под ним не прячутся — место снизу = высота окна (--ck-h ставит js/metrika.js) */
 @media (max-width:1024px){html.est-ck{scroll-padding-bottom:calc(var(--ck-h,0px) + 12px)}}

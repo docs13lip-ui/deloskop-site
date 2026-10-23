@@ -37,6 +37,7 @@
 .sv-vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .sv-nol td{color:var(--muted);font-size:var(--t-small)}
 .sv-itog{font-size:var(--t-lead);font-weight:600;margin:var(--s-5) 0 var(--s-2);max-width:38em}
+.sv-nepr{font-size:var(--t-small);margin:0 0 var(--s-2);max-width:38em}
 .sv-pod{font-size:var(--t-small);color:var(--muted);max-width:38em;margin:0}
 .sv-dal{display:flex;gap:var(--s-3);flex-wrap:wrap;margin:var(--s-5) 0 0}
 .sv-btn{display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:var(--r-s);border:1px solid var(--line);color:var(--ink);text-decoration:none;font-weight:600;font-size:var(--t-small);background:var(--surface)}

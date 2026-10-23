@@ -100,6 +100,22 @@ def rezhim_polosy(beta, bdo):
     return "c" if bdo else None
 
 
+# beta-odna-stroka-v1 (ТЗ [Продукт] 23.10 Д3): на телефоне (≤ 640 px — общий порог шапки) полоса — одна строка 44 px:
+# короткая строка в <summary>, полный текст полосы — слово в слово в том же <details>. На широком экране <details> открыт
+# инлайн-скриптом до первой отрисовки, <summary> скрыт — вид прежний. Без JS — короткая строка, раскрывается нажатием.
+# Короткие строки — только то, что уже сказано в полном тексте режима (без новых обещаний).
+KOROTKO = {
+    "a": "Всё бесплатно по&nbsp;{{D}} включительно",
+    "b": "Всё бесплатно&nbsp;· {{G}}&nbsp;{{P}} в&nbsp;день",
+    "c": "Быстрая проверка&nbsp;— бесплатно, {{G}}&nbsp;в&nbsp;день",
+}
+
+
+def korotko(r, D=""):
+    g = gost_v_den()
+    return KOROTKO[r].replace("{{D}}", D).replace("{{G}}", str(g)).replace("{{P}}", proverok(g))
+
+
 def polosa_sobrat(beta, bdo):
     """Полоса из partials/beta.html (каркас) и partials/beta-a|b|c.html (текст). Ключ «скрыть» — свой для каждой даты:
     сменилась дата — полосу снова видят все, и те, кто нажал «×» ([Право] 05.10, условие 2)."""
@@ -109,11 +125,12 @@ def polosa_sobrat(beta, bdo):
     D = data_ru(bdo) if bdo else ""
     D1 = data_ru(sleduyushij(bdo)) if bdo else ""
     tekst = _chast("beta-%s.html" % r).replace("{{D}}", D).replace("{{D1}}", D1).replace("{{G}}", str(gost_v_den()))
-    zapas = ('<template data-beta-b>' + _chast("beta-b.html").replace("{{G}}", str(gost_v_den())) + '</template>') if r == "a" else ""
+    zapas = ('<template data-beta-b>' + _chast("beta-b.html").replace("{{G}}", str(gost_v_den())) + '</template>'
+             '<template data-beta-b-kr>' + korotko("b") + '</template>') if r == "a" else ""
     krestik = "" if r == "c" else _chast("beta-x.html")
     return (_chast("beta.html").replace("{{REZHIM}}", r).replace("{{DO}}", bdo or "")
             .replace("{{KLASS}}", " beta-bar--c" if r == "c" else "")
-            .replace("{{TEKST}}", tekst).replace("{{ZAPAS}}", zapas).replace("{{KRESTIK}}", krestik))
+            .replace("{{KOROTKO}}", korotko(r, D)).replace("{{TEKST}}", tekst).replace("{{ZAPAS}}", zapas).replace("{{KRESTIK}}", krestik))
 
 
 # Сроки беты в текстах страниц: <span data-beta-srok…> по 13 октября[ включительно]</span>. Сборщик вписывает дату из

@@ -82,6 +82,15 @@
         if (window.dlkGoal) window.dlkGoal("beta_bar_close");
       });
     }
+    // beta-odna-stroka-v1: телефон — короткая строка (полный текст по нажатию), широкий экран — полный текст;
+    // поворот планшета / смена ширины окна — тот же выбор, что сделал скрипт полосы при загрузке
+    var det = bar.querySelector("[data-beta-d]");
+    if (det && window.matchMedia) {
+      var mq = window.matchMedia("(max-width:640px)");
+      var smena = function () { det.open = !mq.matches; };
+      if (mq.addEventListener) mq.addEventListener("change", smena); else if (mq.addListener) mq.addListener(smena);
+      det.addEventListener("toggle", function () { if (det.open && mq.matches && window.dlkGoal) window.dlkGoal("beta_bar_open"); });
+    }
     osnProverit(bar);
   }
   window.dlkBeta = { srokSkrytiya: srokSkrytiya, nadpisKrestika: nadpisKrestika, osnSsylka: osnSsylka, klyuch: klyuch,

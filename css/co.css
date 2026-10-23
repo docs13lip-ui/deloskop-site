@@ -75,8 +75,8 @@
 .co-daty__vhod{margin-top:var(--s-4);max-width:720px;font-size:var(--t-small);color:var(--ink-2)}
 .co-daty__vhod a{white-space:normal}
 @media print{.co-daty__vhod{display:none}}
-/* kartochki-shablon-v1: ИНН в H1 — тише имени; «Ещё в регионе» — второй список под «Похожими» */
-.co-h1-inn{font-weight:400;color:var(--ink-2);white-space:nowrap}
+/* kartochki-shablon-v1 + h1-d4 (23.10): ИНН в H1 — второй строкой, тише имени; «Ещё в регионе» — второй список под «Похожими» */
+.co-h1-inn{display:block;font-weight:400;font-size:20px;line-height:1.3;color:var(--muted);white-space:nowrap}
 .co-sos__h{margin:var(--s-4) 0 var(--s-1)}
 .co .co-zel__s{list-style:none;margin:0;padding:0}.co .co-zel__f{font-weight:600}
 /* kartochki-hab-v3: хаб /company/ — длинная отрасль раскрывается «Ещё N компаний» (<details>, без JS); цель касания 44 px */

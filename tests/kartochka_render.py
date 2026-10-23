@@ -2898,14 +2898,26 @@ def _sh_vozrast(god, t):
     return ("%s%s%s" % (m.group(1), NB, m.group(2))) if m else ""
 
 
+# kartochki-h1-d4 (23.10.2026, [Ночные-2]; ТЗ [Продукт] интенсив 23.10 Д4): ОПФ не отрывается от названия
+# (ООО&nbsp;«Лента»), ИНН — отдельной строкой без запятой (.co-h1-inn — display:block в css/co.css). Идемпотентна.
+_D4_OPF = re.compile(r'^(ООО|АО|ПАО|НАО|ЗАО|ОАО)(?: |\u00a0)(?=\S)')
+
+
+def h1_d4(h1, inn):
+    h1 = h1.replace(',<span class="co-h1-inn"> ИНН', '<span class="co-h1-inn">ИНН')
+    if "co-h1-inn" not in h1:
+        h1 += '<span class="co-h1-inn">ИНН&nbsp;%s</span>' % inn
+    return _D4_OPF.sub(r'\1&nbsp;', h1)
+
+
 def shablon_v2(t):
     """kartochki-shablon-v1: H1 с ИНН, строка под H1 и description по шаблону [Продукт · Яндекс] 11.10. Идемпотентна."""
     d = shablon_dannye(t)
     if not (d["name"] and d["inn"]):
         return t
     h1 = _SH_H1.search(t)
-    if h1 and "co-h1-inn" not in h1.group(2):
-        t = t[:h1.start(2)] + h1.group(2) + ',<span class="co-h1-inn"> ИНН&nbsp;%s</span>' % d["inn"] + t[h1.end(2):]
+    if h1:
+        t = t[:h1.start(2)] + h1_d4(h1.group(2), d["inn"]) + t[h1.end(2):]
     sub = _SH_SUB.search(t)
     if sub and "ИНН " + d["inn"] in sub.group(2):
         chasti = [x.strip() for x in sub.group(2).split(" · ")]

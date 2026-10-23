@@ -54,7 +54,7 @@ class TestShablonObrazec(unittest.TestCase):
         for papka, t in self.st.items():
             h1 = re.findall(r"<h1>(.*?)</h1>", t, re.S)
             self.assertEqual(len(h1), 1, papka)
-            self.assertIn(',<span class="co-h1-inn"> ИНН&nbsp;%s</span>' % papka[:10], h1[0], papka)
+            self.assertIn('<span class="co-h1-inn">ИНН&nbsp;%s</span>' % papka[:10], h1[0], papka)  # h1-d4: без запятой
 
     def test_podzag_bez_povtora_inn(self):
         for papka, t in self.st.items():

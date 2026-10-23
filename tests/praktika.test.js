@@ -282,3 +282,20 @@ test('Разбор № 24: ВС АКПИ25-52 / АПЛ25-108 — ровно 3 ц
   assert.ok(!/гарантир|отменим/i.test(t) && !/ИП [А-ЯЁ][а-яё]+/.test(s), 'без имени истца и обещаний (в тексте автора)');
   assert.ok(s.includes('№ АКПИ25-52') && s.includes('№ АПЛ25-108'));
 });
+
+// razbor25-v1 ([Ночные запуски] 23.10; текст [Право] 23.10 11:00 разд. 2; даты и итоги сверены с PDF vsrf.ru 23.10: 25.12.2025 № 306-ЭС24-23083(2) — апелляция и округ оставлены в силе, 11.02.2026 № 190-ПЭК25(3) — отказ Сбербанку)
+test('Разбор № 25: налоговый залог — итог 25.12.2025 по тексту ВС, грань «месяц после решения о взыскании», без цитат из ВС и без обещаний', () => {
+  const r = D.razbory.find((x) => x.slug === 'nalogovyj-arest-zalog-v-bankrotstve-postavshchika');
+  assert.ok(r && r.razdel === 'nalogi');
+  assert.deepStrictEqual(r.dela.map((d) => d.nomer + ' ' + d.data), ['№ 306-ЭС24-23083(2) 2025-12-25', '№ 190-ПЭК25(3) 2026-02-11']);
+  const t = un(chitat('tests/praktika/nalogovyj-arest-zalog-v-bankrotstve-postavshchika.html'));
+  assert.ok(t.includes('109 751 549,31 ₽') && t.includes('А72-19547/2022'));
+  assert.ok(/153 единицы другого имущества/.test(t) && !/153 единицы оборудования/.test(t), 'по тексту ВС — движимое имущество, не «оборудование»');
+  assert.ok(t.includes('п. 2.1 ст. 73 НК') && /не уплачена в течение месяца/.test(t), 'грань — месяц после решения о взыскании');
+  assert.ok(/оставила в силе акты апелляции и округа/.test(t), '25.12.2025 — итог по тексту определения (2)');
+  const sud = t.split('<h2>Что решил суд</h2>')[1].split('<h2>')[0];
+  assert.strictEqual((sud.match(/«[^»]+»/g) || []).length, 0, 'цитат из ВС нет ([Право] 23.10)');
+  assert.ok(!/гарантир|точно получите|вернём/i.test(t));
+  const s = un(chitat('praktika/nalogi/nalogovyj-arest-zalog-v-bankrotstve-postavshchika/index.html'));
+  assert.ok(s.includes('КНД 1120101') && s.includes('Пример не из дела'));
+});

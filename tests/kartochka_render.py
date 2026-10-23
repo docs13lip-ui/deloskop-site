@@ -2017,9 +2017,25 @@ def _hab_poryadok(kart):
     return [x for o in otrasli for x in sorted(po_otr[o], key=lambda x: x["name"])]
 
 
-def stranicy_haba(kart, na_stranice=HAB_NA_STRANICE):
-    """→ [карточки страницы 1, страницы 2, …] в порядке хаба; пустой список карточек — одна пустая страница."""
+# kartochki-hab-v3 (ТЗ [Продукт] 23.10 С2): на /company/ — ВСЕ карточки, что стоят в sitemap-companies.xml (до
+# HAB_PERVAYA_MAKS), группами по отраслям; внутри группы первые HAB_VIDNO видны, остальные — под <details> (без JS-подгрузки,
+# ссылки в HTML). Карточки вне sitemap (noindex или ждут партии) — на /company/stranica/2/… (noindex, follow).
+# Масштаб: 10 000+ карточек — первая страница ограничена HAB_PERVAYA_MAKS, дальше несут хабы отраслей и регионов.
+HAB_PERVAYA_MAKS = 1000
+HAB_VIDNO = 8
+
+
+def stranicy_haba(kart, na_stranice=HAB_NA_STRANICE, v_sitemap=None, pervaya=None):
+    """→ [карточки страницы 1, страницы 2, …] в порядке хаба; пустой список карточек — одна пустая страница.
+    v_sitemap — адреса карточек в sitemap: тогда страница 1 = они (до pervaya), страницы 2… — остальные."""
     sp = _hab_poryadok(kart)
+    if v_sitemap:
+        pervaya = HAB_PERVAYA_MAKS if pervaya is None else pervaya
+        pervye = [x for x in sp if adres_str(x) in v_sitemap][:pervaya]
+        if pervye:
+            est = {id(x) for x in pervye}
+            ost = [x for x in sp if id(x) not in est]
+            return [pervye] + [ost[i:i + na_stranice] for i in range(0, len(ost), na_stranice)]
     return [sp[i:i + na_stranice] for i in range(0, len(sp), na_stranice)] or [[]]
 
 
@@ -2052,7 +2068,7 @@ STATYA_NET_OTCHETNOSTI = "/nalogi/net-otchetnosti-v-otkrytyh-dannyh/"
 HAB_CHITAT_SSYLKI = {"Дата сведений — не дата страницы": (STATYA_NET_OTCHETNOSTI, "Почему отчётности может не быть")}
 
 
-def html_haba(kart, index, n=1, vsego=1, vse=None, kg=None, statyi=frozenset()):
+def html_haba(kart, index, n=1, vsego=1, vse=None, kg=None, statyi=frozenset(), v_sitemap=None):
     """Страница n из vsego хаба; kart — карточки этой страницы, vse — все (для описания и строки регионов);
     kg — {(vid, имя): адрес} хабов групп (kartochki-haby-v1): заголовок отрасли и регион — ссылкой на свой хаб;
     statyi — адреса статей сайта, которые уже есть (ссылки HAB_CHITAT_SSYLKI ставим только на них)."""
@@ -2075,17 +2091,31 @@ def html_haba(kart, index, n=1, vsego=1, vse=None, kg=None, statyi=frozenset()):
         poryadok = {o: i for i, o in enumerate(dict.fromkeys(hab_otrasl(x) for x in _hab_poryadok(vse)))}
         otrasli = sorted(otrasli, key=lambda o: poryadok.get(o, 0))
     bloki = []
+    razdelit = bool(v_sitemap) and n <= 1  # kartochki-hab-v3: все карточки страницы 1, длинные группы — под <details>
     for o in otrasli:
         sp = sorted(po_otr[o], key=lambda x: x["name"])
         # kartochki-okved-v1 (ТЗ 16:50, разд. 2): под названием — «город · ОКВЭД 46.71», если код напечатан на карточке
-        bloki.append('<section class="co-sec"><h2>%s <span class="caption">%d</span></h2><ul class="co-sos co-sos--cols">%s</ul></section>' % (
-            _s("otrasl", o, e(o)), len(sp), "".join('<li><a href="%s">%s</a><span class="caption">%s</span></li>' % (
-                adres_str(x), e(x["name"]), " · ".join(filter(None, [e(x.get("gorod") or x.get("region") or ""),
-                                                                   ("ОКВЭД%s<span class=\"num\">%s</span>" % (NB, okved_kod(x.get("okved"))))
-                                                                   if okved_kod(x.get("okved")) else ""]))) for x in sp)))
+        li = ['<li><a href="%s">%s</a><span class="caption">%s</span></li>' % (
+            adres_str(x), e(x["name"]), " · ".join(filter(None, [e(x.get("gorod") or x.get("region") or ""),
+                                                               ("ОКВЭД%s<span class=\"num\">%s</span>" % (NB, okved_kod(x.get("okved"))))
+                                                               if okved_kod(x.get("okved")) else ""]))) for x in sp]
+        spisok = '<ul class="co-sos co-sos--cols">%s</ul>' % "".join(li)
+        if razdelit and len(li) > HAB_VIDNO + 1:
+            ostalos = len(li) - HAB_VIDNO
+            spisok = ('<ul class="co-sos co-sos--cols">%s</ul><details class="co-esche"><summary>Ещё%s%d%s%s</summary>'
+                      '<ul class="co-sos co-sos--cols">%s</ul></details>') % (
+                "".join(li[:HAB_VIDNO]), NB, ostalos, NB, plural(ostalos, "компания", "компании", "компаний"),
+                "".join(li[HAB_VIDNO:]))
+        bloki.append('<section class="co-sec"><h2>%s <span class="caption">%d</span></h2>%s</section>' % (
+            _s("otrasl", o, e(o)), len(sp), spisok))
     regiony = ""
+    if razdelit:
+        # kartochki-hab-v3: отрасль, у которой нет карточек в поиске, без своего раздела — но ссылка на её хаб остаётся
+        net = [(imya, adr) for (vid, imya), adr in sorted(kg.items()) if vid == "otrasl" and imya not in po_otr]
+        if net:
+            regiony = '<p class="co-reg caption">Ещё отрасли: %s.</p>' % " · ".join('<a href="%s">%s</a>' % (adr, e(imya)) for imya, adr in net)
     if po_reg and n <= 1:
-        regiony = '<p class="co-reg caption">Группы — по основному виду деятельности в ЕГРЮЛ (раздел ОКВЭД%s2). По регионам: %s.</p>' % (NB, " · ".join(
+        regiony = regiony + '<p class="co-reg caption">Группы — по основному виду деятельности в ЕГРЮЛ (раздел ОКВЭД%s2). По регионам: %s.</p>' % (NB, " · ".join(
             "%s%s—%s%d" % (_s("region", r, e(r)), NB, NB, c) for r, c in sorted(po_reg.items(), key=lambda x: (-x[1], x[0]))))
     chitat = ('<section class="co-sec co-chit" id="kak-chitat"><h2>Как читать карточку</h2><ol class="co-chit__sp">%s</ol>'
               '<p class="caption">Сведения — из открытых государственных реестров на указанные даты; выводы — наш расчёт по этим '
@@ -2095,8 +2125,10 @@ def html_haba(kart, index, n=1, vsego=1, vse=None, kg=None, statyi=frozenset()):
         "<li><b>%s.</b> %s%s</li>" % (e(z), tekst, _ssylka_chitat(z, statyi)) for z, tekst in HAB_CHITAT)
     n_otr = len([o for o in vse_otr if o != HAB_NET_OTRASLI])
     t = "Компании в Делоскопе: проверка по ИНН — Делоскоп"
+    # kartochki-hab-v3: число — карточек в поиске (= ссылок на странице 1), а не всех опубликованных
+    n_k = len(kart) if razdelit else len(vse)
     d = "%d %s%s с выводами по открытым реестрам: доходы, штат, налоги и долги — у каждой цифры источник и дата сведений." % (
-        len(vse), plural(len(vse), "компания", "компании", "компаний"),
+        n_k, plural(n_k, "компания", "компании", "компаний"),
         (" из %d %s" % (n_otr, plural(n_otr, "отрасли", "отраслей", "отраслей"))) if n_otr > 1 else "")
     robots = "" if (index and n <= 1) else '<meta name="robots" content="noindex, follow">\n'
     ld = {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
@@ -2105,6 +2137,16 @@ def html_haba(kart, index, n=1, vsego=1, vse=None, kg=None, statyi=frozenset()):
     h1, krosh, lead = "Компании", "Компании", (
         'Карточки компаний с выводами по открытым госреестрам. Каждая цифра — с источником и датой сведений. Нет нужной '
         'компании — проверьте её по ИНН на <a href="/">главной</a>: отчёт соберём за минуту. <a href="#kak-chitat">Как читать карточку ›</a>')
+    ld2 = ""
+    if razdelit:
+        h1 = "%d%s%s в%sДелоскопе" % (n_k, NB, plural(n_k, "компания", "компании", "компаний"), NB)
+        sp_ld = [x for o in otrasli for x in sorted(po_otr[o], key=lambda x: x["name"])]
+        ld2 = json.dumps({"@context": "https://schema.org", "@type": "CollectionPage", "name": "Компании в Делоскопе",
+                          "url": "%s/%s/" % (SAJT, PAPKA), "inLanguage": "ru",
+                          "mainEntity": {"@type": "ItemList", "numberOfItems": len(sp_ld), "itemListElement": [
+                              {"@type": "ListItem", "position": i, "url": SAJT + adres_str(x), "name": x["name"]}
+                              for i, x in enumerate(sp_ld, 1)]}}, ensure_ascii=False, separators=(",", ":"))
+        ld2 = '\n<script type="application/ld+json">%s</script>' % ld2.replace("</", "<\\/")
     if n > 1:
         t = "Компании в Делоскопе — страница %d из %d" % (n, vsego)
         d = "%s Страница %d из %d." % (d, n, vsego)
@@ -2112,6 +2154,10 @@ def html_haba(kart, index, n=1, vsego=1, vse=None, kg=None, statyi=frozenset()):
         krosh = '<a href="/%s/">Компании</a> › Страница%s%d' % (PAPKA, NB, n)
         lead = ('Продолжение списка карточек компаний. Нет нужной — проверьте её по ИНН на <a href="/">главной</a>. '
                 '<a href="/%s/#kak-chitat">Как читать карточку%s›</a>' % (PAPKA, NB))
+        if v_sitemap:
+            lead = ('Карточки, которых пока нет в поиске: новые ждут своей очереди в карте сайта, по части компаний в открытых '
+                    'реестрах мало сведений. Нет нужной — проверьте её по ИНН на <a href="/">главной</a>. '
+                    '<a href="/%s/#kak-chitat">Как читать карточку%s›</a>' % (PAPKA, NB))
         chitat = ""
         ld["itemListElement"].append({"@type": "ListItem", "position": 3, "name": "Страница %d" % n,
                                       "item": SAJT + adres_stranicy_haba(n)})
@@ -2129,7 +2175,7 @@ def html_haba(kart, index, n=1, vsego=1, vse=None, kg=None, statyi=frozenset()):
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/css/ds.css">
 <link rel="stylesheet" href="/css/co.css">
-<script type="application/ld+json">{ld}</script>
+<script type="application/ld+json">{ld}</script>{ld2}
 </head>
 <body class="co">
 <!--shapka--><!--/shapka-->
@@ -2142,7 +2188,7 @@ def html_haba(kart, index, n=1, vsego=1, vse=None, kg=None, statyi=frozenset()):
 </body>
 </html>
 """.format(t=e(t), robots=robots, d=e(d), sajt=SAJT, kanon=adres_stranicy_haba(n), bloki="".join(bloki), regiony=regiony,
-           chitat=chitat, nav=nav + ("\n" if nav else ""), h1=h1, krosh=krosh, lead=lead,
+           chitat=chitat, nav=nav + ("\n" if nav else ""), h1=h1, krosh=krosh, lead=lead, ld2=ld2,
            ld=json.dumps(ld, ensure_ascii=False, separators=(",", ":")))
 
 
@@ -2852,14 +2898,26 @@ def _sh_vozrast(god, t):
     return ("%s%s%s" % (m.group(1), NB, m.group(2))) if m else ""
 
 
+# kartochki-h1-d4 (23.10.2026, [Ночные-2]; ТЗ [Продукт] интенсив 23.10 Д4): ОПФ не отрывается от названия
+# (ООО&nbsp;«Лента»), ИНН — отдельной строкой без запятой (.co-h1-inn — display:block в css/co.css). Идемпотентна.
+_D4_OPF = re.compile(r'^(ООО|АО|ПАО|НАО|ЗАО|ОАО)(?: |\u00a0)(?=\S)')
+
+
+def h1_d4(h1, inn):
+    h1 = h1.replace(',<span class="co-h1-inn"> ИНН', '<span class="co-h1-inn">ИНН')
+    if "co-h1-inn" not in h1:
+        h1 += '<span class="co-h1-inn">ИНН&nbsp;%s</span>' % inn
+    return _D4_OPF.sub(r'\1&nbsp;', h1)
+
+
 def shablon_v2(t):
     """kartochki-shablon-v1: H1 с ИНН, строка под H1 и description по шаблону [Продукт · Яндекс] 11.10. Идемпотентна."""
     d = shablon_dannye(t)
     if not (d["name"] and d["inn"]):
         return t
     h1 = _SH_H1.search(t)
-    if h1 and "co-h1-inn" not in h1.group(2):
-        t = t[:h1.start(2)] + h1.group(2) + ',<span class="co-h1-inn"> ИНН&nbsp;%s</span>' % d["inn"] + t[h1.end(2):]
+    if h1:
+        t = t[:h1.start(2)] + h1_d4(h1.group(2), d["inn"]) + t[h1.end(2):]
     sub = _SH_SUB.search(t)
     if sub and "ИНН " + d["inn"] in sub.group(2):
         chasti = [x.strip() for x in sub.group(2).split(" · ")]
@@ -3493,10 +3551,19 @@ def un_frazy(f):
             t = "; ".join(chasti)
             out.append(t[0].upper() + t[1:] + ".")
 
-    # 3. Давность отчётности
-    if g1 and na and na.year - g1 >= 2:
+    # 3. Давность отчётности. kartochki-zakrytye-v1 (ТЗ [Продукт] 23.10 п. 3Д; текст — [Право] 23.10, разд. 1): годы без
+    # отчётности называем числами; причину для компании не называем (основания закрытия разные, мы их не видим) — только
+    # общая строка о ст. 18 402-ФЗ, без номера части до сверки [Право]
+    # «Старше двух лет» (≥ 3 года до года сведений) — новый абзац; за позапрошлый год — прежний (2025-ю могли ещё не открыть)
+    if g1 and na and na.year - g1 == 2:
         out.append("У %s последняя открытая отчётность — за %d год, о %d годе она ничего не говорит: до подписания "
                    "договора попросите у компании бухгалтерскую отчётность за %d год." % (im, g1, na.year - 1, na.year - 1))
+    elif g1 and na and na.year - g1 >= 3:
+        prichina = ("Так бывает по разным причинам, в том числе законным: в ряде случаев доступ к отчётности в ГИР БО "
+                    "ограничен (ст." + NB + "18 Федерального закона №" + NB + "402-ФЗ).")
+        gody = "%d–%d годы" % (g1 + 1, na.year - 1)
+        out.append(("Последняя открытая отчётность %s — за %d год. За %s в открытой части ГИР БО её нет — до сделки "
+                    "попросите у компании бухгалтерскую отчётность и справку КНД" + NB + "1120101. %s") % (im, g1, gody, prichina))
 
     # 4. Налоги и руководитель — по выводам «Коротко»
     nd = _zn_v(f, "warn", "Задолженность перед бюджетом")

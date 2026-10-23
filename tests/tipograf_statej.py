@@ -33,6 +33,7 @@ STRANICY = {
     "kontragenty-iz-vypiski/index.html": "main",
     "skoraya-115-fz/index.html": "main",
     "proverit-schet/index.html": "main",
+    "sravnit/index.html": "main",  # sravnit-v1 (23.10.2026): «Сравнить двух поставщиков»
     "osnovatel/index.html": "main",
     "index.html": "main",  # tipograf-tarify-v1 (18.10.2026): главная — пишется руками; строку цен и JSON-LD правит sobrat_tarify
     # tipograf-yur-v1 (19.10.2026): юридические документы — «да» [Право] 19.10 10:50 (п. 333 б): меняется только вид

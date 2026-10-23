@@ -80,6 +80,7 @@ footer a{color:var(--muted)}
 .calc-st .note{font-size:15px;color:var(--muted);margin-top:14px}
 .calc-st .calc{margin-top:28px}
 @media (max-width:860px){.calc-st .calc{grid-template-columns:1fr}}
+@media (max-width:360px){.calc-st .box{padding:20px}.calc-st .tot{flex-wrap:wrap;gap:4px 16px;font-size:20px}}
 .calc-st input[type=text]{box-sizing:border-box}
 main.shire{max-width:1040px}
 main.shire article,main.shire .faq,main.shire .check,main.shire .src,main.shire .more{max-width:760px}
@@ -90,7 +91,7 @@ main.shire article,main.shire .faq,main.shire .check,main.shire .src,main.shire 
 <link rel="preload" href="/fonts/onest-cyrillic-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/onest-latin-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/onest-cyrillic-600.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/css/b/ds.2d1cc05b79.css">
+<link rel="stylesheet" href="/css/b/ds.4af88fe3ae.css">
 <script src="/js/b/yadro.a2940b479f.js" defer></script>
 <link rel="icon" type="image/png" sizes="120x120" href="/favicon-120.png">
 <link rel="alternate" type="application/rss+xml" title="Разборы дел — Делоскоп" href="/praktika/rss.xml">
@@ -185,7 +186,7 @@ main.shire article,main.shire .faq,main.shire .check,main.shire .src,main.shire 
           <input id="sv-sum" type="text" inputmode="numeric" value="3 000 000" autocomplete="off">
           <label class="chk"><input id="sv-exp" type="checkbox"> Налоговая сняла ещё и расходы по налогу на прибыль — худший случай</label>
           <label class="chk"><input id="sv-int" type="checkbox"> Налоговая сочла нарушение умышленным — штраф 40% вместо 20%</label>
-          <p class="note">Пени считаем за 2 года: выездная проверка обычно приходит позже сделки. Пени — оценка по нынешней ключевой ставке 14% (действует с 27.07.2026, Банк России сохранил её 11.09.2026). В 2024–2025 годах ставка доходила до 21%, поэтому по давним сделкам пени выше. Пени посчитаны по правилам 2025–2026 годов (п.&nbsp;5.1 ст.&nbsp;75 НК РФ, действует до 31.12.2026). Если их не продлят, с 2027 года пени с 31-го дня просрочки — 1/150 ставки ЦБ, и сумма будет выше.</p>
+          <p class="note">Пени считаем за 2 года: выездная проверка обычно приходит позже сделки. Пени — оценка по нынешней ключевой ставке 14% (действует с 27.07.2026, Банк России сохранил её 23.10.2026). В 2024–2025 годах ставка доходила до 21%, поэтому по давним сделкам пени выше. Пени посчитаны по правилам 2025–2026 годов (п.&nbsp;5.1 ст.&nbsp;75 НК РФ, действует до 31.12.2026). Если их не продлят, с 2027 года пени с 31-го дня просрочки — 1/150 ставки ЦБ, и сумма будет выше.</p>
         </div>
         <div class="box" aria-live="polite">
           <div class="row"><span>Снятый вычет НДС (22%)</span><b id="sv-vat">—</b></div>

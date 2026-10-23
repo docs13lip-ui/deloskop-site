@@ -572,29 +572,12 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
             t = fh.read()
         sos_ = pohozhie(x, vse_d)
         izm += zapisat_k(put, _SOS.sub(lambda m: m.group(1) + sosedi_html(x, sos_, eshche_kompanii(x, vse_d, sos_)) + m.group(3), t, count=1))
-    # kartochki-volna-v1: хаб — по HAB_NA_STRANICE карточек; лишние страницы прошлой сборки убираем
-    str_haba = stranicy_haba(vse, HAB_NA_STRANICE) if vse else []
-    # kartochki-v4.5: ссылки «Как читать карточку» — только на статьи, которые уже есть в этой сборке сайта
-    statyi = frozenset(u for u in (STATYA_NET_OTCHETNOSTI,)
-                       if os.path.isfile(os.path.join(koren, u.strip("/"), "index.html")))
-    if vse:
-        for n, chast in enumerate(str_haba, 1):
-            put = os.path.join(koren, adres_stranicy_haba(n).strip("/"), "index.html")
-            zapisat(put, ss.sobrat_stranicu(html_haba(chast, hub_index, n, len(str_haba), vse, kg, statyi), r, podval, shapka))
-    elif os.path.exists(os.path.join(papka, "index.html")):
-        os.remove(os.path.join(papka, "index.html"))
-    papka_str = os.path.join(papka, HAB_STRANICA)
-    if os.path.isdir(papka_str):
-        for d in os.listdir(papka_str):
-            if not (d.isdigit() and 2 <= int(d) <= len(str_haba)):
-                shutil.rmtree(os.path.join(papka_str, d))
-        if not os.listdir(papka_str):
-            os.rmdir(papka_str)
     # sitemap-companies.xml + robots.txt
     sm = os.path.join(koren, "sitemap-companies.xml")
     rb = os.path.join(koren, "robots.txt")
     stroka = "Sitemap: %s/sitemap-companies.xml" % SAJT
     robots = open(rb, encoding="utf-8").read()
+    lm = {}
     if vse:
         # kartochki-indeks-v1: карточка с noindex в sitemap не идёт (ворота индексации, ТЗ [Данные] 03.10 разд. 3.2)
         lm = {adres_str(k): (k["_lastmod"] if k.get("_s_diska") else lastmod(k, k["_V"])) for k in vse if not k.get("_noindex")}
@@ -628,6 +611,26 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
             os.remove(sm)
         if stroka in robots:
             zapisat(rb, robots.replace(stroka + "\n", "").replace(stroka, ""))
+    # kartochki-volna-v1: хаб — по HAB_NA_STRANICE карточек; лишние страницы прошлой сборки убираем.
+    # kartochki-hab-v3 (С2): страница 1 = все карточки из sitemap-companies.xml (поэтому хаб — после sitemap), 2… — остальные
+    v_sm = frozenset(lm) if (vse and hub_index) else frozenset()  # хаб вне индекса — делить незачем
+    str_haba = stranicy_haba(vse, HAB_NA_STRANICE, v_sm) if vse else []
+    # kartochki-v4.5: ссылки «Как читать карточку» — только на статьи, которые уже есть в этой сборке сайта
+    statyi = frozenset(u for u in (STATYA_NET_OTCHETNOSTI,)
+                       if os.path.isfile(os.path.join(koren, u.strip("/"), "index.html")))
+    if vse:
+        for n, chast in enumerate(str_haba, 1):
+            put = os.path.join(koren, adres_stranicy_haba(n).strip("/"), "index.html")
+            zapisat(put, ss.sobrat_stranicu(html_haba(chast, hub_index, n, len(str_haba), vse, kg, statyi, v_sm), r, podval, shapka))
+    elif os.path.exists(os.path.join(papka, "index.html")):
+        os.remove(os.path.join(papka, "index.html"))
+    papka_str = os.path.join(papka, HAB_STRANICA)
+    if os.path.isdir(papka_str):
+        for d in os.listdir(papka_str):
+            if not (d.isdigit() and 2 <= int(d) <= len(str_haba)):
+                shutil.rmtree(os.path.join(papka_str, d))
+        if not os.listdir(papka_str):
+            os.rmdir(papka_str)
     otchet["izmeneno_stranic"] = izm
     otchet["s_diska"] = len(starye)
     # reyting-v1: /reyting/ строится из опубликованных карточек — пересобрать вместе с ними (если страница заведена)

@@ -66,6 +66,8 @@
     // dosje-sdelki-v1: с номером проверки — «Досье сделки» на странице Паспорта по этому номеру (без второй проверки)
     var rid = /^[A-Za-z0-9_-]{8,24}$/.test(String(r && r.report_id || '')) ? String(r.report_id) : '';
     if (!svoj && inn.length === 10) a.push(rid ? { t: 'Досье сделки', href: '/pasport/kontragent/?id=' + rid + '#sd', cel: 'otchet_pasport' } : { t: 'Паспорт контрагента', href: '/pasport/kontragent/?inn=' + inn, cel: 'otchet_pasport' });
+    // sravnit-v1 (Ф2, 23.10): «+ Сравнить с другой» — тихой ссылкой под второстепенной кнопкой (не спорит с главной); ИП не сравниваем
+    if (!svoj && inn.length === 10) a.push({ t: '+' + NB + 'Сравнить с другой компанией', href: '/sravnit/?a=' + inn, cel: 'otchet_sravnit', tihaya: true });
     return a;
   }
 
@@ -105,6 +107,7 @@
   }
   function htmlDejstviya(r, svoj, g) {
     return dejstviya(r, svoj, g).map(function (d) {
+      if (d.tihaya) return '<a class="ot-lnk" href="' + esc(d.href) + '" data-cel="' + d.cel + '">' + esc(d.t) + '</a>';
       return '<a class="ot-btn ' + (d.glavnaya ? 'p' : 's') + '" href="' + esc(d.href) + '" data-cel="' + d.cel + '"' + (d.ext ? ' target="_blank" rel="noopener"' : '') + '>' + esc(d.t) + '</a>';
     }).join('');
   }

@@ -285,14 +285,16 @@ footer a{color:var(--ink2)}
 .doverie .chips{grid-template-columns:repeat(5,minmax(0,1fr))}
 @media (max-width:1100px){.doverie .chips{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .chip{padding:16px 18px;font-size:15px}
+@media (max-width:520px){.doverie .chip{-webkit-hyphens:auto;hyphens:auto}}
+@media (max-width:360px){.doverie .chip{padding:14px}}
 .ceny .lead{max-width:820px;margin-top:16px}
 .ceny .startovaya-gl{max-width:820px;margin:10px 0 0;font-size:15px;line-height:1.5;color:var(--muted)}
 .ceny p a{display:inline-block;margin-top:18px;font-weight:600}
 .yakor{position:absolute}
 </style>
 <!-- vizual-v3.0a: стили и скрипты главной — пятью файлами вместо 17 (partials/sborka.json, tests/sobrat_js.py) -->
-<link rel="stylesheet" href="/css/b/ds.2d1cc05b79.css">
-<link rel="stylesheet" href="/css/b/glavnaya-stil.8a31524843.css">
+<link rel="stylesheet" href="/css/b/ds.4af88fe3ae.css">
+<link rel="stylesheet" href="/css/b/glavnaya-stil.b7ab508d8c.css">
 <script src="/js/b/yadro.a2940b479f.js" defer></script>
 <script src="/js/b/glavnaya.4ce8aa43b6.js" defer></script>
 <link rel="icon" type="image/png" sizes="120x120" href="/favicon-120.png">
@@ -484,7 +486,7 @@ footer a{color:var(--ink2)}
         <h2 class="h2" id="praktika-h">Как решают суды: разборы дел</h2>
         <p class="lead">Настоящие дела с&nbsp;номером и&nbsp;датой: о&nbsp;чём спорили, чем кончилось и&nbsp;что из&nbsp;этого следует для&nbsp;вас.</p>
       </div>
-      <!--praktika-glavnaya--><div class="pr-gl"><a href="/praktika/115-fz/kriterii-zsk-ne-otmenit-vs/"><small>115&#8209;ФЗ</small><b>Критерии «светофора» ЦБ: почему их не отменить и с чем спорить на самом деле</b><span>Верховный суд РФ · решение № АКПИ25-52 · 11 марта 2025</span></a><a href="/praktika/nalogi/nds-postavshchika-usn-cena-dogovora/"><small>Налоги</small><b>Поставщик на упрощёнке стал платить НДС. Кто доплатит — он или вы?</b><span>Конституционный суд РФ · постановление № 41-П · 25 ноября 2025</span></a><a href="/praktika/nalogi/podryadchik-ne-vystavil-schet-fakturu/"><small>Налоги</small><b>Подрядчик не выставил счёт-фактуру. Верховный суд: заставить можно через суд</b><span>Верховный суд РФ · определение СКЭС № 305-ЭС25-14104 · 3 апреля 2026</span></a></div><!--/praktika-glavnaya-->
+      <!--praktika-glavnaya--><div class="pr-gl"><a href="/praktika/nalogi/nalogovyj-arest-zalog-v-bankrotstve-postavshchika/"><small>Налоги</small><b>Налоговая «заморозила» имущество поставщика. Что останется вам, если он обанкротится?</b><span>Верховный суд РФ, экономическая коллегия · определение № 306-ЭС24-23083(2) · 25 декабря 2025</span></a><a href="/praktika/115-fz/kriterii-zsk-ne-otmenit-vs/"><small>115&#8209;ФЗ</small><b>Критерии «светофора» ЦБ: почему их не отменить и с чем спорить на самом деле</b><span>Верховный суд РФ · решение № АКПИ25-52 · 11 марта 2025</span></a><a href="/praktika/nalogi/nds-postavshchika-usn-cena-dogovora/"><small>Налоги</small><b>Поставщик на упрощёнке стал платить НДС. Кто доплатит — он или вы?</b><span>Конституционный суд РФ · постановление № 41-П · 25 ноября 2025</span></a></div><!--/praktika-glavnaya-->
       <p class="vse"><a href="/praktika/" data-praktika-gl>Все разборы&nbsp;→</a></p>
     </div>
   </section>
@@ -714,7 +716,7 @@ footer a{color:var(--ink2)}
   // vizual-v3.0a: модули отчёта (~450 КБ) — одним пакетом и только когда нужны: при проверке, при намерении проверить
   // (фокус в поле, наведение или касание кнопки) и после загрузки страницы, когда браузер свободен (пример «Условий сделки»).
   // Пакет не загрузился — отчёт рисуется как раньше без модулей (каждый вызов — через window.X).
-  var OTCHET_JS='/js/b/otchet.03933527ae.js', moduliP=null;
+  var OTCHET_JS='/js/b/otchet.759543de17.js', moduliP=null;
   function gruzitModuli(){if(moduliP)return moduliP;moduliP=new Promise(function(ok){var s=document.createElement('script');s.src=OTCHET_JS;s.onload=s.onerror=function(){ok()};document.head.appendChild(s);});return moduliP;}
   function kogdaModuli(f){gruzitModuli().then(function(){if(moduliGotovy)f();else document.addEventListener('DOMContentLoaded',function(){f()},{once:true});});}
   ['focus','input','pointerenter','touchstart'].forEach(function(ev){form.addEventListener(ev,function(){gruzitModuli()},{once:true,passive:true,capture:true});});
@@ -837,7 +839,10 @@ footer a{color:var(--ink2)}
       setTimeout(function(){t.remove()},12000); },8000); }
   form.addEventListener('submit',askLater);
   // ИНН из адреса (?inn=…) — например, «Проверить снова» из кабинета
-  var qi=innIzAdresa()||new URLSearchParams(location.search).get('inn');
+  // sravnit-v1: /?inn=A&vs=B — сравнение двух компаний живёт на /sravnit/ (здесь проверку не запускаем — не тратим лимит)
+  var qvs=new URLSearchParams(location.search).get('vs')||'', svs=/^\d{10}$/.test(qvs)&&/^\d{10}$/.test(innIzAdresa());
+  if(svs)location.replace('/sravnit/?a='+innIzAdresa()+'&b='+qvs);
+  var qi=svs?'':innIzAdresa()||new URLSearchParams(location.search).get('inn');
   if(qi&&/^\d{10}(\d{2})?$/.test(qi)){input.value=qi;
     if(window.DlkInn&&!DlkInn.ok(qi)){bezOtcheta();note.className='note err';note.textContent=DlkInn.OPECHATKA;}else runCheck(qi);}
   // не ИНН (поиск по сайту из выдачи, SearchAction) — подставляем запрос в поле, проверку человек запускает сам

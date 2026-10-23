@@ -44,3 +44,9 @@ p,li,dd,dt,figcaption,blockquote,summary,legend,h1,h2,h3,h4{text-wrap:pretty}
   .usl-btns button,.usl-btns a{min-height:44px}
   .ceny p a{padding-block:9px;margin-top:9px;margin-bottom:-9px}
 }
+/* vbok-320: узкий телефон (320 px) — ничего не выходит за край.
+   Слово длиннее строки переносится, а не выталкивает страницу вбок; кнопки
+   сегмента и поля ввода в ряду сжимаются (min-width:auto у flex — по содержимому). */
+body{overflow-wrap:break-word}
+.seg--fit button{min-width:0}
+@media (max-width:640px){.co-ind--wait .co-ind__n{white-space:normal}}

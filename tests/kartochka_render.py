@@ -3920,3 +3920,82 @@ def _un_pered_fakt(f):  # noqa: F811
     inn = f.get("inn", "") or ""
     return var[int(inn[-3:]) % len(var)] if inn[-3:].isdigit() else var[0]
 
+
+
+# ---------------------------------------------------------------- kartochki-svodka-v1 ([Ночные-2] 23.10; ТЗ [Продукт] 23.10 п. 3А)
+# [Право] 23.10 00:30, разд. 3 (п. 373б): «зелёные тоны одинаковы для всех — на карточках только одним сводным блоком
+# «Что значат эти строки для банка и налоговой»; тексты те же; правовой стороны против нет». Здесь: у зелёных строк
+# «Проверки по реестрам» блок «Комментарий команды» снимается, его три фразы — дословно, без новых слов — переезжают
+# одним пунктом в раздел под реестрами; пункт начинается с имени компании, строки факта и даты сведений этой карточки.
+# Жёлтые и красные комментарии остаются под своей строкой. Оговорка [Право] 02.10 — одна на карточку: если под строками
+# ещё есть комментарии — остаётся там, иначе — последней строкой сводного блока. Подпись «Команда Делоскопа · …» —
+# одна на блок, у пункта — только норма и дата сверки. Пункт — тот же «kom kom--zel» (цвета и тёмная тема — прежние).
+# Чистая функция по готовой разметке: одинаково для новых карточек (обёртка html_kartochki ниже, значит и API) и
+# опубликованных (kartochki.py → perepechatat). Повторный вызов ничего не меняет. В отчёте /api/check — как было.
+_SV_REESTRY = re.compile(r'(<section class="co-sec" aria-labelledby="reestry">)(.*?)(</section>)', re.S)
+_SV_PARA = re.compile(r'<div class="fact"><span>([^<]*)</span><span class="fact__v">([^<]*)</span>'
+                      r'<span class="fact__src co-src">([^<]*)</span></div>'
+                      r'(<div class="kom kom--zel" data-kom="([a-z0-9_]+)"><div class="kom__h">[^<]*</div>(.*?)'
+                      r'<div class="kom__p">([^<]*)</div></div>)', re.S)
+_SV_OG = '<p class="kom-og">'
+_SV_DATA = re.compile(r"сведения на (\d{2}\.\d{2}\.\d{4})")
+SV_METKA = 'class="co-sec co-zel"'
+
+
+def _sv_podpis(stroki):
+    """Подписи пунктов «Команда Делоскопа · 115-ФЗ и налоги · норма · нормы сверены …» → общая часть и хвосты."""
+    chasti = [s.split(" · ") for s in stroki]
+    n = min(len(c) for c in chasti)
+    obsh = 0
+    while obsh < n - 1 and all(c[obsh] == chasti[0][obsh] for c in chasti):
+        obsh += 1
+    if len(chasti) == 1:  # один пункт: общая часть — до нормы (первые две части), как подпись библиотеки
+        obsh = min(2, n - 1)
+    return " · ".join(chasti[0][:obsh]), [" · ".join(c[obsh:]) for c in chasti]
+
+
+def _sv_mal(s):
+    return s[:1].lower() + s[1:]
+
+
+def svodka_zel(t):
+    if SV_METKA in t:
+        return t
+    m = _SV_REESTRY.search(t)
+    if not m or "kom kom--zel" not in m.group(2):
+        return t
+    telo = m.group(2)
+    pary = list(_SV_PARA.finditer(telo))
+    if not pary:
+        return t
+    org = _sh_org(t)
+    im = html.escape(un_kratkoe(str(org.get("name") or "")), quote=False).replace(" ", NB, 1) or "компании"
+    podpis, hvosty = _sv_podpis([p.group(7) for p in pary])
+    punkty = []
+    for p, hv in zip(pary, hvosty):
+        zag, znach, src, kod, frazy = p.group(1), p.group(2), p.group(3), p.group(5), p.group(6)
+        d = _SV_DATA.search(src)
+        fakt = _sv_mal(znach) if len(znach.split()) >= 3 else "%s — %s" % (_sv_mal(zag), _sv_mal(znach))
+        punkty.append('<li class="kom kom--zel co-zel__i" data-kom="%s"><p class="co-zel__f">%s: %s%s</p>%s'
+                      '<div class="kom__p">%s</div></li>' % (kod, im, fakt, (", сведения на " + d.group(1)) if d else "",
+                                                             frazy, hv))
+    novoe = telo
+    for p in pary:
+        novoe = novoe.replace(p.group(4), "", 1)
+    og = ""
+    if 'class="kom ' not in novoe and _SV_OG in novoe:
+        i = novoe.index(_SV_OG)
+        j = novoe.index("</p>", i) + 4
+        og, novoe = novoe[i:j], novoe[:i] + novoe[j:]
+    blok = ('\n<section %s aria-labelledby="zel"><h2 id="zel">Что значат зелёные строки %s для банка и налоговой</h2>'
+            '<ul class="co-zel__s">%s</ul>%s%s</section>' % (
+                SV_METKA, im, "".join(punkty), ('<p class="kom__p">%s</p>' % podpis) if podpis else "", og))
+    return t[:m.start()] + m.group(1) + novoe + m.group(3) + blok + t[m.end():]
+
+
+_html_kartochki_do_svodki = html_kartochki
+
+
+def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811
+    """kartochki-svodka-v1: зелёные комментарии — одним блоком под реестрами."""
+    return svodka_zel(_html_kartochki_do_svodki(k, V, sosedi, kom, normy, cena, segodnya))

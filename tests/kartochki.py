@@ -545,6 +545,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         t2 = ssylki_kroshek(t2, kg)  # kartochki-haby-v1: регион и раздел в крошках — ссылкой на хаб группы
         t2 = shablon_v2(t2)  # kartochki-shablon-v1: H1 с ИНН, строка под H1, description — как у новых
         t2 = pochinit_imya(t2)  # kartochki-imya-v1: советы и заголовок реестров — с названием, как у новых
+        t2 = svodka_zel(t2)  # kartochki-svodka-v1: зелёные комментарии — одним блоком под реестрами, как у новых
         t2 = pochinit_pered(t2)  # kartochki-unik-v2: «Перед оплатой» — по признакам страницы, как у новых
         t2 = pochinit_razbor(t2)  # kartochki-unik-v2: «… в цифрах» — с названием, как у новых
         t2 = pochinit_vozrast(t2, den)  # vozrast-segodnya-v1: возраст — на сегодня, число пересчитывает и браузер

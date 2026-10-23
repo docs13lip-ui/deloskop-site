@@ -741,11 +741,13 @@ class TestKommentariiKartochki(unittest.TestCase):
         return K.html_kartochki(k, K.vyvody(k), [], self.kom if kom else None)
 
     def test_pod_proverennym_faktom_i_ogovorka_odin_raz(self):
+        # kartochki-svodka-v1: зелёный комментарий — в сводном блоке под реестрами ([Право] 23.10 п. 373б), а не под строкой
         t = self._html(O.zapis(3))
         i = t.index("<span>Долги по налогам</span>")
+        z = t.index('class="co-sec co-zel"')
         j = t.index('data-kom="nedoimka"')
-        self.assertLess(i, j)
-        self.assertNotIn('class="fact"', t[i + 30:j])  # сразу под своей строкой
+        self.assertLess(i, z)
+        self.assertLess(z, j)
         self.assertIn('data-kom="nedostovernost"', t)
         self.assertEqual(t.count('class="kom-og"'), 1)
         self.assertIn(K.KOM_OGOVORKA, t)

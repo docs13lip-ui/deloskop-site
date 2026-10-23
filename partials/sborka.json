@@ -45,6 +45,7 @@
       "js/otkuda.js",
       "js/reestry-sami.js",
       "js/rekvizity-proverki.js",
+      "js/perepoverit.js",
       "js/status-kod.js",
       "js/usloviya.js",
       "js/shchit.js",

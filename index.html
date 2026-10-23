@@ -665,6 +665,8 @@ footer a{color:var(--ink2)}
     if(window.Otkuda){try{Otkuda.mount(report.querySelector('.src'),r)}catch(e){}}
     // реквизиты проверки (№, дата и время МСК, самые давние сведения, год бухотчётности) + печать только отчёта — js/rekvizity-proverki.js
     if(window.RekvizityProverki){try{RekvizityProverki.mount(report,r,{polucheno:new Date()})}catch(e){}}
+    // «Перепроверить до {дата + 30 дней}» + «Напомнить в календаре» (.ics собирается в браузере) — js/perepoverit.js; своя компания — без строки
+    if(!svoj&&window.Perepoverit){try{Perepoverit.mount(report,r)}catch(e){}}
     var shR=null;
     // «Только существенные факты» (≤ 7, источник и дата) + свёрнутая «Все данные из реестров» — js/sushchestvennoe.js; нет модуля — строки светофора как были
     if(window.Svyazi){try{Svyazi.zapomnit(report,svoj?null:r)}catch(e){}}

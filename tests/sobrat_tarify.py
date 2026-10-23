@@ -494,7 +494,7 @@ page = f'''<!doctype html>
 <h2 class="big" id="voprosy">Вопросы</h2>
 {faq_html}
 
-<div class="check"><h2>Начните с бесплатной проверки</h2><p>Проверьте свою компанию или поставщика по ИНН — без регистрации.</p><form action="/" method="get"><input name="inn" inputmode="numeric" maxlength="12" pattern="\d{10}|\d{12}" required placeholder="ИНН компании или ИП" aria-label="ИНН компании или ИП"><button type="submit">Проверить</button></form></div>
+<div class="check"><h2>Начните с бесплатной проверки</h2><p>Проверьте свою компанию или поставщика по ИНН — без регистрации.</p><form action="/" method="get"><input name="inn" inputmode="numeric" maxlength="12" pattern="\\d{{10}}|\\d{{12}}" required placeholder="ИНН компании или ИП" aria-label="ИНН компании или ИП"><button type="submit">Проверить</button></form></div>
 
 <section class="src"><h2>Источники</h2><ol>
 {SRC_376}<li><a href="https://www.consultant.ru/document/cons_doc_LAW_19671/" rel="noopener" target="_blank">Налоговый кодекс РФ: ст. 54.1, 75, 122, 171–172</a></li>

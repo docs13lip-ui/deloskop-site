@@ -17,10 +17,10 @@ const sobrat = (args) => JSON.parse(execFileSync('python3', ['-c',
 test('Д3: короткая строка в <summary>, полный текст режима — внутри того же <details>, байт в байт', () => {
   const [a, b, c, g] = sobrat('B.polosa_sobrat(True,"2026-10-13"),B.polosa_sobrat(True,None),B.polosa_sobrat(False,"2026-10-13"),B.gost_v_den()');
   const tekstB = chit('partials/beta-b.html').trim().replace('{{G}}', String(g));
-  assert.ok(b.includes('<details class="beta-bar__d" data-beta-d><summary class="beta-bar__kr"><span>Всё бесплатно&nbsp;· ' + g + '&nbsp;проверок в&nbsp;день</span></summary><p class="beta-bar__t">' + tekstB + '</p></details>'));
+  assert.ok(b.includes('<details class="beta-bar__d" data-beta-d><summary class="beta-bar__kr"><span><span class="beta-kr-d">Без входа&nbsp;— ' + g + '&nbsp;проверок в&nbsp;день</span><span class="beta-kr-k">Без входа&nbsp;— ' + g + '&nbsp;в&nbsp;день</span></span></summary><p class="beta-bar__t">' + tekstB + '</p></details>'));
   assert.ok(a.includes('<summary class="beta-bar__kr"><span>Всё бесплатно по&nbsp;13&nbsp;октября включительно</span></summary>'));
   // A → B в полночь: и полный текст, и короткая строка лежат запасом
-  assert.ok(a.includes('<template data-beta-b-kr>Всё бесплатно&nbsp;· ' + g + '&nbsp;проверок в&nbsp;день</template>'));
+  assert.ok(a.includes('<template data-beta-b-kr><span class="beta-kr-d">Без входа&nbsp;— ' + g + '&nbsp;проверок в&nbsp;день</span><span class="beta-kr-k">Без входа&nbsp;— ' + g + '&nbsp;в&nbsp;день</span></template>'));
   assert.ok(c.includes('<span>Быстрая проверка&nbsp;— бесплатно, ' + g + '&nbsp;в&nbsp;день</span>'));
   for (const s of [a, b, c]) assert.strictEqual((s.match(/<details/g) || []).length, 1);
 });
@@ -60,4 +60,16 @@ test('Д5: шапка при прокрутке — 94 % фона темы (не
   assert.ok(!/\.shapka\.is-scrolled\{background:rgba\(/.test(g));
   assert.ok(!/\.shapka\.is-scrolled\{background:rgba\(17,17,19,0\.72\)/.test(chit('css/tema.css')));
   assert.ok(chit('partials/shapka.css').includes(' .shapka{background:color-mix(in srgb,var(--bg) 94%,transparent);'));
+});
+
+// beta-kr-v2 (ответ [Право] 23.10 22:40 на ✎ 17:45): строка режима «b» — без многоточия и обрезки, две ступени по ширине;
+// число — из tarify.json (gost_v_den), «без входа» обязательно (у вошедшего — больше).
+test('beta-kr-v2: «Без входа — N проверок в день» (≥ 360 px) и «Без входа — N в день» (< 360 px), без многоточия', () => {
+  const [b, g] = sobrat('B.polosa_sobrat(True,None),B.gost_v_den()');
+  assert.ok(b.includes('<span class="beta-kr-d">Без входа&nbsp;— ' + g + '&nbsp;проверок в&nbsp;день</span><span class="beta-kr-k">Без входа&nbsp;— ' + g + '&nbsp;в&nbsp;день</span>'));
+  const css = chit('partials/shapka.css');
+  assert.ok(!/beta-bar__kr>span\{[^}]*ellipsis/.test(css), 'многоточия нет — обрезанное «…10 провер…» читается как другое условие');
+  assert.ok(css.includes('.beta-bar .beta-kr-k{display:none}') && css.includes('@media (max-width:359px){.beta-bar .beta-kr-d{display:none}.beta-bar .beta-kr-k{display:inline}}'));
+  const tarify = JSON.parse(chit('tarify/tarify.json'));
+  assert.ok(JSON.stringify(tarify).includes('"gost_v_den": ' + g) || JSON.stringify(tarify).includes('"gost_v_den":' + g), 'число — из tarify.json');
 });

@@ -12,7 +12,7 @@ a.skip:focus{top:var(--s-2);color:var(--on-accent)}
 
 .shapka{position:sticky;top:0;z-index:40;display:block;height:var(--header-h);margin:0;padding:0;background:var(--bg);border-bottom:1px solid transparent;color:var(--ink);font:400 var(--t-body)/1.4 var(--font);text-align:left;transition:border-color var(--fast) var(--ease)}
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
- .shapka{background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:saturate(180%) blur(12px);backdrop-filter:saturate(180%) blur(12px)}
+ .shapka{background:color-mix(in srgb,var(--bg) 94%,transparent);-webkit-backdrop-filter:saturate(180%) blur(12px);backdrop-filter:saturate(180%) blur(12px)}
 }
 .shapka.is-scrolled{border-bottom-color:var(--line)}
 .shapka a,.mnav a{display:inline;padding:0;margin:0;border:0;border-radius:0;background:none;box-shadow:none;font:inherit;color:inherit;text-decoration:none}
@@ -117,7 +117,17 @@ dialog.mnav::backdrop{background:rgba(17,17,19,.4);-webkit-backdrop-filter:blur(
 .beta-bar .beta-bar__x{flex:none;display:inline-grid;place-items:center;width:44px;height:44px;margin-right:-10px;padding:0;border:0;border-radius:var(--r-pill);background:none;color:var(--muted);cursor:pointer}
 .beta-bar .beta-bar__x:hover{background:var(--surface-2);color:var(--ink)}
 .beta-bar :focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
-@media (max-width:640px){.beta-bar .beta-bar__t>a[href^="mailto:"]{display:none}.beta-bar .beta-bar__metka{display:none}.beta-bar .beta-bar__t b{display:block;margin-bottom:2px}.beta-bar .beta-bar__dop,.beta-bar .beta-bar__t>a{font-size:var(--t-caption);line-height:1.45}.beta-bar .beta-bar__in{gap:var(--s-2)}}
+/* beta-odna-stroka-v1: полный текст — в <details>; на широком экране открыт до отрисовки (скрипт полосы), короткая строка скрыта */
+.beta-bar .beta-bar__d{flex:1;min-width:0;margin:0;padding:0}
+.beta-bar .beta-bar__d>.beta-bar__t{margin:0!important}  /* на /tarify/ и /indeks/ страница задаёт details p{margin…!important} */
+.beta-bar .beta-bar__kr{display:none;align-items:center;gap:var(--s-2);min-height:44px;margin:0;padding:0;list-style:none;cursor:pointer;color:var(--ink);font:600 var(--t-small)/1.3 var(--font);-webkit-tap-highlight-color:transparent}
+.beta-bar .beta-bar__kr::-webkit-details-marker{display:none}
+.beta-bar .beta-bar__kr>span{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.beta-bar .beta-bar__kr::after{content:"";flex:none;width:7px;height:7px;margin:-3px 2px 0;border:solid var(--muted);border-width:0 1.6px 1.6px 0;transform:rotate(45deg);transition:transform var(--fast) var(--ease)}
+.beta-bar .beta-bar__d[open]>.beta-bar__kr::after{margin-top:3px;transform:rotate(-135deg)}
+.beta-bar .beta-bar__d:not([open])>.beta-bar__kr{display:flex}
+@media (max-width:640px){.beta-bar .beta-bar__kr{display:flex}.beta-bar .beta-bar__in{align-items:flex-start}.beta-bar .beta-bar__d[open]>.beta-bar__t{padding-top:0}.beta-bar .beta-bar__metka{display:none}.beta-bar .beta-bar__t b{display:block;margin-bottom:2px}.beta-bar .beta-bar__dop,.beta-bar .beta-bar__t>a{font-size:var(--t-caption);line-height:1.45}.beta-bar .beta-bar__in{gap:var(--s-2)}}
+@media (prefers-reduced-motion:reduce){.beta-bar .beta-bar__kr::after{transition:none}}
 @media print{.beta-bar{display:none!important}}
 
 /* окно «Что нового» — открывается ТОЛЬКО по пункту в шапке */

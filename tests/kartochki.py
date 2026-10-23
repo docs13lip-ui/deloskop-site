@@ -566,12 +566,16 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
     # первая сборка из сведений и следующий добор дают одни и те же байты
     na_d = kartochki_na_diske(koren)
     vse_d = [na_d[i] for i in sorted(na_d)]
+    teksty = {}
+    for x in vse_d:
+        with open(os.path.join(papka, x["_papka"], "index.html"), encoding="utf-8") as fh:
+            teksty[x["inn"]] = fh.read()
+    # kartochki-vhod-v1: у каждой открытой карточки — не меньше VHOD_MIN входящих ссылок с других карточек
+    svyazi = svyazi_vse(vse_d, {i for i, t in teksty.items() if noindex_html(t)})
     for x in vse_d:
         put = os.path.join(papka, x["_papka"], "index.html")
-        with open(put, encoding="utf-8") as fh:
-            t = fh.read()
-        sos_ = pohozhie(x, vse_d)
-        izm += zapisat_k(put, _SOS.sub(lambda m: m.group(1) + sosedi_html(x, sos_, eshche_kompanii(x, vse_d, sos_)) + m.group(3), t, count=1))
+        sos_, esh_ = svyazi[x["inn"]]
+        izm += zapisat_k(put, _SOS.sub(lambda m: m.group(1) + sosedi_html(x, sos_, esh_) + m.group(3), teksty[x["inn"]], count=1))
     # sitemap-companies.xml + robots.txt
     sm = os.path.join(koren, "sitemap-companies.xml")
     rb = os.path.join(koren, "robots.txt")

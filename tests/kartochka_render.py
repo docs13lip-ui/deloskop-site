@@ -4066,3 +4066,57 @@ _html_kartochki_do_svodki = html_kartochki
 def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811
     """kartochki-svodka-v1: зелёные комментарии — одним блоком под реестрами."""
     return svodka_zel(_html_kartochki_do_svodki(k, V, sosedi, kom, normy, cena, segodnya))
+
+
+# ---------------------------------------------------------------- kartochki-vhod-v1: у каждой карточки — входящие ссылки
+# «Похожие» и «Ещё …» считаются от самой карточки, поэтому ссылки распределяются неровно: на 24.10 у 10 из 167
+# карточек меньше 2 входящих ссылок с других карточек, у трёх — ни одной (до них поисковик доходит только с хаба).
+# Добор: такой карточке даём место в «Ещё …» самых близких карточек (тот же класс ОКВЭД → тот же раздел и регион →
+# раздел → регион → любые; внутри — ближе по обороту, затем у кого ссылок меньше, затем ИНН). На одной карточке —
+# не больше VHOD_DOBAVOK добавленных ссылок. Карточки за воротами индексации (noindex) не добираем.
+# Всё — от состава карточек: добор и полная сборка дают одни и те же байты.
+VHOD_MIN = 2
+VHOD_DOBAVOK = 2
+
+
+def svyazi_vse(vse, zakryty=()):
+    """→ {ИНН: (похожие, ещё)} для всех карточек с добором входящих ссылок. zakryty — ИНН карточек с noindex."""
+    out = {}
+    for k in vse:
+        s = pohozhie(k, vse)
+        out[k["inn"]] = (s, eshche_kompanii(k, vse, s))
+    po_inn = {k["inn"]: k for k in vse}
+
+    def ssylki(i):
+        s, e_ = out[i]
+        return {x["inn"] for x in s} | {x["inn"] for x in e_}
+
+    vhod = {k["inn"]: 0 for k in vse}
+    for i in out:
+        for j in ssylki(i):
+            if j in vhod:
+                vhod[j] += 1
+    dobavleno = {}
+    for i in sorted((i for i in vhod if vhod[i] < VHOD_MIN and i not in zakryty), key=lambda i: (vhod[i], i)):
+        x = po_inn[i]
+        moi_d, kl, rz, rg = _dohod_kart(x), okved_klass(x), _razdel(x), x.get("region")
+
+        def blizost(y):
+            if kl and okved_klass(y) == kl:
+                return 0
+            if rz and rg and _razdel(y) == rz and y.get("region") == rg:
+                return 1
+            if rz and _razdel(y) == rz:
+                return 2
+            if rg and y.get("region") == rg:
+                return 3
+            return 4
+        kand = [y for y in vse if y["inn"] != i and i not in ssylki(y["inn"]) and dobavleno.get(y["inn"], 0) < VHOD_DOBAVOK]
+        kand.sort(key=lambda y: (blizost(y), abs(math.log1p(_dohod_kart(y)) - math.log1p(moi_d)),
+                                 len(ssylki(y["inn"])), y["inn"]))
+        for y in kand[:VHOD_MIN - vhod[i]]:
+            s, e_ = out[y["inn"]]
+            out[y["inn"]] = (s, e_ + [x])
+            dobavleno[y["inn"]] = dobavleno.get(y["inn"], 0) + 1
+            vhod[i] += 1
+    return out

@@ -378,9 +378,11 @@ opis = (f"Тарифы Делоскопа: бесплатно, Старт — {r
 t_pro = next(t for t in D['tarify'] if t['id'] == 'pro')
 
 _osn = D.get('osnovatel')
+# osn-bez-ceny-v1 ([Право] 23.10, ответ на ✎ 07:50): пока оплаты на паузе, цена и «цена не растёт» в полосе — только в платном виде
+# (<!--oplata-->); в бете — «Условия объявим здесь заранее», как на /osnovatel/ (п. 4 ч. 3 ст. 5 38-ФЗ). Вернули оплаты — цена вернулась сама.
 OSN_BAND = (f'''<aside class="osn-band" aria-labelledby="osn-band-h">
- <div><h2 id="osn-band-h">Тариф основателя</h2><p>«Про» на&nbsp;год для первых {_osn.get('mest', 300)} клиентов. Цена не&nbsp;растёт, пока подписка не&nbsp;прервана.</p></div>
- <div class="osn-band__r"><span class="osn-band__p"><span data-cena="osnovatel">{f"{_osn['cena_rub']:,}".replace(',', NB)}</span>&nbsp;₽/год</span><a class="cta primary" href="/osnovatel/">Подробнее</a></div>
+ <div><h2 id="osn-band-h">Тариф основателя</h2><p><!--oplata-->«Про» на&nbsp;год для первых {_osn.get('mest', 300)} клиентов. Цена не&nbsp;растёт, пока подписка не&nbsp;прервана.<!--/oplata--><!--v-bete-->Условия объявим здесь заранее.<!--/v-bete--></p></div>
+ <div class="osn-band__r"><!--oplata--><span class="osn-band__p"><span data-cena="osnovatel">{f"{_osn['cena_rub']:,}".replace(',', NB)}</span>&nbsp;₽/год</span><!--/oplata--><!--v-bete--><!--/v-bete--><a class="cta primary" href="/osnovatel/">Подробнее</a></div>
 </aside>
 ''' if _osn and _osn.get('cena_rub') else '')
 

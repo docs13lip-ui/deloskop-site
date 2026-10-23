@@ -84,3 +84,19 @@ test('оферта п. 3.8 (з): счёт 5 рабочих дней, мест н
   assert.ok(blok.includes('все 300 мест уже заняты') && blok.includes('10 рабочих дней'));
   assert.ok(/osnovatel: "[^"]*Место основателя — при наличии свободного места на дату зачисления \(п\. 3\.8 оферты\)/.test(chitat('js/schet.js')));
 });
+
+test('osn-bez-ceny-v1: в бете полоса на /tarify/ без цены и без «цена не растёт» — «Условия объявим здесь заранее»; в платном виде цена на месте', () => {
+  // [Право] 23.10, ответ на ✎ 07:50: /osnovatel/ обещает объявить условия заранее, а полоса называла цену (п. 4 ч. 3 ст. 5 38-ФЗ).
+  const html = chitat('tarify/index.html');
+  const polosa = (t) => t.slice(t.indexOf('<aside class="osn-band"'), t.indexOf('</aside>', t.indexOf('<aside class="osn-band"')));
+  const bez = (t) => t.replace(/<!--[\s\S]*?-->/g, '');
+  const pl = polosa(vidimoe(platnyj(html)));
+  assert.match(pl, /data-cena="osnovatel">[^<]+</, 'платный вид: цена в полосе');
+  assert.match(pl, /Цена не&nbsp;растёт/, 'платный вид: условие на месте');
+  if (D.beta === true) {
+    const vid = bez(polosa(vidimoe(html)));
+    assert.ok(!/data-cena|₽|растёт|клиентов/.test(vid), 'бета: в полосе нет цены и условий — ' + vid);
+    assert.ok(vid.includes('Условия объявим здесь заранее.'), 'бета: строка [Право]');
+    assert.ok(vid.includes('href="/osnovatel/"'), 'бета: ссылка «Подробнее» на месте');
+  }
+});

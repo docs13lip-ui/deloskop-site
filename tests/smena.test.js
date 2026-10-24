@@ -71,5 +71,6 @@ test("страница: блок #smena, скрипт, ссылка из рез�
   const js = fs.readFileSync(path.join(__dirname, "..", "js", "smena.js"), "utf8");
   assert.doesNotMatch(js, /innerHTML/);
   const sm = fs.readFileSync(path.join(__dirname, "..", "sitemap.xml"), "utf8");
-  assert.match(sm, /proverit-schet\/<\/loc><lastmod>2026-10-01/);
+  const lm = sm.match(/proverit-schet\/<\/loc><lastmod>([\d-]+)</);  // seo-svyazi-v1: lastmod — по смене текста
+  assert.ok(lm && lm[1] >= '2026-10-01');
 });

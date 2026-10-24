@@ -88,5 +88,7 @@ test('/politika/: цели 7 и 8 дословно по тексту [Право
   ]) assert.ok(s.includes(f), 'в политике нет: ' + f.slice(0, 40));
   assert.ok(t.includes('<p class="meta">Редакция от 20 октября 2026 '));
   assert.ok(t.includes('"dateModified": "2026-10-20"'));
-  assert.ok(chitat('sitemap.xml').includes('<loc>https://deloskop.ru/politika/</loc><lastmod>2026-10-20</lastmod>'));
+  // seo-svyazi-v1: lastmod — по смене текста страницы (tests/sitemap_lastmod.py), не раньше редакции
+  const lm = chitat('sitemap.xml').match(/<loc>https:\/\/deloskop\.ru\/politika\/<\/loc><lastmod>([\d-]+)</);
+  assert.ok(lm && lm[1] >= '2026-10-20');
 });

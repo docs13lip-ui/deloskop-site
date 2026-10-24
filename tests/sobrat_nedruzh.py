@@ -32,17 +32,17 @@ def e(t):
 
 def data_rus(iso):
     g, m, d = iso.split("-")
-    return "%d%s%s %s" % (int(d), NB, MES[int(m) - 1], g)
+    return "%d%s%s%s%s" % (int(d), NB, MES[int(m) - 1], NB, g)  # tipograf-daty-v1: «5 марта 2022» целиком
 
 
 def pometka(x):
     if x.get("vveden"):
         return "добавлена с%s%s" % (NB, data_rus(x["vveden"]["data"]))
     if x.get("redakciya"):
-        return "уточнена 29%sоктября 2022" % NB
+        return "уточнена 29%sоктября%s2022" % (NB, NB)
     if x.get("chleny_es"):
         return "все %d стран ЕС" % len(x["chleny_es"])
-    return "с%s5%sмарта 2022" % (NB, NB)
+    return "с%s5%sмарта%s2022" % (NB, NB, NB)  # tipograf-daty-v1
 
 
 def blok(d):

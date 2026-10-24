@@ -382,13 +382,19 @@ def sobrat(koren=KOREN):
     txt = stranica(D)
     r_ = SH.rekv_sajta()
     # сырые NBSP → &nbsp;: патч остаётся ASCII-безопасным при пересылке текстом (урок kartochki-ascii-v1)
+    ishod = txt
     txt = nerazryv(tipograf(txt)).replace(NB, "&nbsp;")
+    # tipograf-daty-v1 (24.10.2026): JSON-LD — данные, не текст: «Выручка за 2025&nbsp;год&nbsp;— …» в ItemList.name
+    # попадало в поиск с «&nbsp;» буквами. Возвращаем блоки разметки как их собрал json.dumps.
+    ld = iter(LD_BLOK.findall(ishod))
+    txt = LD_BLOK.sub(lambda m: next(ld), txt)
     # 18.10 lenta-chisto-v1: те же правила, что у статей и разборов (короткие слова, числа, тире) — внутри <main>;
     # таблицы и подписи источника — тоже текст: на 390 px висело ~20 предлогов и союзов
     txt = TS.statya(txt, "main")
     return SH.sobrat_stranicu(txt, r_, SH.podval_html(r_), SH.shapka_html()), D
 
 
+LD_BLOK = re.compile(r'<script type="application/ld\+json">.*?</script>', re.S)
 SM_STROKA = re.compile(r"\n  <url><loc>https://deloskop\.ru/reyting/</loc>[^\n]*</url>")
 GLAVNAYA_SM = "<url><loc>https://deloskop.ru/</loc>"
 HAB_METKA = re.compile(r"<!--reyting-->.*?<!--/reyting-->", re.S)

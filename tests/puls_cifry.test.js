@@ -52,7 +52,8 @@ test('число записей совпадает с тем, что поста�
   const c = cifry()[0];
   assert.strictEqual(c.n, lenta.length);
   const f = forma(lenta.length, ['обновление', 'обновления', 'обновлений']);
-  assert.strictEqual(c.podpis.replace(/&nbsp;/g, ' '), f + ' в ленте с 25 сентября 2026',
+  assert.strictEqual(c.podpis.replace(/&nbsp;/g, ' '), f + ' в ленте с 25 сентября 2026',  // tipograf-daty-v1: год — тоже неразрывно
+   
     'подпись — та же, что пишет скрипт (textContent)');
   assert.match(html, /z\.textContent=a\.length/, 'скрипт по-прежнему берёт длину ленты');
 });
@@ -69,6 +70,6 @@ test('формы слов при числе', () => {
 
 test('«Цифры на …» — день верхней записи ленты', () => {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(lenta[0].id);
-  const den = +m[3] + '&nbsp;' + MES[+m[2] - 1] + ' ' + m[1];
+  const den = +m[3] + '&nbsp;' + MES[+m[2] - 1] + '&nbsp;' + m[1];  // tipograf-daty-v1
   assert.ok(html.includes('<p class="cap">Цифры на&nbsp;' + den + '.</p>'), 'подпись: ' + den);
 });

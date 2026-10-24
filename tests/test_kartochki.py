@@ -30,7 +30,7 @@ def sobrat(zapisi, **kw):
 
 def chitat(p):
     """Страница карточки как её видит браузер: сущности невидимых знаков (kartochki-ascii-v1) — обратно в знаки."""
-    t = pathlib.Path(p).read_text(encoding="utf-8")
+    t = K.bez_tipografa(pathlib.Path(p).read_text(encoding="utf-8"))  # kartochki-korotkie-v1: NB_T — обычным пробелом, как в сборке
     for z, (sush, _) in K.NEVIDIMYE.items():
         t = t.replace(sush, z)
     return t
@@ -1893,6 +1893,7 @@ class TestKartochkiFinansyV1(unittest.TestCase):
 
 
 def chitat_html(t):
+    t = K.bez_tipografa(t)  # kartochki-korotkie-v1
     for z, (sush, _) in K.NEVIDIMYE.items():
         t = t.replace(sush, z)
     return t

@@ -26,7 +26,7 @@ STR = ('<html><head><title>АО «А», ИНН 7707083893: проверка — 
 def kartochki():
     for d in sorted(PAPKA.iterdir()):
         if re.match(r"^\d{10}-", d.name) and (d / "index.html").is_file():
-            yield d.name, (d / "index.html").read_text(encoding="utf-8")
+            yield d.name, R.bez_tipografa((d / "index.html").read_text(encoding="utf-8"))  # kartochki-korotkie-v1: без NB_T
 
 
 class TestWebPage(unittest.TestCase):

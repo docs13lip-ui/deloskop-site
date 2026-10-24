@@ -51,3 +51,17 @@ p,li,dd,dt,figcaption,blockquote,summary,legend,h1,h2,h3,h4{text-wrap:pretty}
 body{overflow-wrap:break-word}
 .seg--fit button{min-width:0}
 @media (max-width:640px){.co-ind--wait .co-ind__n{white-space:normal}}
+/* podelitsya-v1 (24.10.2026): «Поделиться» под статьёй и разбором — тихая строка, не реклама площадок: без значков и фирменных цветов.
+   Цвета — от текста страницы (currentColor): у разборов и статей свои палитры, токены ДС есть не везде (замер Chromium: на разборе
+   в светлой теме --text/--line пусты) — так блок читается в обеих темах на любой странице. Поле касания 44 px; на телефоне — в два ряда. */
+.podel{margin:40px 0 8px;padding-top:20px;border-top:1px solid rgba(127,127,127,.28);max-width:38em}
+.podel__h{margin:0 0 12px;font-size:var(--t-15,15px);line-height:1.45;opacity:.72}
+.podel__r{display:flex;flex-wrap:wrap;gap:8px}
+.podel .podel__a{display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border:1px solid rgba(127,127,127,.38);border-radius:var(--r-pill,999px);
+  background:transparent;color:inherit;font-family:inherit;font-weight:600;font-size:var(--t-15,15px);line-height:1;text-decoration:none;cursor:pointer;transition:border-color .2s,background-color .2s}
+.podel .podel__a[hidden]{display:none}
+.podel .podel__a:hover{border-color:currentColor;background:rgba(127,127,127,.12)}
+.podel .podel__a:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+.podel__ok{margin:10px 0 0;min-height:1.4em;font-size:var(--t-13,13px);opacity:.72}
+@media (max-width:420px){.podel .podel__a{padding:0 14px}}
+@media (prefers-reduced-motion:reduce){.podel .podel__a{transition:none}}

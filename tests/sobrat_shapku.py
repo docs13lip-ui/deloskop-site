@@ -91,6 +91,9 @@ APPLE_IMYA = '<meta name="apple-mobile-web-app-title" content="Делоскоп"
 PWA_JS = '<script src="/js/pwa.js" defer></script>'
 # noch-2010-schetchik (20.10): свой счёт просмотров без cookie (/politika/, цель 8) — в пакете «yadro»; отдельным тегом — где пакета нет
 SCHETCHIK_JS = '<script src="/js/schetchik.js" defer></script>'
+# podelitsya-v1 (24.10): «Скопировать ссылку» и «Ещё…» блока «Поделиться» — в пакете «yadro»; отдельным тегом — где пакета нет
+# (на странице без блока скрипт сразу выходит). Ставится на все страницы, как счётчик: иначе свёртка в пакет не видит полного набора.
+PODEL_JS = '<script src="/js/podelitsya.js" defer></script>'
 # vizual-v1 (17.10, «глубина и свет»): последним стилем страницы — тени в три слоя, дышащий фон, стекло
 GLUBINA_LINK = '<link rel="stylesheet" href="/css/glubina.css">'
 # vizual-v3.0b (18.10): тёмная тема — по системе + переключатель в подвале (решение владельца 18.10 15:38).
@@ -392,6 +395,8 @@ def vstavit_shapku(txt, shapka):
         txt = txt.replace("</head>", PWA_JS + "\n</head>", 1)
     if not est(txt, SCHETCHIK_JS):
         txt = txt.replace("</head>", SCHETCHIK_JS + "\n</head>", 1)
+    if not est(txt, PODEL_JS):
+        txt = txt.replace("</head>", PODEL_JS + "\n</head>", 1)
     if not est(txt, GLUBINA_LINK):
         txt = txt.replace("</head>", GLUBINA_LINK + "\n</head>", 1)
     if not est(txt, TEMA_LINK):
@@ -542,6 +547,8 @@ def sobrat_stranicu(txt, r, podval, shapka=None):
     txt = og_oblozhka(txt)
     # 6в) seo-svyazi-v1: sameAs — в каждом Organization «Делоскоп» (главная, издатель статей и карточек)
     txt = SAMEAS.sub(lambda m: m.group(0) + SAMEAS_VSTAVKA, txt)
+    # 6г) podelitsya-v1: «Поделиться» под текстом статей и разборов (ВК, Telegram, ОК, ссылка) — без чужих скриптов
+    txt = podelitsya(txt)
     # 7) shrift-v1: предзагрузка шрифта — последней строкой <head> и после всех вставок: так страница, собранная заново
     #    (kartochki perepechatat, сборщики разделов), и пересобранная sobrat_shapku совпадают байт в байт
     txt = STARYJ_PRELOAD.sub("", txt)
@@ -553,6 +560,47 @@ def sobrat_stranicu(txt, r, podval, shapka=None):
         i = m.start() if m and m.start() < txt.find("</head>") else txt.find("</head>")
         txt = txt[:i] + SHRIFT_PRELOAD + "\n" + txt[i:]
     return txt
+
+
+# podelitsya-v1 (24.10.2026, план [Маркетинг] 24.10 разд. 6 п. 3): кнопки «Поделиться» на страницах-статьях —
+# всё, у чего в JSON-LD "@type": "Article" (статьи /nalogi/ и /115-fz/, разборы /praktika/, /kak-vidit-bank/, /tochnost/),
+# кроме карточек /company/ (их рисует kartochka_render, а API надевает только оболочку — TestObolochka).
+# Простые ссылки vk.com/share.php, t.me/share/url, connect.ok.ru/offer: ни скриптов, ни cookies площадок (152-ФЗ), скорость та же.
+# Метка ?utm_source=vk|tg|ok&utm_medium=share — свой счётчик видит, откуда пришёл человек (виды vk, telegram, ok);
+# robots.txt склеивает utm (Clean-param). «Скопировать ссылку» и системное «Отправить…» (телефон) — js/podelitsya.js;
+# без скриптов этих кнопок не видно (hidden), ссылки работают. Цель Метрики share_click {kuda, stranica}.
+PODEL = re.compile(r"\n?<!--podelitsya-->.*?<!--/podelitsya-->", re.S)
+PODEL_PLOSHCHADKI = (
+    ("vk", "ВКонтакте", "https://vk.com/share.php?url={u}&title={t}"),
+    ("tg", "Telegram", "https://t.me/share/url?url={u}&text={t}"),
+    ("ok", "Одноклассники", "https://connect.ok.ru/offer?url={u}&title={t}"),
+)
+
+
+def podelitsya(txt):
+    from urllib.parse import quote
+    txt = PODEL.sub("", txt)
+    h = txt.find("</head>")
+    kanon = re.search(r'<link rel="canonical" href="(https://deloskop\.ru/[^"]+)">', txt[:h])
+    if not kanon or "/company/" in kanon.group(1) or not re.search(r'"@type": ?"Article"', txt) or "</article>" not in txt:
+        return txt
+    url = kanon.group(1)
+    zag = re.search(r'<meta property="og:title" content="([^"]*)">', txt[:h]) or re.search(r"<title>(.*?)</title>", txt[:h], re.S)
+    t = re.sub(r"\s+[—–-]\s+Делоскоп\s*$", "", html.unescape(zag.group(1)).strip()) if zag else "Делоскоп"
+    ssylki = "".join(
+        '<a class="podel__a" href="%s" target="_blank" rel="noopener nofollow" data-podel="%s">%s</a>' % (
+            html.escape(shablon.format(u=quote(url + "?utm_source=%s&utm_medium=share" % kod, safe=""), t=quote(t, safe="")), quote=True),
+            kod, imya)
+        for kod, imya, shablon in PODEL_PLOSHCHADKI)
+    blok = ('<!--podelitsya--><aside class="podel" aria-label="Поделиться" data-url="%s" data-title="%s">'
+            '<p class="podel__h">Пригодится коллеге или&nbsp;бухгалтеру? Отправьте ссылку</p>'
+            '<div class="podel__r">%s'
+            '<button type="button" class="podel__a" data-podel="copy" hidden>Скопировать ссылку</button>'
+            '<button type="button" class="podel__a" data-podel="sys" hidden>Ещё…</button></div>'
+            '<p class="podel__ok" role="status" aria-live="polite"></p></aside><!--/podelitsya-->'
+            % (html.escape(url, quote=True), html.escape(t, quote=True), ssylki))
+    i = txt.rfind("</article>") + len("</article>")
+    return txt[:i] + "\n" + blok + txt[i:]
 
 
 SAMEAS = re.compile(r'"@type": "Organization", "name": "Делоскоп"(?!, "sameAs")')

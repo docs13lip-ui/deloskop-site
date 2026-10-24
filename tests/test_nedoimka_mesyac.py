@@ -19,7 +19,7 @@ def kartochki():
     for d in sorted(os.listdir(PAPKA)):
         put = os.path.join(PAPKA, d, "index.html")
         if re.match(r"^\d{10}-", d) and os.path.isfile(put):
-            yield d, open(put, encoding="utf-8").read()
+            yield d, K.bez_tipografa(open(put, encoding="utf-8").read())  # kartochki-korotkie-v1: без NB_T
 
 
 class TestNedoimkaMesyac(unittest.TestCase):

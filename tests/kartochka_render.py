@@ -4332,3 +4332,129 @@ def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None)
 
 def vstavit_znachit(t):  # noqa: F811 — kartochki-tipograf-v1: блок «Что это значит» пересобирается — с той же типографикой
     return tipograf_kartochki(_vstavit_znachit_do_tipografa(t))
+
+
+# ---------------------------------------------------------------- kartochki-chisla-v1 (24.10.2026, [Ночные-2])
+# Остаток «число | слово» на карточках (замер 24.10 по видимому тексту 167 карточек): «17 | разделов», «20 | лет»,
+# «142 | млрд», «35 | %», «им. | В.Д. Шашина» — 855 мест. Правила — те же, что tipograf-chisla-v1 и PRAVILA статей
+# (tests/tipograf_statej.py: CHISLO/METKA, SOKR, «число единица»), копией: модуль карточки — общий с API и не тянет
+# сборщиков сайта (TestObshchijRender). Отличие: «21.1 129-ФЗ» — номер статьи и закона, а не «21 129» тысячами.
+# Знак — NB_T (&#160;): выглядит как &nbsp;, но отличим, и bez_tipografa() снимает его точно — pochinit_*, «Похожие»
+# и строка набора ФНС ищут текст с обычным пробелом. Ставится последним шагом: запись файла (kartochki.py → zapisat_k)
+# и ответ API (kartochka_iz_check); kartochki.py снимает его при чтении опубликованной карточки. Слова прежние.
+# Короткие слова («в, на, для» — 24 067 мест) и «слово —» (5 613) — следующим шагом: их текст ищут сторожа карточек.
+NB_T = "&#160;"
+
+
+def bez_tipografa(t):
+    """Карточка без знаков kartochki-chisla-v1 — как до него, байт в байт."""
+    return t.replace(NB_T, " ") if t else t
+
+
+_TK_CHISLO = re.compile(r"(?<![\w.,/\u2011&#-])(\d{1,3}(?:,\d+)?) (?=(?!(?:абз|подп|разд|прил|стр|руб|коп)\.)[а-яё]{3})")
+_TK_METKA = re.compile(r"(?:(?<![\w-])(?:пп?|ч|ст|подп|абз|гл|ред|разд|прил)\.|№|(?<![\w-])(?:n|стать[а-яё]*|пункт[а-яё]*|подпункт[а-яё]*"
+                       r"|критери[а-яё]*|приложени[а-яё]*|раздел[а-яё]*|глав[а-яё]*|код[а-яё]*|част[а-яё]*|абзац[а-яё]*|позици[а-яё]*"
+                       r"|шаг[а-яё]*|вопрос[а-яё]*|строк[а-яё]*))(?:\s|&nbsp;)+$")
+_TK_SOKR = re.compile(r"(?<![\w-])(г|ул|д|им|обл|корп|стр)\. (?=[А-ЯЁ0-9])|(?<![\w-])(т)\. (?=[ед]\.)")
+_TK_TYSYACHI = re.compile(r"(?<![\d.,])(\d{1,3}) (?=\d{3}\b(?!-))")
+_TK_EDINICA = re.compile(r"(?<=\d) (?=(?:₽|%|млн|млрд|тыс|рабоч|дн|месяц|год|лет|час|минут))")
+
+
+def _tk_chisla(s):
+    s = _tk_tekst(bez_tipografa(s))  # с нуля: повторный вызов — те же байты (METKA видит только обычный пробел)
+    if not s.strip():
+        return s
+    s = _TK_CHISLO.sub(lambda m: m.group(0) if _TK_METKA.search(m.string[max(0, m.start() - 40):m.start()].lower())
+                       else m.group(1) + NB_T, s)
+    s = _TK_SOKR.sub(lambda m: (m.group(1) or m.group(2)) + "." + NB_T, s)
+    s = _TK_TYSYACHI.sub(lambda m: m.group(1) + NB_T, s)
+    return _TK_EDINICA.sub(NB_T, s)
+
+
+_tipograf_kartochki_do_chisel = tipograf_kartochki
+
+
+def tipograf_kartochki(t, chisla=False):  # noqa: F811 — kartochki-chisla-v1
+    """chisla=False (по умолчанию) — прежние правила kartochki-tipograf-v1: так зовут промежуточные шаги сборки.
+    chisla=True — и «число | слово» знаком NB_T: последний шаг (запись файла, ответ API)."""
+    if not chisla or not t:
+        return _tipograf_kartochki_do_chisel(t)
+    out, i = [], 0
+    for m in _TK_NE_TROGAT.finditer(t):
+        out.append(_tk_chisla(t[i:m.start()]))
+        out.append(m.group(0))
+        i = m.end()
+    out.append(_tk_chisla(t[i:]))
+    return "".join(out)
+
+
+def vstavit_znachit(t):  # noqa: F811 — kartochki-chisla-v1: промежуточный шаг — без NB_T
+    return _tipograf_kartochki_do_chisel(_vstavit_znachit_do_tipografa(bez_tipografa(t)))
+
+
+_kartochka_iz_check_do_chisel = kartochka_iz_check
+
+
+def kartochka_iz_check(zapis, sosedi=(), kom=None, normy=None, cena=None):  # noqa: F811 — kartochki-chisla-v1
+    """Ответ API — с той же типографикой, что файл волны (API = файл)."""
+    ok, pr, adres, t = _kartochka_iz_check_do_chisel(zapis, sosedi, kom, normy, cena)
+    return ok, pr, adres, (tipograf_kartochki(t, chisla=True) if t else t)
+
+
+# ---------------------------------------------------------------- kartochki-korotkie-v1 (24.10.2026, [Ночные-2])
+# Шаг 2 типографики карточек (обещан в kartochki-chisla-v1): короткие слова «в | банк», «для | сделки», «не | нашли»
+# и «слово | —» рвались переносом — короткое слово висело в конце строки, тире начинало следующую. Правила — те же,
+# что PRAVILA статей (tests/tipograf_statej.py: KOROTKIE, «ст. ч. п. №», « —»), копией (модуль общий с API).
+# Знак — тот же NB_T, ставится тем же последним шагом (запись файла, ответ API) — bez_tipografa() снимает и его, поэтому
+# промежуточные шаги сборки, pochinit_* и соседние сборщики видят прежний текст. Слова не меняются — только вид пробела.
+_TK_KOROTKIE = re.compile(r"(?i)(?<![\w&#-])(в|и|а|к|с|у|о|я|по|на|не|до|от|за|из|ни|но|же|ли|без|для|под|над|при|про"
+                          r"|со|об|во|мы|вы|он|её|ее|их|ей|им) (?!\s)")  # (?!\s): и перед тегом — «на <a>help@…</a>»
+_TK_NOMER = re.compile(r"(?<![\w-])(пп?\.|ст\.|ч\.|№) (?!\s)")
+_TK_TIRE = re.compile(r"(?<!\s) (?=—)")  # (?<!\s): и после тега — «21&nbsp;<b>год</b> — с 2005»
+_tk_chisla_do_korotkih = _tk_chisla
+
+
+def _tk_chisla(s):  # noqa: F811 — kartochki-korotkie-v1
+    s = _tk_chisla_do_korotkih(s)
+    if not s.strip():
+        return s
+    s = _TK_TIRE.sub(NB_T, s)
+    s = _TK_NOMER.sub(lambda m: m.group(1) + NB_T, s)
+    return _TK_KOROTKIE.sub(lambda m: m.group(1) + NB_T, s)
+
+
+_vorota_indeksa_html_do_korotkih = vorota_indeksa_html
+_god_otchetnosti_html_do_korotkih = god_otchetnosti_html
+
+
+def vorota_indeksa_html(t):  # noqa: F811 — kartochki-korotkie-v1: ворота читают карточку без NB_T («Даты из реестра», «за 2025 год»)
+    return _vorota_indeksa_html_do_korotkih(bez_tipografa(t))
+
+
+def god_otchetnosti_html(t):  # noqa: F811 — kartochki-korotkie-v1
+    return _god_otchetnosti_html_do_korotkih(bez_tipografa(t))
+
+
+_TK_TIRE_MEZHDU = re.compile(r"(?<=</span>) (?=<span\b[^>]*>—)")  # «30 июня 1999 года</span> <span class="co-daty__p">— 27 лет»
+_tipograf_kartochki_do_korotkih = tipograf_kartochki
+
+
+def tipograf_kartochki(t, chisla=False):  # noqa: F811 — kartochki-korotkie-v1: тире в соседнем <span> — тоже не с новой строки
+    t = _tipograf_kartochki_do_korotkih(t, chisla)
+    return _TK_TIRE_MEZHDU.sub(NB_T, t) if chisla and t else t
+
+
+# Строки фактов (<div class="fact">: сетка «1fr auto» из ДС) на 320 px: склейка «о недостоверности» поднимала min-content
+# обеих ячеек — страница выходила вбок на 13 px (Chromium, 30 карточек). В ячейках фактов короткое слово не склеиваем
+# (число со словом и тире — да): строка фактов короткая, висячий предлог в ней почти не встречается.
+_TK_FACT = re.compile(r'<div class="fact">.*?</div>', re.S)
+_TK_KOROTKIE_NB = re.compile(r"(?i)(?<![\w&#-])(в|и|а|к|с|у|о|я|по|на|не|до|от|за|из|ни|но|же|ли|без|для|под|над|при|про"
+                             r"|со|об|во|мы|вы|он|её|ее|их|ей|им)" + re.escape(NB_T))
+_tipograf_kartochki_do_faktov = tipograf_kartochki
+
+
+def tipograf_kartochki(t, chisla=False):  # noqa: F811 — kartochki-korotkie-v1: в строках фактов — без склейки коротких слов
+    t = _tipograf_kartochki_do_faktov(t, chisla)
+    if not (chisla and t):
+        return t
+    return _TK_FACT.sub(lambda m: _TK_KOROTKIE_NB.sub(lambda k: k.group(1) + " ", m.group(0)), t)

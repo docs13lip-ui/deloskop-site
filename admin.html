@@ -124,6 +124,20 @@ select:disabled,input:disabled{background:var(--bg);color:var(--muted)}
 .pult-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
 .pult-head .muted{font-size:13px}
 .pl-btn{border:0;background:none;padding:0;font:inherit;font-size:13px;font-weight:600;color:var(--accent);cursor:pointer;min-height:32px}
+/* Экран «Сегодня» — pult-statistika-v1 (24.10.2026) */
+.sg__zag{margin:0 0 6px;font-size:13px;font-weight:600;color:var(--ink2);letter-spacing:.01em}
+.sg__metka{font-weight:500;color:var(--muted)}
+.sg__list{list-style:none;margin:10px 0 0;padding:0;font-size:13px;line-height:1.4}
+.sg__list li{display:flex;gap:8px;align-items:baseline;padding:4px 0;border-top:1px solid var(--line)}
+.sg__list li:first-child{border-top:0}
+.sg__t{flex:1;min-width:0;overflow-wrap:anywhere}
+.sg__tip{color:var(--muted)}
+.sg__n{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.sg__pr{color:var(--muted);font-variant-numeric:tabular-nums;min-width:3.2em;text-align:right;white-space:nowrap}
+.sg__net{color:var(--muted);font-weight:400}
+.sg__hud .sg__t,.sg__hud .sg__pr{color:var(--bad);font-weight:600}
+.sg-odna{grid-column:1/-1}
+.sg-svyaz{margin:10px 0 0;padding:10px 14px;border-radius:10px;background:var(--warn-bg);color:var(--warn);font-size:13px}
 </style>
 </head>
 <body>
@@ -159,6 +173,13 @@ select:disabled,input:disabled{background:var(--bg);color:var(--muted)}
       </div>
     </section>
 
+
+    <section class="card" id="sgSek">
+      <div class="pult-head"><h2 style="margin:0">Сегодня</h2><span class="muted" id="sgKogda">собираем сводку…</span></div>
+      <p class="muted" style="margin-top:6px">Сегодня · вчера · 7 дней — по счётчикам сервера Делоскопа, без cookie и без личных данных.</p>
+      <p class="sg-svyaz" id="sgSvyaz" role="status" hidden></p>
+      <div class="pult" id="sgPlitki" aria-live="polite"></div>
+    </section>
 
     <section class="card" id="pultSek">
       <div class="pult-head"><h2 style="margin:0">Сейчас</h2><span class="muted"><span id="plKogda">проверяем страницы…</span> · <button class="pl-btn" type="button" id="plPovtor">Проверить сейчас</button></span></div>
@@ -292,6 +313,7 @@ select:disabled,input:disabled{background:var(--bg);color:var(--muted)}
     $('sUsers').textContent=s.users;$('sNew').textContent=s.users_7d;$('sActive').textContent=s.active_1d;
     $('sToday').textContent=s.checks_today;$('sWeek').textContent=s.checks_7d;$('sFb').textContent=s.feedback_new;
     if(window.DlkPult&&!window.DlkPult._started){window.DlkPult._started=true;try{DlkPult.start(API,s)}catch(_){}}
+    if(window.DlkSegodnya&&!window.DlkSegodnya._started){window.DlkSegodnya._started=true;try{DlkSegodnya.start(API)}catch(_){}}
     Array.prototype.forEach.call($('fRole').elements,function(el){el.disabled=!isAdmin});
     if(!isAdmin)note($('rNote'),'Вы тестировщик: можно смотреть, менять роли и тарифы — только администратору.');
   })}
@@ -379,6 +401,7 @@ select:disabled,input:disabled{background:var(--bg);color:var(--muted)}
 <script src="/js/admin-scheta.js"></script>
 <script src="/js/admin-bazy.js"></script>
 <script src="/js/admin-pult.js"></script>
+<script src="/js/admin-segodnya.js"></script>
 <script src="/obnovleniya.js" defer></script>
 </body>
 </html>

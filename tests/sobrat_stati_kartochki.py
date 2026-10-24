@@ -103,7 +103,7 @@ def kartochki(koren=KOREN):
         put = os.path.join(papka, d, "index.html")
         if not m or not os.path.isfile(put):
             continue
-        t = ubrat_iz_kartochki(open(put, encoding="utf-8").read())
+        t = ubrat_iz_kartochki(open(put, encoding="utf-8").read().replace("&#160;", " "))  # kartochki-chisla-v1: NB_T карточки — обычным пробелом
         h = _H1.search(t)
         if _NOINDEX.search(t) or not h:
             continue
@@ -150,7 +150,7 @@ def zagolovok_stati(statya, koren=KOREN):
     put = os.path.join(koren, statya, "index.html")
     if not os.path.isfile(put):
         return None
-    h = _H1.search(open(put, encoding="utf-8").read())
+    h = _H1.search(open(put, encoding="utf-8").read().replace("&#160;", " "))  # kartochki-chisla-v1: NB_T карточки — обычным пробелом
     return " ".join(_TEG.sub("", h.group(1)).split()) if h else None
 
 
@@ -202,7 +202,7 @@ def kartochki_so_statyami(koren=KOREN):
         put = os.path.join(papka, d, "index.html")
         if not re.match(r"^\d{10}-", d) or not os.path.isfile(put):
             continue
-        t = open(put, encoding="utf-8").read()
+        t = open(put, encoding="utf-8").read().replace("&#160;", " ")  # kartochki-chisla-v1: NB_T карточки — обычным пробелом
         if d in karta:
             statya, yakor = karta[d]
             out[put] = vstavit_v_kartochku(t, statya, yakor, zag[statya])
@@ -236,7 +236,7 @@ def sobrat(proverit=False, koren=KOREN):
                 open(put, "w", encoding="utf-8").write(novoe)
     if proverit:
         for put, t in kartochki_so_statyami(koren).items():
-            if open(put, encoding="utf-8").read() != t:
+            if open(put, encoding="utf-8").read().replace("&#160;", " ") != t:  # kartochki-chisla-v1: сверка без NB_T
                 nado.append(put)
     if nado and proverit:
         print("stati-kartochki: устарели %d страниц — запустите python3 tests/sobrat_stati_kartochki.py "

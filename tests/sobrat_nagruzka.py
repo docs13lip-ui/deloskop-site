@@ -131,7 +131,7 @@ def kartochki_po_strokam(koren=KOREN):
         put = os.path.join(papka, d, "index.html")
         if not re.match(r"^\d{10}-", d) or not os.path.isfile(put):
             continue
-        t = open(put, encoding="utf-8").read()
+        t = open(put, encoding="utf-8").read().replace("&#160;", " ")  # kartochki-chisla-v1: NB_T карточки — обычным пробелом
         if _noindex(t):
             continue
         m, h = _STROKA.search(t), _H1.search(t)
@@ -151,7 +151,7 @@ def haby_otrasley(koren=KOREN):
         put = os.path.join(papka, d, "index.html")
         if not os.path.isfile(put):
             continue
-        t = open(put, encoding="utf-8").read()
+        t = open(put, encoding="utf-8").read().replace("&#160;", " ")  # kartochki-chisla-v1: NB_T карточки — обычным пробелом
         if _noindex(t):
             continue
         h = _H1.search(t)

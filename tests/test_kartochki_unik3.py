@@ -94,7 +94,7 @@ class Sborka(unittest.TestCase):
             self.assertEqual(o["izmeneno_stranic"], 0)
             for p, t in st.items():
                 self.assertEqual(p.read_text(encoding="utf-8"), t, p)
-            sravn = sum("чем у «" in t for t in st.values())
+            sravn = sum("чем у «" in R.bez_tipografa(t) for t in st.values())  # kartochki-korotkie-v1: без NB_T
             self.assertGreater(sravn, 0, "ни одной подписи-сравнения на образцовом наборе")
         finally:
             shutil.rmtree(d, ignore_errors=True)
@@ -107,7 +107,7 @@ class Sborka(unittest.TestCase):
             self.assertIn('class="co-hab__vvod"', p.read_text(encoding="utf-8"), p)
         karty = [p for p in papka.glob("*/index.html") if re.match(r"^\d{10}-", p.parent.name)]
         if karty:
-            self.assertTrue(any("чем у «" in p.read_text(encoding="utf-8") for p in karty))
+            self.assertTrue(any("чем у «" in R.bez_tipografa(p.read_text(encoding="utf-8")) for p in karty))  # kartochki-korotkie-v1: без NB_T
 
 
 if __name__ == "__main__":

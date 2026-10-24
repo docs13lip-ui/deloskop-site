@@ -184,7 +184,8 @@ class TestOpublikovannye(unittest.TestCase):
             self.assertTrue(fr, imya + ": нет блока — python3 tests/kartochki.py sobrat --dobavit --vhod <пустой.jsonl>")
             self.assertGreaterEqual(sum(len(x.split()) for x in fr[:-1]), K.ZN_MIN_SLOV, imya)
             self.assertFalse(K.STOP_SLOVA.search(" ".join(fr)), imya)
-            self.assertEqual(K.vstavit_znachit(t), t, imya + ": блок устарел — пересоберите")
+            # kartochki-chisla-v1: шаг сборки работает без NB_T, знак ставит запись файла (tipograf_kartochki(…, chisla=True))
+            self.assertEqual(K.bez_tipografa(K.vstavit_znachit(t)), K.bez_tipografa(t), imya + ": блок устарел — пересоберите")
 
     def test_svoj_tekst(self):
         vse = {imya: set(frazy_bloka(t)[:-1]) for imya, t in self.str.items()}

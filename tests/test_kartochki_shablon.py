@@ -97,6 +97,7 @@ class TestShablonObrazec(unittest.TestCase):
 
     def test_shablon_idempotenten(self):
         for t in self.st.values():
+            t = K.bez_tipografa(t)  # kartochki-chisla-v1: шаблон — по тексту без NB_T, как в сборке
             self.assertEqual(K.bez_nevidimyh(K.shablon_v2(t)), t)  # на диске NBSP — сущностью
 
 

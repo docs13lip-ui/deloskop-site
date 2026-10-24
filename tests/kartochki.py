@@ -238,7 +238,7 @@ def kartochki_na_diske(koren=KOREN):
         if not m or not os.path.isfile(put):
             continue
         with open(put, encoding="utf-8") as fh:
-            t = fh.read()
+            t = bez_tipografa(fh.read())  # kartochki-chisla-v1
         org = None
         for blok in _LD.findall(t):
             try:
@@ -476,7 +476,7 @@ def un_zagruzit(koren=KOREN):
         put = os.path.join(papka, d, "index.html")
         if re.match(r"^\d{10}-", d) and os.path.isfile(put):
             with open(put, encoding="utf-8") as fh:
-                stranicy.append(fh.read())
+                stranicy.append(bez_tipografa(fh.read()))  # kartochki-chisla-v1
     return un_ustanovit(stranicy)
 
 
@@ -501,7 +501,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
 
     def zapisat_k(put, txt):
         p_ = os.path.basename(os.path.dirname(put))
-        txt, d_t = vstavit_webpage(tipograf_kartochki(bez_nevidimyh(txt)), den_, prezhnie.get(p_))  # kartochki-tipograf-v1
+        txt, d_t = vstavit_webpage(tipograf_kartochki(bez_nevidimyh(txt), chisla=True), den_, prezhnie.get(p_))  # kartochki-tipograf-v1
         if d_t:
             daty_teksta["/%s/%s/" % (PAPKA, p_)] = d_t
         return zapisat(put, txt)
@@ -541,7 +541,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
     for k in kart:
         sos_ = pohozhie(k, vse)
         k["_eshche"] = eshche_kompanii(k, vse, sos_)  # kartochki-shablon-v1: всего ссылок на карточки — не меньше 5
-        txt = ss.sobrat_stranicu(html_kartochki(k, k["_V"], sos_, kom, normy, cena), r, podval, shapka)
+        txt = ss.sobrat_stranicu(bez_tipografa(html_kartochki(k, k["_V"], sos_, kom, normy, cena)), r, podval, shapka)  # kartochki-chisla-v1: NB_T — при записи
         txt = ssylki_kroshek(txt, kg)
         txt = pochinit_vozrast(txt, den)
         k["_noindex"] = noindex_html(txt)
@@ -550,7 +550,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
     for x in starye:
         put = os.path.join(papka, x["_papka"], "index.html")
         with open(put, encoding="utf-8") as fh:
-            t = ubrat_nabor(ubrat_statyu(fh.read()))  # kartochki-stati-v1 + nedoimka-mesyac-v1: обе строки ставим заново
+            t = ubrat_nabor(ubrat_statyu(bez_tipografa(fh.read())))  # kartochki-chisla-v1: без NB_T · kartochki-stati-v1 + nedoimka-mesyac-v1: обе строки ставим заново
         sos_ = pohozhie(x, vse)
         t2 = _SOS.sub(lambda m: m.group(1) + sosedi_html(x, sos_, eshche_kompanii(x, vse, sos_)) + m.group(3), t, count=1)
         t2 = pochinit_god_dvazhdy(t2)  # v3.10: «Выручка за 2021 — … за 2021» → год один раз, как у новых карточек
@@ -581,7 +581,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
     for k_ in sorted(kartochki_na_diske(koren).values(), key=lambda x: x["_papka"]):
         put = os.path.join(papka, k_["_papka"], "index.html")
         with open(put, encoding="utf-8") as fh:
-            t = fh.read()
+            t = bez_tipografa(fh.read())  # kartochki-chisla-v1
         izm += zapisat_k(put, vstavit_znachit(t))
     # kartochki-unik-v3: «Похожие» (подпись — сравнение по обороту) — по напечатанному на всех карточках, как у добора:
     # первая сборка из сведений и следующий добор дают одни и те же байты
@@ -590,7 +590,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
     teksty = {}
     for x in vse_d:
         with open(os.path.join(papka, x["_papka"], "index.html"), encoding="utf-8") as fh:
-            teksty[x["inn"]] = fh.read()
+            teksty[x["inn"]] = bez_tipografa(fh.read())  # kartochki-chisla-v1
     # kartochki-vhod-v1: у каждой открытой карточки — не меньше VHOD_MIN входящих ссылок с других карточек
     svyazi = svyazi_vse(vse_d, {i for i, t in teksty.items() if noindex_html(t)})
     for x in vse_d:
@@ -783,7 +783,7 @@ def nabory_nedoimki(koren=KOREN):
         put = os.path.join(papka, d, "index.html")
         if re.match(r"^\d{10}-", d) and os.path.isfile(put):
             with open(put, encoding="utf-8") as fh:
-                m = _NABOR_DATA.search(fh.read())
+                m = _NABOR_DATA.search(bez_tipografa(fh.read()))  # kartochki-chisla-v1
             if m:
                 dd = dt.date(int(m.group(3)), int(m.group(2)), int(m.group(1)))
                 schet[dd] = schet.get(dd, 0) + 1

@@ -310,19 +310,27 @@ function parse(raw){
   r.ks=accs.filter(function(a){return a.indexOf('301')===0})[0]||null;
   var cand=accs.filter(function(a){return a.indexOf('301')!==0});
   if(r.bik){var good=cand.filter(function(a){return accOk(r.bik,a)});r.acc=good[0]||cand[0]||null}else r.acc=cand[0]||null;
-  // КПП: ближайший после ИНН поставщика (schet-nds-v1: КПП покупателя, стоящий выше, — не берём), иначе первый в тексте
+  // КПП (schet-kpp-v1): каждый КПП — тому ИНН, что стоит прямо перед ним (не дальше 120 знаков; «КПП … ИНН …» — тому, что сразу после).
+  // Позиция — по цифрам КПП, а не по слову: в «ИНН/КПП 7707083893/773601001» КПП идёт после ИНН.
+  // У ИП (12 цифр) КПП нет; чужой КПП поставщику не достаётся — ни «первый в тексте», ни покупателя.
   var reK=/КПП[^\d]{0,12}(\d{4}[0-9A-Z]{2}\d{3})(?![0-9A-Z])|(?:ИНН|ИНН\s*\/\s*КПП)[^\d]{0,12}\d{10}\s*\/\s*(\d{4}[0-9A-Z]{2}\d{3})(?![0-9A-Z])/ig,kpps=[];
-  while((m=reK.exec(t)))kpps.push({v:(m[1]||m[2]).toUpperCase(),pos:m.index});
+  while((m=reK.exec(t))){var kv=m[1]||m[2];kpps.push({v:kv.toUpperCase(),pos:m.index+m[0].lastIndexOf(kv)});}
+  kpps.forEach(function(k){
+    var pr=r.inns.filter(function(x){return x.pos<k.pos}).pop(),nx=r.inns.filter(function(x){return x.pos>k.pos})[0];
+    var own=pr&&k.pos-(pr.pos+pr.inn.length)<=120?pr:nx&&nx.pos-k.pos<=60?nx:null;
+    if(own&&own.inn.length===10&&!own.kpp)own.kpp=k.v;
+  });
+  r.inns.forEach(function(x){if(!x.kpp)x.kpp=null});
   var selI=r.inns.filter(function(x){return x.role==='seller'})[0]||r.inns.filter(function(x){return x.role!=='buyer'})[0];
-  var kN=selI&&kpps.filter(function(k){return k.pos>selI.pos&&k.pos-selI.pos<80})[0];
-  if(kN||kpps.length)r.kpp=(kN||kpps[0]).v;
+  r.kpp=selI?selI.kpp:(kpps.length&&!r.inns.length?kpps[0].v:null);
   // Сумма к оплате (schet-nds-v1): сначала «к оплате», потом «с НДС», потом «Всего», и только потом «Итого» —
   // «Итого» в счетах 1С/Контура часто сумма без НДС, а «Итого без НДС» — всегда без НДС.
   r.total=amtAfter(t,'(?:всего|итого|сумма)\\s*к\\s*оплате')
     ??amtAfter(t,'(?:всего|итого|сумма)[,\\s]*(?:с|включая)\\s*(?:учётом\\s*|учетом\\s*)?(?:налога\\s*)?\\(?НДС')
     ??amtAfter(t,'всего(?!\\s*(?:наименований|без|НДС))')
     ??amtAfter(t,'итого(?!\\s*(?:без|НДС))')
-    ??amtAfter(t,'итого');
+    ??amtAfter(t,'итого')
+    ??amtAfter(t,'(?:^|[\\s.])сумма\\s*:');   // schet-kpp-v1: «Сумма: 100 000,00» (счёт «Моего дела»); заголовок колонки «Сумма» — без двоеточия
   // НДС: сумма после «НДС», но не «без НДС» / «с НДС» / «включая НДС» (это заголовки колонок и итогов).
   // Помеченная «в т. ч. / итого / сумма НДС» — важнее первой встречной.
   var reV=new RegExp('(в\\s*т(?:ом)?\\.?\\s*ч(?:исле)?\\.?\\s*|итого\\s*|всего\\s*|сумма\\s*)?НДС[^\\d]{0,4}(?:\\(?\\s*(\\d{1,2})\\s*%\\s*\\)?)?[^\\d]{0,20}'+AMT,'gi'),vs=[];
@@ -342,7 +350,7 @@ function parse(raw){
   if(m){r.no=m[1];r.date=m[2].replace(/\s*г\.?$/,'')}
   m=t.match(/([А-ЯЁA-Z«"][^\n]{2,80}?(?:БАНК|Банк|банк)[^\n]{0,40})\s*(?:г\.|БИК)/);
   if(!m)m=t.match(/([^\n]*(?:БАНК|Банк|банк)[^\n]*)\n\s*Банк получателя/);   // макет 1С из PDF: название строкой выше
-  if(m)r.bank=m[1].replace(/^.*\d{20}\s*(?:в\s+)?/,'').replace(/^(?:Банк получателя|Банк)\s*[:\-]?\s*/i,'').replace(/[\s,;.:]+$/,'').trim()||null;
+  if(m)r.bank=m[1].replace(/[\s,;]*(?:к\/?с|кор(?:р)?\.?\s*с(?:ч|чёт|чет)?\.?)\s*\d{20}.*$/i,'').replace(/^.*\d{20}\s*(?:в\s+)?/,'').replace(/^(?:Банк получателя|Банк)\s*[:\-]?\s*/i,'').replace(/[\s,;.:]+$/,'').trim()||null;
   return r;
 }
 
@@ -404,7 +412,8 @@ function render(r,sel,local,remote,remoteErr){
     all.push({st:lvl==='high'?'bad':lvl==='medium'?'warn':'ok',title:'Признаки риска поставщика',
       detail:(co.name_short||co.name_full||'')+': '+({low:'Без серьёзных сигналов',medium:'Есть вопросы',high:'Есть серьёзные сигналы'}[remote.risk_level]||'')+'. '+(remote.verdict||'')});
     if(co.status&&co.status!=='ACTIVE')all.push({st:'bad',title:'Статус в ЕГРЮЛ',detail:'Компания не действует: '+({LIQUIDATING:'ликвидируется или ФНС готовит исключение из ЕГРЮЛ',LIQUIDATED:'ликвидирована',BANKRUPT:'дело о банкротстве',REORGANIZING:'реорганизация'}[co.status]||co.status)+'.'});
-    if(r.kpp&&co.kpp&&r.kpp!==co.kpp)all.push({st:'warn',title:'КПП',detail:(window.DlkKppInn?DlkKppInn.strokaRashozhdeniya(r.kpp,co.kpp):'В счёте '+r.kpp+', в ЕГРЮЛ '+co.kpp+'. Так бывает у филиалов, но стоит уточнить.')});
+    var kp=sel&&sel.kpp!==undefined?sel.kpp:r.kpp;   // schet-kpp-v1: КПП того ИНН, что выбран поставщиком (и при смене ИНН кнопкой)
+    if(kp&&co.kpp&&kp!==co.kpp)all.push({st:'warn',title:'КПП',detail:(window.DlkKppInn?DlkKppInn.strokaRashozhdeniya(kp,co.kpp):'В счёте '+kp+', в ЕГРЮЛ '+co.kpp+'. Так бывает у филиалов, но стоит уточнить.')});
     var bn=window.DlkBezNds&&DlkBezNds.stroka(r.noVat,remote,new Date());if(bn)all.push(bn);
   }
   var worst=(accBad||all.some(function(x){return x.st==='bad'}))?'bad':(accHigh||all.some(function(x){return x.st==='warn'}))?'warn':'ok';

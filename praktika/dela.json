@@ -10,9 +10,9 @@
     "115-fz/zapros-banka-po-115-fz-kak-otvetit/index.html": ["shtraf-banka-za-dokumenty-115-fz", "otklyuchili-internet-bank"],
     "115-fz/zsk-zony-riska/index.html": ["krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "zagraditelnye-komissii", "isklyuchili-iz-egryul-dolg-s-direktora", "zsk-dolzhnika-sudebnyj-prikaz", "kriterii-zsk-ne-otmenit-vs"],
     "115-fz/proverit-kontragenta-zsk-po-inn/index.html": ["kriterii-zsk-ne-otmenit-vs"],
-    "nalogi/statya-54-1-nk-prostymi-slovami/index.html": ["razryv-nds-v-cepochke-krascvetmet", "vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke", "droblenie-uplachennaya-usn-zachityvaetsya", "povtornaya-vyezdnaya-proverka-vs-2026", "podryadchik-ne-vystavil-schet-fakturu"],
+    "nalogi/statya-54-1-nk-prostymi-slovami/index.html": ["podarok-ot-roditelya-ip-ndfl-vs-2026", "razryv-nds-v-cepochke-krascvetmet", "vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke", "droblenie-uplachennaya-usn-zachityvaetsya", "povtornaya-vyezdnaya-proverka-vs-2026", "podryadchik-ne-vystavil-schet-fakturu"],
     "nalogi/nds-postavshchika-na-usn-po-inn/index.html": ["nds-postavshchika-usn-cena-dogovora", "podryadchik-ne-vystavil-schet-fakturu"],
-    "nalogi/nagruzka/index.html": ["droblenie-uplachennaya-usn-zachityvaetsya", "zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
+    "nalogi/nagruzka/index.html": ["podarok-ot-roditelya-ip-ndfl-vs-2026", "droblenie-uplachennaya-usn-zachityvaetsya", "zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/nagruzka-po-otraslyam-2025/index.html": ["zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/priznaki-tehnicheskoj-kompanii/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke"],
     "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026"],
@@ -27,6 +27,68 @@
     "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"]
   },
   "razbory": [
+    {
+      "razdel": "nalogi",
+      "slug": "podarok-ot-roditelya-ip-ndfl-vs-2026",
+      "h1": "Родитель-предприниматель подарил помещения ребёнку-предпринимателю. Нужно платить НДФЛ?",
+      "title": "Мама-ИП подарила бизнес-недвижимость дочери: НДФЛ нет (ВС, 2026)",
+      "description": "Инспекция насчитала 2,43 млн ₽ НДФЛ с 11 помещений, подаренных дочери-ИП. Верховный суд: освобождение для родных не зависит от того, как используют подарок.",
+      "zapros": "подарок от родителя ИП НДФЛ недвижимость",
+      "data": "2026-10-24",
+      "minut": 4,
+      "lid": "Мать-предприниматель подарила дочери-предпринимателю 11 помещений, которые сдавались в аренду и до подарка, и после. Инспекция решила, что это доход от бизнеса, и насчитала 2,43 млн ₽ НДФЛ. Верховный суд отменил решения трёх инстанций: подарок от близкого родственника НДФЛ не облагается, как бы его ни использовали. Разбираем, где грань и как оформить дарение.",
+      "dela": [
+        {
+          "sud": "Верховный суд РФ, Судебная коллегия по экономическим спорам",
+          "sud_kratko": "ВС",
+          "akt": "Определение",
+          "nomer": "№ 309-ЭС24-21782",
+          "data": "2026-04-17",
+          "delo": "НДФЛ с 11 помещений, подаренных матерью-ИП дочери-ИП (№ А50-28917/2023); резолютивная часть — 15.04.2026",
+          "na_konu": "2 434 536 ₽ НДФЛ и 30 431,69 ₽ штрафа",
+          "na_konu_kratko": "≈ 2,43 млн ₽",
+          "itog": "В пользу налогоплательщика",
+          "itog_nov": false,
+          "istochnik": "https://vsrf.ru/lk/practice/stor_pdf_ec/2535286",
+          "istochnik_podpis": "vsrf.ru — текст определения; сверено 24.10",
+          "sverka": "2026-10-24"
+        }
+      ],
+      "knopka": {
+        "zagolovok": "Сдаёте помещения — проверьте арендатора",
+        "tekst": "Проверка по ИНН: статус в ЕГРЮЛ, долги по налогам и отметки, на которые смотрят банк и налоговая, — на дату проверки.",
+        "knopka": "Проверить арендатора по ИНН",
+        "url": "/",
+        "cel": "razbor27_check",
+        "slezh": {
+          "knopka": "Следить за арендатором",
+          "url": "/cabinet.html#watch",
+          "cel": "razbor27_slezh"
+        }
+      },
+      "zakon": [
+        [
+          "п. 18.1 ст. 217 НК РФ — подарки от членов семьи и близких родственников не облагаются НДФЛ",
+          "ред. 04.08.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_28165/"
+        ],
+        [
+          "п. 1 и 3 ст. 3, п. 1 ст. 34.2 НК РФ — экономическое основание налога, равенство, разъяснения Минфина",
+          "ред. 04.08.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_19671/"
+        ],
+        [
+          "п. 1 ст. 572 ГК РФ — дарение без встречного предоставления",
+          "ред. на 24.10.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_9027/"
+        ]
+      ],
+      "pohozhie": [
+        "povtornaya-vyezdnaya-proverka-vs-2026",
+        "blokirovka-lichnogo-scheta-ip",
+        "droblenie-uplachennaya-usn-zachityvaetsya"
+      ]
+    },
     {
       "razdel": "nalogi",
       "slug": "nalogovyj-arest-zalog-v-bankrotstve-postavshchika",

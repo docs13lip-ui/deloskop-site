@@ -301,3 +301,22 @@ test('Разбор № 25: налоговый залог — итог 25.12.2025
   const s = un(chitat('praktika/nalogi/nalogovyj-arest-zalog-v-bankrotstve-postavshchika/index.html'));
   assert.ok(s.includes('КНД 1120101') && s.includes('Пример не из дела'));
 });
+
+// razbor27-v1 ([Ночные запуски] 24.10; текст [Право] 24.10 разд. 5; 5 цитат, даты, суммы и письма Минфина сверены с PDF vsrf.ru 24.10 — stor_pdf_ec/2535286, «34.2» в PDF — «342» без точки)
+test('Разбор № 27: подарок от мамы-ИП — 309-ЭС24-21782 от 17.04.2026, цитаты ВС дословно, без имён, без обещаний и без ◐ про иноагентов', () => {
+  const r = D.razbory.find((x) => x.slug === 'podarok-ot-roditelya-ip-ndfl-vs-2026');
+  assert.ok(r && r.razdel === 'nalogi');
+  assert.deepStrictEqual(r.dela.map((d) => d.nomer + ' ' + d.data), ['№ 309-ЭС24-21782 2026-04-17']);
+  const t = un(chitat('tests/praktika/podarok-ot-roditelya-ip-ndfl-vs-2026.html'));
+  for (const c of ['«…возможность освобождения дохода от обложения НДФЛ связывается законом исключительно с наличием семейных или близкородственных отношений между дарителем и одаряемым»',
+    '«…полученная в порядке дарения недвижимость фактически квалифицируется в качестве предпринимательского внереализационного дохода…»',
+    '«Разъяснения Министерства финансов Российской Федерации по данному вопросу носили последовательный характер»']) assert.ok(t.includes(c), 'цитата ' + c);
+  assert.ok(t.includes('2 434 536 ₽') && t.includes('30 431,69 ₽') && t.includes('А50-28917/2023') && t.includes('11 объектов'));
+  assert.ok(t.includes('п. 1 ст. 34.2 НК') && !/ст\. 342/.test(t), 'ст. 34.2, а не «342» из PDF');
+  for (const n of ['№ 03-11-11/66174', '№ 03-11-11/38260', '№ 03-04-05/98449', '№ 03-04-05/35604']) assert.ok(t.includes(n), 'письмо ' + n);
+  assert.ok(!/иностранн|иноагент/i.test(t), 'исключение для иноагентов — ◐, до текста п. 18.1 не ставим');
+  assert.ok(!/Хабиев|Посягин|Гальперин/.test(t), 'имён и адресов из дела не публикуем');
+  assert.ok(!/гарантир|точно не возьм|вернём/i.test(t));
+  const s = un(chitat('praktika/nalogi/podarok-ot-roditelya-ip-ndfl-vs-2026/index.html'));
+  assert.ok(s.includes('data-goal="razbor27_check"') && s.includes('№ 309-ЭС24-21782'));
+});

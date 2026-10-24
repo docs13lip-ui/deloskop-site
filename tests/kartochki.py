@@ -651,6 +651,13 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
             otchet["nagruzka"] = sobrat_nagruzka.sobrat(koren=koren)
     except Exception as oshibka:  # не роняем сборку карточек; nagruzka.test.js (--check) покажет устаревший блок
         otchet["nagruzka"] = "ошибка: %s" % oshibka
+    # stati-kartochki-v1: статьи /nalogi/ и /115-fz/ называют карточки по теме — пересобрать вместе с ними
+    try:
+        import sobrat_stati_kartochki
+        if os.path.abspath(koren) == os.path.abspath(sobrat_stati_kartochki.KOREN):
+            otchet["stati"] = sobrat_stati_kartochki.sobrat(koren=koren)
+    except Exception as oshibka:  # не роняем сборку карточек; test_stati_kartochki (--check) покажет устаревший блок
+        otchet["stati"] = "ошибка: %s" % oshibka
     return kart, otchet
 
 

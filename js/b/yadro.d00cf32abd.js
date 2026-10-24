@@ -506,7 +506,7 @@
    Цели: window.dlkGoal("check_started" | "report_opened" | "invoice_created" | "registration" |
    "article_to_tool" | "whatsnew_open" | "pkg_view" | "pkg_cta" | "praktika_cta" |
    "entry_pay" | "entry_watch" | "entry_bank" | "shchit_start" | "shchit_sled" |
-   "schet_zapros" | "schet_buhgalteru" | "schet_oplachen", {параметры}) — без согласия ничего не отправляет.
+   "schet_zapros" | "schet_buhgalteru" | "schet_oplachen" | "company_to_check" | "vk_click" | "share_click", {параметры}) — без согласия ничего не отправляет.
    События дублируются в параметры визита `sobytie` — копятся и без заведённой цели (справка Метрики, visit-params-data).
    Ключи параметров — только из KLYUCHI; значения с 10+ цифрами подряд или «@» и значения из полей ввода не передаём.
    Просмотр отправляется вручную (init с defer: true + hit — справка Метрики «SPA-сайты»): в адресе и referer
@@ -667,16 +667,60 @@
     s.textContent = v === "all" ? "Вы разрешили Яндекс Метрику." : v === "need" ? "Вы выбрали только необходимые cookies — Метрика не загружается." : "Вы ещё не сделали выбор.";
   }
 
-  // «из статьи в сервис»: клик из разбора (/115-fz/…, /nalogi/…) на инструмент
-  var INSTRUMENTY = /^\/(|index\.html|skoraya-115-fz\/|nalichnye\/|kontragenty-iz-vypiski\/|proverit-schet\/|pasport\/|delopis\/|tarify\/|indeks\/)(\?|#|$)/;
-  function izStati(e) {
-    var a = e.target.closest && e.target.closest("a[href]");
-    if (!a || !/^\/(115-fz|nalogi)\/[^/]+\//.test(location.pathname)) return;
+  // celi-v2 (24.10.2026, план [Маркетинг] 24.10 разд. 6 п. 4) — переходы, которые раньше не считались:
+  //  article_to_tool {statya, kuda, sposob} — из статьи /115-fz/…, /nalogi/… и разбора /praktika/<раздел>/<slug>/ к инструменту:
+  //    ссылка (sposob «ssylka») или форма «Проверить» без своей цели (sposob «forma»; раньше 17 таких форм молчали);
+  //  company_to_check {kuda, mesto} — с карточки /company/<ИНН>-…/ к проверке: «/?inn=», Паспорт, «Проверь счёт», сравнение;
+  //  vk_click {mesto, stranica} — в сообщество ВКонтакте (кнопки «Поделиться» vk.com/share.php — это share_click).
+  // Шапка, меню, хлебные крошки и подвал в article_to_tool/company_to_check не входят — это навигация, а не шаг из текста.
+  // Параметры — только пути и метки разделов; ИНН из адреса не уходит (chistye отбрасывает 10+ цифр).
+  var INSTRUMENTY = /^\/(|index\.html|skoraya-115-fz\/|nalichnye\/|kontragenty-iz-vypiski\/|proverit-schet\/|pasport\/(kontragent\/)?|delopis\/|tarify\/|indeks\/|sravnit\/)$/;
+  var STATYA = /^\/((115-fz|nalogi)\/[^/]+|praktika\/[^/]+\/[^/]+)\//;
+  var KARTOCHKA = /^\/company\/\d{10}[^/]*\/$/;
+  var PROVERKA = /^\/(pasport\/kontragent\/|proverit-schet\/|sravnit\/)$/;
+  var VK = /^(m\.)?vk\.(com|ru)$/i;
+  function perehod(stranica, href, origin, sposob) {
     var u;
-    try { u = new URL(a.href, location.href); } catch (x) { return; }
-    if (u.origin === location.origin && INSTRUMENTY.test(u.pathname + (u.search ? "?" : ""))) {
-      window.dlkGoal("article_to_tool", { statya: location.pathname, kuda: u.pathname });
+    try { u = new URL(href, origin + stranica); } catch (x) { return null; }
+    if (u.origin !== origin) {
+      if (VK.test(u.hostname) && !/^\/share\.php/i.test(u.pathname)) return { cel: "vk_click", p: { stranica: stranica } };
+      return null;
     }
+    if (!INSTRUMENTY.test(u.pathname)) return null;
+    if (STATYA.test(stranica)) return { cel: "article_to_tool", p: { statya: stranica, kuda: u.pathname, sposob: sposob || "ssylka" } };
+    if (KARTOCHKA.test(stranica) && (PROVERKA.test(u.pathname) || (u.pathname === "/" && /[?&]inn=/.test(u.search)) || (u.pathname === "/" && sposob === "forma")))
+      return { cel: "company_to_check", p: { kuda: u.pathname } };
+    return null;
+  }
+  window.dlkPerehod = perehod; // для tests/celi_v2.test.js
+  var NAVIGACIYA = "[data-shapka], header.shapka, nav, .mnav, .podval";
+  // раздел карточки, где был клик: id заголовка секции («pered», «reestry»…), верх карточки или боковая колонка
+  function mesto(el) {
+    var s = el.closest("[aria-labelledby]");
+    if (s && /^(section|aside)$/i.test(s.tagName)) return s.getAttribute("aria-labelledby");
+    if (el.closest(".co-head")) return "verh";
+    if (el.closest(".co-ind")) return "indeks";
+    if (el.closest("aside")) return "sboku";
+    return "stranica";
+  }
+  function naPerehod(r, el) {
+    if (!r) return;
+    if (r.cel === "vk_click") r.p.mesto = el.closest(".podval") ? "podval" : "stranica";
+    else {
+      if (el.closest(NAVIGACIYA)) return;
+      if (r.cel === "company_to_check") r.p.mesto = mesto(el);
+    }
+    window.dlkGoal(r.cel, r.p);
+  }
+  function izSsylki(e) {
+    var a = e.target && e.target.closest && e.target.closest("a[href]");
+    if (a) naPerehod(perehod(location.pathname, a.getAttribute("href"), location.origin), a);
+  }
+  function izFormy(e) {
+    var f = e.target && e.target.closest && e.target.closest("form");
+    if (!f || f.getAttribute("data-goal") === "article_to_tool") return; // у калькулятора своя article_to_tool
+    if ((f.getAttribute("method") || "get").toLowerCase() !== "get") return;
+    naPerehod(perehod(location.pathname, f.getAttribute("action") || location.pathname, location.origin, "forma"), f);
   }
 
   // «Разбор дела» → одно действие: клик по кнопке тёмного блока .dl на /praktika/<раздел>/<slug>/ (SEO-обвязка [Маркетинга] 30.09)
@@ -693,7 +737,8 @@
     var v = chitat();
     if (v === "all") zagruzit();
     else if (!v) banner();
-    document.addEventListener("click", izStati, true);
+    document.addEventListener("click", izSsylki, true);
+    document.addEventListener("submit", izFormy, true);
     document.addEventListener("click", izRazbora, true);
     // ссылка-кнопка с data-goal (например, главная кнопка статьи «ЗСК контрагента» → Паспорт): своя цель
     document.addEventListener("click", function (e) {

@@ -4235,3 +4235,37 @@ def html_gruppy(g, kart, index, n=1, vsego=1, normy=None, statyi=()):  # noqa: F
     nav = t.rfind('<nav class="co-str', 0, i)
     kuda = nav if nav != -1 else i
     return t[:kuda] + ch + "\n" + t[kuda:]
+
+
+# ---------------------------------------------------------------- haby-svyazi-v1 (24.10.2026, [Ночные-2])
+# Хабы региона и отрасли не ссылались друг на друга: на /company/region/moskva/ заголовок «Энергетика 11» — просто текст,
+# во вводном абзаце /company/otrasl/energetika/ «с адресом Москва (11)» — тоже. Теперь имя группы, у которой есть свой хаб,
+# — ссылка на него: заголовки отраслей на хабе региона и имена во вводном абзаце (только 1-я страница, только эти места;
+# группы без хаба — текстом, как раньше). kg — karta_grupp(gruppy) из сборщика; без kg — как раньше.
+def hab_ssylki_grupp(t, g, kg):
+    if not kg:
+        return t
+    if g.get("vid") == "region":
+        def zam(m):
+            a = kg.get(("otrasl", html.unescape(m.group(1))))
+            return ('<section class="co-sec"><h2><a href="%s">%s</a> ' % (a, m.group(1))) if a else m.group(0)
+        t = re.sub(r'<section class="co-sec"><h2>([^<]+) (?=<span class="caption">)', zam, t)
+    m = re.search(r'<p class="co-hab__vvod">.*?</p>', t, re.S)
+    if not m:
+        return t
+    vv = m.group(0)
+    for (vid, imya), a in sorted(kg.items()):
+        if vid == g.get("vid"):
+            continue
+        nz = e(region_polnyj(imya)) if vid == "region" else "«%s»" % e(imya)
+        vv = re.sub(r"(с адресом |здесь — |, дальше — )%s(?= \(\d+\))" % re.escape(nz),
+                    lambda mm: '%s<a href="%s">%s</a>' % (mm.group(1), a, nz), vv, count=1)
+    return t[:m.start()] + vv + t[m.end():]
+
+
+_html_gruppy_do_svyazi = html_gruppy
+
+
+def html_gruppy(g, kart, index, n=1, vsego=1, normy=None, statyi=(), kg=None):  # noqa: F811 — haby-svyazi-v1
+    t = _html_gruppy_do_svyazi(g, kart, index, n, vsego, normy, statyi)
+    return hab_ssylki_grupp(t, g, kg) if n <= 1 else t

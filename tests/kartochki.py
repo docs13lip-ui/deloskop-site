@@ -434,6 +434,7 @@ def sobrat_gruppy(gruppy, lm, koren, r, podval, shapka):
     v_sm = {}
     nuzhnye = set()
     normy, statyi = zagruzit_normy(), statyi_haba(koren)  # haby-statyi-v1
+    kg = karta_grupp(gruppy)  # haby-svyazi-v1: ссылки регион ↔ отрасль
     for g in gruppy:
         lms = [lm[adres_str(k)] for k in g["kart"] if adres_str(k) in lm]
         index = len(lms) >= HAB_GRUPPY_OT
@@ -442,7 +443,7 @@ def sobrat_gruppy(gruppy, lm, koren, r, podval, shapka):
             a = adres_gruppy(g, n)
             nuzhnye.add(a)
             zapisat(os.path.join(koren, a.strip("/"), "index.html"),
-                    ss.sobrat_stranicu(html_gruppy(g, chast, index, n, len(chasti), normy, statyi), r, podval, shapka))
+                    ss.sobrat_stranicu(html_gruppy(g, chast, index, n, len(chasti), normy, statyi, kg), r, podval, shapka))
         if index:
             v_sm[adres_gruppy(g)] = max(lms)
     # лишнее (группа ушла ниже порога, страниц стало меньше) — удаляем; пустые папки — тоже

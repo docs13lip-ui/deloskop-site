@@ -268,10 +268,15 @@ function ksOk(bik,ks){return key23('0'+bik.slice(4,6)+ks)}
 /* ---------- разбор текста счёта ---------- */
 var SELLER=/(поставщик|исполнител|продав[еце]|(?<!грузо)получател|подрядчик|арендодател|лицензиар)/gi;
 var BUYER=/(покупател|заказчик|плательщик|арендатор|грузополучател|лицензиат)/gi;
-function num(s){return parseFloat(String(s).replace(/[\s ]/g,'').replace(/[,\-](?=\d{2}$)/,'.'))}
+function num(s){s=String(s);var k=s.match(/^([\d\s ]+?)\s*(?:руб\.?|р\.)\s*(\d{2})\s*коп/i);
+  if(k)return parseFloat(k[1].replace(/\s/g,'')+'.'+k[2]);
+  return parseFloat(s.replace(/\s*(?:руб\.?|р\.|₽)$/i,'').replace(/[\s ]/g,'').replace(/[,\-](?=\d{2}$)/,'.'))}
+// schet-nds-v1: сумма — «1 200,00», «118000-00», «100 000 руб. 00 коп.», «100 000 руб.» (целые — только со словом «руб»/«₽»)
+var AMT='(\\d[\\d ]*(?:[.,\\-]\\d{2}(?![\\d\\-]|\\.\\d)(?:\\s*(?:руб\\.?|₽))?|\\s*(?:руб\\.?|р\\.)\\s*\\d{2}\\s*коп|\\s*(?:руб|₽)))';
+function amtAfter(t,lab){var m=new RegExp(lab+'[^\\d]{0,30}'+AMT,'i').exec(t);return m?num(m[1]):null}
 
 function parse(raw){
-  var t=raw.replace(/ /g,' ').replace(/[ \t]+/g,' ');
+  var t=raw.replace(/[    ]/g,' ').replace(/[ \t]+/g,' ');
   var j=t.replace(/(\d)[ \t]+(?=\d)/g,'$1');           // «4070 2810 …» → слитно
   var r={inns:[],bik:null,acc:null,ks:null,kpp:null,total:null,vat:null,noVat:false,no:null,date:null,bank:null};
 
@@ -305,17 +310,39 @@ function parse(raw){
   r.ks=accs.filter(function(a){return a.indexOf('301')===0})[0]||null;
   var cand=accs.filter(function(a){return a.indexOf('301')!==0});
   if(r.bik){var good=cand.filter(function(a){return accOk(r.bik,a)});r.acc=good[0]||cand[0]||null}else r.acc=cand[0]||null;
-  m=t.match(/КПП[^\d]{0,12}(\d{4}[0-9A-Z]{2}\d{3})(?![0-9A-Z])/i)||t.match(/(?:ИНН|ИНН\s*\/\s*КПП)[^\d]{0,12}\d{10}\s*\/\s*(\d{4}[0-9A-Z]{2}\d{3})(?![0-9A-Z])/i);
-  if(m)r.kpp=m[1].toUpperCase();
-  m=t.match(/(?:всего|итого)\s*к\s*оплате[^\d]{0,30}(\d[\d ]*[.,\-]\d{2})(?![\d\-])/i)||t.match(/итого[^\d]{0,30}(\d[\d ]*[.,\-]\d{2})(?![\d\-])/i);
-  if(m)r.total=num(m[1]);
-  m=t.match(/(?:в\s*т(?:ом)?\.?\s*ч(?:исле)?\.?\s*)?(?:сумма\s*)?НДС[^\d]{0,4}(?:\(?\s*(\d{1,2})\s*%\s*\)?)?[^\d]{0,20}(\d[\d ]*[.,\-]\d{2})(?![\d\-])/i);
-  if(m){r.vatRate=m[1]?+m[1]:null;r.vat=num(m[2]);}
-  if(/без\s*(?:налога\s*)?\(?НДС\)?|НДС\s*не\s*облагается/i.test(t)){r.noVat=true;r.vat=null}
+  // КПП: ближайший после ИНН поставщика (schet-nds-v1: КПП покупателя, стоящий выше, — не берём), иначе первый в тексте
+  var reK=/КПП[^\d]{0,12}(\d{4}[0-9A-Z]{2}\d{3})(?![0-9A-Z])|(?:ИНН|ИНН\s*\/\s*КПП)[^\d]{0,12}\d{10}\s*\/\s*(\d{4}[0-9A-Z]{2}\d{3})(?![0-9A-Z])/ig,kpps=[];
+  while((m=reK.exec(t)))kpps.push({v:(m[1]||m[2]).toUpperCase(),pos:m.index});
+  var selI=r.inns.filter(function(x){return x.role==='seller'})[0]||r.inns.filter(function(x){return x.role!=='buyer'})[0];
+  var kN=selI&&kpps.filter(function(k){return k.pos>selI.pos&&k.pos-selI.pos<80})[0];
+  if(kN||kpps.length)r.kpp=(kN||kpps[0]).v;
+  // Сумма к оплате (schet-nds-v1): сначала «к оплате», потом «с НДС», потом «Всего», и только потом «Итого» —
+  // «Итого» в счетах 1С/Контура часто сумма без НДС, а «Итого без НДС» — всегда без НДС.
+  r.total=amtAfter(t,'(?:всего|итого|сумма)\\s*к\\s*оплате')
+    ??amtAfter(t,'(?:всего|итого|сумма)[,\\s]*(?:с|включая)\\s*(?:учётом\\s*|учетом\\s*)?(?:налога\\s*)?\\(?НДС')
+    ??amtAfter(t,'всего(?!\\s*(?:наименований|без|НДС))')
+    ??amtAfter(t,'итого(?!\\s*(?:без|НДС))')
+    ??amtAfter(t,'итого');
+  // НДС: сумма после «НДС», но не «без НДС» / «с НДС» / «включая НДС» (это заголовки колонок и итогов).
+  // Помеченная «в т. ч. / итого / сумма НДС» — важнее первой встречной.
+  var reV=new RegExp('(в\\s*т(?:ом)?\\.?\\s*ч(?:исле)?\\.?\\s*|итого\\s*|всего\\s*|сумма\\s*)?НДС[^\\d]{0,4}(?:\\(?\\s*(\\d{1,2})\\s*%\\s*\\)?)?[^\\d]{0,20}'+AMT,'gi'),vs=[];
+  while((m=reV.exec(t))){
+    var pre=t.slice(Math.max(0,m.index-14),m.index)+(m[1]||'');
+    if(/(?:без|(?:^|[\s(])с|включая|учётом|учетом)\s*(?:налога\s*)?\(?\s*$/i.test(pre))continue;
+    vs.push({lab:!!m[1],rate:m[2]?+m[2]:null,v:num(m[3])});
+  }
+  var v=vs.filter(function(x){return x.lab})[0]||vs[0];
+  if(v){r.vatRate=v.rate;r.vat=v.v;}
+  // «Без НДС» — только как отметка о счёте, а не заголовок «Цена без НДС» / «Итого без НДС» при НДС в счёте
+  var bez=/(цен[аы]|сумм[аы]|итого|всего|стоимость|стоим\.)\s*$/i;
+  var reB=/без\s*(?:налога\s*)?\(?НДС\)?|НДС\s*не\s*облагается|не\s*облагается\s*НДС/gi,mb;
+  while((mb=reB.exec(t))){if(!bez.test(t.slice(Math.max(0,mb.index-12),mb.index))){r.noVat=true;break}}
+  if(r.vat>0)r.noVat=false;else if(r.noVat)r.vat=null;
   m=t.match(/сч[её]т(?:\s*на\s*оплату)?\s*№\s*([\wА-Яа-я\-\/.]+)\s*от\s*(\d{1,2}[.\s][\wА-Яа-я]+[.\s]\d{2,4})/i);
   if(m){r.no=m[1];r.date=m[2].replace(/\s*г\.?$/,'')}
   m=t.match(/([А-ЯЁA-Z«"][^\n]{2,80}?(?:БАНК|Банк|банк)[^\n]{0,40})\s*(?:г\.|БИК)/);
-  if(m)r.bank=m[1].replace(/^.*\d{20}\s*(?:в\s+)?/,'').replace(/^(?:Банк получателя|Банк)\s*/i,'').replace(/[\s,;.:]+$/,'').trim()||null;
+  if(!m)m=t.match(/([^\n]*(?:БАНК|Банк|банк)[^\n]*)\n\s*Банк получателя/);   // макет 1С из PDF: название строкой выше
+  if(m)r.bank=m[1].replace(/^.*\d{20}\s*(?:в\s+)?/,'').replace(/^(?:Банк получателя|Банк)\s*[:\-]?\s*/i,'').replace(/[\s,;.:]+$/,'').trim()||null;
   return r;
 }
 

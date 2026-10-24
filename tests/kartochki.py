@@ -410,11 +410,30 @@ def partiya_sitemap(lm, staryj_xml, segodnya, partiya=PARTIYA_V_SUTKI, dohod=Non
     return vybor, metka, len(novye) - len(berem)
 
 
+_H1_STATI = re.compile(r"<h1[^>]*>(.*?)</h1>", re.S)
+
+
+def statyi_haba(koren):
+    """haby-statyi-v1: [(адрес, заголовок h1)] статей HAB_STATYI, что есть на сайте и открыты роботам."""
+    out = []
+    for st in HAB_STATYI:
+        put = os.path.join(koren, st, "index.html")
+        if not os.path.isfile(put):
+            continue
+        t = open(put, encoding="utf-8").read()
+        h = _H1_STATI.search(t)
+        if not h or re.search(r'<meta name="robots" content="[^"]*noindex', t):
+            continue
+        out.append(("/%s/" % st, re.sub(r"[ \t\r\n]+", " ", html.unescape(re.sub(r"<[^>]+>", "", h.group(1)))).strip()))
+    return out
+
+
 def sobrat_gruppy(gruppy, lm, koren, r, podval, shapka):
     """kartochki-haby-v1: пишет хабы групп, убирает исчезнувшие → {адрес стр. 1: lastmod} хабов, идущих в sitemap.
     В индекс — когда ≥ HAB_GRUPPY_OT карточек группы стоят в sitemap (lm); lastmod — самая свежая из них."""
     v_sm = {}
     nuzhnye = set()
+    normy, statyi = zagruzit_normy(), statyi_haba(koren)  # haby-statyi-v1
     for g in gruppy:
         lms = [lm[adres_str(k)] for k in g["kart"] if adres_str(k) in lm]
         index = len(lms) >= HAB_GRUPPY_OT
@@ -423,7 +442,7 @@ def sobrat_gruppy(gruppy, lm, koren, r, podval, shapka):
             a = adres_gruppy(g, n)
             nuzhnye.add(a)
             zapisat(os.path.join(koren, a.strip("/"), "index.html"),
-                    ss.sobrat_stranicu(html_gruppy(g, chast, index, n, len(chasti)), r, podval, shapka))
+                    ss.sobrat_stranicu(html_gruppy(g, chast, index, n, len(chasti), normy, statyi), r, podval, shapka))
         if index:
             v_sm[adres_gruppy(g)] = max(lms)
     # лишнее (группа ушла ниже порога, страниц стало меньше) — удаляем; пустые папки — тоже

@@ -55,5 +55,5 @@ test('detali-v1c: остаток касания и строки — крошки
     assert.ok(css.includes(r), r);
   assert.match(css, /:where\(article,\.set-host,\.co-ogov\) :where\(p:not\(\[class\]\),ul:not\(\[class\]\)>li,ol:not\(\[class\]\)>li\)\{max-width:38em\}/);
   assert.doesNotMatch(css.replace(/\/\*[\s\S]*?\*\//g, ''), /\d+ch\b/, 'ширина строки — в em: ch зависит от шрифта и сдвигает колонку при загрузке Onest');
-  assert.match(chitat('partials/shapka.css'), /\.ck-bar \.ck-bar__b button\{flex:1;min-height:44px/, 'кнопки cookie на телефоне — 44 px (источник — partials/shapka.css)');
+  assert.match(chitat('partials/shapka.css'), /\.ck-bar \.ck-bar__b button\{flex:1 1 164px;min-height:44px/, 'кнопки cookie на телефоне — 44 px (источник — partials/shapka.css)');
 });

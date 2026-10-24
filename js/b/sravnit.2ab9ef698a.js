@@ -111,7 +111,9 @@
  * утверждения, которого нет в отчёте каждой компании. «Не проверяли» ≠ «не нашли» — пишем как есть.
  * Строки, где компании расходятся (разный тон или Индекс отличается на 10 и больше), подсвечены.
  * Итог — одна фраза-подсчёт отметок «внимание» и «серьёзно», без оценки «кто лучше».
- * ИП в сравнение не берём (данные предпринимателей не публикуем) — сообщаем до запроса, проверки не тратим.
+ * ИП в сравнение не берём — сообщаем до запроса, проверки не тратим. Текст отказа — [команда] 23.10: «Сравнивать можно только организации.»
+ * (без объяснения «не публикуем»: основной отчёт по ИНН ИП что-то показывает — объяснение стало бы неправдой).
+ * «Не проверяли» в подсчёт не входит; рядом — сколько строк не проверено у каждой ([команда] 23.10, ✎ 08:55).
  *
  * Чистые функции (stroki, itog, proverit) проверяет tests/sravnenie.test.js; mount — только на странице.
  */
@@ -124,7 +126,7 @@
   var NB = ' ';
   var TON_USL = { go: 'ok', cap: 'warn', post: 'warn', stop: 'bad' };
   var ST = { ACTIVE: 'действующая', LIQUIDATING: 'ликвидируется', LIQUIDATED: 'ликвидирована', BANKRUPT: 'банкротство', REORGANIZING: 'реорганизация' };
-  var IP_TEKST = 'ИП сравнить нельзя: сведения о' + NB + 'предпринимателях мы не' + NB + 'публикуем. Сравнение — только для' + NB + 'компаний (ИНН из' + NB + '10' + NB + 'цифр).';
+  var IP_TEKST = 'Сравнивать можно только организации.';
   var DVE = 'Сравнение — это две проверки: из' + NB + '10 бесплатных в' + NB + 'день уйдут 2.';
 
   function m(name) { return root && root[name] ? root[name] : null; }
@@ -207,18 +209,18 @@
     if (s) return { t: zaglavnaya(s.detail || (s.status === 'ok' ? 'Нет' : 'Есть')), ton: ton(s.status) };
     var k = kpi(r, /Долг перед бюджетом/);
     if (k) return k.value ? { t: dengi(Number(k.value)), ton: 'warn' } : { t: zaglavnaya(k.text || 'Нет'), ton: k.text === 'Нет' ? 'ok' : 'neutral' };
-    return { t: 'Не проверяли', pod: 'свежего набора ФНС в ответе нет', ton: 'neutral' };
+    return { t: 'Не проверяли', pod: 'свежего набора ФНС в ответе нет', ton: 'neutral', nepr: true };
   }
   function ySudy(r) {
     var s = r && r.damia && r.damia.sudy;
-    if (!s || s.status !== 'polucheno' || !s.dannye) return { t: 'Не проверяли', pod: 'проверьте сами в картотеке kad.arbitr.ru', ton: 'neutral' };
+    if (!s || s.status !== 'polucheno' || !s.dannye) return { t: 'Не проверяли', pod: 'проверьте сами в картотеке kad.arbitr.ru', ton: 'neutral', nepr: true };
     var d = s.dannye, n = +d.otvetchik_nezaversheno || 0, v = +d.vsego || 0;
     var t = n ? 'Ответчик в' + NB + n + NB + skl(n, 'незавершённом деле', 'незавершённых делах', 'незавершённых делах') : 'Незавершённых дел ответчиком нет';
     return { t: t, pod: 'всего дел: ' + v + (s.data_svedeniy ? ' · на' + NB + data(s.data_svedeniy) : ''), ton: n ? 'warn' : 'ok' };
   }
   function yZsk(r) {
     var z = r && r.zsk;
-    if (!z || !z.level) return { t: 'Не считали', ton: 'neutral' };
+    if (!z || !z.level) return { t: 'Не считали', ton: 'neutral', nepr: true };
     return { t: z.title || '', pod: 'наша оценка, не статус Банка России', ton: z.level === 'high' ? 'bad' : z.level === 'medium' ? 'warn' : 'ok' };
   }
   function yUsl(r) {
@@ -271,10 +273,31 @@
   function itog(rA, rB) {
     var a = otmetki(rA), b = otmetki(rB), nA = imya(rA), nB = imya(rB);
     var sl = function (n) { return skl(n, 'отметка', 'отметки', 'отметок'); };
-    if (a === b) return a ? 'Отметок «внимание» и' + NB + '«серьёзно» в' + NB + 'отчётах поровну — по' + NB + a + '.'
+    if (a === b) return a ? 'Отметок «внимание» и' + NB + '«серьёзно» поровну: ' + a + ' и' + NB + b + '.'
       : 'Ни в' + NB + 'одном отчёте нет отметок «внимание» и' + NB + '«серьёзно».';
     var men = a < b ? nA : nB, x = Math.min(a, b), y = Math.max(a, b);
     return 'У' + NB + men + ' меньше отметок «внимание» и' + NB + '«серьёзно»: ' + x + ' против ' + y + ' (' + y + NB + sl(y) + ' у' + NB + (a < b ? nB : nA) + ').';
+  }
+
+  // neproveno(rA, rB, S?) → '' или фраза: сколько строк сравнения не проверено у каждой компании.
+  // Такие строки в подсчёт отметок не входят — «не проверяли» ≠ «не нашли» ([команда] 23.10).
+  function neproveno(rA, rB, S) {
+    S = S || stroki(rA, rB, {});
+    var kA = 0, kB = 0;
+    S.forEach(function (x) { if (x.a.nepr) kA++; if (x.b.nepr) kB++; });
+    if (!kA && !kB) return '';
+    var gl = function (n) { return skl(n, 'не' + NB + 'проверена', 'не' + NB + 'проверены', 'не' + NB + 'проверено'); };
+    var st = function (n) { return n + NB + skl(n, 'строка', 'строки', 'строк'); };
+    if (kA && kB) return 'Не' + NB + 'проверены строки: у' + NB + imya(rA) + ' — ' + kA + ', у' + NB + imya(rB) + ' — ' + kB + '. В' + NB + 'подсчёт они не' + NB + 'входят.';
+    var k = kA || kB;
+    return 'У' + NB + (kA ? imya(rA) : imya(rB)) + ' ' + gl(k) + ' ' + st(k) + ' — в' + NB + 'подсчёт они не' + NB + 'входят.';
+  }
+  // дата сведений для подписи: дата проверки из ответа API (у обеих — один день), иначе сегодня
+  function dataSvedenij(rA, rB, o) {
+    var d = data(rA && rA.checked_at) || data(rB && rB.checked_at);
+    if (d) return d;
+    var t = new Date((o && o.sejchas) || Date.now());
+    return ('0' + t.getDate()).slice(-2) + '.' + ('0' + (t.getMonth() + 1)).slice(-2) + '.' + t.getFullYear();
   }
 
   // ---------- вёрстка ----------
@@ -299,8 +322,10 @@
     });
     if (!raz) h += '<tr class="sv-nol"><td colspan="3">По' + NB + 'этим строкам компании не' + NB + 'расходятся.</td></tr>';
     h += '</tbody></table></div>';
-    h += '<p class="sv-itog">' + esc(itog(rA, rB)) + '</p>' +
-      '<p class="sv-pod">Считаем строки «внимание» и' + NB + '«серьёзно» в' + NB + 'отчёте каждой компании и' + NB + 'прогноз ЗСК выше «низкого». Это подсчёт, а' + NB + 'не' + NB + 'оценка, с' + NB + 'кем работать: решение — за' + NB + 'вами.</p>' +
+    var np = neproveno(rA, rB, S);
+    h += '<p class="sv-itog">' + esc(itog(rA, rB)) + '</p>' + (np ? '<p class="sv-nepr">' + esc(np) + '</p>' : '') +
+      '<p class="sv-pod">Считаем строки «внимание» и' + NB + '«серьёзно» в' + NB + 'отчёте каждой компании и' + NB + 'прогноз ЗСК выше «низкого». ' +
+      'Это подсчёт отметок по' + NB + 'открытым сведениям на' + NB + esc(dataSvedenij(rA, rB, o)) + ', а' + NB + 'не' + NB + 'оценка компаний. С' + NB + 'кем работать — решаете вы.</p>' +
       '<p class="sv-dal"><a class="sv-btn" href="/?inn=' + esc(cA.inn) + '">Полный отчёт «' + esc(nA) + '»</a><a class="sv-btn" href="/?inn=' + esc(cB.inn) + '">Полный отчёт «' + esc(nB) + '»</a></p>';
     return h;
   }
@@ -372,6 +397,6 @@
     else mount(root.document);
   }
 
-  return { proverit: proverit, stroki: stroki, itog: itog, otmetki: otmetki, html: html, mount: mount, IP_TEKST: IP_TEKST, DVE: DVE };
+  return { proverit: proverit, stroki: stroki, itog: itog, otmetki: otmetki, neproveno: neproveno, html: html, mount: mount, IP_TEKST: IP_TEKST, DVE: DVE };
 });
 ;

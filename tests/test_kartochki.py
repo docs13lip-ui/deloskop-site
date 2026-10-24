@@ -1856,8 +1856,8 @@ class TestKartochkiFinansyV1(unittest.TestCase):
         h = chitat_html(K.html_kartochki(k, K.vyvody(k), []))
         i = h.index('aria-labelledby="bal"')
         b = h[i:h.index("</section>", i)]
-        for t in ("На чём держится компания — баланс на" + NB + "31.12.2025", "Собственный капитал", "26,7" + NB + "млрд" + NB + "₽",
-                  ">3" + NB + "%<", ">64" + NB + "%<", ">33" + NB + "%<", "Кто кому должен — на" + NB + "31.12.2025",
+        for t in ("На чём держится ПАО" + NB + "«Образец» — баланс на" + NB + "31.12.2025", "Собственный капитал", "26,7" + NB + "млрд" + NB + "₽",
+                  ">3" + NB + "%<", ">64" + NB + "%<", ">33" + NB + "%<", "Кто кому должен — расчёты ПАО" + NB + "«Образец» на" + NB + "31.12.2025",
                   "Фирме должны покупатели", "Фирма должна поставщикам", "Кредиты и займы", "23" + NB + "% выручки за" + NB + "2025",
                   "ГИР БО, бухгалтерская отчётность · сведения на 31.12.2025"):
             self.assertIn(t, b)
@@ -1927,7 +1927,8 @@ class TestKartochkiTonV1(unittest.TestCase):
     def test_podpis_balansa(self):
         k = K.iz_check(self._r(profit=[{"year": 2025, "value": 1e9}], balance={"year": 2025, "equity": 5e9, "long_debt": 1e9, "short_debt": 2e9}))
         h = K.html_kartochki(k, K.vyvody(k), [])
-        self.assertIn("Суммы из бухгалтерской отчётности на конец года, без оценок. Что они значат для сделки — в полном отчёте.", h)
+        # kartochki-unik-v10: с названием компании («…для сделки с ООО «…» — в полном отчёте»), без названия — как было
+        self.assertRegex(h, r"Суммы из бухгалтерской отчётности на конец года, без оценок\. Что они значат для сделки( с [^<]+?)? — в полном отчёте\.")
         self.assertNotIn("Только суммы", h)
 
     def test_nalog_na_pribyl_bez_znaka_net_stroki(self):
@@ -2284,6 +2285,42 @@ class TestFsspIzDamia(unittest.TestCase):
 
     def test_staryj_otvet_bez_damia_kak_byl(self):
         self.assertNotIn("fssp", K.iz_check(O.zapis(3))["fakty"])
+
+
+class TestVhodyashchie(unittest.TestCase):
+    """kartochki-vhod-v1: у каждой открытой карточки — не меньше 2 входящих ссылок с других карточек."""
+
+    def test_na_diske(self):
+        papka = os.path.join(KOREN, "company")
+        vhod, zakryty = {}, set()
+        for d in os.listdir(papka):
+            put = os.path.join(papka, d, "index.html")
+            if not re.match(r"^\d{10}-", d) or not os.path.isfile(put):
+                continue
+            t = open(put, encoding="utf-8").read()
+            vhod.setdefault("/company/%s/" % d, set())
+            if 'name="robots" content="noindex' in t:
+                zakryty.add("/company/%s/" % d)
+            for h in set(re.findall(r'href="(/company/\d{10}-[^"#?]+/)"', t)):
+                if h != "/company/%s/" % d:
+                    vhod.setdefault(h, set()).add(d)
+        malo = sorted(a for a, s in vhod.items() if len(s) < K.VHOD_MIN and a not in zakryty)
+        self.assertEqual(malo, [], "открытые карточки, на которые ссылаются меньше %d других" % K.VHOD_MIN)
+
+    def test_dobor(self):
+        z = [K.iz_check(O.zapis(i)) for i in range(4)]
+        for i, k in enumerate(z):
+            k["inn"] = "77000000%02d" % i
+        svyazi = K.svyazi_vse(z)
+        vhod = {k["inn"]: 0 for k in z}
+        for s, e_ in svyazi.values():
+            for x in s + e_:
+                vhod[x["inn"]] += 1
+        self.assertTrue(all(v >= min(K.VHOD_MIN, len(z) - 1) for v in vhod.values()), vhod)
+        self.assertEqual(svyazi, K.svyazi_vse(z), "от состава — одни и те же ссылки")
+        for i, (s, e_) in svyazi.items():
+            self.assertNotIn(i, [x["inn"] for x in s + e_], "на себя не ссылаемся")
+            self.assertEqual(len({x["inn"] for x in s + e_}), len(s + e_), "без повторов")
 
 
 if __name__ == "__main__":

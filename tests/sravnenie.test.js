@@ -35,7 +35,7 @@ const SEJCHAS = Date.parse('2026-10-23T08:00:00+03:00');
 
 test('(1) ввод: ИП не сравниваем, один ИНН дважды — нет, опечатка — до запроса', () => {
   assert.strictEqual(S.proverit('7736050003', '500100732259'), S.IP_TEKST);
-  assert.ok(sp(S.IP_TEKST).includes('ИП сравнить нельзя'));
+  assert.strictEqual(S.IP_TEKST, 'Сравнивать можно только организации.', 'текст [Право] 23.10 — без «не публикуем»');
   assert.ok(/один и тот же/.test(S.proverit('7736050003', '7736050003')));
   assert.ok(/обеих/.test(S.proverit('7736050003', '')));
   assert.ok(/опечатка|контрольн/i.test(S.proverit('7736050003', '7707083890')), 'контрольная цифра — DlkInn');
@@ -75,7 +75,7 @@ test('(4) итог — подсчёт отметок, без «лучше»; п�
     signals: [{ title: 'Адрес', status: 'warn', detail: 'Массовый адрес' }, { title: 'Задолженность по налогам', status: 'bad', detail: '1,2 млн ₽' }] });
   const t = sp(S.itog(otvet(), plohaya));
   assert.strictEqual(t, 'У ПАО «Альфа» меньше отметок «внимание» и «серьёзно»: 0 против 3 (3 отметки у ООО «Бета»).');
-  assert.strictEqual(sp(S.itog(plohaya, plohaya)), 'Отметок «внимание» и «серьёзно» в отчётах поровну — по 3.');
+  assert.strictEqual(sp(S.itog(plohaya, plohaya)), 'Отметок «внимание» и «серьёзно» поровну: 3 и 3.');
   assert.strictEqual(sp(S.itog(otvet(), otvet())), 'Ни в одном отчёте нет отметок «внимание» и «серьёзно».');
   for (const x of [t, S.itog(plohaya, plohaya)]) assert.ok(!/лучше|надёжнее|рекоменд/i.test(x), x);
   const R = S.stroki(otvet(), plohaya, { sejchas: SEJCHAS });
@@ -102,4 +102,24 @@ test('(5) вёрстка: вкладки A | B | «Разница», ссылк�
   assert.deepStrictEqual(a[a.length - 1], { t: '+' + NB + 'Сравнить с другой компанией', href: '/sravnit/?a=7736050003', cel: 'otchet_sravnit', tihaya: true });
   assert.ok(!O.dejstviya({ company: { inn: '770000000012' } }).some((x) => /Сравнить/.test(x.t)), 'ИП — без сравнения');
   assert.ok(!O.dejstviya({ company: { inn: '7736050003' } }, true).some((x) => /Сравнить/.test(x.t)), 'Щит — без сравнения');
+});
+
+test('(6) ответы [Право] 23.10: «не проверено» — рядом с итогом и вне подсчёта; подпись с датой; отказ ИП без «не публикуем»', () => {
+  const nepr = otvet({ company: { inn: '7707083893', name_short: 'ООО «Бета»' }, damia: { sudy: { status: 'ne_provereno' } }, zsk: { level: null },
+    signals: [{ title: 'Адрес', status: 'warn', detail: 'Массовый адрес' }] });
+  assert.strictEqual(S.otmetki(nepr), 1, '«не проверяли» в подсчёт не входит');
+  assert.strictEqual(sp(S.neproveno(otvet(), nepr)), 'У ООО «Бета» не проверены 2 строки — в подсчёт они не входят.');
+  assert.strictEqual(S.neproveno(otvet(), otvet()), '');
+  const odna = otvet({ damia: { sudy: { status: 'ne_provereno' } } });
+  assert.strictEqual(sp(S.neproveno(odna, nepr)), 'Не проверены строки: у ПАО «Альфа» — 1, у ООО «Бета» — 2. В подсчёт они не входят.');
+  const pyat = otvet({ company: { inn: '7707083893', name_short: 'ООО «Бета»' }, damia: { sudy: { status: 'x' } }, zsk: {}, signals: [], kpi: [] });
+  assert.ok(/не проверены 3 строки/.test(sp(S.neproveno(otvet(), pyat))), sp(S.neproveno(otvet(), pyat)));
+  const h = sp(S.html(otvet(), nepr, { sejchas: SEJCHAS }).replace(/<[^>]+>/g, ' '));
+  assert.ok(h.includes('Это подсчёт отметок по открытым сведениям на 23.10.2026, а не оценка компаний. С кем работать — решаете вы.'), 'подпись [Право]');
+  assert.ok(h.includes('У ООО «Бета» не проверены 2 строки'));
+  assert.ok(!/надёжн|лучше|рейтинг|рекоменд/i.test(h), '222-ФЗ: без оценочных слов');
+  const p = sp(fs.readFileSync(path.join(ROOT, 'sravnit/index.html'), 'utf8').replace(/&nbsp;/g, ' '));
+  assert.ok(p.includes('Сравнивать можно только организации'));
+  assert.ok(!/не публикуем/.test(p), 'на /sravnit/ — без «не публикуем» (ответ [Право])');
+  assert.ok(p.includes('а не оценка компаний. С кем работать — решаете вы.'));
 });

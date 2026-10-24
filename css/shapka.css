@@ -122,7 +122,9 @@ dialog.mnav::backdrop{background:rgba(17,17,19,.4);-webkit-backdrop-filter:blur(
 .beta-bar .beta-bar__d>.beta-bar__t{margin:0!important}  /* на /tarify/ и /indeks/ страница задаёт details p{margin…!important} */
 .beta-bar .beta-bar__kr{display:none;align-items:center;gap:var(--s-2);min-height:44px;margin:0;padding:0;list-style:none;cursor:pointer;color:var(--ink);font:600 var(--t-small)/1.3 var(--font);-webkit-tap-highlight-color:transparent}
 .beta-bar .beta-bar__kr::-webkit-details-marker{display:none}
-.beta-bar .beta-bar__kr>span{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.beta-bar .beta-bar__kr>span{min-width:0;overflow:hidden;white-space:nowrap}
+.beta-bar .beta-kr-k{display:none}
+@media (max-width:359px){.beta-bar .beta-kr-d{display:none}.beta-bar .beta-kr-k{display:inline}}
 .beta-bar .beta-bar__kr::after{content:"";flex:none;width:7px;height:7px;margin:-3px 2px 0;border:solid var(--muted);border-width:0 1.6px 1.6px 0;transform:rotate(45deg);transition:transform var(--fast) var(--ease)}
 .beta-bar .beta-bar__d[open]>.beta-bar__kr::after{margin-top:3px;transform:rotate(-135deg)}
 .beta-bar .beta-bar__d:not([open])>.beta-bar__kr{display:flex}
@@ -161,9 +163,8 @@ dialog.dlo::backdrop{background:rgba(17,17,19,.55)}
 .ck-bar .ck-bar__ok{background:var(--accent);color:var(--on-accent)}
 .ck-bar .ck-bar__ok:hover{background:var(--accent-hover)}
 .ck-bar .ck-bar__no{background:var(--surface-2);color:var(--ink)}
-.ck-bar .ck-bar__kr{display:none}
 .ck-bar :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-@media (max-width:640px){.ck-bar .ck-bar__in{flex-direction:column;align-items:stretch;gap:var(--s-2);padding:var(--s-2) var(--gutter) calc(var(--s-2) + env(safe-area-inset-bottom))}.ck-bar .ck-bar__t{font-size:var(--t-caption)}.ck-bar .ck-bar__dl{display:none}.ck-bar .ck-bar__kr{display:inline}.ck-bar .ck-bar__b button{flex:1;min-height:44px;padding:0 12px}}
+@media (max-width:640px){.ck-bar .ck-bar__in{flex-direction:column;align-items:stretch;gap:var(--s-2);padding:var(--s-2) var(--gutter) calc(var(--s-2) + env(safe-area-inset-bottom))}.ck-bar .ck-bar__t{font-size:var(--t-caption)}.ck-bar .ck-bar__b{flex-wrap:wrap}.ck-bar .ck-bar__b button{flex:1 1 164px;min-height:44px;padding:0 4px}}
 @media print{.ck-bar{display:none!important}}
 /* ck-mesto-v1: пока окно открыто, низ страницы и форма под ним не прячутся — место снизу = высота окна (--ck-h ставит js/metrika.js) */
 @media (max-width:1024px){html.est-ck{scroll-padding-bottom:calc(var(--ck-h,0px) + 12px)}}

@@ -103,7 +103,9 @@ const vse_html = (dir) => fs.readdirSync(path.join(KOREN, dir), { withFileTypes:
     : (x.name.endsWith('.html') ? [path.join(dir, x.name)] : []));
 
 test('у каждого разбора ≥ 2 входящие ссылки с живых страниц вне /praktika/', () => {
-  const stranicy = vse_html('.').map((f) => chitat(f));
+  // kartochki-osvezhit-2310d ([Ночные-2] 23.10): ссылки из ленты (/obnovleniya/, «Последние изменения» на /o-proekte/)
+  // уходят, когда лента сдвигается, — CI краснел от записи про карточки. Считаем только постоянные страницы.
+  const stranicy = vse_html('.').filter((f) => !f.startsWith('obnovleniya') && f !== path.join('o-proekte', 'index.html')).map((f) => chitat(f));
   for (const r of D.razbory) {
     const url = `/praktika/${r.razdel}/${r.slug}/`;
     const n = stranicy.filter((t) => t.includes(`href="${url}"`)).length;

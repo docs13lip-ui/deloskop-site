@@ -3072,6 +3072,16 @@ IMYA_FORMY = ("ООО", "АО", "ПАО", "НАО", "ЗАО", "ОАО")
 _IM_SOVET_SCHET = "Сверьте реквизиты в счёте с этой компанией: ИНН, название, банк."
 _IM_SOVET_DOGOVOR = "Перед договором проверьте полномочия подписанта и сохраните копии документов."
 _IM_H2_REESTRY = '<h2 id="reestry">Проверка по реестрам</h2>'
+_IM_BAL_H3 = '<h3 class="co-h3">На чём держится компания — баланс на'
+_IM_RASCH_H3 = '<h3 class="co-h3">Кто кому должен — на'
+_IM_BALANS = "Что они значат для сделки — в полном отчёте."
+_IM_BALL = "Балл от 1 до 99 считаем на сегодняшних данных"
+_IM_KNOPKA = '/proverit-schet/">Проверить счёт от этой компании</a>'
+_IM_RAZBOR = '<p class="caption">◆ рассчитано Делоскопом по данным: '
+_IM_PASPORT_VHOD = "Полный Паспорт контрагента: руководитель и"
+_IM_OTCHET_ASIDE = '<p class="small">Финансы за пять лет, налоги и долги'
+_IM_PASPORT_ASIDE = '<p class="small">Документ для папки к сделке: 17 разделов'
+KNOPKA_IMYA_MAKS = 24  # символов с кавычками: «Россети Московский регион» (26) — уже общая подпись
 
 
 def pochinit_imya(t):
@@ -3083,6 +3093,23 @@ def pochinit_imya(t):
     t = t.replace(_IM_SOVET_SCHET, "Сверьте реквизиты в счёте с %s: ИНН%s%s, название, банк." % (im, NB, inn))
     t = t.replace(_IM_SOVET_DOGOVOR, "Перед договором с %s проверьте полномочия подписанта и сохраните копии документов." % im)
     t = t.replace(_IM_H2_REESTRY, '<h2 id="reestry">Проверка %s по реестрам</h2>' % im)
+    # kartochki-unik-v10 ([Ночные-2] 24.10): два заголовка баланса, две служебные подписи и кнопка «Проверить счёт» (Индекс, баланс) стояли на всех
+    # открытых карточках одинаково — называем компанию («для», «с» — без «о/об» перед аббревиатурой). Смысл тот же.
+    t = t.replace(_IM_BAL_H3, '<h3 class="co-h3">На чём держится %s — баланс на' % im)
+    t = t.replace(_IM_RASCH_H3, '<h3 class="co-h3">Кто кому должен — расчёты %s на' % im)
+    t = t.replace(_IM_BALANS, "Что они значат для сделки с %s — в полном отчёте." % im)
+    t = t.replace(_IM_BALL, "Балл от 1 до 99 для %s считаем на сегодняшних данных" % im)
+    kor = imya.split(" ", 1)[1]  # «Мосэнерго» — на кнопке без формы: короче; длинное название кнопку не растягивает
+    if kor.startswith("«") and len(kor) <= KNOPKA_IMYA_MAKS:
+        t = t.replace(_IM_KNOPKA, '/proverit-schet/">Проверить счёт от %s</a>' % html.escape(kor, quote=False))
+    # kartochki-unik-v11 ([Ночные-2] 24.10): ещё четыре служебные строки стояли дословно на 140–167 открытых карточках —
+    # подпись «Разбора по цифрам», вход в Паспорт и две боковые карточки («Полный отчёт», «Паспорт контрагента»).
+    # Называем компанию; смысл и порядок слов прежние. Тексты [Право] (оговорки, «Комментарий команды») не трогаем.
+    t = t.replace(_IM_RAZBOR, '<p class="caption">◆ рассчитано Делоскопом для %s по данным: ' % im)
+    t = t.replace(_IM_PASPORT_VHOD, "Полный Паспорт контрагента %s: руководитель и" % im)
+    t = t.replace(_IM_OTCHET_ASIDE, '<p class="small">Финансы %s за пять лет, налоги и долги' % (
+        html.escape(kor, quote=False) if kor.startswith("«") else im))  # «Мосэнерго» — без формы; без кавычек — с формой
+    t = t.replace(_IM_PASPORT_ASIDE, '<p class="small">Документ для папки к сделке с %s: 17 разделов' % im)
     return t
 
 
@@ -4066,3 +4093,57 @@ _html_kartochki_do_svodki = html_kartochki
 def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811
     """kartochki-svodka-v1: зелёные комментарии — одним блоком под реестрами."""
     return svodka_zel(_html_kartochki_do_svodki(k, V, sosedi, kom, normy, cena, segodnya))
+
+
+# ---------------------------------------------------------------- kartochki-vhod-v1: у каждой карточки — входящие ссылки
+# «Похожие» и «Ещё …» считаются от самой карточки, поэтому ссылки распределяются неровно: на 24.10 у 10 из 167
+# карточек меньше 2 входящих ссылок с других карточек, у трёх — ни одной (до них поисковик доходит только с хаба).
+# Добор: такой карточке даём место в «Ещё …» самых близких карточек (тот же класс ОКВЭД → тот же раздел и регион →
+# раздел → регион → любые; внутри — ближе по обороту, затем у кого ссылок меньше, затем ИНН). На одной карточке —
+# не больше VHOD_DOBAVOK добавленных ссылок. Карточки за воротами индексации (noindex) не добираем.
+# Всё — от состава карточек: добор и полная сборка дают одни и те же байты.
+VHOD_MIN = 2
+VHOD_DOBAVOK = 2
+
+
+def svyazi_vse(vse, zakryty=()):
+    """→ {ИНН: (похожие, ещё)} для всех карточек с добором входящих ссылок. zakryty — ИНН карточек с noindex."""
+    out = {}
+    for k in vse:
+        s = pohozhie(k, vse)
+        out[k["inn"]] = (s, eshche_kompanii(k, vse, s))
+    po_inn = {k["inn"]: k for k in vse}
+
+    def ssylki(i):
+        s, e_ = out[i]
+        return {x["inn"] for x in s} | {x["inn"] for x in e_}
+
+    vhod = {k["inn"]: 0 for k in vse}
+    for i in out:
+        for j in ssylki(i):
+            if j in vhod:
+                vhod[j] += 1
+    dobavleno = {}
+    for i in sorted((i for i in vhod if vhod[i] < VHOD_MIN and i not in zakryty), key=lambda i: (vhod[i], i)):
+        x = po_inn[i]
+        moi_d, kl, rz, rg = _dohod_kart(x), okved_klass(x), _razdel(x), x.get("region")
+
+        def blizost(y):
+            if kl and okved_klass(y) == kl:
+                return 0
+            if rz and rg and _razdel(y) == rz and y.get("region") == rg:
+                return 1
+            if rz and _razdel(y) == rz:
+                return 2
+            if rg and y.get("region") == rg:
+                return 3
+            return 4
+        kand = [y for y in vse if y["inn"] != i and i not in ssylki(y["inn"]) and dobavleno.get(y["inn"], 0) < VHOD_DOBAVOK]
+        kand.sort(key=lambda y: (blizost(y), abs(math.log1p(_dohod_kart(y)) - math.log1p(moi_d)),
+                                 len(ssylki(y["inn"])), y["inn"]))
+        for y in kand[:VHOD_MIN - vhod[i]]:
+            s, e_ = out[y["inn"]]
+            out[y["inn"]] = (s, e_ + [x])
+            dobavleno[y["inn"]] = dobavleno.get(y["inn"], 0) + 1
+            vhod[i] += 1
+    return out

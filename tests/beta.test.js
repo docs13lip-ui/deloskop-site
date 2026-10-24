@@ -136,9 +136,10 @@ test('пока видна «Открытая бета», полоса «Ново
   const o = fs.readFileSync(path.join(__dirname, '..', 'obnovleniya.js'), 'utf8');
   assert.ok(/querySelector\("\[data-beta-bar\]"\);\s*if \(beta && !beta\.hidden\) return;/.test(o));
 });
-test('cookie-баннер: на ≤ 640 px короткий текст, длинный скрыт', () => {
+test('cookie-баннер: одна короткая строка на всех ширинах (ck-korotko-v1, текст [Право] 23.10)', () => {
   const m = fs.readFileSync(path.join(__dirname, '..', 'js', 'metrika.js'), 'utf8');
   const c = fs.readFileSync(path.join(__dirname, '..', 'partials', 'shapka.css'), 'utf8');
-  assert.ok(m.includes('ck-bar__kr') && m.includes('ck-bar__dl'));
-  assert.ok(/max-width:640px\)\{[^}]*\}\.ck-bar \.ck-bar__t\{[^}]*\}\.ck-bar \.ck-bar__dl\{display:none\}\.ck-bar \.ck-bar__kr\{display:inline\}/.test(c));
+  assert.ok(!m.includes('ck-bar__kr') && !m.includes('ck-bar__dl'), 'двух вариантов текста больше нет');
+  assert.ok(!/ck-bar__(kr|dl)/.test(c));
+  assert.ok(/max-width:640px\)\{[^}]*\}\.ck-bar \.ck-bar__t\{font-size:var\(--t-caption\)\}/.test(c));
 });

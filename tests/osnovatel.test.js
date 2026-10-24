@@ -100,3 +100,22 @@ test('osn-bez-ceny-v1: в бете полоса на /tarify/ без цены и
     assert.ok(vid.includes('href="/osnovatel/"'), 'бета: ссылка «Подробнее» на месте');
   }
 });
+
+// osn-bete-v1 (ответ [Право] 23.10 22:40 на ✎ 15:40, п. 4 ч. 3 ст. 5 38-ФЗ): пока оплаты на паузе, /osnovatel/ не называет цену,
+// не обещает «цена не растёт», не говорит о 300 местах и о счетах — ни на странице, ни в title/description/og/JSON-LD.
+test('/osnovatel/ в бете: без цены, «не растёт», «300» и «Счёт для» вне <template data-oplata>; платный вид — прежний', () => {
+  const html = chitat('osnovatel/index.html');
+  const v = vidimoe(html).split('<!--podval-->')[0];
+  if (/<meta name="deloskop-rezhim" content="beta">/.test(html) || html.includes('<template data-oplata>')) {
+    for (const w of ['₽', 'не растёт', 'не&nbsp;растёт', '300', 'Счёт для', '14 300', '7 150']) assert.ok(!v.includes(w), 'в бете видно «' + w + '»');
+  }
+  assert.ok(v.includes('<title>Тариф основателя — Делоскоп</title>'));
+  const opis = 'Сейчас весь Делоскоп бесплатен. Условия тарифа основателя объявим на этой странице не позже чем за 3 дня до начала оплат.';
+  assert.ok(v.includes('<meta name="description" content="' + opis + '">') && v.includes('<meta property="og:description" content="' + opis + '">'));
+  assert.ok(v.includes('"description": "' + opis + '"'), 'JSON-LD WebPage');
+  assert.ok(v.includes('<p class="osn-price"><b>Условия объявим здесь заранее</b></p>'));
+  const faq = JSON.parse(v.match(/<script type="application\/ld\+json">(\{"@context": "https:\/\/schema.org", "@type": "FAQPage"[\s\S]*?)<\/script>/)[1]);
+  assert.strictEqual(faq.mainEntity.length, (v.match(/<details><summary>/g) || []).length, 'FAQPage в бете — только видимые вопросы');
+  const p = vidimoe(platnyj(html));
+  assert.ok(p.includes('ваша цена не&nbsp;растёт') && p.includes('Почему мест только 300?') && /data-cena="osnovatel">/.test(p), 'вернутся оплаты — вернётся всё');
+});

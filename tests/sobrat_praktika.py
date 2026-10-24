@@ -233,7 +233,9 @@ def pk(r):
                                                 " и ".join(data_ch(x["data"]) for x in r["dela"]))
         else:
             meta = "%s · %d дела · %s" % (d["sud_kratko"], len(r["dela"]), " и ".join(x["nomer"] for x in r["dela"]))
-    kon = " и ".join(x.get("na_konu_kratko") or x["na_konu"] for x in r["dela"])
+    # [Ночные запуски] 24.10 03:05: одинаковая ставка у двух дел (оба круга ВС по ЗСК, один спор «Красцветмета») —
+    # одной строкой, без повтора «X и X»; разные — через «и», порядок дел сохраняем.
+    kon = " и ".join(dict.fromkeys(x.get("na_konu_kratko") or x["na_konu"] for x in r["dela"]))
     return """<a class="pk" href="%s"><span class="pk__q">%s</span><span class="pk__m">%s</span><span class="pk__k">На кону — %s</span></a>""" % (
         url_razbora(r), e(r["h1"]), e(meta), e(kon))
 

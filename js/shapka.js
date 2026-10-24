@@ -340,6 +340,68 @@
   else init();
 })();
 
+// inn-pole-v1 >>> (24.10.2026): поле ИНН в формах «Проверить» (29 статей, /tarify/, НДС на УСН).
+//   У полей стоит pattern «10 или 12 цифр», а браузер не чистит ввод: ИНН, скопированный из договора или счёта
+//   с пробелом («7707083893 », «7707 083 893», «ИНН 7707083893»), отклонялся с общим «Введите данные в указанном
+//   формате» — форма молча не уходила. Теперь: вставка — берём из текста первый ИНН (10 или 12 цифр подряд,
+//   пробелы и дефисы внутри числа не мешают; «ИНН/КПП 7707083893/770701001» → 7707083893), ввод — только цифры,
+//   отказ — понятной фразой. Длину не обрезаем: 12 цифр в поле «только организации» должны получить отказ, а не
+//   превратиться в чужой ИНН из 10 (браузер сам обрезает вставку по maxlength — поэтому длинную вставку
+//   кладём целиком сами). Контрольную цифру проверяет главная (js/inn.js) — здесь только длина.
+(function () {
+  "use strict";
+  var SEL = 'input[name="inn"][inputmode="numeric"]', NB = " ";
+  function pole(t) { return t && t.matches && t.matches(SEL) ? t : null; }
+  function cifry(s) { return String(s == null ? "" : s).replace(/\D/g, ""); }
+  function izTeksta(s) {
+    var g = String(s || "").match(/\d(?:[\s \-]*\d)*/g) || [], i, d;
+    for (i = 0; i < g.length; i++) {
+      d = cifry(g[i]); if (d.length === 10 || d.length === 12) return d;
+      // inn-tekst-v1: «7707083893 770701001» — ИНН и КПП через пробел склеились в 19 цифр; берём слово из 10/12
+      var t = g[i].split(/[\s\u00a0]+/), j; for (j = 0; j < t.length; j++) { d = cifry(t[j]); if (d.length === 10 || d.length === 12) return d; }
+    }
+    return cifry(s);
+  }
+  function tolkoOrg(p) { return p.getAttribute("maxlength") === "10"; }
+  function otkaz(p) {
+    var n = cifry(p.value).length;
+    if (tolkoOrg(p)) {
+      if (!n) return "Введите ИНН организации —" + NB + "10" + NB + "цифр.";
+      if (n === 12) return "Здесь нужен ИНН организации —" + NB + "10" + NB + "цифр. Из" + NB + "12" + NB + "цифр — ИНН" + NB + "ИП или человека.";
+      return "ИНН организации —" + NB + "10" + NB + "цифр. Сейчас цифр:" + NB + n + ".";
+    }
+    if (!n) return "Введите ИНН —" + NB + "10" + NB + "цифр у" + NB + "компании или" + NB + "12" + NB + "у" + NB + "ИП.";
+    return "ИНН компании —" + NB + "10" + NB + "цифр, ИНН" + NB + "ИП —" + NB + "12. Сейчас цифр:" + NB + n + ".";
+  }
+  function izmeneno(p) {
+    try { p.dispatchEvent(new Event("input", { bubbles: true })); } catch (e) { /* старый браузер — без события */ }
+  }
+  document.addEventListener("paste", function (ev) {
+    var p = pole(ev.target), cb = ev.clipboardData;
+    if (!p || !cb) return;
+    var s = cb.getData("text") || cb.getData("text/plain") || "", d = izTeksta(s);
+    var dl = +p.getAttribute("maxlength") || 0;
+    if (!d || (d === s && !(dl && d.length > dl))) return;  // чистый ИНН по длине — вставит сам браузер
+    ev.preventDefault();
+    var v = p.value, a = p.selectionStart, b = p.selectionEnd;
+    if (a == null || b == null) { a = 0; b = v.length; }
+    p.value = (d.length === 10 || d.length === 12) && a === 0 && b === v.length ? d : cifry(v.slice(0, a) + d + v.slice(b));
+    izmeneno(p);
+  });
+  document.addEventListener("input", function (ev) {
+    var p = pole(ev.target);
+    if (!p) return;
+    var d = cifry(p.value);
+    if (d !== p.value) p.value = d;
+    p.setCustomValidity("");
+  });
+  document.addEventListener("invalid", function (ev) {
+    var p = pole(ev.target);
+    if (p) p.setCustomValidity(otkaz(p));
+  }, true);
+})();
+// <<< inn-pole-v1
+
 /* §9. vizual-v3.1b (г): переходы между страницами — какой заголовок с каким связать (css: partials/shapka.css).
    CSS даёт заголовку <h1> новой страницы имя dlk-zag; здесь, на уходящей странице, решаем, что переедет на его место:
    — список → карточка, раздел → статья: видимая на экране ссылка, по которой ушли (название переезжает в заголовок);
@@ -434,3 +496,4 @@
   ["pointerup", "pointercancel", "dragstart"].forEach(function (n) { document.addEventListener(n, otpusk, { passive: true }); });
   document.addEventListener("pointerout", function (ev) { if (el && ev.target === el && !el.contains(ev.relatedTarget)) otpusk(); }, { passive: true });
 })();
+

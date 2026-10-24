@@ -33,12 +33,12 @@ function zapusk(rezhim) {
 test('адрес отчёта: строка под полем с первого кадра — «Проверяем по реестрам…», прежний текст — в data-def', () => {
   const n = zapusk(true);
   assert.strictEqual(n.textContent, 'Проверяем по реестрам…');
-  assert.match(n.a['data-def'], /^10 проверок в день — бесплатно/);
+  assert.match(n.a['data-def'], /^10\sпроверок в день — бесплатно/);
 });
 
 test('обычная главная: строка под полем не меняется', () => {
   const n = zapusk(false);
-  assert.match(n.textContent, /^10 проверок в день/);
+  assert.match(n.textContent, /^10\sпроверок в день/);
   assert.deepStrictEqual(n.a, {});
 });
 

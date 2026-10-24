@@ -91,7 +91,7 @@ test('(5) вёрстка: вкладки A | B | «Разница», ссылк�
   assert.ok(!/лучше/i.test(h.replace(/<[^>]+>/g, '')));
   const p = fs.readFileSync(path.join(ROOT, 'sravnit/index.html'), 'utf8');
   assert.ok(p.includes('<link rel="canonical" href="https://deloskop.ru/sravnit/">'));
-  assert.ok(/из(&nbsp;| )10 бесплатных в(&nbsp;| )день уйдут 2/.test(p), 'предупреждение о двух проверках — до запроса');
+  assert.ok(/из(&nbsp;| )10(&nbsp;| )бесплатных в(&nbsp;| )день уйдут 2/.test(p), 'предупреждение о двух проверках — до запроса');
   assert.ok(/\/js\/b\/sravnit\.[0-9a-f]{10}\.js/.test(p) && /\/js\/b\/otchet\.[0-9a-f]{10}\.js/.test(p));
   assert.ok(fs.readFileSync(path.join(ROOT, 'sitemap.xml'), 'utf8').includes('<loc>https://deloskop.ru/sravnit/</loc>'));
   const g = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');

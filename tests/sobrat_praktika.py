@@ -53,6 +53,7 @@ def tipograf(txt):
         s = re.sub(r"(?<=\d{4}) (?=гг?\.)", NB, s)
         s = re.sub(r"(?<![\w-])(ООО|ОАО|ПАО|ЗАО|АО|НКО|ФГУП|МУП|ИП) (?=«)", "\\1" + NB, s)  # ООО «Пример»
         s = re.sub(r" (—)", NB + "\\1", s)
+        s = TS.sokr(TS.chislo_slovo(s, NB), NB)  # tipograf-chisla-v1: «35 факторов», «г. Сергиеву Посаду»
         return s
     return "".join(ch if ch.startswith("<") else t(ch) for ch in re.split(r"(<[^>]+>)", txt))
 

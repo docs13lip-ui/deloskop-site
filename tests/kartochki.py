@@ -643,6 +643,13 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         otchet["reyting"] = sobrat_reyting.zapisat_esli_est(koren)
     except Exception as oshibka:  # рейтинг не должен ронять сборку карточек; тест reyting.test.js покажет устаревшую страницу
         otchet["reyting"] = "ошибка: %s" % oshibka
+    # normy-kompanii-v1: справочник норм ФНС ссылается на карточки по строкам отраслей — пересобрать вместе с ними
+    try:
+        import sobrat_nagruzka
+        if os.path.abspath(koren) == os.path.abspath(sobrat_nagruzka.KOREN):
+            otchet["nagruzka"] = sobrat_nagruzka.sobrat(koren=koren)
+    except Exception as oshibka:  # не роняем сборку карточек; nagruzka.test.js (--check) покажет устаревший блок
+        otchet["nagruzka"] = "ошибка: %s" % oshibka
     return kart, otchet
 
 

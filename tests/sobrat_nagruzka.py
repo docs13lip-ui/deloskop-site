@@ -5,6 +5,9 @@
 между метками <!--normy--> и <!--/normy-->. Цифры руками в HTML не правим: правим JSON и запускаем сборщик.
 Источник — Информация ФНС от 05.05.2026 (приложения 3–4 к приказу № ММ-3-06/333@);
 рентабельность за 2024 год — Информация ФНС от 07.05.2025 (ключ rentabelnost_2024).
+normy-kompanii-v1 (24.10.2026): блок «Компании этих отраслей на Делоскопе» между <!--normy-kompanii--> и
+<!--/normy-kompanii--> — из опубликованных карточек /company/ (строка таблицы — по ссылке карточки «Таблица ФНС по
+отраслям», только карточки в индексе). Пересобирается вместе с карточками (tests/kartochki.py sobrat / perepechatat).
 
 Запуск: python3 tests/sobrat_nagruzka.py         — собрать
         python3 tests/sobrat_nagruzka.py --check — только проверить (код 1, если нужна сборка; tests/nagruzka.test.js)
@@ -24,6 +27,11 @@ CSS_POSLE = "table.normy td b{color:var(--ink)}\n"
 CSS_YAKOR = ("table.normy tr{scroll-margin-top:calc(var(--header-h,64px) + 24px)}"
              "table.normy tr:target td{background:var(--accent-soft,#EAF1FD)}"
              "table.normy tr:target td:first-child{box-shadow:inset 2px 0 0 var(--accent)}\n")
+# normy-kompanii-v1: строки «Компаний этих отраслей» — плотнее вопросов FAQ (22 строки на 390 px не должны занимать 4 экрана)
+CSS_KOMP = (".faq.normy-komp details{padding:10px 16px;margin:0 0 6px;border-radius:16px}"
+            ".faq.normy-komp summary{font-weight:500;font-size:15px;line-height:1.35}"
+            ".faq.normy-komp summary small{color:var(--muted);font-weight:400;font-size:13px;white-space:nowrap}"
+            ".faq.normy-komp details p{font-size:15px}\n")
 
 
 def chislo(x):
@@ -102,17 +110,110 @@ def tablicy(d):
     return "\n".join(out)
 
 
-def sobrat(proverit=False):
+# ---------------------------------------------------------------- normy-kompanii-v1: карточки компаний по строкам таблицы
+KOMP_METKI = re.compile(r"<!--normy-kompanii-->.*?<!--/normy-kompanii-->", re.S)
+KOMP_NA_STROKU = 8    # сколько карточек назвать в строке, если все они есть на хабе отрасли (остальные — «и ещё N» → хаб)
+KOMP_BEZ_HABA = 24    # без такого хаба — больше (на 10 000 карточек строка не разрастается: «и ещё N» → каталог)
+_H1 = re.compile(r"<h1[^>]*>(.*?)</h1>", re.S)
+_STROKA = re.compile(r'href="/nalogi/nagruzka-po-otraslyam-2025/#(n-[0-9a-z-]+)"')
+_SSYLKA_KARTOCHKI = re.compile(r'href="/company/(\d{10}-[^/"]+)/"')
+
+
+def _noindex(t):
+    return re.search(r'<meta name="robots" content="[^"]*noindex', t) is not None
+
+
+def kartochki_po_strokam(koren=KOREN):
+    """→ {якорь строки «n-35-1»: [(ключ сортировки, папка, название html)]} — только карточки в индексе."""
+    papka = os.path.join(koren, "company")
+    po = {}
+    for d in sorted(os.listdir(papka)) if os.path.isdir(papka) else []:
+        put = os.path.join(papka, d, "index.html")
+        if not re.match(r"^\d{10}-", d) or not os.path.isfile(put):
+            continue
+        t = open(put, encoding="utf-8").read()
+        if _noindex(t):
+            continue
+        m, h = _STROKA.search(t), _H1.search(t)
+        if not m or not h:
+            continue
+        imya = re.sub(r"<span[^>]*>.*?</span>", "", h.group(1), flags=re.S).strip()
+        klyuch = re.sub(r"^(ООО|АО|ПАО|НАО|ЗАО|ОАО)\s*", "", html.unescape(imya).replace("\u00a0", " ")).strip("«»\" ").lower()
+        po.setdefault(m.group(1), []).append((klyuch, d, imya))
+    return po
+
+
+def haby_otrasley(koren=KOREN):
+    """→ [(адрес хаба, название, множество папок карточек)] — только хабы отраслей в индексе."""
+    out = []
+    papka = os.path.join(koren, "company", "otrasl")
+    for d in sorted(os.listdir(papka)) if os.path.isdir(papka) else []:
+        put = os.path.join(papka, d, "index.html")
+        if not os.path.isfile(put):
+            continue
+        t = open(put, encoding="utf-8").read()
+        if _noindex(t):
+            continue
+        h = _H1.search(t)
+        imya = re.sub(r"<[^>]+>", "", h.group(1)).strip() if h else d
+        out.append(("/company/otrasl/%s/" % d, imya, set(_SSYLKA_KARTOCHKI.findall(t))))
+    return out
+
+
+def _kompaniy(n):
+    f = "компания" if n % 10 == 1 and n % 100 != 11 else ("компании" if 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14 else "компаний")
+    return "%d&nbsp;%s" % (n, f)
+
+
+def blok_kompanii(d, koren=KOREN):
+    po = kartochki_po_strokam(koren)
+    haby = haby_otrasley(koren)
+    stroki = []
+    for s in d["nagruzka"]:
+        y = yakor(s["kod"])
+        kart = sorted(po.get(y, []))
+        if not kart:
+            continue
+        hab = next((h for h in haby if {p for _, p, _ in kart} <= h[2]), None)
+        limit = KOMP_NA_STROKU if hab else KOMP_BEZ_HABA
+        if len(kart) <= limit + 1:  # «и ещё 1» не пишем — называем
+            limit = len(kart)
+        nazv_ = ", ".join('<a href="/company/%s/">%s</a>' % (p, imya) for _, p, imya in kart[:limit])
+        ostatok = len(kart) - limit
+        hvost = ""
+        if ostatok > 0:
+            hvost = (" и&nbsp;ещё %d&nbsp;— <a href=\"%s\">все карточки раздела «%s»</a>" % (ostatok, hab[0], html.escape(hab[1]))
+                     if hab else " и&nbsp;ещё %d&nbsp;— <a href=\"/company/\">в&nbsp;каталоге компаний</a>" % ostatok)
+        stroki.append('<details data-stroka="%s"><summary><span>%s <small>%s · %s</small></span></summary><p>%s%s.</p><p><a href="#%s">Норма ФНС этой строки ↑</a></p></details>'
+                      % (y, nazv(s), kod(s), _kompaniy(len(kart)), nazv_, hvost, y))
+    if not stroki:
+        return "<!--normy-kompanii--><!--/normy-kompanii-->"
+    return ("<!--normy-kompanii-->\n"
+            '<section class="faq normy-komp" aria-labelledby="kompanii"><h2 id="kompanii">Компании этих отраслей на&nbsp;Делоскопе</h2>\n'
+            "<p>Строка&nbsp;— по&nbsp;основному ОКВЭД компании из&nbsp;ЕГРЮЛ. У&nbsp;каждой карточки&nbsp;— ссылка на&nbsp;эту строку "
+            "таблицы и&nbsp;отчётность компании на&nbsp;дату сведений. Порядок&nbsp;— по&nbsp;алфавиту, это не&nbsp;рейтинг.</p>\n%s\n</section>\n"
+            "<!--/normy-kompanii-->") % "\n".join(stroki)
+
+
+def sobrat(proverit=False, koren=KOREN):
     d = json.load(open(DANNYE, encoding="utf-8"))
     s = open(STRANICA, encoding="utf-8").read()
-    if CSS_YAKOR not in s and CSS_POSLE in s:
-        s_css = s.replace(CSS_POSLE, CSS_POSLE + CSS_YAKOR, 1)
+    if not KOMP_METKI.search(s):  # normy-kompanii-v1: место блока — перед «Как это решают суды», иначе в конце статьи
+        mesto = "<!--praktika-ssylki-->" if "<!--praktika-ssylki-->" in s else "</article>"
+        s_komp = s.replace(mesto, "<!--normy-kompanii--><!--/normy-kompanii-->\n" + mesto, 1)
     else:
-        s_css = s
+        s_komp = s
+    if CSS_YAKOR not in s_komp and CSS_POSLE in s_komp:
+        s_css = s_komp.replace(CSS_POSLE, CSS_POSLE + CSS_YAKOR, 1)
+    else:
+        s_css = s_komp
+    if CSS_KOMP not in s_css and CSS_YAKOR in s_css:
+        s_css = s_css.replace(CSS_YAKOR, CSS_YAKOR + CSS_KOMP, 1)
     if not METKI.search(s):
         print("нет меток <!--normy--> в " + STRANICA)
         return 1
     novoe = METKI.sub(lambda m: tablicy(d), s_css, count=1)
+    novoe = KOMP_METKI.sub(lambda m: blok_kompanii(d, koren), novoe, count=1)
     if novoe == s:
         print("nagruzka: таблицы собраны")
         return 0

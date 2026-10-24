@@ -45,7 +45,9 @@ class TestNedoimkaMesyac(unittest.TestCase):
 
     def test_obertka(self):
         import inspect
-        self.assertIn("nabor_nedoimki", inspect.getsource(K.html_kartochki), "новые карточки и API — через ту же функцию")
+        # kartochki-tipograf-v1: последняя обёртка — типограф, под ней — nabor_nedoimki
+        self.assertIn("nabor_nedoimki", inspect.getsource(K.html_kartochki) + inspect.getsource(K._html_kartochki_do_tipografa),
+                      "новые карточки и API — через ту же функцию")
 
     def test_ne_proverennyj_fakt(self):
         t = ('<div class="fact"><span>Задолженность по налогам</span><span class="fact__v">не проверяли</span>'

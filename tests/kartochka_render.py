@@ -1523,7 +1523,7 @@ def pochinit_izmenenie(t):
 _DATY_VHOD = re.compile(r'<p class="co-daty__vhod">.*?</p>', re.S)
 _DATY_EST = '<section class="co-sec co-daty"'
 _DATY_LD = re.compile(r'"foundingDate": "(\d{4}-\d{2}-\d{2})"')
-_DATY_SOBRANO = re.compile(r"Страница собрана (\d{1,2})(?:&nbsp;|\u00a0| )(\S+?) (\d{4})\.")
+_DATY_SOBRANO = re.compile(r"Страница собрана (\d{1,2})(?:&nbsp;|\u00a0| )([^\s&]+?)(?:&nbsp;|\u00a0| )(\d{4})\.")  # kartochki-tipograf-v1: и «октября&nbsp;2026»
 _DATY_INN = re.compile(r'"taxID": "(\d{10})"')
 _DATY_KUDA = ('<section class="co-sec" aria-labelledby="fin">', '<section class="co-sec" aria-labelledby="reestry">')
 _PASPORT_ASIDE_STAROE = "17 разделов, у каждого источник и дата сведений"
@@ -2620,6 +2620,12 @@ def _zn_nb(s):
     return re.sub(r"\b(за|с|на|в|до) (\d)", lambda m: m.group(1) + NB + m.group(2), s, flags=re.I)
 
 
+def _zn_ed(x):
+    """Сумма из вывода «Коротко» («31,1 млн ₽», «6 тыс. ₽») — число, единица и «₽» неразрывно (tipograf-mln)."""
+    x = re.sub(r"(\d) (трлн|млрд|млн|тыс\.|₽)", lambda m: m.group(1) + NB + m.group(2), x.strip())
+    return re.sub(r"(трлн|млрд|млн|тыс\.) ₽", lambda m: m.group(1) + NB + "₽", x)
+
+
 def zn_frazy(f):
     """Список предложений блока (без HTML). Пусто — блока нет: на странице нет выручки или имени."""
     ryad = [x for x in f["ryad"] if x.get("dohod") and x["dohod"] > 0]
@@ -2663,7 +2669,7 @@ def zn_frazy(f):
             t += " (%s год подряд)" % podryad.group(1)
         t += " при выручке %s" % dengi(r1)
         if kap:
-            t += ", а обязательства больше активов на %s" % kap.group(1).strip()
+            t += ", а обязательства больше активов на %s" % _zn_ed(kap.group(1))
         t += (": если платите вперёд, привяжите оплату к поставке или этапам работ — по отчётности у компании нет "
               "запаса, из которого она вернула бы аванс без новых денег." if kap else
               ": крупный аванс лучше разбить на этапы и платить по факту поставки, а в договоре прописать срок возврата "
@@ -2671,7 +2677,7 @@ def zn_frazy(f):
         out.append(t)
     elif kap:
         out.append("Обязательства компании больше её активов на %s (баланс на 31.12.%s): если платите вперёд, привяжите "
-                   "оплату к поставке или этапам работ." % (kap.group(1).strip(), g1))
+                   "оплату к поставке или этапам работ." % (_zn_ed(kap.group(1)), g1))
     elif pr1 is not None and p0 and p0.get("pribyl") and p0["pribyl"] > 0 and pr1 <= p0["pribyl"] * 0.7:
         t = "Прибыль %s — %s, на %s меньше, чем годом раньше" % (za, dengi(pr1), _zn_proc(1 - pr1 / p0["pribyl"]))
         if dl is not None and abs(dl) >= 0.05:
@@ -3498,7 +3504,7 @@ def un_frazy(f):
             t += " (%s год подряд)" % podryad.group(1)
         t += " при выручке %s" % dengi(r1)
         if kap:
-            t += ", а обязательства больше активов на %s" % kap.group(1).strip()
+            t += ", а обязательства больше активов на %s" % _zn_ed(kap.group(1))
             t += (": если платите вперёд, привяжите оплату к поставке или этапам работ — по отчётности у компании нет "
                   "запаса, из которого она вернула бы аванс без новых денег.")
         elif p0 and p0.get("pribyl") and p0["pribyl"] > 0:
@@ -3510,7 +3516,7 @@ def un_frazy(f):
         out.append(t)
     elif kap:
         out.append("Обязательства %s больше активов на %s (баланс на 31.12.%s): если платите вперёд, привяжите "
-                   "оплату к поставке или этапам работ." % (im, kap.group(1).strip(), g1))
+                   "оплату к поставке или этапам работ." % (im, _zn_ed(kap.group(1)), g1))
     elif pr1 is not None and p0 and p0.get("pribyl") and p0["pribyl"] > 0 and pr1 <= p0["pribyl"] * 0.7:
         t = "Прибыль %s %s — %s, на %s меньше, чем годом раньше" % (im, za, dengi(pr1), _zn_proc(1 - pr1 / p0["pribyl"]))
         if dl is not None and abs(dl) >= 0.05:
@@ -3662,7 +3668,7 @@ def un_pered(f):
     if nd:
         m = re.search(r"— (.*?) на (\d.*?\d{4})", nd)
         s.append("Попросите у %s справку об исполнении обязанности по уплате налогов (КНД 1120101): на %s в данных ФНС "
-                 "был долг %s." % (im, m.group(2), m.group(1)) if m else
+                 "был долг %s." % (im, m.group(2), _zn_ed(m.group(1))) if m else
                  "Попросите у %s справку об исполнении обязанности по уплате налогов (КНД 1120101)." % im)
     sm = _zn_v(f, "warn", "Руководитель сменился")
     if sm:
@@ -3671,7 +3677,7 @@ def un_pered(f):
     kap = re.search(r"минус ([^:]+):", _zn_v(f, "warn", "Собственный капитал") or "")
     if (p1.get("pribyl") is not None and p1["pribyl"] < 0) or kap:
         prichina = ("убыток %s за %d год" % (dengi(-p1["pribyl"]), p1["god"]) if p1.get("pribyl") is not None and p1["pribyl"] < 0
-                    else "обязательства больше активов на %s" % kap.group(1).strip())
+                    else "обязательства больше активов на %s" % _zn_ed(kap.group(1)))
         s.append('Аванс — частями, по факту поставки или этапов работ: у %s %s. '
                  '<a href="/nalogi/skolko-platit-vpered-neznakomoj-kompanii/">Сколько можно платить вперёд</a>' % (im, prichina))
     elif p0 and p1.get("dohod") and p1["dohod"] <= p0["dohod"] * 0.7:
@@ -4269,3 +4275,60 @@ _html_gruppy_do_svyazi = html_gruppy
 def html_gruppy(g, kart, index, n=1, vsego=1, normy=None, statyi=(), kg=None):  # noqa: F811 — haby-svyazi-v1
     t = _html_gruppy_do_svyazi(g, kart, index, n, vsego, normy, statyi)
     return hab_ssylki_grupp(t, g, kg) if n <= 1 else t
+
+
+# ---------------------------------------------------------------- kartochki-tipograf-v1 (24.10.2026, [Ночные-2])
+# Как tipograf-daty-v1 и tipograf-mln-v1 для остального сайта: на карточках «1 | сентября 2026», «сентября | 2026»,
+# «ООО | «Лента»» и «млн | ₽» рвались переносом (замер 24.10: 394 «месяц год», 168 «ООО «», 57 «день месяц» на 167
+# карточках). Те же правила, что PRAVILA в tests/tipograf_statej.py, — только по видимому тексту <body>: <head>, JSON-LD,
+# скрипты, стили, атрибуты и блоки сборщиков (<!--x-->…<!--/x-->: шапка, подвал, бета) не трогаем — оболочка карточки
+# остаётся байт в байт как partials/obolochka.json. Слова не меняются — только вид пробела (знак NB; файл хранит его сущностью — bez_nevidimyh; отпечаток WebPage тот же).
+_TK_MES = "января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря"
+_TK_PRAVILA = (
+    (re.compile(r"(?<![\d,.])(\d{1,2}) (?=(?:%s)(?![а-яё]))" % _TK_MES), lambda m: m.group(1) + NB),          # 1 сентября
+    (re.compile(r"(?<![а-яё])(%s) (?=\d{4}(?!\d))" % _TK_MES), lambda m: m.group(1) + NB),                     # сентября 2026
+    (re.compile(r"(?<![\w«-])(ООО|ОАО|ЗАО|ПАО|НАО|АО|АНО|НКО|ГУП|МУП|ФГУП) (?=«)"), lambda m: m.group(1) + NB),  # ООО «Лента»
+    (re.compile(r"(млн|млрд|трлн|тыс\.) (?=₽)"), lambda m: m.group(1) + NB),                                    # 36,1 млрд ₽
+)
+_TK_NE_TROGAT = re.compile(
+    r"\A(?=[\s\S]*<body\b)[\s\S]*?<body\b[^>]*>"
+    r"|<head\b.*?</head>|<title\b.*?</title>"
+    r"|<!--([a-z0-9-]+)-->.*?<!--/\1-->"
+    r"|<(script|style|code|pre|textarea)\b.*?</\2>"
+    r"|<!--r:[a-z0-9_-]+-->.*?<!--/r-->"
+    r"|<!--.*?-->"
+    r"|<[^>]*>", re.S)
+
+
+def tipograf_kartochki(t):
+    """Неразрывные пробелы в датах, «ООО «…»» и «млн ₽» — по тексту между тегами; повторный вызов ничего не меняет."""
+    if not t:
+        return t
+    out, i = [], 0
+    for m in _TK_NE_TROGAT.finditer(t):
+        out.append(_tk_tekst(t[i:m.start()]))
+        out.append(m.group(0))
+        i = m.end()
+    out.append(_tk_tekst(t[i:]))
+    return "".join(out)
+
+
+def _tk_tekst(s):
+    if not s.strip():
+        return s
+    for rx, zam in _TK_PRAVILA:
+        s = rx.sub(zam, s)
+    return s
+
+
+_html_kartochki_do_tipografa = html_kartochki
+_vstavit_znachit_do_tipografa = vstavit_znachit
+
+
+def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811 — kartochki-tipograf-v1
+    """Тело карточки — с неразрывными пробелами (API и сайт отдают одни и те же байты)."""
+    return tipograf_kartochki(_html_kartochki_do_tipografa(k, V, sosedi, kom, normy, cena, segodnya))
+
+
+def vstavit_znachit(t):  # noqa: F811 — kartochki-tipograf-v1: блок «Что это значит» пересобирается — с той же типографикой
+    return tipograf_kartochki(_vstavit_znachit_do_tipografa(t))

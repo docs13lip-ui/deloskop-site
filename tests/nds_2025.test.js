@@ -25,7 +25,7 @@ test('статья «Как проверить счёт»: правило дат
   assert.match(s, /buh\.ru\/articles\/perekhod-na-stavku-nds-22-s-2026-goda\.html/);
   const dm = (s.match(/"dateModified": "(\d{4})-(\d{2})-(\d{2})"/) || []).slice(1).map(Number);
   assert.deepStrictEqual(dm, [2026, 10, 1]);
-  assert.match(s, /Обновлено 1 октября 2026\./);
+  assert.match(s, /Обновлено 1(?:&nbsp;| )октября(?:&nbsp;| )2026\./);
 });
 
 test('sitemap: lastmod статьи не раньше dateModified', () => {

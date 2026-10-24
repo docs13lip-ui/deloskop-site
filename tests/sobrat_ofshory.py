@@ -32,7 +32,7 @@ def e(t):
 
 def data_rus(iso):
     g, m, d = iso.split("-")
-    return "%d%s%s %s" % (int(d), NB, MES[int(m) - 1], g)
+    return "%d%s%s%s%s" % (int(d), NB, MES[int(m) - 1], NB, g)  # tipograf-daty-v1: «5 марта 2022» целиком
 
 
 def blok(d):

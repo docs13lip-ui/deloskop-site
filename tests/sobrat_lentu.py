@@ -61,7 +61,7 @@ def t(s):
 
 
 def kogda(u):
-    t = esc(u.get("data") or "") + (", " + esc(u["vremya"]) + " МСК" if u.get("vremya") else "")
+    t = TS.tekst(esc(u.get("data") or "")) + (", " + esc(u["vremya"]) + " МСК" if u.get("vremya") else "")
     m = re.match(r"^(\d{4}-\d{2}-\d{2})", u.get("id") or "")
     if m and u.get("vremya"):
         return '<time datetime="%sT%s+03:00">%s</time>' % (m.group(1), esc(u["vremya"]), t)
@@ -139,7 +139,7 @@ CIFRA = re.compile(r'(<div class="cifra"><b(?: data-c="(\w+)")?>)\d+(</b><span(?
 CIFRY_DATA = re.compile(r'(<p class="cap">Цифры на&nbsp;)\d+&nbsp;[а-я]+(?:&nbsp;| )\d{4}(\.</p>)')
 # вид числа → (формы слова для 1 / 2–4 / 5+, хвост подписи как в разметке)
 CIFRY_VIDY = [
-    ("zapisej", ("обновление", "обновления", "обновлений"), " в&nbsp;ленте с&nbsp;25&nbsp;сентября 2026"),
+    ("zapisej", ("обновление", "обновления", "обновлений"), " в&nbsp;ленте с&nbsp;25&nbsp;сентября&nbsp;2026"),
     ("kartochki", ("карточка", "карточки", "карточек"), " компаний&nbsp;— у&nbsp;каждой свой вывод"),
     ("razbory", ("разбор", "разбора", "разборов"), " судебных и&nbsp;налоговых дел"),
     ("stati", ("статья", "статьи", "статей"), " о&nbsp;115&#8209;ФЗ и&nbsp;налогах простыми словами"),
@@ -183,7 +183,7 @@ def sobrat_cifry(txt, zapisi):
     txt = CIFRA.sub(zamena, txt)
     m = re.match(r"^(\d{4})-(\d{2})-(\d{2})", (zapisi[0].get("id") if zapisi else "") or "")
     if m:
-        den = "%d&nbsp;%s %s" % (int(m.group(3)), MESYACY[int(m.group(2)) - 1], m.group(1))
+        den = "%d&nbsp;%s&nbsp;%s" % (int(m.group(3)), MESYACY[int(m.group(2)) - 1], m.group(1))  # tipograf-daty-v1
         txt = CIFRY_DATA.sub(lambda x: x.group(1) + den + x.group(2), txt, count=1)
     return txt
 

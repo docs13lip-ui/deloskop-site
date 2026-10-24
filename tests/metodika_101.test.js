@@ -45,7 +45,7 @@ test('методика 1.0.1: версия, журнал, без потолка 
   const s = h.match(/<script type="application\/json" id="metodika">([\s\S]*?)<\/script>/);
   assert.deepStrictEqual(JSON.parse(s[1]), M, 'методика на странице и в indeks/metodika-v1.json разошлись');
   assert.match(h, /<span class="ver">Методика v1\.0\.1 · /);
-  assert.match(h, /<td>v1\.0\.1<\/td><td>3 октября 2026<\/td>/);
+  assert.match(h, /<td>v1\.0\.1<\/td><td>3(?:&nbsp;| )октября(?:&nbsp;| )2026<\/td>/);
   assert.strictEqual((h.match(/"version": "1\.0\.1"/g) || []).length, 2);
 });
 

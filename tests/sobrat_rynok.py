@@ -93,7 +93,7 @@ def stroka_usloviya(p):
 
 def data_ru(iso):
     d = datetime.date.fromisoformat(iso)
-    return "%d%s%s %d%sг." % (d.day, NB, MES[d.month - 1], d.year, NB)
+    return "%d%s%s%s%d%sг." % (d.day, NB, MES[d.month - 1], NB, d.year, NB)  # tipograf-daty-v1
 
 
 def blok(p):

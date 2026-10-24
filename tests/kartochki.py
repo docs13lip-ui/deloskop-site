@@ -501,7 +501,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
 
     def zapisat_k(put, txt):
         p_ = os.path.basename(os.path.dirname(put))
-        txt, d_t = vstavit_webpage(bez_nevidimyh(txt), den_, prezhnie.get(p_))
+        txt, d_t = vstavit_webpage(tipograf_kartochki(bez_nevidimyh(txt)), den_, prezhnie.get(p_))  # kartochki-tipograf-v1
         if d_t:
             daty_teksta["/%s/%s/" % (PAPKA, p_)] = d_t
         return zapisat(put, txt)

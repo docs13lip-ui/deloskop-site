@@ -51,7 +51,8 @@ test('главная кнопка — одна, в Паспорт контраг
 });
 
 test('внешние ссылки — https, только первоисточники и с rel=noopener', () => {
-  const vneshnie = [...S.matchAll(/<a [^>]*href="(https?:\/\/[^"]+)"[^>]*>/g)];
+  // seo-svyazi-v1: подвал (общий для всех страниц, «Мы во ВКонтакте») — не источники статьи
+  const vneshnie = [...S.replace(/<!--podval-->[\s\S]*?<!--\/podval-->/, '').matchAll(/<a [^>]*href="(https?:\/\/[^"]+)"[^>]*>/g)];
   assert.ok(vneshnie.length >= 5);
   for (const m of vneshnie) {
     assert.ok(m[1].startsWith('https://'), m[1]);

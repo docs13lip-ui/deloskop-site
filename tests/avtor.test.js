@@ -73,7 +73,7 @@ test('хабы /praktika/: лид без сводки, сводка — из del
     const sv = s.match(/<p class="svodka">([\s\S]*?)<\/p>/);
     assert.ok(lid && sv, f);
     assert.ok(!/\d+\s*разбор/.test(lid[1]) && !/Последний/i.test(lid[1]), f + ': в лиде нет числа и даты');
-    assert.ok(sv[1].startsWith(sp.length + ' разбор'), f + ': число разборов');
+    assert.ok(new RegExp('^' + sp.length + '(?:&nbsp;| |\u00a0)разбор').test(sv[1]), f + ': число разборов');  // tipograf-chisla-v1: «28 разборов» неразрывно
     assert.ok(sv[1].includes(`<time datetime="${sp[0].data}">`), f + ': дата последнего');
     assert.ok(sv[1].includes(`<a href="/praktika/${sp[0].razdel}/${sp[0].slug}/">`), f + ': ссылка на последний');
     assert.ok(s.indexOf('class="svodka"') < s.indexOf('class="razd"'), f + ': сводка над разделами');

@@ -71,7 +71,8 @@ test('одно главное действие — проверка по ИНН 
 });
 
 test('внешние ссылки — https, первоисточники, rel=noopener', () => {
-  const v = [...S.matchAll(/<a [^>]*href="(https?:\/\/[^"]+)"[^>]*>/g)].filter((m) => !m[1].startsWith('https://deloskop.ru'));
+  // seo-svyazi-v1: подвал (общий для всех страниц, «Мы во ВКонтакте») — не источники статьи
+  const v = [...S.replace(/<!--podval-->[\s\S]*?<!--\/podval-->/, '').matchAll(/<a [^>]*href="(https?:\/\/[^"]+)"[^>]*>/g)].filter((m) => !m[1].startsWith('https://deloskop.ru'));
   assert.ok(v.length >= 3);
   for (const m of v) {
     assert.ok(/^https:\/\/www\.consultant\.ru\//.test(m[1]), 'не первоисточник: ' + m[1]);

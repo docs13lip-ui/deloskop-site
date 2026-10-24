@@ -169,6 +169,10 @@ def gorod(r):
 
 
 # ---------- подвал ----------
+# seo-svyazi-v1 (24.10.2026): страницы Делоскопа в соцсетях. Сайт и сообщество связаны для поиска: sameAs в разметке
+# Organization «Делоскоп» на всех страницах (sobrat_stranicu, шаг 6в) и ссылка в подвале. Новое — одной строкой сюда.
+VK = "https://vk.com/deloskop_ru"  # сообщество club242169479, верифицировано через Госуслуги 10.10
+SOOBSHCHESTVA = [VK]
 KOLONKI = [
     ("Продукты", [
         ("Проверка по ИНН", "/"), ("Индекс Делоскопа", "/indeks/"), ("Щит", "/#shield"),
@@ -183,7 +187,10 @@ KOLONKI = [
         ("О проекте", "/o-proekte/"),  # o-proekte-v1 (11.10): миссия, принципы, роли команды, пульс
         ("Методика Индекса", "/indeks/#metodika"), ("Точность Индекса", "/tochnost/"),
         ("Кабинет", "/cabinet.html"), ("Бухгалтерам и партнёрам", "/partneram/"),
-        ("Реквизиты и контакты", "/rekvizity/"), ("help@deloskop.ru", "mailto:help@deloskop.ru")]),
+        ("Реквизиты и контакты", "/rekvizity/"), ("help@deloskop.ru", "mailto:help@deloskop.ru"),
+        # seo-svyazi-v1 (24.10.2026, план [Маркетинг] 24.10 разд. 2.2 п. 3): сообщество — в подвале всех страниц;
+        # метка utm_source=site — переходы с сайта видны в статистике сообщества. Адрес без метки — в sameAs (SOOBSHCHESTVA).
+        ("Мы во ВКонтакте", VK + "?utm_source=site")]),
     ("Документы", [
         ("Публичная оферта", "/oferta/"), ("Политика обработки ПДн", "/politika/"),
         ("Согласие на обработку ПДн", "/soglasie/"), ("Согласие на рассылки", "/rassylki/"),
@@ -201,7 +208,9 @@ def podval_html(r):
         # zhurnal-v1: «Журнал» — в подвале, когда страница /zhurnal/ собрана (tests/sobrat_zhurnal.py)
         if zag == "Знания" and os.path.exists(put("zhurnal", "index.html")):
             ssylki = ssylki + [("Журнал", "/zhurnal/")]
-        li = "".join('<li><a href="%s">%s</a></li>' % (e(h), e(t)) for t, h in ssylki)
+        # seo-svyazi-v1: внешняя ссылка подвала — rel="me" (это наша страница), в той же вкладке, как остальные
+        li = "".join('<li><a href="%s"%s>%s</a></li>' % (e(h), ' rel="me noopener"' if h.startswith("https://") else "", e(t))
+                     for t, h in ssylki)
         cols.append('<nav class="podval__col" aria-label="%s"><p class="podval__h">%s</p><ul>%s</ul></nav>' % (e(zag), e(zag), li))
     stroka = "© 2026 Делоскоп"
     if r["_est"]:
@@ -531,6 +540,8 @@ def sobrat_stranicu(txt, r, podval, shapka=None):
     txt = TT.dlya_stranicy(txt)
     # 6б) og-v1: обложка ссылок 1200×630 и Open Graph на разделах без него
     txt = og_oblozhka(txt)
+    # 6в) seo-svyazi-v1: sameAs — в каждом Organization «Делоскоп» (главная, издатель статей и карточек)
+    txt = SAMEAS.sub(lambda m: m.group(0) + SAMEAS_VSTAVKA, txt)
     # 7) shrift-v1: предзагрузка шрифта — последней строкой <head> и после всех вставок: так страница, собранная заново
     #    (kartochki perepechatat, сборщики разделов), и пересобранная sobrat_shapku совпадают байт в байт
     txt = STARYJ_PRELOAD.sub("", txt)
@@ -542,6 +553,10 @@ def sobrat_stranicu(txt, r, podval, shapka=None):
         i = m.start() if m and m.start() < txt.find("</head>") else txt.find("</head>")
         txt = txt[:i] + SHRIFT_PRELOAD + "\n" + txt[i:]
     return txt
+
+
+SAMEAS = re.compile(r'"@type": "Organization", "name": "Делоскоп"(?!, "sameAs")')
+SAMEAS_VSTAVKA = ', "sameAs": ' + json.dumps(SOOBSHCHESTVA)
 
 
 OBOLOCHKA_JSON = ("partials", "obolochka.json")
@@ -621,6 +636,9 @@ def main():
             if not check:
                 with open(put(f), "w", encoding="utf-8") as fh:
                     fh.write(nov)
+    # seo-svyazi-v1: lastmod в sitemap.xml — по смене текста страниц (tests/sitemap_lastmod.py), после сборки страниц
+    import sitemap_lastmod as LM
+    izmeneno += LM.obnovit(KOREN, check=check)
     if check:
         if izmeneno:
             print("Нужна сборка: " + ", ".join(izmeneno))

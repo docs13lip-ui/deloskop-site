@@ -34,8 +34,9 @@ test('третий вопрос FAQ — в видимом блоке и в JSON-
   assert.ok(!/(точно выиграете|гарантир)/i.test(TXT));
 });
 
-test('dateModified статьи и lastmod в sitemap совпадают', () => {
+test('lastmod статьи в sitemap не раньше dateModified', () => {  // seo-svyazi-v1: lastmod — по смене текста (tests/sitemap_lastmod.py)
   const dm = STR.match(/"dateModified": "([\d-]+)"/)[1];
   const sm = fs.readFileSync(path.join(KOREN, 'sitemap.xml'), 'utf8');
-  assert.ok(sm.includes('nalogi/nds-postavshchika-na-usn-po-inn/</loc><lastmod>' + dm + '<'));
+  const lm = sm.match(/nalogi\/nds-postavshchika-na-usn-po-inn\/<\/loc><lastmod>([\d-]+)</);
+  assert.ok(lm && lm[1] >= dm, 'lastmod ' + (lm && lm[1]) + ' < dateModified ' + dm);
 });

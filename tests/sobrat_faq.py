@@ -56,6 +56,7 @@ def tipo(s):
     t = re.sub(r"(января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря) (?=\d{4}(?!\d))", lambda m: m.group(1) + nb, t)
     t = re.sub(r"(?<=\d{4}) (?=гг?\.)", nb, t)
     t = re.sub(r"(?<![\w-])(ООО|ОАО|ПАО|ЗАО|АО|НКО|ФГУП|МУП|ИП) (?=«)", lambda m: m.group(1) + nb, t)
+    t = TS.sokr(TS.chislo_slovo(t, nb), nb)  # tipograf-chisla-v1 — до «ст. »: METKA видит обычный пробел
     t = re.sub(r" (?=—)", nb, t)
     t = re.sub(r"(?<![\w-])(пп?\.|ст\.|ч\.|№) ", lambda m: m.group(1) + nb, t)
     t = re.sub(r"(?i)(?<![\w-])(" + KOROTKIE + r") ", lambda m: m.group(1) + nb, t)

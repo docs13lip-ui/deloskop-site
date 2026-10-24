@@ -45,7 +45,8 @@ test('tipo() в скриптах ленты и калькулятора держ
   const kod = 'import sys; sys.path.insert(0, "tests"); import tipograf_statej as T; ' +
     'print(T.tekst("от 17 апреля 2026 г.; 2017 марта; 123 мая; 1 Мая; 5 марта; ООО «Пример», ТАО «x»"))';
   const py = execFileSync('python3', ['-c', kod], { cwd: ROOT, encoding: 'utf8' }).trim();
-  assert.strictEqual(py, 'от&nbsp;17&nbsp;апреля&nbsp;2026&nbsp;г.; 2017 марта; 123 мая; 1 Мая; 5&nbsp;марта; ООО&nbsp;«Пример», ТАО «x»');
+  assert.strictEqual(py, 'от&nbsp;17&nbsp;апреля&nbsp;2026&nbsp;г.; 2017 марта; 123&nbsp;мая; 1 Мая; 5&nbsp;марта; ООО&nbsp;«Пример», ТАО «x»');
+  // «123 мая» — не дата (правило даты: 1–2 цифры), но счёт: «123&nbsp;мая» ставит tipograf-chisla-v1 (число + слово)
   for (const f of ['obnovleniya.js', 'obnovleniya/index.html', 'tarify/tarify.js']) {
     const s = fs.readFileSync(path.join(ROOT, f), 'utf8');
     const m = s.match(/function tipo\(s\)\{[\s\S]*?\\u2011"\);\}/);

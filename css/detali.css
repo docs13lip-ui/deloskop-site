@@ -21,6 +21,7 @@ p,li,dd,dt,figcaption,blockquote,summary,legend,h1,h2,h3,h4{text-wrap:pretty}
   /* ссылка — единственное в строке списка: «Что проверить» в ленте, источники, «Условия рассылки» */
   .src li>a,.zh-niz__m a,.bol>a{display:inline-block;padding:12px 0}
   .u .p a,.tw td>a{display:inline-block;padding:12px 0;margin:-12px 0}  /* значок ✓ ленты и строки таблицы остаются на своих местах */
+  .u .p a{max-width:100%}  /* tipograf-chisla-v1: «АО «Калининградгазификация» →» на 320 px выходил за край на 7 px — inline-block брал ширину по самому длинному куску */
 }
 /* detali-v1c: с мышью подвал прежний — поле ссылки 24 px (WCAG 2.5.8) без сдвига строк */
 @media (min-width:641px) and (pointer:fine){

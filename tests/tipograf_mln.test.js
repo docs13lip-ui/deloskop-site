@@ -14,9 +14,6 @@ const RX = /(?:млн|млрд|трлн|тыс\.) ₽/g;
 function stranicy(dir, out = []) {
   for (const f of fs.readdirSync(dir, { withFileTypes: true })) {
     if (f.name.startsWith('.') || f.name === 'node_modules' || f.name === 'tests') continue;
-    // /company/ собирает tests/kartochka_render.py (Ночные-2): 4 карточки — «…на 36,1 млрд ₽» в «Перед оплатой»
-    // (kap.group(1), строки ~3501/3674) — правка их сборщиком, тогда убрать это исключение.
-    if (dir === ROOT && f.name === 'company') continue;
     const p = path.join(dir, f.name);
     if (f.isDirectory()) stranicy(p, out);
     else if (f.name.endsWith('.html')) out.push(p);

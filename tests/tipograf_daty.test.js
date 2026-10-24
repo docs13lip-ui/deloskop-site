@@ -12,7 +12,7 @@ const { execFileSync } = require('child_process');
 const ROOT = path.join(__dirname, '..');
 const MES = 'января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря';
 const RX = new RegExp('(?:(?:^|[^0-9])[0-9]{1,2} (?:' + MES + ')(?![а-яё])|(?:' + MES + ') [0-9]{4}(?![0-9]))', 'g');
-// Не трогаем: /company/ (сборщик Ночных-2, kartochka_render.py) и юридические документы — дата редакции в них
+// Не трогаем: /company/ (сборщик Ночных-2, kartochka_render.py — свой сторож tests/test_kartochki_tipograf.py) и юридические документы — дата редакции в них
 // читается счётом и актом байт в байт (tipograf_statej: «Редакция от…» и блоки сборщиков не типографим).
 const MIMO = new Set(['company', 'oferta', 'politika', 'soglasie', 'cookies', 'vozvrat', 'rassylki', 'rekvizity', 'partneram/usloviya']);
 

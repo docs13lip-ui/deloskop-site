@@ -530,7 +530,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
     for x in starye:
         put = os.path.join(papka, x["_papka"], "index.html")
         with open(put, encoding="utf-8") as fh:
-            t = fh.read()
+            t = ubrat_nabor(fh.read())  # nedoimka-mesyac-v1: строку о наборе ФНС ставим заново после svodka_zel
         sos_ = pohozhie(x, vse)
         t2 = _SOS.sub(lambda m: m.group(1) + sosedi_html(x, sos_, eshche_kompanii(x, vse, sos_)) + m.group(3), t, count=1)
         t2 = pochinit_god_dvazhdy(t2)  # v3.10: «Выручка за 2021 — … за 2021» → год один раз, как у новых карточек
@@ -546,6 +546,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         t2 = shablon_v2(t2)  # kartochki-shablon-v1: H1 с ИНН, строка под H1, description — как у новых
         t2 = pochinit_imya(t2)  # kartochki-imya-v1: советы и заголовок реестров — с названием, как у новых
         t2 = svodka_zel(t2)  # kartochki-svodka-v1: зелёные комментарии — одним блоком под реестрами, как у новых
+        t2 = nabor_nedoimki(t2)  # nedoimka-mesyac-v1: «ФНС обновляет набор раз в месяц» под строкой недоимки, как у новых
         t2 = pochinit_pered(t2)  # kartochki-unik-v2: «Перед оплатой» — по признакам страницы, как у новых
         t2 = pochinit_razbor(t2)  # kartochki-unik-v2: «… в цифрах» — с названием, как у новых
         t2 = pochinit_vozrast(t2, den)  # vozrast-segodnya-v1: возраст — на сегодня, число пересчитывает и браузер
@@ -728,6 +729,25 @@ def k_osvezheniyu(n, vyhod=None, koren=KOREN):
     return [inn for inn, _, _ in svezhest(koren) if inn not in gotovo][:max(0, int(n))]
 
 
+_NABOR_DATA = re.compile(r'<span>Задолженность по налогам</span><span class="fact__v">[^<]*</span>'
+                         r'<span class="fact__src co-src">ФНС, открытые данные[^<]* · сведения на (\d\d)\.(\d\d)\.(\d{4})')
+
+
+def nabory_nedoimki(koren=KOREN):
+    """nedoimka-mesyac-v1: [(дата набора ФНС о недоимке, сколько карточек)] по опубликованным, новые первыми."""
+    papka = os.path.join(koren, PAPKA)
+    schet = {}
+    for d in sorted(os.listdir(papka)) if os.path.isdir(papka) else []:
+        put = os.path.join(papka, d, "index.html")
+        if re.match(r"^\d{10}-", d) and os.path.isfile(put):
+            with open(put, encoding="utf-8") as fh:
+                m = _NABOR_DATA.search(fh.read())
+            if m:
+                dd = dt.date(int(m.group(3)), int(m.group(2)), int(m.group(1)))
+                schet[dd] = schet.get(dd, 0) + 1
+    return sorted(schet.items(), reverse=True)
+
+
 def pechat_svezhesti(spisok, pokazat=10):
     dni = [d for _, _, d in spisok if d is not None]
     if not spisok:
@@ -859,6 +879,9 @@ def main(argv):
         argv = ["sobrat", "--dobavit", "--vhod", os.devnull]
     if argv[0] == "svezhest":
         pechat_svezhesti(svezhest(), int(_arg(argv, "--pokazat", "10")))
+        nab = nabory_nedoimki()
+        if nab:  # nedoimka-mesyac-v1: набор ФНС выходит ежемесячно — видно, когда API отдал новый (тогда perepechatat/--osvezhit)
+            print("Набор ФНС о недоимке на карточках: " + ", ".join("на %s — %d" % (d.strftime("%d.%m.%Y"), n) for d, n in nab))
         return 0
     if argv[0] == "iz-api":
         osv = _arg(argv, "--osvezhit")

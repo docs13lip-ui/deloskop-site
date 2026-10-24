@@ -4147,3 +4147,33 @@ def svyazi_vse(vse, zakryty=()):
             dobavleno[y["inn"]] = dobavleno.get(y["inn"], 0) + 1
             vhod[i] += 1
     return out
+
+
+# ---------------------------------------------------------------- nedoimka-mesyac-v1 (ТЗ [Продукт] 23.10, п. 3Г)
+# С 01.04.2026 ФНС публикует набор о задолженности по налогам ежемесячно, а не раз в квартал (приказ ФНС России от
+# 25.11.2025 № ЕД-7-14/1006@). Под строкой «Задолженность по налогам» в «Проверке по реестрам» — мелко: «ФНС обновляет
+# набор раз в месяц.» Даты следующего выхода не пишем, пока день публикации не сверен. Строка — только под проверенным
+# фактом (с датой сведений). Чистая функция по готовой разметке, после svodka_zel: новые карточки (обёртка ниже, значит и
+# API) и опубликованные (kartochki.py → perepechatat: снимается при чтении, ставится заново). Повторный вызов — те же байты.
+NABOR_METKA = '<p class="co-nabor">'
+NABOR_TEKST = NABOR_METKA + "ФНС обновляет набор раз в&nbsp;месяц.</p>"  # &nbsp; — как пишет запись карточки
+_NABOR_FAKT = re.compile(r'(<div class="fact"><span>Задолженность по налогам</span><span class="fact__v">[^<]*</span>'
+                         r'<span class="fact__src co-src">ФНС, открытые данные[^<]* · сведения на \d{2}\.\d{2}\.\d{4}[^<]*</span></div>)')
+_NABOR_UBRAT = re.compile(re.escape(NABOR_METKA) + r"[^<]*</p>")
+
+
+def ubrat_nabor(t):
+    return _NABOR_UBRAT.sub("", t)
+
+
+def nabor_nedoimki(t):
+    t = ubrat_nabor(t)
+    return _NABOR_FAKT.sub(lambda m: m.group(1) + NABOR_TEKST, t, count=1)
+
+
+_html_kartochki_do_nabora = html_kartochki
+
+
+def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811
+    """nedoimka-mesyac-v1: под строкой недоимки — «ФНС обновляет набор раз в месяц»."""
+    return nabor_nedoimki(_html_kartochki_do_nabora(k, V, sosedi, kom, normy, cena, segodnya))

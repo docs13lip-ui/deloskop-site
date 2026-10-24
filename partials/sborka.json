@@ -21,7 +21,8 @@
       "js/kopiya.js",
       "js/pwa.js",
       "obnovleniya.js",
-      "js/schetchik.js"
+      "js/schetchik.js",
+      "js/podelitsya.js"
     ],
     "glavnaya": [
       "js/vhody.js",

@@ -57,7 +57,7 @@ test('главная кнопка — одна, в «Скорую 115-ФЗ», с
 
 test('внешние ссылки — https, первоисточники, rel=noopener', () => {
   // seo-svyazi-v1: подвал (общий для всех страниц, «Мы во ВКонтакте») — не источники статьи
-  const v = [...S.replace(/<!--podval-->[\s\S]*?<!--\/podval-->/, '').matchAll(/<a [^>]*href="(https?:\/\/[^"]+)"[^>]*>/g)];
+  const v = [...S.replace(/<!--(podval|podelitsya)-->[\s\S]*?<!--\/\1-->/g, '')  /* podelitsya-v1: ссылки «Поделиться» — не источники статьи */.matchAll(/<a [^>]*href="(https?:\/\/[^"]+)"[^>]*>/g)];
   assert.ok(v.length >= 4);
   for (const m of v) {
     assert.ok(/^https:\/\/(www\.consultant\.ru|www\.fedsfm\.ru|www\.cbr\.ru|publication\.pravo\.gov\.ru)\//.test(m[1]), 'не первоисточник: ' + m[1]);

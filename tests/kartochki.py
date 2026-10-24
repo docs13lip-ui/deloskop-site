@@ -530,7 +530,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
     for x in starye:
         put = os.path.join(papka, x["_papka"], "index.html")
         with open(put, encoding="utf-8") as fh:
-            t = ubrat_nabor(fh.read())  # nedoimka-mesyac-v1: строку о наборе ФНС ставим заново после svodka_zel
+            t = ubrat_nabor(ubrat_statyu(fh.read()))  # kartochki-stati-v1 + nedoimka-mesyac-v1: обе строки ставим заново
         sos_ = pohozhie(x, vse)
         t2 = _SOS.sub(lambda m: m.group(1) + sosedi_html(x, sos_, eshche_kompanii(x, vse, sos_)) + m.group(3), t, count=1)
         t2 = pochinit_god_dvazhdy(t2)  # v3.10: «Выручка за 2021 — … за 2021» → год один раз, как у новых карточек
@@ -577,6 +577,16 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         put = os.path.join(papka, x["_papka"], "index.html")
         sos_, esh_ = svyazi[x["inn"]]
         izm += zapisat_k(put, _SOS.sub(lambda m: m.group(1) + sosedi_html(x, sos_, esh_) + m.group(3), teksty[x["inn"]], count=1))
+    # kartochki-stati-v1: обратная перелинковка — в одном разделе карточки строка «По теме раздела: «статья»» (подбор —
+    # tests/sobrat_stati_kartochki.py, по тем же карточкам, что статьи → карточки); последним шагом, до sitemap: дата
+    # изменения текста WebPage и lastmod учитывают строку
+    try:
+        import sobrat_stati_kartochki as sk_
+        if os.path.abspath(koren) == os.path.abspath(sk_.KOREN):
+            for put, t in sk_.kartochki_so_statyami(koren).items():
+                izm += zapisat_k(put, t)
+    except Exception as oshibka:  # не роняем сборку; test_stati_kartochki (--check) покажет несобранные строки
+        otchet["stati_v_kartochkah"] = "ошибка: %s" % oshibka
     # sitemap-companies.xml + robots.txt
     sm = os.path.join(koren, "sitemap-companies.xml")
     rb = os.path.join(koren, "robots.txt")
@@ -667,6 +677,11 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
 # тексты (оговорки [Право], «Перед оплатой», «Полный отчёт», «Паспорт»). Сделать воротами — решение [Продукт] (✎).
 SOVPADENIE_CEL = 0.60
 _SOS_SSYLKI = re.compile(r'<li><a href="/company/([^/"]+)/">')
+
+
+def ubrat_statyu(t):
+    """kartochki-stati-v1: опубликованная карточка без строки «По теме раздела» (её ставит конец сборки)."""
+    return re.sub(r"<!--karta-statya-->.*?<!--/karta-statya-->", "", t, flags=re.S)
 
 
 def predlozheniya(t):

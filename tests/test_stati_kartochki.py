@@ -81,5 +81,68 @@ class TestStatiKartochki(unittest.TestCase):
         self.assertEqual(S.raspredelit(kart), S.raspredelit(list(reversed(kart))), "выбор зависит от порядка файлов")
 
 
+class TestKartochkiStati(unittest.TestCase):
+    """kartochki-stati-v1: карточка → статья раздела (обратное направление)."""
+
+    def stroki(self):
+        out = {}
+        for d in sorted(os.listdir(os.path.join(KOREN, "company"))):
+            put = os.path.join(KOREN, "company", d, "index.html")
+            if re.match(r"^\d{10}-", d) and os.path.isfile(put):
+                out[d] = (open(put, encoding="utf-8").read(), None)
+                t = out[d][0]
+                out[d] = (t, S.K_METKI.findall(t))
+        return out
+
+    def test_u_kazhdoj_v_indekse_odna(self):
+        for d, (t, st) in self.stroki().items():
+            if d in KART:
+                self.assertEqual(len(st), 1, d + ": у карточки в индексе — ровно одна строка «По теме раздела»")
+            else:
+                self.assertEqual(st, [], d + ": карточка вне индекса (или ИП) — без строки")
+
+    def test_v_razdele_temy_i_vzaimno(self):
+        temy = {statya: (yakor, filtr) for statya, yakor, _, filtr in S.TEMY}
+        vpered = {}
+        for statya in temy:
+            for p in re.findall(r'href="/company/([^/"]+)/#', blok_stati(statya)[1]):
+                vpered.setdefault(p, set()).add(statya)
+        schet = {}
+        for d, (t, st) in self.stroki().items():
+            if not st:
+                continue
+            statya = re.search(r'href="/([^"]+)/"', st[0]).group(1)
+            self.assertIn(statya, temy, d)
+            yakor, filtr = temy[statya]
+            sek = re.search(r'<section[^>]*aria-labelledby="%s"[^>]*>(.*?)</section>' % yakor, t, re.S)
+            self.assertTrue(sek and S.K_METKI.search(sek.group(1)), "%s: строка не в разделе #%s" % (d, yakor))
+            if filtr:
+                self.assertIn(filtr, KART[d][4], d)
+            if d in vpered and not any('href="/%s/"' % x in KART[d][6] for x in vpered[d]):
+                self.assertIn(statya, vpered[d], d + ": статья назвала карточку — карточка ссылается на неё же")
+            self.assertEqual(S._TEG.sub("", st[0]).count(S.zagolovok_stati(statya)), 1, d + ": заголовок статьи")
+            self.assertEqual(KART[d][6].count('href="/%s/"' % statya), 0, d + ": статья уже есть на карточке — второй раз не ставим")
+            schet[statya] = schet.get(statya, 0) + 1
+        if len(KART) >= len(S.TEMY) * 3:
+            self.assertEqual(set(schet), set(temy), "каждая статья получает ссылки с карточек")
+            self.assertLessEqual(max(schet.values()) - min(schet.values()), 2, "ссылки распределены ровно: %s" % schet)
+
+    def test_bez_slov_ocenki(self):
+        for d, (t, st) in self.stroki().items():
+            for x in st:
+                b = html.unescape(S._TEG.sub(" ", x)).lower()
+                for slovo in ("надёжн", "надежн", "лучш", "худш", "рекомендуем", "опасн", "сомнительн", "техническ", "рейтинг"):
+                    self.assertNotIn(slovo, b, d)
+
+    def test_snyat_i_postavit(self):
+        d = sorted(KART)[0]
+        t = open(os.path.join(KOREN, "company", d, "index.html"), encoding="utf-8").read()
+        bez = S.ubrat_iz_kartochki(t)
+        self.assertNotIn("karta-statya", bez)
+        st = re.search(r'href="/([^"]+)/"', S.K_METKI.search(t).group(0)).group(1)
+        yakor = dict((a, b) for a, b, _, _ in S.TEMY)[st]
+        self.assertEqual(S.vstavit_v_kartochku(t, st, yakor, S.zagolovok_stati(st)), t, "повторная вставка меняет страницу")
+
+
 if __name__ == "__main__":
     unittest.main()

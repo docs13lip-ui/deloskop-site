@@ -17,6 +17,13 @@
 Блок — между <!--stati-kartochki--> и <!--/stati-kartochki-->, перед «Как это решают суды» (<!--praktika-ssylki-->),
 иначе в конце <article>. Пересборка — вместе с карточками (tests/kartochki.py sobrat/perepechatat).
 
+kartochki-stati-v1 (24.10.2026, [Ночные-2]) — обратное направление: у каждой карточки юрлица в индексе в одном разделе
+(#reestry, #daty, #pered, #fin, #korotko, #zel) строка «По теме раздела: «Заголовок статьи»». Карточка, которую назвала
+статья, ссылается на эту же статью (взаимная ссылка); остальные — на статью своего раздела, у которой меньше ссылок с
+карточек (при равенстве — устойчивый хеш), и только если раздел (и строка-фильтр темы) на карточке есть, а статьи на ней
+ещё нет. Строку ставит tests/kartochki.py последним шагом сборки (через запись карточки — с датой изменения текста
+WebPage), а снимает перед правками опубликованных; здесь --check сверяет и её.
+
 Запуск: python3 tests/sobrat_stati_kartochki.py          — собрать
         python3 tests/sobrat_stati_kartochki.py --check  — только проверить (код 1, если нужна сборка)
 """
@@ -51,12 +58,19 @@ TEMY = [
 ]
 
 _H1 = re.compile(r"<h1[^>]*>(.*?)</h1>", re.S)
+K_METKI = re.compile(r"<!--karta-statya-->.*?<!--/karta-statya-->", re.S)
+
+
+def ubrat_iz_kartochki(t):
+    """Карточка без строки «По теме раздела» — до правок опубликованной страницы и для подбора по тексту."""
+    return K_METKI.sub("", t)
 _NOINDEX = re.compile(r'<meta name="robots" content="[^"]*noindex')
 _TEG = re.compile(r"<[^>]+>")
 
 
 def kartochki(koren=KOREN):
-    """→ [(папка, ИНН, имя html, ключ сортировки, текст без тегов, множество якорей)] — карточки юрлиц в индексе."""
+    """→ [(папка, ИНН, имя html, ключ сортировки, текст без тегов, множество якорей, html без строки статьи)] — карточки
+    юрлиц в индексе."""
     papka = os.path.join(koren, "company")
     out = []
     for d in sorted(os.listdir(papka)) if os.path.isdir(papka) else []:
@@ -64,7 +78,7 @@ def kartochki(koren=KOREN):
         put = os.path.join(papka, d, "index.html")
         if not m or not os.path.isfile(put):
             continue
-        t = open(put, encoding="utf-8").read()
+        t = ubrat_iz_kartochki(open(put, encoding="utf-8").read())
         h = _H1.search(t)
         if _NOINDEX.search(t) or not h:
             continue
@@ -72,7 +86,7 @@ def kartochki(koren=KOREN):
         tekst = " ".join(html.unescape(_TEG.sub(" ", t)).replace(" ", " ").split())
         klyuch = re.sub(r"^(ООО|АО|ПАО|НАО|ЗАО|ОАО)\s*", "", html.unescape(_TEG.sub("", imya)).replace(" ", " ")).strip("«»\" ").lower()
         yakorya = set(re.findall(r'<section[^>]*aria-labelledby="([a-z0-9-]+)"', t))
-        out.append((d, m.group(1), imya, klyuch, tekst, yakorya))
+        out.append((d, m.group(1), imya, klyuch, tekst, yakorya, t))
     return out
 
 
@@ -102,6 +116,69 @@ def blok(yakor, opisanie, vybor):
             "Порядок&nbsp;— по&nbsp;алфавиту, это не&nbsp;рейтинг.</p><!--/stati-kartochki-->") % (opisanie, ssylki)
 
 
+def zagolovok_stati(statya, koren=KOREN):
+    put = os.path.join(koren, statya, "index.html")
+    if not os.path.isfile(put):
+        return None
+    h = _H1.search(open(put, encoding="utf-8").read())
+    return " ".join(_TEG.sub("", h.group(1)).split()) if h else None
+
+
+def obratno(kart, po, koren=KOREN):
+    """→ {папка карточки: (статья, якорь)}: взаимная ссылка, иначе — статья раздела с наименьшим числом карточек."""
+    out = {}
+    nagruzka = {statya: 0 for statya, *_ in TEMY}
+    for statya, yakor, _, _ in TEMY:
+        for k in po.get(statya, []):
+            if k[0] not in out and ("/%s/" % statya) not in k[6]:  # уже ссылается — взаимность есть, берём другую
+                out[k[0]] = (statya, yakor)
+                nagruzka[statya] += 1
+    est = {statya for statya, *_ in TEMY if zagolovok_stati(statya, koren)}
+    for k in sorted(kart, key=lambda x: x[0]):
+        if k[0] in out:
+            continue
+        podhodyat = [(statya, yakor) for statya, yakor, _, filtr in TEMY
+                     if statya in est and yakor in k[5] and (not filtr or filtr in k[4]) and ("/%s/" % statya) not in k[6]]
+        if not podhodyat:
+            continue
+        statya, yakor = min(podhodyat, key=lambda x: (nagruzka[x[0]], _hesh(x[0], k[1])))
+        out[k[0]] = (statya, yakor)
+        nagruzka[statya] += 1
+    return out
+
+
+def stroka_kartochki(statya, zag):
+    return ('<!--karta-statya--><p class="co-statya">По&nbsp;теме раздела: <a href="/%s/">%s</a></p><!--/karta-statya-->'
+            % (statya, zag))
+
+
+def vstavit_v_kartochku(t, statya, yakor, zag):
+    t = ubrat_iz_kartochki(t)
+    rx = re.compile(r'(<section[^>]*aria-labelledby="%s"[^>]*>.*?)(</section>)' % re.escape(yakor), re.S)
+    return rx.sub(lambda m: m.group(1) + stroka_kartochki(statya, zag) + m.group(2), t, count=1)
+
+
+def kartochki_so_statyami(koren=KOREN):
+    """→ {путь карточки: новый текст} для всех карточек юрлиц на диске (у карточек вне подбора строка снимается)."""
+    kart = kartochki(koren)
+    po = raspredelit(kart)
+    karta = obratno(kart, po, koren)
+    zag = {statya: zagolovok_stati(statya, koren) for statya, *_ in TEMY}
+    papka = os.path.join(koren, "company")
+    out = {}
+    for d in sorted(os.listdir(papka)) if os.path.isdir(papka) else []:
+        put = os.path.join(papka, d, "index.html")
+        if not re.match(r"^\d{10}-", d) or not os.path.isfile(put):
+            continue
+        t = open(put, encoding="utf-8").read()
+        if d in karta:
+            statya, yakor = karta[d]
+            out[put] = vstavit_v_kartochku(t, statya, yakor, zag[statya])
+        else:
+            out[put] = ubrat_iz_kartochki(t)
+    return out
+
+
 def sobrat(proverit=False, koren=KOREN):
     kart = kartochki(koren)
     po = raspredelit(kart)
@@ -125,8 +202,13 @@ def sobrat(proverit=False, koren=KOREN):
             nado.append(statya)
             if not proverit:
                 open(put, "w", encoding="utf-8").write(novoe)
+    if proverit:
+        for put, t in kartochki_so_statyami(koren).items():
+            if open(put, encoding="utf-8").read() != t:
+                nado.append(put)
     if nado and proverit:
-        print("stati-kartochki: устарели %d статей — запустите python3 tests/sobrat_stati_kartochki.py" % len(nado))
+        print("stati-kartochki: устарели %d страниц — запустите python3 tests/sobrat_stati_kartochki.py "
+              "(строки «По теме раздела» на карточках — python3 tests/kartochki.py perepechatat)" % len(nado))
         return 1
     print("stati-kartochki: %s (%d статей, %d карточек в индексе)" % ("обновлено " + str(len(nado)) if nado else "собрано", len(TEMY), len(kart)))
     return 0

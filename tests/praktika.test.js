@@ -320,3 +320,27 @@ test('Разбор № 27: подарок от мамы-ИП — 309-ЭС24-2178
   const s = un(chitat('praktika/nalogi/podarok-ot-roditelya-ip-ndfl-vs-2026/index.html'));
   assert.ok(s.includes('data-goal="razbor27_check"') && s.includes('№ 309-ЭС24-21782'));
 });
+
+// razbor28-v1 ([Ночные запуски] 24.10; текст [Право] 24.10 разд. 3; 5 цитат, даты актов, сумма и состав сверены с PDF vsrf.ru 24.10 — stor_pdf_ec/2542960, «406.1» в PDF — «4061»)
+test('Разбор № 28: потери по ст. 406.1 ГК — 305-ЭС26-602 от 26.05.2026, раздел «Договоры», цитаты ВС дословно, без имён сторон и без ◐-ответов', () => {
+  const r = D.razbory.find((x) => x.slug === 'kompensaciya-poter-406-1-vs-2026');
+  assert.ok(r && r.razdel === 'dogovory' && D.razdely.dogovory);
+  assert.deepStrictEqual(r.dela.map((d) => d.nomer + ' ' + d.data), ['№ 305-ЭС26-602 2026-05-26']);
+  const t = un(chitat('tests/praktika/kompensaciya-poter-406-1-vs-2026.html'));
+  for (const c of ['«…возмещению подлежат лишь те потери, которые уже понесены или с неизбежностью будут понесены в будущем…»',
+    '«…а сама норма не допускает возмещения потерь в произвольном размере»',
+    '«наличие явного и недвусмысленного соглашения между сторонами»',
+    '«…апелляционный суд надлежащим образом не проверил обоснованность представленного истцом расчета»',
+    '«суд (арбитражный суд) не может уменьшить размер возмещения потерь»']) assert.ok(t.includes(c), 'цитата ' + c);
+  assert.ok(t.includes('89 321 309,47 ₽') && t.includes('А40-183390/2024') && t.includes('2021–2022'));
+  for (const d of ['2025-03-18', '2025-07-22', '2025-11-21', '2026-05-13']) assert.ok(t.includes('datetime="' + d + '"'), 'дата ' + d);
+  assert.ok(!/ст\. 4061/.test(t), 'ст. 406.1, а не «4061» из PDF');
+  assert.ok(!/гражданин|неустойк/i.test(t), 'FAQ про граждан и неустойку — ◐, до текста п. 1 ст. 406.1 не ставим');
+  assert.ok(!/Хатыпова|Грачева|Тютин|«[А-ЯЁ][а-яё]+-?[А-ЯЁ]?[а-яё]*»\s*\(ИНН/.test(t), 'имён судей и сторон в тексте нет');
+  assert.ok(!/гарантир|точно выиграете|вернём/i.test(t));
+  const s = un(chitat('praktika/dogovory/kompensaciya-poter-406-1-vs-2026/index.html'));
+  assert.ok(s.includes('data-goal="razbor28_check"') && s.includes('№ 305-ЭС26-602'));
+  const h = un(chitat('praktika/dogovory/index.html'));
+  assert.ok(h.includes('/praktika/dogovory/kompensaciya-poter-406-1-vs-2026/'));
+  assert.ok(un(chitat('sitemap.xml')).includes('https://deloskop.ru/praktika/dogovory/'));
+});

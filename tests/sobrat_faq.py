@@ -51,6 +51,7 @@ def tipo(s):
     t = html.escape(s, quote=False)
     t = re.sub(r"(?<=\d) (?=\d{3}\b)", nb, t)
     t = re.sub(r"(?<=\d) (?=(?:₽|%|млн|млрд|тыс|рабоч|дн|месяц|год|лет))", nb, t)
+    t = re.sub(r"(млн|млрд|трлн|тыс\.) (?=₽)", lambda m: m.group(1) + nb, t)  # tipograf-mln-v1
     t = re.sub(r" (?=—)", nb, t)
     t = re.sub(r"(?<![\w-])(пп?\.|ст\.|ч\.|№) ", lambda m: m.group(1) + nb, t)
     t = re.sub(r"(?i)(?<![\w-])(" + KOROTKIE + r") ", lambda m: m.group(1) + nb, t)

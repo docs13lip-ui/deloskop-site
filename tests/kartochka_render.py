@@ -4177,3 +4177,95 @@ _html_kartochki_do_nabora = html_kartochki
 def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811
     """nedoimka-mesyac-v1: под строкой недоимки — «ФНС обновляет набор раз в месяц»."""
     return nabor_nedoimki(_html_kartochki_do_nabora(k, V, sosedi, kom, normy, cena, segodnya))
+
+
+# haby-statyi-v1: хабы /company/otrasl/ и /company/region/ ссылались только на меню (/nalogi/, /115-fz/). На 1-й странице —
+# раздел «Перед сделкой с компанией из списка»: у хаба отрасли — строки справочника ФНС (нагрузка 2025), к которым
+# относятся карточки группы (по самому длинному префиксу ОКВЭД — как на карточке), не больше HAB_NORM_MAKS, по числу
+# карточек; у обоих — нейтральные статьи о проверке перед сделкой. Статьи о сигналах (BEZ_IMEN в
+# tests/sobrat_stati_kartochki.py) рядом со списком компаний не ставим (ответ [Право] 24.10, разд. 1.1) — сторож в тестах.
+HAB_STATYI = (
+    "nalogi/proverka-kontragenta-pered-dogovorom",
+    "nalogi/skolko-platit-vpered-neznakomoj-kompanii",
+    "nalogi/kak-proverit-schet-pered-oplatoj",
+    "nalogi/kody-statusa-egryul",
+)
+HAB_NORM_MAKS = 4
+
+
+def hab_normy(g, normy):
+    """→ [(строка ФНС, число карточек группы)] — по убыванию числа, затем по коду; только у хаба отрасли."""
+    if g.get("vid") != "otrasl" or not normy:
+        return []
+    po, stroki = {}, {}
+    for k in g.get("kart") or []:
+        r = otrasl_stroka(k.get("okved"), normy)
+        if r:
+            po[r["kod"]] = po.get(r["kod"], 0) + 1
+            stroki[r["kod"]] = r
+    return [(stroki[kd], n) for kd, n in sorted(po.items(), key=lambda a: (-a[1], a[0]))][:HAB_NORM_MAKS]
+
+
+def hab_chitat(g, normy=None, statyi=()):
+    """Раздел хаба «Перед сделкой с компанией из списка» (HTML) или "" — если ставить нечего."""
+    li = []
+    for r, n in hab_normy(g, normy):
+        li.append('<li><a href="%s#%s">%s</a><span class="caption">средняя налоговая нагрузка за%s2025%sгод%s— %s%s%% '
+                  '(ФНС, без страховых взносов) · %d%s%s</span></li>' % (
+                      SPRAVOCHNIK_NORM, yakor_normy(r["kod"]), e(_nazv_normy(r)), NB, NB, NB,
+                      ("%.1f" % r["nagruzka"]["2025"]).replace(".", ","), NB, n, NB,
+                      plural(n, "карточка", "карточки", "карточек")))
+    for adr, zag in statyi or ():
+        li.append('<li><a href="%s">%s</a></li>' % (adr, e(zag)))
+    if not li:
+        return ""
+    return ('<section class="co-sec co-hab__chitat" id="chitat"><h2>Перед сделкой с%sкомпанией из%sсписка</h2>'
+            '<ul class="co-sos">%s</ul></section>' % (NB, NB, "".join(li)))
+
+
+_html_gruppy_do_chitat = html_gruppy
+
+
+def html_gruppy(g, kart, index, n=1, vsego=1, normy=None, statyi=()):  # noqa: F811 — haby-statyi-v1
+    t = _html_gruppy_do_chitat(g, kart, index, n, vsego)
+    ch = hab_chitat(g, normy, statyi) if n <= 1 else ""
+    if not ch:
+        return t
+    i = t.rfind("</main>")
+    nav = t.rfind('<nav class="co-str', 0, i)
+    kuda = nav if nav != -1 else i
+    return t[:kuda] + ch + "\n" + t[kuda:]
+
+
+# ---------------------------------------------------------------- haby-svyazi-v1 (24.10.2026, [Ночные-2])
+# Хабы региона и отрасли не ссылались друг на друга: на /company/region/moskva/ заголовок «Энергетика 11» — просто текст,
+# во вводном абзаце /company/otrasl/energetika/ «с адресом Москва (11)» — тоже. Теперь имя группы, у которой есть свой хаб,
+# — ссылка на него: заголовки отраслей на хабе региона и имена во вводном абзаце (только 1-я страница, только эти места;
+# группы без хаба — текстом, как раньше). kg — karta_grupp(gruppy) из сборщика; без kg — как раньше.
+def hab_ssylki_grupp(t, g, kg):
+    if not kg:
+        return t
+    if g.get("vid") == "region":
+        def zam(m):
+            a = kg.get(("otrasl", html.unescape(m.group(1))))
+            return ('<section class="co-sec"><h2><a href="%s">%s</a> ' % (a, m.group(1))) if a else m.group(0)
+        t = re.sub(r'<section class="co-sec"><h2>([^<]+) (?=<span class="caption">)', zam, t)
+    m = re.search(r'<p class="co-hab__vvod">.*?</p>', t, re.S)
+    if not m:
+        return t
+    vv = m.group(0)
+    for (vid, imya), a in sorted(kg.items()):
+        if vid == g.get("vid"):
+            continue
+        nz = e(region_polnyj(imya)) if vid == "region" else "«%s»" % e(imya)
+        vv = re.sub(r"(с адресом |здесь — |, дальше — )%s(?= \(\d+\))" % re.escape(nz),
+                    lambda mm: '%s<a href="%s">%s</a>' % (mm.group(1), a, nz), vv, count=1)
+    return t[:m.start()] + vv + t[m.end():]
+
+
+_html_gruppy_do_svyazi = html_gruppy
+
+
+def html_gruppy(g, kart, index, n=1, vsego=1, normy=None, statyi=(), kg=None):  # noqa: F811 — haby-svyazi-v1
+    t = _html_gruppy_do_svyazi(g, kart, index, n, vsego, normy, statyi)
+    return hab_ssylki_grupp(t, g, kg) if n <= 1 else t

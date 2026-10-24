@@ -47,6 +47,7 @@ def tipograf(txt):
         s = re.sub(r"(\d) (?=\d{3}(?!\d))", "\\1" + NB, s)
         s = re.sub(r"(\d) (?=(млн|млрд|тыс\.|₽|%|месяц|рабоч|раз\b|лет\b|год|минут|дн|инстанц))", "\\1" + NB, s)
         s = re.sub(r"(^|[\s(«])(ст\.|п\.|пп\.|ч\.|подп\.|№) (?=[\dА-ЯA-Z])", "\\1\\2" + NB, s)
+        s = re.sub(r"(млн|млрд|трлн|тыс\.) (?=₽)", "\\1" + NB, s)  # tipograf-mln-v1: «2,43 млн ₽» не рвётся
         s = re.sub(r" (—)", NB + "\\1", s)
         return s
     return "".join(ch if ch.startswith("<") else t(ch) for ch in re.split(r"(<[^>]+>)", txt))

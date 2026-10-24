@@ -410,11 +410,31 @@ def partiya_sitemap(lm, staryj_xml, segodnya, partiya=PARTIYA_V_SUTKI, dohod=Non
     return vybor, metka, len(novye) - len(berem)
 
 
+_H1_STATI = re.compile(r"<h1[^>]*>(.*?)</h1>", re.S)
+
+
+def statyi_haba(koren):
+    """haby-statyi-v1: [(адрес, заголовок h1)] статей HAB_STATYI, что есть на сайте и открыты роботам."""
+    out = []
+    for st in HAB_STATYI:
+        put = os.path.join(koren, st, "index.html")
+        if not os.path.isfile(put):
+            continue
+        t = open(put, encoding="utf-8").read()
+        h = _H1_STATI.search(t)
+        if not h or re.search(r'<meta name="robots" content="[^"]*noindex', t):
+            continue
+        out.append(("/%s/" % st, re.sub(r"[ \t\r\n]+", " ", html.unescape(re.sub(r"<[^>]+>", "", h.group(1)))).strip()))
+    return out
+
+
 def sobrat_gruppy(gruppy, lm, koren, r, podval, shapka):
     """kartochki-haby-v1: пишет хабы групп, убирает исчезнувшие → {адрес стр. 1: lastmod} хабов, идущих в sitemap.
     В индекс — когда ≥ HAB_GRUPPY_OT карточек группы стоят в sitemap (lm); lastmod — самая свежая из них."""
     v_sm = {}
     nuzhnye = set()
+    normy, statyi = zagruzit_normy(), statyi_haba(koren)  # haby-statyi-v1
+    kg = karta_grupp(gruppy)  # haby-svyazi-v1: ссылки регион ↔ отрасль
     for g in gruppy:
         lms = [lm[adres_str(k)] for k in g["kart"] if adres_str(k) in lm]
         index = len(lms) >= HAB_GRUPPY_OT
@@ -423,7 +443,7 @@ def sobrat_gruppy(gruppy, lm, koren, r, podval, shapka):
             a = adres_gruppy(g, n)
             nuzhnye.add(a)
             zapisat(os.path.join(koren, a.strip("/"), "index.html"),
-                    ss.sobrat_stranicu(html_gruppy(g, chast, index, n, len(chasti)), r, podval, shapka))
+                    ss.sobrat_stranicu(html_gruppy(g, chast, index, n, len(chasti), normy, statyi, kg), r, podval, shapka))
         if index:
             v_sm[adres_gruppy(g)] = max(lms)
     # лишнее (группа ушла ниже порога, страниц стало меньше) — удаляем; пустые папки — тоже
@@ -530,7 +550,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
     for x in starye:
         put = os.path.join(papka, x["_papka"], "index.html")
         with open(put, encoding="utf-8") as fh:
-            t = ubrat_nabor(fh.read())  # nedoimka-mesyac-v1: строку о наборе ФНС ставим заново после svodka_zel
+            t = ubrat_nabor(ubrat_statyu(fh.read()))  # kartochki-stati-v1 + nedoimka-mesyac-v1: обе строки ставим заново
         sos_ = pohozhie(x, vse)
         t2 = _SOS.sub(lambda m: m.group(1) + sosedi_html(x, sos_, eshche_kompanii(x, vse, sos_)) + m.group(3), t, count=1)
         t2 = pochinit_god_dvazhdy(t2)  # v3.10: «Выручка за 2021 — … за 2021» → год один раз, как у новых карточек
@@ -577,6 +597,16 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         put = os.path.join(papka, x["_papka"], "index.html")
         sos_, esh_ = svyazi[x["inn"]]
         izm += zapisat_k(put, _SOS.sub(lambda m: m.group(1) + sosedi_html(x, sos_, esh_) + m.group(3), teksty[x["inn"]], count=1))
+    # kartochki-stati-v1: обратная перелинковка — в одном разделе карточки строка «По теме раздела: «статья»» (подбор —
+    # tests/sobrat_stati_kartochki.py, по тем же карточкам, что статьи → карточки); последним шагом, до sitemap: дата
+    # изменения текста WebPage и lastmod учитывают строку
+    try:
+        import sobrat_stati_kartochki as sk_
+        if os.path.abspath(koren) == os.path.abspath(sk_.KOREN):
+            for put, t in sk_.kartochki_so_statyami(koren).items():
+                izm += zapisat_k(put, t)
+    except Exception as oshibka:  # не роняем сборку; test_stati_kartochki (--check) покажет несобранные строки
+        otchet["stati_v_kartochkah"] = "ошибка: %s" % oshibka
     # sitemap-companies.xml + robots.txt
     sm = os.path.join(koren, "sitemap-companies.xml")
     rb = os.path.join(koren, "robots.txt")
@@ -651,6 +681,13 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
             otchet["nagruzka"] = sobrat_nagruzka.sobrat(koren=koren)
     except Exception as oshibka:  # не роняем сборку карточек; nagruzka.test.js (--check) покажет устаревший блок
         otchet["nagruzka"] = "ошибка: %s" % oshibka
+    # stati-kartochki-v1: статьи /nalogi/ и /115-fz/ называют карточки по теме — пересобрать вместе с ними
+    try:
+        import sobrat_stati_kartochki
+        if os.path.abspath(koren) == os.path.abspath(sobrat_stati_kartochki.KOREN):
+            otchet["stati"] = sobrat_stati_kartochki.sobrat(koren=koren)
+    except Exception as oshibka:  # не роняем сборку карточек; test_stati_kartochki (--check) покажет устаревший блок
+        otchet["stati"] = "ошибка: %s" % oshibka
     return kart, otchet
 
 
@@ -660,6 +697,11 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
 # тексты (оговорки [Право], «Перед оплатой», «Полный отчёт», «Паспорт»). Сделать воротами — решение [Продукт] (✎).
 SOVPADENIE_CEL = 0.60
 _SOS_SSYLKI = re.compile(r'<li><a href="/company/([^/"]+)/">')
+
+
+def ubrat_statyu(t):
+    """kartochki-stati-v1: опубликованная карточка без строки «По теме раздела» (её ставит конец сборки)."""
+    return re.sub(r"<!--karta-statya-->.*?<!--/karta-statya-->", "", t, flags=re.S)
 
 
 def predlozheniya(t):

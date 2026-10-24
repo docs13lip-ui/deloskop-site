@@ -439,7 +439,7 @@
 ;
 /* --- /js/metrika.js --- */
 /* Делоскоп — Яндекс Метрика ТОЛЬКО с согласия (документ команды, раздел 6).
-   Счётчик 113083788, Вебвизор выключен. Код Метрики не загружается, пока человек не нажал «Принять»
+   Счётчик 113083788, Вебвизор выключен. Код Метрики не загружается, пока человек не нажал «Разрешить»
    в баннере cookies; «Только необходимые» — не загружается. Выбор хранится в браузере 12 месяцев.
    Цели: window.dlkGoal("check_started" | "report_opened" | "invoice_created" | "registration" |
    "article_to_tool" | "whatsnew_open" | "pkg_view" | "pkg_cta" | "praktika_cta" |
@@ -573,14 +573,17 @@
     ckMera();
   }
 
+  // ck-korotko-v1 (23.10.2026): одна строка на всех ширинах — текст [команда] 23.10 (✎ 06:50, ч. 1 ст. 9 152-ФЗ, 4 условия):
+  // (1) названо, что включится — Метрика и cookies; (2) «Подробнее» на /cookies/ — в той же строке;
+  // (3) кнопки одного размера и веса, «Только необходимые» — кнопка, не ссылка; (4) до «Разрешить» Метрика не грузится.
   function banner() {
     if (document.querySelector(".ck-bar")) return;
     var d = document.createElement("div");
     d.className = "ck-bar";
     d.setAttribute("role", "region");
     d.setAttribute("aria-label", "Cookies");
-    d.innerHTML = '<div class="ck-bar__in"><p class="ck-bar__t"><span class="ck-bar__dl">Мы используем необходимые cookies для работы сайта и, с\u00a0вашего согласия, Яндекс Метрику, чтобы понимать, что улучшить. Подробнее\u00a0— в\u00a0<a href="/cookies/">Политике cookies</a>.</span><span class="ck-bar__kr">Cookies\u00a0— для работы сайта, Метрика\u00a0— только с\u00a0вашего согласия. <a href="/cookies/">Подробнее</a></span></p>' +
-      '<div class="ck-bar__b"><button type="button" class="ck-bar__ok" data-ck="all">Принять</button>' +
+    d.innerHTML = '<div class="ck-bar__in"><p class="ck-bar__t">Яндекс Метрику и\u00a0её cookies включим только с\u00a0вашего согласия. <a href="/cookies/">Подробнее</a></p>' +
+      '<div class="ck-bar__b"><button type="button" class="ck-bar__ok" data-ck="all">Разрешить</button>' +
       '<button type="button" class="ck-bar__no" data-ck="need">Только необходимые</button></div></div>';
     d.addEventListener("click", function (e) {
       var b = e.target.closest("[data-ck]");

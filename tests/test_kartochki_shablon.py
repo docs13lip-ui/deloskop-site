@@ -44,7 +44,7 @@ class TestShablonObrazec(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.d, cls.kart, _ = sobrat(O.nabor(12))
-        cls.st = {p.parent.name: p.read_text(encoding="utf-8") for p in stranicy(cls.d)}
+        cls.st = {p.parent.name: R.bez_tipografa(p.read_text(encoding="utf-8")) for p in stranicy(cls.d)}  # kartochki-korotkie-v1: без NB_T
 
     @classmethod
     def tearDownClass(cls):

@@ -62,7 +62,7 @@ class TestKartochkiChisla(unittest.TestCase):
         self.assertIn('{"d": "в 17 разделах"}', r)
         self.assertIn("<!--podval--><p>Проверка по ИНН</p><!--/podval-->", r)
         nb = K.NB_T
-        for kusok in ("17" + nb + "разделов", "ст. 21.1 129-ФЗ", "30" + nb + "000" + nb + "₽", "за 20" + nb + "лет",
+        for kusok in ("17" + nb + "разделов", "ст." + nb + "21.1 129-ФЗ", "30" + nb + "000" + nb + "₽", "за" + nb + "20" + nb + "лет",
                       "им." + nb + "В.Д.", "от 1 до 99"):
             self.assertIn(kusok, r)
         self.assertNotIn("&#8209;", r)

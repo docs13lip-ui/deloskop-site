@@ -57,7 +57,7 @@ class Opublikovannye(unittest.TestCase):
             self.skipTest("карточек нет")
         sravn = 0
         for f in karty:
-            t = f.read_text(encoding="utf-8")
+            t = R.bez_tipografa(f.read_text(encoding="utf-8"))  # kartochki-korotkie-v1: без NB_T
             for blok in re.findall(r'<ul class="co-sos(?: co-sos--eshche)?">(.*?)</ul>', t, re.S):
                 for cap in re.findall(r'<span class="caption">(.*?)</span>', blok):
                     c = html.unescape(cap)

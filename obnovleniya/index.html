@@ -46,7 +46,7 @@ h1{font-size:clamp(32px,6vw,56px);line-height:1.05;letter-spacing:-.025em;margin
 <link rel="preload" href="/fonts/onest-latin-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/onest-cyrillic-600.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/css/b/ds.4bce001529.css">
-<script src="/js/b/yadro.1164f59216.js" defer></script>
+<script src="/js/b/yadro.ce6717b529.js" defer></script>
 <link rel="icon" type="image/png" sizes="120x120" href="/favicon-120.png">
 <link rel="alternate" type="application/rss+xml" title="Разборы дел — Делоскоп" href="/praktika/rss.xml">
 <link rel="manifest" href="/manifest.webmanifest">
@@ -160,6 +160,7 @@ h1{font-size:clamp(32px,6vw,56px);line-height:1.05;letter-spacing:-.025em;margin
     function pered(re){return function(m,w,o,x){return o&&re.test(x.charAt(o-1))?m:w+"\u00a0";};}
     return String(s).replace(/(\d) (?=\d{3}(?![0-9A-Za-zЀ-ӿ_]))/g,"$1\u00a0")
       .replace(/(\d) (?=₽|%|млн|млрд|тыс|рабоч|дн|месяц|год|лет|час|минут)/g,"$1\u00a0")
+      .replace(/(млн|млрд|трлн|тыс\.) (?=₽)/g,"$1\u00a0")
       .replace(/ (?=—)/g,"\u00a0")
       .replace(/(пп?\.|ст\.|ч\.|№) /g,pered(P))
       .replace(/(в|и|а|к|с|у|о|я|по|на|не|до|от|за|из|ни|но|же|ли|без|для|под|над|при|про|со|об|во|мы|вы|он|её|ее|их|ей|им) /gi,pered(B))

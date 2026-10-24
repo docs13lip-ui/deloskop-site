@@ -158,4 +158,30 @@ http { include ${MIME}; default_type application/octet-stream; access_log off;
     assert.strictEqual((await zapros(port, p)).kod, 404, p);
   }
   assert.strictEqual((await zapros(port, '/', 'HEAD')).h.server, 'nginx', 'без номера версии');
+
+  // nginx-proverka-v1: тот же набор, которым Штаб и Ночные проверяют живой сайт после переезда
+  // (deploy/proverka_zhivogo.js), — на локальном nginx должен быть весь ✓, включая каждый адрес обеих карт сайта.
+  const { proverit } = require('../deploy/proverka_zhivogo.js');
+  const itog = await proverit(`http://127.0.0.1:${port}`, { sitemap: true });
+  const plohie = itog.filter(x => !x.ok).map(x => `${x.imya}: ${x.chto}`);
+  assert.deepStrictEqual(plohie, [], 'проверка живого на локальном nginx');
+  assert.ok(itog.length >= 14, 'все проверки на месте');
+});
+
+test('проверка живого: набор совпадает с конфигом (без nginx)', () => {
+  const src = fs.readFileSync(path.join(KOREN, 'deploy/proverka_zhivogo.js'), 'utf8');
+  // заголовки кэша в проверке = заголовки в deploy/nginx.conf
+  for (const v of ['max-age=31536000', 'immutable', 'max-age=2592000', 'no-cache']) {
+    assert.ok(CONF.includes(v), 'в конфиге: ' + v);
+    assert.ok(src.includes(v), 'в проверке: ' + v);
+  }
+  // ключ IndexNow в проверке = файл ключа в корне
+  const kl = /KLYUCH_INDEXNOW = '([0-9a-f]+)'/.exec(src)[1];
+  assert.strictEqual(fs.readFileSync(path.join(KOREN, kl + '.txt'), 'utf8').trim(), kl);
+  // в образ сайта скрипт не попадает: Dockerfile удаляет deploy/, nginx закрывает /deploy/
+  assert.match(DOCKERFILE, /rm -rf \/usr\/share\/nginx\/html\/deploy/);
+  assert.match(CONF, /\(\?:tests\|deploy\|\\\.github\)/);
+  // запускается из CI без сети: только чтение, без записи и без внешних модулей
+  assert.doesNotMatch(src, /require\('(?!node:)[a-z]/i, 'без сторонних модулей');
+  assert.doesNotMatch(src, /method: ?'(POST|PUT|DELETE)'/);
 });

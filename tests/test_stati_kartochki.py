@@ -33,6 +33,8 @@ class TestStatiKartochki(unittest.TestCase):
             t, b = blok_stati(statya)
             self.assertTrue(b, "нет блока в " + statya)
             self.assertLess(t.find("<!--stati-kartochki-->"), t.find("</article>"), statya + ": блок вне статьи")
+            if statya in S.BEZ_IMEN:
+                continue
             ssylki = re.findall(r'href="/company/([^/"]+)/#([a-z0-9-]+)"', b)
             self.assertTrue(0 < len(ssylki) <= S.NA_STATYU, statya)
             for papka, y in ssylki:
@@ -45,8 +47,26 @@ class TestStatiKartochki(unittest.TestCase):
                     self.assertIn(filtr, KART[papka][4], "%s: на карточке нет строки «%s»" % (papka, filtr))
             imena = [KART[p][3] for p, _ in ssylki]
             self.assertEqual(imena, sorted(imena), statya + ": не по алфавиту")
-            self.assertIn("это не&nbsp;рейтинг", b)
-        self.assertGreaterEqual(vsego, 60)
+            self.assertIn(S.PODPIS, b, statya + ": подпись [Право] 24.10 «Компании — для примера раздела…»")
+        self.assertGreaterEqual(vsego, 6 * (len(S.TEMY) - len(S.BEZ_IMEN)))
+
+    def test_signaly_bez_imen(self):
+        """stati-imena-v1 (ответ [Право] 24.10, разд. 1.1): в статьях о сигналах — ни одной ссылки на карточку."""
+        dolzhny = {"nalogi/nedostovernyj-adres-egryul", "115-fz/proverit-kontragenta-zsk-po-inn",
+                   "115-fz/zapros-banka-po-115-fz-kak-otvetit"}
+        self.assertTrue(dolzhny <= S.BEZ_IMEN, "темы [Право] «ЗСК», «запрос банка», «недостоверный адрес» — без имён")
+        temy = {statya for statya, *_ in S.TEMY}
+        self.assertTrue(S.BEZ_IMEN <= temy, "в BEZ_IMEN — статья вне TEMY: %s" % (S.BEZ_IMEN - temy))
+        for statya in S.BEZ_IMEN:
+            t, b = blok_stati(statya)
+            self.assertNotRegex(t, r'href="/company/\d', statya + ": в статье о сигнале — ссылка на карточку компании")
+            self.assertIn('href="/company/"', b, statya)
+            self.assertIn("проверкой по&nbsp;реестрам", b, statya)
+        # и наоборот: сигнальное слово в заголовке статьи из TEMY → статья обязана быть в BEZ_IMEN
+        for statya in temy - S.BEZ_IMEN:
+            zag = (S.zagolovok_stati(statya) or "").lower()
+            for slovo in ("зск", "115-фз", "запрос банка", "недостовер", "нет бухотч", "реквизит"):
+                self.assertNotIn(slovo, zag, "%s: «%s» в заголовке — статья о сигнале, имена убрать" % (statya, slovo))
 
     def test_raspredeleny(self):
         schet = {}

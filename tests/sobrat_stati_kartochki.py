@@ -24,6 +24,13 @@ kartochki-stati-v1 (24.10.2026, [Ночные-2]) — обратное напр�
 ещё нет. Строку ставит tests/kartochki.py последним шагом сборки (через запись карточки — с датой изменения текста
 WebPage), а снимает перед правками опубликованных; здесь --check сверяет и её.
 
+stati-imena-v1 (24.10.2026, [Ночные-2]) — ответ [Право] 24.10, разд. 1.1 (ст. 152 ГК, деловая репутация): имя компании
+рядом с темой «проверка по ЗСК», «запрос банка», «недостоверный адрес» читается как сведения о самой компании, а зон ЗСК
+и запросов банков чужих компаний мы не знаем («не проверяли ≠ не нашли»). Поэтому статьи о сигналах (BEZ_IMEN) карточки
+не называют — в них строка «раздел с проверкой по реестрам есть на каждой карточке → /company/». В нейтральных темах
+(статусы, даты, отчётность ГИР БО, «Перед оплатой», «зелёные строки») имена остаются с подписью «Компании — для примера
+раздела: по алфавиту, не по признакам. Это не рейтинг и не оценка.» Сторож — tests/test_stati_kartochki.py.
+
 Запуск: python3 tests/sobrat_stati_kartochki.py          — собрать
         python3 tests/sobrat_stati_kartochki.py --check  — только проверить (код 1, если нужна сборка)
 """
@@ -56,6 +63,19 @@ TEMY = [
     ("115-fz/proverit-kontragenta-zsk-po-inn", "zel", "раздел о&nbsp;том, что значат зелёные строки компании для&nbsp;банка и&nbsp;налоговой", None),
     ("115-fz/zapros-banka-po-115-fz-kak-otvetit", "zel", "раздел о&nbsp;том, что значат зелёные строки компании для&nbsp;банка и&nbsp;налоговой", None),
 ]
+
+# статьи о сигналах — без имён компаний (ответ [Право] 24.10, разд. 1.1); карточки по-прежнему могут ссылаться на них
+BEZ_IMEN = {
+    "nalogi/nedostovernyj-adres-egryul",
+    "nalogi/net-otchetnosti-v-otkrytyh-dannyh",
+    "nalogi/pismo-o-smene-rekvizitov-kak-proverit",
+    "115-fz/proverit-kontragenta-zsk-po-inn",
+    "115-fz/zapros-banka-po-115-fz-kak-otvetit",
+}
+PODPIS = "Компании&nbsp;— для&nbsp;примера раздела: по&nbsp;алфавиту, не&nbsp;по&nbsp;признакам. Это не&nbsp;рейтинг и&nbsp;не&nbsp;оценка."
+BEZ_IMEN_TEKST = ("<!--stati-kartochki--><p class=\"stati-komp\"><strong>Как это выглядит на&nbsp;карточке компании:</strong> "
+                  "раздел с&nbsp;проверкой по&nbsp;реестрам есть на&nbsp;каждой карточке&nbsp;→ <a href=\"/company/\">карточки компаний</a>.</p>"
+                  "<!--/stati-kartochki-->")
 
 _H1 = re.compile(r"<h1[^>]*>(.*?)</h1>", re.S)
 K_METKI = re.compile(r"<!--karta-statya-->.*?<!--/karta-statya-->", re.S)
@@ -99,6 +119,9 @@ def raspredelit(kart, temy=TEMY, na_statyu=NA_STATYU):
     schet = {k[0]: 0 for k in kart}
     out = {}
     for statya, yakor, _, filtr in temy:
+        if statya in BEZ_IMEN:
+            out[statya] = []
+            continue
         podhodyat = [k for k in kart if yakor in k[5] and (not filtr or filtr in k[4])]
         podhodyat.sort(key=lambda k: (schet[k[0]], _hesh(statya, k[1])))
         vybor = podhodyat[:na_statyu]
@@ -108,12 +131,14 @@ def raspredelit(kart, temy=TEMY, na_statyu=NA_STATYU):
     return out
 
 
-def blok(yakor, opisanie, vybor):
+def blok(yakor, opisanie, vybor, statya=None):
+    if statya in BEZ_IMEN:
+        return BEZ_IMEN_TEKST
     if not vybor:
         return PUSTO
     ssylki = ", ".join('<a href="/company/%s/#%s">%s</a>' % (k[0], yakor, k[2]) for k in vybor)
     return ("<!--stati-kartochki--><p class=\"stati-komp\"><strong>Как это выглядит на&nbsp;карточке компании:</strong> %s&nbsp;— %s. "
-            "Порядок&nbsp;— по&nbsp;алфавиту, это не&nbsp;рейтинг.</p><!--/stati-kartochki-->") % (opisanie, ssylki)
+            "%s</p><!--/stati-kartochki-->") % (opisanie, ssylki, PODPIS)
 
 
 def zagolovok_stati(statya, koren=KOREN):
@@ -189,7 +214,7 @@ def sobrat(proverit=False, koren=KOREN):
             print("stati-kartochki: нет статьи " + statya)
             return 1
         s = open(put, encoding="utf-8").read()
-        novyj = blok(yakor, opisanie, po[statya]) + "\n"
+        novyj = blok(yakor, opisanie, po[statya], statya) + "\n"
         if METKI.search(s):
             novoe = METKI.sub(lambda m: novyj, s, count=1)
         else:

@@ -20,6 +20,13 @@
 сборки (записи -71 и -47 и лишняя </div>): метка искалась до ПЕРВОГО <!--/lenta-->, хвост за ней жил вечно, и посетитель
 видел эти две записи дважды (с одинаковыми id). Теперь блок заменяется до ПОСЛЕДНЕЙ закрывающей метки внутри <main>.
 
+Цифры «Пульса» на /o-proekte/ (24.10.2026, [Ночные запуски] puls-cifry-v1): четыре числа над снимком стояли руками
+на 11.10 — «285 обновлений», «112 карточек», «18 разборов», «44 статьи» и «Цифры на 11 октября 2026». Скрипт страницы
+через полсекунды менял 285 на длину ленты (383 на живом 24.10) — число прыгало на глазах, а остальные три отставали
+навсегда (на 24.10: 166 карточек, 21 разбор, 27 статей). Теперь все четыре и дата подписи считаются здесь из файлов
+сайта: записи obnovleniya.json; папки /company/<ИНН>-…/; разборы praktika/dela.json; статьи — страницы /115-fz/…/ и
+/nalogi/…/ без хабов; дата — день верхней записи ленты. Сторож — tests/puls_cifry.test.js.
+
 Запуск: python3 tests/sobrat_lentu.py [--check]
 Вызывается сам из tests/postavit_vremya.py — то есть при каждой выкладке, вместе с проставлением времени.
 """
@@ -128,10 +135,64 @@ def sobrat_puls(txt, zapisi):
     return PULS.sub(lambda m: m.group(1) + "\n" + li + "\n" + m.group(3), txt, count=1)
 
 
+CIFRA = re.compile(r'(<div class="cifra"><b(?: data-c="(\w+)")?>)\d+(</b><span(?: data-c-l)?>)(.*?)(</span></div>)')
+CIFRY_DATA = re.compile(r'(<p class="cap">Цифры на&nbsp;)\d+&nbsp;[а-я]+(?:&nbsp;| )\d{4}(\.</p>)')
+# вид числа → (формы слова для 1 / 2–4 / 5+, хвост подписи как в разметке)
+CIFRY_VIDY = [
+    ("zapisej", ("обновление", "обновления", "обновлений"), " в&nbsp;ленте с&nbsp;25&nbsp;сентября 2026"),
+    ("kartochki", ("карточка", "карточки", "карточек"), " компаний&nbsp;— у&nbsp;каждой свой вывод"),
+    ("razbory", ("разбор", "разбора", "разборов"), " судебных и&nbsp;налоговых дел"),
+    ("stati", ("статья", "статьи", "статей"), " о&nbsp;115&#8209;ФЗ и&nbsp;налогах простыми словами"),
+]
+
+
+def forma(n, f):
+    """Как в скрипте /o-proekte/: 1 обновление, 2 обновления, 5 и 11–19 обновлений."""
+    d, k = n % 100, n % 10
+    return f[2] if 10 < d < 20 else f[0] if k == 1 else f[1] if 1 < k < 5 else f[2]
+
+
+def schet_puls(zapisi):
+    """Четыре числа «Пульса» — из файлов сайта, без ручных правок."""
+    kart = sum(1 for d in (ROOT / "company").iterdir()
+               if d.is_dir() and re.match(r"^\d{10}(\d{2})?-", d.name) and (d / "index.html").exists()) \
+        if (ROOT / "company").is_dir() else 0
+    dela = ROOT / "praktika" / "dela.json"
+    razb = len(json.loads(dela.read_text(encoding="utf-8")).get("razbory", [])) if dela.exists() else 0
+    stati = 0
+    for hab in ("115-fz", "nalogi"):
+        h = ROOT / hab
+        if h.is_dir():
+            stati += sum(1 for f in h.rglob("index.html") if f.parent != h)
+    return {"zapisej": len(zapisi), "kartochki": kart, "razbory": razb, "stati": stati}
+
+
+def sobrat_cifry(txt, zapisi):
+    """Числа над «Последними изменениями» и подпись «Цифры на …» — день верхней записи ленты."""
+    chisla = schet_puls(zapisi)
+    bloki = list(CIFRA.finditer(txt))
+    if len(bloki) != len(CIFRY_VIDY):
+        raise SystemExit("sobrat_lentu: на /o-proekte/ не %d цифр «Пульса», а %d — разметку правили руками"
+                         % (len(CIFRY_VIDY), len(bloki)))
+    po_poryadku = iter(CIFRY_VIDY)
+
+    def zamena(m):
+        vid, formy, hvost = next(po_poryadku)
+        n = chisla[vid]
+        return "%s%d%s%s%s%s" % (m.group(1), n, m.group(3), forma(n, formy), hvost, m.group(5))
+    txt = CIFRA.sub(zamena, txt)
+    m = re.match(r"^(\d{4})-(\d{2})-(\d{2})", (zapisi[0].get("id") if zapisi else "") or "")
+    if m:
+        den = "%d&nbsp;%s %s" % (int(m.group(3)), MESYACY[int(m.group(2)) - 1], m.group(1))
+        txt = CIFRY_DATA.sub(lambda x: x.group(1) + den + x.group(2), txt, count=1)
+    return txt
+
+
 def main(argv):
     zapisi = json.loads(LENTA.read_text(encoding="utf-8"))["obnovleniya"]
     pary = [(STRANICA, sobrat, "Лента в HTML /obnovleniya/"),
-            (PULS_STRANICA, lambda t: sobrat_puls(t, zapisi), "«Последние изменения» на /o-proekte/")]
+            (PULS_STRANICA, lambda t: sobrat_cifry(sobrat_puls(t, zapisi), zapisi),
+             "«Пульс проекта» на /o-proekte/")]
     kod = 0
     for put, f, imya in pary:
         if not put.exists():

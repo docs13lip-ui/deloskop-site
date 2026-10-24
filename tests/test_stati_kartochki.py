@@ -143,9 +143,20 @@ class TestKartochkiStati(unittest.TestCase):
             self.assertEqual(S._TEG.sub("", st[0]).count(S.zagolovok_stati(statya)), 1, d + ": заголовок статьи")
             self.assertEqual(KART[d][6].count('href="/%s/"' % statya), 0, d + ": статья уже есть на карточке — второй раз не ставим")
             schet[statya] = schet.get(statya, 0) + 1
-        if len(KART) >= len(S.TEMY) * 3:
-            self.assertEqual(set(schet), set(temy), "каждая статья получает ссылки с карточек")
+        nejtr = set(temy) - S.BEZ_IMEN
+        self.assertFalse(set(schet) & S.BEZ_IMEN, "stati-kartochki-v3: карточки не ссылаются на статьи-«сигналы»: %s" % (set(schet) & S.BEZ_IMEN))
+        if len(KART) >= len(nejtr) * 3:
+            self.assertEqual(set(schet), nejtr, "каждая нейтральная статья получает ссылки с карточек")
             self.assertLessEqual(max(schet.values()) - min(schet.values()), 2, "ссылки распределены ровно: %s" % schet)
+
+    def test_net_signalov_na_kartochkah(self):
+        """stati-kartochki-v3: ни одна карточка /company/ не ведёт на статью из BEZ_IMEN — ни строкой «По теме», ни иначе."""
+        for d in sorted(os.listdir(os.path.join(KOREN, "company"))):
+            put = os.path.join(KOREN, "company", d, "index.html")
+            if re.match(r"^\d{10}-", d) and os.path.isfile(put):
+                t = open(put, encoding="utf-8").read()
+                for statya in S.BEZ_IMEN:
+                    self.assertNotIn('href="/%s/"' % statya, "".join(S.K_METKI.findall(t)), d)
 
     def test_bez_slov_ocenki(self):
         for d, (t, st) in self.stroki().items():

@@ -31,6 +31,11 @@ stati-imena-v1 (24.10.2026, [Ночные-2]) — ответ [Право] 24.10,
 (статусы, даты, отчётность ГИР БО, «Перед оплатой», «зелёные строки») имена остаются с подписью «Компании — для примера
 раздела: по алфавиту, не по признакам. Это не рейтинг и не оценка.» Сторож — tests/test_stati_kartochki.py.
 
+stati-kartochki-v3 (24.10.2026, [Ночные-2], задача Штаба 13:15): и обратного хода к статьям BEZ_IMEN нет — строка
+«По теме раздела» на карточке конкретной компании ведёт только на 10 нейтральных статей (имя компании рядом с темой
+«ЗСК», «запрос банка», «недостоверный адрес», «нет бухотчётности», «новые реквизиты» читалось бы как сведение о ней —
+логика [Право] 1.1). Ровность распределения — по 10 статьям. Сторож — tests/test_stati_kartochki.py.
+
 Запуск: python3 tests/sobrat_stati_kartochki.py          — собрать
         python3 tests/sobrat_stati_kartochki.py --check  — только проверить (код 1, если нужна сборка)
 """
@@ -152,13 +157,15 @@ def zagolovok_stati(statya, koren=KOREN):
 def obratno(kart, po, koren=KOREN):
     """→ {папка карточки: (статья, якорь)}: взаимная ссылка, иначе — статья раздела с наименьшим числом карточек."""
     out = {}
-    nagruzka = {statya: 0 for statya, *_ in TEMY}
+    nagruzka = {statya: 0 for statya, *_ in TEMY if statya not in BEZ_IMEN}
     for statya, yakor, _, _ in TEMY:
+        if statya in BEZ_IMEN:  # stati-kartochki-v3: со статьями-«сигналами» карточки не связываем ни в одну сторону
+            continue
         for k in po.get(statya, []):
             if k[0] not in out and ("/%s/" % statya) not in k[6]:  # уже ссылается — взаимность есть, берём другую
                 out[k[0]] = (statya, yakor)
                 nagruzka[statya] += 1
-    est = {statya for statya, *_ in TEMY if zagolovok_stati(statya, koren)}
+    est = {statya for statya, *_ in TEMY if statya not in BEZ_IMEN and zagolovok_stati(statya, koren)}
     for k in sorted(kart, key=lambda x: x[0]):
         if k[0] in out:
             continue

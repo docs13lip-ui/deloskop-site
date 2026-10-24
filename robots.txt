@@ -5,6 +5,14 @@ Disallow: /tests/
 Disallow: /cabinet.html
 Disallow: /admin.html
 Disallow: /schet/dokument/
+# Отчёт, Паспорт контрагента и сравнение по ИНН — личная проверка, не страница для поиска:
+# робот их не открывает и не запускает по ним проверки (сторож — tests/robots_otchety.test.js)
+Disallow: /*?inn=
+Disallow: /*&inn=
+Disallow: /otchet/
+Disallow: /report.html
+Disallow: /pasport/kontragent/?
+Disallow: /sravnit/?
 Clean-param: ref /
 Clean-param: utm_source&utm_medium&utm_campaign&utm_content&utm_term&yclid&ysclid&yrclid /
 

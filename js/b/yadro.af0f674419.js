@@ -498,6 +498,46 @@
   ["pointerup", "pointercancel", "dragstart"].forEach(function (n) { document.addEventListener(n, otpusk, { passive: true }); });
   document.addEventListener("pointerout", function (ev) { if (el && ev.target === el && !el.contains(ev.relatedTarget)) otpusk(); }, { passive: true });
 })();
+
+
+/* §11. dostupnost-v1 (25.10): широкая таблица на телефоне листается вбок внутри .tw — без мыши до неё
+   не добраться. Пока таблица шире своей рамки, рамка — область «Таблица: <заголовок>» и принимает фокус
+   (стрелки листают её), поместилась — снова обычный блок без лишней остановки Tab. Заголовок — подпись таблицы
+   (<caption>) или ближайший заголовок выше; иначе — «Таблица». */
+(function () {
+  "use strict";
+  if (typeof window === "undefined" || typeof document === "undefined" || !document.querySelectorAll || !window.addEventListener) return;
+  function imya(w) {
+    var c = w.querySelector("caption");
+    var t = c && c.textContent;
+    if (!t) {
+      for (var e = w.previousElementSibling, i = 0; e && i < 6 && !t; e = e.previousElementSibling, i++)
+        if (/^H[2-4]$/.test(e.tagName)) t = e.textContent;
+    }
+    t = (t || "").replace(/\s+/g, " ").trim();
+    return t ? "Таблица: " + (t.length > 80 ? t.slice(0, 79) + "…" : t) : "Таблица";
+  }
+  function otmetit() {
+    var ws = document.querySelectorAll(".tw");
+    for (var i = 0; i < ws.length; i++) {
+      var w = ws[i], shire = w.scrollWidth > w.clientWidth + 1;
+      if (shire && !w.hasAttribute("data-tw-fokus")) {
+        w.setAttribute("data-tw-fokus", "");
+        w.setAttribute("tabindex", "0");
+        w.setAttribute("role", "region");
+        w.setAttribute("aria-label", imya(w));
+      } else if (!shire && w.hasAttribute("data-tw-fokus")) {
+        ["data-tw-fokus", "tabindex", "role", "aria-label"].forEach(function (a) { w.removeAttribute(a); });
+      }
+    }
+  }
+  var tajmer = 0;
+  function pozzhe() { clearTimeout(tajmer); tajmer = setTimeout(otmetit, 150); }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", otmetit); else otmetit();
+  window.addEventListener("load", otmetit);
+  window.addEventListener("resize", pozzhe, { passive: true });
+  if (typeof module === "object" && module.exports) module.exports.tablicy = { otmetit: otmetit, imya: imya };
+})();
 ;
 /* --- /js/metrika.js --- */
 /* Делоскоп — Яндекс Метрика ТОЛЬКО с согласия (документ команды, раздел 6).

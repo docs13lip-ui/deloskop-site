@@ -35,6 +35,7 @@
 .podval a:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
 .podval__niz{display:flex;justify-content:space-between;gap:var(--s-3) var(--s-6);flex-wrap:wrap;margin-top:var(--s-7);padding-top:var(--s-5);border-top:1px solid var(--line);font-size:var(--t-caption);line-height:1.4}
 .podval .podval__niz p{margin:0;color:var(--muted);font-size:var(--t-caption)}
+.podval .podval__niz a{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.2em}.podval .podval__niz a:hover{text-decoration-color:currentColor}
 @media (max-width:900px){.podval__cols{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:640px){.podval{padding:var(--s-7) 0 var(--s-6)}.podval__cols{gap:var(--s-5) var(--s-4)}.podval li{margin-bottom:var(--s-3)}}
 @media print{.podval{display:none}}
@@ -158,6 +159,8 @@ dialog.mnav::backdrop{background:rgba(17,17,19,.4);-webkit-backdrop-filter:blur(
 .beta-bar .beta-bar__x{flex:none;display:inline-grid;place-items:center;width:44px;height:44px;margin-right:-10px;padding:0;border:0;border-radius:var(--r-pill);background:none;color:var(--muted);cursor:pointer}
 .beta-bar .beta-bar__x:hover{background:var(--surface-2);color:var(--ink)}
 .beta-bar :focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+/* dostupnost-v1: рамка широкой таблицы на телефоне принимает фокус (js/shapka.js §11) — кольцо как у кнопок */
+.tw[data-tw-fokus]:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
 /* beta-odna-stroka-v1: полный текст — в <details>; на широком экране открыт до отрисовки (скрипт полосы), короткая строка скрыта */
 .beta-bar .beta-bar__d{flex:1;min-width:0;margin:0;padding:0}
 .beta-bar .beta-bar__d>.beta-bar__t{margin:0!important}  /* на /tarify/ и /indeks/ страница задаёт details p{margin…!important} */

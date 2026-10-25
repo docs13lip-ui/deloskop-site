@@ -199,6 +199,11 @@ def proverit(d, html_stranicy=""):
             for r, chto in ZAPRET:
                 if r.search(kusok):
                     raise Oshibka("%s: %s — нельзя (%r)" % (i, chto, kusok))
+    # demo-vitrina-v1: показы на /kak-rabotaet/ сами называют свой экспонат (data-eksponat) — ссылка «Как это работает»
+    po_id = {x["id"]: x for x in ex}
+    for i, pokaz in POKAZY().items():
+        if i not in po_id or po_id[i]["status"] == "razrabotka":
+            raise Oshibka("kak-rabotaet: показ #%s — экспонат %r не найден или ещё в разработке" % (pokaz, i))
     zal = d.get("zal") or {}
     for k in ("nad", "zag", "lead", "skoro"):
         if not zal.get(k):
@@ -211,6 +216,21 @@ def proverit(d, html_stranicy=""):
     for r, chto in ZAPRET:
         if r.search(cd.get("tekst", "")) or any(r.search(v) for v in zal.values() if isinstance(v, str)):
             raise Oshibka("zal/chto_dalshe: %s — нельзя" % chto)
+
+
+def POKAZY(koren=KOREN):
+    try:
+        with open(os.path.join(koren, "kak-rabotaet", "index.html"), encoding="utf-8") as f:
+            return {e: i for i, e in re.findall(r'<section class="kr-d" id="([^"]+)" data-eksponat="([^"]+)"', f.read())}
+    except OSError:
+        return {}
+
+
+def kak(x):
+    pokaz = POKAZY().get(x["id"])
+    if not pokaz:
+        return ""
+    return '<p class="vit-e__go"><a class="vit-lnk" href="/kak-rabotaet/#%s">Как это работает<span aria-hidden="true">→</span></a></p>' % e(pokaz)
 
 
 def geroj(imya, klass="vit-g"):
@@ -287,7 +307,7 @@ def eksponat(x, n, klass=None):
         # «3 факта» — только на узком экране и только со скриптом (js/vitrina.js снимает hidden); без скрипта факты открыты
         '<div class="vit-e__niz"><button type="button" class="vit-e__fb" aria-expanded="false" aria-controls="%s" hidden>'
         'Что умеет<span aria-hidden="true"></span></button>' % fid +
-        '<p class="vit-e__go">%s</p></div>' % ssylka(x, "vit-btn", t(x["dejstvie"]) + '<span aria-hidden="true">→</span>') +
+        '<p class="vit-e__go">%s</p>%s</div>' % (ssylka(x, "vit-btn", t(x["dejstvie"]) + '<span aria-hidden="true">→</span>'), kak(x)) +
         '</div></li>'
     )
 

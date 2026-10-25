@@ -43,7 +43,8 @@ test('модули отчёта из пакета дают те же объек�
   okno.window = okno;
   vm.runInContext('var window=this.window;', ctx);
   // пакет исполняется в браузере с this === window: UMD-обёртки кладут объекты в root
-  vm.runInContext('(function(){' + chitat(paket('otchet')) + '\n}).call(window)', ctx);
+  // primer-legkij-v1: «Условия сделки» с зависимостями — в пакете primer, страница всегда грузит его раньше otchet
+  vm.runInContext('(function(){' + chitat(paket('primer')) + '\n' + chitat(paket('otchet')) + '\n}).call(window)', ctx);
   const est = Object.keys(okno).concat(Object.keys(ctx));
   for (const g of ['Usloviya', 'Otchet', 'Dinamika', 'IndeksOtvet', 'Sushchestvennoe', 'Shchit', 'Otkuda', 'Terminy', 'DeloskopIndeks', 'Nedavnie'])
     assert.ok(est.includes(g), g);

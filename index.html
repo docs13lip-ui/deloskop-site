@@ -636,7 +636,7 @@ footer a{color:var(--ink2)}
       dossier:{kpi:[{label:'Выручка за 2025',value:48000000}]},damia:{fssp:{status:'not_found'},nalogi:{status:'not_found'},sudy:{status:'not_found'},bankrotstvo:{status:'not_found'}}},{compact:true});}catch(e){ex.className='verdict';}
   }
   // пример «Условий сделки» — когда страница загрузилась и браузер свободен (не спорит с первым экраном)
-  window.addEventListener('load',function(){var ric=window.requestIdleCallback||function(f){setTimeout(f,200)};ric(function(){kogdaModuli(primerUslovij)},{timeout:2500});});
+  window.addEventListener('load',function(){var ric=window.requestIdleCallback||function(f){setTimeout(f,200)};ric(function(){kogdaPrimer(primerUslovij)},{timeout:2500});});
 
   // ---- живая проверка ----
   var CAPI=(location.hostname.endsWith('deloskop.ru')?'https://api.deloskop.ru':'');
@@ -720,12 +720,19 @@ footer a{color:var(--ink2)}
   // приходил до модулей — отчёт рисовался старой вёрсткой: без вывода, предела предоплаты, Индекса и Динамики. Запрос уходит сразу, рисуем — когда модули на месте.
   // readyState не годится: «interactive» ставится до исполнения defer-скриптов — ждём само событие (этот скрипт исполняется раньше него).
   var moduliGotovy=false;document.addEventListener('DOMContentLoaded',function(){moduliGotovy=true});
-  // vizual-v3.0a: модули отчёта (~450 КБ) — одним пакетом и только когда нужны: при проверке, при намерении проверить
+  // vizual-v3.0a: модули отчёта (~400 КБ) — одним пакетом и только когда нужны: при проверке, при намерении проверить
   // (фокус в поле, наведение или касание кнопки) и после загрузки страницы, когда браузер свободен (пример «Условий сделки»).
   // Пакет не загрузился — отчёт рисуется как раньше без модулей (каждый вызов — через window.X).
-  var OTCHET_JS='/js/b/otchet.759543de17.js', moduliP=null;
-  function gruzitModuli(){if(moduliP)return moduliP;moduliP=new Promise(function(ok){var s=document.createElement('script');s.src=OTCHET_JS;s.onload=s.onerror=function(){ok()};document.head.appendChild(s);});return moduliP;}
-  function kogdaModuli(f){gruzitModuli().then(function(){if(moduliGotovy)f();else document.addEventListener('DOMContentLoaded',function(){f()},{once:true});});}
+  // primer-legkij-v1 (25.10): пример «Условий сделки» просит только пакет «primer» (usloviya + sushchestvennoe + status-kod, ~130 КБ), а не весь отчёт (~535 КБ):
+  // сервер пока отдаёт без сжатия, и каждый заход на главную без проверки скачивал полмегабайта. Весь отчёт — при проверке и намерении проверить.
+  // Оба тега — async=false: исполняются в порядке вставки (как defer), «primer» всегда раньше «otchet».
+  var PRIMER_JS='/js/b/primer.eef7a4397f.js', OTCHET_JS='/js/b/otchet.560d095dfa.js', primerP=null, moduliP=null;
+  function teg(src){return new Promise(function(ok){var s=document.createElement('script');s.src=src;s.async=false;s.onload=s.onerror=function(){ok()};document.head.appendChild(s);});}
+  function gruzitPrimer(){if(!primerP)primerP=teg(PRIMER_JS);return primerP;}
+  function gruzitModuli(){if(moduliP)return moduliP;var p=gruzitPrimer();moduliP=Promise.all([p,teg(OTCHET_JS)]);return moduliP;}
+  function kogdaGotovo(p,f){p.then(function(){if(moduliGotovy)f();else document.addEventListener('DOMContentLoaded',function(){f()},{once:true});});}
+  function kogdaModuli(f){kogdaGotovo(gruzitModuli(),f);}
+  function kogdaPrimer(f){kogdaGotovo(gruzitPrimer(),f);}
   ['focus','input','pointerenter','touchstart'].forEach(function(ev){form.addEventListener(ev,function(){gruzitModuli()},{once:true,passive:true,capture:true});});
   // ---- vizual-v3.1a: адрес отчёта и «Назад» ----
   // Отчёт получает свой адрес в истории: «Назад» возвращает пример, «Вперёд» — отчёт. Сейчас адрес — /?inn=…
@@ -739,12 +746,12 @@ footer a{color:var(--ink2)}
   function adres(inn,o){if(o&&(o.svoj||o.izIstorii)||!/^\d{10}(\d{2})?$/.test(String(inn))||!history.pushState)return;
     var u=OTCHET_PUT?'/otchet/'+inn+'/':'/?inn='+inn;
     try{if(innIzAdresa()===String(inn))history.replaceState({dlkInn:String(inn)},'',u);else history.pushState({dlkInn:String(inn)},'',u);}catch(e){}}
-  function bezOtcheta(){document.documentElement.classList.remove('rezhim-otcheta');if(document.readyState==='complete')kogdaModuli(primerUslovij);}
+  function bezOtcheta(){document.documentElement.classList.remove('rezhim-otcheta');if(document.readyState==='complete')kogdaPrimer(primerUslovij);}
   function vernutPrimer(){bezOtcheta();if(!exUzly||report.classList.contains('ex'))return;
     if(window.DlkLipkaya)try{DlkLipkaya.snyat()}catch(e){}
     perehod(function(){report.textContent='';exUzly.forEach(function(n){report.appendChild(n)});report.className=exAtr.c;
       if(exAtr.a)report.setAttribute('aria-label',exAtr.a);document.body.classList.remove('rezhim-otcheta');}).then(function(){
-      note.className='note';note.textContent=def;if(window.Portfel)try{Portfel.obnovit()}catch(e){}kogdaModuli(primerUslovij);});}
+      note.className='note';note.textContent=def;if(window.Portfel)try{Portfel.obnovit()}catch(e){}kogdaPrimer(primerUslovij);});}
   window.addEventListener('popstate',function(){var inn=innIzAdresa();
     if(inn){input.value=inn;runCheck(inn,{izIstorii:true});}else vernutPrimer();});
   function runCheck(v,o){

@@ -1,5 +1,5 @@
 {
-  "_": "vizual-v3.0a: пакеты JS — tests/sobrat_js.py склеивает исходники в js/b/<имя>.<отпечаток>.js в этом порядке (порядок = прежний порядок тегов defer). Правьте исходники и этот список, потом: python3 tests/sobrat_js.py. «otchet» на главной не подключается тегом — его грузит страница при первой проверке, при намерении проверить (фокус в поле, наведение на кнопку) или после загрузки страницы, когда браузер свободен (пример «Условий сделки»). Пакеты стилей (*.css) — так же, в css/b/. «yadro» — общее для всех страниц (шапка, Метрика, подпись при копировании, PWA, «Что нового», свой счёт просмотров без cookie); sobrat_shapku не вставляет отдельные теги того, что уже есть в пакете страницы. yadro-v1: «ds» и «yadro» sobrat_shapku ставит на все страницы сайта (svernut), sobrat_js обновляет их отпечаток везде — правите исходник пакета, запустите python3 tests/sobrat_shapku.py && python3 tests/sobrat_js.py.",
+  "_": "vizual-v3.0a: пакеты JS — tests/sobrat_js.py склеивает исходники в js/b/<имя>.<отпечаток>.js в этом порядке (порядок = прежний порядок тегов defer). Правьте исходники и этот список, потом: python3 tests/sobrat_js.py. «primer» (primer-legkij-v1, 25.10) — «Условия сделки» и то, что они спрашивают при расчёте (sushchestvennoe, status-kod, usloviya; ~130 КБ): его главная грузит после load для примера «Условий сделки»; «otchet» (~400 КБ, без них) — только при проверке или намерении проверить, всегда после «primer» (async=false — порядок как у defer). «otchet» на главной не подключается тегом — его грузит страница при первой проверке, при намерении проверить (фокус в поле, наведение на кнопку) или после загрузки страницы, когда браузер свободен (пример «Условий сделки»). Пакеты стилей (*.css) — так же, в css/b/. «yadro» — общее для всех страниц (шапка, Метрика, подпись при копировании, PWA, «Что нового», свой счёт просмотров без cookie); sobrat_shapku не вставляет отдельные теги того, что уже есть в пакете страницы. yadro-v1: «ds» и «yadro» sobrat_shapku ставит на все страницы сайта (svernut), sobrat_js обновляет их отпечаток везде — правите исходник пакета, запустите python3 tests/sobrat_shapku.py && python3 tests/sobrat_js.py.",
   "pakety": {
     "ds": [
       "css/fonts.css",
@@ -41,14 +41,11 @@
       "js/inn.js"
     ],
     "otchet": [
-      "js/sushchestvennoe.js",
       "js/kommentarii.js",
       "js/otkuda.js",
       "js/reestry-sami.js",
       "js/rekvizity-proverki.js",
       "js/perepoverit.js",
-      "js/status-kod.js",
-      "js/usloviya.js",
       "js/shchit.js",
       "js/dinamika.js",
       "js/golos.js",
@@ -67,6 +64,11 @@
       "js/svyazi.js",
       "js/nedavnie.js"
     ],
+    "primer": [
+      "js/sushchestvennoe.js",
+      "js/status-kod.js",
+      "js/usloviya.js"
+    ],
     "nebo": [
       "js/nebo.js"
     ],
@@ -82,10 +84,12 @@
       "yadro",
       "glavnaya",
       "glavnaya-sinhr",
+      "primer",
       "otchet"
     ],
     "sravnit/index.html": [
       "glavnaya-sinhr",
+      "primer",
       "otchet",
       "sravnit"
     ]

@@ -56,6 +56,6 @@ test('в режиме отчёта пример «Условий сделки» 
   assert.ok(f, 'primerUslovij на месте');
   assert.match(f[1], /classList\.contains\('rezhim-otcheta'\)\)return;/);
   assert.ok(f[1].indexOf("rezhim-otcheta')") > f[1].indexOf("ex.hasAttribute('data-usl-gotov')"), 'проверка режима — до data-usl-gotov не ставим метку');
-  assert.match(html, /function bezOtcheta\(\)\{document\.documentElement\.classList\.remove\('rezhim-otcheta'\);if\(document\.readyState==='complete'\)kogdaModuli\(primerUslovij\);\}/);
-  assert.match(html, /Portfel\.obnovit\(\)\}catch\(e\)\{\}kogdaModuli\(primerUslovij\);\}\);\}/, 'vernutPrimer — после возврата узлов примера');
+  assert.match(html, /function bezOtcheta\(\)\{document\.documentElement\.classList\.remove\('rezhim-otcheta'\);if\(document\.readyState==='complete'\)kogdaPrimer\(primerUslovij\);\}/);
+  assert.match(html, /Portfel\.obnovit\(\)\}catch\(e\)\{\}kogdaPrimer\(primerUslovij\);\}\);\}/, 'vernutPrimer — после возврата узлов примера');
 });

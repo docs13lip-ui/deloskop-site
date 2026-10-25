@@ -1,11 +1,7 @@
 /* Делоскоп · пакет «glavnaya-stil» — собран tests/sobrat_js.py из 5 файлов (partials/sborka.json). Правьте исходники, не этот файл. */
 /* --- /css/otchet.css --- */
-/* Делоскоп — лист «Отчёт о проверке» на всю ширину (js/otchet.js; макет документ команды, разд. 2.1–2.3).
-   Токены v1.1 — дополнение к ds.css; названия совпадают с макетом. */
 :root{--r-doc:16px;--line-2:#D9D9D4;--ok-dot:#16723F;--warn-dot:#B86E00;--bad-dot:#B3261E;--na:#A1A1A6}
 .n{font-variant-numeric:tabular-nums}
-
-/* режим отчёта: герой схлопывается в строку с полем, отчёт — лист 1 200 px */
 .rezhim-otcheta .hero{padding-block:16px clamp(40px,6vw,72px)}
 .rezhim-otcheta .hero .wrap{grid-template-columns:minmax(0,1fr);gap:16px;max-width:calc(1200px + 2*var(--pad))}
 .rezhim-otcheta .hero-text{flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 16px}
@@ -14,8 +10,6 @@
 .rezhim-otcheta .hero-text .check input,.rezhim-otcheta .hero-text .check button{min-height:44px;font-size:17px}
 .rezhim-otcheta .hero-text .note{flex:1 1 200px;min-height:0;font-size:15px}
 @media (min-width:901px){.rezhim-otcheta .hero-text{position:sticky;top:68px;z-index:9;padding:10px 0;background:rgba(245,245,242,.92);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}}
-
-/* лист */
 .report.ot{display:block;padding:0;gap:0;border-radius:var(--r-doc);background:var(--card,#fff);box-shadow:0 1px 2px rgba(29,29,31,.04),0 12px 32px rgba(29,29,31,.06)}
 .ot-hd,.ot-vd,.ot-body{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:24px;padding:32px 40px 24px}
 .ot-hd{border-bottom:1px solid var(--line,#E6E6E1)}
@@ -24,8 +18,6 @@
 .ot-who .company{font-size:32px;line-height:1.15;letter-spacing:-.02em;margin-top:6px}
 .ot-who .sub{font-size:15px;color:var(--ink2,#48484C);font-variant-numeric:tabular-nums}
 .ot-rq .rkv{margin:0}
-
-/* B — полоса вывода */
 .ot-vd{padding:28px 40px;background:var(--warn-bg,#FFF4E0);-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .ot-vd--ok{background:var(--ok-bg,#E8F5EE)}.ot-vd--bad{background:var(--bad-bg,#FDECEA)}
 .ot-ix{grid-column:1/4;border-right:1px solid rgba(0,0,0,.08);padding-right:24px;display:flex;flex-direction:column;gap:8px;min-width:0}
@@ -38,7 +30,6 @@
 .ot-ix__pl{font-size:15px;color:var(--ink2,#48484C)}
 .ot-ix__lv{font-size:15px;font-weight:600}
 .ot-ix__pod{font-size:13px;line-height:1.45;color:var(--muted,#6B6B70);margin-top:4px;font-variant-numeric:tabular-nums}
-/* indeks-v-otchete-v1: число по открытой методике в браузере, раскладка «Почему N» */
 .ot-ix__lv--ok{color:var(--ok,#16723F)}.ot-ix__lv--warn{color:var(--warn,#9A5B00)}.ot-ix__lv--bad{color:var(--bad,#B3261E)}
 .ot-ix__po{font-size:13px;line-height:1.4;color:var(--muted,#6B6B70)}
 .ot-ix__pch{font-size:13px;line-height:1.4}
@@ -53,7 +44,6 @@
 .ot-ix__ne-uch{margin:8px 0 0;color:var(--muted,#6B6B70);font-size:13px}
 .ot-main>.din{background:transparent;border-radius:0;padding:24px 0}
 .ot-ix .pill{align-self:flex-start;background:rgba(255,255,255,.7)}
-/* «Без серьёзных сигналов» / «Есть серьёзные сигналы» длиннее прежних слов — в узкой колонке переносим, а не вылезаем за край (malo-pilyulya-v1) */
 .ot-ix .pill,.ex-ix .pill{white-space:normal;max-width:100%;line-height:1.25;border-radius:16px}
 .ot-ix .pill svg,.ex-ix .pill svg{flex:none}
 .ot-vt{grid-column:4/10;min-width:0;display:flex;flex-direction:column;gap:8px}
@@ -70,13 +60,9 @@
 .ot-btn{display:inline-flex;justify-content:center;align-items:center;text-align:center;font-weight:600;font-size:15px;padding:12px 16px;border-radius:10px;text-decoration:none;min-height:44px}
 .ot-btn.p{background:var(--accent,#0B63E5);color:#fff}.ot-btn.p:hover{background:var(--accent-hover,#084BB0);color:#fff}
 .ot-btn.s{background:rgba(255,255,255,.6);box-shadow:inset 0 0 0 1px var(--line-2);color:var(--ink,#1D1D1F)}.ot-btn.s:hover{box-shadow:inset 0 0 0 1px var(--accent,#0B63E5);color:var(--accent,#0B63E5)}
-.ot-lnk{display:flex;justify-content:center;align-items:center;min-height:44px;font-size:15px;color:var(--accent,#0B63E5);text-decoration:none}.ot-lnk:hover{color:var(--accent-hover,#084BB0);text-decoration:underline}/* sravnit-v1 */
-/* «Паспорт в один шаг» (js/pasport-cta.js): строка под кнопкой — 13 px серым (ТЗ [команда] 02.10, разд. 1.1) */
+.ot-lnk{display:flex;justify-content:center;align-items:center;min-height:44px;font-size:15px;color:var(--accent,#0B63E5);text-decoration:none}.ot-lnk:hover{color:var(--accent-hover,#084BB0);text-decoration:underline}
 .pcta{margin:-2px 0 0;font-size:13px;line-height:1.4;color:var(--ink2,#48484C);text-align:center}.pcta a{color:var(--accent,#0B63E5);white-space:nowrap}
-/* lestnica-390-v1: подсказка «Старта» длиннее колонки действий (3 из 12) — своей строкой и с переносом */
 .pcta a[data-ssylka="start"]{display:block;white-space:normal;margin-top:2px}
-
-/* тело: основное 8 + справка 4 */
 .ot-body{gap:0 40px;padding:8px 40px 32px}
 .ot-main{grid-column:1/9;min-width:0;display:flex;flex-direction:column}
 .ot-main>*{padding:24px 0;margin:0;border-bottom:1px solid var(--line,#E6E6E1)}
@@ -91,29 +77,22 @@
 .ot-side .otk{margin:0;border-top:0}
 .report.ot .shch-k{display:none}
 #ot-kak,#indeks{scroll-margin-top:140px}
-
-/* J — подвал и оговорка */
 .ot-foot{padding:16px 40px 20px;border-top:1px solid var(--line,#E6E6E1)}
 .ot-foot .report-actions{gap:8px}
 .ot-disc{margin:0;padding:0 40px 28px;font-size:13px;color:var(--muted,#6B6B70)}
-
-/* 390: одна колонка; порядок — факты → изменения → динамика → как посчитали → откуда → все данные */
 @media (max-width:860px){
- .ot-hd,.ot-vd,.ot-body{grid-template-columns:minmax(0,1fr);padding-left:20px;padding-right:20px}
- .ot-foot,.ot-disc{padding-left:20px;padding-right:20px}
- .ot-who,.ot-rq,.ot-ix,.ot-vt,.ot-act,.ot-main,.ot-side{grid-column:1/-1}
- .ot-who .company{font-size:24px}
- .ot-vd{gap:16px}
- .ot-ix{border-right:0;padding-right:0;flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:6px 12px}
- .ot-ix__lab{flex-basis:100%}.ot-ix__big{font-size:52px}.ot-ix__sh{flex-basis:100%}
- .ot-vt .usl-t,.ot-vt__h{font-size:24px}
- .ot-body{display:flex;flex-direction:column;padding-top:0}
- .ot-main,.ot-side{display:contents}
- .ot-main>*{order:1}.ot-side>.ot-sc{order:2;padding-top:20px;margin-bottom:0}.ot-side>.otk{order:3;padding-top:12px}.ot-main>.ot-gl{order:4;border-top:1px solid var(--line,#E6E6E1)}
+.ot-hd,.ot-vd,.ot-body{grid-template-columns:minmax(0,1fr);padding-left:20px;padding-right:20px}
+.ot-foot,.ot-disc{padding-left:20px;padding-right:20px}
+.ot-who,.ot-rq,.ot-ix,.ot-vt,.ot-act,.ot-main,.ot-side{grid-column:1/-1}
+.ot-who .company{font-size:24px}
+.ot-vd{gap:16px}
+.ot-ix{border-right:0;padding-right:0;flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:6px 12px}
+.ot-ix__lab{flex-basis:100%}.ot-ix__big{font-size:52px}.ot-ix__sh{flex-basis:100%}
+.ot-vt .usl-t,.ot-vt__h{font-size:24px}
+.ot-body{display:flex;flex-direction:column;padding-top:0}
+.ot-main,.ot-side{display:contents}
+.ot-main>*{order:1}.ot-side>.ot-sc{order:2;padding-top:20px;margin-bottom:0}.ot-side>.otk{order:3;padding-top:12px}.ot-main>.ot-gl{order:4;border-top:1px solid var(--line,#E6E6E1)}
 }
-
-/* главная до проверки — карточка-пример тем же листом (ТЗ [команда] 02.10, разд. 2.5 п. 8):
-   шапка-документ → полоса вывода (B) в уменьшенном виде → 3 существенных факта с источником и датой */
 .report.ex{padding:0;gap:0;overflow:hidden;border-radius:var(--r-doc)}
 .ex-hd{padding:24px 28px 18px;border-bottom:1px solid var(--line,#E6E6E1)}
 .ex-hd .company{font-size:24px;margin-top:4px}
@@ -138,14 +117,12 @@
 .ex-r>span{display:block}.ex-r small{display:block;margin-top:2px;font-size:12px;color:var(--muted,#6B6B70);font-weight:400}
 .ex-pod{margin:0;padding:12px 28px 22px;font-size:13px;color:var(--muted,#6B6B70)}
 @media (max-width:520px){
- .ex-hd,.ex-vd,.ex-f{padding-left:20px;padding-right:20px}.ex-pod{padding:12px 20px 20px}
- .ex-vd{grid-template-columns:minmax(0,1fr);gap:12px}
- .ex-ix{border-right:0;padding-right:0;flex-direction:row;flex-wrap:wrap;align-items:center;gap:4px 10px}
- .ex-ix__lab{flex-basis:100%}
- .ex-r{flex-direction:column;gap:4px}.ex-r b.d{text-align:left;max-width:none}
+.ex-hd,.ex-vd,.ex-f{padding-left:20px;padding-right:20px}.ex-pod{padding:12px 20px 20px}
+.ex-vd{grid-template-columns:minmax(0,1fr);gap:12px}
+.ex-ix{border-right:0;padding-right:0;flex-direction:row;flex-wrap:wrap;align-items:center;gap:4px 10px}
+.ex-ix__lab{flex-basis:100%}
+.ex-r{flex-direction:column;gap:4px}.ex-r b.d{text-align:left;max-width:none}
 }
-
-/* «Ваши контрагенты» — прошлые проверки из этого браузера на месте примера (ТЗ [команда] 02.10 19:37, разд. 1; js/portfel.js) */
 .hero.pf-on .report.ex{display:none}
 .pf{background:var(--card,#fff);border-radius:var(--r-doc,16px);box-shadow:0 1px 2px rgba(29,29,31,.04),0 12px 32px rgba(29,29,31,.06);padding:24px 28px 18px;min-width:0}
 .pf[hidden]{display:none}
@@ -179,25 +156,20 @@
 .pf__da{min-height:36px;padding:0 12px;border-radius:10px;background:#FDECEA!important;color:#B3261E!important;font-weight:600}
 .pf__net{min-height:36px;padding:0 12px;border-radius:10px;font-weight:600}
 @media (max-width:520px){
- .pf{padding:20px 20px 14px}.pf__h{font-size:24px}
- .pf__r{grid-template-areas:"a a" "i c" "d d";row-gap:0}
- .pf__b{display:contents}.pf__inn{grid-area:i;color:var(--muted,#6B6B70)}.pf__d{grid-area:d;font-size:13px;color:var(--muted,#6B6B70)}.pf__d--star{color:#9A5B00}
- .pf__go{padding:0 8px}
+.pf{padding:20px 20px 14px}.pf__h{font-size:24px}
+.pf__r{grid-template-areas:"a a" "i c" "d d";row-gap:0}
+.pf__b{display:contents}.pf__inn{grid-area:i;color:var(--muted,#6B6B70)}.pf__d{grid-area:d;font-size:13px;color:var(--muted,#6B6B70)}.pf__d--star{color:#9A5B00}
+.pf__go{padding:0 8px}
 }
-
-/* печать: лист без тени, справка — под основным, кнопки не печатаем */
 @media print{
- .pf{display:none!important}
- .report.ot{box-shadow:none!important;border-radius:0!important}
- .ot-hd,.ot-vd,.ot-body{display:block;padding:12px 0}
- .ot-ix{border-right:0;padding:0 0 8px}
- .ot-act,.ot-foot,.ot-vt__kak{display:none!important}
- .ot-disc{padding:8px 0 0}
- .ot-side{padding-top:8px}
+.pf{display:none!important}
+.report.ot{box-shadow:none!important;border-radius:0!important}
+.ot-hd,.ot-vd,.ot-body{display:block;padding:12px 0}
+.ot-ix{border-right:0;padding:0 0 8px}
+.ot-act,.ot-foot,.ot-vt__kak{display:none!important}
+.ot-disc{padding:8px 0 0}
+.ot-side{padding-top:8px}
 }
-
-/* «Паспорт 490 ₽ в один шаг» — лист оплаты (js/pasport-oplata.js; ТЗ [команда] 02.10, разд. 1.2):
-   справа поверх отчёта, на телефоне — снизу; цена крупно, одна главная кнопка */
 dialog.po{position:fixed;inset:0 0 0 auto;width:min(440px,100vw);max-width:none;height:100dvh;max-height:none;margin:0;padding:28px 28px calc(24px + env(safe-area-inset-bottom));border:0;border-radius:var(--r-doc,16px) 0 0 var(--r-doc,16px);background:var(--surface,#fff);color:var(--ink,#1D1D1F);font:400 15px/1.5 var(--font,Onest,"Onest Zapas","Onest Zapas R",-apple-system,"Segoe UI",Roboto,Arial,sans-serif);box-shadow:var(--shadow);overflow-y:auto;overscroll-behavior:contain}
 dialog.po::backdrop{background:rgba(17,17,19,.4)}
 .po-x{position:absolute;top:12px;right:12px;width:40px;height:40px;border:0;border-radius:999px;background:transparent;font-size:24px;line-height:1;color:var(--ink2,#48484C);cursor:pointer}
@@ -221,27 +193,16 @@ dialog.po::backdrop{background:rgba(17,17,19,.4)}
 .po--schet .po-forma{margin-top:20px;padding-top:4px;border-top:1px solid var(--line,#E6E6E1)}
 .po-og{margin:16px 0 0;font-size:13px;line-height:1.45;color:var(--muted,#6B6B70)}
 @media (max-width:520px){
- dialog.po{inset:auto 0 0 0;width:100vw;height:auto;max-height:92dvh;padding:24px 20px calc(20px + env(safe-area-inset-bottom));border-radius:var(--r-doc,16px) var(--r-doc,16px) 0 0}
- .po-cena b{font-size:32px}
+dialog.po{inset:auto 0 0 0;width:100vw;height:auto;max-height:92dvh;padding:24px 20px calc(20px + env(safe-area-inset-bottom));border-radius:var(--r-doc,16px) var(--r-doc,16px) 0 0}
+.po-cena b{font-size:32px}
 }
 @media print{dialog.po{display:none!important}}
-
-/* otchet-detali-v1 (19.10.2026; разбор отчёта на телефоне).
-   1) Поля касания в теле отчёта ≥ 44 px на телефоне и сенсорном экране: термины, ссылки в строке и «проверить …» — невидимой
-      полосой 44 px вокруг (::after, строка текста не сдвигается); summary, кнопки «Условий сделки» — высотой. С мышью — 24 px (WCAG 2.5.8).
-   2) «Готово. Отчёт — рядом.» на телефоне — только для экранного диктора: страница сама прокручивает к отчёту, строка над ним
-      оставалась наполовину под шапкой; role=status по-прежнему озвучивает готовность.
-   3) Номер проверки — в подвале отчёта мелкой строкой (нужен поддержке, не читателю); в шапке остаются даты.
-   4) Режим отчёта (/?inn=…): под отчётом — строка «Другие инструменты» и подвал сайта, витрина и разделы главной — на чистой главной. */
 @media (max-width:640px),(pointer:coarse){
- .report.ot .termin,.report.ot a:not(.btn):not(.ot-btn):not([data-u]){position:relative}
- .report.ot .termin::after,.report.ot a:not(.btn):not(.ot-btn):not([data-u])::after{content:"";position:absolute;left:-4px;right:-4px;top:50%;height:44px;transform:translateY(-50%)}
- .report.ot summary{min-height:44px;display:flex;align-items:center;flex-wrap:wrap}
- .report.ot .ot-ix__pch>summary{display:inline-flex}
+.report.ot .termin,.report.ot a:not(.btn):not(.ot-btn):not([data-u]){position:relative}
+.report.ot .termin::after,.report.ot a:not(.btn):not(.ot-btn):not([data-u])::after{content:"";position:absolute;left:-4px;right:-4px;top:50%;height:44px;transform:translateY(-50%)}
+.report.ot summary{min-height:44px;display:flex;align-items:center;flex-wrap:wrap}
+.report.ot .ot-ix__pch>summary{display:inline-flex}
 }
-/* bez-pryzhka-v1 (21.10.2026): строка «Готово» на телефоне гаснет, а не схлопывается. Схлопывание (1 px, position:absolute)
-   поднимало всё ниже на ~29 px в кадре, где появился отчёт: CLS проверки на 390 px 0,034, по ссылке /?inn= — 0,024.
-   opacity:0 — место строки остаётся (после прокрутки к отчёту оно над краем экрана), роль status по-прежнему озвучивает готовность. */
 @media (max-width:979px){.rezhim-otcheta .hero-text .note.ok{opacity:0}}
 .ot-nom{margin:10px 0 0;font-size:12px;color:var(--muted,#6B6B70)}
 .ot-nom .rkv__nom{font-size:inherit}
@@ -254,18 +215,14 @@ dialog.po::backdrop{background:rgba(17,17,19,.4)}
 @media (max-width:860px){.ot-dr{padding-left:20px;padding-right:20px}}
 @media (max-width:640px),(pointer:coarse){.ot-dr ul{flex-wrap:nowrap;overflow-x:auto;scroll-snap-type:x proximity;scroll-padding-inline:20px;scrollbar-width:none;margin:0 -20px;padding:0 20px 4px}.ot-dr ul::-webkit-scrollbar{display:none}.ot-dr li{flex:0 0 auto;scroll-snap-align:start}.ot-dr a{white-space:nowrap}}
 @media (min-width:641px) and (pointer:fine){
- .report.ot .termin,.report.ot a:not(.btn):not(.ot-btn):not([data-u]){position:relative}
- .report.ot .termin::after,.report.ot a:not(.btn):not(.ot-btn):not([data-u])::after{content:"";position:absolute;left:-2px;right:-2px;top:50%;height:24px;transform:translateY(-50%)}
- .report.ot summary{min-height:24px}
+.report.ot .termin,.report.ot a:not(.btn):not(.ot-btn):not([data-u]){position:relative}
+.report.ot .termin::after,.report.ot a:not(.btn):not(.ot-btn):not([data-u])::after{content:"";position:absolute;left:-2px;right:-2px;top:50%;height:24px;transform:translateY(-50%)}
+.report.ot summary{min-height:24px}
 }
 .rezhim-otcheta main#top>:not(.hero){display:none}
 @media print{.ot-dr{display:none}}
 .rkv.rkv--nechet>div:last-child{grid-column:1/-1}
 @media print{.report.ot .ot-foot:has(.ot-nom){display:block!important;border:0;padding:4px 0 0}}
-/* zhivoj-v2 (js/zhivoj-otchet.js): ожидание ответа и проявление вывода. Только opacity/transform; «Уменьшить движение» — ничего не движется.
-   (1) строка состояния: по названиям реестров бежит свет — второй слой того же слова цветом текста (::after, opacity), основной слой не тускнеет (контраст как у строки);
-   (2) пример под ней — полоса «перелива» через карточку (::after, transform), с задержкой 250 мс — на быстром ответе не мелькает;
-   (3) вывод и действия полосы — снизу вверх по очереди после кольца; (4) раскрытые блоки отчёта — содержимое проявляется. */
 .zh-ist__i{position:relative;white-space:nowrap;color:var(--ink2)}
 .zh-ist__r{color:var(--muted)}
 @media (max-width:520px){.zh-ist__p{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}}
@@ -281,29 +238,21 @@ dialog.po::backdrop{background:rgba(17,17,19,.4)}
 @keyframes zh-akk{from{opacity:0;transform:translateY(-6px)}}
 @media (prefers-reduced-motion:reduce){.zh-ist__i::after,.report.loading::after{animation:none;opacity:0}.ot-vd--pojav .ot-vt>*,.ot-vd--pojav .ot-act>*,.report.ot details[open]>:not(summary){animation:none}}
 /* --- /css/perehod.css --- */
-/* Делоскоп — vizual-v3.1a «Инструмент» (18.10.2026): переход «пример → отчёт» и подсказки у поля ИНН.
-   Визуал v3 §7, волна 3.1 (а, б). Без поддержки — правила просто не действуют, всё работает как раньше. */
-
-/* (а) View Transitions одного документа: кольцо Индекса, название, вывод и первые факты перетекают на новое место (js/perehod.js) */
 ::view-transition-group(*){animation-duration:.45s;animation-timing-function:cubic-bezier(.2,.7,.2,1)}
 ::view-transition-old(root),::view-transition-new(root){animation-duration:.28s}
 @media (prefers-reduced-motion:reduce){
-  ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}
+::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}
 }
-
-/* (б) Подсказки компаний — в верхнем слое (popover) и под формой по якорю; без якорей — position:absolute, как было */
 .check--yakor{anchor-name:--dlk-forma}
 .check--yakor .sugg[popover]{position:fixed;position-anchor:--dlk-forma;inset:auto;top:anchor(bottom);left:anchor(left);
-  width:anchor-size(width);margin:6px 0 0;border:0;color:inherit;position-try-fallbacks:flip-block}
+width:anchor-size(width);margin:6px 0 0;border:0;color:inherit;position-try-fallbacks:flip-block}
 .check--yakor .sugg[popover]:not(:popover-open){display:none}
-
-/* vizual-v3.1b (в) — липкая строка «Что делать завтра утром» на телефоне (js/lipkaya.js): вывод ушёл за верх — строка снизу, по нажатию — окно */
 .lip{position:fixed;left:0;right:0;bottom:var(--lip-niz,0px);z-index:28;padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));
-  background:var(--card,#fff);border-top:1px solid var(--line,#E6E6E1);box-shadow:0 -8px 24px rgba(0,0,0,.06);
-  transform:translateY(calc(100% + 24px));visibility:hidden;transition:transform .28s cubic-bezier(.2,.7,.2,1),visibility 0s .28s}
+background:var(--card,#fff);border-top:1px solid var(--line,#E6E6E1);box-shadow:0 -8px 24px rgba(0,0,0,.06);
+transform:translateY(calc(100% + 24px));visibility:hidden;transition:transform .28s cubic-bezier(.2,.7,.2,1),visibility 0s .28s}
 .lip.is-on{transform:none;visibility:visible;transition:transform .28s cubic-bezier(.2,.7,.2,1),visibility 0s}
 .lip__b{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"z s" "t s";align-items:center;column-gap:12px;width:100%;min-height:52px;margin:0;
-  padding:7px 7px 7px 14px;border:0;border-radius:16px;background:var(--surface-2,#EEEEEA);color:var(--ink,#1D1D1F);font:500 15px/1.3 var(--font,inherit);text-align:left;cursor:pointer}
+padding:7px 7px 7px 14px;border:0;border-radius:16px;background:var(--surface-2,#EEEEEA);color:var(--ink,#1D1D1F);font:500 15px/1.3 var(--font,inherit);text-align:left;cursor:pointer}
 .lip__z{grid-area:z;color:var(--muted,#6B6B70);font-size:13px;font-weight:500}
 .lip__t{grid-area:t;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lip__t::before{content:"";display:inline-block;width:8px;height:8px;margin-right:8px;border-radius:50%;vertical-align:1px;background:var(--warn-dot,#B86E00)}
@@ -315,8 +264,8 @@ dialog.po::backdrop{background:rgba(17,17,19,.4)}
 @media (min-width:601px){.lip{display:none}}
 body.lip-on .fb-btn{bottom:calc(84px + var(--lip-niz,0px) + env(safe-area-inset-bottom,0px))}
 dialog.lip-d{position:fixed;inset:auto 0 0 0;width:100vw;max-width:none;max-height:88dvh;margin:0;padding:24px 20px calc(20px + env(safe-area-inset-bottom,0px));
-  border:0;border-radius:var(--r-doc,16px) var(--r-doc,16px) 0 0;background:var(--card,#fff);color:var(--ink,#1D1D1F);
-  font:400 17px/1.5 var(--font,inherit);box-shadow:var(--shadow,0 -8px 32px rgba(0,0,0,.12));overflow-y:auto;overscroll-behavior:contain}
+border:0;border-radius:var(--r-doc,16px) var(--r-doc,16px) 0 0;background:var(--card,#fff);color:var(--ink,#1D1D1F);
+font:400 17px/1.5 var(--font,inherit);box-shadow:var(--shadow,0 -8px 32px rgba(0,0,0,.12));overflow-y:auto;overscroll-behavior:contain}
 dialog.lip-d::backdrop{background:rgba(17,17,19,.4)}
 dialog.lip-d[open]{animation:lip-vverh .28s cubic-bezier(.2,.7,.2,1)}
 @keyframes lip-vverh{from{transform:translateY(24px);opacity:0}}
@@ -329,24 +278,17 @@ dialog.lip-d[open]{animation:lip-vverh .28s cubic-bezier(.2,.7,.2,1)}
 @media (prefers-reduced-motion:reduce){.lip,.lip.is-on{transition:none}dialog.lip-d[open]{animation:none}}
 @media print{.lip,dialog.lip-d{display:none!important}}
 /* --- /css/vitrina.css --- */
-/* vitrina-v1 — «Витрина экосистемы» на главной (разметку собирает tests/sobrat_vitrinu.py из partials/vitrina.json).
-   Каждый продукт — экспонат: сцена с героем + статус, польза, три факта, одно действие. Цвета — только токены темы
-   (в тёмной теме подхватываются сами). Движение: появление — общий механизм «сборки» (data-sobir, css/glubina.css);
-   поворот героя и свет — по прокрутке (animation-timeline: view(), только transform/opacity); наклон к курсору —
-   js/vitrina.js. «Меньше движения» и браузеры без view() — сцены стоят, всё читается. */
 .vit{
- --vg-a:var(--accent);--vg-p:var(--surface,var(--card));--vg-on:var(--surface,var(--card));
- --vg-k:color-mix(in srgb,var(--ink) 72%,transparent);--vg-l:color-mix(in srgb,var(--ink) 20%,transparent);
- --vg-s:color-mix(in srgb,var(--accent) 14%,var(--surface,var(--card)));
- --vg-ok:var(--ok);--vg-warn:var(--warn);--vg-bad:var(--bad,#B3261E);
- --vit-ten:rgba(0,0,0,.16);--vit-svet:color-mix(in srgb,var(--accent) 20%,transparent);
- padding-block:0 var(--sect);position:relative
+--vg-a:var(--accent);--vg-p:var(--surface,var(--card));--vg-on:var(--surface,var(--card));
+--vg-k:color-mix(in srgb,var(--ink) 72%,transparent);--vg-l:color-mix(in srgb,var(--ink) 20%,transparent);
+--vg-s:color-mix(in srgb,var(--accent) 14%,var(--surface,var(--card)));
+--vg-ok:var(--ok);--vg-warn:var(--warn);--vg-bad:var(--bad,#B3261E);
+--vit-ten:rgba(0,0,0,.16);--vit-svet:color-mix(in srgb,var(--accent) 20%,transparent);
+padding-block:0 var(--sect);position:relative
 }
 .vit-nabor{position:absolute;width:0;height:0;overflow:hidden}
 .vit__head{display:flex;flex-direction:column;gap:16px;max-width:760px;margin-bottom:32px}
 .vit__head .lead{max-width:34em}
-
-/* карта витрины: все продукты одним взглядом, ведёт к экспонату */
 .vit__karta ul{list-style:none;margin:0 0 clamp(48px,7vw,96px);padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:10px}
 .vit-k{display:flex;align-items:center;gap:12px;min-height:56px;padding:6px 14px 6px 6px;border:1px solid var(--line);border-radius:16px;background:var(--surface,var(--card));color:var(--ink);font-size:15px;font-weight:500;line-height:1.25;text-decoration:none;transition:transform .2s var(--ease),border-color .2s var(--ease),box-shadow .2s var(--ease)}
 .vit-k:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--accent) 45%,var(--line));box-shadow:0 10px 24px rgba(0,0,0,.08)}
@@ -355,21 +297,18 @@ dialog.lip-d[open]{animation:lip-vverh .28s cubic-bezier(.2,.7,.2,1)}
 .vit-k__g{stroke:var(--vg-k);stroke-width:3;stroke-linejoin:round;stroke-linecap:round;flex:none;width:44px;height:44px;padding:5px;border-radius:10px;background:var(--vg-s)}
 .vit-k--b{color:var(--ink2)}
 .vit-k--b .vit-k__g{opacity:.6;filter:grayscale(.7)}
-
-/* зал: экспонаты чередуют сторону сцены */
 .vit__zal{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:clamp(64px,9vw,128px)}
 .vit-e{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:clamp(32px,5vw,80px);align-items:center;scroll-margin-top:96px}
 .vit-e--sp .vit-e__scena{order:2}
 .vit-e__scena{position:relative;aspect-ratio:5/4;border-radius:28px;border:1px solid var(--line);overflow:hidden;isolation:isolate;perspective:900px;
- background:radial-gradient(120% 90% at 50% 0%,var(--vg-s),var(--surface,var(--card)) 72%)}
+background:radial-gradient(120% 90% at 50% 0%,var(--vg-s),var(--surface,var(--card)) 72%)}
 .vit-e__svet{position:absolute;inset:-25%;z-index:-1;background:radial-gradient(38% 38% at 34% 34%,var(--vit-svet),transparent 72%)}
 .vit-e__blik{position:absolute;left:-30%;top:-30%;width:60%;height:60%;z-index:2;pointer-events:none;opacity:0;border-radius:50%;
- background:radial-gradient(closest-side,rgba(255,255,255,.22),transparent);transition:opacity .3s var(--ease)}
+background:radial-gradient(closest-side,rgba(255,255,255,.22),transparent);transition:opacity .3s var(--ease)}
 .vit-e__scena:hover .vit-e__blik{opacity:1}
 .vit-e__tilt{position:absolute;inset:12% 14% 17%;transform-style:preserve-3d;transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .45s var(--ease)}
 .vit-g{display:block;width:100%;height:100%;stroke:var(--vg-k);stroke-width:2;stroke-linejoin:round;stroke-linecap:round;filter:drop-shadow(0 22px 26px var(--vit-ten))}
 .vit-e__pol{position:absolute;left:24%;right:24%;bottom:8%;height:9%;z-index:-1;border-radius:50%;background:radial-gradient(closest-side,var(--vit-ten),transparent)}
-
 .vit-e__nad{display:flex;align-items:center;gap:14px;margin:0 0 14px}
 .vit-e__n{font-size:13px;font-weight:600;letter-spacing:.06em;color:var(--muted);font-variant-numeric:tabular-nums}
 .vit-st{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--ink2)}
@@ -386,14 +325,12 @@ dialog.lip-d[open]{animation:lip-vverh .28s cubic-bezier(.2,.7,.2,1)}
 .vit-e__u li::before{content:"";position:absolute;left:3px;top:.42em;width:12px;height:6px;border-left:2px solid var(--accent);border-bottom:2px solid var(--accent);transform:rotate(-45deg)}
 .vit-e__go{margin:0}
 .vit-btn{display:inline-flex;align-items:center;gap:10px;min-height:48px;padding:0 24px;border-radius:999px;background:var(--accent);color:var(--on-accent,#fff);font-size:16px;font-weight:600;text-decoration:none;
- transition:transform .2s var(--ease),box-shadow .2s var(--ease),background-color .2s var(--ease)}
+transition:transform .2s var(--ease),box-shadow .2s var(--ease),background-color .2s var(--ease)}
 .vit-btn span{display:inline-block;transition:transform .2s var(--ease)}
 .vit-btn:hover{background:var(--accent-hover,var(--accent));transform:translateY(-1px);box-shadow:0 10px 24px color-mix(in srgb,var(--accent) 32%,transparent)}
 .vit-btn:hover span{transform:translateX(3px)}
 .vit-btn:active{transform:translateY(0) scale(.98);box-shadow:none}
 .vit-btn:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
-
-/* в разработке — приглушённый свет, без дат */
 .vit-s{margin-top:clamp(80px,10vw,144px);padding-top:clamp(40px,5vw,64px);border-top:1px solid var(--line)}
 .vit-s__h{font-size:clamp(26px,3vw,34px);letter-spacing:-.025em;margin:0 0 24px}
 .vit-s__g{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
@@ -410,82 +347,67 @@ dialog.lip-d[open]{animation:lip-vverh .28s cubic-bezier(.2,.7,.2,1)}
 .vit-d{margin-top:24px;padding:28px;border-radius:28px;border:1px solid var(--line);background:var(--surface,var(--card));max-width:760px}
 .vit-d__h{font-size:22px;letter-spacing:-.02em;margin:0 0 10px}
 .vit-d p{margin:0;max-width:68ch;font-size:16px;line-height:1.55;color:var(--ink2)}
-
-/* тёмная тема: свечение вместо тени */
 [data-theme=dark] .vit{--vit-ten:rgba(0,0,0,.55);--vit-svet:color-mix(in srgb,var(--accent) 28%,transparent)}
 [data-theme=dark] .vit-e__scena{box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 0 1px color-mix(in srgb,var(--accent) 10%,transparent),0 30px 60px rgba(0,0,0,.35)}
 [data-theme=dark] .vit-g{filter:drop-shadow(0 0 22px color-mix(in srgb,var(--accent) 22%,transparent)) drop-shadow(0 22px 26px var(--vit-ten))}
 [data-theme=dark] .vit-k:hover{box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 30%,transparent),0 10px 28px rgba(0,0,0,.4)}
-
-/* телефон и узкие экраны: сцена над текстом */
 @media (max-width:860px){
- .vit-e{grid-template-columns:1fr;gap:24px}
- .vit-e--sp .vit-e__scena{order:0}
- .vit-e__scena{aspect-ratio:16/11}
- .vit-s__g{grid-template-columns:1fr}
+.vit-e{grid-template-columns:1fr;gap:24px}
+.vit-e--sp .vit-e__scena{order:0}
+.vit-e__scena{aspect-ratio:16/11}
+.vit-s__g{grid-template-columns:1fr}
 }
 @media (min-width:861px) and (max-width:1100px){.vit-s__g{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:520px){
- .vit__karta ul{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
- .vit-k{gap:8px;padding-right:8px;font-size:14px}
- .vit-k__g{width:40px;height:40px}
- .vit-btn{width:100%;justify-content:center}
+.vit__karta ul{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.vit-k{gap:8px;padding-right:8px;font-size:14px}
+.vit-k__g{width:40px;height:40px}
+.vit-btn{width:100%;justify-content:center}
 }
-
-/* движение по прокрутке: герой поворачивается к зрителю, свет переходит, тень пола дышит */
 @supports (animation-timeline:view()){
- @media (prefers-reduced-motion:no-preference){
-  .vit-g{animation:vit-povorot linear both;animation-timeline:view();animation-range:cover 0% cover 100%}
-  .vit-e__svet{animation:vit-svet linear both;animation-timeline:view();animation-range:cover 0% cover 100%}
-  .vit-e__pol{animation:vit-pol linear both;animation-timeline:view();animation-range:cover 0% cover 100%}
- }
+@media (prefers-reduced-motion:no-preference){
+.vit-g{animation:vit-povorot linear both;animation-timeline:view();animation-range:cover 0% cover 100%}
+.vit-e__svet{animation:vit-svet linear both;animation-timeline:view();animation-range:cover 0% cover 100%}
+.vit-e__pol{animation:vit-pol linear both;animation-timeline:view();animation-range:cover 0% cover 100%}
+}
 }
 @keyframes vit-povorot{
- from{transform:translateY(20px) rotateX(18deg) rotateY(-24deg) scale(.92)}
- 50%{transform:none}
- to{transform:translateY(-14px) rotateX(-8deg) rotateY(16deg) scale(.97)}
+from{transform:translateY(20px) rotateX(18deg) rotateY(-24deg) scale(.92)}
+50%{transform:none}
+to{transform:translateY(-14px) rotateX(-8deg) rotateY(16deg) scale(.97)}
 }
 @keyframes vit-svet{from{transform:translate(-14%,18%);opacity:.5}50%{opacity:1}to{transform:translate(22%,-12%);opacity:.6}}
 @keyframes vit-pol{from{transform:scaleX(.7);opacity:.5}50%{transform:none;opacity:1}to{transform:scaleX(.85);opacity:.7}}
-
 @media (prefers-reduced-motion:reduce){
- .vit-k,.vit-btn,.vit-btn span,.vit-e__tilt,.vit-e__a,.vit-e__blik{transition:none}
- .vit-k:hover,.vit-btn:hover,.vit-btn:active,.vit-btn:hover span{transform:none}
- .vit-e__tilt{transform:none}
- .vit-e__blik{display:none}
+.vit-k,.vit-btn,.vit-btn span,.vit-e__tilt,.vit-e__a,.vit-e__blik{transition:none}
+.vit-k:hover,.vit-btn:hover,.vit-btn:active,.vit-btn:hover span{transform:none}
+.vit-e__tilt{transform:none}
+.vit-e__blik{display:none}
 }
-
-/* ---------- vitrina-v2 (19.10.2026): глубина сцены, компактный телефон, бабл «Отзыв» ---------- */
-/* Материал героя в сцене — градиенты набора (tests/sobrat_vitrinu.py, MATERIALY) при одном свете сверху слева.
-   Набор <svg class="vit-nabor"> стоит перед секцией — цвета градиентов задаём и ему (stop-color берёт переменные по месту <stop>). */
 .vit,.vit-nabor{
- --vg-p-svet:color-mix(in srgb,var(--surface,var(--card)) 70%,white);--vg-p-ten:color-mix(in srgb,var(--surface,var(--card)) 84%,black);
- --vg-a-svet:color-mix(in srgb,var(--accent) 72%,white);--vg-a-ten:color-mix(in srgb,var(--accent) 76%,black);
- --vg-s-svet:color-mix(in srgb,var(--accent) 10%,var(--surface,var(--card)));--vg-s-ten:color-mix(in srgb,var(--accent) 26%,var(--surface,var(--card)))
+--vg-p-svet:color-mix(in srgb,var(--surface,var(--card)) 70%,white);--vg-p-ten:color-mix(in srgb,var(--surface,var(--card)) 84%,black);
+--vg-a-svet:color-mix(in srgb,var(--accent) 72%,white);--vg-a-ten:color-mix(in srgb,var(--accent) 76%,black);
+--vg-s-svet:color-mix(in srgb,var(--accent) 10%,var(--surface,var(--card)));--vg-s-ten:color-mix(in srgb,var(--accent) 26%,var(--surface,var(--card)))
 }
 [data-theme=dark] .vit,[data-theme=dark] .vit-nabor{--vg-p-svet:color-mix(in srgb,var(--surface,var(--card)) 78%,white);--vg-p-ten:color-mix(in srgb,var(--surface,var(--card)) 70%,black)}
 .vit-e__scena .vit-g{--vg-p:url(#vg-gp);--vg-a:url(#vg-ga);--vg-s:url(#vg-gs)}
-/* Слои глубины: задний ореол → свет → тело → пол → частицы → блик. Прокрутка двигает transform (view()),
-   курсор и наклон телефона — свойство translate (js/vitrina.js: --px/--py от −0,5 до 0,5) — они складываются. */
 .vit-e__zad{position:absolute;inset:6% 12%;z-index:-2;border-radius:50%;pointer-events:none;
- background:radial-gradient(closest-side,color-mix(in srgb,var(--accent) 22%,transparent),transparent 78%);
- translate:calc(var(--px,0) * -18px) calc(var(--py,0) * -12px)}
+background:radial-gradient(closest-side,color-mix(in srgb,var(--accent) 22%,transparent),transparent 78%);
+translate:calc(var(--px,0) * -18px) calc(var(--py,0) * -12px)}
 .vit-e__tilt{translate:calc(var(--px,0) * 8px) calc(var(--py,0) * 6px)}
 .vit-e__pol{translate:calc(var(--px,0) * 12px) 0}
 .vit-e__ch{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
 .vit-e__ch i{position:absolute;width:var(--r);height:var(--r);border-radius:50%;background:var(--accent);opacity:0;
- animation:vit-pyl 9s linear infinite;animation-play-state:paused}
+animation:vit-pyl 9s linear infinite;animation-play-state:paused}
 .vit-e__scena--zhivaya .vit-e__ch i{animation-play-state:running}
 @keyframes vit-pyl{0%{opacity:0;transform:translate3d(0,0,0)}20%{opacity:.55}80%{opacity:.35}100%{opacity:0;transform:translate3d(10px,-90px,0)}}
 [data-theme=dark] .vit-e__zad{background:radial-gradient(closest-side,color-mix(in srgb,var(--accent) 34%,transparent),transparent 78%)}
 @supports (animation-timeline:view()){
- @media (prefers-reduced-motion:no-preference){
-  .vit-e__zad{animation:vit-zad linear both;animation-timeline:view();animation-range:cover 0% cover 100%}
- }
+@media (prefers-reduced-motion:no-preference){
+.vit-e__zad{animation:vit-zad linear both;animation-timeline:view();animation-range:cover 0% cover 100%}
+}
 }
 @keyframes vit-zad{from{transform:translateY(16%) scale(.9)}50%{transform:none}to{transform:translateY(-14%) scale(1.04)}}
-
-/* «Что умеет» — на узком экране факты свёрнуты (только со скриптом: класс vit--js ставит js/vitrina.js) */
 .vit-e__niz{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px}
 .vit-e__fb{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0;border:0;background:none;color:var(--ink);font:inherit;font-weight:600;cursor:pointer}
 .vit-e__fb span{width:8px;height:8px;margin-top:-4px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;rotate:45deg;transition:rotate .2s var(--ease),margin .2s var(--ease)}
@@ -493,125 +415,104 @@ dialog.lip-d[open]{animation:lip-vverh .28s cubic-bezier(.2,.7,.2,1)}
 .vit-e__fb:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
 .vit-e__fb[hidden]{display:none}
 @media (max-width:860px){
- .vit--js .vit-e:not(.is-f) .vit-e__u,.vit--js .vit-b:not(.is-f) .vit-b__u{display:none}
- .vit--js .vit-e.is-f .vit-e__u,.vit--js .vit-b.is-f .vit-b__u{animation:vit-f .24s var(--ease) both}
+.vit--js .vit-e:not(.is-f) .vit-e__u,.vit--js .vit-b:not(.is-f) .vit-b__u{display:none}
+.vit--js .vit-e.is-f .vit-e__u,.vit--js .vit-b.is-f .vit-b__u{animation:vit-f .24s var(--ease) both}
 }
 @keyframes vit-f{from{opacity:0;translate:0 -6px}}
-
-/* Телефон: короткая витрина — карта лентой, крупные сцены ниже, компактные — рядом с заголовком */
 @media (max-width:860px){
- .vit__head{margin-bottom:20px}
- .vit__karta{margin:0 calc(var(--gutter,16px) * -1) 28px}
- .vit__karta ul{display:flex;gap:8px;margin:0;padding:2px var(--gutter,16px) 6px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;
-  -webkit-mask-image:linear-gradient(90deg,transparent,black 16px,black calc(100% - 24px),transparent);mask-image:linear-gradient(90deg,transparent,black 16px,black calc(100% - 24px),transparent)}
- .vit__karta ul::-webkit-scrollbar{display:none}
- .vit__karta li{flex:none;scroll-snap-align:start}
- .vit-k{min-height:48px;padding-right:14px;white-space:nowrap}
- .vit__zal{gap:28px}
- .vit-e{gap:16px}
- .vit-e--k .vit-e__scena{aspect-ratio:auto;height:176px}
- .vit-e--m{grid-template-columns:minmax(0,1fr) 104px;column-gap:16px;row-gap:0;align-items:start}
- .vit-e--m .vit-e__txt{display:contents}
- .vit-e--m .vit-e__scena{grid-column:2;grid-row:1 / 3;order:0;height:104px;aspect-ratio:auto;border-radius:16px;perspective:500px}
- .vit-e--m .vit-e__tilt{inset:12%}
- .vit-e--m .vit-e__nad{grid-column:1;grid-row:1;margin-bottom:8px}
- .vit-e--m .vit-e__h{grid-column:1;grid-row:2;align-self:start}
- .vit-e--m .vit-e__p,.vit-e--m .vit-e__u,.vit-e--m .vit-e__niz{grid-column:1 / -1}
- .vit-e__h{margin-bottom:12px}
- .vit-e__p{margin-bottom:12px}
- .vit-e__u{margin-bottom:16px}
- .vit-e__niz{gap:8px 16px}
- .vit-e__niz .vit-btn{width:auto;padding:0 18px;gap:8px}
- .vit-e__nad{margin-bottom:8px}
- .vit-s{margin-top:48px;padding-top:32px}
- .vit-s__h{margin-bottom:16px}
- .vit-s__g{gap:12px}
- .vit-b{display:grid;grid-template-columns:minmax(0,1fr) 72px;column-gap:16px;row-gap:8px;padding:20px;align-items:start}
- .vit-b__scena{grid-column:2;grid-row:1 / 3;height:72px;margin:0;padding:8px}
- .vit-b__h{grid-column:1;grid-row:1}
- .vit-b__p{grid-column:1;grid-row:2}
- .vit-b__u,.vit-b .vit-e__niz{grid-column:1 / -1}
- .vit-b__go{margin:0}
- .vit-d{padding:20px;margin-top:16px}
- .vit{padding-bottom:56px}
+.vit__head{margin-bottom:20px}
+.vit__karta{margin:0 calc(var(--gutter,16px) * -1) 28px}
+.vit__karta ul{display:flex;gap:8px;margin:0;padding:2px var(--gutter,16px) 6px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;
+-webkit-mask-image:linear-gradient(90deg,transparent,black 16px,black calc(100% - 24px),transparent);mask-image:linear-gradient(90deg,transparent,black 16px,black calc(100% - 24px),transparent)}
+.vit__karta ul::-webkit-scrollbar{display:none}
+.vit__karta li{flex:none;scroll-snap-align:start}
+.vit-k{min-height:48px;padding-right:14px;white-space:nowrap}
+.vit__zal{gap:28px}
+.vit-e{gap:16px}
+.vit-e--k .vit-e__scena{aspect-ratio:auto;height:176px}
+.vit-e--m{grid-template-columns:minmax(0,1fr) 104px;column-gap:16px;row-gap:0;align-items:start}
+.vit-e--m .vit-e__txt{display:contents}
+.vit-e--m .vit-e__scena{grid-column:2;grid-row:1 / 3;order:0;height:104px;aspect-ratio:auto;border-radius:16px;perspective:500px}
+.vit-e--m .vit-e__tilt{inset:12%}
+.vit-e--m .vit-e__nad{grid-column:1;grid-row:1;margin-bottom:8px}
+.vit-e--m .vit-e__h{grid-column:1;grid-row:2;align-self:start}
+.vit-e--m .vit-e__p,.vit-e--m .vit-e__u,.vit-e--m .vit-e__niz{grid-column:1 / -1}
+.vit-e__h{margin-bottom:12px}
+.vit-e__p{margin-bottom:12px}
+.vit-e__u{margin-bottom:16px}
+.vit-e__niz{gap:8px 16px}
+.vit-e__niz .vit-btn{width:auto;padding:0 18px;gap:8px}
+.vit-e__nad{margin-bottom:8px}
+.vit-s{margin-top:48px;padding-top:32px}
+.vit-s__h{margin-bottom:16px}
+.vit-s__g{gap:12px}
+.vit-b{display:grid;grid-template-columns:minmax(0,1fr) 72px;column-gap:16px;row-gap:8px;padding:20px;align-items:start}
+.vit-b__scena{grid-column:2;grid-row:1 / 3;height:72px;margin:0;padding:8px}
+.vit-b__h{grid-column:1;grid-row:1}
+.vit-b__p{grid-column:1;grid-row:2}
+.vit-b__u,.vit-b .vit-e__niz{grid-column:1 / -1}
+.vit-b__go{margin:0}
+.vit-d{padding:20px;margin-top:16px}
+.vit{padding-bottom:56px}
 }
-
-/* Бабл «Отзыв» не накрывает кнопки: пока у нижнего края экрана кнопка действия — прячется (js/vitrina.js) */
 .fb-btn{transition:opacity .2s var(--ease),scale .2s var(--ease)}
 .fb-ukryt .fb-btn{opacity:0;scale:.6;pointer-events:none}
 @media (prefers-reduced-motion:reduce){.fb-btn,.vit-e__fb span{transition:none}.vit-e__zad,.vit-e__tilt,.vit-e__pol,.vit-e__ch{translate:none}}
 @media print{.vit-e__scena,.vit-b__scena,.vit__karta,.vit-e__fb{display:none}.vit-e__u{display:grid!important}.vit-e{grid-template-columns:1fr}}
-
-/* ---------- vitrina-v2b (19.10.2026): ритм зала, «камера едет», свет пола между экспонатами ---------- */
-/* Ритм на широком экране: крупные — полная строка; одиночный компактный — малая сцена и текст шире;
-   два компактных подряд — пара в одну строку (сцена над текстом). Вид и сторону считает tests/sobrat_vitrinu.py (ritm). */
 @media (min-width:861px){
- .vit__zal{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:clamp(24px,3vw,40px)}
- .vit-e{grid-column:1 / -1}
- .vit-e--m{grid-template-columns:minmax(0,.7fr) minmax(0,1fr)}
- .vit-e--m.vit-e--sp{grid-template-columns:minmax(0,1fr) minmax(0,.7fr)}
- .vit-e--m .vit-e__scena{aspect-ratio:4/3;border-radius:28px}
- .vit-e--m .vit-e__h{font-size:clamp(24px,2.4vw,32px)}
- .vit-e--para{grid-column:auto;grid-template-columns:1fr;grid-template-rows:auto 1fr;align-items:stretch;gap:24px}
- .vit-e--para .vit-e__txt{display:flex;flex-direction:column}
- .vit-e--para .vit-e__niz{margin-top:auto}
- .vit-e--para .vit-e__scena{aspect-ratio:16/9}
- .vit-e--para .vit-e__tilt{inset:10% 26% 16%}
+.vit__zal{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:clamp(24px,3vw,40px)}
+.vit-e{grid-column:1 / -1}
+.vit-e--m{grid-template-columns:minmax(0,.7fr) minmax(0,1fr)}
+.vit-e--m.vit-e--sp{grid-template-columns:minmax(0,1fr) minmax(0,.7fr)}
+.vit-e--m .vit-e__scena{aspect-ratio:4/3;border-radius:28px}
+.vit-e--m .vit-e__h{font-size:clamp(24px,2.4vw,32px)}
+.vit-e--para{grid-column:auto;grid-template-columns:1fr;grid-template-rows:auto 1fr;align-items:stretch;gap:24px}
+.vit-e--para .vit-e__txt{display:flex;flex-direction:column}
+.vit-e--para .vit-e__niz{margin-top:auto}
+.vit-e--para .vit-e__scena{aspect-ratio:16/9}
+.vit-e--para .vit-e__tilt{inset:10% 26% 16%}
 }
-
-/* Свет пола «перетекает»: у каждого экспоната мягкое пятно со стороны сцены; по прокрутке (view()) оно разгорается
-   у экспоната в центре экрана и смещается к следующему — свет переходит по залу. Только transform/opacity. */
-.vit{overflow-x:clip}   /* пятна света шире колонки — не дают прокрутку вбок */
+.vit{overflow-x:clip}
 .vit__zal{position:relative;isolation:isolate}
 .vit-e{position:relative}
 .vit-e::before{content:"";position:absolute;z-index:-1;pointer-events:none;top:-18%;bottom:-18%;left:-12%;width:64%;opacity:0;
- background:radial-gradient(closest-side,color-mix(in srgb,var(--accent) 9%,transparent),transparent)}
+background:radial-gradient(closest-side,color-mix(in srgb,var(--accent) 9%,transparent),transparent)}
 .vit-e--sp::before{left:auto;right:-12%}
 .vit-e--para::before{left:-8%;width:116%}
 [data-theme=dark] .vit-e::before{background:radial-gradient(closest-side,color-mix(in srgb,var(--accent) 15%,transparent),transparent)}
 @supports (animation-timeline:view()){
- @media (prefers-reduced-motion:no-preference){
-  .vit-e::before{animation:vit-luzha linear both;animation-timeline:view();animation-range:cover 0% cover 100%}
-  .vit-e--sp::before{animation-name:vit-luzha-p}
- }
+@media (prefers-reduced-motion:no-preference){
+.vit-e::before{animation:vit-luzha linear both;animation-timeline:view();animation-range:cover 0% cover 100%}
+.vit-e--sp::before{animation-name:vit-luzha-p}
+}
 }
 @keyframes vit-luzha{from{opacity:0;transform:translate3d(0,-12%,0)}45%,55%{opacity:1;transform:none}to{opacity:0;transform:translate3d(38%,14%,0)}}
 @keyframes vit-luzha-p{from{opacity:0;transform:translate3d(0,-12%,0)}45%,55%{opacity:1;transform:none}to{opacity:0;transform:translate3d(-38%,14%,0)}}
-
-/* Индикатор «03 / 13 · название» — создаёт js/vitrina.js, только внутри зала. Широкий экран с полем слева —
-   вертикальная шкала у левого края (32 px); иначе — таблетка под шапкой, видна во время прокрутки. Не ловит нажатия. */
 .vit-ind{position:fixed;z-index:15;pointer-events:none;opacity:0;transition:opacity .3s var(--ease),translate .3s var(--ease);
- font-size:13px;font-weight:600;line-height:1;color:var(--ink2);font-variant-numeric:tabular-nums}
+font-size:13px;font-weight:600;line-height:1;color:var(--ink2);font-variant-numeric:tabular-nums}
 .vit-ind.is-vid{opacity:1}
 .vit-ind b{font-weight:600;color:var(--ink)}
 .vit-ind--shk{left:clamp(12px,calc((100vw - var(--wide,1200px)) / 4),40px);top:40vh;width:32px;translate:-8px -50%;
- display:flex;flex-direction:column;align-items:center;gap:10px}
+display:flex;flex-direction:column;align-items:center;gap:10px}
 .vit-ind--shk.is-vid{translate:0 -50%}
 .vit-ind--shk .vit-ind__dor{position:relative;width:2px;height:96px;border-radius:2px;background:var(--line);overflow:hidden}
 .vit-ind--shk .vit-ind__dor i{position:absolute;inset:0;background:var(--accent);transform-origin:top;transform:scaleY(var(--hod,0))}
 .vit-ind--shk .vit-ind__ns{writing-mode:vertical-rl;rotate:180deg;max-height:30vh;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-weight:500;color:var(--muted)}
 .vit-ind--shk .vit-ind__sl{display:none}
 .vit-ind--tab{left:50%;top:calc(var(--header-h,56px) + 8px);translate:-50% -6px;display:flex;align-items:center;gap:6px;height:32px;padding:0 14px;max-width:calc(100vw - 32px);
- border:1px solid var(--line);border-radius:999px;background:color-mix(in srgb,var(--surface,var(--card)) 90%,transparent);
- -webkit-backdrop-filter:saturate(180%) blur(12px);backdrop-filter:saturate(180%) blur(12px);box-shadow:0 6px 18px rgba(0,0,0,.12);white-space:nowrap}
+border:1px solid var(--line);border-radius:999px;background:color-mix(in srgb,var(--surface,var(--card)) 90%,transparent);
+-webkit-backdrop-filter:saturate(180%) blur(12px);backdrop-filter:saturate(180%) blur(12px);box-shadow:0 6px 18px rgba(0,0,0,.12);white-space:nowrap}
 .vit-ind--tab.is-vid{translate:-50% 0}
 .vit-ind--tab .vit-ind__dor,.vit-ind--tab .vit-ind__vs{display:none}
 .vit-ind--tab .vit-ind__ns{overflow:hidden;text-overflow:ellipsis;font-weight:500}
 .vit-ind--tab .vit-ind__ns::before{content:"·";margin-right:6px;color:var(--muted)}
-
-/* Карта витрины подсвечивает экспонат на экране (aria-current ставит js/vitrina.js) */
 .vit-k[aria-current]{border-color:color-mix(in srgb,var(--accent) 60%,var(--line));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 40%,transparent)}
 .vit-k[aria-current] .vit-k__g{background:color-mix(in srgb,var(--accent) 22%,var(--surface,var(--card)))}
 @media (prefers-reduced-motion:reduce){.vit-ind{transition:none}}
 @media print{.vit-ind{display:none}}
 /* --- /css/vizual2.css --- */
-/* Делоскоп — визуал, волна 2 (vizual-v2, 18.10.2026). Разметку ставит /js/vizual2.js; без JS ничего из этого не видно.
-   Подключается до glubina.css (тот — последним стилем страницы). */
-
-/* ===== А. переворот примера отчёта ===== */
 .ex-vid{display:flex;gap:4px;padding:4px;margin:18px 28px 2px;border-radius:999px;background:rgba(29,29,31,.05);width:max-content;max-width:calc(100% - 56px)}
 .ex-vid[hidden]{display:none}
-/* vizual-v3.1c: до js/vizual2.js — место под таблетки отступом блока фактов (таблетки 18 + 44 + 2 px и обёртка .ex-flip 6 px); [hidden] в ДС — !important, поэтому не показываем, а отодвигаем. Без JS места нет: класс ставит строка в <head> главной */
 .zhdu-js .report.ex .ex-vid[hidden]+.ex-f{margin-top:78px}
 .ex-vid button{white-space:nowrap;border:0;background:transparent;font:inherit;font-size:15px;font-weight:500;color:var(--ink2,#48484C);padding:7px 14px;border-radius:999px;cursor:pointer;min-height:44px;transition:background .2s,color .2s,box-shadow .2s}
 .ex-vid button:hover{color:var(--ink,#1D1D1F)}
@@ -627,26 +528,18 @@ dialog.lip-d[open]{animation:lip-vverh .28s cubic-bezier(.2,.7,.2,1)}
 .ex-zad .ex-f__h{padding-bottom:6px}
 .ex-zad .ex-f__h b{font-size:15px}
 .ex-zad .ex-r{border-color:rgba(29,29,31,.08)}
-/* pravo-teksty-v1: оговорка под «Глазами банка / налоговой» */
 .ex-zad__pod{margin:10px 0 12px;font-size:13px;line-height:1.45;color:var(--ink2,#48484C);max-width:38em}
 .ex-zad__pod[hidden]{display:none}
-/* настоящий отчёт: таблетки над «Существенными фактами», оборот — мягкая плашка в колонке */
 .ex-vid.ot-vid{margin:0 0 12px;max-width:100%}
 .ot-main .ex-zad{bottom:auto;padding:14px 16px 4px;border-radius:16px}
 .ot-main .ex-zad .ex-r,.ot-main .ex-zad .sut__r{border-color:rgba(29,29,31,.08)}
-/* после поворота скрытая сторона не ловит клики и не читается — inert/aria-hidden ставит скрипт */
 .ex-lico[inert],.ex-zad[inert]{pointer-events:none}
-/* otchet-detali-v1: вкладок 3 (пример) или 4 (отчёт, «Связи» добавляет js/svyazi.js) — всегда одна строка равных колонок; было 3 колонки — «Связи» уезжала на вторую строку */
 @media (min-width:521px) and (max-width:720px){.ex-vid.ot-vid{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);width:auto}.ex-vid.ot-vid button{white-space:normal;line-height:1.15;padding:6px 8px}}
 @media (max-width:520px){.ex-vid.ot-vid{margin:0 0 12px}.ex-vid{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);margin:16px 20px 2px;width:auto;max-width:none;border-radius:16px}.ex-vid button{white-space:normal;line-height:1.15;padding:6px 4px;font-size:13px;min-height:44px;border-radius:10px}.ex-zad{padding:16px 20px 4px}}
 @media (max-width:520px){.zhdu-js .report.ex .ex-vid[hidden]+.ex-f{margin-top:68px}}
-
-/* ===== Б. «сеть связей» за первым экраном ===== */
 .set-host{position:relative;isolation:isolate}
 .set{position:absolute;left:0;top:0;width:100%;height:min(100%,100vh);z-index:-1;pointer-events:none;display:block}
 #landing.set-host>.set{height:min(100%,640px,100vh)}
-
-/* ===== В. форма проверки ===== */
 .v2-forma{position:relative}
 .v2-forma button{transition:transform 300ms var(--ease,cubic-bezier(.2,.7,.2,1)),background .2s,box-shadow .3s}
 .v2-forma button.is-magnit{transition:transform 120ms linear,background .2s,box-shadow .3s}
@@ -656,17 +549,14 @@ dialog.lip-d[open]{animation:lip-vverh .28s cubic-bezier(.2,.7,.2,1)}
 .is-inn-ok .inn-pol i{background:var(--ok,#16723F)}
 .is-inn-ne .inn-pol i{background:var(--warn,#9A5B00)}
 .is-inn-ok button[type=submit],.is-inn-ok button:not([type]){box-shadow:0 0 0 4px var(--accent-soft,#EAF1FD)}
-
 @media (prefers-reduced-motion:reduce){
- .ex-flip__in,.ex-zad,.v2-forma button,.v2-forma button.is-magnit,.inn-pol,.inn-pol i,.ex-vid button{transition:none}
- /* без вращения: смена сторон мгновенно */
- .ex-flip__in.is-oborot{transform:none}
- .ex-zad{transform:none;visibility:hidden}
- .is-oborot .ex-zad{visibility:visible}
- .is-oborot .ex-lico{visibility:hidden}
+.ex-flip__in,.ex-zad,.v2-forma button,.v2-forma button.is-magnit,.inn-pol,.inn-pol i,.ex-vid button{transition:none}
+.ex-flip__in.is-oborot{transform:none}
+.ex-zad{transform:none;visibility:hidden}
+.is-oborot .ex-zad{visibility:visible}
+.is-oborot .ex-lico{visibility:hidden}
 }
 @media print{.set,.ex-vid,.inn-pol{display:none}}
-/* vizual-v3.2 «Связи» (js/svyazi.js): оборот с графом; широкий экран — холст + список для диктора, ≤ 600 px — список, граф по кнопке */
 .svz{position:relative;margin:2px 0 6px}
 .svz__cv{display:block;width:100%;height:320px;cursor:grab}
 .svz__kn{display:none}
@@ -678,56 +568,41 @@ dialog.lip-d[open]{animation:lip-vverh .28s cubic-bezier(.2,.7,.2,1)}
 .svz__zn{font-weight:500;color:var(--ink,#1D1D1F);overflow-wrap:anywhere}
 .svz__pod{font-size:13px;color:var(--ink-2,#48484C)}
 @media (max-width:600px){
- .svz__cv{display:none;height:300px}
- .svz--graf .svz__cv{display:block}
- .svz__sp{position:static;width:auto;height:auto;overflow:visible;clip:auto;white-space:normal}
- .svz__kn{display:inline-flex;align-items:center;min-height:44px;margin:0 0 8px;padding:0 16px;border:1px solid var(--line,#E6E6E1);border-radius:999px;background:transparent;color:var(--ink,#1D1D1F);font:inherit;font-size:15px;cursor:pointer}
- .svz__kn:focus-visible{outline:2px solid var(--accent,#0B63E5);outline-offset:2px}
+.svz__cv{display:none;height:300px}
+.svz--graf .svz__cv{display:block}
+.svz__sp{position:static;width:auto;height:auto;overflow:visible;clip:auto;white-space:normal}
+.svz__kn{display:inline-flex;align-items:center;min-height:44px;margin:0 0 8px;padding:0 16px;border:1px solid var(--line,#E6E6E1);border-radius:999px;background:transparent;color:var(--ink,#1D1D1F);font:inherit;font-size:15px;cursor:pointer}
+.svz__kn:focus-visible{outline:2px solid var(--accent,#0B63E5);outline-offset:2px}
 }
 .svz__ist{margin:8px 0 4px;font-size:12px;line-height:1.4;color:var(--muted,#6B6B70)}
 @media print{.svz__cv,.svz__kn{display:none}.svz__sp{position:static;width:auto;height:auto;overflow:visible;clip:auto;white-space:normal}}
 /* --- /css/glubina.css --- */
-/* Делоскоп — «Глубина и свет» (vizual-v1, часть А, 17.10.2026).
-   Подключает tests/sobrat_shapku.py на всех страницах последним стилем — поэтому переопределяет токены ds.css.
-   Один главный эффект на экран: фон дышит еле заметно, тени глубже, стекло — у шапки и примера отчёта.
-   Фон двигаем только transform (без filter:blur на весь экран — мягкость дают сами радиальные пятна,
-   телефон не греется); зерно — простой слой с прозрачностью, без mix-blend-mode. */
 :root{
- --shadow:0 1px 1px rgba(29,29,31,.03),0 8px 24px rgba(29,29,31,.06),0 32px 64px -24px rgba(29,29,31,.10);
- --shadow-hover:0 1px 1px rgba(29,29,31,.04),0 10px 30px rgba(29,29,31,.075),0 40px 80px -24px rgba(29,29,31,.125)
+--shadow:0 1px 1px rgba(29,29,31,.03),0 8px 24px rgba(29,29,31,.06),0 32px 64px -24px rgba(29,29,31,.10);
+--shadow-hover:0 1px 1px rgba(29,29,31,.04),0 10px 30px rgba(29,29,31,.075),0 40px 80px -24px rgba(29,29,31,.125)
 }
 body::before{content:"";position:fixed;z-index:-2;inset:-12%;pointer-events:none;
- background:radial-gradient(42% 38% at 22% 18%,rgba(234,241,253,.95),rgba(234,241,253,0) 70%),
-  radial-gradient(38% 34% at 82% 64%,rgba(243,239,230,.95),rgba(243,239,230,0) 70%);
- opacity:.9;animation:dyhanie 18s ease-in-out infinite alternate;will-change:transform}
+background:radial-gradient(42% 38% at 22% 18%,rgba(234,241,253,.95),rgba(234,241,253,0) 70%),
+radial-gradient(38% 34% at 82% 64%,rgba(243,239,230,.95),rgba(243,239,230,0) 70%);
+opacity:.9;animation:dyhanie 18s ease-in-out infinite alternate;will-change:transform}
 body::after{content:"";position:fixed;z-index:-1;inset:0;pointer-events:none;opacity:.035;
- background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='z'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23z)'/%3E%3C/svg%3E")}
+background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='z'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23z)'/%3E%3C/svg%3E")}
 @keyframes dyhanie{from{transform:translate3d(-2%,-1.5%,0)}to{transform:translate3d(2%,1.5%,0)}}
-
-/* тени в три слоя; подъём при наведении — только там, где есть мышь */
 .card,.report.ex,.vhod,.pr-gl a,.osn-card{box-shadow:var(--shadow)}
 .report{box-shadow:var(--shadow)}
 .search,.check{box-shadow:var(--shadow)}
 .card,.report.ex,.vhod,.pr-gl a,.search,.check{transition:box-shadow var(--slow,240ms) var(--ease,cubic-bezier(.2,.7,.2,1)),transform var(--slow,240ms) var(--ease,cubic-bezier(.2,.7,.2,1)),border-color .2s}
 @media (hover:hover){
- .card:hover,.report.ex:hover,.vhod:hover,.pr-gl a:hover{box-shadow:var(--shadow-hover);transform:translateY(-2px)}
- .search:hover,.check:hover{box-shadow:var(--shadow-hover)}
- .search:focus-within,.check:focus-within{box-shadow:var(--shadow-hover),0 0 0 3px var(--accent,#0B63E5)}
+.card:hover,.report.ex:hover,.vhod:hover,.pr-gl a:hover{box-shadow:var(--shadow-hover);transform:translateY(-2px)}
+.search:hover,.check:hover{box-shadow:var(--shadow-hover)}
+.search:focus-within,.check:focus-within{box-shadow:var(--shadow-hover),0 0 0 3px var(--accent,#0B63E5)}
 }
-
-/* shapka-plotnee-v1: при 72 % текст полосы и страницы читался сквозь шапку (просвет 14–17 из 255). 94 % фона темы с размытием —
-   просвет не больше 3; 94 % без размытия — 14, поэтому размытие оставлено. */
-/* стекло: шапка после 8 px прокрутки (класс ставит shapka.js) и пример отчёта на главной */
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
- .shapka.is-scrolled{background:color-mix(in srgb,var(--bg) 94%,transparent);-webkit-backdrop-filter:saturate(160%) blur(14px);backdrop-filter:saturate(160%) blur(14px);border-bottom-color:rgba(29,29,31,.06)}
- .report.ex{background:rgba(255,255,255,.78);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:var(--shadow),inset 0 0 0 1px rgba(255,255,255,.6)}
- @media (hover:hover){.report.ex:hover{box-shadow:var(--shadow-hover),inset 0 0 0 1px rgba(255,255,255,.6)}}
- /* vizual-v3.1b: пока ждём ответ (и при заходе по адресу отчёта) стекло снимаем — Chromium считает границы блока с backdrop-filter
-    шире самого блока, и смена примера на отчёт засчитывалась сдвигом вёрстки (CLS 0,17–0,39). Видно не будет: пример в это время приглушён. */
- .report.ex.loading,.rezhim-otcheta .report.ex{background:#fff;-webkit-backdrop-filter:none;backdrop-filter:none}
+.shapka.is-scrolled{background:color-mix(in srgb,var(--bg) 94%,transparent);-webkit-backdrop-filter:saturate(160%) blur(14px);backdrop-filter:saturate(160%) blur(14px);border-bottom-color:rgba(29,29,31,.06)}
+.report.ex{background:rgba(255,255,255,.78);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:var(--shadow),inset 0 0 0 1px rgba(255,255,255,.6)}
+@media (hover:hover){.report.ex:hover{box-shadow:var(--shadow-hover),inset 0 0 0 1px rgba(255,255,255,.6)}}
+.report.ex.loading,.rezhim-otcheta .report.ex{background:#fff;-webkit-backdrop-filter:none;backdrop-filter:none}
 }
-
-/* ===== «Живой Индекс» (часть Б): кольцо 1–99 в перспективе. Разметку ставит /js/zhivoj-indeks.js ===== */
 @property --p{syntax:'<number>';inherits:true;initial-value:0}
 .zhi{--zona-cvet:var(--ok,#16723F);--d:132px;display:flex;flex-direction:column;align-items:center;gap:8px;flex:none}
 .zhi[data-zona=warn]{--zona-cvet:var(--warn,#9A5B00)}
@@ -736,7 +611,6 @@ body::after{content:"";position:fixed;z-index:-1;inset:0;pointer-events:none;opa
 .zhi__scena{position:relative;width:var(--d);height:var(--d);perspective:900px}
 .zhi__kolco{position:absolute;inset:0;transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transform-style:preserve-3d;transition:transform 600ms var(--ease,cubic-bezier(.2,.7,.2,1));border-radius:50%}
 .zhi__fon,.zhi__duga{position:absolute;inset:0;border-radius:50%;-webkit-mask:radial-gradient(farthest-side,transparent 79%,#000 80%);mask:radial-gradient(farthest-side,transparent 79%,#000 80%)}
-/* шкала-дуга 270° (снизу слева → снизу справа); зоны методики v1: 1–29, 30–49, 50–69, 70–99 — доли от 75 % круга */
 .zhi__fon{opacity:.28;background:conic-gradient(from 225deg,var(--bad,#B3261E) 0 22%,var(--high,#C2410C) 0 37.1%,var(--warn,#9A5B00) 0 52.3%,var(--ok,#16723F) 0 75%,transparent 0)}
 .zhi__duga{background:conic-gradient(from 225deg,var(--zona-cvet) calc(var(--p)*.7576%),transparent 0)}
 .zhi__svet{position:absolute;inset:8%;border-radius:50%;box-shadow:0 0 40px -10px var(--zona-cvet);opacity:.35;transform:translateZ(-1px)}
@@ -745,38 +619,30 @@ body::after{content:"";position:fixed;z-index:-1;inset:0;pointer-events:none;opa
 .zhi__chislo{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:inherit;font-size:calc(var(--d)*.34);font-weight:600;line-height:1;letter-spacing:-.03em;color:var(--ink,#1D1D1F);font-variant-numeric:tabular-nums;transform:translateZ(24px)}
 .zhi__chislo small{font-size:.32em;font-weight:500;color:var(--muted,#6B6B70);margin-left:2px}
 .zhi__pod::before{content:"Индекс Делоскопа · 1–99"}
-/* пример (компания вымышленная): вместо числа — знак зоны цветом зоны */
 .ex-ix .zhi__chislo::before{content:"";width:30%;height:30%;background:var(--zona-cvet);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-6.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-6.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}
 .zhi__pod{font-size:12px;color:var(--ink-2,#48484C);white-space:nowrap}
 .zhi.is-idet{transition:--p 1.2s var(--ease,cubic-bezier(.2,.7,.2,1))}
-/* пример на главной: кольцо сверху колонки; на 390 — слева от «Уровень риска» */
 .ex-ix .zhi{align-self:flex-start;--d:120px}
-/* vizual-v3.1c: кольцо примера лежит в разметке; без JS (нет класса est-js из <head> главной) — сразу до базы методики */
 html:not(.est-js) .ex-ix .zhi{--p:72}
 @media (max-width:720px){.ex-ix .zhi{--d:96px;flex-basis:100%;flex-direction:row;gap:14px}.ex-ix .zhi__pod{white-space:normal}}
-/* отчёт: число Индекса переезжает в центр кольца (тот же узел — текст отчёта не меняется) */
 .ot-ix .zhi{--d:168px;align-self:flex-start;margin:4px 0}
 .ot-ix .zhi .ot-ix__big{font-size:48px;line-height:1}
 .ot-ix .zhi .ot-ix__big small{font-size:15px}
 .ot-ix--zhi .ot-ix__sh{display:none}
 @media (max-width:860px){.ot-ix--zhi{align-items:center}.ot-ix .zhi{--d:132px;align-self:center}.ot-ix .zhi .ot-ix__big{font-size:32px}}
-
-/* ===== Сборка при прокрутке (часть В): классы ставит /js/zhivoj-indeks.js; без JS всё видно сразу ===== */
 @supports (animation-timeline:view()){
- .sobir{animation:vstat both linear;animation-timeline:view();animation-range:entry calc(var(--i,0)*6%) entry calc(60% + var(--i,0)*6%)}
+.sobir{animation:vstat both linear;animation-timeline:view();animation-range:entry calc(var(--i,0)*6%) entry calc(60% + var(--i,0)*6%)}
 }
 @keyframes vstat{from{opacity:0;transform:translateY(24px) scale(.985)}to{opacity:1;transform:none}}
 .zhi-io .sobir{transition:opacity .6s var(--ease,cubic-bezier(.2,.7,.2,1)),transform .6s var(--ease,cubic-bezier(.2,.7,.2,1));transition-delay:calc(var(--i,0)*60ms)}
 .zhi-io .sobir:not(.is-vidno){opacity:0;transform:translateY(24px) scale(.985)}
-
-/* запасные пути */
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.report.ex{background:#fff}}
 @media (prefers-reduced-motion:reduce){
- body::before{animation:none;transform:none}
- .card,.report.ex,.vhod,.pr-gl a,.search,.check{transition:none}
- .card:hover,.report.ex:hover,.vhod:hover,.pr-gl a:hover{transform:none}
- .zhi__kolco{transition:none;transform:none}
- .zhi.is-idet{transition:none}
- .sobir,.zhi-io .sobir,.zhi-io .sobir:not(.is-vidno){animation:none;transition:none;opacity:1;transform:none}
+body::before{animation:none;transform:none}
+.card,.report.ex,.vhod,.pr-gl a,.search,.check{transition:none}
+.card:hover,.report.ex:hover,.vhod:hover,.pr-gl a:hover{transform:none}
+.zhi__kolco{transition:none;transform:none}
+.zhi.is-idet{transition:none}
+.sobir,.zhi-io .sobir,.zhi-io .sobir:not(.is-vidno){animation:none;transition:none;opacity:1;transform:none}
 }
 @media print{body::before,body::after{display:none}.report.ex{background:#fff;-webkit-backdrop-filter:none;backdrop-filter:none}}

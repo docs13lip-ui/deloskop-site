@@ -23,11 +23,17 @@ test('сборщик пакетов ничего не меняет (как sobra
 
 test('пакет = исходники в порядке карты; отпечаток в имени — от содержимого', () => {
   const crypto = require('crypto');
+  // paket-legkij-v1: в пакете исходник — без комментариев и отступов (tests/szhat_js.py); сжатые тексты — одним вызовом
+  const vse = [].concat(...Object.values(KARTA.pakety));
+  const szh = JSON.parse(require('child_process').execFileSync('python3', ['-c',
+    'import json, sys; sys.path.insert(0, "tests"); from szhat_js import szhat_js, szhat_css\n' +
+    'print(json.dumps({f: (szhat_css if f.endswith(".css") else szhat_js)(open(f, encoding="utf-8").read()) for f in sys.argv[1:]}))',
+  ].concat(vse), { cwd: path.join(__dirname, '..'), encoding: 'utf8', maxBuffer: 64 << 20 }));
   for (const [imya, fajly] of Object.entries(KARTA.pakety)) {
     const p = paket(imya), t = chitat(p);
     let poz = 0;
     for (const f of fajly) {
-      const i = t.indexOf('/* --- /' + f + ' --- */\n' + chitat(f).trimEnd() + (vid(imya) === 'js' ? '\n;\n' : '\n'), poz);
+      const i = t.indexOf('/* --- /' + f + ' --- */\n' + szh[f].trimEnd() + (vid(imya) === 'js' ? '\n;\n' : '\n'), poz);
       assert.ok(i >= poz, imya + ': ' + f + ' целиком и по порядку');
       poz = i + 1;
     }
@@ -43,7 +49,8 @@ test('модули отчёта из пакета дают те же объек�
   okno.window = okno;
   vm.runInContext('var window=this.window;', ctx);
   // пакет исполняется в браузере с this === window: UMD-обёртки кладут объекты в root
-  vm.runInContext('(function(){' + chitat(paket('otchet')) + '\n}).call(window)', ctx);
+  // primer-legkij-v1: «Условия сделки» с зависимостями — в пакете primer, страница всегда грузит его раньше otchet
+  vm.runInContext('(function(){' + chitat(paket('primer')) + '\n' + chitat(paket('otchet')) + '\n}).call(window)', ctx);
   const est = Object.keys(okno).concat(Object.keys(ctx));
   for (const g of ['Usloviya', 'Otchet', 'Dinamika', 'IndeksOtvet', 'Sushchestvennoe', 'Shchit', 'Otkuda', 'Terminy', 'DeloskopIndeks', 'Nedavnie'])
     assert.ok(est.includes(g), g);

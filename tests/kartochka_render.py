@@ -1082,7 +1082,7 @@ def razbor_html(k):
     return ('<section class="co-sec co-razbor" aria-labelledby="razbor"><h2 id="razbor">Разбор по цифрам</h2>'
             '<ul class="co-vv">%s</ul><p class="caption">◆ рассчитано Делоскопом по данным: %s и открытые данные ФНС — '
             'без оценки компании.</p></section>' % (
-                "".join('<li class="co-v co-v--info"><span class="co-v__z" aria-label="расчёт"></span><div><p>%s</p></div></li>'
+                "".join('<li class="co-v co-v--info"><span class="co-v__z" role="img" aria-label="расчёт"></span><div><p>%s</p></div></li>'
                         % e(x).replace("&nbsp;", NB) for x in f), e(src)))
 
 
@@ -1688,7 +1688,7 @@ def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None):
         # страница; ведём в полный отчёт (ТЗ [Продукт · Маркетинг] 03.10 16:50, разд. 2)
         ind = indeks_v_otchete_html(k["inn"])
     # выводы
-    vv = "".join('<li class="co-v co-v--%s"><span class="co-v__z" aria-label="%s"></span><div><p>%s</p>%s</div></li>' % (
+    vv = "".join('<li class="co-v co-v--%s"><span class="co-v__z" role="img" aria-label="%s"></span><div><p>%s</p>%s</div></li>' % (
         ZNAK[x["ton"]][0], ZNAK[x["ton"]][1], e(x["tekst"]).replace("&nbsp;", NB), _istochnik_stroka(x["istochnik"], x["data"], x["status"]))
         for x in V)
     # перед оплатой — по признакам компании
@@ -3692,6 +3692,17 @@ def un_pered(f):
         return ['В сведениях этой страницы у %s замечаний нет — перед оплатой остаётся сверить счёт: ИНН%s%s, '
                 'название и банк. <a href="/proverit-schet/">Проверить счёт</a>' % (im, NB, inn)]
     return (s + [schet])[:3]
+
+
+# kartochki-rol-znaka-v1 ([Ночные-2] 25.10, по аудиту axe dostupnost-v1): цветная точка вывода — <span aria-label> без роли;
+# у span без роли aria-label запрещён (aria-prohibited-attr) и читалка подпись («хорошо», «обратите внимание»…) не произносит.
+# role="img" — точка как значок с именем. Новые карточки — в шаблоне; опубликованные — здесь. Идемпотентна.
+_ZNAK_BEZ_ROLI = re.compile(r'<span class="co-v__z" aria-label="')
+
+
+def pochinit_rol_znaka(t):
+    """Точке вывода — role="img" (подпись читается вслух). Повторный вызов ничего не меняет."""
+    return _ZNAK_BEZ_ROLI.sub('<span class="co-v__z" role="img" aria-label="', t)
 
 
 def pochinit_pered(t):

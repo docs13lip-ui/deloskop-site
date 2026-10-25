@@ -46,6 +46,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import beta as BETA  # noqa: E402
 import tema_temnaya as TT  # noqa: E402  vizual-v3.0b: тёмный слой стилей страницы
+import seo_haby as SH  # noqa: E402  seo-haby-v1: крошки и ItemList хабов
 import tipograf_statej as TS  # noqa: E402  tipograf-obolochka-v1: шапка и подвал — тем же типографом, что статьи
 
 KOREN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -437,6 +438,9 @@ def podval_css():
             ".podval a:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}\n"
             ".podval__niz{display:flex;justify-content:space-between;gap:var(--s-3) var(--s-6);flex-wrap:wrap;margin-top:var(--s-7);padding-top:var(--s-5);border-top:1px solid var(--line);font-size:var(--t-caption);line-height:1.4}\n"
             ".podval .podval__niz p{margin:0;color:var(--muted);font-size:var(--t-caption)}\n"
+            # dostupnost-v1 (25.10): ссылки внутри строк подвала («Реквизиты», help@) — с подчёркиванием: цветом они отличались
+            # от текста строки на 1,5 : 1 (нужно ≥ 3 : 1, WCAG 1.4.1) и читались как обычный текст; колонки — списки ссылок, их не трогаем
+            ".podval .podval__niz a{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.2em}.podval .podval__niz a:hover{text-decoration-color:currentColor}\n"
             "@media (max-width:900px){.podval__cols{grid-template-columns:repeat(2,minmax(0,1fr))}}\n"
             "@media (max-width:640px){.podval{padding:var(--s-7) 0 var(--s-6)}.podval__cols{gap:var(--s-5) var(--s-4)}.podval li{margin-bottom:var(--s-3)}}\n"
             "@media print{.podval{display:none}}\n")
@@ -549,6 +553,8 @@ def sobrat_stranicu(txt, r, podval, shapka=None):
     txt = SAMEAS.sub(lambda m: m.group(0) + SAMEAS_VSTAVKA, txt)
     # 6г) podelitsya-v1: «Поделиться» под текстом статей и разборов (ВК, Telegram, ОК, ссылка) — без чужих скриптов
     txt = podelitsya(txt)
+    # 6д) seo-haby-v1: BreadcrumbList хабов и продуктовых страниц, ItemList статей хаба (tests/seo_haby.py)
+    txt = SH.primenit(txt)
     # 7) shrift-v1: предзагрузка шрифта — последней строкой <head> и после всех вставок: так страница, собранная заново
     #    (kartochki perepechatat, сборщики разделов), и пересобранная sobrat_shapku совпадают байт в байт
     txt = STARYJ_PRELOAD.sub("", txt)

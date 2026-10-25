@@ -16,7 +16,7 @@
     "nalogi/nagruzka/index.html": ["podarok-ot-roditelya-ip-ndfl-vs-2026", "droblenie-uplachennaya-usn-zachityvaetsya", "zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/nagruzka-po-otraslyam-2025/index.html": ["zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/priznaki-tehnicheskoj-kompanii/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke"],
-    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026", "kompensaciya-poter-406-1-vs-2026"],
+    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026"],
     "pasport/index.html": ["proverka-kontragenta-na-datu-sdelki"],
     "nalogi/svezhest-dannyh-proverki-kontragenta/index.html": ["proverka-kontragenta-na-datu-sdelki"],
     "nalogi/pismo-o-smene-rekvizitov-kak-proverit/index.html": ["dvojnik-postavshchika-bank-poluchatelya"],
@@ -24,10 +24,67 @@
     "nalogi/izmeneniya-egryul-kontragenta/index.html": ["reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p"],
     "nalogi/kody-statusa-egryul/index.html": ["reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p"],
     "nalogi/nedostovernyj-adres-egryul/index.html": ["isklyuchili-iz-egryul-dolg-s-direktora"],
-    "nalogi/skolko-platit-vpered-neznakomoj-kompanii/index.html": ["nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "isklyuchili-iz-egryul-dolg-s-direktora", "kompensaciya-poter-406-1-vs-2026"],
+    "nalogi/skolko-platit-vpered-neznakomoj-kompanii/index.html": ["nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "isklyuchili-iz-egryul-dolg-s-direktora", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026"],
     "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"]
   },
   "razbory": [
+    {
+      "razdel": "dogovory",
+      "slug": "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026",
+      "h1": "Отдали имущество, получив только задаток. Кто платит разницу?",
+      "title": "Отдали имущество за задаток: ВС о вине управляющего | Делоскоп",
+      "description": "ВС: управляющий, передавший квартиру до полной оплаты, отвечает и за простую неосторожность. Что это значит для продавцов и кредиторов.",
+      "zapros": "передали имущество до полной оплаты задаток убытки управляющего",
+      "data": "2026-10-25",
+      "minut": 4,
+      "lid": "Управляющий продал квартиру из конкурсной массы за 6,1 млн ₽. Передал её покупателю и подал документы на регистрацию, хотя пришёл только задаток — 297 990 ₽. Остальное покупатель так и не заплатил. Две инстанции сочли, что взыскать убытки с управляющего можно только за умысел. Верховный суд с этим не согласился.",
+      "dela": [
+        {
+          "sud": "Верховный суд РФ, Судебная коллегия по экономическим спорам",
+          "sud_kratko": "ВС",
+          "akt": "Определение",
+          "nomer": "№ 305-ЭС26-3930",
+          "data": "2026-08-26",
+          "delo": "Убытки с бывшего конкурсного управляющего: квартиру передали покупателю, получив только задаток (№ А40-4457/2025); резолютивная часть — 17.08.2026",
+          "na_konu": "5 804 112 ₽ — разница между ценой квартиры (6 102 102 ₽) и задатком (297 990 ₽)",
+          "na_konu_kratko": "≈ 5,8 млн ₽",
+          "itog": "В пользу компании",
+          "itog_nov": false,
+          "istochnik": "https://vsrf.ru/lk/practice/stor_pdf_ec/2563804",
+          "istochnik_podpis": "vsrf.ru — текст определения; сверено 23.10",
+          "sverka": "2026-10-23"
+        }
+      ],
+      "knopka": {
+        "zagolovok": "Передаёте имущество до полной оплаты — сначала проверьте покупателя",
+        "tekst": "Проверка по ИНН: долги у приставов, приостановки по счетам и признаки банкротства — на дату проверки. При сигналах — только после полной оплаты или под гарантию.",
+        "knopka": "Проверить покупателя по ИНН",
+        "url": "/",
+        "cel": "razbor26_check",
+        "slezh": {
+          "knopka": "Следить за покупателем",
+          "url": "/cabinet.html#watch",
+          "cel": "razbor26_slezh"
+        }
+      },
+      "zakon": [
+        [
+          "п. 1 ст. 401 ГК РФ — ответственность при вине, в том числе неосторожности; ст. 15 ГК РФ — возмещение убытков",
+          "ред. на 25.10.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_5142/"
+        ],
+        [
+          "п. 4 ст. 203, ст. 129, 143 Федерального закона № 127-ФЗ «О несостоятельности (банкротстве)» — разумность управляющего, его обязанности и отчёты",
+          "ред. на 25.10.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_39331/"
+        ]
+      ],
+      "pohozhie": [
+        "nalogovyj-arest-zalog-v-bankrotstve-postavshchika",
+        "kompensaciya-poter-406-1-vs-2026",
+        "proverka-kontragenta-na-datu-sdelki"
+      ]
+    },
     {
       "razdel": "dogovory",
       "slug": "kompensaciya-poter-406-1-vs-2026",
@@ -77,6 +134,11 @@
           "ст. 431 ГК РФ — толкование договора; ст. 15, 393, 404 ГК РФ — убытки и их уменьшение",
           "ред. на 24.10.2026",
           "https://www.consultant.ru/document/cons_doc_LAW_5142/"
+                ],
+        [
+          "Обзор судебной практики Верховного суда РФ № 3 (2026), утв. Президиумом ВС РФ, п. 13 — это дело включено в обзор",
+          "",
+          "https://www.garant.ru/products/ipo/prime/doc/414981131/"
         ]
       ],
       "pohozhie": [
@@ -1003,6 +1065,7 @@
       "description": "ВС 31.03.2026 по делу «Вокфорс»: 214,6 млн ₽ остались в силе, расчётный метод для подставных подрядчиков закрыт. Когда налог всё же пересчитают.",
       "zapros": "налоговая реконструкция техническая компания верховный суд 2026",
       "data": "2026-09-30",
+      "izmeneno": "2026-10-24",
       "minut": 6,
       "lid": "Три суда разрешили компании учесть расходы на работы, которые реально были сделаны, — пусть и через подставных подрядчиков, и признали незаконным начисление 107,7 млн ₽ налога на прибыль и штрафа. Верховный суд в марте 2026 года это отменил: вместе с НДС, в котором компании отказали сразу, 214,6 млн ₽ налогов и штрафов остались в силе. Разбираем, почему «работа же выполнена» больше не довод и когда налог всё-таки можно пересчитать по-честному.",
       "dela": [
@@ -1016,7 +1079,8 @@
         ["п. 1 ст. 252 НК РФ — расходы обоснованы и подтверждены документами", "ред. на 30.09.2026", "https://www.consultant.ru/document/cons_doc_LAW_28165/"],
         ["подп. 7 п. 1 ст. 31 НК РФ — расчётный способ определения налога", "ред. на 30.09.2026", "https://www.consultant.ru/document/cons_doc_LAW_19671/"],
         ["Письмо ФНС России от 10.03.2021 № БВ-4-7/3060@, пп. 11, 17 — когда возможна реконструкция", "", "https://www.consultant.ru/document/cons_doc_LAW_352052/"],
-        ["Обзор правовых позиций КС и ВС за I квартал 2026 года (ФНС России, 29.06.2026), п. 4", "", "https://www.garant.ru/products/ipo/prime/doc/414350683/"]
+        ["Обзор правовых позиций КС и ВС за I квартал 2026 года (ФНС России, 29.06.2026), п. 4", "", "https://www.garant.ru/products/ipo/prime/doc/414350683/"],
+        ["Обзор судебной практики Верховного суда РФ № 3 (2026), утв. Президиумом ВС РФ, п. 19 — это дело включено в обзор", "", "https://www.garant.ru/products/ipo/prime/doc/414981131/"]
       ],
       "pohozhie": ["proverka-kontragenta-na-datu-sdelki", "ks-12-p-svidetel-po-svoej-proverke", "podryadchik-ne-vystavil-schet-fakturu"]
     },

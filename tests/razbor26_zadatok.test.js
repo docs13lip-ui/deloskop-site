@@ -53,3 +53,18 @@ test('Разбор № 26: страница, хаб «Договоры», FAQ д
   assert.ok(h.includes(URL) && h.includes('/praktika/dogovory/kompensaciya-poter-406-1-vs-2026/'), 'на хабе оба разбора');
   assert.ok(un(chitat('sitemap.xml')).includes('https://deloskop.ru' + URL));
 });
+
+// razbor26-sverka-v1 ([Ночные запуски] 25.10 16:05): сверка по PDF vsrf.ru stor_pdf_ec/2563804 — 6 цитат дословно
+// («Не убедившись…» в тексте ВС — с заглавной, у нас внутри фразы — со строчной); норма о разумности управляющего —
+// п. 4 ст. 20.3 Закона о банкротстве (в черновике было «ст. 203» — такой статьи с этим смыслом нет).
+test('Разбор № 26: п. 4 ст. 20.3 Закона о банкротстве, а не «ст. 203»; сверка 25.10', () => {
+  const t = un(chitat('tests/praktika/' + SLUG + '.html'));
+  const D = JSON.parse(chitat('praktika/dela.json'));
+  const r = D.razbory.find((x) => x.slug === SLUG);
+  const z = JSON.stringify(r.zakon);
+  assert.ok(t.includes('п. 4 ст. 20.3 Закона о банкротстве') && z.includes('п. 4 ст. 20.3,'));
+  assert.ok(!/ст\. 203\b/.test(t + z), 'ст. 203 — опечатка');
+  assert.strictEqual(r.dela[0].sverka, '2026-10-25');
+  const s = un(chitat('praktika/dogovory/' + SLUG + '/index.html'));
+  assert.ok(s.includes('ст. 20.3') && !/ст\. 203\b/.test(s), 'собранная страница');
+});

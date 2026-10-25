@@ -1042,12 +1042,15 @@
    Окно САМО НЕ ОТКРЫВАЕТСЯ (решение команды 26.09): оно закрывало поле ИНН у клиентов.
    Вместо него: синяя точка и счётчик у пункта «Что нового» в шапке + тонкая полоса под шапкой.
    Окно — только по кнопке в шапке (событие deloskop:whatsnew) или по ссылке с ?obnovleniya.
-   Прочитанным считается последнее обновление, которое человек открыл или скрыл. Данные: /obnovleniya.json */
+   Прочитанным считается последнее обновление, которое человек открыл или скрыл.
+   Данные: /obnovleniya-verh.json — верхние 12 записей и «vsego» (lenta-legkaya-v1, 25.10: вся лента — 587 КБ на каждую
+   страницу; собирает tests/sobrat_lentu.py). Полная лента — только на /obnovleniya/. */
 (function () {
   "use strict";
   var KEY = "deloskop_obnovlenie_videl";
   var NA_LENTE = location.pathname.indexOf("/obnovleniya") === 0;
   var list = [];
+  var vsego = 0; // сколько записей во всей ленте (в лёгкой — только верхние)
 
   function get() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
   function set(v) { try { localStorage.setItem(KEY, v); } catch (e) {} }
@@ -1093,7 +1096,8 @@
     var s = get();
     if (!s) return 1;
     for (var i = 0; i < list.length; i++) if (list[i].id === s) return i;
-    return 1;
+    // прочитанная — ниже верхних записей лёгкой ленты: новых больше, чем в ней, — счётчик «9+»
+    return vsego > list.length ? list.length : 1;
   }
   function prochital() {
     if (list[0]) set(list[0].id);
@@ -1182,10 +1186,11 @@
   });
 
   function start() {
-    fetch("/obnovleniya.json", { cache: "no-cache" })
+    fetch("/obnovleniya-verh.json", { cache: "no-cache" })
       .then(function (r) { return r.json(); })
       .then(function (d) {
         list = (d && d.obnovleniya) || [];
+        vsego = (d && d.vsego) || list.length;
         if (!list.length) return;
         if (NA_LENTE) set(list[0].id); // открыл ленту — всё прочитано
         obnovit();

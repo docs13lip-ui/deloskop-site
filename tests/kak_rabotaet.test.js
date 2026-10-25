@@ -8,8 +8,8 @@ const s = fs.readFileSync(path.join(K, "kak-rabotaet/index.html"), "utf8");
 const main = s.slice(s.indexOf("<main"), s.indexOf("</main>"));
 const pokazy = [...main.matchAll(/<section class="kr-d" id="([^"]+)"[\s\S]*?<\/section>/g)];
 
-test("семь показов: Проверка по ИНН, Досье сделки, Кому вы платите, Проверь счёт, Наличные, Скорая, Слежение", () => {
-  assert.deepStrictEqual(pokazy.map((m) => m[1]), ["proverka", "dosje", "platite", "schet", "nalichnye", "skoraya", "slezhenie"]);
+test("восемь показов: Проверка по ИНН, Паспорт, Досье сделки, Кому вы платите, Проверь счёт, Наличные, Скорая, Слежение", () => {
+  assert.deepStrictEqual(pokazy.map((m) => m[1]), ["proverka", "pasport", "dosje", "platite", "schet", "nalichnye", "skoraya", "slezhenie"]);
   const oglav = [...main.matchAll(/<ul class="kr-oglav">([\s\S]*?)<\/ul>/g)][0][1];
   assert.deepStrictEqual([...oglav.matchAll(/href="#([^"]+)"/g)].map((m) => m[1]), pokazy.map((m) => m[1]), "оглавление = показы");
 });
@@ -30,6 +30,21 @@ test("цифры показов совпадают с примерами про�
   // 3 000 000 ₽ в месяц → в рабочий день 146 тыс. ₽ (как в Скорой: WD_PER_MONTH = 247 / 12)
   assert.match(fs.readFileSync(path.join(K, "skoraya-115-fz/engine.js"), "utf8"), /WD_PER_MONTH = 247 \/ 12/);
   assert.strictEqual(Math.round(3000000 / (247 / 12) / 1000), 146);
+});
+
+// demo-vitrina-v3: показ «Паспорт компании» — цифры образца Паспорта (pasport/engine.js и /pasport/kontragent/?demo=1)
+test("Паспорт: цифры и метки — как в образце Паспорта", () => {
+  const b = pokazy.find((m) => m[1] === "pasport")[0].replace(/&nbsp;|\u00a0/g, " ");
+  for (const x of ["Предварительно: есть замечания", "11 компаний", "на 01.09.2026", "6 из 12 разделов", "61 400 000 ₽", "1 100 000 ₽", "Собрать Паспорт"]) assert.ok(b.includes(x), x);
+  for (const x of ["kr-m--ist", "kr-m--ras", "kr-m--net"]) assert.ok(b.includes(x), x);
+  const eng = fs.readFileSync(path.join(K, "pasport/engine.js"), "utf8");
+  assert.match(eng, /по адресу зарегистрировано 11 компаний/);
+  assert.match(eng, /id: 'tax_debt'[^}]*detail: 'нет'[^}]*as_of: '2026-09-01'/);
+  assert.match(fs.readFileSync(path.join(K, "pasport/kontragent/index.html"), "utf8"), /year:2025,value:61400000/);
+  // предел аванса образца: две недели выручки (÷ 26), одно замечание → половина, вниз до сотен тысяч
+  assert.strictEqual(Math.floor(61400000 / 26 / 2 / 100000) * 100000, 1100000);
+  // витрина: экспонат «Паспорт» ведёт на показ Паспорта, а не на досье
+  assert.ok(fs.readFileSync(path.join(K, "index.html"), "utf8").includes('href="/kak-rabotaet/#pasport">Как это работает'));
 });
 
 test("[data-zam] — только у элементов на смену ушедшему (не на первом шаге)", () => {

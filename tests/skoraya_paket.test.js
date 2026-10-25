@@ -41,7 +41,7 @@ test("оговорка юриста — полным текстом в блок�
   const leg = blok.match(/<aside class="pkg__legal" id="pkg-legal"[^>]*>([\s\S]*?)<\/aside>/);
   assert.ok(leg); assert.strictEqual(tekst(leg[1]), OGOVORKA);
   assert.ok(tekst(blok).includes(FIT));
-  const card = blok.match(/<aside class="pkg__card"[\s\S]*?<\/aside>/)[0];
+  const card = blok.match(/<section class="pkg__card"[\s\S]*?<\/section>/)[0];
   assert.ok(card.includes('href="#pkg-legal"') && tekst(card).includes("не гарантия исхода"));
 });
 

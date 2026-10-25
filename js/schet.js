@@ -156,7 +156,7 @@
 
   var CSS = "" +
     ".sf{--sf-ink:var(--ink,#1D1D1F);--sf-ink2:var(--ink2,#48484C);--sf-muted:var(--muted,#6B6B70);--sf-line:var(--line,#E6E6E1);--sf-acc:var(--accent,#0B63E5);--sf-ok:var(--ok,#16723F);--sf-bad:var(--bad,#B3261E);color:var(--sf-ink);font-size:17px;line-height:1.45}" +
-    ".sf h3{font-size:24px;letter-spacing:-.02em;line-height:1.2;margin:0 0 6px;font-weight:600;outline:0}" +
+    ".sf h2{font-size:24px;letter-spacing:-.02em;line-height:1.2;margin:0 0 6px;font-weight:600;outline:0}" +
     ".sf .sf-lead{color:var(--sf-ink2);font-size:15px;margin:0 0 18px}" +
     ".sf .sf-na{font-size:15px;font-weight:600;color:var(--sf-ink);margin:0 0 8px;padding:10px 12px;border-radius:10px;background:#EEF3FC}.sf .sf-na[hidden]{display:none}" +
     ".sf .sf-seg{display:flex;gap:4px;background:#EBEBE6;border-radius:999px;padding:4px;margin:0 0 10px;width:max-content;max-width:100%}" +
@@ -182,13 +182,13 @@
     ".sf .sf-ok{width:48px;height:48px;border-radius:50%;background:var(--ok-bg,#E8F5EE);display:flex;align-items:center;justify-content:center;margin:0 0 14px}" +
     "dialog.sf-dlg{border:0;border-radius:28px;padding:28px 28px 24px;width:min(480px,calc(100vw - 32px));max-height:calc(100dvh - 32px);box-shadow:0 30px 80px rgba(0,0,0,.25);background:#fff;overflow:auto;box-sizing:border-box}" +
     "dialog.sf-dlg::backdrop{background:rgba(29,29,31,.45)}" +
-    "dialog.sf-dlg .sf h3{padding-right:44px}" +
+    "dialog.sf-dlg .sf h2{padding-right:44px}" +
     "dialog.sf-dlg .sf-x{position:absolute;top:14px;right:14px;width:40px;height:40px;border:0;border-radius:50%;background:#F0F0EC;font-size:24px;line-height:1;cursor:pointer;color:var(--ink,#1D1D1F)}" +
     "@media (max-width:640px){dialog.sf-dlg{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;border-radius:0;padding:24px 16px calc(24px + env(safe-area-inset-bottom))}.sf .sf-seg button{padding:8px 13px}}";
   function stili() { if (document.getElementById("sf-css")) return; var s = document.createElement("style"); s.id = "sf-css"; s.textContent = CSS; document.head.appendChild(s); }
 
   var nomerFormy = 0;
-  var BETA_HTML = '<h3 tabindex="-1">В бете счета не выставляем</h3>' +
+  var BETA_HTML = '<h2 tabindex="-1">В бете счета не выставляем</h2>' +
     '<p>Идёт открытая бета: весь Делоскоп открыт бесплатно — проверка, отчёт, Паспорт, Щит, Скорая. ' +
     'Платить не нужно. Реквизиты и оплата появятся позже.</p>' +
     '<p><a class="sf-go" href="/#inn">Проверить компанию бесплатно</a></p>' +
@@ -196,7 +196,7 @@
   function formaBeta(box) {
     stili();
     box.innerHTML = '<div class="sf sf-beta" data-beta>' + BETA_HTML + '</div>';
-    var h = box.querySelector("h3");
+    var h = box.querySelector("h2");
     return { fokus: function () { try { h.focus(); } catch (e) {} } };
   }
 
@@ -249,7 +249,7 @@
     var poleK = nuzhenK && !st.kInn;
     var id = "sf" + (++nomerFormy);
     box.innerHTML = '<form class="sf" novalidate>' +
-      '<h3 id="' + id + '-h" tabindex="-1"></h3>' +
+      '<h2 id="' + id + '-h" tabindex="-1"></h2>' +
       (st.produkt
         ? (nuzhenK ? '<p class="sf-na" data-pasport-na' + (st.kInn ? '' : ' hidden') + '></p>' : '') +
           '<p class="sf-lead">' + (LID_PRODUKTA[st.produkt] || LID_PRODUKTA.skoraya_pod_klyuch) + '</p>'
@@ -318,7 +318,7 @@
         $("[data-grazhdane]").textContent = k ? GRAZHDANE_KARTA : GRAZHDANE_DO;
         if (st.produkt) {
           var p = produktIz(DD, st.produkt);
-          $("h3").textContent = "Счёт на «" + (p ? p.nazvanie : "Скорую под ключ").replace(/^Скорая/, "Скорую") + "»";
+          $("h2").textContent = "Счёт на «" + (p ? p.nazvanie : "Скорую под ключ").replace(/^Скорая/, "Скорую") + "»";
           $("[data-sum]").textContent = p ? rub(p.cena_rub) : "—";
           $("[data-pod]").textContent = p ? "разово" + (p.podarok ? " · " + p.podarok + " в подарок" : "") : "";
           sbpRisovat(f, p && p.cena_rub, p && p.nazvanie, st.kInn);
@@ -327,7 +327,7 @@
         var platnye = (DD && DD.tarify || []).filter(function (t) { return t.mesyac > 0; });
         if (!platnye.length) platnye = [{ id: "start", nazvanie: "Старт" }, { id: "pro", nazvanie: "Про" }, { id: "biznes", nazvanie: "Бизнес" }];
         var t = platnye.filter(function (x) { return x.id === st.tarif; })[0] || platnye[0]; st.tarif = t.id;
-        $("h3").textContent = "Счёт на тариф «" + t.nazvanie + "»";
+        $("h2").textContent = "Счёт на тариф «" + t.nazvanie + "»";
         seg($('[data-seg=tarif]'), platnye.map(function (x) { return [x.id, x.nazvanie]; }), st.tarif, "tarif");
         seg($('[data-seg=srok]'), [["mes", "Месяц"], ["kvartal", "Квартал"], ["god", "Год −20%"]], st.srok, "srok");
         var s = summa(DD, st.tarif, st.srok);
@@ -434,7 +434,7 @@
         ? "Откройте счёт, скачайте PDF и оплатите с расчётного счёта. В назначении платежа — номер счёта: так мы найдём ваш платёж без уточнений." + (j.pismo ? " Копию отправили на " + esc(j.email) + ". Если письма нет 10 минут — проверьте «Спам»." : "")
         : "Счёт с реквизитами пришлём на " + esc(j.email) + " в течение рабочего дня. Он появится и по ссылке ниже — сохраните её.";
       f.innerHTML = '<div class="sf-ok" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 20 20" fill="none"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#16723F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>' +
-        '<h3 tabindex="-1">' + esc(h) + "</h3>" +
+        '<h2 tabindex="-1">' + esc(h) + "</h2>" +
         '<p class="sf-lead">' + esc(j.pokupatel || "") + (z.produkt ? " · «" + esc(j.tarif) + "», разово" : " · тариф «" + esc(j.tarif) + "» · " + esc(SROK_TEKST[j.mesyacev] || "")) + " · " + rub(j.summa) + "</p>" +
         (z.inn_kontragenta ? '<p class="sf-na">' + esc(pasportNa(z.inn_kontragenta, z.nazvanie_kontragenta)) + "</p>" : "") +
         '<p style="font-size:15px;margin:0 0 6px">' + tekst + "</p>" +
@@ -444,7 +444,7 @@
         (j.gotov && j.buhgalteru === true ? '<a class="sf-go2" href="' + esc(j.url) + '#buhgalteru" target="_blank" rel="noopener">Отправить счёт бухгалтеру</a>' : "") +
         '<button type="button" class="' + (j.gotov ? "sf-go2" : "sf-go") + '" data-copy>Скопировать ссылку на счёт</button>' +
         '<p class="sf-mel">Нужен договор или счёт на другую компанию — напишите на <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>.</p>';
-      f.querySelector("h3").focus();
+      f.querySelector("h2").focus();
       f.querySelector("[data-copy]").onclick = function () { kopirovat(j.url, this, "Ссылка скопирована"); };
       var ks = f.querySelector("[data-karta-schet]");
       if (ks) ks.onclick = function () { kartoj({ schet_nomer: String(j.nomer), email: j.email }, this, f.querySelector("[data-err2]")); };

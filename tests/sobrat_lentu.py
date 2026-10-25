@@ -27,6 +27,13 @@
 сайта: записи obnovleniya.json; папки /company/<ИНН>-…/; разборы praktika/dela.json; статьи — страницы /115-fz/…/ и
 /nalogi/…/ без хабов; дата — день верхней записи ленты. Сторож — tests/puls_cifry.test.js.
 
+Лёгкая лента для каждой страницы (25.10.2026, [Ночные запуски] lenta-legkaya-v1): точка, счётчик и полоса «Новое»
+в шапке (obnovleniya.js, в «ядре» на всех страницах) брали ВСЮ ленту — /obnovleniya.json, 587 КБ на 25.10 (419 записей),
+сервер отдаёт её без сжатия, а после каждой выкладки — заново. Скрипту нужны только верхние записи: заголовок последней
+и номер прочитанной среди верхних 10 (дальше счётчик всё равно пишет «9+»). Теперь здесь же собирается
+/obnovleniya-verh.json — верхние VERH_SKOLKO записей и «vsego» (≈ 11 КБ, в 50 с лишним раз меньше). Полная лента — только на
+/obnovleniya/ и в Пульте. Сторож — tests/lenta_legkaya.test.js.
+
 Запуск: python3 tests/sobrat_lentu.py [--check]
 Вызывается сам из tests/postavit_vremya.py — то есть при каждой выкладке, вместе с проставлением времени.
 """
@@ -42,6 +49,8 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 LENTA = ROOT / "obnovleniya.json"
 STRANICA = ROOT / "obnovleniya" / "index.html"
 SKOLKO = 20
+VERH_IMYA = "obnovleniya-verh.json"  # рядом с LENTA (тесты подменяют LENTA временной папкой — лёгкая лента уходит туда же)
+VERH_SKOLKO = 12  # счётчику нужно 11 (индекс прочитанной 0…10, больше 9 — «9+»), одна про запас
 METKA = re.compile(r"<!--lenta-->.*?<!--/lenta-->", re.S)
 PULS_STRANICA = ROOT / "o-proekte" / "index.html"
 PULS_SKOLKO = 5  # столько же показывает скрипт страницы (a.slice(0,5))
@@ -189,16 +198,25 @@ def sobrat_cifry(txt, zapisi):
     return txt
 
 
+def sobrat_verh(zapisi):
+    """Верхние записи ленты для obnovleniya.js — тот же порядок и поля, что в obnovleniya.json."""
+    d = {"_kak": "Собирает tests/sobrat_lentu.py из obnovleniya.json — руками не править.",
+         "vsego": len(zapisi), "obnovleniya": zapisi[:VERH_SKOLKO]}
+    return json.dumps(d, ensure_ascii=False, indent=1) + "\n"
+
+
 def main(argv):
     zapisi = json.loads(LENTA.read_text(encoding="utf-8"))["obnovleniya"]
     pary = [(STRANICA, sobrat, "Лента в HTML /obnovleniya/"),
             (PULS_STRANICA, lambda t: sobrat_cifry(sobrat_puls(t, zapisi), zapisi),
              "«Пульс проекта» на /o-proekte/")]
+    verh = LENTA.with_name(VERH_IMYA)
+    pary.append((verh, lambda t: sobrat_verh(zapisi), "Лёгкая лента /obnovleniya-verh.json"))
     kod = 0
     for put, f, imya in pary:
-        if not put.exists():
+        if not put.exists() and put != verh:
             continue
-        stary = put.read_text(encoding="utf-8")
+        stary = put.read_text(encoding="utf-8") if put.exists() else ""
         novyj = f(stary)
         if "--check" in argv:
             if novyj != stary:

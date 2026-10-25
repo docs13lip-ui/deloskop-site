@@ -774,7 +774,7 @@ footer a{color:var(--ink2)}
 
   // ---- подсказки по названию ----
   var list=document.createElement('ul');list.className='sugg';list.id='sugg';list.setAttribute('role','listbox');list.hidden=true;form.appendChild(list);
-  input.setAttribute('aria-controls','sugg');input.setAttribute('aria-autocomplete','list');input.setAttribute('aria-expanded','false');
+  input.setAttribute('role','combobox');input.setAttribute('aria-controls','sugg');input.setAttribute('aria-autocomplete','list');input.setAttribute('aria-expanded','false');
   // vizual-v3.1a: подсказки — в верхнем слое (popover) и привязаны к форме якорем (anchor positioning): не обрезаются
   // соседними блоками и не прячутся под отчётом. Нет поддержки якорей — список под полем, как раньше (position:absolute).
   var POP=!!(list.showPopover&&window.CSS&&CSS.supports&&CSS.supports('position-anchor','--dlk-forma'));

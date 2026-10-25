@@ -1,6 +1,5 @@
 /* Делоскоп · пакет «ds» — собран tests/sobrat_js.py из 5 файлов (partials/sborka.json). Правьте исходники, не этот файл. */
 /* --- /css/fonts.css --- */
-/* Onest (SIL OFL 1.1, /fonts/OFL.txt) — со своего сервера, без Google Fonts. Сборка: подмножества кириллица, латиница, латиница-расш. (₽). */
 @font-face{font-family:Onest;font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/onest-cyrillic-400.woff2) format("woff2");unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
 @font-face{font-family:Onest;font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/onest-latin-ext-400.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 @font-face{font-family:Onest;font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/onest-latin-400.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
@@ -10,9 +9,6 @@
 @font-face{font-family:Onest;font-style:normal;font-weight:600;font-display:swap;src:url(/fonts/onest-cyrillic-600.woff2) format("woff2");unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
 @font-face{font-family:Onest;font-style:normal;font-weight:600;font-display:swap;src:url(/fonts/onest-latin-ext-600.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 @font-face{font-family:Onest;font-style:normal;font-weight:600;font-display:swap;src:url(/fonts/onest-latin-600.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
-/* Запасной шрифт по меркам Onest (vizual-v3.1c, 18.10.2026): пока Onest грузится (font-display:swap), текст набран системным шрифтом,
-   растянутым до ширины Onest, — строки не переносятся заново при подмене (CLS). Множители — средняя ширина текста главной
-   (Onest 400/500/600 против Arial ≈ Liberation Sans и Roboto, tests/zapas_shrifta.test.js); вертикаль — по hhea Onest (0,97 / 0,305). */
 @font-face{font-family:"Onest Zapas";font-style:normal;font-weight:400;src:local("Arial"),local("ArialMT"),local("Liberation Sans"),local("LiberationSans"),local("Arimo");size-adjust:102.63%;ascent-override:94.51%;descent-override:29.72%;line-gap-override:0%}
 @font-face{font-family:"Onest Zapas";font-style:normal;font-weight:500;src:local("Arial"),local("ArialMT"),local("Liberation Sans"),local("LiberationSans"),local("Arimo");size-adjust:103.87%;ascent-override:93.39%;descent-override:29.36%;line-gap-override:0%}
 @font-face{font-family:"Onest Zapas";font-style:normal;font-weight:600;src:local("Arial Bold"),local("Arial-BoldMT"),local("Liberation Sans Bold"),local("LiberationSans-Bold"),local("Arimo Bold");size-adjust:98.40%;ascent-override:98.58%;descent-override:31.00%;line-gap-override:0%}
@@ -20,7 +16,6 @@
 @font-face{font-family:"Onest Zapas R";font-style:normal;font-weight:500;src:local("Roboto Medium"),local("Roboto-Medium");size-adjust:102.41%;ascent-override:94.72%;descent-override:29.78%;line-gap-override:0%}
 @font-face{font-family:"Onest Zapas R";font-style:normal;font-weight:600;src:local("Roboto Medium"),local("Roboto-Medium");size-adjust:103.61%;ascent-override:93.62%;descent-override:29.44%;line-gap-override:0%}
 /* --- /css/podval.css --- */
-/* СОБРАНО tests/sobrat_shapku.py из /css/ds.css — руками не править. Подвал §3.2 дизайн-системы. */
 .podval{--bg:#F5F5F2;--surface:#FFFFFF;--surface-2:#EEEEEA;--ink:#1D1D1F;--ink-2:#48484C;--muted:#6B6B70;--line:#E6E6E1; --accent:#0B63E5;--accent-hover:#084BB0;--accent-soft:#EAF1FD;--on-accent:#FFFFFF; --ok:#16723F;--ok-bg:#E8F5EE;--warn:#9A5B00;--warn-bg:#FFF4E0;--high:#C2410C;--high-bg:#FFEDE3;--bad:#B3261E;--bad-bg:#FDECEA; --font:Onest,"Onest Zapas","Onest Zapas R",-apple-system,"Segoe UI",Roboto,Arial,sans-serif; --t-display:clamp(48px,6.4vw,72px);--t-h1:clamp(32px,4.6vw,56px);--t-h2:clamp(32px,3.2vw,48px);--t-h3:24px; --t-lead:20px;--t-body:17px;--t-small:15px;--t-caption:13px; --s-1:4px;--s-2:8px;--s-3:12px;--s-4:16px;--s-5:24px;--s-6:32px;--s-7:48px;--s-8:64px;--s-9:96px;--s-10:128px; --wide:1200px;--text:760px;--gutter:clamp(16px,5vw,48px);--section:clamp(64px,9vw,120px); --r-s:10px;--r-m:16px;--r-l:28px;--r-xl:28px;--r-pill:999px; --shadow:0 1px 2px rgba(29,29,31,.04),0 12px 32px rgba(29,29,31,.06); --ease:cubic-bezier(.2,.7,.2,1);--fast:160ms;--slow:240ms; --header-h:64px;}
 .podval{background:var(--surface);border-top:1px solid var(--line);color:var(--muted);font:400 var(--t-small)/1.5 var(--font);margin-top:var(--s-8);padding:var(--s-8) 0 var(--s-7);text-align:left}
 .podval *{box-sizing:border-box}
@@ -40,21 +35,16 @@
 @media (max-width:640px){.podval{padding:var(--s-7) 0 var(--s-6)}.podval__cols{gap:var(--s-5) var(--s-4)}.podval li{margin-bottom:var(--s-3)}}
 @media print{.podval{display:none}}
 /* --- /css/shapka.css --- */
-/* СОБРАНО tests/sobrat_shapku.py из /partials/shapka.css и токенов /css/ds.css — руками не править. */
 a.skip,.shapka,dialog.mnav,.wn-bar,.beta-bar,dialog.dlo,.ck-bar{--bg:#F5F5F2;--surface:#FFFFFF;--surface-2:#EEEEEA;--ink:#1D1D1F;--ink-2:#48484C;--muted:#6B6B70;--line:#E6E6E1; --accent:#0B63E5;--accent-hover:#084BB0;--accent-soft:#EAF1FD;--on-accent:#FFFFFF; --ok:#16723F;--ok-bg:#E8F5EE;--warn:#9A5B00;--warn-bg:#FFF4E0;--high:#C2410C;--high-bg:#FFEDE3;--bad:#B3261E;--bad-bg:#FDECEA; --font:Onest,"Onest Zapas","Onest Zapas R",-apple-system,"Segoe UI",Roboto,Arial,sans-serif; --t-display:clamp(48px,6.4vw,72px);--t-h1:clamp(32px,4.6vw,56px);--t-h2:clamp(32px,3.2vw,48px);--t-h3:24px; --t-lead:20px;--t-body:17px;--t-small:15px;--t-caption:13px; --s-1:4px;--s-2:8px;--s-3:12px;--s-4:16px;--s-5:24px;--s-6:32px;--s-7:48px;--s-8:64px;--s-9:96px;--s-10:128px; --wide:1200px;--text:760px;--gutter:clamp(16px,5vw,48px);--section:clamp(64px,9vw,120px); --r-s:10px;--r-m:16px;--r-l:28px;--r-xl:28px;--r-pill:999px; --shadow:0 1px 2px rgba(29,29,31,.04),0 12px 32px rgba(29,29,31,.06); --ease:cubic-bezier(.2,.7,.2,1);--fast:160ms;--slow:240ms; --header-h:64px;}
 @media (max-width:640px){a.skip,.shapka,dialog.mnav,.wn-bar,.beta-bar,dialog.dlo,.ck-bar{--t-lead:17px;--t-body:17px;--header-h:56px}}
-/* ===== шапка (документ команды, часть 1) =====
-   Все правила — с префиксом .shapka / .mnav / .skip / .wn-: старые страницы ещё не на ds.css,
-   их стили (a{…}, header{…}, .btn) не должны протекать в шапку, а шапка — в страницу. */
 .shapka,.shapka *,.mnav,.mnav *,.wn-bar,.wn-bar *,.beta-bar,.beta-bar *,.dlo,.dlo *,a.skip{box-sizing:border-box}
 .shapka [hidden],.mnav [hidden],.wn-bar [hidden]{display:none!important}
 .vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 a.skip{position:absolute;left:var(--s-4);top:-100px;z-index:100;display:inline-block;padding:var(--s-3) var(--s-4);border-radius:var(--r-s);background:var(--accent);color:var(--on-accent);font:600 15px/1 var(--font);text-decoration:none}
 a.skip:focus{top:var(--s-2);color:var(--on-accent)}
-
 .shapka{position:sticky;top:0;z-index:40;display:block;height:var(--header-h);margin:0;padding:0;background:var(--bg);border-bottom:1px solid transparent;color:var(--ink);font:400 var(--t-body)/1.4 var(--font);text-align:left;transition:border-color var(--fast) var(--ease)}
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
- .shapka{background:color-mix(in srgb,var(--bg) 94%,transparent);-webkit-backdrop-filter:saturate(180%) blur(12px);backdrop-filter:saturate(180%) blur(12px)}
+.shapka{background:color-mix(in srgb,var(--bg) 94%,transparent);-webkit-backdrop-filter:saturate(180%) blur(12px);backdrop-filter:saturate(180%) blur(12px)}
 }
 .shapka.is-scrolled{border-bottom-color:var(--line)}
 .shapka a,.mnav a{display:inline;padding:0;margin:0;border:0;border-radius:0;background:none;box-shadow:none;font:inherit;color:inherit;text-decoration:none}
@@ -64,13 +54,11 @@ a.skip:focus{top:var(--s-2);color:var(--on-accent)}
 .shapka button,.mnav button{margin:0;font:inherit;letter-spacing:normal;text-transform:none}
 .shapka :focus-visible,.mnav :focus-visible,.wn-bar :focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
 .shapka .shapka__in{max-width:calc(var(--wide) + 2*var(--gutter));height:100%;margin:0 auto;padding:0 var(--gutter);display:flex;align-items:center;gap:var(--s-4)}
-
 .shapka .shapka__logo,.mnav .shapka__logo{display:inline-flex;align-items:center;gap:var(--s-2);min-height:44px;flex:none;color:var(--ink);text-decoration:none}
 .shapka .shapka__logo:hover,.mnav .shapka__logo:hover{color:var(--ink)}
 .shapka__logo svg{display:block;flex:none}
 .shapka__logo circle{stroke:var(--ink)}
 .shapka__word{font:600 24px/1 var(--font);letter-spacing:-.03em}
-
 .shapka .shapka__nav{flex:1;min-width:0;display:flex;justify-content:center}
 .shapka .shapka__list{display:flex;gap:var(--s-1)}
 .shapka .shapka__list>li{position:relative}
@@ -81,7 +69,6 @@ a.skip:focus{top:var(--s-2);color:var(--on-accent)}
 .shapka__chev{width:12px;height:12px;transition:transform var(--fast) var(--ease)}
 .shapka .shapka__link[aria-expanded=true]{color:var(--ink);background:var(--surface-2)}
 .shapka .shapka__link[aria-expanded=true] .shapka__chev{transform:rotate(180deg)}
-
 .shapka .shapka__menu{position:absolute;top:calc(100% + 8px);left:50%;min-width:300px;padding:var(--s-2);background:var(--surface);border-radius:var(--r-l);box-shadow:var(--shadow);opacity:0;visibility:hidden;transform:translate(-50%,-4px);transition:opacity var(--fast) var(--ease),transform var(--fast) var(--ease),visibility 0s linear var(--fast)}
 .shapka .shapka__menu::before{content:"";position:absolute;left:0;right:0;top:-8px;height:8px}
 .shapka .shapka__dd.is-open .shapka__menu{opacity:1;visibility:visible;transform:translate(-50%,0);transition-delay:0s}
@@ -90,7 +77,6 @@ a.skip:focus{top:var(--s-2);color:var(--on-accent)}
 .shapka .shapka__menu a[aria-current=page] b{color:var(--accent)}
 .shapka .shapka__menu b{display:block;font:600 15px/1.3 var(--font);color:inherit}
 .shapka .shapka__menu span{display:block;margin-top:2px;font:400 var(--t-caption)/1.4 var(--font);color:var(--muted)}
-
 .shapka .shapka__right{display:flex;align-items:center;gap:var(--s-1);flex:none}
 .shapka__new-s{display:none}
 .shapka__dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-left:2px}
@@ -101,20 +87,16 @@ a.skip:focus{top:var(--s-2);color:var(--on-accent)}
 .mnav .shapka__btn--lg{min-height:56px;margin-left:0;padding:0 28px;font-size:17px}
 .shapka .shapka__burger,.mnav .shapka__burger{display:none;width:44px;height:44px;place-items:center;padding:0;border:0;border-radius:var(--r-pill);background:none;color:var(--ink);cursor:pointer}
 .shapka .shapka__burger:hover,.mnav .shapka__burger:hover{background:var(--surface-2)}
-
 @media (max-width:1199px){.shapka__new-l{display:none}.shapka__new-s{display:inline}}
 @media (max-width:1024px){
- .shapka .shapka__nav,.shapka .shapka__new,.shapka .shapka__login{display:none}
- .shapka .shapka__burger{display:inline-grid}
- .shapka .shapka__right{margin-left:auto}
+.shapka .shapka__nav,.shapka .shapka__new,.shapka .shapka__login{display:none}
+.shapka .shapka__burger{display:inline-grid}
+.shapka .shapka__right{margin-left:auto}
 }
 @media (max-width:640px){.shapka__word{font-size:20px}}
-/* uzkij-360-v1: 360–399 px (частые Android) — шапка влезает без сдвига вбок (было +24 px на 360) */
 @media (max-width:399px){.shapka .shapka__btn{margin-left:4px;padding:0 13px}.shapka .shapka__right{gap:0}.shapka__word{font-size:17px}}
 @media (max-width:359px){.shapka .shapka__btn{display:none}}
 @media print{.shapka,.mnav,.skip,.wn-bar{display:none!important}}
-
-/* мобильное меню — лист сверху */
 html.is-locked{overflow:hidden}
 dialog.mnav{position:fixed;inset:0 0 auto 0;width:100%;max-width:none;height:auto;max-height:100dvh;margin:0;padding:0 0 calc(var(--s-6) + env(safe-area-inset-bottom));border:0;border-radius:0 0 var(--r-xl) var(--r-xl);background:var(--bg);color:var(--ink);font:400 var(--t-body)/1.4 var(--font);text-align:left;box-shadow:var(--shadow);overflow-y:auto;overscroll-behavior:contain}
 dialog.mnav[open]{animation:mnav-in var(--slow) var(--ease)}
@@ -133,8 +115,6 @@ dialog.mnav::backdrop{background:rgba(17,17,19,.4);-webkit-backdrop-filter:blur(
 .mnav .mnav__extra{display:flex;flex-direction:column;margin-top:var(--s-4);padding-top:var(--s-4);border-top:1px solid var(--line)}
 .mnav .mnav__row{display:flex;align-items:center;gap:var(--s-2);min-height:44px;padding:0;border:0;background:none;color:var(--ink-2);font:500 17px/1 var(--font);text-align:left;cursor:pointer}
 .mnav .mnav__cta{display:flex;width:100%;margin-top:var(--s-5)}
-
-/* полоса «Новое» под шапкой (документ команды, п. 1) — не липкая */
 .wn-bar{background:var(--accent-soft);color:var(--ink);font:400 var(--t-small)/1.4 var(--font);text-align:left}
 .wn-bar .wn-bar__in{max-width:calc(var(--wide) + 2*var(--gutter));min-height:44px;margin:0 auto;padding:0 var(--gutter);display:flex;align-items:center;gap:var(--s-3)}
 .wn-bar .wn-bar__t{flex:1;min-width:0;margin:0;padding:var(--s-2) 0;font-size:var(--t-small);color:var(--ink)}
@@ -143,11 +123,8 @@ dialog.mnav::backdrop{background:rgba(17,17,19,.4);-webkit-backdrop-filter:blur(
 .wn-bar a:hover{color:var(--accent-hover);text-decoration:underline}
 .wn-bar .wn-bar__x{flex:none;display:inline-grid;place-items:center;width:44px;height:44px;margin-right:-10px;padding:0;border:0;border-radius:var(--r-pill);background:none;color:var(--ink-2);cursor:pointer}
 .wn-bar .wn-bar__x:hover{background:rgba(11,99,229,.08);color:var(--ink)}
-
-/* полоса «Открытая бета» под шапкой (beta-v1, решение команды 29.09.2026) — не липкая, закрывается на неделю */
 .beta-bar{background:var(--surface);border-bottom:1px solid var(--line);color:var(--ink-2);font:400 var(--t-small)/1.4 var(--font);text-align:left}
 .beta-bar[hidden]{display:none!important}
-/* beta-data-v1: вариант C («Бета завершилась») — нейтральный серый, тон новости; крестика нет, через 7 дней полоса прячется сама */
 .beta-bar.beta-bar--c{background:var(--surface-2)}
 .beta-bar.beta-bar--c .beta-bar__metka{background:var(--surface);color:var(--muted)}
 .beta-bar .beta-bar__in{max-width:calc(var(--wide) + 2*var(--gutter));min-height:44px;margin:0 auto;padding:0 var(--gutter);display:flex;align-items:center;gap:var(--s-3)}
@@ -159,11 +136,9 @@ dialog.mnav::backdrop{background:rgba(17,17,19,.4);-webkit-backdrop-filter:blur(
 .beta-bar .beta-bar__x{flex:none;display:inline-grid;place-items:center;width:44px;height:44px;margin-right:-10px;padding:0;border:0;border-radius:var(--r-pill);background:none;color:var(--muted);cursor:pointer}
 .beta-bar .beta-bar__x:hover{background:var(--surface-2);color:var(--ink)}
 .beta-bar :focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
-/* dostupnost-v1: рамка широкой таблицы на телефоне принимает фокус (js/shapka.js §11) — кольцо как у кнопок */
 .tw[data-tw-fokus]:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
-/* beta-odna-stroka-v1: полный текст — в <details>; на широком экране открыт до отрисовки (скрипт полосы), короткая строка скрыта */
 .beta-bar .beta-bar__d{flex:1;min-width:0;margin:0;padding:0}
-.beta-bar .beta-bar__d>.beta-bar__t{margin:0!important}  /* на /tarify/ и /indeks/ страница задаёт details p{margin…!important} */
+.beta-bar .beta-bar__d>.beta-bar__t{margin:0!important}
 .beta-bar .beta-bar__kr{display:none;align-items:center;gap:var(--s-2);min-height:44px;margin:0;padding:0;list-style:none;cursor:pointer;color:var(--ink);font:600 var(--t-small)/1.3 var(--font);-webkit-tap-highlight-color:transparent}
 .beta-bar .beta-bar__kr::-webkit-details-marker{display:none}
 .beta-bar .beta-bar__kr>span{min-width:0;overflow:hidden;white-space:nowrap}
@@ -175,8 +150,6 @@ dialog.mnav::backdrop{background:rgba(17,17,19,.4);-webkit-backdrop-filter:blur(
 @media (max-width:640px){.beta-bar .beta-bar__kr{display:flex}.beta-bar .beta-bar__in{align-items:flex-start}.beta-bar .beta-bar__d[open]>.beta-bar__t{padding-top:0}.beta-bar .beta-bar__metka{display:none}.beta-bar .beta-bar__t b{display:block;margin-bottom:2px}.beta-bar .beta-bar__dop,.beta-bar .beta-bar__t>a{font-size:var(--t-caption);line-height:1.45}.beta-bar .beta-bar__in{gap:var(--s-2)}}
 @media (prefers-reduced-motion:reduce){.beta-bar .beta-bar__kr::after{transition:none}}
 @media print{.beta-bar{display:none!important}}
-
-/* окно «Что нового» — открывается ТОЛЬКО по пункту в шапке */
 dialog.dlo{width:min(640px,calc(100% - 32px));max-width:none;max-height:calc(100dvh - 32px);margin:auto;padding:clamp(24px,5vw,44px);border:0;border-radius:var(--r-xl);background:var(--surface);color:var(--ink);font:400 var(--t-body)/1.5 var(--font);text-align:left;box-shadow:0 24px 80px rgba(0,0,0,.25);overflow:auto}
 dialog.dlo[open]{animation:mnav-in var(--slow) var(--ease)}
 dialog.dlo::backdrop{background:rgba(17,17,19,.55)}
@@ -196,16 +169,10 @@ dialog.dlo::backdrop{background:rgba(17,17,19,.55)}
 .dlo .dlo-ok:hover{background:var(--accent-hover)}
 .dlo .dlo-all{align-self:center;font-size:17px}
 @media (prefers-reduced-motion:reduce){dialog.mnav[open],dialog.dlo[open]{animation:none}.shapka,.shapka *,.mnav *{transition:none!important}}
-
-/* баннер cookies (документ команды, раздел 6) — внизу, компактный, не закрывает поле ИНН */
 .ck-bar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -8px 24px rgba(29,29,31,.06);color:var(--ink);font:400 var(--t-small)/1.4 var(--font);text-align:left}
 .ck-bar .ck-bar__in{max-width:calc(var(--wide) + 2*var(--gutter));margin:0 auto;padding:var(--s-3) var(--gutter) calc(var(--s-3) + env(safe-area-inset-bottom));display:flex;align-items:center;gap:var(--s-3) var(--s-5)}
 .ck-bar .ck-bar__t{flex:1;min-width:0;margin:0;font-size:var(--t-small);color:var(--ink-2)}
 .ck-bar a{display:inline;padding:0;background:none;color:var(--accent);text-decoration:underline;text-underline-offset:.18em}
-/* dostupnost-v2 (25.10.2026): ссылка внутри абзаца отличается от текста не только цветом (WCAG 1.4.1, axe link-in-text-block):
-   на этих страницах ссылки без подчёркивания, а синий к тексту рядом — 1,07–2,98 : 1 (нужно ≥ 3 : 1). Тонкая линия 1 px,
-   отступ .2em, полупрозрачная; при наведении — в цвет ссылки. Список — блоки, где axe нашёл такие ссылки (86 страниц ×
-   светлая/тёмная × 1280/390); новый блок с ссылками в тексте — добавить сюда и в tests/dostupnost_v2.test.js. */
 :is(.pyat,.celi,.princip,.pravila,.ndsq,.ndsf__m,.gran,.ras__pod,.pkg__cap,.formula,.lead) a:not([class]){text-decoration-line:underline;text-decoration-thickness:1px;text-underline-offset:.2em;text-decoration-color:currentColor}
 @supports (color:color-mix(in srgb,red 50%,transparent)){:is(.pyat,.celi,.princip,.pravila,.ndsq,.ndsf__m,.gran,.ras__pod,.pkg__cap,.formula,.lead) a:not([class]){text-decoration-color:color-mix(in srgb,currentColor 55%,transparent)}
 :is(.pyat,.celi,.princip,.pravila,.ndsq,.ndsf__m,.gran,.ras__pod,.pkg__cap,.formula,.lead) a:not([class]):hover{text-decoration-color:currentColor}}
@@ -217,26 +184,18 @@ dialog.dlo::backdrop{background:rgba(17,17,19,.55)}
 .ck-bar :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 @media (max-width:640px){.ck-bar .ck-bar__in{flex-direction:column;align-items:stretch;gap:var(--s-2);padding:var(--s-2) var(--gutter) calc(var(--s-2) + env(safe-area-inset-bottom))}.ck-bar .ck-bar__t{font-size:var(--t-caption)}.ck-bar .ck-bar__b{flex-wrap:wrap}.ck-bar .ck-bar__b button{flex:1 1 164px;min-height:44px;padding:0 4px}}
 @media print{.ck-bar{display:none!important}}
-/* ck-mesto-v1: пока окно открыто, низ страницы и форма под ним не прячутся — место снизу = высота окна (--ck-h ставит js/metrika.js) */
 @media (max-width:1024px){html.est-ck{scroll-padding-bottom:calc(var(--ck-h,0px) + 12px)}}
 html.est-ck body{padding-bottom:var(--ck-h,0px)}
 @media print{html.est-ck body{padding-bottom:0}}
 @media (min-width:1025px){.ck-bar{left:auto;right:24px;bottom:24px;width:440px;border:0;border-radius:var(--r-l);box-shadow:0 12px 40px rgba(29,29,31,.16)}.ck-bar .ck-bar__in{flex-direction:column;align-items:stretch;padding:var(--s-5);gap:var(--s-4)}.ck-bar .ck-bar__b button{flex:1}}
-/* Номера дел, законов и писем не рвутся на переносе (js/shapka.js, п. 8) */
 .nw{white-space:nowrap}
-/* vizual-v3.1b (г) — переходы между страницами без белого экрана (cross-document View Transitions).
-   Старая страница плавно сменяется новой; заголовок статьи или компании переезжает на место нового.
-   Пара «что с чем» решает js/shapka.js (§9, событие pageswap): статья → статья, список → карточка, карточка → карточка;
-   в остальных переходах заголовок просто проявляется вместе со страницей. «Уменьшить движение» — переходов нет. */
 @media (prefers-reduced-motion:no-preference){
-  @view-transition{navigation:auto;types:dlk-str}
-  html:active-view-transition-type(dlk-str) h1{view-transition-name:dlk-zag}
-  ::view-transition-old(root),::view-transition-new(root){animation-duration:.22s}
-  ::view-transition-group(dlk-zag){animation-duration:.38s;animation-timing-function:cubic-bezier(.2,.7,.2,1)}
-  ::view-transition-old(dlk-zag),::view-transition-new(dlk-zag){height:100%;object-fit:none;object-position:left top}
+@view-transition{navigation:auto;types:dlk-str}
+html:active-view-transition-type(dlk-str) h1{view-transition-name:dlk-zag}
+::view-transition-old(root),::view-transition-new(root){animation-duration:.22s}
+::view-transition-group(dlk-zag){animation-duration:.38s;animation-timing-function:cubic-bezier(.2,.7,.2,1)}
+::view-transition-old(dlk-zag),::view-transition-new(dlk-zag){height:100%;object-fit:none;object-position:left top}
 }
-
-/* переключатель темы в шапке (18.10): одна кнопка — показывает, куда переключит */
 .shapka .shapka__tema{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;border:1px solid var(--line);border-radius:50%;background:none;color:var(--ink-2);cursor:pointer;flex:none;transition:color var(--fast,160ms) var(--ease,ease),border-color var(--fast,160ms) var(--ease,ease)}
 .shapka .shapka__tema:hover{color:var(--ink);border-color:var(--ink-2)}
 .shapka .shapka__tema:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
@@ -244,11 +203,6 @@ html.est-ck body{padding-bottom:var(--ck-h,0px)}
 [data-theme=dark] .shapka .shapka__tema-s{display:block}
 [data-theme=dark] .shapka .shapka__tema-m{display:none}
 @media print{.shapka .shapka__tema{display:none}}
-
-/* zhivoj-v1 (19.10.2026) — живая смена темы. Новая тема раскрывается кругом от нажатой кнопки (шапка или подвал):
-   js/shapka.js §8 ставит на <html> класс tema-vt на время перехода и растит круг у снимка новой страницы.
-   На время перехода у остальных элементов имена переходов снимаются — вся страница меняется одним кругом,
-   заголовки и кольцо не улетают отдельно. Иконка солнца/луны — поворотом. «Уменьшить движение», нет поддержки — сразу. */
 .tema-vt body *{view-transition-name:none!important}
 .tema-vt::view-transition-old(root),.tema-vt::view-transition-new(root){animation:none;mix-blend-mode:normal}
 .tema-vt::view-transition-group(root){animation:none}
@@ -256,32 +210,23 @@ html.est-ck body{padding-bottom:var(--ck-h,0px)}
 .tema-ik .shapka .shapka__tema svg{animation:dlk-ikonka .48s var(--ease,cubic-bezier(.2,.7,.2,1)) both}
 @media (prefers-reduced-motion:reduce){.tema-ik .shapka .shapka__tema svg{animation:none}}
 /* --- /css/tema.css --- */
-/* vizual-v3.0b — тёмная тема. База — ДС v1 §2.5.
-   Тему ставит строка в <head> (tests/sobrat_shapku.py → TEMA_JS): выбор из localStorage «tema» или система;
-   на <html> — data-theme="dark|light". Без скрипта — светлая, как было. Переключатель — в подвале (js/shapka.js, §8).
-   Токены переопределяются там, где страницы и блоки задают их сами: :root (в т. ч. старые имена --card, --ink2,
-   --dark…), подвал, шапка, «Разборы», «Журнал», пакет «Скорой», окно доступа. Цвета риска подобраны на контраст
-   ≥ 4,5 : 1 на --surface и на своих плашках (замер — tests/zamer_temy.js). */
 :root[data-theme=dark],
 [data-theme=dark] :is(.podval,a.skip,.shapka,dialog.mnav,.wn-bar,.beta-bar,dialog.dlo,.ck-bar,.pr,.zh,.pkg,.acc-box){
- color-scheme:dark;
- --bg:#111113;--surface:#1C1C1F;--surface-2:#26262A;--card:#1C1C1F;--soft:#19191C;
- --ink:#F5F5F2;--ink-2:#C7C7CC;--ink2:#C7C7CC;--muted:#A1A1A6;--off:#8E8E93;--na:#8E8E93;--rule:#F5F5F2;
- --line:#2E2E33;--line-2:#3A3A40;
- --accent:#5B9BFF;--accent-hover:#8AB8FF;--accent-soft:#16243D;--on-accent:#0B0B0C;
- --ok:#4CC38A;--ok-bg:#0F2A1C;--okbg:#0F2A1C;--ok-dot:#4CC38A;
- --warn:#E8A23A;--warn-bg:#2E220C;--warnbg:#2E220C;--warn-dot:#E8A23A;
- --high:#FF8F57;--high-bg:#35190D;--or:#FF8F57;
- --bad:#FF7B72;--bad-bg:#3A1513;--badbg:#3A1513;--bad-dot:#FF7B72;
- --dark:#000;--dark2:#1C1C1F;
- --shadow:0 1px 2px rgba(0,0,0,.5),0 12px 32px rgba(0,0,0,.4);
+color-scheme:dark;
+--bg:#111113;--surface:#1C1C1F;--surface-2:#26262A;--card:#1C1C1F;--soft:#19191C;
+--ink:#F5F5F2;--ink-2:#C7C7CC;--ink2:#C7C7CC;--muted:#A1A1A6;--off:#8E8E93;--na:#8E8E93;--rule:#F5F5F2;
+--line:#2E2E33;--line-2:#3A3A40;
+--accent:#5B9BFF;--accent-hover:#8AB8FF;--accent-soft:#16243D;--on-accent:#0B0B0C;
+--ok:#4CC38A;--ok-bg:#0F2A1C;--okbg:#0F2A1C;--ok-dot:#4CC38A;
+--warn:#E8A23A;--warn-bg:#2E220C;--warnbg:#2E220C;--warn-dot:#E8A23A;
+--high:#FF8F57;--high-bg:#35190D;--or:#FF8F57;
+--bad:#FF7B72;--bad-bg:#3A1513;--badbg:#3A1513;--bad-dot:#FF7B72;
+--dark:#000;--dark2:#1C1C1F;
+--shadow:0 1px 2px rgba(0,0,0,.5),0 12px 32px rgba(0,0,0,.4);
 }
 :root[data-theme=light]{color-scheme:light}
 [data-theme=dark] body{background:var(--bg);color:var(--ink)}
-/* картинки с белым фоном (иконки, схемы) — чуть приглушаем, чтобы не слепили */
 [data-theme=dark] img:not([src$=".svg"]){filter:brightness(.92)}
-
-/* переключатель темы в подвале — сегменты в духе системных; без скрипта скрыт */
 .tema{display:inline-flex;align-items:center;gap:var(--s-2,8px);margin:0}
 .tema__h{color:var(--muted);font-size:var(--t-caption,13px)}
 .tema__g{display:inline-flex;padding:2px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line)}
@@ -290,12 +235,10 @@ html.est-ck body{padding-bottom:var(--ck-h,0px)}
 .tema button[aria-pressed=true]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
 .tema button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 @media print{.tema{display:none}}
-/*<avto>*/
-/* СОБРАНО tests/tema_temnaya.py (зовёт sobrat_shapku) из css/ds.css, css/shapka.css, css/podval.css, css/glubina.css, css/vizual2.css, css/otchet.css, css/co.css, css/acc.css, css/praktika.css, css/zhurnal.css, css/reyting.css, css/paket.css, css/pusto.css — руками не править. */
 [data-theme=dark] .hdr{background:rgba(17,17,19,0.88)}
 [data-theme=dark] .wn-bar .wn-bar__x:hover{background:rgba(91,155,255,0.08)}
 [data-theme=dark] body::before{background:radial-gradient(42% 38% at 22% 18%,rgba(22,36,61,0.95),rgba(22,36,61,0) 70%),
-  radial-gradient(38% 34% at 82% 64%,rgba(46,34,12,0.95),rgba(46,34,12,0) 70%)}
+radial-gradient(38% 34% at 82% 64%,rgba(46,34,12,0.95),rgba(46,34,12,0) 70%)}
 [data-theme=dark] .report.ex{box-shadow:var(--shadow)}
 @media (hover:hover){[data-theme=dark] .report.ex:hover{box-shadow:var(--shadow-hover)}
 }
@@ -422,69 +365,47 @@ html.est-ck body{padding-bottom:var(--ck-h,0px)}
 [data-theme=dark] .usl-napr{background:rgba(255,255,255,0.097)}
 [data-theme=dark] .usl-napr button[aria-pressed=true]{background:#1C1C1F}
 [data-theme=dark] .usl-watch{border:1px solid #2E2E33;background:#1C1C1F}
-/*</avto>*/
 /* --- /css/detali.css --- */
-/* detali-v1 (18.10.2026): детали по замеру 18.10 — общее для всех страниц, пакет «ds».
-   1) Переносы: браузер сам не оставляет одно слово последней строкой абзаца и не вешает короткое слово в конце строки,
-      где типограф не дотянулся (текст из скриптов, данные). Второй рубеж после tests/tipograf_statej.py; где не поддерживается — как было.
-   2) Поля касания на телефоне и сенсорном экране — не меньше 44 px (Apple HIG, WCAG 2.5.5). С мышью подвал остаётся плотным:
-      строки ≥ 24 px с промежутком — норма WCAG 2.5.8. */
-/* detali-v1b: шкала размеров и радиусов — значения, которые остались на сайте (сторож tests/shkala_radiusy.test.js). */
 :root{--t-12:12px;--t-13:13px;--t-15:15px;--t-17:17px;--t-20:20px;--t-24:24px;--t-32:32px;--t-48:48px;--r-small:10px;--r-inner:16px;--r-card:28px;--r-pill:999px}
 p,li,dd,dt,figcaption,blockquote,summary,legend,h1,h2,h3,h4{text-wrap:pretty}
 @media (max-width:640px),(pointer:coarse){
-  .podval li{margin:0}
-  .podval li a{display:inline-block;padding:11px 0}  /* ссылки в строке текста внизу подвала — как были */
-  .tema button{min-height:44px;padding-left:14px;padding-right:14px}
-  .shapka__tema,.shapka__burger{min-width:44px;min-height:44px}
-  .shapka__btn,.shapka .shapka__btn{min-height:44px}
-  /* detali-v1c: остаток замера 19.10 — то, во что на телефоне целились пальцем мимо */
-  a.skip,.pr .razd a,button[data-preset]{min-height:44px}
-  a.skip{display:inline-flex;align-items:center}
-  summary{min-height:44px;padding-top:10px;padding-bottom:10px;box-sizing:border-box}
-  /* крошки — поле 44 px без сдвига строки (поле уходит в пустой воздух над и под строкой) */
-  .crumbs a,.co-krosh a{display:inline-block;padding:12px 0;margin:-12px 0}
-  /* ссылка — единственное в строке списка: «Что проверить» в ленте, источники, «Условия рассылки» */
-  .src li>a,.zh-niz__m a,.bol>a{display:inline-block;padding:12px 0}
-  .u .p a,.tw td>a{display:inline-block;padding:12px 0;margin:-12px 0}  /* значок ✓ ленты и строки таблицы остаются на своих местах */
-  .u .p a{max-width:100%}  /* tipograf-chisla-v1: «АО «Калининградгазификация» →» на 320 px выходил за край на 7 px — inline-block брал ширину по самому длинному куску */
+.podval li{margin:0}
+.podval li a{display:inline-block;padding:11px 0}
+.tema button{min-height:44px;padding-left:14px;padding-right:14px}
+.shapka__tema,.shapka__burger{min-width:44px;min-height:44px}
+.shapka__btn,.shapka .shapka__btn{min-height:44px}
+a.skip,.pr .razd a,button[data-preset]{min-height:44px}
+a.skip{display:inline-flex;align-items:center}
+summary{min-height:44px;padding-top:10px;padding-bottom:10px;box-sizing:border-box}
+.crumbs a,.co-krosh a{display:inline-block;padding:12px 0;margin:-12px 0}
+.src li>a,.zh-niz__m a,.bol>a{display:inline-block;padding:12px 0}
+.u .p a,.tw td>a{display:inline-block;padding:12px 0;margin:-12px 0}
+.u .p a{max-width:100%}
 }
-/* detali-v1c: с мышью подвал прежний — поле ссылки 24 px (WCAG 2.5.8) без сдвига строк */
 @media (min-width:641px) and (pointer:fine){
-  .podval li a{display:inline-block;padding:1px 0;margin:-1px 0}
-  .src li>a,.u .p a{display:inline-block}  /* высота строки ≥ 24 px — поле есть, строки не сдвигаются */
-  .crumbs a,.co-krosh a,.zh-niz__m a,.tw td>a{display:inline-block;padding:4px 0;margin:-4px 0}
+.podval li a{display:inline-block;padding:1px 0;margin:-1px 0}
+.src li>a,.u .p a{display:inline-block}
+.crumbs a,.co-krosh a,.zh-niz__m a,.tw td>a{display:inline-block;padding:4px 0;margin:-4px 0}
 }
-/* detali-v1c: строка абзаца ≤ 75 знаков — простые абзацы и списки статей, методики, лендинга Паспорта, рейтинга.
-   38em, а не 58ch: ch — ширина «0» текущего шрифта, и пока Onest грузится, колонка была бы другой ширины (замер: CLS /pasport/ 0,001 → 0,018);
-   em от шрифта не зависит. :where — нулевой вес: где страница задала свою ширину, остаётся её. */
 :where(article,.set-host,.co-ogov) :where(p:not([class]),ul:not([class])>li,ol:not([class])>li){max-width:38em}
 .pkg .pkg-item__d{max-width:38em}
-/* заголовок третьего уровня без своего размера (стиль браузера 1,17 em = 19,89 px) — на шкалу */
 :where(article) h3{font-size:var(--t-20)}
-/* vitrina-v2a (19.10.2026): остаток целей касания на главной (замер tests/zamer_detali.js после detali-v1c: 8) */
 .vse>a,.rynok__go>a{padding-block:2px}
 .usl summary{min-height:24px}
 @media (max-width:640px),(pointer:coarse){
-  .vse>a,.rynok__go>a{padding-block:12px}
-  .usl summary{min-height:44px}
-  .usl-btns button,.usl-btns a{min-height:44px}
-  .ceny p a{padding-block:9px;margin-top:9px;margin-bottom:-9px}
+.vse>a,.rynok__go>a{padding-block:12px}
+.usl summary{min-height:44px}
+.usl-btns button,.usl-btns a{min-height:44px}
+.ceny p a{padding-block:9px;margin-top:9px;margin-bottom:-9px}
 }
-/* vbok-320: узкий телефон (320 px) — ничего не выходит за край.
-   Слово длиннее строки переносится, а не выталкивает страницу вбок; кнопки
-   сегмента и поля ввода в ряду сжимаются (min-width:auto у flex — по содержимому). */
 body{overflow-wrap:break-word}
 .seg--fit button{min-width:0}
 @media (max-width:640px){.co-ind--wait .co-ind__n{white-space:normal}}
-/* podelitsya-v1 (24.10.2026): «Поделиться» под статьёй и разбором — тихая строка, не реклама площадок: без значков и фирменных цветов.
-   Цвета — от текста страницы (currentColor): у разборов и статей свои палитры, токены ДС есть не везде (замер Chromium: на разборе
-   в светлой теме --text/--line пусты) — так блок читается в обеих темах на любой странице. Поле касания 44 px; на телефоне — в два ряда. */
 .podel{margin:40px 0 8px;padding-top:20px;border-top:1px solid rgba(127,127,127,.28);max-width:38em}
 .podel__h{margin:0 0 12px;font-size:var(--t-15,15px);line-height:1.45;opacity:.72}
 .podel__r{display:flex;flex-wrap:wrap;gap:8px}
 .podel .podel__a{display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border:1px solid rgba(127,127,127,.38);border-radius:var(--r-pill,999px);
-  background:transparent;color:inherit;font-family:inherit;font-weight:600;font-size:var(--t-15,15px);line-height:1;text-decoration:none;cursor:pointer;transition:border-color .2s,background-color .2s}
+background:transparent;color:inherit;font-family:inherit;font-weight:600;font-size:var(--t-15,15px);line-height:1;text-decoration:none;cursor:pointer;transition:border-color .2s,background-color .2s}
 .podel .podel__a[hidden]{display:none}
 .podel .podel__a:hover{border-color:currentColor;background:rgba(127,127,127,.12)}
 .podel .podel__a:focus-visible{outline:2px solid currentColor;outline-offset:2px}

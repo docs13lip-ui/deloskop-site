@@ -1193,7 +1193,8 @@ td b{font-weight:600}
   if(demo){
     var r=JSON.parse(JSON.stringify(PasportEngine.DEMO)); r.checked_at=new Date().toISOString();
     // Образец раздела 6 (pasport-balans-v1): вымышленные суммы баланса и расчётов — показать, как выглядят строки на 31.12.
-    r.dossier={charts:{revenue:[{year:2023,value:48200000},{year:2024,value:56100000},{year:2025,value:61400000}],balance:{year:2025,equity:18600000,long_debt:4000000,short_debt:12900000},debts:{year:2025,receivables:9800000,payables:7400000,loans:5200000}}};
+    // obrazec-pasporta-v1: выручка — и строкой KPI «Выручка за 2025», как в живом ответе API: её берёт предел аванса (раздел 14); без неё образец писал «выручки в отчётности нет» рядом с выручкой 61,4 млн ₽ в разделе 6.
+    r.dossier={kpi:[{label:'Выручка за 2025',value:61400000}],charts:{revenue:[{year:2023,value:48200000},{year:2024,value:56100000},{year:2025,value:61400000}],balance:{year:2025,equity:18600000,long_debt:4000000,short_debt:12900000},debts:{year:2025,receivables:9800000,payables:7400000,loans:5200000}}};
     document.getElementById('nazad').href='/pasport/';
     render(r,{usloviya:U,indeksVorota:window.IndeksVorota,nomer:'ОБРАЗЕЦ',summa:summa});zhdatMetodiku(perevypustit,4);return;
   }

@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Как работает проверка контрагента по ИНН — показ на примере — Делоскоп</title>
-<meta name="description" content="Три коротких показа: проверка компании по ИНН, досье сделки и проверка счёта перед оплатой. Что вы вводите и что увидите в ответ — на вымышленной компании.">
+<title>Как работает проверка контрагента и 115-ФЗ — на примере — Делоскоп</title>
+<meta name="description" content="Семь коротких показов на вымышленной компании: проверка по ИНН, досье сделки, выписка, счёт, наличные, Скорая 115-ФЗ и слежение.">
 <link rel="canonical" href="https://deloskop.ru/kak-rabotaet/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Как работает Делоскоп — показ на примере">
-<meta property="og:description" content="Проверка по ИНН, досье сделки и проверка счёта: что вы вводите и что увидите в ответ.">
+<meta property="og:description" content="Проверка по ИНН, выписка, наличные, Скорая 115-ФЗ и слежение: что вы вводите и что увидите в ответ.">
 <meta property="og:url" content="https://deloskop.ru/kak-rabotaet/">
 <meta property="og:image" content="https://deloskop.ru/oblozhka.png">
 <meta property="og:image:width" content="1200">
@@ -20,7 +20,7 @@
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<script type="application/ld+json">[{"@context": "https://schema.org", "@type": "WebPage", "name": "Как работает Делоскоп — показ на примере", "url": "https://deloskop.ru/kak-rabotaet/", "description": "Три коротких показа: проверка компании по ИНН, досье сделки и проверка счёта перед оплатой.", "author": {"@id": "https://deloskop.ru/o-proekte/#komanda"}}, {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Делоскоп", "item": "https://deloskop.ru/"}, {"@type": "ListItem", "position": 2, "name": "Как это работает", "item": "https://deloskop.ru/kak-rabotaet/"}]}]</script>
+<script type="application/ld+json">[{"@context": "https://schema.org", "@type": "WebPage", "name": "Как работает Делоскоп — показ на примере", "url": "https://deloskop.ru/kak-rabotaet/", "description": "Семь коротких показов на вымышленной компании: проверка по ИНН, досье сделки, выписка, счёт, наличные, Скорая 115-ФЗ и слежение.", "author": {"@id": "https://deloskop.ru/o-proekte/#komanda"}}, {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Делоскоп", "item": "https://deloskop.ru/"}, {"@type": "ListItem", "position": 2, "name": "Как это работает", "item": "https://deloskop.ru/kak-rabotaet/"}]}]</script>
 <link rel="stylesheet" href="/css/ds.css">
 <link rel="stylesheet" href="/css/kak-rabotaet.css">
 <script src="/js/kak-rabotaet.js" defer></script>
@@ -115,11 +115,15 @@
 <nav class="kr-crumbs" aria-label="Навигация"><a href="/">Делоскоп</a><span aria-hidden="true">›</span><span>Как это работает</span></nav>
 <header class="kr-head">
 <h1>Как это работает</h1>
-<p class="lead">Три коротких показа: что вы&nbsp;вводите и&nbsp;что увидите в&nbsp;ответ. Компания в&nbsp;примерах вымышленная&nbsp;— ООО&nbsp;«Пример», цифры тоже.</p>
+<p class="lead">Семь коротких показов: что вы&nbsp;вводите и&nbsp;что увидите в&nbsp;ответ. Компания в&nbsp;примерах вымышленная&nbsp;— ООО&nbsp;«Пример», цифры тоже.</p>
 <ul class="kr-oglav">
 <li><a href="#proverka">Проверка по&nbsp;ИНН</a></li>
 <li><a href="#dosje">Досье сделки</a></li>
+<li><a href="#platite">Кому вы&nbsp;платите</a></li>
 <li><a href="#schet">Проверь счёт</a></li>
+<li><a href="#nalichnye">Наличные</a></li>
+<li><a href="#skoraya">Скорая 115&#8209;ФЗ</a></li>
+<li><a href="#slezhenie">Слежение</a></li>
 </ul>
 </header>
 
@@ -184,9 +188,42 @@
 </div>
 </section>
 
+<section class="kr-d" id="platite" data-eksponat="vypiska" aria-labelledby="kr-h4" data-demo="platite">
+<div class="kr-d__txt">
+<p class="eyebrow">03 · Выписка за&nbsp;квартал</p>
+<h2 id="kr-h4">Кому вы&nbsp;платите</h2>
+<p class="kr-d__lid">Загрузите выписку из&nbsp;1С&nbsp;— увидите всех поставщиков, у&nbsp;кого из&nbsp;них признаки «технической» компании и&nbsp;сколько денег на&nbsp;кону.</p>
+<ol class="kr-sh">
+<li><button type="button" data-t="2400"><b>Выписка из&nbsp;1С</b><span>Файл обмена из&nbsp;интернет-банка. Выписка не&nbsp;уходит с&nbsp;вашего компьютера&nbsp;— всё считается в&nbsp;браузере.</span></button></li>
+<li><button type="button" data-t="3200"><b>Кому ушли деньги</b><span>Поставщики по&nbsp;сумме и&nbsp;доле расходов&nbsp;— главные сверху.</span></button></li>
+<li><button type="button" data-t="3400"><b>Что насторожит</b><span>Смена реквизитов, размытое назначение, разовый крупный платёж.</span></button></li>
+<li><button type="button" data-t="4200"><b>Деньги на&nbsp;кону</b><span>Сколько могут снять по&nbsp;ст.&nbsp;54.1 НК, если поставщик «технический», и&nbsp;что сделать на&nbsp;этой неделе.</span></button></li>
+</ol>
+<p class="kr-upr"><button type="button" class="btn btn--secondary" data-povtor>Повторить</button><a class="btn btn--primary" href="/kontragenty-iz-vypiski/" data-demo-go>Проверить свою выписку</a></p>
+</div>
+<div class="kr-ekr" aria-hidden="true">
+<p class="kr-ekr__adr">deloskop.ru/kontragenty-iz-vypiski</p>
+<div class="kr-fajl" data-ot="1"><span class="kr-fajl__i kr-fajl__i--txt">1С</span><b>kl_to_1c.txt · 03.07–02.09.2026</b></div>
+<div class="kr-itog" data-ot="2"><span>Поставщикам ушло</span><b>7&nbsp;321&nbsp;000&nbsp;₽</b></div>
+<ul class="kr-pol" data-ot="2">
+<li class="kr-pol--w" style="--d:.67"><b>ООО&nbsp;«Пример-Бетон»</b><span>4&nbsp;880&nbsp;000&nbsp;₽ · 67&nbsp;%</span><i></i></li>
+<li style="--d:.25"><b>ООО&nbsp;«Пример-Снаб»</b><span>1&nbsp;830&nbsp;000&nbsp;₽ · 25&nbsp;%</span><i></i></li>
+<li style="--d:.05"><b>ООО&nbsp;«Пример-Логистик»</b><span>366&nbsp;000&nbsp;₽ · 5&nbsp;%</span><i></i></li>
+</ul>
+<ul class="kr-f" data-ot="3" data-do="3">
+<li class="kr-w"><b>«Пример-Бетон»: сменились счёт и&nbsp;банк</b><span>Подтвердите звонком по&nbsp;известному номеру</span></li>
+<li class="kr-w"><b>«Пример-Снаб»: не&nbsp;видно, за&nbsp;что платите</b><span>Назначение&nbsp;— «оплата по&nbsp;счёту»</span></li>
+</ul>
+<ul class="kr-f" data-ot="4" data-zam>
+<li class="kr-w"><b>Если «Пример-Бетон» окажется «технической»</b><span>На&nbsp;кону от&nbsp;1&nbsp;056&nbsp;000 до&nbsp;2&nbsp;632&nbsp;000&nbsp;₽&nbsp;— вычет НДС и&nbsp;налог с&nbsp;расходов</span></li>
+<li class="kr-sovet">Первым делом: проверить трёх главных поставщиков&nbsp;— на&nbsp;них 97&nbsp;% расходов</li>
+</ul>
+</div>
+</section>
+
 <section class="kr-d" id="schet" data-eksponat="vypiska" aria-labelledby="kr-h3" data-demo="schet">
 <div class="kr-d__txt">
-<p class="eyebrow">03 · Пришёл счёт</p>
+<p class="eyebrow">04 · Пришёл счёт</p>
 <h2 id="kr-h3">Проверь счёт</h2>
 <p class="kr-d__lid">Перетащите счёт в&nbsp;PDF&nbsp;— до&nbsp;оплаты увидите, сходятся ли&nbsp;реквизиты, верен ли&nbsp;НДС и&nbsp;кто поставщик.</p>
 <ol class="kr-sh">
@@ -209,6 +246,97 @@
 <ul class="kr-f" data-ot="4">
 <li class="kr-w"><b>Принадлежность счёта не&nbsp;подтверждена</b><span>Позвоните по&nbsp;номеру из&nbsp;договора, а&nbsp;не&nbsp;из&nbsp;письма</span></li>
 <li class="kr-sovet">Поставщик: ООО&nbsp;«Пример»&nbsp;— без&nbsp;серьёзных сигналов</li>
+</ul>
+</div>
+</section>
+
+<section class="kr-d" id="nalichnye" data-eksponat="nalichnye" aria-labelledby="kr-h5" data-demo="nalichnye">
+<div class="kr-d__txt">
+<p class="eyebrow">05 · Снятие и&nbsp;взносы</p>
+<h2 id="kr-h5">Наличные глазами банка</h2>
+<p class="kr-d__lid">Та же&nbsp;выписка&nbsp;— и&nbsp;видно, где снятие наличных начинает выглядеть для&nbsp;банка как риск и&nbsp;сколько денег встанет, если счёт ограничат.</p>
+<ol class="kr-sh">
+<li><button type="button" data-t="2400"><b>Выписка за&nbsp;3–6&nbsp;месяцев</b><span>Файл не&nbsp;покидает ваш компьютер: разбор идёт в&nbsp;браузере.</span></button></li>
+<li><button type="button" data-t="3400"><b>Три доли, как у&nbsp;банка</b><span>Наличные в&nbsp;расходах, транзит «пришло&nbsp;— ушло», налоги к&nbsp;обороту.</span></button></li>
+<li><button type="button" data-t="3000"><b>Сколько встанет</b><span>Остаток и&nbsp;поступления за&nbsp;10&nbsp;рабочих дней ограничения.</span></button></li>
+<li><button type="button" data-t="4200"><b>Три дела на&nbsp;неделю</b><span>У&nbsp;каждого признака&nbsp;— основание: 115&#8209;ФЗ, 860-П или 18-МР.</span></button></li>
+</ol>
+<p class="kr-upr"><button type="button" class="btn btn--secondary" data-povtor>Повторить</button><a class="btn btn--primary" href="/nalichnye/" data-demo-go>Проверить свою выписку</a></p>
+</div>
+<div class="kr-ekr" aria-hidden="true">
+<p class="kr-ekr__adr">deloskop.ru/nalichnye</p>
+<div class="kr-fajl" data-ot="1"><span class="kr-fajl__i kr-fajl__i--txt">1С</span><b>kl_to_1c.txt · июль&nbsp;— сентябрь 2026</b></div>
+<div class="kr-pl" data-ot="2">
+<p class="kr-pl--b"><b>41&nbsp;%</b><span>наличными от&nbsp;расходов</span></p>
+<p class="kr-pl--w"><b>33&nbsp;%</b><span>транзит за&nbsp;2&nbsp;рабочих дня</span></p>
+<p class="kr-pl--w"><b>0,5&nbsp;%</b><span>налоги к&nbsp;обороту, ориентир банков&nbsp;— 0,9&nbsp;%</span></p>
+</div>
+<div class="kr-itog kr-itog--w" data-ot="3"><span>Встанет, если банк ограничит счёт на&nbsp;10&nbsp;рабочих дней</span><b>3&nbsp;024&nbsp;091&nbsp;₽</b></div>
+<ul class="kr-f" data-ot="4">
+<li><b>Точное назначение вместо «на&nbsp;хознужды»</b><span>«Под&nbsp;отчёт на&nbsp;закупку материалов по&nbsp;договору №&nbsp;…»</span></li>
+<li><b>Снятие&nbsp;— по&nbsp;графику, а&nbsp;не&nbsp;в&nbsp;день поступления</b><span>Неснижаемый остаток на&nbsp;счёте</span></li>
+<li class="kr-sovet">Налоги&nbsp;— с&nbsp;того счёта, куда приходит выручка</li>
+</ul>
+</div>
+</section>
+
+<section class="kr-d" id="skoraya" data-eksponat="skoraya" aria-labelledby="kr-h6" data-demo="skoraya">
+<div class="kr-d__txt">
+<p class="eyebrow">06 · Банк ограничил счёт</p>
+<h2 id="kr-h6">Скорая 115&#8209;ФЗ</h2>
+<p class="kr-d__lid">Счёт ограничили&nbsp;— это процедура со&nbsp;сроками. За&nbsp;пару ответов&nbsp;— план по&nbsp;дням, у&nbsp;каждого шага&nbsp;— пункт закона.</p>
+<ol class="kr-sh">
+<li><button type="button" data-t="2800"><b>Что сделал банк</b><span>Запросил документы, не&nbsp;провёл платёж, отключил интернет-банк&nbsp;— путь у&nbsp;каждой ситуации свой.</span></button></li>
+<li><button type="button" data-t="2600"><b>Пара фактов</b><span>Когда банк сообщил о&nbsp;мере и&nbsp;сколько платите со&nbsp;счёта в&nbsp;месяц.</span></button></li>
+<li><button type="button" data-t="3800"><b>План по&nbsp;дням</b><span>Даты&nbsp;— по&nbsp;производственному календарю, у&nbsp;каждого шага&nbsp;— основание.</span></button></li>
+<li><button type="button" data-t="4200"><b>Деньги и&nbsp;документы</b><span>Сколько платежей задержится и&nbsp;что приложить к&nbsp;письму в&nbsp;банк.</span></button></li>
+</ol>
+<p class="kr-upr"><button type="button" class="btn btn--secondary" data-povtor>Повторить</button><a class="btn btn--primary" href="/skoraya-115-fz/" data-demo-go>Открыть Скорую</a></p>
+</div>
+<div class="kr-ekr" aria-hidden="true">
+<p class="kr-ekr__adr">deloskop.ru/skoraya-115-fz</p>
+<ul class="kr-vyb" data-ot="1" data-do="1">
+<li>Запросил документы</li><li class="vyb">Не&nbsp;провёл платёж</li><li>Отключил интернет-банк или карту</li><li>Расторгает договор счёта</li><li>Красная зона ЗСК</li>
+</ul>
+<div class="kr-dv" data-ot="2" data-do="2"><p><span>Банк отказал в&nbsp;операции</span><b data-pech="20.10.2026"></b></p><p><span>Платежи со&nbsp;счёта в&nbsp;месяц</span><b data-pech="3 000 000 ₽"></b></p></div>
+<ol class="kr-plan" data-ot="3" data-do="3" data-zam data-po>
+<li><b>27&nbsp;окт.</b><span>Банк сообщает дату и&nbsp;причину отказа · ст.&nbsp;7&nbsp;115&#8209;ФЗ</span></li>
+<li class="kr-plan--ja"><b>27&nbsp;окт.</b><span>Подать документы и&nbsp;пояснение · п.&nbsp;13.4 ст.&nbsp;7</span></li>
+<li><b>6&nbsp;нояб.</b><span>Ответ банка&nbsp;— 7&nbsp;рабочих дней со&nbsp;дня подачи</span></li>
+<li class="kr-plan--ja"><b>11&nbsp;нояб.</b><span>Если отказ&nbsp;— в&nbsp;комиссию при&nbsp;Банке России</span></li>
+</ol>
+<div class="kr-itog kr-itog--w" data-ot="4" data-zam><span>Задержится платежей в&nbsp;каждый рабочий день ограничения</span><b>146&nbsp;тыс.&nbsp;₽</b></div>
+<ul class="kr-f" data-ot="4" data-zam>
+<li><b>Договор, счёт, акт или накладная</b><span>По&nbsp;отклонённой операции</span></li>
+<li class="kr-sovet kr-sovet--w">Не&nbsp;повторяйте отклонённый платёж тем же&nbsp;текстом и&nbsp;не&nbsp;дробите его</li>
+</ul>
+</div>
+</section>
+
+<section class="kr-d" id="slezhenie" data-eksponat="slezhenie" aria-labelledby="kr-h7" data-demo="slezhenie">
+<div class="kr-d__txt">
+<p class="eyebrow">07 · После первой оплаты</p>
+<h2 id="kr-h7">Слежение за&nbsp;компанией</h2>
+<p class="kr-d__lid">Компания меняется между вашими оплатами. Добавьте её&nbsp;в&nbsp;кабинет&nbsp;— при&nbsp;следующей проверке увидите, что изменилось с&nbsp;прошлой.</p>
+<ol class="kr-sh">
+<li><button type="button" data-t="2400"><b>ИНН&nbsp;— в&nbsp;слежение</b><span>Ключевые поставщики и&nbsp;покупатели&nbsp;— в&nbsp;одном списке кабинета.</span></button></li>
+<li><button type="button" data-t="2600"><b>Список с&nbsp;итогом</b><span>У&nbsp;каждой компании&nbsp;— статус и&nbsp;Индекс на&nbsp;дату прошлой проверки.</span></button></li>
+<li><button type="button" data-t="3600"><b>Что изменилось</b><span>Перед новой оплатой&nbsp;— «Проверить»: сравниваем с&nbsp;прошлой проверкой.</span></button></li>
+<li><button type="button" data-t="4000"><b>Что сделать</b><span>Одна строка&nbsp;— что запросить до&nbsp;следующего платежа.</span></button></li>
+</ol>
+<p class="kr-upr"><button type="button" class="btn btn--secondary" data-povtor>Повторить</button><a class="btn btn--primary" href="/cabinet.html" data-demo-go>Открыть кабинет</a></p>
+</div>
+<div class="kr-ekr" aria-hidden="true">
+<p class="kr-ekr__adr">Кабинет · Слежение за&nbsp;контрагентами</p>
+<div class="kr-pole" data-ot="1"><span class="kr-pole__v" data-pech="0000000000"></span><span class="kr-pole__b">Добавить</span></div>
+<div class="kr-sp" data-ot="2"><b>ООО&nbsp;«Пример»</b><span>действующая · Индекс 72 · проверка 12&nbsp;сентября</span></div>
+<ul class="kr-f" data-ot="3">
+<li class="kr-w"><b>Индекс: 72 → 58 с&nbsp;проверки 12.09</b></li>
+<li><b>Руководитель сменился: новая запись в&nbsp;ЕГРЮЛ с&nbsp;02.10.2026</b></li>
+<li class="kr-w"><b>Появилась отметка о&nbsp;недостоверности сведений в&nbsp;ЕГРЮЛ</b></li>
+</ul>
+<ul class="kr-f" data-ot="4">
+<li class="kr-sovet kr-sovet--w">До&nbsp;следующей оплаты: решение о&nbsp;назначении руководителя и&nbsp;пояснение по&nbsp;отметке ЕГРЮЛ</li>
 </ul>
 </div>
 </section>

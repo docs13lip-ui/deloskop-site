@@ -76,3 +76,45 @@
 }
 @media (max-width:420px){.kr-ekr{gap:10px}.kr-dv p,.kr-f li{padding-block:8px}.kr-dv p{flex-wrap:wrap;gap:2px 12px}.kr-f li::before{top:13px}.kr-upr .btn{flex:1 1 100%}}
 @media (prefers-reduced-motion:reduce){.kr-js [data-ot]{transition:none}.kr-kol .kr-kol__z{transition:none}.kr-d.idet .kr-sh button[aria-current=step]::after{animation:none}}
+/* demo-vitrina-v2: Кому вы платите, Наличные, Скорая 115-ФЗ, Слежение */
+.kr-fajl__i--txt{background:var(--accent);color:var(--on-accent)}
+.kr-itog{display:grid;gap:2px;padding:14px 16px;border-radius:var(--r-m);background:var(--bg)}
+.kr-itog span{font-size:var(--t-small);color:var(--muted)}
+.kr-itog b{font-size:24px;font-weight:650;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.kr-itog--w{background:var(--warn-bg)}
+.kr-itog--w span{color:var(--ink-2)}
+.kr-pol{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.kr-pol li{display:grid;grid-template-columns:1fr auto;gap:2px 12px}
+.kr-pol b{font-weight:600}
+.kr-pol span{font-size:var(--t-caption);color:var(--muted);font-variant-numeric:tabular-nums}
+.kr-pol i{grid-column:1/-1;height:8px;border-radius:4px;background:var(--line);position:relative;overflow:hidden}
+.kr-pol i::after{content:"";position:absolute;inset:0;border-radius:4px;background:var(--accent);transform-origin:left;transform:scaleX(var(--d))}
+.kr-pol--w i::after{background:var(--warn)}
+.kr-js .kr-pol i::after{transform:scaleX(0);transition:transform .9s var(--ease)}
+.kr-js .kr-pol.on i::after{transform:scaleX(var(--d))}
+.kr-pl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.kr-pl p{display:grid;align-content:start;gap:4px;padding:12px 14px;border-radius:var(--r-m);background:var(--bg)}
+.kr-pl b{font-size:24px;font-weight:650;font-variant-numeric:tabular-nums}
+.kr-pl span{font-size:var(--t-caption);color:var(--muted);line-height:1.35}
+.kr-pl--b{background:var(--bad-bg)!important}.kr-pl--b b{color:var(--bad)}
+.kr-pl--w{background:var(--warn-bg)!important}.kr-pl--w b{color:var(--warn)}
+.kr-vyb{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.kr-vyb li{padding:11px 14px;border-radius:var(--r-s);background:var(--bg);box-shadow:inset 0 0 0 1px var(--line)}
+.kr-vyb li.vyb{transition:background .3s var(--ease) 1.3s,box-shadow .3s var(--ease) 1.3s,font-weight 0s 1.3s}
+.kr-vyb.on li.vyb,.kr-d:not(.kr-js) .kr-vyb li.vyb{background:var(--accent-soft);box-shadow:inset 0 0 0 1.5px var(--accent);font-weight:600}
+.kr-plan{display:grid;gap:0;margin:0;padding:0;list-style:none}
+.kr-plan li{position:relative;display:grid;grid-template-columns:64px 1fr;gap:12px;padding:8px 0 8px 22px}
+.kr-plan li::before{content:"";position:absolute;left:4px;top:14px;width:10px;height:10px;border-radius:50%;background:var(--muted)}
+.kr-plan li+li::after{content:"";position:absolute;left:8px;top:-6px;height:20px;width:2px;background:var(--line)}
+.kr-plan li.kr-plan--ja::before{background:var(--accent)}
+.kr-plan b{font-weight:600;font-variant-numeric:tabular-nums}
+.kr-plan span{color:var(--ink-2)}
+.kr-js [data-po] li{opacity:0;transform:translateX(-6px);transition:opacity .35s var(--ease),transform .35s var(--ease)}
+.kr-js [data-po].on li.on{opacity:1;transform:none}
+.kr-js [data-zam].on{animation:kr-vhod .45s var(--ease)}
+@keyframes kr-vhod{from{opacity:0;transform:translateY(10px)}}
+.kr-sp{display:grid;gap:2px;padding:12px 14px;border-radius:var(--r-s);background:var(--bg);box-shadow:inset 3px 0 0 var(--ok)}
+.kr-sp b{font-weight:600}
+.kr-sp span{font-size:var(--t-caption);color:var(--muted)}
+@media (max-width:520px){.kr-pl{grid-template-columns:1fr}.kr-pl p{grid-template-columns:auto 1fr;align-items:baseline;gap:12px}.kr-pl b{font-size:20px}.kr-itog b{font-size:20px}.kr-plan li{grid-template-columns:56px 1fr}}
+@media (prefers-reduced-motion:reduce){.kr-js .kr-pol i::after,.kr-js [data-po] li,.kr-vyb li.vyb{transition:none}.kr-js [data-zam].on{animation:none}}

@@ -221,7 +221,11 @@ def proverit(d, html_stranicy=""):
 def POKAZY(koren=KOREN):
     try:
         with open(os.path.join(koren, "kak-rabotaet", "index.html"), encoding="utf-8") as f:
-            return {e: i for i, e in re.findall(r'<section class="kr-d" id="([^"]+)" data-eksponat="([^"]+)"', f.read())}
+            # у экспоната может быть несколько показов (vypiska: «Кому вы платите» и «Проверь счёт») — ссылка ведёт на первый
+            d = {}
+            for i, e in re.findall(r'<section class="kr-d" id="([^"]+)" data-eksponat="([^"]+)"', f.read()):
+                d.setdefault(e, i)
+            return d
     except OSError:
         return {}
 

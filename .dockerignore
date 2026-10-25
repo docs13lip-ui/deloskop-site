@@ -2,6 +2,7 @@
 .git
 .github
 .gitignore
+.gitattributes
 .dockerignore
 tests
 **/__pycache__

@@ -1,0 +1,4 @@
+# lenta-slit-v1: лента «Что нового» сливается по записям, а не по строкам.
+# Включить на компьютере один раз: git config merge.lenta.driver "python3 tests/lenta_slit.py %O %A %B"
+# Без этой настройки git сливает файл как обычный текст (как раньше).
+obnovleniya.json merge=lenta

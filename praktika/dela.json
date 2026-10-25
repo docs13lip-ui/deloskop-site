@@ -2,7 +2,8 @@
   "_kak": "Разборы дел — данные для /praktika/. Одна запись = одна статья «Разбор дела»; текст автора (юрист отдела) — tests/praktika/<slug>.html, карточки дел, кнопка, нормы и мета — здесь. Новые разборы — ПЕРВЫМИ в списке. После правки: python3 tests/sobrat_praktika.py (собирает хабы и страницы, шапку и подвал ставит сам), проверка — python3 tests/sobrat_praktika.py --check и node --test tests/praktika.test.js. Карточка дела (dela[]) — единица данных: тот же JSON позже покажем в «Скорой» и в Паспорте («в похожих делах суды решили так»). «Где в законе» (zakon[]): [норма, редакция, первоисточник] — третий элемент: адрес полного текста или список пар [подпись, адрес], если норма из двух документов; норма без адреса тест не пропустит. Вторая кнопка «Следить за …» (knopka.slezh: knopka, url /cabinet.html…, cel) — на странице только атрибутами секции; кнопку ставит js/slezh-knopka.js, когда в tarify/tarify.json slezhenie_pisma: true.",
   "razdely": {
     "115-fz": {"nazvanie": "Банки и 115-ФЗ", "kratko": "115-ФЗ", "h1": "Как решают суды: банки и 115-ФЗ", "title": "Судебная практика по 115-ФЗ и банкам: разборы дел — Делоскоп", "description": "Разборы решений Верховного и Конституционного судов о блокировках, комиссиях банков и ЗСК: что случилось, что решил суд, что делать завтра утром.", "lid": "Решения Верховного и Конституционного судов о банках и 115-ФЗ — с номером дела, ссылкой на текст и тем, что из этого следует для вашего счёта."},
-    "nalogi": {"nazvanie": "Налоги", "kratko": "Налоги", "h1": "Как решают суды: налоги", "title": "Налоговая судебная практика 2026: разборы дел — Делоскоп", "description": "Разборы налоговых дел ВС, КС и судов округов: реконструкция, проверка контрагента, допросы. Номер дела, первоисточник, что делать и сколько на кону.", "lid": "Налоговые споры, которые меняют правила для бизнеса, — с номером дела, ссылкой на текст и расчётом, сколько это может стоить вам."}
+    "nalogi": {"nazvanie": "Налоги", "kratko": "Налоги", "h1": "Как решают суды: налоги", "title": "Налоговая судебная практика 2026: разборы дел — Делоскоп", "description": "Разборы налоговых дел ВС, КС и судов округов: реконструкция, проверка контрагента, допросы. Номер дела, первоисточник, что делать и сколько на кону.", "lid": "Налоговые споры, которые меняют правила для бизнеса, — с номером дела, ссылкой на текст и расчётом, сколько это может стоить вам."},
+    "dogovory": {"nazvanie": "Договоры", "kratko": "Договоры", "h1": "Как решают суды: договоры", "title": "Судебная практика по договорам: разборы дел ВС — Делоскоп", "description": "Разборы решений Верховного суда о договорах между компаниями: что случилось, что решил суд и что поправить в договоре до подписи.", "lid": "Споры по договорам между компаниями — с номером дела, ссылкой на текст и тем, что стоит поправить в договоре до подписи."}
   },
   "ssylki_s_sajta": {
     "_kak": "Входящие ссылки на разборы с живых страниц (SEO-обвязка [Маркетинга] 30.09): файл страницы → slug разборов или «hab:<раздел>». Сборщик ставит блок между метками <!--praktika-ssylki-->…<!--/praktika-ssylki--> (в статье — перед </article>). Тест: у каждого разбора ≥ 2 входящие ссылки вне /praktika/.",
@@ -15,7 +16,7 @@
     "nalogi/nagruzka/index.html": ["podarok-ot-roditelya-ip-ndfl-vs-2026", "droblenie-uplachennaya-usn-zachityvaetsya", "zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/nagruzka-po-otraslyam-2025/index.html": ["zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/priznaki-tehnicheskoj-kompanii/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke"],
-    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026"],
+    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026", "kompensaciya-poter-406-1-vs-2026"],
     "pasport/index.html": ["proverka-kontragenta-na-datu-sdelki"],
     "nalogi/svezhest-dannyh-proverki-kontragenta/index.html": ["proverka-kontragenta-na-datu-sdelki"],
     "nalogi/pismo-o-smene-rekvizitov-kak-proverit/index.html": ["dvojnik-postavshchika-bank-poluchatelya"],
@@ -23,10 +24,67 @@
     "nalogi/izmeneniya-egryul-kontragenta/index.html": ["reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p"],
     "nalogi/kody-statusa-egryul/index.html": ["reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p"],
     "nalogi/nedostovernyj-adres-egryul/index.html": ["isklyuchili-iz-egryul-dolg-s-direktora"],
-    "nalogi/skolko-platit-vpered-neznakomoj-kompanii/index.html": ["nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "isklyuchili-iz-egryul-dolg-s-direktora"],
+    "nalogi/skolko-platit-vpered-neznakomoj-kompanii/index.html": ["nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "isklyuchili-iz-egryul-dolg-s-direktora", "kompensaciya-poter-406-1-vs-2026"],
     "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"]
   },
   "razbory": [
+    {
+      "razdel": "dogovory",
+      "slug": "kompensaciya-poter-406-1-vs-2026",
+      "h1": "В договоре есть пункт о компенсации потерь. Можно ли по нему просто выставить сумму?",
+      "title": "Компенсация потерь в договоре: ВС требует прозрачный расчёт (2026)",
+      "description": "Страховщик требовал 89,3 млн ₽ потерь по ст. 406.1 ГК. Верховный суд: условие о потерях работает, но «произвольную» сумму по непрозрачной формуле не взыскать.",
+      "zapros": "компенсация потерь 406.1 ГК расчёт",
+      "data": "2026-10-24",
+      "minut": 4,
+      "lid": "Страховая компания насчитала оператору медицинских программ 89,3 млн ₽ «потерь» по формуле из договора и подписала акт сверки одна: оператор промолчал 5 рабочих дней. Апелляция взыскала всё. Верховный суд: условие о потерях действует без вины, но «в произвольном размере» потери не взыскивают — нужен прозрачный расчёт с документами. Разбираем, что записать в договор до подписи.",
+      "dela": [
+        {
+          "sud": "Верховный суд РФ, Судебная коллегия по экономическим спорам",
+          "sud_kratko": "ВС",
+          "akt": "Определение",
+          "nomer": "№ 305-ЭС26-602",
+          "data": "2026-05-26",
+          "delo": "Потери по ст. 406.1 ГК по формуле и одностороннему акту сверки: страховщик против оператора медицинских программ (№ А40-183390/2024); резолютивная часть — 13.05.2026",
+          "na_konu": "89 321 309,47 ₽ потерь за 2021–2022 годы",
+          "na_konu_kratko": "≈ 89,3 млн ₽",
+          "itog": "На новое рассмотрение",
+          "itog_nov": false,
+          "istochnik": "https://vsrf.ru/lk/practice/stor_pdf_ec/2542960",
+          "istochnik_podpis": "vsrf.ru — текст определения; сверено 24.10",
+          "sverka": "2026-10-24"
+        }
+      ],
+      "knopka": {
+        "zagolovok": "Подписываете договор с пунктом о потерях — сначала проверьте контрагента",
+        "tekst": "Проверка по ИНН: статус в ЕГРЮЛ, долги по налогам и отметки, на которые смотрят банк и налоговая, — на дату проверки.",
+        "knopka": "Проверить контрагента по ИНН",
+        "url": "/",
+        "cel": "razbor28_check",
+        "slezh": {
+          "knopka": "Следить за контрагентом",
+          "url": "/cabinet.html#watch",
+          "cel": "razbor28_slezh"
+        }
+      },
+      "zakon": [
+        [
+          "ст. 406.1 ГК РФ — возмещение потерь при наступлении обстоятельств, указанных в договоре",
+          "ред. на 24.10.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_5142/"
+        ],
+        [
+          "ст. 431 ГК РФ — толкование договора; ст. 15, 393, 404 ГК РФ — убытки и их уменьшение",
+          "ред. на 24.10.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_5142/"
+        ]
+      ],
+      "pohozhie": [
+        "proverka-kontragenta-na-datu-sdelki",
+        "nds-postavshchika-usn-cena-dogovora",
+        "podryadchik-ne-vystavil-schet-fakturu"
+      ]
+    },
     {
       "razdel": "nalogi",
       "slug": "podarok-ot-roditelya-ip-ndfl-vs-2026",

@@ -65,6 +65,13 @@ ul.list .nm span{color:var(--muted);font-size:13px}
 .oferta-vhod{margin:10px 0 0;font-size:13px;line-height:1.45;color:var(--muted)}
 #pisma .sogl{margin:12px 0}
 #pismaNote:empty{display:none}
+/* vhody-v2-sait: «или» + кнопки Яндекс ID / VK ID — только когда API говорит, что ключи вставлены */
+.cherez{margin:14px 0 0}
+.cherez__ili{display:flex;align-items:center;gap:12px;margin:0 0 12px;font-size:13px;color:var(--muted)}
+.cherez__ili::before,.cherez__ili::after{content:"";flex:1;height:1px;background:var(--line)}
+.cherez__ryad{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.cherez__btn{display:flex;align-items:center;justify-content:center;min-height:48px;text-align:center}
+.cherez__pro{margin:10px 0 0;font-size:13px;line-height:1.45;color:var(--muted)}
 .retry{margin-left:8px}
 #nedWrap .ned{margin-top:8px;max-width:none}
 @media (max-width:560px){ul.list li{flex-wrap:wrap}.acts{width:100%;padding-left:0}}
@@ -182,6 +189,7 @@ ul.list .nm span{color:var(--muted);font-size:13px}
       <input id="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="\d{6}" maxlength="6" placeholder="Код из письма">
       <button class="btn primary" type="submit">Войти</button>
     </form>
+    <div id="cherez" hidden></div>
     <p class="oferta-vhod">Входя, вы принимаете <a href="/oferta/">оферту</a>. Как мы обрабатываем данные&nbsp;— в&nbsp;<a href="/politika/">Политике</a>.</p>
     <p class="note" id="lnote" role="status" aria-live="polite"></p>
     <p class="free">Без входа работают 10 проверок в день, <a href="/skoraya-115-fz/">Скорая 115-ФЗ</a>, <a href="/#shield">Щит</a>, <a href="/nalichnye/">Наличные глазами банка</a> и <a href="/proverit-schet/">Проверь счёт</a>. Вход нужен, чтобы сохранить историю и следить за компаниями.</p>
@@ -247,6 +255,7 @@ ul.list .nm span{color:var(--muted);font-size:13px}
 <script src="/js/nedavnie.js"></script>
 <script src="/js/papka-proverok.js"></script>
 <script src="/js/golos.js"></script>
+<script src="/js/vhod-cherez.js"></script>
 <script>
 (function(){
   var API=(location.hostname.endsWith('deloskop.ru')?'https://api.deloskop.ru':'');
@@ -371,11 +380,16 @@ ul.list .nm span{color:var(--muted);font-size:13px}
     var v=$('cinn').value.replace(/\D/g,'');
     if(!validInn(v)){note($('cnote'),'ИНН — 10 цифр у компании или 12 у ИП','err');$('cinn').focus();return}
     location.href='/?inn='+v};
+  // ---- вход через Яндекс ID / VK ID (vhody-v2-sait): итог возврата с сервера и кнопки ----
+  var vhodItog=window.DlkVhodCherez?DlkVhodCherez.itog():null;
+  if(vhodItog&&vhodItog.novyj&&window.dlkGoal)dlkGoal('registration',{vid:vhodItog.cherez});
   function showLogin(){
     try{localStorage.removeItem('dlk_voshel')}catch(e){}$('login').hidden=false;$('cab').hidden=true;$('logout').hidden=true;
     $('goCheck').className='btn';
     $('nedWrap').hidden=!(window.Nedavnie&&Nedavnie.render($('ned')));
     proverSoglasie();
+    if(window.DlkVhodCherez&&API)DlkVhodCherez.mount($('cherez'),{api:API,next:'/cabinet.html'});
+    if(vhodItog&&vhodItog.tekst){note($('lnote'),vhodItog.tekst,'err');vhodItog=null}
   }
   function load(){
     $('loading').hidden=false;$('loading').textContent='Загружаем кабинет…';

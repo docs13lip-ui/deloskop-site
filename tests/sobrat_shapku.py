@@ -46,6 +46,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import beta as BETA  # noqa: E402
 import tema_temnaya as TT  # noqa: E402  vizual-v3.0b: тёмный слой стилей страницы
+import seo_haby as SH  # noqa: E402  seo-haby-v1: крошки и ItemList хабов
 import tipograf_statej as TS  # noqa: E402  tipograf-obolochka-v1: шапка и подвал — тем же типографом, что статьи
 
 KOREN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -549,6 +550,8 @@ def sobrat_stranicu(txt, r, podval, shapka=None):
     txt = SAMEAS.sub(lambda m: m.group(0) + SAMEAS_VSTAVKA, txt)
     # 6г) podelitsya-v1: «Поделиться» под текстом статей и разборов (ВК, Telegram, ОК, ссылка) — без чужих скриптов
     txt = podelitsya(txt)
+    # 6д) seo-haby-v1: BreadcrumbList хабов и продуктовых страниц, ItemList статей хаба (tests/seo_haby.py)
+    txt = SH.primenit(txt)
     # 7) shrift-v1: предзагрузка шрифта — последней строкой <head> и после всех вставок: так страница, собранная заново
     #    (kartochki perepechatat, сборщики разделов), и пересобранная sobrat_shapku совпадают байт в байт
     txt = STARYJ_PRELOAD.sub("", txt)

@@ -22,6 +22,9 @@ import os
 import re
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from szhat_js import szhat_css, szhat_js  # paket-legkij-v1: пакеты без комментариев и отступов
+
 KOREN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 KARTA = os.path.join("partials", "sborka.json")
 PAPKI = (("js", "b"), ("css", "b"))  # vizual-v3.0a: пакеты стилей — css/b/<имя>.<отпечаток>.css
@@ -64,6 +67,7 @@ def sobrat_paket(imya, fajly, koren=KOREN, zamena=None):
             # @charset/@import в середине склейки не работают — в исходниках их быть не должно
             if re.search(r"@(?:charset|import)\b", t):
                 raise SystemExit("sobrat_js: %s — @charset/@import в пакете стилей не годятся" % put)
+            t = szhat_css(t)
             sloj = SLOI.get(put)
             if sloj:
                 # vizual-v3.0a (б): каскадный слой — порядок слоёв задан первой строкой пакета «ds» и в <head> страницы
@@ -73,6 +77,10 @@ def sobrat_paket(imya, fajly, koren=KOREN, zamena=None):
             continue
         if VERH_STRICT.match(t):
             raise SystemExit("sobrat_js: %s начинается с 'use strict' — строгим стал бы весь пакет" % put)
+        try:
+            t = szhat_js(t)
+        except ValueError as e:
+            raise SystemExit("sobrat_js: %s — %s" % (put, e))
         chasti.append("/* --- /%s --- */\n%s\n;\n" % (put, t.rstrip()))
     return "".join(chasti)
 

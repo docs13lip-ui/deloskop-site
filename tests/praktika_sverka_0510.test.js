@@ -8,7 +8,8 @@ const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 const KOREN = path.join(__dirname, '..');
-const un = (s) => s.replace(/ /g, ' ').replace(/&nbsp;/g, ' ');
+// nomer-dela-v1: номер дела — в <span class="nw"> (без переноса), сверяем текст без этой обёртки
+const un = (s) => s.replace(/<span class="nw">([^<]*)<\/span>/g, '$1').replace(/ /g, ' ').replace(/&nbsp;/g, ' ');
 const vse = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((x) =>
   x.isDirectory() ? vse(path.join(dir, x.name)) : x.name.endsWith('.html') ? [path.join(dir, x.name)] : []);
 

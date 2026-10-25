@@ -67,11 +67,18 @@ def tipograf_stranicy(txt):
 
 
 def nerazryv(txt):
-    """«115-ФЗ» не рвётся по дефису на 390 px — только внутри <main> и только в тексте (не в атрибутах)."""
+    """«115-ФЗ» и номер дела («№ 309-ЭС25-9697», «А40-183390/2024») не рвутся по дефису на 390 px —
+    только внутри <main> и только в тексте (не в атрибутах). Номер — nomer-dela-v1 (TS.nomer_dela)."""
     a, b = txt.find("<main"), txt.find("</main>")
     if a < 0 or b < 0:
         return txt
-    m = re.sub(r"(>[^<]*)", lambda x: x.group(1).replace("115-ФЗ", '\x00'), txt[a:b])
+    # <summary> вопросов и строка карточки разбора <span class="pk__m"> — flex-контейнеры (praktika.css): <span> внутри стал бы
+    # отдельным flex-элементом — в вопросе строка выходила за край (320 px: +70 px на «КС № 12-П»), в карточке «№» отрывался
+    # от номера на 12 px (gap). Там номер дела не оборачиваем.
+    def tekst(ch):
+        vopros = ch.startswith("<summary") or ch.startswith('<span class="pk__m">')
+        return re.sub(r"(>[^<]*)", lambda x: (lambda t: t if vopros else TS.nomer_dela(t))(x.group(1).replace("115-ФЗ", '\x00')), ch)
+    m = "".join(tekst(ch) for ch in re.split(r'(<summary\b.*?</summary>|<span class="pk__m">[^<]*</span>)', txt[a:b], flags=re.S))
     m = m.replace("\x00", '<span class="nw">115-ФЗ</span>')
     return txt[:a] + m + txt[b:]
 

@@ -104,6 +104,24 @@ TEG = re.compile(r"(<[^>]*>)")
 SKRIPT = re.compile(r"<script\b.*?</script>", re.S | re.I)
 
 
+# nomer-dela-v1 (25.10.2026): номер дела «309-ЭС24-21782», «А40-183390/2024», «№ 12-П» рвался по дефису (лента на 390 px —
+# 10 мест, на 320 — 16). Неразрывный дефис (U+2011) не ставим: скопированный номер перестал бы находиться в kad.arbitr и на vsrf.
+# Номер целиком — в <span class="nw"> (white-space: nowrap, partials/shapka.css): знаки те же, только перенос внутри запрещён.
+# Не в tekst(): tekst() зовут и для текстовых узлов (DlkTipo.uzly), и для строк в JS — разметка там стала бы буквами.
+# Ставят только сборщики, которые пишут HTML: лента (sobrat_lentu.t и nd() в скрипте /obnovleniya/), разборы (sobrat_praktika.nerazryv).
+# Без lookbehind — то же выражение в JS (старые iOS); сторож tests/nomer_dela.test.js сверяет Python и JS.
+NOMER_DELA = re.compile(r"(^|[^0-9A-Za-zЀ-ӿ_/\u2011-])((?:[0-9]{2,3}-(?:ЭС|КГ|КАД|АД|ЭК|АПГ|УД|КП)[0-9]{2}-[0-9]+(?:-К[0-9]+)?(?:\([0-9]+\))?"
+                        r"|[АA][0-9]{2}-[0-9]+/[0-9]{4})(?![0-9]))")
+NOMER_KS = re.compile(r"(№(?:&nbsp;|\u00a0| ))([0-9]{1,4}-[ПО])(?![0-9A-Za-zЀ-ӿ_])")
+NW = '<span class="nw">'
+
+
+def nomer_dela(t):
+    """«№ 309-ЭС24-21782» → «№ <span class="nw">309-ЭС24-21782</span>»: только в тексте, где нет разметки (ленте — текст записи)."""
+    t = NOMER_DELA.sub(lambda m: m.group(1) + NW + m.group(2) + "</span>", t)
+    return NOMER_KS.sub(lambda m: m.group(1) + NW + m.group(2) + "</span>", t)
+
+
 def tekst(t):
     t = sokr(chislo_slovo(t))  # tipograf-chisla-v1 — до PRAVILA: «п. 5» ещё с обычным пробелом, METKA видит оба вида
     for rx, na in PRAVILA:

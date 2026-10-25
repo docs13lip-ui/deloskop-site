@@ -1,6 +1,7 @@
 /* demo-vitrina-v1: «Как это работает» — показ продукта сценой по шагам (страница /kak-rabotaet/).
    Шаг n: элементы экрана [data-ot<=n] видны (.on), [data-do<n] уходят; [data-pech] «печатается» на своём шаге.
    Запуск — когда показ на экране; ушёл с экрана — пауза. Кнопка шага — перейти к нему, «Повторить» — с начала.
+   [data-zam] — до своего шага не занимает места; [data-po] — пункты списка появляются по одному.
    «Меньше движения» — сразу итог, шаги переключаются без анимации. Без скрипта — итог и обычный список шагов. */
 (function () {
   "use strict";
@@ -10,7 +11,7 @@
   function Pokaz(d) {
     var ekr = d.querySelector(".kr-ekr"), kn = [].slice.call(d.querySelectorAll(".kr-sh button")),
       el = [].slice.call(ekr.querySelectorAll("[data-ot]")), pech = [].slice.call(ekr.querySelectorAll("[data-pech]")),
-      ist = [].slice.call(ekr.querySelectorAll(".kr-ist li")), pole = ekr.querySelector(".kr-pole"),
+      ist = [].slice.call(ekr.querySelectorAll(".kr-ist li, [data-po] > li")), pole = ekr.querySelector(".kr-pole"),
       n = 0, tajm = [], vidno = false, konec = false, imya = d.getAttribute("data-demo");
     d.classList.add("kr-js");
 
@@ -37,7 +38,8 @@
       el.forEach(function (x) {
         var ot = +x.getAttribute("data-ot"), dO = x.getAttribute("data-do");
         x.classList.toggle("on", ot <= k);
-        x.classList.toggle("von", dO !== null && k > +dO);
+        // [data-zam] — элемент на смену ушедшему: до своего шага места не держит (demo-vitrina-v2)
+        x.classList.toggle("von", (dO !== null && k > +dO) || (ot > k && x.hasAttribute("data-zam")));
       });
       pech.forEach(function (x) {
         var ot = +x.closest("[data-ot]").getAttribute("data-ot");
@@ -46,10 +48,10 @@
         else x.textContent = "";
       });
       if (pole) pole.classList.remove("zhmi");
-      ist.forEach(function (li, i) {
+      ist.forEach(function (li) {
         var ot = +li.parentNode.getAttribute("data-ot");
         if (k > ot || !anim || MALO) li.classList.toggle("on", k >= ot);
-        else if (k === ot) { li.classList.remove("on"); pozzhe(function () { li.classList.add("on"); }, 350 + i * 450); }
+        else if (k === ot) { li.classList.remove("on"); var j = [].indexOf.call(li.parentNode.children, li); pozzhe(function () { li.classList.add("on"); }, 350 + j * 450); }
       });
       // кнопка «Проверить» нажимается в конце шага ввода
       if (pole && anim && k === 1 && !MALO) pozzhe(function () { pole.classList.add("zhmi"); }, 1700);

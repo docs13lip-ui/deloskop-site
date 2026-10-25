@@ -157,6 +157,13 @@ dialog.dlo::backdrop{background:rgba(17,17,19,.55)}
 .ck-bar .ck-bar__in{max-width:calc(var(--wide) + 2*var(--gutter));margin:0 auto;padding:var(--s-3) var(--gutter) calc(var(--s-3) + env(safe-area-inset-bottom));display:flex;align-items:center;gap:var(--s-3) var(--s-5)}
 .ck-bar .ck-bar__t{flex:1;min-width:0;margin:0;font-size:var(--t-small);color:var(--ink-2)}
 .ck-bar a{display:inline;padding:0;background:none;color:var(--accent);text-decoration:underline;text-underline-offset:.18em}
+/* dostupnost-v2 (25.10.2026): ссылка внутри абзаца отличается от текста не только цветом (WCAG 1.4.1, axe link-in-text-block):
+   на этих страницах ссылки без подчёркивания, а синий к тексту рядом — 1,07–2,98 : 1 (нужно ≥ 3 : 1). Тонкая линия 1 px,
+   отступ .2em, полупрозрачная; при наведении — в цвет ссылки. Список — блоки, где axe нашёл такие ссылки (86 страниц ×
+   светлая/тёмная × 1280/390); новый блок с ссылками в тексте — добавить сюда и в tests/dostupnost_v2.test.js. */
+:is(.pyat,.celi,.princip,.pravila,.ndsq,.ndsf__m,.gran,.ras__pod,.pkg__cap,.formula,.lead) a:not([class]){text-decoration-line:underline;text-decoration-thickness:1px;text-underline-offset:.2em;text-decoration-color:currentColor}
+@supports (color:color-mix(in srgb,red 50%,transparent)){:is(.pyat,.celi,.princip,.pravila,.ndsq,.ndsf__m,.gran,.ras__pod,.pkg__cap,.formula,.lead) a:not([class]){text-decoration-color:color-mix(in srgb,currentColor 55%,transparent)}
+:is(.pyat,.celi,.princip,.pravila,.ndsq,.ndsf__m,.gran,.ras__pod,.pkg__cap,.formula,.lead) a:not([class]):hover{text-decoration-color:currentColor}}
 .ck-bar .ck-bar__b{display:flex;gap:var(--s-2);flex:none}
 .ck-bar button{min-height:40px;padding:0 18px;border:0;border-radius:var(--r-pill);font:600 15px/1 var(--font);cursor:pointer;white-space:nowrap}
 .ck-bar .ck-bar__ok{background:var(--accent);color:var(--on-accent)}

@@ -147,6 +147,37 @@ def statya(s, teg="article"):
     return s[:a] + fragment(s[a:b]) + s[b:]
 
 
+# nomer-dela-v2 (26.10.2026): то же для статей /115-fz/ и /nalogi/ и страниц из STRANICY — до правки 14 номеров на 6 страницах
+# рвались по дефису («№ 305-ЭС25-1505» в «ЗСК контрагента», «№ 304-ЭС23-9987» в «Письме о смене реквизитов»…). Отдельным
+# проходом, а не в kusok(): kusok() зовёт и sobrat_praktika (у него свой nerazryv) — двойной обёртки не будет.
+# Не оборачиваем: уже обёрнутое <span class="nw">…</span>, <summary> и <span class="pk__m"> (flex — см. sobrat_praktika.nerazryv),
+# служебные блоки сборщиков (NE_TROGAT: FAQ оборачивает sobrat_faq, блок разборов на главной — sobrat_praktika.glavnaya).
+NE_NOMER = re.compile(r'(<summary\b.*?</summary>|<span class="pk__m">.*?</span>|<span class="nw">[^<]*</span>)', re.S | re.I)
+
+
+def nomera(s, teg="article"):
+    """Номер дела в рамке страницы — в <span class="nw">; повторный запуск ничего не меняет."""
+    skripty = [(m.start(), m.end()) for m in SKRIPT.finditer(s)]
+    vne = lambda i: not any(x <= i < y for x, y in skripty)
+    a = next((m.start() for m in re.finditer("<" + teg + r"[\s>]", s) if vne(m.start())), None)
+    b = next((m.start() for m in re.finditer("</" + teg + ">", s) if a is not None and m.start() > a and vne(m.start())), None)
+    if a is None or b is None:
+        return s
+
+    def kus(t):
+        return "".join(ch if NE_NOMER.fullmatch(ch) else
+                       "".join(c if c.startswith("<") else nomer_dela(c) for c in TEG.split(ch))
+                       for ch in NE_NOMER.split(t))
+
+    out, i, f = [], 0, s[a:b]
+    for m in NE_TROGAT.finditer(f):
+        out.append(kus(f[i:m.start()]))
+        out.append(m.group(0))
+        i = m.end()
+    out.append(kus(f[i:]))
+    return s[:a] + "".join(out) + s[b:]
+
+
 def fragment(s):
     """Типографика куска HTML целиком: служебные блоки сборщиков, скрипты, стили и комментарии не трогаем.
     Для оболочки (шапка, подвал — tests/sobrat_shapku.py), статей и страниц из STRANICY — одни правила."""
@@ -180,7 +211,7 @@ def main(argv):
     izm = []
     for p, teg in stranicy():
         s = p.read_text(encoding="utf-8")
-        nov = statya(s, teg) if teg else fragment(s)
+        nov = nomera(statya(s, teg), teg) if teg else fragment(s)
         if nov != s:
             izm.append(str(p.relative_to(ROOT)))
             if not check:

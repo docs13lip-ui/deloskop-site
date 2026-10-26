@@ -57,7 +57,8 @@ test('sobrat_shapku: обложка — одна на странице и не �
   const src = fs.readFileSync(path.join(K, 'tests/sobrat_shapku.py'), 'utf8');
   assert.match(src, /txt = og_oblozhka\(txt\)/);
   for (const f of stranicy()) {
-    const n = golova(f).split(OBL).length - 1;
+    // obraz-statej-v1: тот же адрес бывает и в image разметки Article (если JSON-LD в <head>) — считаем мету og:image
+    const n = golova(f).split('<meta property="og:image" content="' + OBL + '">').length - 1;
     assert.ok(n <= 1, f + ': обложка ' + n + ' раз');
   }
 });

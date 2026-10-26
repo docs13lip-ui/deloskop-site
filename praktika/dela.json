@@ -16,7 +16,7 @@
     "nalogi/nagruzka/index.html": ["podarok-ot-roditelya-ip-ndfl-vs-2026", "droblenie-uplachennaya-usn-zachityvaetsya", "zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/nagruzka-po-otraslyam-2025/index.html": ["zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/priznaki-tehnicheskoj-kompanii/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke"],
-    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026"],
+    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026"],
     "pasport/index.html": ["proverka-kontragenta-na-datu-sdelki"],
     "nalogi/svezhest-dannyh-proverki-kontragenta/index.html": ["proverka-kontragenta-na-datu-sdelki"],
     "nalogi/pismo-o-smene-rekvizitov-kak-proverit/index.html": ["dvojnik-postavshchika-bank-poluchatelya"],
@@ -24,10 +24,67 @@
     "nalogi/izmeneniya-egryul-kontragenta/index.html": ["reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p"],
     "nalogi/kody-statusa-egryul/index.html": ["reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p"],
     "nalogi/nedostovernyj-adres-egryul/index.html": ["isklyuchili-iz-egryul-dolg-s-direktora"],
-    "nalogi/skolko-platit-vpered-neznakomoj-kompanii/index.html": ["nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "isklyuchili-iz-egryul-dolg-s-direktora", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026"],
+    "nalogi/skolko-platit-vpered-neznakomoj-kompanii/index.html": ["nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "isklyuchili-iz-egryul-dolg-s-direktora", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026"],
     "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"]
   },
   "razbory": [
+    {
+      "razdel": "dogovory",
+      "slug": "zalog-odna-veshch-iz-pyati-vs-2026",
+      "h1": "Залог дороже долга в четыре раза. Можно ли забрать хотя бы экскаватор?",
+      "title": "Залог техники: можно ли забрать одну вещь из пяти — разбор ВС",
+      "description": "Долг — почти четверть стоимости залога, просрочка семь месяцев. Суды отказали: залог «слишком дорогой». ВС разрешил обратить взыскание на часть вещей.",
+      "zapros": "обращение взыскания на часть заложенного имущества несоразмерность",
+      "data": "2026-10-26",
+      "minut": 4,
+      "lid": "Поставщик отгружал товар покупателю, а долг обеспечил поручитель — залогом пяти единиц своей техники. Покупатель не заплатил около 4,9 млн ₽. Три суда отказали обратить взыскание: залог стоит 22 млн ₽ — это несоразмерно. Верховный суд отменил все три акта.",
+      "dela": [
+        {
+          "sud": "Верховный суд РФ, Судебная коллегия по экономическим спорам",
+          "sud_kratko": "ВС",
+          "akt": "Определение",
+          "nomer": "№ 305-ЭС25-14813",
+          "data": "2026-06-03",
+          "delo": "Обращение взыскания на пять единиц техники в залоге у поручителя при долге около четверти стоимости залога (№ А40-216070/2024); резолютивная часть — 25.05.2026; Обзор судебной практики ВС № 3 (2026), п. 12",
+          "na_konu": "4 889 268,10 ₽ долга по поставкам и 200 000 ₽ неустойки; залог — 22 млн ₽",
+          "na_konu_kratko": "≈ 4,9 млн ₽",
+          "itog": "На новое рассмотрение",
+          "itog_nov": false,
+          "istochnik": "https://vsrf.ru/lk/practice/stor_pdf_ec/2545792",
+          "istochnik_podpis": "vsrf.ru — текст определения; сверено 26.10",
+          "sverka": "2026-10-26"
+        }
+      ],
+      "knopka": {
+        "zagolovok": "Отгружаете с отсрочкой под залог — сначала проверьте покупателя",
+        "tekst": "Проверка по ИНН: долги у приставов, приостановки по счетам и признаки банкротства — на дату проверки. Проверьте и поручителя.",
+        "knopka": "Проверить покупателя по ИНН",
+        "url": "/",
+        "cel": "razbor29_check",
+        "slezh": {
+          "knopka": "Следить за покупателем",
+          "url": "/cabinet.html#watch",
+          "cel": "razbor29_slezh"
+        }
+      },
+      "zakon": [
+        [
+          "п. 2 ст. 348 ГК РФ — когда в обращении взыскания на залог отказывают; п. 4 ст. 339.1 ГК РФ — учёт залога движимого",
+          "ред. на 26.10.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_5142/"
+        ],
+        [
+          "п. 56 постановления Пленума ВС РФ от 27.06.2023 № 23 — соразмерность при залоге нескольких вещей",
+          "",
+          [["п. 56 Пленума — цитата в тексте определения ВС", "https://vsrf.ru/lk/practice/stor_pdf_ec/2545792"]]
+        ]
+      ],
+      "pohozhie": [
+        "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026",
+        "kompensaciya-poter-406-1-vs-2026",
+        "nalogovyj-arest-zalog-v-bankrotstve-postavshchika"
+      ]
+    },
     {
       "razdel": "dogovory",
       "slug": "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026",

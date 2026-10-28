@@ -841,6 +841,10 @@ def iz_api(spisok, vyhod, api="https://api.deloskop.ru", pauza=6.0, maks=MAKS_ZA
     propusk = {"opub": 0, "otsev": 0}
     if not zanovo:
         opub, otsev = kv.ne_sprashivat(segodnya_msk(), KOREN)
+        if sluzhebnyj:
+            # kartochki-anonim-v1 ([Ночные-2] 28.10): «нет финансов» в отсеве мог дать анонимный ответ (он приходит без
+            # финансов) — со служебным доступом такие ИНН спрашиваем снова; остальные причины отсева в силе
+            otsev = otsev - otsev_net_fin()
         propusk = {"opub": sum(1 for s in inns if s in opub), "otsev": sum(1 for s in inns if s in otsev and s not in opub)}
         inns = [s for s in inns if s not in opub and s not in otsev]
     if propusk["opub"] or propusk["otsev"]:
@@ -848,6 +852,9 @@ def iz_api(spisok, vyhod, api="https://api.deloskop.ru", pauza=6.0, maks=MAKS_ZA
             propusk["opub"], propusk["otsev"], kv.OTSEV_DNEJ))
     inns = inns[:max(0, int(maks))]
     print("Служебный доступ: %s · к запросу: %d ИНН (не больше %d за запуск)" % ("да" if sluzhebnyj else "нет — анонимно, 10 проверок в день", len(inns), maks))
+    if not sluzhebnyj and osvezhit is None and inns:
+        print("Внимание: анонимный /api/check отдаёт реестр без финансов — новые карточки не пройдут ворота «нет финансов», "
+              "в отсев такие ответы не пишутся (kartochki-anonim-v1). Новые компании — со служебным доступом.")
     ok = oshibki = 0
     with open(vyhod, "a", encoding="utf-8") as fh:
         for i, inn in enumerate(inns, 1):
@@ -862,6 +869,7 @@ def iz_api(spisok, vyhod, api="https://api.deloskop.ru", pauza=6.0, maks=MAKS_ZA
                 for pole in ("phones", "emails", "phone", "email"):
                     c.pop(pole, None)
                 r["_poluchen_msk"] = poluchen_msk()  # kartochki-msk-v1: дата проверки по Москве, не по UTC сервера
+                r["_dostup"] = "sluzhebnyj" if sluzhebnyj else "anonimno"  # kartochki-anonim-v1: каким доступом получен ответ
                 fh.write(json.dumps(r, ensure_ascii=False) + "\n")
                 fh.flush()
                 ok += 1
@@ -898,14 +906,32 @@ def vorota_zapisi(r):
     return vorota(k, vyvody(k))
 
 
+def otsev_net_fin(put=None):
+    """kartochki-anonim-v1: ИНН, которые в отсеве только из-за «нет финансов»."""
+    return {inn for inn, (_, pr) in kv.chitat_otsev(put or kv.OTSEV).items() if NET_FIN in pr}
+
+
+def neyasnye_otvety(zapisi):
+    """kartochki-anonim-v1 ([Ночные-2] 28.10): анонимный /api/check отдаёт реестр без финансов (сверено 28.10 живым
+    ответом: в досье нет ни выручки, ни графика доходов). «Нет финансов» по такому ответу — неполный ответ, а не
+    сведения о компании: в отсев не пишем и прежнюю запись отсева им не снимаем. Ответ без пометки _dostup (старые
+    файлы) считаем полным, как раньше."""
+    out = set()
+    for r in zapisi:
+        if r.get("_dostup") == "anonimno" and vorota_zapisi(r)[1] == NET_FIN:
+            out.add(re.sub(r"\D", "", str((r.get("company") or {}).get("inn") or "")))
+    return out
+
+
 def otsev(vhod, segodnya=None, put=None):
     """Дописывает в отсев ИНН из vhod (.jsonl), не прошедшие ворота публикации; прошедшие — из отсева убирает."""
     put = put or kv.OTSEV
     segodnya = segodnya or segodnya_msk()
     staryj = kv.chitat_otsev(put)
     zapisi = chitat_jsonl(vhod)
-    novye = kv.otsev_iz_otveta(zapisi, segodnya, vorota_zapisi)
-    proshli = {re.sub(r"\D", "", str((r.get("company") or {}).get("inn") or "")) for r in zapisi} - set(novye)
+    neyasnye = neyasnye_otvety(zapisi)
+    novye = {i: v for i, v in kv.otsev_iz_otveta(zapisi, segodnya, vorota_zapisi).items() if i not in neyasnye}
+    proshli = {re.sub(r"\D", "", str((r.get("company") or {}).get("inn") or "")) for r in zapisi} - set(novye) - neyasnye
     itog = {i: v for i, v in staryj.items() if i not in proshli}
     itog.update(novye)
     kv.zapisat_otsev(itog, put)

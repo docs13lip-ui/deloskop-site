@@ -91,8 +91,10 @@
     box.appendChild(ryad);
     var pr = doc.createElement("p");
     pr.className = "cherez__pro";
-    pr.textContent = "Пароль от " + spisok.map(function (p) { return p.imya; }).join(" и ") +
-      " мы не видим: нам придут только имя и почта. По почте найдём ваш кабинет или создадим новый.";
+    // площадка передаёт и номер профиля — «только имя и почта» было бы неточно (152-ФЗ)
+    pr.textContent = nb("Пароль от " + spisok.map(function (p) { return p.imya; }).join(" и ") +
+      " мы не видим. " + (spisok.length > 1 ? "Площадка" : spisok[0].imya) +
+      " передаст нам имя, почту и номер профиля — по почте найдём ваш кабинет или создадим новый.");
     box.appendChild(pr);
     box.addEventListener("click", function (e) {
       var a = e.target.closest ? e.target.closest("[data-cherez]") : null;

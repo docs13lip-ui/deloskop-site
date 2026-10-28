@@ -120,6 +120,8 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
 .zsk .zg ul{margin:2px 0 0;padding-left:18px}
 .zsk .zd{font-size:12px;color:var(--muted);margin-top:10px}
 .zsk a.cbr{display:inline-block;margin-top:10px;font-weight:600}
+.zsk .zvz{margin:10px 0 0;font-size:15px;color:var(--ink2);max-width:62ch}
+.zsk .zvz a{font-weight:600}
 .zsk .zgt{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin-top:6px}
 .zsk .zw{margin:4px 0 0;font-size:15px;color:var(--ink2)}
 .zsk .zdo{margin:4px 0 6px;font-size:15px}.zsk .zdo span{font-weight:600}
@@ -463,6 +465,8 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
       (z.groups.length?'<div class="zg"><div class="zgt">Типологии, по которым совпали признаки</div>'+z.groups.map(function(g){return '<b>'+esc(g.typology)+'</b><ul>'+g.items.map(function(i){return '<li>'+esc(i)+'</li>'}).join('')+'</ul>'+
         (g.why?'<p class="zw">'+esc(g.why)+'</p>':'')+(g.todo?'<p class="zdo"><span>Что сделать:</span> '+esc(g.todo)+'</p>':'')}).join('')+'</div>':'')+
       '<a class="cbr noprint" href="'+esc(z.cbr_url)+'" target="_blank" rel="noopener">Проверить красную зону на сайте ЦБ →</a>'+
+      // zsk-vzyskatel-v1 (п. 413): взыскателю при высоком и среднем прогнозе — разбор ВС № 305‑ЭС25‑1505; фраза — из лида разбора, исход не обещаем
+      (z.level==='high'||z.level==='medium'?'<p class="zvz noprint">Взыскиваете с&nbsp;этой компании долг по&nbsp;суду? Отнесение должника к&nbsp;высокому риску само по&nbsp;себе не&nbsp;основание отказать взыскателю&nbsp;— <a href="/praktika/115-fz/zsk-dolzhnika-sudebnyj-prikaz/" data-goal="zsk_vzyskatel">разбор ВС №&nbsp;305‑ЭС25‑1505</a></p>':'')+
       '<div class="zd">'+esc(z.disclaimer)+(z.sources&&z.sources.length?' Основа типологий: '+z.sources.map(function(x){return '<a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.title)+'</a>'}).join('; ')+'.':'')+'</div></div>';}
   // Индекс — только за «воротами полноты» (п. 71, 81): число 1–99 и зона — когда сервер разрешил; иначе «считаем, собрано N %».
   function indeksHtml(r){

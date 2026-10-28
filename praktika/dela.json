@@ -11,9 +11,9 @@
     "115-fz/zapros-banka-po-115-fz-kak-otvetit/index.html": ["shtraf-banka-za-dokumenty-115-fz", "otklyuchili-internet-bank"],
     "115-fz/zsk-zony-riska/index.html": ["krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "zagraditelnye-komissii", "isklyuchili-iz-egryul-dolg-s-direktora", "zsk-dolzhnika-sudebnyj-prikaz", "kriterii-zsk-ne-otmenit-vs"],
     "115-fz/proverit-kontragenta-zsk-po-inn/index.html": ["kriterii-zsk-ne-otmenit-vs"],
-    "nalogi/statya-54-1-nk-prostymi-slovami/index.html": ["podarok-ot-roditelya-ip-ndfl-vs-2026", "razryv-nds-v-cepochke-krascvetmet", "vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke", "droblenie-uplachennaya-usn-zachityvaetsya", "povtornaya-vyezdnaya-proverka-vs-2026", "podryadchik-ne-vystavil-schet-fakturu"],
+    "nalogi/statya-54-1-nk-prostymi-slovami/index.html": ["utochnenka-i-peni-ens", "podarok-ot-roditelya-ip-ndfl-vs-2026", "razryv-nds-v-cepochke-krascvetmet", "vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke", "droblenie-uplachennaya-usn-zachityvaetsya", "povtornaya-vyezdnaya-proverka-vs-2026", "podryadchik-ne-vystavil-schet-fakturu"],
     "nalogi/nds-postavshchika-na-usn-po-inn/index.html": ["nds-postavshchika-usn-cena-dogovora", "podryadchik-ne-vystavil-schet-fakturu"],
-    "nalogi/nagruzka/index.html": ["podarok-ot-roditelya-ip-ndfl-vs-2026", "droblenie-uplachennaya-usn-zachityvaetsya", "zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
+    "nalogi/nagruzka/index.html": ["utochnenka-i-peni-ens", "podarok-ot-roditelya-ip-ndfl-vs-2026", "droblenie-uplachennaya-usn-zachityvaetsya", "zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/nagruzka-po-otraslyam-2025/index.html": ["zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/priznaki-tehnicheskoj-kompanii/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke"],
     "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026"],
@@ -28,6 +28,67 @@
     "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"]
   },
   "razbory": [
+    {
+      "razdel": "nalogi",
+      "slug": "utochnenka-i-peni-ens",
+      "h1": "Пени за 2019 год «давно просрочены». Почему Верховный суд оставил их в ЕНС?",
+      "title": "Уточнёнка за 2019 год и пени в ЕНС: сроки не прошли (ВС, 2026)",
+      "description": "ВС 25.09.2026 № 306-ЭС26-4683: компания до 2023 года уточняла НДС за 2019 год — и 116 тыс. ₽ пеней остались в ЕНС. От чего на самом деле считают сроки.",
+      "zapros": "пени в ЕНС за старые периоды уточнённая декларация",
+      "data": "2026-10-28",
+      "minut": 3,
+      "lid": "Три суда решили, что сроки взыскания пеней по НДС за 2019 год давно прошли, и велели убрать 116 тыс. ₽ из ЕНС. Верховный суд отменил эти решения: компания сама уточняла декларации за эти кварталы до 2023 года. Разбираем, от чего на самом деле считаются сроки.",
+      "dela": [
+        {
+          "sud": "Верховный суд РФ, Судебная коллегия по экономическим спорам",
+          "sud_kratko": "ВС",
+          "akt": "Определение",
+          "nomer": "№ 306-ЭС26-4683",
+          "data": "2026-09-25",
+          "delo": "ООО «Стройцентр» против УФНС по Ульяновской области (№ А72-16379/2024) — пени в ЕНС; резолютивная часть — 23.09.2026",
+          "na_konu": "116 027,07 ₽ пеней по НДС за III и IV кварталы 2019 года (весь спор — 5 764 124,51 ₽ пеней)",
+          "na_konu_kratko": "≈ 116 тыс. ₽",
+          "itog": "В пользу налоговой",
+          "itog_nov": false,
+          "istochnik": "https://vsrf.ru/lk/practice/stor_pdf_ec/2570098",
+          "istochnik_podpis": "vsrf.ru — текст определения; сверено 28.10",
+          "sverka": "2026-10-28"
+        }
+      ],
+      "knopka": {
+        "zagolovok": "Ваша компания глазами налоговой",
+        "tekst": "Проверка по ИНН: статус в ЕГРЮЛ, долги по налогам и уплаченные налоги по открытым данным ФНС на дату проверки.",
+        "knopka": "Проверить свою компанию",
+        "url": "/",
+        "cel": "razbor30_check"
+      },
+      "zakon": [
+        [
+          "п. 9.1 ст. 88 НК РФ — уточнённая декларация во время камеральной проверки (как в определении ВС)",
+          "",
+          "https://www.consultant.ru/document/cons_doc_LAW_19671/"
+        ],
+        [
+          "п. 5 ст. 11.3 НК РФ — из чего складывается обязанность в ЕНС",
+          "",
+          "https://www.consultant.ru/document/cons_doc_LAW_19671/"
+        ],
+        [
+          "ст. 46, 47 и 70 НК РФ — требование и сроки взыскания",
+          "",
+          "https://www.consultant.ru/document/cons_doc_LAW_19671/"
+        ],
+        [
+          "Определение СКЭС ВС РФ от 25.09.2026 № 306-ЭС26-4683 — полный текст",
+          "",
+          "https://vsrf.ru/lk/practice/stor_pdf_ec/2570098"
+        ]
+      ],
+      "pohozhie": [
+        "povtornaya-vyezdnaya-proverka-vs-2026",
+        "droblenie-uplachennaya-usn-zachityvaetsya"
+      ]
+    },
     {
       "razdel": "dogovory",
       "slug": "zalog-odna-veshch-iz-pyati-vs-2026",

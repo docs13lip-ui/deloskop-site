@@ -18,10 +18,14 @@ main = rd('index.html')
 # glavnaya-v2 (01.10): на главной — не карточки тарифов, а строка «Сколько стоит» с ценами из tarify.json;
 # калькулятор ошибки — на своей странице /nalogi/kalkulyator-tehnicheskij-postavshchik/
 nbr = lambda x: f'{x:,}'.replace(',', '\u00a0')
-for tid in ('start', 'pro', 'biznes'):
-    ok(f'главная: {tid} — цена месяца из tarify.json', f'<span data-cena="{tid}.mesyac">{nbr(T[tid]["mesyac"])}</span>' in main)
-ok('главная: строка «Сколько стоит» — скидка за год из tarify.json (20%)',
-   all(round((1 - T[x]['god'] / (T[x]['mesyac'] * 12)) * 100) in (20, 21) for x in ('start', 'pro', 'biznes')) and 'на&nbsp;20% дешевле' in main)
+# glavnaya-a-v1 (31.10.2026, схема А, решение 0яи): блок #price — «Условия» без цен (метка data-ceny-net); цены — только на /tarify/
+if 'data-ceny-net' in main:
+    ok('главная: цен нет — «Условия» (data-ceny-net), цены на /tarify/', 'data-cena=' not in main and 'data-ceny-stroka' not in main)
+else:
+    for tid in ('start', 'pro', 'biznes'):
+        ok(f'главная: {tid} — цена месяца из tarify.json', f'<span data-cena="{tid}.mesyac">{nbr(T[tid]["mesyac"])}</span>' in main)
+    ok('главная: строка «Сколько стоит» — скидка за год из tarify.json (20%)',
+       all(round((1 - T[x]['god'] / (T[x]['mesyac'] * 12)) * 100) in (20, 21) for x in ('start', 'pro', 'biznes')) and 'на&nbsp;20% дешевле' in main)
 ok('главная: кнопок оплаты нет — они на /tarify/', 'data-tarif=' not in main and 'Оплачивать помесячно' not in main)
 ok('главная: ссылка на /tarify/', 'href="/tarify/"' in main)
 ok('главная: ссылка на калькулятор', 'href="/nalogi/kalkulyator-tehnicheskij-postavshchik/"' in main)

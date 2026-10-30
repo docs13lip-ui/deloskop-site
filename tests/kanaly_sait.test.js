@@ -53,7 +53,9 @@ test('/boty/: пока ссылок нет — noindex и не в sitemap; кн�
 test('главная: кнопка «Написать в MAX» есть, но скрыта, пока нет ссылки; кабинет подставляет ИНН из ссылки бота', () => {
   const s = chitat('index.html');
   assert.ok(s.includes('<script src="/js/kanaly.js" defer></script>'));
-  assert.ok(/<p class="note kanaly-glav" data-kanaly-blok hidden><a data-kanal="max" hidden>Написать в&nbsp;MAX<\/a>/.test(s));
+  // glavnaya-a-v1: строка ботов переехала из первого экрана в «Условия» (#price)
+  const pr = s.slice(s.indexOf('id="price"'), s.indexOf('</section>', s.indexOf('id="price"')));
+  assert.ok(/<p class="note kanaly-glav" data-kanaly-blok hidden>[^<]*<a data-kanal="max" hidden>в&nbsp;MAX<\/a>/.test(pr));
   const c = chitat('cabinet.html');
   const m = c.match(/var m=(\/\[\?&\]inn=[^;]+\/)\.exec\(location\.search\)/);
   assert.ok(m, 'нет подстановки ИНН');

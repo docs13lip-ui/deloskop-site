@@ -534,13 +534,17 @@ _m = open(_mp, encoding='utf-8').read()
 # в узлах <span data-cena="<тариф>.mesyac|god"> (их заполняет цикл ниже, как на /osnovatel/). Кнопок оплаты на главной нет.
 _m = BETA.primenit(_m, D.get('beta') is True)
 # chislo-bystryh-v1: «Бесплатно — N быстрых проверок в день» в строке цен — из gost_v_den (было «3» при лимите 10)
+# glavnaya-a-v1 (31.10.2026, схема А; решение 0яи — цен в публичных текстах нет): блок #price главной — «Условия» без цен,
+# секция помечена data-ceny-net. Тогда строки цен и «Старта» нет и не нужно; без метки строка цен обязательна, как раньше.
+_ceny_net = 'data-ceny-net' in _m
 _m, _nb = _re.subn(r'(<p class="lead" data-ceny-stroka>Бесплатно&nbsp;— )\d+&nbsp;быстр[а-яё]+ провер[а-яё]+ в&nbsp;день',
                    lambda mm: mm.group(1) + BYSTRYH.replace(' ', '&nbsp;', 1).replace(' в день', ' в&nbsp;день'), _m)
-if _nb != 1:
-    sys.exit('index.html: строка цен «Бесплатно — N быстрых проверок в день» не найдена (data-ceny-stroka)')
+if _nb != (0 if _ceny_net else 1):
+    sys.exit('index.html: строка цен «Бесплатно — N быстрых проверок в день» не найдена (data-ceny-stroka)' if not _ceny_net
+             else 'index.html: у #price метка data-ceny-net, а строка цен data-ceny-stroka осталась')
 # start390-glavnaya-v1 (10.10): в бете под строкой цен — стартовая цена «Старта», как на /tarify/ и в отчёте о проверке
 _m = _re.sub(r'<!--start-gl-->.*?<!--/start-gl-->', '', _m, flags=_re.S)
-_sgl = STV.stroka_glavnaya_beta(D)
+_sgl = '' if _ceny_net else STV.stroka_glavnaya_beta(D)
 if _sgl:
     _i = _m.index('<p class="lead" data-ceny-stroka>')
     _j = _m.index('</p>', _i) + len('</p>')

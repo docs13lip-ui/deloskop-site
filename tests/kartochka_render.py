@@ -4767,3 +4767,75 @@ _html_kartochki_do_ramki_daty = html_kartochki
 
 def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811 — kartochki-ramka-daty-v1
     return tipograf_kartochki(ramka_daty(_html_kartochki_do_ramki_daty(k, V, sosedi, kom, normy, cena, segodnya)))
+
+
+# ---------------------------------------------------------------- kartochki-bez-povtora-v1 (решение владельца 30.10 «уникальность»)
+# Внутри одной карточки «Что это значит для вас» повторял числа, уже сказанные выше: «С 2020 по 2025 год выручка выросла
+# в 3 раза — с 9,4 до 28,3 млрд ₽» стоял под тем же выводом «Разбора по цифрам», а «снова в плюсе: 1,2 млрд ₽ … убыток
+# 426 млн ₽» — под первым абзацем блока («снова прибыль, 1,2 млрд ₽, после убытка 426 млн ₽»). Читатель видит одно и то же
+# дважды, поиск — повтор шаблона. Правило: абзац блока, все числа которого (≥ 2: суммы ₽, проценты, «в N раза»; годы не в счёт)
+# уже названы в «Разборе по цифрам» или в абзацах выше, — снимаем. Абзац с заголовком (<b>) и подпись ◆ — всегда на месте;
+# абзац с советом (попросите, пропишите, этапами, аванс…) — тоже; блок не короче ZN_MIN_SLOV (60) слов; новых утверждений нет. Чистая функция по разметке, повтор — те же байты; через vstavit_znachit — и новые карточки, и API,
+# и опубликованные (perepechatat).
+_BP_CHISLO = re.compile(r"[−-]?\d+(?:[   ]\d{3})*(?:,\d+)?[   ]*(?:трлн|млрд|млн|тыс\.)?[   ]*(?:₽|%)"
+                        r"|в[   ]+\d+(?:,\d+)?[   ]+раза?\b")
+_BP_RAZBOR = re.compile(r'<section class="co-sec co-razbor"[^>]*>.*?</section>', re.S)
+_BP_ZNACHIT = re.compile(r'(<section class="co-sec co-znachit"[^>]*>)(.*?)(</section>)', re.S)
+_BP_P = re.compile(r"<p(?: class=\"([^\"]*)\")?>.*?</p>", re.S)
+_BP_SOVET = re.compile(r"попрос|пропиш|спрос|провер|запрос|оплач|этап|договор|сверь|плат|аванс|подпис|аккредитив", re.I)
+
+
+def _bp_chisla(frag):
+    s = html.unescape(re.sub(r"<[^>]+>", "", frag))
+    return {re.sub(r"[\s  ]+", " ", x).strip() for x in _BP_CHISLO.findall(s)}
+
+
+def bez_povtora(t):
+    """kartochki-bez-povtora-v1: абзац «Что это значит» без новых чисел против «Разбора» и абзацев выше — снят. Идемпотентна."""
+    if not t:
+        return t
+    z = _BP_ZNACHIT.search(t)
+    if not z:
+        return t
+    r = _BP_RAZBOR.search(t)
+    vidno = set()
+    if r:
+        for p in _BP_P.finditer(r.group(0)):
+            if "caption" not in (p.group(1) or ""):
+                vidno |= _bp_chisla(p.group(0))
+    telo = z.group(2)
+    chasti, pos, pervyj, snyat = [], 0, True, set()
+    for p in _BP_P.finditer(telo):
+        chasti.append(telo[pos:p.start()])
+        chasti.append(p)
+        pos = p.end()
+    chasti.append(telo[pos:])
+
+    def slov(bez):  # как сторож test_kartochki_znachit: слова абзацев без класса, кроме последнего
+        abz = [x.group(0) for i, x in enumerate(chasti) if not isinstance(x, str) and i not in bez and not x.group(1)]
+        return sum(len(_zn_txt(re.sub(r"^<p>|</p>$", "", a)).split()) for a in abz[:-1])
+
+    for i, p in enumerate(chasti):
+        if isinstance(p, str):
+            continue
+        frag = p.group(0)
+        ch = _bp_chisla(frag)
+        # совет («Крупный аванс — этапами…») — новое, даже если числа те же: абзац с советом не снимаем
+        sluzh = "caption" in (p.group(1) or "") or "<b>" in frag or pervyj or bool(_BP_SOVET.search(frag))
+        pervyj = False
+        if not sluzh and len(ch) >= 2 and ch <= vidno and slov(snyat | {i}) >= ZN_MIN_SLOV:
+            snyat.add(i)  # блок не короче ZN_MIN_SLOV слов — иначе повтор остаётся
+            continue
+        vidno |= ch
+    out = [x if isinstance(x, str) else x.group(0) for i, x in enumerate(chasti) if i not in snyat]
+    novoe = "".join(out)
+    if novoe == telo:
+        return t
+    return t[:z.start(2)] + novoe + t[z.end(2):]
+
+
+_vstavit_znachit_do_povtora = vstavit_znachit
+
+
+def vstavit_znachit(t):  # noqa: F811 — kartochki-bez-povtora-v1: пересобранный блок — без абзацев-повторов
+    return bez_povtora(_vstavit_znachit_do_povtora(t))

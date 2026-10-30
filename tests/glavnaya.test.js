@@ -25,9 +25,9 @@ test('порядок блоков: hero → входы → витрина → Щ
 
 test('первый экран: H1, title и description по ТЗ', () => {
   // glavnaya-h1-v1 (Продукт 23.10, С1): H1 — главный запрос, как начало title; лозунг — крупной строкой под ним (не заголовок)
-  assert.match(G, /<h1 class="hero-h1">Проверка контрагента по&nbsp;ИНН<\/h1>/);
+  // glavnaya-a-v1 (31.10, схема А, ТЗ [Продукт] блок 1): одна H1 в два уровня — запрос и обещание (лозунг теперь внутри H1)
+  assert.match(G, /<h1 class="hero-h1"><span class="h1-kicker">Проверка контрагента по&nbsp;ИНН<\/span> <span class="glavnaya-display">Проверьте контрагента\. Поймите, что сделать до&nbsp;оплаты\.<\/span><\/h1>/);
   assert.strictEqual((G.match(/<h1\b/g) || []).length, 1, 'на главной один H1');
-  assert.match(G, /<p class="glavnaya-display">Перед оплатой&nbsp;— проверить\. Если банк спросил&nbsp;— ответить\.<\/p>/);
   assert.ok(/^Проверка контрагента по ИНН/.test(/<title>([^<]+)<\/title>/.exec(G)[1]), 'title начинается с того же запроса, что H1');
   // Д2: размеры лозунга — по шкале ДС (48 / 32), не clamp до 60
   assert.match(G, /\.glavnaya-display\{font-size:48px;/);
@@ -54,10 +54,10 @@ test('«Разборы дел»: 3 карточки, все адреса сущ�
   assert.match(chitat('js/metrika.js'), /praktika_cta", \{ otkuda: "glavnaya"/);
 });
 
-test('FAQ: 6 вопросов, FAQPage = видимым вопросам', () => {
+test('FAQ: 7 вопросов, FAQPage = видимым вопросам', () => {
   // tipograf-tarify-v1: в вопросах — &nbsp; типографа; в JSON-LD — обычный текст
   const vidnye = [...MAIN.matchAll(/<summary>([^<]+)<\/summary>/g)].map((m) => m[1].replace(/&nbsp;/g, ' '));
-  assert.strictEqual(vidnye.length, 6);
+  assert.strictEqual(vidnye.length, 7); // glavnaya-a-v1: + «Нашли ошибку?»
   const ld = JSON.parse(/<!--ld-glavnaya--><script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(G)[1]);
   const faq = ld.find((x) => x['@type'] === 'FAQPage');
   assert.deepStrictEqual(faq.mainEntity.map((q) => q.name), vidnye);
@@ -77,13 +77,10 @@ test('запретное на главной: «скоро», персональ
   }
 });
 
-test('цены на главной — только строкой из tarify.json, кнопок оплаты нет', () => {
-  const T = JSON.parse(chitat('tarify/tarify.json'));
-  for (const x of T.tarify.filter((x) => x.mesyac)) {
-    const m = new RegExp('<span data-cena="' + x.id + '\\.mesyac">([^<]+)</span>').exec(G);
-    assert.ok(m, 'нет цены ' + x.id);
-    assert.strictEqual(+m[1].replace(/\D/g, ''), x.mesyac);
-  }
+test('главная без цен (0яи, glavnaya-a-v1): блок «Условия», кнопок оплаты нет', () => {
+  const pr = G.slice(G.indexOf('id="price"'), G.indexOf('</section>', G.indexOf('id="price"')));
+  assert.match(pr, /data-ceny-net/);
+  assert.ok(!/data-cena=|data-ceny-stroka|₽/.test(pr), 'в «Условиях» нет цен');
   assert.ok(!/data-tarif=|href="\/schet\//.test(G));
   assert.match(MAIN, /href="\/tarify\/"/);
 });

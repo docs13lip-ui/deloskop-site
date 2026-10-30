@@ -34,6 +34,6 @@ test("витрина: «Уведомления» у живых продукто�
   assert.ok(spisok && spisok.length > 5, "vitrina.json: нет списка экспонатов");
   for (const x of spisok) for (const u of x.umeet || [])
     if (/уведомл/i.test(u) && x.status === "zhivoe") assert.ok(/в разработке/.test(u), x.id + ": «" + u + "» — обещание без функции");
-  const glav = fs.readFileSync(path.join(K, "index.html"), "utf8");
-  assert.ok(!glav.includes("Уведомления туда, где"), "index.html отстал от vitrina.json — python3 tests/sobrat_vitrinu.py");
+  const glav = fs.readFileSync(path.join(K, "vse-vozmozhnosti/index.html"), "utf8");
+  assert.ok(!glav.includes("Уведомления туда, где"), "vse-vozmozhnosti/index.html отстал от vitrina.json — python3 tests/sobrat_vitrinu.py");
 });

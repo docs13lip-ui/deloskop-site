@@ -273,3 +273,10 @@
 .vit-k[aria-current] .vit-k__g{background:color-mix(in srgb,var(--accent) 22%,var(--surface,var(--card)))}
 @media (prefers-reduced-motion:reduce){.vit-ind{transition:none}}
 @media print{.vit-ind{display:none}}
+/* vse-vozmozhnosti-v1 (30.10.2026, схема А): на главной вместо зала — одна строка-вход на /vse-vozmozhnosti/; там же — блок показов */
+.vit-vhod{padding:56px 0}
+.vit-vhod .wrap{display:flex;flex-direction:column;gap:14px;max-width:760px}
+.vit-vhod .lead{margin:0}
+.vit-vhod__go{display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px;margin:8px 0 0}
+.vv .vit{padding-top:24px}
+@media (max-width:860px){.vit-vhod{padding:40px 0}}

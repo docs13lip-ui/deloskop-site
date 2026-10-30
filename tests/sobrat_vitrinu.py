@@ -330,10 +330,16 @@ def budushij(x):
     )
 
 
-def ld(ex):
+# vse-vozmozhnosti-v1 (30.10.2026, решение владельца «схема А»): зал витрины — на своей странице /vse-vozmozhnosti/;
+# на главной между теми же метками — короткий блок id="vitrina" со ссылкой туда (якорь /#vitrina не ломается).
+STRANICA = "vse-vozmozhnosti/index.html"
+ADRES = "https://deloskop.ru/vse-vozmozhnosti/"
+
+
+def ld(ex, baza=ADRES):
     spisok = [{
         "@type": "ListItem", "position": i + 1, "name": x["zag"],
-        "url": "https://deloskop.ru/#" + x["id"], "description": x["polza"],
+        "url": baza + "#" + x["id"], "description": x["polza"],
     } for i, x in enumerate(ex)]
     d = {"@context": "https://schema.org", "@type": "ItemList", "name": "Продукты Делоскопа",
          "itemListOrder": "https://schema.org/ItemListOrderAscending", "numberOfItems": len(spisok),
@@ -341,7 +347,7 @@ def ld(ex):
     return '<script type="application/ld+json">%s</script>' % json.dumps(d, ensure_ascii=False).replace("</", "<\\/")
 
 
-def blok(d):
+def blok(d, h="h1"):
     ex = d["eksponaty"]
     zal = d["zal"]
     zhivye = [x for x in ex if x["status"] != "razrabotka"]
@@ -364,11 +370,34 @@ def blok(d):
     return (
         NACH + nabor(ex) +
         '<section class="vit" id="vitrina" aria-labelledby="vitrina-h"><div class="wrap">'
-        '<header class="vit__head"><p class="eyebrow">%s</p><h2 class="h2" id="vitrina-h">%s</h2><p class="lead">%s</p></header>' % (
-            t(zal["nad"]), t(zal["zag"]), t(zal["lead"])) +
+        '<header class="vit__head"><p class="eyebrow">%s</p><%s class="h2" id="vitrina-h">%s</%s><p class="lead">%s</p></header>' % (
+            t(zal["nad"]), h, t(zal["zag"]), h, t(zal["lead"])) +
         '<nav class="vit__karta" aria-label="Карта витрины"><ul>%s</ul></nav>' % karta +
         '<ol class="vit__zal">%s</ol>%s</div></section>' % (zalhtml, skoro) +
         ld(ex) + KON
+    )
+
+
+def chislo(n, odin, dva, pyat):
+    n10, n100 = n % 10, n % 100
+    slovo = odin if n10 == 1 and n100 != 11 else dva if 2 <= n10 <= 4 and not 12 <= n100 <= 14 else pyat
+    return "%d&nbsp;%s" % (n, slovo)
+
+
+def korotkij(d):
+    """Главная (схема А): вместо зала — одна строка-вход на /vse-vozmozhnosti/; счёт продуктов — из того же JSON."""
+    ex = d["eksponaty"]
+    zal = d["zal"]
+    zhivyh = sum(1 for x in ex if x["status"] != "razrabotka")
+    budushih = len(ex) - zhivyh
+    hvost = (" и&nbsp;%s в&nbsp;разработке" % chislo(budushih, "направление", "направления", "направлений")) if budushih else ""
+    return (
+        NACH + '<section class="vit-vhod" id="vitrina" aria-labelledby="vitrina-h"><div class="wrap">'
+        '<p class="eyebrow">%s</p><h2 class="h2" id="vitrina-h">%s</h2>' % (t(zal["nad"]), t(zal["zag"])) +
+        '<p class="lead">%s работают сейчас%s: сделка, банк и&nbsp;налоговая, у&nbsp;каждого своя страница.</p>' % (
+            chislo(zhivyh, "продукт", "продукта", "продуктов"), hvost) +
+        '<p class="vit-vhod__go"><a class="vit-btn" href="/vse-vozmozhnosti/">Все возможности Делоскопа<span aria-hidden="true">→</span></a></p>'
+        '</div></section>' + KON
     )
 
 
@@ -453,7 +482,7 @@ def dubli(s, d, koren=KOREN):
 
 def sobrat(s, d, koren=KOREN):
     proverit(d, s)
-    b = blok(d)
+    b = korotkij(d)
     if NACH in s:
         a = s.index(NACH)
         z = s.index(KON, a) + len(KON)
@@ -464,27 +493,43 @@ def sobrat(s, d, koren=KOREN):
     return dubli(s[:m.end()] + "\n\n  " + b + s[m.end():], d, koren)
 
 
+def sobrat_stranicu(s, d):
+    """/vse-vozmozhnosti/: полный зал между метками (страница своя — без «дублей» главной)."""
+    proverit(d, s)
+    if NACH not in s:
+        raise Oshibka(STRANICA + ": нет меток <!--vitrina-->…<!--/vitrina-->")
+    a = s.index(NACH)
+    z = s.index(KON, a) + len(KON)
+    return s[:a] + blok(d) + s[z:]
+
+
 def main(argv):
-    put = os.path.join(KOREN, "index.html")
-    with open(put, encoding="utf-8") as f:
-        s = f.read()
-    try:
-        novoe = sobrat(s, dannye())
-    except Oshibka as o:
-        print("sobrat_vitrinu: " + str(o), file=sys.stderr)
-        return 2
+    d = dannye()
+    otstali, izmeneny = [], []
+    for imya, fn in (("index.html", sobrat), (STRANICA, sobrat_stranicu)):
+        put = os.path.join(KOREN, imya)
+        with open(put, encoding="utf-8") as f:
+            s = f.read()
+        try:
+            novoe = fn(s, d)
+        except Oshibka as o:
+            print("sobrat_vitrinu: " + str(o), file=sys.stderr)
+            return 2
+        if novoe == s:
+            continue
+        if "--check" in argv:
+            otstali.append(imya)
+        else:
+            with open(put, "w", encoding="utf-8") as f:
+                f.write(novoe)
+            izmeneny.append(imya)
     if "--check" in argv:
-        if novoe != s:
-            print("sobrat_vitrinu: index.html отстал от partials/vitrina.json — запустите python3 tests/sobrat_vitrinu.py", file=sys.stderr)
+        if otstali:
+            print("sobrat_vitrinu: %s отстал(и) от partials/vitrina.json — запустите python3 tests/sobrat_vitrinu.py" % ", ".join(otstali), file=sys.stderr)
             return 1
         print("sobrat_vitrinu: витрина совпадает с partials/vitrina.json")
         return 0
-    if novoe != s:
-        with open(put, "w", encoding="utf-8") as f:
-            f.write(novoe)
-        print("sobrat_vitrinu: index.html пересобран")
-    else:
-        print("sobrat_vitrinu: без изменений")
+    print("sobrat_vitrinu: " + (", ".join(izmeneny) + " пересобран(ы)" if izmeneny else "без изменений"))
     return 0
 
 

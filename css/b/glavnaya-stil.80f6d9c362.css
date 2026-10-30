@@ -510,6 +510,12 @@ border:1px solid var(--line);border-radius:999px;background:color-mix(in srgb,va
 .vit-k[aria-current] .vit-k__g{background:color-mix(in srgb,var(--accent) 22%,var(--surface,var(--card)))}
 @media (prefers-reduced-motion:reduce){.vit-ind{transition:none}}
 @media print{.vit-ind{display:none}}
+.vit-vhod{padding:56px 0}
+.vit-vhod .wrap{display:flex;flex-direction:column;gap:14px;max-width:760px}
+.vit-vhod .lead{margin:0}
+.vit-vhod__go{display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px;margin:8px 0 0}
+.vv .vit{padding-top:24px}
+@media (max-width:860px){.vit-vhod{padding:40px 0}}
 /* --- /css/vizual2.css --- */
 .ex-vid{display:flex;gap:4px;padding:4px;margin:18px 28px 2px;border-radius:999px;background:rgba(29,29,31,.05);width:max-content;max-width:calc(100% - 56px)}
 .ex-vid[hidden]{display:none}

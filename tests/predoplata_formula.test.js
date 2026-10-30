@@ -25,7 +25,8 @@ test('константы кода — в тексте страницы: дели
   const sroki = { 6: 'до' + NB + '6' + NB + 'месяцев', 12: 'до' + NB + 'года', 36: 'до' + NB + '3' + NB + 'лет', Infinity: 'старше' };
   M.POTOLKI.forEach(([m, sum]) => assert.ok(t.includes(sroki[m] + ' — ' + rub(sum)), 'потолок ' + m + ' → ' + sum));
   assert.strictEqual(M.OSTOROZHNO, false, 'правило «долги не проверены → половина» включили — допишите его в формулу на /indeks/');
-  assert.ok(U.prepayCap({ revenue: null, ageMonths: null }, 'go').cap === 1000000 && t.includes('Возраст тоже неизвестен — ' + rub(1000000)));
+  // doverie-v1: выручка и возраст неизвестны — предел не считаем (cap = null), и страница говорит то же
+  assert.ok(U.prepayCap({ revenue: null, ageMonths: null }, 'go').cap === null && t.includes('Возраст тоже неизвестен — предел не' + NB + 'считаем'));
 });
 
 test('округление в тексте = niceFloor', () => {

@@ -27,14 +27,14 @@
     var pc = U.prepayCap({ revenue: vyr, ageMonths: voz.m, vyruchkaNol: nol }, t);
     var R = pc.raschet || {}, shagi = [];
     if (t === 'post') return { itog: 0, shagi: ['Вывод «Только по факту» — вперёд не платить: оплата после поставки или акта.'] };
+    // doverie-v1: выручка и возраст неизвестны — предел не считаем (itog = null: не 0 ₽ и не сумма)
+    if (R.base === 'insufficient_data') return { itog: null, nedostatochno: true, shagi: ['Выручка и возраст неизвестны — предел не считаем: положительный предел из одних неизвестных не выводим.', 'Чего не хватает: дата регистрации и отчётность за прошлый год. До них — платите по факту поставки.'] };
     if (R.base === 'nol') return { itog: 0, nol: true, shagi: ['Отчёт за год сдан, а выручки в нём нет — выручку считаем нулевой.', '0' + NB + '₽ — советуем платить по факту поставки.'] };
     if (R.base === 'revenue') {
       shagi.push('Две недели выручки: ' + rub(R.revenue) + ' ÷ ' + U.METODIKA.DELITEL + ' = ' + rub(R.dveNedeli) + '.');
       if (R.ageCapped) shagi.push('Компании меньше года — не выше потолка для её возраста: ' + rub(R.byAge) + '.');
     } else if (R.base === 'age') {
       shagi.push('Выручки нет — потолок по возрасту (' + voz.t + '): ' + rub(R.byAge) + '.');
-    } else {
-      shagi.push('Выручка и возраст неизвестны — осторожный потолок: ' + rub(R.byAge) + '.');
     }
     if (R.half) shagi.push('Вывод «Можно с пределом» — половина: ' + rub(R.doPolovinu / 2) + '.');
     if (R.malo) shagi.push('Меньше ' + rub(U.METODIKA.MINIMUM) + ' — ориентир не ставим: советуем платить по факту.');
@@ -58,7 +58,7 @@
       var vyr = chislo(f.elements.vyruchka.value);
       if (nolBox) nolBox.hidden = !!vyr;                  // галочка — только когда выручка пустая или 0
       var r = raschet({ vyruchka: vyr, vozrast: f.elements.vozrast.value, vyvod: f.elements.vyvod.value, nol: !vyr && f.elements.nol && f.elements.nol.checked });
-      out.textContent = r.itog ? rub(r.itog) : '0' + NB + '₽';
+      out.textContent = r.itog == null && r.nedostatochno ? 'не считаем' : r.itog ? rub(r.itog) : '0' + NB + '₽';
       kak.innerHTML = '';
       r.shagi.forEach(function (s) { var li = doc.createElement('li'); li.textContent = s; kak.appendChild(li); });
     }

@@ -2406,28 +2406,62 @@ def _kom_rx(s):
         return None
 
 
+# kommentarii-signal-id-v1: код признака — signal_id / rule_id, иначе однозначный id ответа /api/check. Та же таблица, что
+# IZ_API в js/kommentarii.js и js/usloviya.js (сторож tests/test_kommentarii_signal_id.py сверяет).
+KOM_IZ_API = {
+    "tax_debt": "tax_debt", "employees": "shtat", "age": "vozrast",
+    "mass_address": "mass_address", "massovyj_adres": "mass_address", "mass_dir": "mass_dir", "massovyj_rukovoditel": "mass_dir",
+    "fssp": "fssp", "rnp": "rnp", "nedostovernost": "nedostovernost", "bankrotstvo": "bankrotstvo", "likvidaciya": "likvidaciya",
+    "reorganizaciya": "reorganizaciya", "diskvalifikaciya": "diskvalifikaciya", "priostanovki": "priostanovka", "shtrafy": "shtrafy",
+}
+
+
+def kom_kod(signal):
+    signal = signal or {}
+    for k in (signal.get("signal_id"), signal.get("rule_id")):
+        if k is not None and str(k).strip():
+            return str(k).strip()
+    i = signal.get("id")
+    return KOM_IZ_API.get(str(i)) if i is not None else None
+
+
+def _kom_itog(spisok, z):
+    if not z.get("kak"):
+        return z
+    for c in spisok:
+        if c.get("id") == z["kak"] and not c.get("kak"):
+            return c
+    return None
+
+
 def kom_zapis(sprav, signal):
-    """Первое совпадение сверху: re — по заголовку; uslovie — по «заголовок · деталь»; kak — тексты другой записи."""
+    """Сначала по коду признака (kody), затем первое совпадение сверху: re — по заголовку; uslovie — по «заголовок · деталь»;
+    kak — тексты другой записи. Переименование заголовка признака с кодом комментарий не теряет (kommentarii-signal-id-v1)."""
     signal = signal or {}
     title = str(signal.get("title") or "")
     if not title:
         return None
     vse = title + " · " + str(signal.get("detail") or "")
     spisok = (sprav or {}).get("signaly") or []
+
+    def uslovie_ok(z):
+        if not z.get("uslovie"):
+            return True
+        u = _kom_rx(z["uslovie"])
+        return bool(u and u.search(vse))
+
+    kod = kom_kod(signal)
+    if kod:
+        for z in spisok:
+            if kod in (z.get("kody") or []) and uslovie_ok(z):
+                return _kom_itog(spisok, z)
     for z in spisok:
         r = _kom_rx(z.get("re") or "")
         if not r or not r.search(title):
             continue
-        if z.get("uslovie"):
-            u = _kom_rx(z["uslovie"])
-            if not u or not u.search(vse):
-                continue
-        if not z.get("kak"):
-            return z
-        for c in spisok:
-            if c.get("id") == z["kak"] and not c.get("kak"):
-                return c
-        return None
+        if not uslovie_ok(z):
+            continue
+        return _kom_itog(spisok, z)
     return None
 
 

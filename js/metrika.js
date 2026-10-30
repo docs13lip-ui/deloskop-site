@@ -230,6 +230,12 @@
     var m = /^\/praktika\/[^/]+\/([^/]+)\//.exec(location.pathname);
     if (a && m) window.dlkGoal("praktika_cta", { slug: m[1], kuda: a.getAttribute("href") });
   }
+  // forma-razbora-v1 (30.10.2026): в блоке .dl разбора вместо ссылки — поле ИНН; отправка — тот же praktika_cta (sposob «forma»)
+  function izRazboraForma(e) {
+    var f = e.target && e.target.closest && e.target.closest(".pr .dl form");
+    var m = /^\/praktika\/[^/]+\/([^/]+)\//.exec(location.pathname);
+    if (f && m) window.dlkGoal("praktika_cta", { slug: m[1], kuda: f.getAttribute("action") || "/", sposob: "forma" });
+  }
 
   function start() {
     var v = chitat();
@@ -238,6 +244,7 @@
     document.addEventListener("click", izSsylki, true);
     document.addEventListener("submit", izFormy, true);
     document.addEventListener("click", izRazbora, true);
+    document.addEventListener("submit", izRazboraForma, true);
     // ссылка-кнопка с data-goal (например, главная кнопка статьи «ЗСК контрагента» → Паспорт): своя цель
     document.addEventListener("click", function (e) {
       var a = e.target && e.target.closest && e.target.closest("a[data-goal]");

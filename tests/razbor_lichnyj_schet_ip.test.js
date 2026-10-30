@@ -57,7 +57,8 @@ test('разбор № 8: 86 000 ₽ — только условный прим�
 
 test('разбор № 8: кнопка — проверка по ИНН с целью razbor8_check; строка на экране проверки есть', () => {
   const s = chitat(F);
-  assert.ok(s.includes('<a class="btn" href="/" data-goal="razbor8_check">'));
+  // forma-razbora-v1 (30.10): ИНН вводят прямо в блоке — форма на «/?inn=» с той же целью
+  assert.ok(s.includes('<form class="dl__f" action="/" method="get" data-goal="razbor8_check" data-otkuda="razbor">'));
   // правило [Право]: кнопку ставим, только если на экране проверки есть строка о приостановлении
   assert.ok(chitat('data/kommentarii.json').includes('"nazv": "Приостановление операций по счетам"'));
   assert.ok(chitat('js/metrika.js').includes('a[data-goal]'));

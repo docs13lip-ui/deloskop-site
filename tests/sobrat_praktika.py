@@ -308,7 +308,7 @@ def razbor(r, D, po_slug, F=None):
 <section class="dl" aria-label="Что сделать в Делоскопе"%(slezh)s>
 <h2>%(kz)s</h2>
 <p>%(kt)s</p>
-<a class="btn" href="%(ku)s"%(cel)s>%(kk)s</a>
+%(deystvie)s
 </section>
 <h2>Где в законе</h2>
 <ul class="zakon">
@@ -328,10 +328,45 @@ def razbor(r, D, po_slug, F=None):
 </html>
 """ % {"kr": kroshki_html(kr), "h1": e(r["h1"]), "data": r["data"], "data_ru": data_ru(r["data"]), "min": minut_ru(r["minut"]),
        "lid": e(r["lid"]), "kart": kartochki, "telo": telo, "kz": e(k["zagolovok"]), "kt": e(k["tekst"]), "ku": e(k["url"]),
-       "kk": e(k["knopka"]),
-       "cel": (' data-goal="%s"' % e(k["cel"])) if k.get("cel") else "", "slezh": slezh_attr(k), "slezh_js": '<script src="/js/slezh-knopka.js" defer></script>\n' if k.get("slezh") else "", "zakon": zakon, "faq": faq, "sv": sverka, "sv_ru": data_ru(sverka), "sver_fraza": sver_fraza(r, sverka), "sos": sos,
+       "deystvie": deystvie(k), "slezh": slezh_attr(k), "slezh_js": '<script src="/js/slezh-knopka.js" defer></script>\n' if k.get("slezh") else "", "zakon": zakon, "faq": faq, "sv": sverka, "sv_ru": data_ru(sverka), "sver_fraza": sver_fraza(r, sverka), "sos": sos,
        "sos_z": "Читайте также" if r.get("statyi") else "Похожие разборы"}
     return url, stranica
+
+
+# forma-razbora-v1 (30.10.2026, [Ночные запуски]): кнопка проверки по ИНН в блоке действия → поле ИНН и кнопка.
+# Было: «Проверить покупателя по ИНН» вела на главную, и там ИНН вводили заново — лишний экран между разбором и ответом.
+# Стало: ИНН вводят прямо под разбором, форма уходит на /?inn=… — главная сразу показывает отчёт (как формы статей /nalogi/).
+# Только кнопки на главную, где проверяют одну компанию: «… по ИНН», «Проверить по ИНН» и «Проверить свою компанию»;
+# «Проверить контрагентов» (много компаний), Скорая, Щит, выписка, Паспорт, «Проверь счёт» — ссылкой, как были.
+KOMU_INN = re.compile(r"^Проверить ([а-яё]+[ая]) по ИНН$")
+
+
+def forma_k(k):
+    """Блок действия разбора — форма с полем ИНН? (url «/» и кнопка про одну компанию)."""
+    kn = k["knopka"]
+    return k.get("url") == "/" and (bool(KOMU_INN.match(kn)) or kn == "Проверить по ИНН" or kn.startswith("Проверить свою компанию"))
+
+
+def pole_inn(knopka):
+    """Подпись поля из кнопки: «Проверить покупателя по ИНН» → «ИНН покупателя» (у одушевлённых винительный = родительный)."""
+    m = KOMU_INN.match(knopka)
+    if m:
+        return "ИНН " + m.group(1)
+    if knopka.startswith("Проверить свою компанию"):
+        return "ИНН вашей компании"
+    return "ИНН компании"
+
+
+def deystvie(k):
+    """Главное действие блока .dl: форма ИНН (forma_k) или ссылка-кнопка. Цель Метрики — та же (knopka.cel)."""
+    cel = (' data-goal="%s"' % e(k["cel"])) if k.get("cel") else ""
+    if not forma_k(k):
+        return '<a class="btn" href="%s"%s>%s</a>' % (e(k["url"]), cel, e(k["knopka"]))
+    p = pole_inn(k["knopka"])
+    return ('<form class="dl__f" action="/" method="get"%s data-otkuda="razbor">'
+            '<input name="inn" inputmode="numeric" autocomplete="off" maxlength="12" pattern="\\d{10}|\\d{12}" required'
+            ' placeholder="%s" aria-label="%s" title="10 цифр у компании, 12 — у ИП">'
+            '<button class="btn" type="submit">%s</button></form>') % (cel, e(p), e(p), e(k["knopka"]).replace(" по ИНН", " по" + NB + "ИНН"))
 
 
 def slezh_attr(k):

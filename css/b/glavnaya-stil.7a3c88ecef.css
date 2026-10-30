@@ -646,3 +646,5 @@ body::before{animation:none;transform:none}
 .sobir,.zhi-io .sobir,.zhi-io .sobir:not(.is-vidno){animation:none;transition:none;opacity:1;transform:none}
 }
 @media print{body::before,body::after{display:none}.report.ex{background:#fff;-webkit-backdrop-filter:none;backdrop-filter:none}}
+.meta a.avtor{color:inherit;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.2em;text-decoration-color:color-mix(in srgb,currentColor 45%,transparent)}
+.meta a.avtor:hover{text-decoration-color:currentColor}

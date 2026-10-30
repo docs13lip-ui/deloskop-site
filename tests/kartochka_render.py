@@ -4469,3 +4469,161 @@ def tipograf_kartochki(t, chisla=False):  # noqa: F811 — kartochki-korotkie-v1
     if not (chisla and t):
         return t
     return _TK_FACT.sub(lambda m: _TK_KOROTKIE_NB.sub(lambda k: k.group(1) + " ", m.group(0)), t)
+
+
+# ---------------------------------------------------------------- kartochki-balans-vyvody-v1 (30.10.2026, [Ночные-2])
+# Решение владельца 30.10 «уникальность — приоритет 1» и полоса Ночных-2 «почему факты и финансы не становятся выводами»:
+# раздел «Баланс и расчёты» показывал таблицы, а под ними — одна и та же фраза на 167 карточках («Суммы из бухгалтерской
+# отчётности на конец года, без оценок»). Выводов из баланса не было вовсе: у «ГК Самолет» кредиты — 1583 % выручки, и
+# об этом молчал весь текст. Теперь под таблицами — 1–3 предложения из чисел ЭТИХ таблиц: структура источников средств,
+# кредиты к выручке, кто кому должен в расчётах. Только арифметика по строкам страницы (◆ рассчитано), без оценок
+# компании (STOP_SLOVA), без норм права и советов. Читается со страницы — одинаково у новых карточек, у опубликованных
+# (perepechatat) и в ответе API. Повторный вызов — те же байты.
+_BV_SEK = re.compile(r'<section class="co-sec" aria-labelledby="bal">.*?</section>', re.S)
+_BV_W = r"(?:[ \u00a0]|&nbsp;|&#160;)"
+_BV_STARAYA = re.compile(r'<p class="small">Суммы из' + _BV_W + r'бухгалтерской отчётности на' + _BV_W + r'конец года, без' + _BV_W
+                         + r'оценок\.' + _BV_W + r'(Что они значат для' + _BV_W + r'сделки[^<]*)</p>')
+_BV_BLOK = re.compile(r'<p class="co-bal-vyv">.*?</p><p class="small">(Что они значат для' + _BV_W + r'сделки[^<]*)</p>', re.S)
+_BV_STROKA = re.compile(r'<tr><td>([^<]*)</td><td class="num">([^<]*)</td><td class="(?:num|co-mn)">([^<]*)</td></tr>')
+_BV_GOD = re.compile(r"баланс на[  ]31\.12\.(\d{4})")
+
+
+def _bv_t(s):
+    return re.sub(r"\s+", " ", html.unescape(s or "").replace(NB, " ").replace("‑", "-")).strip()
+
+
+def _bv_razy(x):
+    """2,34 → «в 2,3 раза»; 2,0 → «в 2 раза»; 16 → «в 16 раз»; 22 → «в 22 раза»."""
+    if x < 9.95:
+        s = ("%.1f" % x).replace(".", ",")
+        if s.endswith(",0"):
+            n = int(s[:-2])
+            return "в%s%d%s%s" % (NB, n, NB, "раза" if n in (2, 3, 4) else "раз")
+        return "в%s%s%sраза" % (NB, s, NB)
+    n = int(round(x))
+    return "в%s%d%s%s" % (NB, n, NB, "раза" if (n % 10 in (2, 3, 4) and n % 100 not in (12, 13, 14)) else "раз")
+
+
+def _bv_den(s):
+    """Ячейка «15,2 млрд ₽» → текст с неразрывными пробелами, как на странице."""
+    return _bv_t(s).replace(" ", NB)
+
+
+def bv_frazy(sek, im):
+    """Раздел баланса страницы → предложения выводов (может быть пусто)."""
+    st = {_bv_t(a): (b, _bv_t(c)) for a, b, c in _BV_STROKA.findall(sek)}
+    mg = _BV_GOD.search(_bv_t(sek).replace(" ", NB)) or _BV_GOD.search(_bv_t(sek))
+    god = mg.group(1) if mg else ""
+    fr = []
+    kap = st.get("Собственный капитал")
+    if kap and god and "меньше нуля" not in kap[1]:
+        m = re.match(r"^(\d+) %$", kap[1])
+        dol, kor = st.get("Долгосрочные обязательства"), st.get("Краткосрочные обязательства")
+        if m and dol and kor and re.match(r"^(?:меньше )?\d+ %$", dol[1]) and re.match(r"^(?:меньше )?\d+ %$", kor[1]):
+            p = int(m.group(1))
+            pd_, pk = dol[1].replace(" ", NB), kor[1].replace(" ", NB)
+            if p > 50:
+                fr.append("Больше половины источников средств %s на%s31.12.%s — собственный капитал: %d%s%%; обязательства — %d%s%% "
+                          "(долгосрочные %s, краткосрочные %s)." % (im, NB, god, p, NB, 100 - p, NB, pd_, pk))
+            else:
+                fr.append("Собственный капитал %s на%s31.12.%s — %d%s%% источников средств, остальные %d%s%% — обязательства: "
+                          "долгосрочные %s, краткосрочные %s." % (im, NB, god, p, NB, 100 - p, NB, pd_, pk))
+    kr = st.get("Кредиты и займы")
+    if kr:
+        m = re.match(r"^(\d+) % выручки за (\d{4})$", kr[1])
+        if m and int(m.group(1)) > 0:
+            pr, g = int(m.group(1)), m.group(2)
+            if pr >= 100:
+                fr.append("Кредиты и%sзаймы %s — %s, %s больше выручки за%s%s%sгод." % (NB, im, _bv_den(kr[0]), _bv_razy(pr / 100.0), NB, g, NB))
+            else:
+                fr.append("Кредиты и%sзаймы %s — %s, это %d%s%% выручки за%s%s%sгод." % (NB, im, _bv_den(kr[0]), pr, NB, NB, g, NB))
+    rec, pay = st.get("Фирме должны покупатели"), st.get("Фирма должна поставщикам")
+    if rec and pay:
+        a, b = zn_summa(rec[0]), zn_summa(pay[0])
+        if a and b and a > 0 and b > 0:
+            r = a / b
+            if r >= 1.2:
+                fr.append("Покупатели должны %s %s — %s больше, чем компания должна поставщикам (%s)." % (im, _bv_den(rec[0]), _bv_razy(r), _bv_den(pay[0])))
+            elif r <= 1 / 1.2:
+                fr.append("Долг %s поставщикам — %s, %s больше, чем компании должны покупатели (%s)." % (im, _bv_den(pay[0]), _bv_razy(1 / r), _bv_den(rec[0])))
+            else:
+                fr.append("Покупатели должны %s %s, а компания поставщикам — %s: почти поровну." % (im, _bv_den(rec[0]), _bv_den(pay[0])))
+    return fr
+
+
+def balans_vyvody(t):
+    """kartochki-balans-vyvody-v1: под таблицами баланса — выводы из их чисел. Идемпотентна; нет имени/таблиц — как было."""
+    if not t:
+        return t
+    m = _BV_SEK.search(t)
+    if not m:
+        return t
+    sek = m.group(0)
+    org = _sh_org(t)
+    imya = str(org.get("name") or "")
+    if imya.split(" ")[0] not in IMYA_FORMY or len(imya.split(" ")) < 2:
+        return t
+    kor = imya.split(" ", 1)[1]
+    # «ГК Самолет» — без формы, как в остальном тексте карточки; без кавычек (АО ЦВ ПРОТЕК) — с формой
+    im = html.escape(kor if kor.startswith("«") else imya, quote=False).replace(" ", NB, 0 if kor.startswith("«") else 1)
+    fr = bv_frazy(sek, im)
+    if any(STOP_SLOVA.search(x) for x in fr):
+        return t
+    def blok(hvost):
+        if not fr:
+            return '<p class="small">Суммы из%sбухгалтерской отчётности на%sконец года, без%sоценок. %s</p>' % (NB, NB, NB, hvost)
+        return '<p class="co-bal-vyv">%s</p><p class="small">%s</p>' % (" ".join(fr).replace(NB, "&nbsp;"), hvost)
+    s2 = _BV_BLOK.sub(lambda x: blok(x.group(1)), sek, count=1)
+    if s2 == sek:
+        s2 = _BV_STARAYA.sub(lambda x: blok(x.group(1)), sek, count=1)
+    return t if s2 == sek else t[:m.start()] + s2 + t[m.end():]
+
+
+_html_kartochki_do_balansa = html_kartochki
+
+
+def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811 — kartochki-balans-vyvody-v1
+    return tipograf_kartochki(balans_vyvody(_html_kartochki_do_balansa(k, V, sosedi, kom, normy, cena, segodnya)))
+
+
+# ---------------------------------------------------------------- kartochki-ramka-imya-v1 (30.10.2026, [Ночные-2])
+# Решение владельца 30.10 «уникальность — приоритет 1»: три служебные фразы стояли дословно на всех 167 карточках отдельными
+# предложениями — «Здесь — выводы по фактам на дату карточки.» (Индекс), «У каждого факта — источник и дата, расчёты — по
+# открытой методике.» (вход в Паспорт) и подпись «◆ Расчёт Делоскопа по открытым данным.» под «Что это значит для вас».
+# Первые две присоединены к предыдущему предложению, где уже названа компания (точка → точка с запятой), в подписи названа
+# компания — как unik-v10/v11. Смысл и слова прежние; тексты [Право] не трогаем. Повторный вызов — те же байты.
+_RI_W = r"(?:[  ]|&nbsp;|&#160;)"
+_RI_INDEKS = re.compile(r"(считаем на" + _RI_W + r"сегодняшних данных, когда собрано не" + _RI_W + r"меньше 60" + _RI_W
+                        + r"%" + _RI_W + r"сведений)\." + _RI_W + r"Здесь(" + _RI_W + r"—" + _RI_W + r"выводы по)")
+_RI_PASPORT = re.compile(r"(документы, которые стоит запросить)\." + _RI_W + r"У(" + _RI_W + r"каждого факта" + _RI_W
+                         + r"— источник)")
+_RI_ROMB = re.compile(r'<p class="caption">◆ Расчёт Делоскопа по(' + _RI_W + r')открытым данным\.')
+
+
+def ramka_imya(t):
+    if not t:
+        return t
+    t = _RI_INDEKS.sub(lambda m: m.group(1) + "; здесь" + m.group(2), t, count=1)
+    t = _RI_PASPORT.sub(lambda m: m.group(1) + "; у" + m.group(2), t, count=1)
+    imya = str(_sh_org(t).get("name") or "")
+    if imya.split(" ")[0] in IMYA_FORMY and len(imya.split(" ")) >= 2:
+        kor = imya.split(" ", 1)[1]
+        im = html.escape(kor if kor.startswith("«") else imya, quote=False)
+        if not kor.startswith("«"):
+            im = im.replace(" ", NB, 1)  # как pochinit_imya: форма не отрывается от названия
+        t = _RI_ROMB.sub(lambda m: '<p class="caption">◆ Расчёт Делоскопа для %s по%sоткрытым данным.' % (im, m.group(1)), t)
+    return t
+
+
+_html_kartochki_do_ramki = html_kartochki
+
+
+def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811 — kartochki-ramka-imya-v1
+    return tipograf_kartochki(ramka_imya(_html_kartochki_do_ramki(k, V, sosedi, kom, normy, cena, segodnya)))
+
+
+_vstavit_znachit_do_ramki = vstavit_znachit
+
+
+def vstavit_znachit(t):  # noqa: F811 — kartochki-ramka-imya-v1: пересобранный блок — сразу с подписью «◆ … для «X»»
+    return _tipograf_kartochki_do_chisel(ramka_imya(_vstavit_znachit_do_ramki(t)))

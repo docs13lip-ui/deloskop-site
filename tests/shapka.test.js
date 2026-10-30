@@ -45,7 +45,20 @@ test('5 пунктов меню, без aria-current/is-active/style, цвета
   const p = chitat('partials/shapka.html').replace(/&#8209;/g, '-');
   const nav = p.slice(p.indexOf('<ul class="shapka__list">'), p.indexOf('</nav>'));
   const punkty = [...nav.matchAll(/<li(?: class="shapka__dd")?>\s*<(?:a|button) class="shapka__link"[^>]*>([^<]+)/g)].map(m => m[1].trim());
-  assert.deepStrictEqual(punkty, ['Проверка', 'Выписка', '115-ФЗ', 'Индекс', 'Тарифы']);
+  // shapka-5-v1 (схема А, 30.10): Проверка · Сделка ▾ · Банк и 115-ФЗ ▾ · Знания ▾ · Тарифы
+  assert.deepStrictEqual(punkty, ['Проверка', 'Сделка', 'Банк и&nbsp;115-ФЗ', 'Знания', 'Тарифы']);
+  const podmenu = (id) => [...p.slice(p.indexOf('id="' + id + '"'), p.indexOf('</ul>', p.indexOf('id="' + id + '"'))).matchAll(/<a href="([^"]+)"/g)].map(m => m[1]);
+  assert.deepStrictEqual(podmenu('dd-sdelka'), ['/proverit-schet/', '/kontragenty-iz-vypiski/', '/pasport/kontragent/', '/delopis/']);
+  assert.deepStrictEqual(podmenu('dd-115'), ['/skoraya-115-fz/', '/kak-vidit-bank/', '/nalichnye/', '/pasport/', '/115-fz/']);
+  assert.deepStrictEqual(podmenu('dd-znaniya'), ['/praktika/', '/nalogi/', '/zhurnal/', '/indeks/', '/tochnost/', '/kak-rabotaet/', '/obnovleniya/']);
+  assert.ok(!/href="\/sdelka\/"/.test(p), '«Досье сделки» — без своего адреса (/sdelka/ — мягкая 404), в меню не ставим');
+  // мобильное меню — тот же состав и порядок, что верхнее
+  const mob = [...p.slice(p.indexOf('<ul class="mnav__list">'), p.indexOf('<div class="mnav__extra">')).matchAll(/href="([^"]+)"/g)].map(m => m[1]);
+  const verh = [...nav.matchAll(/href="([^"]+)"/g)].map(m => m[1]);
+  assert.deepStrictEqual(mob, verh);
+  // непрочитанное — точкой у «Знания» и у «Что нового» внутри
+  assert.match(nav, /aria-controls="dd-znaniya"[^>]*>Знания<span class="shapka__dot" data-whatsnew-dot hidden>/);
+  assert.match(nav, /<a href="\/obnovleniya\/"><b>Что нового<span class="shapka__dot" data-whatsnew-dot hidden>/);
   assert.ok(!/aria-current|is-active|style=/.test(p));
   const hex = (p.match(/#[0-9A-Fa-f]{3,6}\b/g) || []).filter(x => !['#0B63E5', '#1D1D1F'].includes(x));
   assert.deepStrictEqual(hex, []);

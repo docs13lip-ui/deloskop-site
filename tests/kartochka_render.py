@@ -4509,8 +4509,9 @@ def _bv_den(s):
     return _bv_t(s).replace(" ", NB)
 
 
-def bv_frazy(sek, im):
-    """Раздел баланса страницы → предложения выводов (может быть пусто)."""
+def bv_frazy(sek, im, vyr=None):
+    """Раздел баланса страницы → предложения выводов (может быть пусто).
+    vyr — (год, «3,1 трлн ₽») из строки «Выручка за ГГГГ» той же страницы (kartochki-dni-postavshchikov-v1) или None."""
     st = {_bv_t(a): (b, _bv_t(c)) for a, b, c in _BV_STROKA.findall(sek)}
     mg = _BV_GOD.search(_bv_t(sek).replace(" ", NB)) or _BV_GOD.search(_bv_t(sek))
     god = mg.group(1) if mg else ""
@@ -4548,7 +4549,35 @@ def bv_frazy(sek, im):
                 fr.append("Долг %s поставщикам — %s, %s больше, чем компании должны покупатели (%s)." % (im, _bv_den(pay[0]), _bv_razy(1 / r), _bv_den(rec[0])))
             else:
                 fr.append("Покупатели должны %s %s, а компания поставщикам — %s: почти поровну." % (im, _bv_den(rec[0]), _bv_den(pay[0])))
+    d = bv_dni(sek, pay, vyr, im)
+    if d:
+        fr.append(d)
     return fr
+
+
+# ---------------------------------------------------------------- kartochki-dni-postavshchikov-v1 (30.10.2026, [Ночные-2])
+# Идея [ВК] 30.10 (пост «компания дня» про «Тандер»): поставщику важна не сумма долга покупателя, а сколько дней выручки
+# покупатель держит у поставщиков. Строка «Фирма должна поставщикам» ÷ «Выручка за ГГГГ» × 365 — только числа ЭТОЙ
+# страницы и только при совпадении года баланса и года выручки. ◆ рассчитано; оговорка «оценка по балансу, а не срок
+# оплаты по договорам» — в самой фразе. Меньше 1 дня или больше 3 лет выручки — фразы нет (на краях число не помогает).
+_BV_RASCH_GOD = re.compile(r"Кто кому должен[^<]*?на[  ]31\.12\.(\d{4})")
+_BV_VYR = re.compile(r'<span>Выручка за(?:&nbsp;|&#160;|\s| )(\d{4})</span><span class="fact__v">([^<]*)</span>')
+
+
+def bv_dni(sek, pay, vyr, im="компании"):
+    if not pay or not vyr:
+        return ""
+    m = _BV_RASCH_GOD.search(_bv_t(sek).replace(" ", NB)) or _BV_RASCH_GOD.search(_bv_t(sek))
+    if not m or m.group(1) != vyr[0]:
+        return ""
+    a, v = zn_summa(pay[0]), zn_summa(vyr[1])
+    if not a or not v or a <= 0 or v <= 0:
+        return ""
+    n = int(round(a / v * 365))
+    if n < 1 or n > 1095:
+        return ""
+    return ("Долг поставщикам на%s31.12.%s равен примерно %d%s%s выручки %s за%s%s%sгод — это оценка по%sбалансу, "
+            "а%sне%sсрок оплаты по%sдоговорам." % (NB, vyr[0], n, NB, plural(n, "дню", "дням", "дням"), im, NB, vyr[0], NB, NB, NB, NB, NB))
 
 
 def balans_vyvody(t):
@@ -4566,7 +4595,8 @@ def balans_vyvody(t):
     kor = imya.split(" ", 1)[1]
     # «ГК Самолет» — без формы, как в остальном тексте карточки; без кавычек (АО ЦВ ПРОТЕК) — с формой
     im = html.escape(kor if kor.startswith("«") else imya, quote=False).replace(" ", NB, 0 if kor.startswith("«") else 1)
-    fr = bv_frazy(sek, im)
+    mv = _BV_VYR.search(t)
+    fr = bv_frazy(sek, im, (mv.group(1), html.unescape(mv.group(2))) if mv else None)
     if any(STOP_SLOVA.search(x) for x in fr):
         return t
     def blok(hvost):

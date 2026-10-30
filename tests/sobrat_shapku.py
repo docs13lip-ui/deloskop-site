@@ -555,6 +555,8 @@ def sobrat_stranicu(txt, r, podval, shapka=None):
     txt = podelitsya(txt)
     # 6д) seo-haby-v1: BreadcrumbList хабов и продуктовых страниц, ItemList статей хаба (tests/seo_haby.py)
     txt = SH.primenit(txt)
+    # 6е) obraz-statej-v1: image в Article/TechArticle статей и разборов — та же картинка, что og:image страницы
+    txt = obraz_statej(txt)
     # 7) shrift-v1: предзагрузка шрифта — последней строкой <head> и после всех вставок: так страница, собранная заново
     #    (kartochki perepechatat, сборщики разделов), и пересобранная sobrat_shapku совпадают байт в байт
     txt = STARYJ_PRELOAD.sub("", txt)
@@ -607,6 +609,28 @@ def podelitsya(txt):
             % (html.escape(url, quote=True), html.escape(t, quote=True), ssylki))
     i = txt.rfind("</article>") + len("</article>")
     return txt[:i] + "\n" + blok + txt[i:]
+
+
+# obraz-statej-v1 (26.10.2026, [Ночные запуски]): у 51 статьи и разбора в Article/TechArticle не было image —
+# для поисковиков это «рекомендуемое» поле: без него статья реже получает расширенный сниппет с картинкой.
+# Берём картинку из og:image той же страницы (обложка 1200×630 или своя, если у страницы она есть) — одна правда
+# для соцсетей и поиска. Только верхний объект статьи ("@context" рядом с "@type"); элементы hasPart хабов не трогаем.
+# Повторная сборка заменяет прежний image (сменили og:image — сменится и он). Сторож — tests/obraz_statej.test.js.
+OBRAZ_ST = re.compile(r'("@context": "https://schema\.org", "@type": "(?:Tech)?Article")(, "image": \{"@type": "ImageObject"[^{}]*\})?')
+
+
+def obraz_statej(txt):
+    h = txt.find("</head>")
+    og = re.search(r'<meta property="og:image" content="([^"]+)">', txt[:h])
+    if not og or not OBRAZ_ST.search(txt):
+        return txt
+    obraz = {"@type": "ImageObject", "url": html.unescape(og.group(1))}
+    w = re.search(r'<meta property="og:image:width" content="(\d+)">', txt[:h])
+    v = re.search(r'<meta property="og:image:height" content="(\d+)">', txt[:h])
+    if w and v:
+        obraz["width"], obraz["height"] = int(w.group(1)), int(v.group(1))
+    vstavka = ', "image": ' + json.dumps(obraz, ensure_ascii=False)
+    return OBRAZ_ST.sub(lambda m: m.group(1) + vstavka, txt)
 
 
 SAMEAS = re.compile(r'"@type": "Organization", "name": "Делоскоп"(?!, "sameAs")')

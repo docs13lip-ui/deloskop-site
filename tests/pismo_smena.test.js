@@ -9,7 +9,8 @@ const K = path.join(__dirname, '..');
 const A = '/nalogi/pismo-o-smene-rekvizitov-kak-proverit/';
 const chit = (f) => fs.readFileSync(path.join(K, f), 'utf8');
 const S = chit('nalogi/pismo-o-smene-rekvizitov-kak-proverit/index.html');
-const T = S.replace(/&nbsp;/g, ' ').replace(/ /g, ' ');
+// nomer-dela-v2 (26.10.2026): номер дела — в <span class="nw">; сверяем текст без обёртки
+const T = S.replace(/<span class="nw">([^<]*)<\/span>/g, '$1').replace(/&nbsp;/g, ' ').replace(/ /g, ' ');
 
 test('мета, canonical и разметка Article + FAQPage + BreadcrumbList', () => {
   assert.match(S, /<link rel="canonical" href="https:\/\/deloskop\.ru\/nalogi\/pismo-o-smene-rekvizitov-kak-proverit\/">/);

@@ -64,8 +64,9 @@ def tipo(s):
     return t.replace(nb, "&nbsp;")
 
 
+# nomer-dela-v2 (26.10.2026): номер дела в ответе — в <span class="nw"> (TS.nomer_dela); в <summary> (flex) и в FAQPage — без разметки.
 def blok(voprosy):
-    d = "".join(f"<details><summary>{tipo(x['v'])}</summary><p>{tipo(' '.join(x['o']))}</p></details>" for x in voprosy)
+    d = "".join(f"<details><summary>{tipo(x['v'])}</summary><p>{TS.nomer_dela(tipo(' '.join(x['o'])))}</p></details>" for x in voprosy)
     return f'<!--faq--><section class="faq" aria-label="Частые вопросы"><h2>Частые вопросы</h2>{d}</section><!--/faq-->'
 
 

@@ -48,7 +48,8 @@ test('ключ Яндекса есть, VK нет — одна кнопка, с�
   const [a] = el.querySelectorAll('[data-cherez]');
   assert.strictEqual(a.href, API + '/api/auth/yandex?next=%2Fcabinet.html');
   assert.match(el.textContent, /Войти с Яндекс ID/);
-  assert.match(el.textContent, /только имя и почта/);
+  assert.match(el.textContent.replace(/\u00a0/g, ' '), /Пароль от Яндекс ID мы не видим\. Яндекс ID передаст нам имя, почту и номер профиля — по почте найдём ваш кабинет или создадим новый\./);
+  assert.doesNotMatch(el.textContent, /только имя/); // приходит и номер профиля
   assert.doesNotMatch(el.textContent, /VK ID/);
 });
 
@@ -56,7 +57,8 @@ test('обе кнопки — в порядке решения владельц�
   const el = uzel('div');
   assert.strictEqual(await V.mount(el, { api: API, fetch: otvet({ vk: true, yandex: true }) }), 2);
   assert.deepStrictEqual(el.querySelectorAll('[data-cherez]').map((a) => a.attrs['data-cherez']), ['yandex', 'vk']);
-  assert.match(el.textContent, /Яндекс ID и VK ID/);
+  assert.match(el.textContent.replace(/\u00a0/g, ' '), /Яндекс ID и VK ID/);
+  assert.match(el.textContent.replace(/\u00a0/g, ' '), /VK ID мы не видим\. Площадка передаст нам имя, почту и номер профиля/);
 });
 
 test('next — только свой путь: чужие сайты и «//» не пропускаем (нет открытого редиректа)', () => {

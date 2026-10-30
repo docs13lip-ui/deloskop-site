@@ -80,6 +80,8 @@ def nerazryv(txt):
         return re.sub(r"(>[^<]*)", lambda x: (lambda t: t if vopros else TS.nomer_dela(t))(x.group(1).replace("115-ФЗ", '\x00')), ch)
     m = "".join(tekst(ch) for ch in re.split(r'(<summary\b.*?</summary>|<span class="pk__m">[^<]*</span>)', txt[a:b], flags=re.S))
     m = m.replace("\x00", '<span class="nw">115-ФЗ</span>')
+    # nomer-dela-v2: ответы FAQ (sobrat_faq.blok) приходят уже с обёрткой — вторую не ставим
+    m = re.sub(r'<span class="nw"><span class="nw">([^<]*)</span></span>', r'<span class="nw">\1</span>', m)
     return txt[:a] + m + txt[b:]
 
 
@@ -488,7 +490,7 @@ def glavnaya(txt, D):
         d = r["dela"][0]
         stroka = "%s · %s · %s" % (d["sud"], akt_nomer(d)[0].lower() + akt_nomer(d)[1:], data_ru(d["data"]))
         kart.append('<a href="%s"><small>%s</small><b>%s</b><span>%s</span></a>' % (
-            url_razbora(r), e(D["razdely"][r["razdel"]]["kratko"]), e(r["h1"]), e(stroka)))
+            url_razbora(r), e(D["razdely"][r["razdel"]]["kratko"]), e(r["h1"]), TS.nomer_dela(e(stroka))))  # nomer-dela-v2
     blok = '<!--praktika-glavnaya--><div class="pr-gl">%s</div><!--/praktika-glavnaya-->' % "".join(kart)
     blok = nerazryv(tipograf(blok)).replace("115-ФЗ", "115&#8209;ФЗ")
     return re.sub(r"<!--praktika-glavnaya-->.*?<!--/praktika-glavnaya-->", lambda m: blok, txt, flags=re.S)

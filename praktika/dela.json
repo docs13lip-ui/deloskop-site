@@ -11,12 +11,12 @@
     "115-fz/zapros-banka-po-115-fz-kak-otvetit/index.html": ["shtraf-banka-za-dokumenty-115-fz", "otklyuchili-internet-bank"],
     "115-fz/zsk-zony-riska/index.html": ["krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "zagraditelnye-komissii", "isklyuchili-iz-egryul-dolg-s-direktora", "zsk-dolzhnika-sudebnyj-prikaz", "kriterii-zsk-ne-otmenit-vs"],
     "115-fz/proverit-kontragenta-zsk-po-inn/index.html": ["kriterii-zsk-ne-otmenit-vs"],
-    "nalogi/statya-54-1-nk-prostymi-slovami/index.html": ["podarok-ot-roditelya-ip-ndfl-vs-2026", "razryv-nds-v-cepochke-krascvetmet", "vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke", "droblenie-uplachennaya-usn-zachityvaetsya", "povtornaya-vyezdnaya-proverka-vs-2026", "podryadchik-ne-vystavil-schet-fakturu"],
+    "nalogi/statya-54-1-nk-prostymi-slovami/index.html": ["utochnenka-i-peni-ens", "podarok-ot-roditelya-ip-ndfl-vs-2026", "razryv-nds-v-cepochke-krascvetmet", "vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke", "droblenie-uplachennaya-usn-zachityvaetsya", "povtornaya-vyezdnaya-proverka-vs-2026", "podryadchik-ne-vystavil-schet-fakturu"],
     "nalogi/nds-postavshchika-na-usn-po-inn/index.html": ["nds-postavshchika-usn-cena-dogovora", "podryadchik-ne-vystavil-schet-fakturu"],
-    "nalogi/nagruzka/index.html": ["podarok-ot-roditelya-ip-ndfl-vs-2026", "droblenie-uplachennaya-usn-zachityvaetsya", "zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
+    "nalogi/nagruzka/index.html": ["utochnenka-i-peni-ens", "podarok-ot-roditelya-ip-ndfl-vs-2026", "droblenie-uplachennaya-usn-zachityvaetsya", "zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/nagruzka-po-otraslyam-2025/index.html": ["zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/priznaki-tehnicheskoj-kompanii/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke"],
-    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026"],
+    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026"],
     "pasport/index.html": ["proverka-kontragenta-na-datu-sdelki"],
     "nalogi/svezhest-dannyh-proverki-kontragenta/index.html": ["proverka-kontragenta-na-datu-sdelki"],
     "nalogi/pismo-o-smene-rekvizitov-kak-proverit/index.html": ["dvojnik-postavshchika-bank-poluchatelya"],
@@ -24,10 +24,128 @@
     "nalogi/izmeneniya-egryul-kontragenta/index.html": ["reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p"],
     "nalogi/kody-statusa-egryul/index.html": ["reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p"],
     "nalogi/nedostovernyj-adres-egryul/index.html": ["isklyuchili-iz-egryul-dolg-s-direktora"],
-    "nalogi/skolko-platit-vpered-neznakomoj-kompanii/index.html": ["nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "isklyuchili-iz-egryul-dolg-s-direktora", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026"],
+    "nalogi/skolko-platit-vpered-neznakomoj-kompanii/index.html": ["nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "isklyuchili-iz-egryul-dolg-s-direktora", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026"],
     "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"]
   },
   "razbory": [
+    {
+      "razdel": "nalogi",
+      "slug": "utochnenka-i-peni-ens",
+      "h1": "Пени за 2019 год «давно просрочены». Почему Верховный суд оставил их в ЕНС?",
+      "title": "Уточнёнка за 2019 год и пени в ЕНС: сроки не прошли (ВС, 2026)",
+      "description": "ВС 25.09.2026 № 306-ЭС26-4683: компания до 2023 года уточняла НДС за 2019 год — и 116 тыс. ₽ пеней остались в ЕНС. От чего на самом деле считают сроки.",
+      "zapros": "пени в ЕНС за старые периоды уточнённая декларация",
+      "data": "2026-10-28",
+      "minut": 3,
+      "lid": "Три суда решили, что сроки взыскания пеней по НДС за 2019 год давно прошли, и велели убрать 116 тыс. ₽ из ЕНС. Верховный суд отменил эти решения: компания сама уточняла декларации за эти кварталы до 2023 года. Разбираем, от чего на самом деле считаются сроки.",
+      "dela": [
+        {
+          "sud": "Верховный суд РФ, Судебная коллегия по экономическим спорам",
+          "sud_kratko": "ВС",
+          "akt": "Определение",
+          "nomer": "№ 306-ЭС26-4683",
+          "data": "2026-09-25",
+          "delo": "ООО «Стройцентр» против УФНС по Ульяновской области (№ А72-16379/2024) — пени в ЕНС; резолютивная часть — 23.09.2026",
+          "na_konu": "116 027,07 ₽ пеней по НДС за III и IV кварталы 2019 года (весь спор — 5 764 124,51 ₽ пеней)",
+          "na_konu_kratko": "≈ 116 тыс. ₽",
+          "itog": "В пользу налоговой",
+          "itog_nov": false,
+          "istochnik": "https://vsrf.ru/lk/practice/stor_pdf_ec/2570098",
+          "istochnik_podpis": "vsrf.ru — текст определения; сверено 28.10",
+          "sverka": "2026-10-28"
+        }
+      ],
+      "knopka": {
+        "zagolovok": "Ваша компания глазами налоговой",
+        "tekst": "Проверка по ИНН: статус в ЕГРЮЛ, долги по налогам и уплаченные налоги по открытым данным ФНС на дату проверки.",
+        "knopka": "Проверить свою компанию",
+        "url": "/",
+        "cel": "razbor30_check"
+      },
+      "zakon": [
+        [
+          "п. 9.1 ст. 88 НК РФ — уточнённая декларация во время камеральной проверки (как в определении ВС)",
+          "",
+          "https://www.consultant.ru/document/cons_doc_LAW_19671/"
+        ],
+        [
+          "п. 5 ст. 11.3 НК РФ — из чего складывается обязанность в ЕНС",
+          "",
+          "https://www.consultant.ru/document/cons_doc_LAW_19671/"
+        ],
+        [
+          "ст. 46, 47 и 70 НК РФ — требование и сроки взыскания",
+          "",
+          "https://www.consultant.ru/document/cons_doc_LAW_19671/"
+        ],
+        [
+          "Определение СКЭС ВС РФ от 25.09.2026 № 306-ЭС26-4683 — полный текст",
+          "",
+          "https://vsrf.ru/lk/practice/stor_pdf_ec/2570098"
+        ]
+      ],
+      "pohozhie": [
+        "povtornaya-vyezdnaya-proverka-vs-2026",
+        "droblenie-uplachennaya-usn-zachityvaetsya"
+      ]
+    },
+    {
+      "razdel": "dogovory",
+      "slug": "zalog-odna-veshch-iz-pyati-vs-2026",
+      "h1": "Залог дороже долга в четыре раза. Можно ли забрать хотя бы экскаватор?",
+      "title": "Залог техники: можно ли забрать одну вещь из пяти — разбор ВС",
+      "description": "Долг — почти четверть стоимости залога, просрочка семь месяцев. Суды отказали: залог «слишком дорогой». ВС разрешил обратить взыскание на часть вещей.",
+      "zapros": "обращение взыскания на часть заложенного имущества несоразмерность",
+      "data": "2026-10-26",
+      "minut": 4,
+      "lid": "Поставщик отгружал товар покупателю, а долг обеспечил поручитель — залогом пяти единиц своей техники. Покупатель не заплатил около 4,9 млн ₽. Три суда отказали обратить взыскание: залог стоит 22 млн ₽ — это несоразмерно. Верховный суд отменил все три акта.",
+      "dela": [
+        {
+          "sud": "Верховный суд РФ, Судебная коллегия по экономическим спорам",
+          "sud_kratko": "ВС",
+          "akt": "Определение",
+          "nomer": "№ 305-ЭС25-14813",
+          "data": "2026-06-03",
+          "delo": "Обращение взыскания на пять единиц техники в залоге у поручителя при долге около четверти стоимости залога (№ А40-216070/2024); резолютивная часть — 25.05.2026; Обзор судебной практики ВС № 3 (2026), п. 12",
+          "na_konu": "4 889 268,10 ₽ долга по поставкам и 200 000 ₽ неустойки; залог — 22 млн ₽",
+          "na_konu_kratko": "≈ 4,9 млн ₽",
+          "itog": "На новое рассмотрение",
+          "itog_nov": false,
+          "istochnik": "https://vsrf.ru/lk/practice/stor_pdf_ec/2545792",
+          "istochnik_podpis": "vsrf.ru — текст определения; сверено 26.10",
+          "sverka": "2026-10-26"
+        }
+      ],
+      "knopka": {
+        "zagolovok": "Отгружаете с отсрочкой под залог — сначала проверьте покупателя",
+        "tekst": "Проверка по ИНН: долги у приставов, приостановки по счетам и признаки банкротства — на дату проверки. Проверьте и поручителя.",
+        "knopka": "Проверить покупателя по ИНН",
+        "url": "/",
+        "cel": "razbor29_check",
+        "slezh": {
+          "knopka": "Следить за покупателем",
+          "url": "/cabinet.html#watch",
+          "cel": "razbor29_slezh"
+        }
+      },
+      "zakon": [
+        [
+          "п. 2 ст. 348 ГК РФ — когда в обращении взыскания на залог отказывают; п. 4 ст. 339.1 ГК РФ — учёт залога движимого",
+          "ред. на 26.10.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_5142/"
+        ],
+        [
+          "п. 56 постановления Пленума ВС РФ от 27.06.2023 № 23 — соразмерность при залоге нескольких вещей",
+          "",
+          [["п. 56 Пленума — цитата в тексте определения ВС", "https://vsrf.ru/lk/practice/stor_pdf_ec/2545792"]]
+        ]
+      ],
+      "pohozhie": [
+        "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026",
+        "kompensaciya-poter-406-1-vs-2026",
+        "nalogovyj-arest-zalog-v-bankrotstve-postavshchika"
+      ]
+    },
     {
       "razdel": "dogovory",
       "slug": "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026",
@@ -93,6 +211,7 @@
       "description": "Страховщик требовал 89,3 млн ₽ потерь по ст. 406.1 ГК. Верховный суд: условие о потерях работает, но «произвольную» сумму по непрозрачной формуле не взыскать.",
       "zapros": "компенсация потерь 406.1 ГК расчёт",
       "data": "2026-10-24",
+      "izmeneno": "2026-10-27",
       "minut": 4,
       "lid": "Страховая компания насчитала оператору медицинских программ 89,3 млн ₽ «потерь» по формуле из договора и подписала акт сверки одна: оператор промолчал 5 рабочих дней. Апелляция взыскала всё. Верховный суд: условие о потерях действует без вины, но «в произвольном размере» потери не взыскивают — нужен прозрачный расчёт с документами. Разбираем, что записать в договор до подписи.",
       "dela": [
@@ -155,6 +274,7 @@
       "description": "Инспекция насчитала 2,43 млн ₽ НДФЛ с 11 помещений, подаренных дочери-ИП. Верховный суд: освобождение для родных не зависит от того, как используют подарок.",
       "zapros": "подарок от родителя ИП НДФЛ недвижимость",
       "data": "2026-10-24",
+      "izmeneno": "2026-10-27",
       "minut": 4,
       "lid": "Мать-предприниматель подарила дочери-предпринимателю 11 помещений, которые сдавались в аренду и до подарка, и после. Инспекция решила, что это доход от бизнеса, и насчитала 2,43 млн ₽ НДФЛ. Верховный суд отменил решения трёх инстанций: подарок от близкого родственника НДФЛ не облагается, как бы его ни использовали. Разбираем, где грань и как оформить дарение.",
       "dela": [
@@ -201,7 +321,8 @@
           "п. 1 ст. 572 ГК РФ — дарение без встречного предоставления",
           "ред. на 24.10.2026",
           "https://www.consultant.ru/document/cons_doc_LAW_9027/"
-        ]
+        ],
+        ["Обзор судебной практики Верховного суда РФ № 3 (2026), п. 33 (дело № 44-КАД26-3-К7: сын подарил отцу 16 объектов) — подарок от члена семьи освобождается от НДФЛ независимо от того, как его используют", "", "https://www.garant.ru/products/ipo/prime/doc/414981131/"]
       ],
       "pohozhie": [
         "povtornaya-vyezdnaya-proverka-vs-2026",
@@ -403,6 +524,7 @@
       "description": "Без счёта-фактуры нет вычета НДС. Верховный суд в 2026 году признал: заказчик вправе через суд обязать подрядчика выставить счёт-фактуру.",
       "zapros": "подрядчик не выставил счет-фактуру можно ли обязать через суд",
       "data": "2026-10-05",
+      "izmeneno": "2026-10-27",
       "minut": 4,
       "lid": "Работы приняты и оплачены, а счёта-фактуры нет — значит, нет и вычета НДС. Три суда сказали генподрядчику, что требовать документ через суд нельзя: это обязанность по налоговому закону, а не по договору. Верховный суд с ними не согласился.",
       "dela": [
@@ -489,7 +611,8 @@
           "Определение СКЭС ВС РФ от 18.03.2026 № 309-ЭС25-9697 — полный текст",
           "",
           "https://www.garant.ru/products/ipo/prime/doc/413828648/"
-        ]
+        ],
+        ["Обзор судебной практики Верховного суда РФ № 2 (2026), утв. Президиумом ВС РФ, п. 24 — это дело включено в обзор", "", "https://vsrf.ru/documents/all/36136/"]
       ],
       "pohozhie": [
         "vokfors-rekonstrukciya",
@@ -1014,6 +1137,7 @@
       "description": "КС в Постановлении № 12-П от 05.03.2026: проверяемого нельзя штрафовать как свидетеля по своей проверке. Где грань для директора и что делать с повесткой.",
       "zapros": "повестка на допрос свидетеля в налоговую по своей проверке",
       "data": "2026-09-30",
+      "izmeneno": "2026-10-27",
       "minut": 6,
       "lid": "Гражданина, у которого шла выездная налоговая проверка, вызвали на допрос свидетелем — о его же доходах — и оштрафовали за неявку. Штраф был символический, но гражданин дошёл до Конституционного суда. И выиграл. Разбираем, что изменилось с 5 марта 2026 года и почему это касается не 500 рублей, а миллионов.",
       "dela": [
@@ -1028,7 +1152,8 @@
         ["п. 1, 3 ст. 90, ч. 1 ст. 128 НК РФ — свидетель, отказ от показаний, ответственность за неявку", "в истолковании КС", "https://www.consultant.ru/document/cons_doc_LAW_19671/"],
         ["подп. 4 п. 1 ст. 31 НК РФ — вызов налогоплательщика для пояснений", "ред. на 30.09.2026", "https://www.consultant.ru/document/cons_doc_LAW_19671/"],
         ["п. 1 ст. 129.1 НК РФ — несообщение пояснений в камеральной проверке", "в изложении КС, 05.03.2026", "https://www.consultant.ru/document/cons_doc_LAW_19671/"],
-        ["п. 1, 3 ст. 122 НК РФ — штраф 20% и 40%", "ред. на 30.09.2026", "https://www.consultant.ru/document/cons_doc_LAW_19671/"]
+        ["п. 1, 3 ст. 122 НК РФ — штраф 20% и 40%", "ред. на 30.09.2026", "https://www.consultant.ru/document/cons_doc_LAW_19671/"],
+        ["Обзор судебной практики Верховного суда РФ № 2 (2026), п. 39 (дело № 67-КАД25-12-К8) — ту же позицию ВС применил к штрафу за неявку на допрос", "", "https://vsrf.ru/documents/all/36136/"]
       ],
       "pohozhie": ["vokfors-rekonstrukciya", "proverka-kontragenta-na-datu-sdelki"]
     },

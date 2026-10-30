@@ -34,13 +34,13 @@ test('статья: абзац после «6 месяцев» и до «Что 
   const a = s.indexOf('за&nbsp;6&nbsp;месяцев'), b = s.indexOf('id="vzyskanie"'), c = s.indexOf('<strong>Что сделать:</strong>');
   assert.ok(a > 0 && a < b && b < c, 'место абзаца');
   assert.ok(s.includes(`href="${RAZBOR}" data-goal="zsk_dolg_razbor"`));
-  const det = s.match(/<details><summary>Поставщик из&nbsp;красной зоны[^<]*<\/summary><p>([^<]*)<\/p><\/details>/);
+  const det = s.match(/<details><summary>Поставщик из&nbsp;красной зоны[^<]*<\/summary><p>((?:[^<]|<span class="nw">|<\/span>)*)<\/p><\/details>/); // nomer-dela-v2: номер дела в ответе — в <span class="nw">
   assert.ok(det, 'вопрос FAQ');
   const tekst = s.slice(s.indexOf('<article>'), s.indexOf('</article>'));
   assert.ok(tekst.includes(det[1]), 'ответ FAQ — дословно из статьи');
   const ld = JSON.parse(s.match(/<script type="application\/ld\+json">(.*?)<\/script>/s)[1]);
   const q = ld[2].mainEntity.find((x) => /не вернул аванс/.test(x.name));
-  assert.ok(q && q.acceptedAnswer.text === un(det[1]));
+  assert.ok(q && q.acceptedAnswer.text === un(det[1].replace(/<span class="nw">([^<]*)<\/span>/g, '$1')));
   assert.strictEqual(ld[0].dateModified, '2026-10-04');
 });
 

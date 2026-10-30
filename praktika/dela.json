@@ -22,12 +22,78 @@
     "nalogi/pismo-o-smene-rekvizitov-kak-proverit/index.html": ["dvojnik-postavshchika-bank-poluchatelya"],
     "nalogi/kak-proverit-schet-pered-oplatoj/index.html": ["dvojnik-postavshchika-bank-poluchatelya"],
     "nalogi/izmeneniya-egryul-kontragenta/index.html": ["reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p"],
-    "nalogi/kody-statusa-egryul/index.html": ["reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p"],
+    "nalogi/kody-statusa-egryul/index.html": ["spisali-dolg-subsidiarka", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p"],
     "nalogi/nedostovernyj-adres-egryul/index.html": ["isklyuchili-iz-egryul-dolg-s-direktora"],
-    "nalogi/skolko-platit-vpered-neznakomoj-kompanii/index.html": ["nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "isklyuchili-iz-egryul-dolg-s-direktora", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026"],
+    "nalogi/skolko-platit-vpered-neznakomoj-kompanii/index.html": ["spisali-dolg-subsidiarka", "nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "isklyuchili-iz-egryul-dolg-s-direktora", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026"],
     "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"]
   },
   "razbory": [
+    {
+      "razdel": "nalogi",
+      "slug": "spisali-dolg-subsidiarka",
+      "h1": "Налоговый долг списали. Отвечать за него больше некому?",
+      "title": "Налоговый долг списан, а субсидиарная ответственность — нет (ВС, 2026)",
+      "description": "ВС 19.02.2026 № 305-ЭС22-15047: списание налогового долга не освобождает директора и участника, если деньги вывели. И «меньше 50 % реестра» не защищает.",
+      "zapros": "списали налоговый долг субсидиарная ответственность директора",
+      "data": "2026-10-30",
+      "minut": 4,
+      "lid": "Компания не заплатила 19 млн ₽ по проверке, банкротство прекратили за отсутствием денег, а долг налоговая списала. Нижние суды решили, что спрашивать больше не с кого. Верховный суд с этим не согласился: если деньги вывели, отвечать могут те, кто компанией управлял.",
+      "dela": [
+        {
+          "sud": "Верховный суд РФ, Судебная коллегия по экономическим спорам",
+          "sud_kratko": "ВС",
+          "akt": "Определение",
+          "nomer": "№ 305-ЭС22-15047 (6,7)",
+          "data": "2026-02-19",
+          "delo": "ФНС против бывшего директора и единственного участника ООО «СтройОптСити» (№ А41-84436/2020) — субсидиарная ответственность по налоговому долгу; резолютивная часть — 05.02.2026",
+          "na_konu": "21 261 258,01 ₽ списанного налогового долга",
+          "na_konu_kratko": "≈ 21,3 млн ₽",
+          "itog": "На новое рассмотрение",
+          "itog_nov": false,
+          "istochnik": "https://vsrf.ru/lk/practice/stor_pdf_ec/2522724",
+          "istochnik_podpis": "vsrf.ru — текст определения; сверено 30.10",
+          "sverka": "2026-10-30"
+        }
+      ],
+      "knopka": {
+        "zagolovok": "Что стоит за контрагентом",
+        "tekst": "Проверка по ИНН: статус в ЕГРЮЛ, банкротство и долги по налогам по открытым данным ФНС на дату проверки.",
+        "knopka": "Проверить контрагента по ИНН",
+        "url": "/",
+        "cel": "razbor31_check"
+      },
+      "zakon": [
+        [
+          "ст. 61.11 Закона о банкротстве (127-ФЗ) — субсидиарная ответственность за невозможность погасить долги",
+          "ред. на 30.10.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_39331/"
+        ],
+        [
+          "п. 4 ст. 10 Закона о банкротстве — в редакции, применённой судом к этому спору",
+          "",
+          "https://www.consultant.ru/document/cons_doc_LAW_39331/"
+        ],
+        [
+          "ст. 59 НК РФ — списание задолженности, которую нельзя взыскать",
+          "",
+          "https://www.consultant.ru/document/cons_doc_LAW_19671/"
+        ],
+        [
+          "пп. 8 п. 1 ст. 23 НК РФ — хранить данные учёта не меньше пяти лет",
+          "ред. 04.08.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_19671/"
+        ],
+        [
+          "Определение СКЭС ВС РФ от 19.02.2026 № 305-ЭС22-15047 (6,7) — полный текст",
+          "",
+          "https://vsrf.ru/lk/practice/stor_pdf_ec/2522724"
+        ]
+      ],
+      "pohozhie": [
+        "isklyuchili-iz-egryul-dolg-s-direktora",
+        "nalogovyj-arest-zalog-v-bankrotstve-postavshchika"
+      ]
+    },
     {
       "razdel": "nalogi",
       "slug": "utochnenka-i-peni-ens",

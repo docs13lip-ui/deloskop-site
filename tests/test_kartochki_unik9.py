@@ -89,7 +89,8 @@ class TestPodpis(unittest.TestCase):
                 continue
             self.assertNotIn("других карточек Делоскопа", t, papka)
             self.assertNotIn("рассчитано Делоскопом по сведениям этой страницы", t, papka)
-            self.assertIn("◆ Расчёт Делоскопа по открытым данным.", t, papka)
+            # kartochki-ramka-imya-v1: в подписи — название компании («◆ Расчёт Делоскопа для «…» по открытым данным.»)
+            self.assertRegex(t, r"◆ Расчёт Делоскопа (для [^<]+? )?по открытым данным\.", papka)
             self.assertEqual(t.count("Условия сделки решаете вы"), 1, papka)
 
 

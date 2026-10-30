@@ -80,9 +80,18 @@ test('источник и дата сверки; сверке не больше 
   assert.ok(dni <= 120, 'перечень сверяли ' + Math.round(dni) + ' дн. назад — пересверьте (data/nedruzhestvennye-430r.json, istochnik.pravilo)');
 });
 
-test('до «да» [Право]: noindex, не в sitemap и не в хабе; без обещаний исхода и превосходных степеней; без сырых NBSP', () => {
-  assert.ok(STR.includes('<meta name="robots" content="noindex, follow">'), 'страница ждёт «да» [Право] — пока noindex');
-  assert.ok(!fs.readFileSync(path.join(KOREN, 'sitemap.xml'), 'utf8').includes('nedruzhestvennye-gosudarstva-perechen'));
+test('открыта для поиска по «да» [Право] 30.10 (✎ 418): без noindex, в sitemap и хабе /nalogi/, вход из «Офшорных зон»; правки 2018-р и плитки «2»; без обещаний исхода и превосходных степеней; без сырых NBSP', () => {
+  assert.ok(!/<meta[^>]+name="robots"[^>]+noindex/.test(STR), 'страница открыта для поиска — [Право] 30.10');
+  assert.ok(fs.readFileSync(path.join(KOREN, 'sitemap.xml'), 'utf8').includes('https://deloskop.ru/nalogi/nedruzhestvennye-gosudarstva-perechen/'));
+  assert.ok(fs.readFileSync(path.join(KOREN, 'nalogi/index.html'), 'utf8').includes('href="/nalogi/nedruzhestvennye-gosudarstva-perechen/"'), 'нет карточки в хабе /nalogi/');
+  assert.ok(fs.readFileSync(path.join(KOREN, 'nalogi/ofshornye-zony-perechen-minfina/index.html'), 'utf8').includes('href="/nalogi/nedruzhestvennye-gosudarstva-perechen/"'), 'нет входа из «Офшорных зон»');
+  assert.ok(fs.readFileSync(path.join(KOREN, 'nalogi/chto-oznachayut-cifry-inn-i-kpp/index.html'), 'utf8').includes('href="/nalogi/nedruzhestvennye-gosudarstva-perechen/"'), 'нет входа из «ИНН и КПП» (КПП иностранной организации — 50–99)');
+  const p = plain(STR);
+  assert.ok(p.includes('добавлены Багамские Острова, а также Гернси и остров Мэн.'), '№ 2018-р — не только Багамы ([Право] 30.10, garant.ru 26.07.2022)');
+  assert.ok(p.includes('строка о Великобритании изложена в новой редакции: теперь в неё входят все коронные владения Британской короны и все Британские заморские территории, а не только отдельно названные.'));
+  assert.ok(p.includes('распоряжения об изменениях — оба в 2022 году') && !p.includes('Багамы и Великобритания'));
+  assert.strictEqual(D.istochnik.data_sverki, '2026-10-30');
+  assert.strictEqual(D.istochnik.sleduyushchaya_sverka, '2027-01-28');
   const t = plain(STR).toLowerCase();
   for (const z of ['гарантир', 'лучш', 'самый ', 'надёжн', 'точно не', ' ии ', 'нейросет', 'искусственн', 'санкци', 'запрещ', 'разрешени']) assert.ok(!t.includes(z), 'слово «' + z + '»');
   assert.ok(!/\u00a0/.test(STR), 'сырой NBSP — пишем &nbsp;');

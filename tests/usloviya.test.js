@@ -98,7 +98,7 @@ t('деньги на кону, ОСН: НДС 22/122, прибыль 25%, штр
 
 t('деньги на кону, УСН: «доходы минус расходы» — 15% × 1,4; «доходы» — ноль', function () {
   assert.strictEqual(Math.round(U.atStake(1000000, 'usn_dr').hard), 210000);
-  assert.ok(U.atStake(1000000, 'usn_d').zero);
+  assert.strictEqual(U.atStake(1000000, 'usn_d').utochnit, 'nds'); // doverie-v1: не «риск нулевой»
   assert.strictEqual(U.atStake(0, 'osno'), null);
 });
 

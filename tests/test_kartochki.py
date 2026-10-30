@@ -1929,7 +1929,9 @@ class TestKartochkiTonV1(unittest.TestCase):
         k = K.iz_check(self._r(profit=[{"year": 2025, "value": 1e9}], balance={"year": 2025, "equity": 5e9, "long_debt": 1e9, "short_debt": 2e9}))
         h = K.html_kartochki(k, K.vyvody(k), [])
         # kartochki-unik-v10: с названием компании («…для сделки с ООО «…» — в полном отчёте»), без названия — как было
-        self.assertRegex(h, r"Суммы из бухгалтерской отчётности на конец года, без оценок\. Что они значат для сделки( с [^<]+?)? — в полном отчёте\.")
+        # kartochki-balans-vyvody-v1: общая фраза «Суммы из…» уступает место выводам из чисел таблиц (тест_kartochki_balans_vyvody)
+        self.assertRegex(h, r"(Суммы из бухгалтерской отчётности на конец года, без оценок\. |<p class=\"co-bal-vyv\">[^<]+</p><p class=\"small\">)"
+                            r"Что они значат для сделки( с [^<]+?)? — в полном отчёте\.")
         self.assertNotIn("Только суммы", h)
 
     def test_nalog_na_pribyl_bez_znaka_net_stroki(self):

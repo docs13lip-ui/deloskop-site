@@ -104,7 +104,7 @@
         ssylka: s ? { t: s.tekst || s[0], u: s.url || s[1] } : null, do: '#r' + x.n });
     });
     var pv = v.predvaritelno;
-    if (pv && pv.baza && !docsG.otchetnost) out.push({ k: 'vyruchka', gruppa: 'fakty', t: 'Выручки нет в отчётности — ориентир посчитан по возрасту компании',
+    if (pv && pv.baza && !docsG.otchetnost) out.push({ k: 'vyruchka', gruppa: 'fakty', t: pv.baza === 'insufficient_data' ? 'Выручка и возраст компании неизвестны — ориентир предоплаты не посчитан' : 'Выручки нет в отчётности — ориентир посчитан по возрасту компании',
       kak: 'Запросите бухгалтерскую отчётность за последний год с квитанцией о сдаче и отметьте, когда получите.', ssylka: BO, do: '#sd-dok' });
     var rk = o.rekv || {};
     if (!rk.vvedeny) out.push({ k: 'rekv', gruppa: 'rekvizity', t: 'Реквизиты для оплаты не сверены', kak: 'Вставьте реквизиты из счёта — сверим ИНН получателя, вид счёта, БИК и контрольный ключ.', do: '#sd-rekv' });
@@ -154,14 +154,38 @@
       return R;
     }
     R.kod = 'sobrano'; R.zagolovok = 'Пункты досье закрыты';
+    // doverie-v1 ([команда] 30.10, п. 4): отметка заказчика ≠ подтверждение источником. Если пункт о фактах закрыт
+    // только его отметкой («проверил сам — нет сведений», «отчётность получена»), положительной доли предоплаты не даём:
+    // Делопись соберёт договор «оплата по факту», долю решает сам заказчик.
+    var otmetki = otmetkiZakazchika(o);
+    R.otmetki = otmetki;
+    if (otmetki.length) {
+      R.osnovanie = 'otmetki';
+      R.tekst = 'Часть пунктов закрыта вашими отметками (' + otmetki.join(', ') + '). Это ваши сведения: источником они не подтверждены, поэтому ориентир Делоскопа по предоплате здесь не выставляем — договор соберётся с оплатой по факту, долю предоплаты решаете вы. Решение принимает ваша компания.';
+      return R;
+    }
+    R.osnovanie = 'istochniki';
     var cap = typeof v.cap === 'number' ? v.cap : null, t = '';
-    if (v.finorg || cap == null) t = 'Предел предоплаты для банка или страховой организации не считаем. ';
+    if (v.nedostatochno) t = 'Ориентир предоплаты не посчитан: выручка и возраст компании неизвестны. ';
+    else if (v.finorg || cap == null) t = 'Предел предоплаты для банка или страховой организации не считаем. ';
     else if (cap === 0) t = 'Ориентир Делоскопа по предоплате — 0' + NB + '₽: оплата по факту поставки. ';
     else if (summa && summa <= cap) { t = 'Сумма в пределах ориентира Делоскопа (до ' + money(cap, U) + '). '; R.predoplata = 100; }
     else if (summa) { R.predoplata = Math.max(1, Math.floor(cap / summa * 100)); t = 'По ориентиру Делоскопа вперёд — не больше ' + money(cap, U) + ' (' + R.predoplata + '% суммы), остальное — после поставки. '; }
     if (v.predvaritelno && v.predvaritelno.baza) t += 'Ориентир посчитан по возрасту компании — сверьте его с выручкой из полученной отчётности: не больше двух недель выручки. ';
     R.tekst = t + 'Решение принимает ваша компания.';
     return R;
+  }
+
+  // Пункты о фактах, закрытые только отметкой заказчика: разделы-реестры с отметкой «нет сведений»
+  // и «отчётность получена» вместо выручки из ГИР БО. Названия — для текста итога.
+  function otmetkiZakazchika(o) {
+    var out = [], otm = o.otm || {}, g = o.galki || {}, docsG = g.docs || {}, v = o.v || {};
+    razdelyKlyuch(o.p).forEach(function (x) {
+      var m = otm[x.n];
+      if (x.status === 'not_checked' && m && m.ok && m.rez === 'net') out.push(x.title.charAt(0).toLowerCase() + x.title.slice(1));
+    });
+    if (v.predvaritelno && v.predvaritelno.baza && docsG.otchetnost) out.push('отчётность');
+    return out;
   }
 
   // ---------- 5. Ссылка в Делопись ----------
@@ -806,7 +830,7 @@
 
   return {
     VERSIYA: VERSIYA, KEY: KEY, MAX: MAX, KLYUCH: KLYUCH, OGOVORKA: OGOVORKA, OGOVORKA_OTM: OGOVORKA_OTM, STARYJ_DNEJ: STARYJ_DNEJ,
-    rekvizity: rekvizity, nedostaet: nedostaet, problemy: problemy, itog: itog, delopisSsylka: delopisSsylka,
+    rekvizity: rekvizity, nedostaet: nedostaet, problemy: problemy, itog: itog, otmetkiZakazchika: otmetkiZakazchika, delopisSsylka: delopisSsylka,
     snimok: snimok, sravnit: sravnit, svezhest: svezhest, spisok: spisok, najti: najti, sohranit: sohranit, udalit: udalit,
     mskData: mskData, mskVremya: mskVremya, html: html, spisokHtml: spisokHtml, esc: esc, realnost: realnost, svyazi: svyazi, obshchijAdres: obshchijAdres, adresKlyuch: adresKlyuch, kratko: kratko, zaprosImeni: zaprosImeni, kratkoGraf: kratkoGraf, svyaziDop: svyaziDop, dengi: dengi, dengiSvg: dengiSvg, dengiGod: dengiGod, dengiHtml: dengiHtml, rubIz: rubIz, krupno: krupno, istochniki: istochniki
   };

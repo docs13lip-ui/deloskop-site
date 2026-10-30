@@ -182,6 +182,7 @@ try { return U.decide(r, {}); } catch (e) { return null; }
 function yPredoplata(u) {
 if (!u) return { t: 'В полном отчёте', ton: 'neutral' };
 if (u.cap > 0) return { t: 'До' + NB + dengi(u.cap), pod: u.capRule || '', ton: TON_USL[u.tone] || 'neutral' };
+if (u.nedostatochno) return { t: 'Не считаем', pod: 'выручка и возраст компании неизвестны', ton: 'neutral', nepr: true };
 return { t: zaglavnaya(u.capRule || 'Не считаем'), ton: TON_USL[u.tone] || 'neutral' };
 }
 function yVyvod(r, u) {

@@ -921,7 +921,7 @@ td b{font-weight:600}
       var it=p.itog||{}, gl=it.glavnoe||[];
       var s1=it.vyvod||'Вердикт — в досье',
           s2=gl.length?gl.join('; '):'В полученных сведениях серьёзных отметок нет. Что не проверяли — в разделе 16.',
-          s3=it.na_konu?('При претензии налоговой по сделке на '+U.money(it.na_konu.summa)+' — до '+U.money(it.na_konu.rub)+' '+(REZH[opts.rezhim||'osn']||REZH.osn)):'Введите сумму сделки — посчитаем, сколько на кону при претензии налоговой.';
+          s3=it.na_konu?(it.na_konu.rub==null?'При претензии налоговой по сделке на '+U.money(it.na_konu.summa)+' — зависит от вашего статуса по НДС: уточните '+(REZH[opts.rezhim||'osn']||REZH.osn):'При претензии налоговой по сделке на '+U.money(it.na_konu.summa)+' — до '+U.money(it.na_konu.rub)+' '+(REZH[opts.rezhim||'osn']||REZH.osn)):'Введите сумму сделки — посчитаем, сколько на кону при претензии налоговой.';
       var pol=m.provereno.chto==='istochnikov'?'Проверено по '+m.provereno.n+' из '+m.provereno.m+' источников':'Сведения получены по '+m.provereno.n+' из '+m.provereno.m+' разделов';
       var h='<div class="kol"><div class="brand">'+LOGO+'делоскоп</div><div class="pr"><b>Паспорт контрагента</b>№ '+esc(m.nomer)+'<br>Сведения на '+esc(vremya(m.sformirovan))+'</div></div>'+
         (m.demo?'<span class="obrazec">Образец: компания вымышленная, данные для примера</span>':'')+

@@ -187,14 +187,23 @@
   // если ни один источник долгов (приставы, налоги) не проверен, предел считается как «с пределом» — вдвое меньше.
   // Пока false: методика не меняется, а честность держит строка «Не проверяли» под пределом.
   var OSTOROZHNO = false;
+  // Версия правила предела ([команда] 30.10: сохранённые отчёты молча не меняем — у вывода есть версия правила и дата).
+  // usloviya-2026-10-30 — doverie-v1: «выручка и возраст неизвестны» → insufficient_data вместо потолка 1 000 000 ₽;
+  // УСН «доходы» → «зависит от статуса по НДС», а не «риск нулевой».
+  var PRAVILO = 'usloviya-2026-10-30';
   var DELITEL = 26;                                        // две недели выручки: 52 недели / 2
   var MINIMUM = 10000;                                     // предел меньше — числа нет, «советуем платить по факту» (malo)
   var POTOLKI = [[6, 100000], [12, 300000], [36, 1000000], [Infinity, 3000000]]; // [младше N мес, потолок]
-  function potolok(m) { if (m == null) return 1000000; for (var i = 0; i < POTOLKI.length; i++) if (m < POTOLKI[i][0]) return POTOLKI[i][1]; return 3000000; }
+  function potolok(m) { if (m == null) return null; for (var i = 0; i < POTOLKI.length; i++) if (m < POTOLKI[i][0]) return POTOLKI[i][1]; return 3000000; }
 
   function prepayCap(f, t, np) {
     if (t === 'post' || t === 'stop') return { cap: 0, rule: t === 'stop' ? 'Вперёд не платить' : 'Оплата только по факту', raschet: { tone: t } };
     if (f.finorg) return { cap: null, finorg: true, rule: 'предел не считаем — банк или страховая организация', raschet: { tone: t, base: 'finorg' } };
+    // doverie-v1 ([команда] 30.10, п. 1): выручка и возраст неизвестны — положительного предела
+    // из одних неизвестных не выводим. cap = null («не посчитано») — не 0 ₽ (у нуля своё основание) и не потолок 1 000 000 ₽.
+    if (!f.revenue && !f.vyruchkaNol && f.ageMonths == null) {
+      return { cap: null, nedostatochno: true, rule: 'предел не считаем — выручка и возраст компании неизвестны', raschet: { tone: t, base: 'insufficient_data' } };
+    }
     var byAge = potolok(f.ageMonths);
     var cap, rule, R = { tone: t, byAge: byAge, ageMonths: f.ageMonths, revenue: f.revenue || null, revenueYear: f.revenueYear || null };
     if (f.vyruchkaNol) {                                   // отчёт сдан, выручки нет: две недели нулевой выручки — 0 ₽
@@ -204,7 +213,7 @@
     if (f.revenue) {
       cap = f.revenue / DELITEL; rule = 'не больше двух недель выручки компании'; R.base = 'revenue'; R.dveNedeli = cap;
       if (f.ageMonths != null && f.ageMonths < 12 && byAge < cap) { cap = byAge; rule = 'потолок для компании младше года'; R.ageCapped = true; }
-    } else { cap = byAge; R.base = f.ageMonths == null ? 'unknown' : 'age'; rule = f.ageMonths == null ? 'осторожный потолок — выручка и возраст неизвестны' : 'потолок по возрасту компании (выручка неизвестна)'; }
+    } else { cap = byAge; R.base = 'age'; rule = 'потолок по возрасту компании (выручка неизвестна)'; }
     R.doPolovinu = cap;
     var ostor = OSTOROZHNO && np && np.dolgiVse && t === 'go';
     if (t === 'cap' || ostor) { cap = cap / 2; rule += ostor ? ', вдвое меньше: долги не проверены' : ', вдвое меньше из-за замечаний'; R.half = ostor ? 'ostorozhno' : 'zamechaniya'; }
@@ -303,8 +312,10 @@
         kak = 'Как посчитали: выручка' + (R.revenueYear ? ' за ' + R.revenueYear : '') + ' — ' + moneyKrupno(R.revenue) + ' ÷ ' + DELITEL + ' = ' + moneyKrupno(R.dveNedeli) + ' (две недели выручки)' + polovina + ', округлили вниз.';
       } else if (R.base === 'age') {
         kak = 'Как посчитали: выручки в отчётности нет — берём потолок по возрасту (' + ageText(R.ageMonths) + '): ' + money(R.byAge) + polovina + '.';
+      } else if (R.base === 'insufficient_data') {
+        kak = NEDOST_KAK(otg);
       } else {
-        kak = 'Как посчитали: выручка и возраст неизвестны — берём осторожный потолок ' + money(R.byAge) + polovina + '.';
+        kak = 'Как посчитали: потолок ' + money(R.byAge) + polovina + '.';
       }
     }
     var ne = '';
@@ -322,6 +333,15 @@
       podpis: 'Ориентир Делоскопа, не норма закона. Методика — в разборе «Сколько платить вперёд незнакомой компании».', url: STATYA };
     if (bankR) out.ssylka = R.base === 'finorg' ? { t: FINORG_SSYLKA, u: bankSsylka(f).u } : bankSsylka(f);
     return out;
+  }
+  // doverie-v1: предел не посчитан — оснований мало; что именно запросить, чтобы он появился.
+  function NEDOST_KAK(otg) {
+    return 'Как посчитали: не считали. Выручка и возраст компании неизвестны, а положительный предел из одних неизвестных мы не выводим. ' +
+      'Чего не хватает: дата регистрации (выписка из ЕГРЮЛ) и бухгалтерская отчётность за прошлый год (ГИР БО или копия от компании).';
+  }
+  function NEDOST_SOVET(otg) {
+    return otg ? 'Предел отсрочки не посчитан: оснований мало. Пока не увидите выписку и отчётность покупателя, отгружайте после оплаты.'
+      : 'Предел предоплаты не посчитан: оснований мало. Пока не увидите выписку и отчётность компании, платите по факту поставки.';
   }
   // Текст [команда] 02.10 19:37 (разд. 0) — когда предел меньше 10 000 ₽.
   function MALO_TEKST(half) {
@@ -374,7 +394,8 @@
   // predvaritelno-v1 (аудит 22.10, приоритет 1 «Безопасность денежных рекомендаций»): ориентир, посчитанный без выручки
   // (по возрасту) или при непроверенных судах, приставах, долгах, — предварительный. Неизвестное не считаем безопасным:
   // заголовок не говорит «работать можно», совет по сумме — «до проверки по факту поставки», число — «после проверки».
-  function headline(f, t, cap, malo, pv) {
+  function headline(f, t, cap, malo, pv, ned) {
+    if (ned && (t === 'go' || t === 'cap')) return t === 'cap' ? 'Предварительно: есть замечания' : 'Предварительно: данных мало';
     if (pv && t === 'go') return 'Предварительно: серьёзного не нашли';
     if (pv && t === 'cap' && !malo && cap != null) return 'Предварительно: есть замечания';
     if (f.status === 'LIQUIDATED') return 'Сделку не заключать';
@@ -385,7 +406,8 @@
     if (t === 'cap') return 'Можно, предоплата — до ' + money(cap);
     return 'Работать можно';
   }
-  function headlineOtg(f, t, cap, malo, pv) {
+  function headlineOtg(f, t, cap, malo, pv, ned) {
+    if (ned && (t === 'go' || t === 'cap')) return t === 'cap' ? 'Предварительно: есть замечания' : 'Предварительно: данных мало';
     if (pv && t === 'go') return 'Предварительно: серьёзного не нашли';
     if (pv && t === 'cap' && !malo && cap != null) return 'Предварительно: есть замечания';
     if (f.status === 'LIQUIDATED') return 'Сделку не заключать';
@@ -426,7 +448,9 @@
   function atStake(amount, regime) {
     amount = parseAmount(amount);
     if (!amount) return null;
-    if (regime === 'usn_d') return { soft: 0, hard: 0, zero: true };
+    // doverie-v1 ([команда] 30.10, п. 2): на УСН «доходы» расход налог не уменьшает, но вычет НДС у плательщика
+    // НДС на УСН есть — риск не нулевой, он зависит от статуса по НДС. Суммы не объявляем; vat — справочно, «если вычет есть».
+    if (regime === 'usn_d') return { soft: null, hard: null, utochnit: 'nds', vat: amount * VAT / (1 + VAT) };
     if (regime === 'usn_dr') { var t = amount * USN_DR; return { soft: 0, hard: t * (1 + FINE_HARD) }; }
     var vat = amount * VAT / (1 + VAT), profit = (amount - vat) * PROFIT;
     return { soft: vat * (1 + FINE_SOFT), hard: (vat + profit) * (1 + FINE_HARD), vat: vat };
@@ -550,13 +574,13 @@
     return { subject: subj, body: body };
   }
 
-  // Почему ориентир предварительный: { baza: 'age'|'unknown'|null, ne: ['арбитражные суды', 'долги у приставов', …] } или null.
+  // Почему ориентир предварительный: { baza: 'age'|'insufficient_data'|null, ne: ['арбитражные суды', 'долги у приставов', …] } или null.
   // Только для тонов go и cap: «по факту» и «стоп» и так ничего не разрешают. Банку и страховой предел не считаем — база не нужна.
-  var PREDV_BAZA = { age: 'выручки в отчётности нет — предел посчитан по возрасту компании', unknown: 'выручка и возраст неизвестны — предел посчитан осторожным потолком' };
+  var PREDV_BAZA = { age: 'выручки в отчётности нет — предел посчитан по возрасту компании', insufficient_data: 'выручка и возраст неизвестны — предел не считаем' };
   function predvaritelno(r, f, t, pc, np) {
     if (t !== 'go' && t !== 'cap') return null;
     if (pc.malo || pc.cap === 0) return null;            // вперёд и так 0 ₽ — разрешать нечего
-    var R = pc.raschet || {}, baza = !pc.finorg && (R.base === 'age' || R.base === 'unknown') ? R.base : null, ne = [];
+    var R = pc.raschet || {}, baza = !pc.finorg && (R.base === 'age' || R.base === 'insufficient_data') ? R.base : null, ne = [];
     (np && np.spisok || []).forEach(function (x) { ne.push(x); });
     neProverenyPodrobno(r).forEach(function (x) {
       var t2 = x.k === 'fssp' ? 'долги у приставов' : x.t;
@@ -585,22 +609,28 @@
         napravlenie: 'otgruzhaem',
         facts: f, tone: t, cap: pc.cap, malo: !!pc.malo, capRule: pc.rule, raschet: pc.raschet, neProvereno: np,
         kak: kakPoschitali(f, t, pc, reasons(f), np, 'otgruzhaem', pv),
-        headline: headlineOtg(f, t, pc.cap, pc.malo, pv), reasons: reasons(f), advice: adviceOtg(f, t, pc.malo),
-        amount: amount, regime: regime, stake: null, prepay: otgruzkaAdvice(amount, pc.cap, t, pv),
+        headline: headlineOtg(f, t, pc.cap, pc.malo, pv, pc.nedostatochno), reasons: reasons(f), advice: adviceOtg(f, t, pc.malo),
+        amount: amount, regime: regime, stake: null, prepay: pc.nedostatochno && amount ? NEDOST_SOVET(true) : otgruzkaAdvice(amount, pc.cap, t, pv),
         docs: list, letter: letterOtg(f, list, amount)
       }, pv);
     }
     return sFinorg(pc, {
       facts: f, tone: t, cap: pc.cap, malo: !!pc.malo, capRule: pc.rule, raschet: pc.raschet, neProvereno: np,
       kak: kakPoschitali(f, t, pc, reasons(f), np, null, pv),
-      headline: headline(f, t, pc.cap, pc.malo, pv), reasons: reasons(f), advice: advice(f, t, pc.malo),
-      amount: amount, regime: regime, stake: atStake(amount, regime), prepay: prepayAdvice(amount, pc.cap, t, pv),
+      headline: headline(f, t, pc.cap, pc.malo, pv, pc.nedostatochno), reasons: reasons(f), advice: advice(f, t, pc.malo),
+      amount: amount, regime: regime, stake: atStake(amount, regime), prepay: pc.nedostatochno && amount ? NEDOST_SOVET(false) : prepayAdvice(amount, pc.cap, t, pv),
       docs: list, letter: letter(f, list, amount)
     }, pv);
   }
   // finorg — только у банка или страховой: у остальных вывод побайтно прежний (снимок tests/otsrochka_pokupatelyu.test.js);
   // predvaritelno — только когда ориентир предварительный (predvaritelno-v1)
-  function sFinorg(pc, v, pv) { if (pc.finorg) v.finorg = true; if (pv) v.predvaritelno = pv; return v; }
+  function sFinorg(pc, v, pv) {
+    if (pc.finorg) v.finorg = true; if (pv) v.predvaritelno = pv;
+    if (pc.nedostatochno) v.nedostatochno = true;
+    // doverie-v1: положительный, нулевой и не посчитанный предел различимы без разбора текста
+    v.predel = { sostoyanie: pc.finorg ? 'finorg' : pc.nedostatochno ? 'insufficient_data' : pc.cap > 0 ? 'positive' : 'zero', pravilo: PRAVILO };
+    return v;
+  }
 
   // ---------- интерфейс ----------
   var CSS = '' +
@@ -609,6 +639,7 @@
     '.usl-mark{flex:none;width:12px;height:12px;border-radius:50%;margin-top:7px;box-shadow:0 0 0 4px rgba(22,114,63,.14);background:#16723F}' +
     '.usl.cap .usl-mark{background:#C27A00;box-shadow:0 0 0 4px rgba(194,122,0,.16)}' +
     '.usl.post .usl-mark,.usl.stop .usl-mark{background:#B3261E;box-shadow:0 0 0 4px rgba(179,38,30,.14)}' +
+    '.usl.ned .usl-mark{background:#8E8E93;box-shadow:0 0 0 4px rgba(142,142,147,.18)}' +
     '.usl-t{font-size:20px;line-height:1.3;font-weight:600;letter-spacing:-.01em}' +
     '.usl-r{margin:4px 0 0;font-size:15px;color:var(--ink2,#48484C)}' +
     '.usl-a{margin:0;font-size:15px;color:var(--ink2,#48484C)}' +
@@ -739,12 +770,12 @@
 
     function draw(keepFocus) {
       var v = decide(r, st), f = v.facts;
-      box.className = 'usl ' + v.tone;
+      box.className = 'usl ' + v.tone + (v.nedostatochno ? ' ned' : '');   // doverie-v1: неизвестное — нейтральным цветом
       var why = v.reasons.length ? v.reasons.join(', ') : chestnoPoyasnenie(r, bezPovtora(r && r.verdict, v.headline)); // точку ставит строка ниже — без «найдено..»
       var stake = '';
       if (v.stake) {
-        stake = v.stake.zero
-          ? '<div class="z">На вашем режиме расходы не уменьшают налог — налоговый риск по этому поставщику нулевой. Остаются риск денег и 115-ФЗ.</div>'
+        stake = v.stake.utochnit === 'nds'
+          ? '<div>Налоговый риск зависит от вашего статуса по\u00a0НДС — уточните. Расход на УСН «доходы» налог не уменьшает; если вы платите НДС 22% с вычетами, на кону вычет НДС — <b>' + money(v.stake.vat) + '</b> (18% суммы). Остаются риск денег и 115-ФЗ.</div>'
           : '<div>На кону при претензии налоговой: <b>' + (v.stake.soft ? money(v.stake.soft).replace(/\s₽$/, '') + '–' : 'до\u00a0') + money(v.stake.hard) + '</b> плюс пени. Досье Делоскопа — ваш довод, что поставщика проверили.</div>';
       }
       var sel = REGIMES.map(function (x) { return '<option value="' + x.id + '"' + (x.id === st.regime ? ' selected' : '') + '>' + esc(x.name) + '</option>'; }).join('');
@@ -814,7 +845,7 @@
     decide: decide, mount: mount, rynokStroka: rynokStroka, facts: facts, tone: tone, reorgPrekr: reorgPrekr, REORG_PREKRASHCHENIE: REORG_PREKRASHCHENIE, REORG_SDELAT: REORG_SDELAT, REORG_DOLG: REORG_DOLG, prepayCap: prepayCap, atStake: atStake,
     docs: docs, letter: letter, parseAmount: parseAmount, money: money, moneyKrupno: moneyKrupno, niceFloor: niceFloor, kindOf: kindOf,
     neProvereno: neProvereno, kakPoschitali: kakPoschitali, otgruzkaAdvice: otgruzkaAdvice, NAPR: NAPR, bezPovtora: bezPovtora, chestnoPoyasnenie: chestnoPoyasnenie, neProverenyKlyuchevye: neProverenyKlyuchevye, vVyvode: vVyvode, STATYA: STATYA, FORMULA: FORMULA,
-    predvaritelno: predvaritelno, METODIKA: { DELITEL: DELITEL, POTOLKI: POTOLKI, OSTOROZHNO: OSTOROZHNO, MINIMUM: MINIMUM },
+    predvaritelno: predvaritelno, METODIKA: { DELITEL: DELITEL, POTOLKI: POTOLKI, OSTOROZHNO: OSTOROZHNO, MINIMUM: MINIMUM, PRAVILO: PRAVILO },
     RATES: { VAT: VAT, PROFIT: PROFIT, USN_DR: USN_DR }
   };
 });

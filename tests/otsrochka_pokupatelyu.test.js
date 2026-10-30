@@ -13,7 +13,8 @@ const P = require('../indeks/predoplata.js');
 const F = require('./otsrochka_fixtures.js');
 const SNIMOK = JSON.parse(fs.readFileSync(path.join(__dirname, 'otsrochka_pokupatelyu.snapshot.json'), 'utf8'));
 const NB = '\u00a0';
-const sha = (x) => require('node:crypto').createHash('sha256').update(JSON.stringify(x)).digest('hex');
+// doverie-v1: новое поле predel (состояние предела и версия правила) в снимок не входит — остальной вывод побайтно прежний
+const sha = (x) => require('node:crypto').createHash('sha256').update(JSON.stringify(x, (k, v) => (k === 'predel' ? undefined : v))).digest('hex');
 const OTG = { napravlenie: 'otgruzhaem' };
 const otg = (r, o) => U.decide(r, Object.assign({}, o || {}, OTG));
 const rub = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, NB) + NB + '₽';

@@ -62,7 +62,7 @@ test('«на кону» — только с формулой и суммой; б
   const bez = P.sobrat(demo(), opt({ summa: 1000000 })); bez.itog.na_konu.formula = '';
   assert.ok(P.proverit(bez).some((e) => /формул/.test(e)));
   const usn = P.sobrat(demo(), opt({ summa: 1000000, rezhim: 'usn_d' }));
-  assert.strictEqual(usn.itog.na_konu.rub, 0);
+  assert.strictEqual(usn.itog.na_konu.rub, null, 'doverie-v1: УСН «доходы» — не 0 ₽, а «уточните статус по НДС»');
 });
 
 test('ИП (12 цифр или kind INDIVIDUAL) — Паспорт не выпускаем, ни одного раздела с данными', () => {

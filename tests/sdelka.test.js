@@ -113,7 +113,9 @@ test('нет необоснованного разрешения платить:
   assert.deepStrictEqual(x.o.nedostaet.map((n) => n.k), [], 'всё закрыто');
   assert.strictEqual(x.it.kod, 'sobrano');
   assert.match(x.it.tekst, /Решение принимает ваша компания\.$/);
-  assert.ok(x.it.predoplata > 0 && x.it.predoplata <= 100);
+  // doverie-v1: стоп-листы закрыты только отметкой заказчика — положительной доли предоплаты нет
+  assert.strictEqual(x.it.predoplata, 0, 'отметка заказчика ≠ подтверждение источником');
+  assert.strictEqual(x.it.osnovanie, 'otmetki');
   // все варианты итога — без «можно платить»
   const varianty = [x.it, sobrat(otvet(), 1500000).it, sobrat(otvet({ risk_level: 'high', signals: [{ title: 'Недостоверные сведения в ЕГРЮЛ', status: 'bad', detail: 'Адрес' }] }), 1500000).it,
     sobrat(otvet({ company: Object.assign({}, otvet().company, { status: 'LIQUIDATED' }) }), 1500000).it];

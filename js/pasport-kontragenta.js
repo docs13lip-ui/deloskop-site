@@ -520,9 +520,12 @@
       var u = U.decide(r, { amount: opts.summa, regime: opts.rezhim });
       itog.vyvod = u.headline && (u.headline.title || u.headline) || '';
       itog.predel_avansa_rub = typeof u.cap === 'number' ? u.cap : null;
+      if (u.predel) itog.predel_sostoyanie = u.predel.sostoyanie;   // doverie-v1: positive | zero | insufficient_data | finorg
       // predel-finorg-v1: банк или страховая организация — предел не считаем (ТЗ [команда] 12.10), строка «не считаем» без тона
       if (u.finorg) fakt('predel', 'Предел аванса', 'не считаем — банк или страховая организация', { ton: 'info', istochnik: 'формула Делоскопа' });
       // predvaritelno-v1 (аудит 22.10): ориентир без выручки или при непроверенных долгах и судах — «после проверки», тон не зелёный
+      // doverie-v1: выручка и возраст неизвестны — предел не посчитан (не «—» с зелёным тоном и не сумма)
+      else if (u.nedostatochno) fakt('predel', 'Предел аванса', 'не считаем — выручка и возраст компании неизвестны; до проверки — по факту поставки', { ton: 'warn', istochnik: 'формула Делоскопа' });
       else if (u.predvaritelno && typeof u.cap === 'number') fakt('predel', 'Предел аванса', 'предварительно: ' + U.money(u.cap) + ' — после проверки того, чего мы не видели; до неё — по факту поставки', { ton: 'warn', istochnik: 'формула Делоскопа' });
       else fakt('predel', 'Предел аванса', typeof u.cap === 'number' ? U.money(u.cap) : '—', { ton: u.malo ? 'warn' : u.tone === 'go' ? 'ok' : u.tone === 'cap' ? 'warn' : 'bad', istochnik: 'формула Делоскопа' });
       var kk = u.kak && (typeof u.kak === 'string' ? { kak: u.kak } : u.kak);
@@ -548,8 +551,9 @@
       (u.docs || []).forEach(function (d, i) { fakt('zaprosit', (i + 1) + '. ' + d.title, d.why || '', { ton: 'info', istochnik: 'письмо ФНС № БВ-4-7/3060@' }); });
       var st = u.stake;
       if (st && u.amount) {
-        itog.na_konu = st.zero
-          ? { rub: 0, formula: 'УСН «доходы»: расход по сделке налог не уменьшает — снимать нечего. Если вы на УСН платите НДС 22% с вычетами, на кону вычет НДС — 18% суммы.', summa: u.amount }
+        // doverie-v1: УСН «доходы» — не «0 ₽», а «зависит от статуса по НДС» (rub = null — не посчитано, не ноль)
+        itog.na_konu = st.utochnit === 'nds'
+          ? { rub: null, utochnit: 'nds', formula: 'УСН «доходы»: расход по сделке налог не уменьшает. Если вы на УСН платите НДС 22% с вычетами, на кону вычет НДС — 18% суммы.', summa: u.amount }
           : { rub: Math.round(st.hard), rub_min: Math.round(st.soft || 0), summa: u.amount,
               formula: u.regime === 'usn_dr' ? 'УСН «доходы минус расходы»: налог 15% со снятого расхода + штраф до 40% (п. 3 ст. 122 НК). Без пеней.'
                 : 'ОСН: вычет НДС 22/122 + налог на прибыль 25% со снятого расхода + штраф 20–40% (ст. 122 НК). Без пеней; верхняя граница без налоговой реконструкции.' };

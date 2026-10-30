@@ -4627,3 +4627,51 @@ _vstavit_znachit_do_ramki = vstavit_znachit
 
 def vstavit_znachit(t):  # noqa: F811 — kartochki-ramka-imya-v1: пересобранный блок — сразу с подписью «◆ … для «X»»
     return _tipograf_kartochki_do_chisel(ramka_imya(_vstavit_znachit_do_ramki(t)))
+
+
+# ---------------------------------------------------------------- kartochki-ramka-daty-v1 (решение владельца 30.10 «уникальность»)
+# Две служебные строки стояли дословно на всех 167 карточках: «…; здесь — выводы по фактам на дату карточки.» (блок Индекса,
+# после kartochki-ramka-imya-v1 — в одном предложении с названием)
+# и «ФНС обновляет набор раз в месяц.» (под строкой недоимки). Обе говорят о дате, но саму дату не называли. Теперь —
+# «…по фактам, собранным 25.10.2026.» и «…; для ООО «…» здесь — набор на 01.09.2026.» — с датой со страницы (первая «ЕГРЮЛ · сведения на …» и дата сведений строки недоимки) и, во второй, с названием компании
+# в форме «для ООО «…»» (аббревиатура формы не склоняется — без ошибок падежа). Новых утверждений нет: только числа и
+# имя, которые уже стоят на странице. Чистая функция по готовой разметке: новые карточки и API (обёртка ниже) и
+# опубликованные (kartochki.py → perepechatat). Повторный вызов — те же байты; нет даты или имени — строка прежняя.
+_RD_PR = r"(?:&nbsp;|&#160;|\s| | )"
+_RD_ZDES = re.compile(r"([Зз])десь" + _RD_PR + r"*— выводы по" + _RD_PR + r"+фактам(?:, собранным| на" + _RD_PR + r"+дату карточки)" + _RD_PR + r"*(?:\d{2}\.\d{2}\.\d{4})?\.")
+_RD_EGRUL = re.compile(r"ЕГРЮЛ · сведения на" + _RD_PR + r"*(\d{2}\.\d{2}\.\d{4})")
+_RD_NABOR = re.compile(r'(<span class="fact__src co-src">ФНС, открытые данные[^<]* · сведения на' + _RD_PR + r'*(\d{2}\.\d{2}\.\d{4})[^<]*</span></div>)'
+                       r'<p class="co-nabor">[^<]*</p>')
+
+
+def _rd_imya(t):
+    imya = str(_sh_org(t).get("name") or "").strip()
+    ch = imya.split(" ")
+    if len(ch) < 2 or ch[0] not in IMYA_FORMY or STOP_SLOVA.search(imya) or "<" in imya:
+        return ""
+    return html.escape(ch[0], quote=False) + "&nbsp;" + html.escape(imya.split(" ", 1)[1], quote=False)
+
+
+def ramka_daty(t):
+    """kartochki-ramka-daty-v1: дата в «Здесь — выводы…» и дата с названием в строке набора ФНС. Идемпотентна."""
+    if not t:
+        return t
+    m = re.search(r"<main.*?</main>", t, re.S)
+    if not m:
+        return t
+    main = m.group(0)
+    e = _RD_EGRUL.search(main)
+    if e:
+        main = _RD_ZDES.sub(lambda x: "%sдесь&nbsp;— выводы по фактам, собранным %s." % (x.group(1), e.group(1)), main, count=1)
+    im = _rd_imya(t)
+    if im:
+        main = _RD_NABOR.sub(lambda x: x.group(1) + '<p class="co-nabor">ФНС обновляет набор раз в&nbsp;месяц; для %s здесь&nbsp;— '
+                             'набор на&nbsp;%s.</p>' % (im, x.group(2)), main, count=1)
+    return t[:m.start()] + main + t[m.end():]
+
+
+_html_kartochki_do_ramki_daty = html_kartochki
+
+
+def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811 — kartochki-ramka-daty-v1
+    return tipograf_kartochki(ramka_daty(_html_kartochki_do_ramki_daty(k, V, sosedi, kom, normy, cena, segodnya)))

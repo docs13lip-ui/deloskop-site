@@ -2,7 +2,9 @@
 """nedoimka-mesyac-v1 (24.10.2026, [Ночные-2]; ТЗ [Продукт] 23.10 п. 3Г): с 01.04.2026 ФНС публикует набор о недоимке
 ежемесячно (приказ ФНС от 25.11.2025 № ЕД-7-14/1006@). Сторож: под проверенной строкой «Задолженность по налогам» —
 ровно одна строка «ФНС обновляет набор раз в месяц.», сразу за фактом; без даты следующего выхода (день не сверен);
-повторная вставка ничего не меняет; новые карточки (html_kartochki) получают строку так же."""
+повторная вставка ничего не меняет; новые карточки (html_kartochki) получают строку так же.
+kartochki-ramka-daty-v1 (30.10): на опубликованной карточке строка дополнена именем и датой набора
+(«…раз в месяц; для ООО «…» здесь — набор на 01.09.2026.») — ramka_daty поверх nabor_nedoimki."""
 import os
 import re
 import sys
@@ -30,7 +32,8 @@ class TestNedoimkaMesyac(unittest.TestCase):
             if fakt:
                 n += 1
                 self.assertEqual(t.count(K.NABOR_METKA), 1, d)
-                self.assertTrue(t.startswith(K.NABOR_TEKST, fakt.end()), d + ": строка — сразу под фактом недоимки")
+                self.assertTrue(t.startswith(K.NABOR_TEKST, fakt.end()) or t.startswith(K.NABOR_TEKST[:-5] + "; для ", fakt.end()),
+                                d + ": строка — сразу под фактом недоимки")
             else:
                 self.assertNotIn(K.NABOR_METKA, t, d + ": строки без проверенного факта недоимки быть не должно")
         self.assertGreater(n, 0)
@@ -40,8 +43,8 @@ class TestNedoimkaMesyac(unittest.TestCase):
 
     def test_povtor(self):
         for d, t in list(kartochki())[:20]:
-            self.assertEqual(K.nabor_nedoimki(t), t, d)
-            self.assertEqual(K.nabor_nedoimki(K.ubrat_nabor(t)), t, d)
+            self.assertEqual(K.ramka_daty(K.nabor_nedoimki(t)), t, d)
+            self.assertEqual(K.ramka_daty(K.nabor_nedoimki(K.ubrat_nabor(t))), t, d)
 
     def test_obertka(self):
         import inspect

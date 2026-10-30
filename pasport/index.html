@@ -90,7 +90,7 @@ details p{margin:10px 0 0;color:var(--ink2);font-size:17px}
 .pp .guil{position:absolute;inset:0;pointer-events:none;opacity:.55}
 .pp-in{position:relative;display:grid;grid-template-columns:1fr auto;gap:28px;align-items:start}
 .kick{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:600}
-.pp h1{font-size:clamp(32px,4.4vw,42px);margin:10px 0 8px}
+.pp .pp-imya{font-size:clamp(32px,4.4vw,42px);line-height:1.06;letter-spacing:-.035em;margin:10px 0 8px}
 .ids{font-size:15px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 16px;font-variant-numeric:tabular-nums}
 .ids b{color:var(--ink2);font-weight:500}
 .verdict{margin-top:22px;border-radius:16px;padding:16px 18px 16px 50px;position:relative}
@@ -478,7 +478,7 @@ function dataSvedenij(v){var t=String(v==null?'':v).trim(),m=/^(\d{4})-(\d{2})-(
       '<article class="pp">'+guilloche(+String(c.inn).slice(-3)||7)+
       '<div class="pp-in"><div>'+
         '<div class="kick">Паспорт компании'+(r.demo?'<span class="demo-flag">пример · вымышленная компания</span>':'')+'</div>'+
-        '<h1>'+esc(name)+'</h1>'+
+        '<h2 class="pp-imya">'+esc(name)+'</h2>'+
         '<div class="ids"><span>ИНН <b>'+esc(c.inn)+'</b></span>'+(c.ogrn?'<span>'+(c.kind==='INDIVIDUAL'?'ОГРНИП':'ОГРН')+' <b>'+esc(c.ogrn)+'</b></span>':'')+(reg?'<span>с '+reg+' года</span>':'')+(city?'<span>'+esc(city)+'</span>':'')+'</div>'+
         '<div class="verdict '+h.tone+'"><b>'+esc(h.title)+'</b><span>'+esc(h.text)+'</span></div>'+
         (facts?'<dl class="facts">'+facts+'</dl>':'')+

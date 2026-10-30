@@ -299,7 +299,7 @@ def razbor(r, D, po_slug, F=None):
 %(kr)s
 <p class="rubr">Разбор дела</p>
 <h1>%(h1)s</h1>
-<p class="meta">Команда Делоскопа · <time datetime="%(data)s">%(data_ru)s</time> · %(min)s чтения</p>
+<p class="meta"><a class="avtor" href="/o-proekte/#komanda">Команда Делоскопа</a> · <time datetime="%(data)s">%(data_ru)s</time> · %(min)s чтения</p>
 <p class="lid">%(lid)s</p>
 %(kart)s
 <article>

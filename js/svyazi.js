@@ -19,6 +19,12 @@
   function skl(n, a, b, c) { var m = Math.abs(n) % 100, k = m % 10; return m > 10 && m < 20 ? c : k === 1 ? a : k > 1 && k < 5 ? b : c; }
   function str(v) { return v == null ? '' : String(v).trim(); }
   function ton(s) { return (s && TON[s.status]) || 'neutral'; }
+  function kodPriznaka(s) {
+    var U = (W && W.Usloviya) || null;
+    if (!U && typeof module === 'object' && typeof require === 'function') { try { U = require('./usloviya.js'); } catch (e) { U = null; } }
+    var x = U && U.signalId ? U.signalId(s) : null;
+    return x && x.po !== 'tekst' ? x : null;
+  }
 
   // модель из ответа /api/check: {centr:{zag, pod}, uzly:[{k, zag, znach, pod, ton}]}; null — вкладки нет
   function model(r) {
@@ -31,8 +37,10 @@
     (r.signals || []).forEach(function (s) {
       if (!s) return;
       sig[s.id] = s;
-      if (/^Массовый руководитель/i.test(str(s.title))) massRuk = s;
-      if (/^Массовый адрес/i.test(str(s.title))) massAdr = s;
+      // signal-id-v1: по коду признака (mass_dir / mass_address), без кода — прежним выражением по заголовку
+      var k = kodPriznaka(s);
+      if (k ? k.id === 'mass_dir' : /^Массовый руководитель/i.test(str(s.title))) massRuk = s;
+      if (k ? k.id === 'mass_address' : /^Массовый адрес/i.test(str(s.title))) massAdr = s;
     });
     var uzly = [];
     function dob(k, row, pod, s) {

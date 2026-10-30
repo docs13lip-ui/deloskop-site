@@ -102,7 +102,13 @@
     return { t: dengi(Number(k.value)), pod: pod, ton: 'neutral' };
   }
   function yNedoimka(r) {
-    var s = sig(r).filter(function (x) { return /задолженност.*налог|недоимк/i.test(String(x.title || '')); })[0];
+    // signal-id-v1: по коду признака (tax_debt), без кода — прежним выражением по заголовку
+    var U = m('Usloviya') || (typeof module === 'object' && typeof require === 'function' ? (function () { try { return require('./usloviya.js'); } catch (e) { return null; } })() : null);
+    var s = sig(r).filter(function (x) {
+      var k = U && U.signalId ? U.signalId(x) : null;
+      if (k && k.po !== 'tekst') return k.id === 'tax_debt';
+      return /задолженност.*налог|недоимк/i.test(String(x.title || ''));
+    })[0];
     if (s) return { t: zaglavnaya(s.detail || (s.status === 'ok' ? 'Нет' : 'Есть')), ton: ton(s.status) };
     var k = kpi(r, /Долг перед бюджетом/);
     if (k) return k.value ? { t: dengi(Number(k.value)), ton: 'warn' } : { t: zaglavnaya(k.text || 'Нет'), ton: k.text === 'Нет' ? 'ok' : 'neutral' };

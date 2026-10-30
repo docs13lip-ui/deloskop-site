@@ -39,6 +39,14 @@
     if (typeof module === 'object' && typeof require === 'function') { try { return require(put); } catch (e) {} }
     return null;
   }
+  // signal-id-v1: признак по коду (signal_id / однозначный id ответа) — через Usloviya.signalId; признак без кода —
+  // прежним выражением по заголовку (совместимый адаптер, вывод для нынешних ответов API тот же)
+  function priznak(s, kod, re) {
+    if (!s || (s.status !== 'bad' && s.status !== 'warn')) return false;
+    var U = modul('Usloviya', './usloviya.js'), x = U && U.signalId ? U.signalId(s) : null;
+    if (x && x.po !== 'tekst') return kod === 'mass' ? x.kind === 'mass' : x.id === kod;
+    return re.test(str(s.title));
+  }
   function cifry(s) { return String(s == null ? '' : s).replace(/\D/g, ''); }
   function plural(n, a, b, c) { var d = n % 10, s = n % 100; return d === 1 && s !== 11 ? a : d >= 2 && d <= 4 && (s < 12 || s > 14) ? b : c; }
   function money(x, U) { U = U || modul('Usloviya', './usloviya.js'); return U ? U.money(x) : String(Math.round(x)) + NB + '₽'; }
@@ -300,7 +308,7 @@
     var dns = stroka(sec.finance, /^Доход на одного сотрудника/i);
     plitka('shtat', 'Сотрудники', F.employees || F.staff, { pod: dns ? 'Доход на сотрудника: ' + dns : '' });
     // 4. Достоверность записей ЕГРЮЛ
-    var mass = (r.signals || []).filter(function (s) { return s && /^Массов/i.test(str(s.title)) && (s.status === 'bad' || s.status === 'warn'); });
+    var mass = (r.signals || []).filter(function (s) { return priznak(s, 'mass', /^Массов/i); });
     if (F.address && /^Нет$/.test(str(F.address.znach))) F.address.znach = 'Отметок о недостоверности нет';
     plitka('dostovernost', 'Достоверность ЕГРЮЛ', F.address, mass.length ? { pod: mass.map(function (s) { return str(s.title) + (s.detail ? ': ' + str(s.detail) : ''); }).join('; '), ton: 'warn' } : null);
     // 5. Статус
@@ -346,9 +354,9 @@
     var rows = sec.management || [];
     var ruk = rows.filter(function (x) { return x && str(x[1]) && !/^(Руководит с|Уставный капитал)/i.test(str(x[0])) && !/учредит|участник|акционер|собственник/i.test(str(x[0])); })[0];
     var s1 = stroka(rows, /^Руководит с/i), kap = stroka(rows, /^Уставный капитал/i);
-    var massRuk = (r.signals || []).filter(function (s) { return s && /^Массовый руководитель/i.test(str(s.title)) && (s.status === 'bad' || s.status === 'warn'); })[0];
-    var massUchr = (r.signals || []).filter(function (s) { return s && /^Массов\S* учредит/i.test(str(s.title)) && (s.status === 'bad' || s.status === 'warn'); })[0];
-    var massAdr = (r.signals || []).filter(function (s) { return s && /^Массовый адрес/i.test(str(s.title)) && (s.status === 'bad' || s.status === 'warn'); })[0];
+    var massRuk = (r.signals || []).filter(function (s) { return priznak(s, 'mass_dir', /^Массовый руководитель/i); })[0];
+    var massUchr = (r.signals || []).filter(function (s) { return priznak(s, 'mass_uchr', /^Массов\S* учредит/i); })[0];
+    var massAdr = (r.signals || []).filter(function (s) { return priznak(s, 'mass_address', /^Массовый адрес/i); })[0];
     var rukImya = ruk ? str(ruk[1]) : str(c.director_name);
     if (rukImya) {
       var yur = RE_YUR.test(rukImya);

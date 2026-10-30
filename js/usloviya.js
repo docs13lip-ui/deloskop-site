@@ -78,8 +78,46 @@
   }
 
   // ---------- признаки из ответа API ----------
-  // Названия признаков приходят текстом, поэтому классифицируем по смыслу.
-  // Неизвестный «плохой» признак не теряется — он попадает в «other».
+  // signal-id-v1 (Master 30.10, «Архитектура»): правило зависит от стабильного кода признака, а не от текста заголовка.
+  // Порядок: (1) s.signal_id / s.rule_id — код признака, когда API начнёт его отдавать; неизвестный код → 'other'
+  // (признак не теряется и не угадывается по тексту); (2) s.id из ответа /api/check, если он однозначен
+  // (tax_debt, employees, age, mass_address…); (3) совместимый адаптер — прежние регулярные выражения по заголовку,
+  // только для общих id (status, address, management, mass) и признаков без id. Для нынешних ответов API результат
+  // побайтно прежний (сторож tests/signal_id.test.js), а переименование заголовка признака с однозначным id правило не меняет.
+  // Вид (kind) — группа для «Условий сделки» и «Щита»; signal_id — сам признак (mass_address ≠ mass_dir).
+  var SIGNALY = [
+    // [signal_id, вид, выражение по заголовку — только для адаптера]
+    ['bankrotstvo', 'exit', /банкрот/i],
+    ['likvidaciya', 'exit', /ликвидац|ликвидир/i],
+    ['reorganizaciya', 'exit', /реорганиз/i],
+    ['prekrashchena', 'exit', /прекращ/i],
+    ['diskvalifikaciya', 'diskv', /дисквалиф/i],
+    ['nedostovernost', 'nedost', /недостоверн/i],
+    ['priostanovka', 'block', /приостановл|блокировк[аи]? (операц|сч)|решени[ея] о приостан/i],
+    ['mass_address', 'mass', /массов\S*\s+адрес/i],
+    ['mass_dir', 'mass', /массов\S*\s+(руковод|директор)/i],
+    ['mass_uchr', 'mass', /массов\S*\s+учредит/i],
+    ['massovyj', 'mass', /массов/i],
+    ['fssp', 'fssp', /пристав|исполнительн|фссп/i],
+    ['rnp', 'rnp', /недобросовестн.*поставщ|\bрнп\b/i],
+    ['tax_debt', 'dolg', /(задолженн|долг)\S*.*(налог|бюджет)|недоимк/i],
+    ['dolg', 'dolg', /задолженн|недоимк|долг/i],
+    ['rukovoditel', 'director', /руководител|директор/i],
+    ['shtat', 'staff', /численност|сотрудник|штат/i],
+    ['otchetnost', 'report', /отч[её]тност|не сда/i],
+    ['nalog_nagruzka', 'nagruzka', /нагрузк|налоги.*уплач|уплачен.*налог/i],
+    ['shtrafy', 'fines', /правонаруш|штраф/i],
+    ['vozrast', 'young', /молод|зарегистрир|возраст/i]
+  ];
+  var VID = {}; SIGNALY.forEach(function (x) { VID[x[0]] = x[1]; });
+  // однозначные id ответа /api/check → signal_id (общие status, address, management, mass, dynamics — через адаптер)
+  var IZ_API = {
+    tax_debt: 'tax_debt', employees: 'shtat', age: 'vozrast',
+    mass_address: 'mass_address', massovyj_adres: 'mass_address', mass_dir: 'mass_dir', massovyj_rukovoditel: 'mass_dir',
+    fssp: 'fssp', rnp: 'rnp', nedostovernost: 'nedostovernost', bankrotstvo: 'bankrotstvo', likvidaciya: 'likvidaciya',
+    reorganizaciya: 'reorganizaciya', diskvalifikaciya: 'diskvalifikaciya', priostanovki: 'priostanovka', shtrafy: 'shtrafy'
+  };
+  // Прежний набор видов — для kindOf(строка): порядок проверки тот же, что был до signal-id-v1
   var KINDS = [
     ['exit', /ликвидац|ликвидир|банкрот|реорганиз|прекращ/i],
     ['diskv', /дисквалиф/i],
@@ -96,9 +134,31 @@
     ['fines', /правонаруш|штраф/i],
     ['young', /молод|зарегистрир|возраст/i]
   ];
-  function kindOf(title) {
-    for (var i = 0; i < KINDS.length; i++) if (KINDS[i][1].test(title || '')) return KINDS[i][0];
-    return 'other';
+  function poTekstu(title) {
+    var t = String(title || ''), k = 'other', i;
+    for (i = 0; i < KINDS.length; i++) if (KINDS[i][1].test(t)) { k = KINDS[i][0]; break; }
+    if (k === 'other') return { id: null, kind: 'other' };
+    // signal_id — первый признак этого вида, чей текст совпал (вид — всегда прежний)
+    for (i = 0; i < SIGNALY.length; i++) if (SIGNALY[i][1] === k && SIGNALY[i][2].test(t)) return { id: SIGNALY[i][0], kind: k };
+    return { id: null, kind: k };
+  }
+  // signalId(s) → { id: signal_id | null, kind, po: 'kod' | 'id' | 'tekst' }
+  function signalId(s) {
+    s = s || {};
+    var kod = s.signal_id || s.rule_id;
+    if (kod != null && String(kod).trim()) {
+      kod = String(kod).trim();
+      return { id: kod, kind: VID[kod] || 'other', po: 'kod' };
+    }
+    var a = s.id != null ? IZ_API[String(s.id)] : null;
+    if (a) return { id: a, kind: VID[a], po: 'id' };
+    var t = poTekstu(s.title);
+    return { id: t.id, kind: t.kind, po: 'tekst' };
+  }
+  // kindOf: признак целиком (по коду) или, как раньше, строка заголовка
+  function kindOf(x) {
+    if (x && typeof x === 'object') return signalId(x).kind;
+    return poTekstu(x).kind;
   }
   function num(v) { var n = typeof v === 'number' ? v : parseFloat(String(v || '').replace(/[^\d.,-]/g, '').replace(',', '.')); return isFinite(n) ? n : null; }
 
@@ -123,12 +183,15 @@
     if (f.kind === 'LEGAL' && (f.kredit || /^65\.[12](\.|\d|$)/.test(String(c.okved || '')))) { f.finorg = true; f.okved = String(c.okved); if (/^\d{13}$/.test(String(c.ogrn || ''))) f.ogrn = String(c.ogrn); }
     (r.signals || []).forEach(function (s) {
       if (s.status !== 'bad' && s.status !== 'warn') {
-        if (/численност|сотрудник/i.test(s.title || '')) { var z = num(s.detail); if (z != null) f.staff = z; }
+        if (signalId(s).id === 'shtat' || /численност|сотрудник/i.test(s.title || '')) { var z = num(s.detail); if (z != null) f.staff = z; }
         return;
       }
-      var k = kindOf(s.title);
+      var si = signalId(s), k = si.kind;
       f[s.status][k] = (f[s.status][k] || 0) + 1;
-      f.list.push({ kind: k, status: s.status, title: s.title || '', detail: s.detail || '' });
+      var el = { kind: k, status: s.status, title: s.title || '', detail: s.detail || '' };
+      // signal_id — неперечисляемое поле: сохранённые выводы, экспорт и снимки (JSON) побайтно прежние
+      Object.defineProperty(el, 'sid', { value: si.id, enumerable: false });
+      f.list.push(el);
       if (k === 'staff') { var n = num(s.detail); if (n != null) f.staff = n; }
     });
     (D.kpi || []).forEach(function (x) {
@@ -250,7 +313,9 @@
   function dvaZnaka(n) { return (n < 10 ? '0' : '') + n; }
   function nalogovyjNabor(r) {
     var sig = (r && r.signals || []).filter(function (s) {
-      return s && (s.id === 'tax_debt' || (!s.id && /задолженн\S*\s+по\s+налог/i.test(s.title || '')));
+      if (!s) return false;
+      var si = signalId(s);
+      return s.id === 'tax_debt' || (si.po === 'kod' && si.id === 'tax_debt') || (si.po === 'tekst' && !s.id && /задолженн\S*\s+по\s+налог/i.test(s.title || ''));
     })[0];
     if (!sig || ['ok', 'warn', 'bad'].indexOf(sig.status) < 0) return null;
     var d = dataIzStroki(sig.as_of);
@@ -843,7 +908,7 @@
 
   return {
     decide: decide, mount: mount, rynokStroka: rynokStroka, facts: facts, tone: tone, reorgPrekr: reorgPrekr, REORG_PREKRASHCHENIE: REORG_PREKRASHCHENIE, REORG_SDELAT: REORG_SDELAT, REORG_DOLG: REORG_DOLG, prepayCap: prepayCap, atStake: atStake,
-    docs: docs, letter: letter, parseAmount: parseAmount, money: money, moneyKrupno: moneyKrupno, niceFloor: niceFloor, kindOf: kindOf,
+    docs: docs, letter: letter, parseAmount: parseAmount, money: money, moneyKrupno: moneyKrupno, niceFloor: niceFloor, kindOf: kindOf, signalId: signalId, SIGNALY: SIGNALY.map(function (x) { return x[0]; }),
     neProvereno: neProvereno, kakPoschitali: kakPoschitali, otgruzkaAdvice: otgruzkaAdvice, NAPR: NAPR, bezPovtora: bezPovtora, chestnoPoyasnenie: chestnoPoyasnenie, neProverenyKlyuchevye: neProverenyKlyuchevye, vVyvode: vVyvode, STATYA: STATYA, FORMULA: FORMULA,
     predvaritelno: predvaritelno, METODIKA: { DELITEL: DELITEL, POTOLKI: POTOLKI, OSTOROZHNO: OSTOROZHNO, MINIMUM: MINIMUM, PRAVILO: PRAVILO },
     RATES: { VAT: VAT, PROFIT: PROFIT, USN_DR: USN_DR }

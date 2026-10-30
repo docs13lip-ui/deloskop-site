@@ -110,3 +110,53 @@ test('(1) интерфейс: «данных мало» — нейтральна
   assert.match(src, /\(v\.nedostatochno \? ' ned' : ''\)/);
   assert.match(src, /\.usl\.ned \.usl-mark\{background:#8E8E93/);
 });
+
+// (4) досье сделки: пункты о фактах, закрытые отметкой заказчика, не дают положительной доли предоплаты
+function dosje(r, summa, otmVse, extraGalki) {
+  global.self = global; global.Usloviya = U;
+  const S = require('../js/sdelka.js'), PK = require('../js/pasport-kontragenta.js');
+  const v = U.decide(r, { amount: summa }), p = PK.sobrat(r, { usloviya: U, summa: summa });
+  const docs = {}; v.docs.forEach((d) => { docs[d.id] = true; });
+  const otm = {};
+  if (otmVse) p.razdely.filter((x) => S.KLYUCH.includes(x.id) && x.status === 'not_checked').forEach((x) => { otm[x.n] = { ok: true, rez: 'net', razdel: x.n }; });
+  const rk = S.rekvizity('ИНН ' + r.company.inn + ', р/с 40702810938000012345, БИК 044525225', r);
+  const o = { r: r, v: v, p: p, summa: summa, rekv: rk, otm: otm, galki: Object.assign({ svereny: true, telefon: true, dogovor: true, docs: docs }, extraGalki || {}) };
+  o.nedostaet = S.nedostaet(o); o.problemy = S.problemy(o);
+  return { o: o, it: S.itog(o), S: S };
+}
+const D = new Date().toISOString().slice(0, 10);
+const VSE = { sudy: { status: 'not_found', data_svedeniy: D }, bankrotstvo: { status: 'not_found', data_svedeniy: D }, fssp: { status: 'not_found', data_svedeniy: D },
+  priostanovki: { status: 'not_found', data_svedeniy: D }, mery: { status: 'not_found', data_svedeniy: D }, rnp: { status: 'not_found', data_svedeniy: D }, kontrakty: { status: 'not_found', data_svedeniy: D } };
+
+test('(4) досье: пункты закрыты отметками заказчика → «Пункты закрыты», но предоплата 0 % и Делопись «по факту»', () => {
+  const r = resp({ inn: '7707049388', reg_date: '2002-01-01', okved: '61.10' }, { checked_at: new Date().toISOString(), dossier: { kpi: [{ label: 'Выручка за 2025', value: 520000000 }] }, damia: VSE,
+    signals: [{ id: 'tax_debt', title: 'Задолженность по налогам', status: 'ok', as_of: D }] });
+  const x = dosje(r, 1500000, true);
+  assert.deepStrictEqual(x.o.nedostaet.map((n) => n.k), []);
+  assert.strictEqual(x.it.kod, 'sobrano');
+  assert.ok(x.it.otmetki.length > 0, 'есть пункты, закрытые отметкой');
+  assert.strictEqual(x.it.predoplata, 0);
+  assert.match(x.S.delopisSsylka('7707049388', x.it), /predoplata=0$/);
+  assert.match(bezNb(x.it.tekst), /источником они не подтверждены/);
+});
+
+test('(4) досье: неизвестные выручка и возраст + «отчётность получена» — не «банк или страховая», предоплата 0 %', () => {
+  const x = dosje(resp({ inn: '7707049388' }, { checked_at: new Date().toISOString(), damia: VSE }), 500000, true, {});
+  const k = x.o.nedostaet.map((n) => n.k);
+  assert.ok(!/банка или страховой/.test(x.it.tekst), x.it.tekst);
+  if (x.it.kod === 'sobrano') assert.strictEqual(x.it.predoplata, 0);
+  const vy = dosje(resp({ inn: '7707049388' }, { checked_at: new Date().toISOString(), damia: VSE }), 500000, true, { docs: {} });
+  const p = vy.o.nedostaet.find((n) => n.k === 'vyruchka');
+  if (p) assert.match(p.t, /не посчитан/);
+  void k;
+});
+
+test('(4) /sravnit/: не обещает данные картотеки арбитражных дел, пока суды не подключены', () => {
+  const html = bezNb(chitat('sravnit/index.html').replace(/&nbsp;/g, ' '));
+  assert.ok(!/Арбитражные суды<\/strong> — из картотеки/.test(html));
+  assert.match(html, /картотеку арбитражных дел мы пока не подключили/);
+});
+
+test('(1) /sravnit/: предел при неизвестных выручке и возрасте — «Не считаем», нейтрально, не зелёным', () => {
+  assert.match(chitat('js/sravnenie.js'), /if \(u\.nedostatochno\) return \{ t: 'Не считаем'[^}]*ton: 'neutral'/);
+});

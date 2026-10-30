@@ -80,6 +80,43 @@ footer a{color:var(--muted)}
 .dalee{display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)!important;font-weight:600;font-size:17px;margin:4px 0 8px}.dalee:hover{border-color:var(--ink2)}
 @media (max-width:560px){.urovni thead{display:none}.urovni,.urovni tbody,.urovni tr,.urovni td{display:block;width:100%}.urovni tr{border-bottom:1px solid var(--line);padding:6px 0}.urovni tr:last-child{border-bottom:0}.urovni td{border:0;padding:6px 16px}.urovni td:first-child{white-space:normal;padding-top:12px}.urovni td:last-child{padding-bottom:12px}}
 .sravn2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:6px 0 20px}.sravn2__k{background:var(--card);border-radius:16px;padding:18px 20px}.sravn2__k small{display:block;font-size:13px;font-weight:600;color:var(--muted);letter-spacing:.02em;text-transform:uppercase}.sravn2__k b{display:block;font-size:20px;line-height:1.25;letter-spacing:-.01em;margin:6px 0 4px;font-weight:600;color:var(--ink)}.sravn2__k span{font-size:15px;color:var(--ink2)}.sravn2__k--per{background:#111113}.sravn2__k--per small{color:#8E8E93}.sravn2__k--per b{color:#fff}.sravn2__k--per span{color:#B8B8BD}.kuda{display:flex;flex-wrap:wrap;gap:8px 22px;font-size:17px;font-weight:500;margin:4px 0 8px}.proekt{background:var(--card);border-radius:16px;padding:18px 22px;border:1px dashed #C9C9C4}.proekt p{margin:8px 0 0;font-size:17px}.proekt__m{display:inline-block;font-size:13px;font-weight:600;color:#8A5A00;background:#FFF4DC;border-radius:8px;padding:3px 9px}.zakon a{font-weight:500}@media (max-width:560px){.sravn2{grid-template-columns:1fr}}
+.pismo{margin:36px 0 8px;background:var(--card);border-radius:var(--r);padding:26px 26px 22px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 16px 40px rgba(0,0,0,.05)}
+.pismo h2{margin:0 0 8px}
+.pismo__lid{font-size:17px}
+.pismo__f{margin:18px 0 0}
+.pismo fieldset{border:0;margin:0;padding:0;min-width:0}
+.pismo .pismo__kto{display:inline-flex;gap:4px;padding:4px;border-radius:16px;background:var(--bg);margin:0 0 18px}
+.pismo__kto label{position:relative;cursor:pointer}
+.pismo__kto input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.pismo__kto span{display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:10px;font-weight:600;font-size:15px;color:var(--ink2)}
+.pismo__kto input:checked+span{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.pismo__kto input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.pismo__set{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px;margin:0 0 16px}
+.pismo__pole{display:flex;flex-direction:column;gap:6px;font-size:15px;color:var(--muted)}
+.pismo__pole--w{grid-column:1/-1}
+.pismo__pole[hidden],.pismo [data-dlya][hidden]{display:none}
+.pismo input:not([type=radio]):not([type=checkbox]),.pismo select{min-height:48px;border:1px solid var(--line);border-radius:10px;padding:0 14px;font:inherit;font-size:17px;color:var(--ink);background:var(--card);width:100%}
+.pismo input:focus,.pismo select:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
+.pismo__otl{margin:0 0 14px!important}
+.pismo__otl legend{font-size:15px;color:var(--muted);margin:0 0 6px;padding:0}
+.pismo__otl label{display:inline-flex;align-items:center;gap:8px;min-height:44px;margin:0 18px 0 0;font-size:17px;color:var(--ink);cursor:pointer}
+.pismo__otl input{width:20px;height:20px;accent-color:var(--accent);margin:0}
+.pismo__knopki{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin:8px 0 0}
+.pismo__btn{min-height:52px;border:0;border-radius:16px;background:var(--accent);color:#fff;font:inherit;font-weight:600;font-size:17px;padding:0 22px;cursor:pointer}.pismo__btn:hover{background:var(--accent-hover)}
+.pismo__kop{min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:inherit;font-weight:600;font-size:17px;padding:0 18px;cursor:pointer}.pismo__kop:hover{border-color:var(--ink2)}
+.pismo__pod{font-size:15px;color:var(--muted)!important;margin:10px 0 0!important}
+.pismo__soob{font-size:15px;color:var(--ink)!important;margin:4px 0 0!important;min-height:1.6em}
+.pismo__d{margin:12px 0 0;border-top:1px solid var(--line);padding-top:12px}
+.pismo__d summary{cursor:pointer;font-weight:600;color:var(--ink);min-height:44px;display:flex;align-items:center}
+.pismo__obr{margin:8px 0 0;padding:22px 24px;border-radius:16px;background:var(--bg);font-size:15px;line-height:1.55}
+.pismo__obr p{margin:0 0 10px;font-size:15px;color:var(--ink)}
+.pismo__obr .pismo__adres{margin:0 0 2px 40%;text-align:left}
+.pismo__obr .pismo__zag{margin:18px 0 14px;text-align:center;font-weight:600}
+.pismo__obr .pismo__punkt{padding-left:16px}
+.pismo__obr .pismo__podpis{margin-top:18px}
+.pismo__p{color:var(--muted)}
+.pismo-js .pismo__obr .pismo__p{background:#FFF4E0;color:#7A4D00;border-radius:4px;padding:0 2px}
+@media (max-width:560px){.pismo{padding:22px 18px 18px}.pismo__set{grid-template-columns:1fr}.pismo__obr{padding:16px}.pismo__obr .pismo__adres{margin-left:0}.pismo__btn{width:100%}}
 </style>
 <!--faq-css--><style>.faq{margin-top:40px}.faq h2{font-size:clamp(24px,3vw,32px);letter-spacing:-.02em;line-height:1.2;margin:0 0 12px;font-weight:600}.faq details{background:var(--card);border-radius:16px;padding:14px 18px;margin:0 0 10px}.faq summary{cursor:pointer;font-weight:600;color:var(--ink)}.faq summary{list-style:none;display:flex;justify-content:space-between;align-items:baseline;gap:16px}.faq summary::-webkit-details-marker{display:none}.faq summary::after{content:"+";flex:none;color:var(--muted);font-weight:400;font-size:24px;line-height:1;transition:transform .2s}.faq details[open] summary::after{transform:rotate(45deg)}.faq summary:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:6px}.faq details p{margin:10px 0 0;color:var(--ink2)}</style><!--/faq-css-->
 
@@ -89,6 +126,7 @@ footer a{color:var(--muted)}
 <link rel="preload" href="/fonts/onest-cyrillic-600.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/css/b/ds.5aca0fd910.css">
 <script src="/js/b/yadro.99020177c2.js" defer></script>
+<script src="/js/shablon-pisma.js" defer></script>
 <link rel="icon" type="image/png" sizes="120x120" href="/favicon-120.png">
 <link rel="alternate" type="application/rss+xml" title="Разборы дел — Делоскоп" href="/praktika/rss.xml">
 <link rel="manifest" href="/manifest.webmanifest">
@@ -96,7 +134,7 @@ footer a{color:var(--muted)}
 <link rel="stylesheet" href="/css/glubina.css">
 <script>!function(d,t){try{t=localStorage.tema}catch(e){}t=t=="auto"?(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light"):t=="light"?t:"dark";d.dataset.theme=t;if(t=="dark"&&(t=document.querySelector("meta[name=theme-color]")))t.content="#111113"}(document.documentElement)</script>
 <meta name="deloskop-rezhim" content="beta">
-<style data-tema>[data-theme=dark] .top{background:rgba(17,17,19,0.86);border-bottom:1px solid rgba(255,255,255,0.09)}[data-theme=dark] .btn{color:#0B0B0C!important}[data-theme=dark] article th{background:#19191C}[data-theme=dark] .check button{color:#0B0B0C}[data-theme=dark] .pyat li::before{background:#16243D}[data-theme=dark] .sravn__btn{color:#0B0B0C!important}[data-theme=dark] .glavnoe__btn{color:#0B0B0C!important}[data-theme=dark] .sravn2__k--per small{color:#A1A1A6}[data-theme=dark] .proekt{border:1px dashed #48484E}[data-theme=dark] .proekt__m{color:#E8A23A;background:#2E220C}</style>
+<style data-tema>[data-theme=dark] .top{background:rgba(17,17,19,0.86);border-bottom:1px solid rgba(255,255,255,0.09)}[data-theme=dark] .btn{color:#0B0B0C!important}[data-theme=dark] article th{background:#19191C}[data-theme=dark] .check button{color:#0B0B0C}[data-theme=dark] .pyat li::before{background:#16243D}[data-theme=dark] .sravn__btn{color:#0B0B0C!important}[data-theme=dark] .glavnoe__btn{color:#0B0B0C!important}[data-theme=dark] .sravn2__k--per small{color:#A1A1A6}[data-theme=dark] .proekt{border:1px dashed #48484E}[data-theme=dark] .proekt__m{color:#E8A23A;background:#2E220C}[data-theme=dark] .pismo__btn{color:#0B0B0C}[data-theme=dark] .pismo-js .pismo__obr .pismo__p{background:#2E220C;color:#FFCA70}</style>
 </head>
 <body>
 <!--shapka-->
@@ -184,6 +222,40 @@ footer a{color:var(--muted)}
 <h2 id="pervyj-den">Что сделать в&nbsp;первый день</h2>
 <ol class="pyat shagi"><li><b>Попросите банк письменно</b>&nbsp;— через приложение, чат или заявление в&nbsp;отделении&nbsp;— назвать основание, по&nbsp;которому операция остановлена или деньги заблокированы.</li><li><b>Отправьте копию паспорта и&nbsp;документы</b> с&nbsp;данными, которые отличают вас от&nbsp;человека из&nbsp;перечня: дату и&nbsp;место рождения, ИНН, СНИЛС.</li><li><b>Попросите банк сверить</b> ваши данные с&nbsp;записью перечня и&nbsp;сообщить результат письменно.</li><li><b>Сохраните все письма и&nbsp;ответы с&nbsp;датами</b>&nbsp;— они понадобятся, если придётся жаловаться.</li><li><b>Если банк не&nbsp;отвечает или настаивает на&nbsp;блокировке</b>&nbsp;— направьте обращение в&nbsp;Росфинмониторинг (раздел «Обращения граждан» на&nbsp;сайте fedsfm.ru) и&nbsp;жалобу в&nbsp;Банк России через интернет-приёмную.</li></ol>
 <p class="kuda"><a href="https://www.fedsfm.ru/citizen/order" rel="noopener" target="_blank">Росфинмониторинг&nbsp;— обращения граждан&nbsp;→</a><a href="https://www.cbr.ru/reception/" rel="noopener" target="_blank">Интернет-приёмная Банка России&nbsp;→</a></p>
+<!--pismo--><section class="pismo" id="pismo" aria-labelledby="pismo-z">
+<h2 id="pismo-z">Письмо в&nbsp;банк: заполните и&nbsp;скачайте</h2>
+<p class="pismo__lid">Заявление о&nbsp;сверке данных с&nbsp;перечнем и&nbsp;об&nbsp;основании ограничения. Заполните то, что знаете,&nbsp;— остальное останется в&nbsp;[скобках], допишете от&nbsp;руки. Письмо собирается в&nbsp;вашем браузере: данные никуда не&nbsp;отправляются и&nbsp;не&nbsp;сохраняются.</p>
+<form class="pismo__f" data-pismo novalidate autocomplete="off">
+<fieldset class="pismo__kto"><legend class="vh">Кто пишет</legend><label><input type="radio" name="kto" value="chel" checked><span>Я&nbsp;— человек</span></label><label><input type="radio" name="kto" value="org"><span>Компания</span></label></fieldset>
+<div class="pismo__set">
+<label class="pismo__pole pismo__pole--w"><span>Банк</span><input name="bank" placeholder="Например, АО «Банк»"></label>
+<label class="pismo__pole pismo__pole--w" data-dlya="chel"><span>ФИО полностью</span><input name="fio"></label>
+<label class="pismo__pole" data-dlya="chel"><span>Дата рождения</span><input name="dr" type="date"></label>
+<label class="pismo__pole" data-dlya="chel"><span>ИНН</span><input name="inn" inputmode="numeric" maxlength="12"></label>
+<label class="pismo__pole pismo__pole--w" data-dlya="org" hidden><span>Наименование</span><input name="naim" placeholder="ООО «…»"></label>
+<label class="pismo__pole" data-dlya="org" hidden><span>ИНН</span><input name="inn_org" inputmode="numeric" maxlength="10"></label>
+<label class="pismo__pole" data-dlya="org" hidden><span>ОГРН</span><input name="ogrn" inputmode="numeric" maxlength="13"></label>
+<label class="pismo__pole pismo__pole--w" data-dlya="org" hidden><span>В&nbsp;лице: должность и&nbsp;ФИО</span><input name="lico" placeholder="генерального директора …"></label>
+<label class="pismo__pole"><span>Телефон</span><input name="tel" type="tel" inputmode="tel"></label>
+<label class="pismo__pole"><span>E-mail</span><input name="email" type="email" inputmode="email"></label>
+</div>
+<div class="pismo__set">
+<label class="pismo__pole"><span>Когда банк ограничил</span><input name="data" type="date"></label>
+<label class="pismo__pole"><span>Что сделал банк</span><select name="dejstvie"><option value="">Выберите</option><option value="0">Остановил операцию</option><option value="1">Не&nbsp;исполнил платёж</option><option value="2">Ограничил распоряжение средствами</option></select></label>
+<label class="pismo__pole"><span>Счёт: последние 4&nbsp;цифры</span><input name="schet4" inputmode="numeric" maxlength="4"></label>
+<label class="pismo__pole"><span>Сумма, ₽</span><input name="summa" inputmode="decimal"></label>
+</div>
+<fieldset class="pismo__otl"><legend>Чем ваши данные отличаются от&nbsp;записи перечня</legend>
+<span data-dlya="chel"><label><input type="checkbox" name="otl" value="дата рождения"> дата рождения</label><label><input type="checkbox" name="otl" value="место рождения"> место рождения</label><label><input type="checkbox" name="otl" value="паспорт"> паспорт</label><label><input type="checkbox" name="otl" value="ИНН"> ИНН</label><label><input type="checkbox" name="otl" value="СНИЛС"> СНИЛС</label></span>
+<span data-dlya="org" hidden><label><input type="checkbox" name="otl" value="ИНН"> ИНН</label><label><input type="checkbox" name="otl" value="ОГРН"> ОГРН</label><label><input type="checkbox" name="otl" value="адрес"> адрес</label></span>
+</fieldset>
+<fieldset class="pismo__otl"><legend>Куда банку ответить</legend><label><input type="radio" name="otvet" value="email"> на&nbsp;e-mail</label><label><input type="radio" name="otvet" value="app"> в&nbsp;приложении банка</label></fieldset>
+<div class="pismo__knopki"><button class="pismo__btn" type="submit">Скачать шаблон письма в&nbsp;банк</button><button class="pismo__kop" type="button" data-pismo-kopiya>Скопировать текст</button></div>
+<p class="pismo__pod">Образец. Исход зависит от&nbsp;банка&nbsp;— мы&nbsp;его не&nbsp;обещаем. Перед отправкой проверьте свои данные.</p>
+<p class="pismo__soob" data-pismo-soob role="status" aria-live="polite"></p>
+</form>
+<details class="pismo__d" open><summary>Текст письма</summary><div class="pismo__obr" data-pismo-obr><p class="pismo__adres">В <span class="pismo__p">[наименование банка]</span></p><p class="pismo__adres">от <span class="pismo__p">[ФИО полностью]</span>, дата рождения <span class="pismo__p">[дд.мм.гггг]</span>, ИНН <span class="pismo__p">[ ]</span>, телефон <span class="pismo__p">[ ]</span>, e-mail <span class="pismo__p">[ ]</span></p><p class="pismo__zag">Заявление о сверке данных с перечнем и об основании ограничения операции</p><p class="pismo__tekst"><span class="pismo__p">[Дата]</span> банк <span class="pismo__p">[остановил операцию / не исполнил платёж / ограничил распоряжение средствами]</span> по счёту, оканчивающемуся на <span class="pismo__p">[4 цифры]</span>, на сумму <span class="pismo__p">[ ]</span> ₽.</p><p class="pismo__tekst">Прошу письменно сообщить:</p><p class="pismo__punkt">1. основание ограничения: норму закона и пункт договора банковского счёта;</p><p class="pismo__punkt">2. связано ли ограничение с совпадением моих данных с записью перечня организаций и физических лиц, в отношении которых имеются сведения об их причастности к экстремистской деятельности или терроризму.</p><p class="pismo__tekst">Я не включён(а) в этот перечень. Мои данные отличаются от данных записи перечня: <span class="pismo__p">[что отличается: дата рождения / место рождения / паспорт / ИНН / СНИЛС]</span>. Копии документов прилагаю.</p><p class="pismo__tekst">По позиции Росфинмониторинга (письмо от 15.05.2020 №&nbsp;01-01-40/9140), если хотя бы одно из идентификационных данных клиента не совпадает с данными перечня, клиент не может быть признан включённым в перечень, и меры по замораживанию (блокированию), предусмотренные подп. 6 п. 1 ст. 7 Федерального закона от 07.08.2001 №&nbsp;115&#8209;ФЗ, к нему не применяются.</p><p class="pismo__tekst">Прошу сверить мои данные с записью перечня, по результату снять ограничение и письменно сообщить итог <span class="pismo__p">[на e-mail / в приложении банка]</span>.</p><p class="pismo__tekst">Приложения: 1) копия паспорта (страницы с ФИО, датой и местом рождения); 2) <span class="pismo__p">[ИНН / СНИЛС]</span>; 3) <span class="pismo__p">[иное]</span>.</p><p class="pismo__podpis"><span class="pismo__p">[Дата]</span>    <span class="pismo__p">[Подпись]</span>    <span class="pismo__p">[ФИО]</span></p></div></details>
+</section><!--/pismo-->
 <h2 id="dokumenty">Какие документы снимают вопрос</h2>
 <p>Те, где есть данные, которых нет у&nbsp;однофамильца: паспорт (дата и&nbsp;место рождения), ИНН, СНИЛС. Для&nbsp;компании&nbsp;— выписка из&nbsp;ЕГРЮЛ с&nbsp;ИНН и&nbsp;ОГРН: в&nbsp;перечне организаций сверяют реквизиты, а&nbsp;не&nbsp;только название.</p>
 <h2 id="sroki">Сроки: сколько банк может держать операцию</h2>

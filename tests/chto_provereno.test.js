@@ -9,7 +9,7 @@ const ROOT = path.join(__dirname, '..');
 const C = require(path.join(ROOT, 'js', 'chto-provereno.js'));
 const P = require(path.join(ROOT, 'js', 'pasport-kontragenta.js'));
 const E = require(path.join(ROOT, 'pasport', 'engine.js'));
-const demo = () => Object.assign(JSON.parse(JSON.stringify(E.DEMO)), { checked_at: '2026-09-30T03:10:00+03:00', damia: {} });
+const demo = () => Object.assign(JSON.parse(JSON.stringify(E.DEMO)), { checked_at: '2026-10-30T03:10:00+03:00', damia: {} });
 const nazv = (a) => a.map((x) => x.nazv);
 
 test('полный ответ: всё ожидаемое — «получено» с источником и датой; внешние реестры — «не проверяли»', () => {
@@ -19,10 +19,10 @@ test('полный ответ: всё ожидаемое — «получено�
   C.OZHIDAEM.filter((p) => p.id !== 'rezhim' && p.id !== 'diskval').forEach((p) => assert.ok(o.polucheno.some((x) => x.id === p.id), 'нет в «получено»: ' + p.id));
   const dolgi = o.polucheno.find((x) => x.id === 'dolgi');
   assert.strictEqual(dolgi.ist, 'ФНС, открытые данные');
-  assert.strictEqual(dolgi.data, '01.09.2026');
+  assert.strictEqual(dolgi.data, '01.10.2026');
   assert.ok(o.polucheno.some((x) => x.nazv === 'Массовый адрес'), 'строка светофора сверх ожидаемых потерялась');
   assert.deepStrictEqual(o.ne_proveryali.map((x) => x.id), ['rezhim', 'diskval', 'sudy', 'scheta', 'pristavy', 'goszakaz', 'stoplisty']);
-  assert.strictEqual(o.na, '30.09.2026');
+  assert.strictEqual(o.na, '30.10.2026');
 });
 
 test('источник не ответил — пункт уходит в «не проверяли», а не молча в «проверено»', () => {
@@ -92,7 +92,7 @@ test('HTML: экранирование, «Проверьте сами» со с�
   r.signals.push({ title: '<img src=x onerror=alert(1)>', status: 'info', source: 'ФНС' });
   const h = C.html(C.sobrat(r, { razdely: P.RAZDELY }));
   assert.ok(!h.includes('<img'));
-  assert.match(h, /Получено при проверке 30\.09\.2026 — \d+/);
+  assert.match(h, /Получено при проверке 30\.10\.2026 — \d+/);
   assert.match(h, /Не проверяли — 7/);
   assert.match(h, /Это не значит, что там ничего нет/);
   assert.match(h, /Проверьте сами: <a href="https:\/\/kad\.arbitr\.ru\/"/);

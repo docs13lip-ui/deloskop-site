@@ -638,6 +638,11 @@ var a = e.target.closest && e.target.closest(".pr .dl a[href]");
 var m = /^\/praktika\/[^/]+\/([^/]+)\//.exec(location.pathname);
 if (a && m) window.dlkGoal("praktika_cta", { slug: m[1], kuda: a.getAttribute("href") });
 }
+function izRazboraForma(e) {
+var f = e.target && e.target.closest && e.target.closest(".pr .dl form");
+var m = /^\/praktika\/[^/]+\/([^/]+)\//.exec(location.pathname);
+if (f && m) window.dlkGoal("praktika_cta", { slug: m[1], kuda: f.getAttribute("action") || "/", sposob: "forma" });
+}
 function start() {
 var v = chitat();
 if (v === "all") zagruzit();
@@ -645,6 +650,7 @@ else if (!v) banner();
 document.addEventListener("click", izSsylki, true);
 document.addEventListener("submit", izFormy, true);
 document.addEventListener("click", izRazbora, true);
+document.addEventListener("submit", izRazboraForma, true);
 document.addEventListener("click", function (e) {
 var a = e.target && e.target.closest && e.target.closest("a[data-goal]");
 if (a) window.dlkGoal(a.getAttribute("data-goal"), { statya: location.pathname, kuda: a.getAttribute("href") || "" });

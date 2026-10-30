@@ -73,6 +73,7 @@
       "js/nebo.js"
     ],
     "sravnit": [
+      "js/istochniki.js",
       "js/imya.js",
       "js/sravnenie.js"
     ]

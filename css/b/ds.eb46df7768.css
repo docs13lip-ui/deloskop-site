@@ -82,6 +82,8 @@ a.skip:focus{top:var(--s-2);color:var(--on-accent)}
 .shapka__dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-left:2px}
 .shapka__cnt{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:var(--r-pill);background:var(--accent);color:var(--on-accent);font:600 12px/1 var(--font)}
 .shapka__dot[hidden],.shapka__cnt[hidden]{display:none}
+.shapka .shapka__link>.shapka__dot{margin-left:5px;vertical-align:1px}
+.shapka .shapka__menu b .shapka__dot:not([hidden]){display:inline-block;margin:0 0 0 6px;vertical-align:2px}
 .shapka .shapka__btn,.mnav .shapka__btn{display:inline-flex;align-items:center;justify-content:center;min-height:40px;margin-left:var(--s-2);padding:0 18px;border-radius:var(--r-pill);background:var(--accent);color:var(--on-accent);font:600 15px/1 var(--font);white-space:nowrap;transition:background var(--fast) var(--ease)}
 .shapka .shapka__btn:hover,.mnav .shapka__btn:hover{background:var(--accent-hover);color:var(--on-accent)}
 .mnav .shapka__btn--lg{min-height:56px;margin-left:0;padding:0 28px;font-size:17px}

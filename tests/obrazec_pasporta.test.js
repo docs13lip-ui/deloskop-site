@@ -19,7 +19,7 @@ function obrazec() {
   const m = /if\(demo\)\{[\s\S]*?r\.dossier=(\{[\s\S]*?\});\n/.exec(h);
   assert.ok(m, 'в странице есть данные образца (r.dossier=…)');
   const r = JSON.parse(JSON.stringify(E.DEMO));
-  r.checked_at = '2026-10-25T22:00:00+03:00';               // дата проверки фиксирована: набор ФНС 01.09 — свежий
+  r.checked_at = '2026-10-25T22:00:00+03:00';               // дата проверки фиксирована: набор ФНС 01.10 — свежий
   r.dossier = Function('return ' + m[1])();
   return P.sobrat(r, { usloviya: U, indeksVorota: IV, nomer: 'ОБРАЗЕЦ' });
 }
@@ -37,7 +37,7 @@ test('долги по налогам, показанные в разделе 7, 
   const ogovorka = (/Оговорка (.*)/.exec(predel) || [])[1] || '';
   const neProv = (/не проверяли ([^.]*)/.exec(ogovorka) || [])[1] || '';
   assert.doesNotMatch(neProv, /налог/, ogovorka);
-  assert.match(ogovorka, /Долги по налогам — нет в списке ФНС на 01\.09\.2026/, ogovorka);
+  assert.match(ogovorka, /Долги по налогам — нет в списке ФНС на 01\.10\.2026/, ogovorka);
 });
 
 test('образец в форме живого ответа API: KPI «Выручка за ГГГГ» = последнему году ряда, строка налогов с id tax_debt', () => {

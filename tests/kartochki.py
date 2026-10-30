@@ -608,6 +608,14 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
                 izm += zapisat_k(put, t)
     except Exception as oshibka:  # не роняем сборку; test_stati_kartochki (--check) покажет несобранные строки
         otchet["stati_v_kartochkah"] = "ошибка: %s" % oshibka
+    # kartochki-reyting-v1: строка «рейтинг по открытой отчётности ›» в «Финансах» карточек из таблицы выручки — тоже до sitemap
+    try:
+        import sobrat_reyting as sr_
+        if os.path.abspath(koren) == os.path.abspath(sr_.KOREN):
+            for put, t in sr_.kartochki_so_ssylkoj(koren).items():
+                izm += zapisat_k(put, t)
+    except Exception as oshibka:  # не роняем сборку; reyting.test.js (--check) покажет устаревшие строки
+        otchet["reyting_v_kartochkah"] = "ошибка: %s" % oshibka
     # sitemap-companies.xml + robots.txt
     sm = os.path.join(koren, "sitemap-companies.xml")
     rb = os.path.join(koren, "robots.txt")

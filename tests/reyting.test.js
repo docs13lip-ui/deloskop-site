@@ -116,3 +116,29 @@ test('одно главное действие — проверка по ИНН;
   assert.strictEqual((h.match(/btn--primary/g) || []).length, 1);
   for (const [, u] of h.matchAll(/href="(\/company\/\d{10}-[^"]+)"/g)) assert.ok(fs.existsSync(path.join(KOREN, u, 'index.html')), u);
 });
+
+// kartochki-reyting-v1 (30.10.2026): карточка → /reyting/ — у каждой карточки из таблицы выручки ровно одна строка
+// в «Финансах»; у остальных строки нет; места числом нет (меняется с каждой новой карточкой) и оценочных слов нет.
+test('карточки из таблицы выручки ссылаются на рейтинг из раздела «Финансы», остальные — нет', () => {
+  const D = dannye();
+  if (!D.otkryt) return;
+  const vTablice = new Set(D.vyr.map(x => x[0]));
+  const papka = path.join(KOREN, 'company');
+  let s = 0;
+  for (const d of fs.readdirSync(papka)) {
+    if (!/^\d{10}-/.test(d)) continue;
+    const p = path.join(papka, d, 'index.html');
+    if (!fs.existsSync(p)) continue;
+    const h = fs.readFileSync(p, 'utf8');
+    const bloki = h.match(/<!--karta-reyting-->[\s\S]*?<!--\/karta-reyting-->/g) || [];
+    if (!vTablice.has(d.slice(0, 10))) { assert.strictEqual(bloki.length, 0, d); continue; }
+    s++;
+    assert.strictEqual(bloki.length, 1, d);
+    const fin = h.match(/<section class="co-sec" aria-labelledby="fin">[\s\S]*?<\/section>/);
+    assert.ok(fin && fin[0].includes(bloki[0]), d + ': строка — внутри «Финансов»');
+    assert.match(bloki[0], /<a href="\/reyting\/#ry-vyr">/);
+    const v = vidimyj(bloki[0]);
+    assert.doesNotMatch(v, /надёжн|лучш|рекоменд|место|№/i, d);
+  }
+  assert.strictEqual(s, vTablice.size);
+});

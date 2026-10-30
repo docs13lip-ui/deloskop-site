@@ -6,7 +6,8 @@
   "redakciya": "ред. от 29.10.2022 (распоряжения от 23.07.2022 № 2018-р и от 29.10.2022 № 3216-р)",
   "ssylka": "https://www.consultant.ru/document/cons_doc_LAW_411064/",
   "ssylka_perechen": "https://www.consultant.ru/document/cons_doc_LAW_411064/e8730c96430f0f246299a0cb7e5b27193f98fdaa/",
-  "data_sverki": "2026-10-10",
+  "data_sverki": "2026-10-30",
+  "sleduyushchaya_sverka": "2027-01-28",
   "pravilo": "Сверять раз в 90 дней и при новом распоряжении Правительства об изменении перечня: тест tests/nedruzhestvennye.test.js краснеет, если сверке больше 120 дней. Новая строка — только с первоисточником и датой."
  },
  "spisok": [

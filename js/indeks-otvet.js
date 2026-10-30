@@ -292,6 +292,7 @@
     return 'По открытой методике v' + esc(v.versiya) + ' · ' + v.istochnikov + NB + 'из' + NB + v.vsego + ' источников · полнота ' + v.polnota + NB + '%';
   }
   var NE_ZNACHIT = 'Не проверено — не значит «не обнаружено».';
+  var TXT_TOCHNOST = 'Индекс — оценка признаков по' + NB + 'открытым данным. Насколько она совпадает с' + NB + 'реальными исходами, покажем в' + NB + '<a href="/tochnost/">публичном отчёте точности</a>.';
   function strokaNe(v) { return 'Не учитывали в этот раз: ' + v.neUchityvali.join('; ') + '. ' + NE_ZNACHIT; }
   var TXT_NEIZV = 'Индекс — считаем: в' + NB + 'проверке есть сигнал, который методика v1 пока не' + NB + 'оценивает. Он показан в' + NB + 'фактах ниже.';
   var ZAG_SOKR = 'Индекс — данных пока' + NB + 'мало';
@@ -316,7 +317,9 @@
         '<div class="ot-ix__lv ot-ix__lv--' + v.ton + '">' + esc(v.uroven) + '</div>' +
         '<div class="ot-ix__po n">' + podpis(v) + ' · <a href="/indeks/">методика</a></div>' +
         '<details class="ot-ix__pch"><summary>Почему ' + v.ball + '</summary><ul class="ot-ix__rs n">' + li + '</ul>' +
-        '<p class="ot-ix__ne-uch">' + strokaNe(v) + '</p></details>';
+        '<p class="ot-ix__ne-uch">' + strokaNe(v) + '</p>' +
+        // tochnost-vhody-v1 (30.10): строка — из абзаца методики на /indeks/ (короче на одну оговорку — сторож (ж) indeks_otvet), ведёт на /tochnost/
+        '<p class="ot-ix__ne-uch">' + TXT_TOCHNOST + '</p></details>';
     }
     if (v.rezhim === 'sokr')
       // v1.2 ([команда] 16:07 разд. 1 п. 4): числа нет — «по сокращённым данным» читалось бы как «посчитали, но грубо»

@@ -27,7 +27,7 @@ function otvet(o) {
       { title: 'Задолженность по налогам', status: 'ok', detail: 'Нет' }],
     zsk: o.zsk || { level: 'low', title: 'Низкая вероятность' },
     dossier: { kpi: o.kpi || [{ label: 'Выручка за 2025', value: 48000000, delta: 12 }, { label: 'Долг перед бюджетом', value: null, text: 'Нет' }] },
-    damia: o.damia || { sudy: { status: 'polucheno', data_svedeniy: '2026-10-12T11:40+03:00', dannye: { vsego: 3, otvetchik: 1, otvetchik_nezaversheno: 0 } } },
+    damia: o.damia || { sudy: { status: 'polucheno', data_svedeniy: '2026-10-20T11:40+03:00', dannye: { vsego: 3, otvetchik: 1, otvetchik_nezaversheno: 0 } } },
     checked_at: '2026-10-23T08:00:00+03:00'
   };
 }

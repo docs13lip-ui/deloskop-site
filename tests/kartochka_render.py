@@ -2572,6 +2572,33 @@ def _zn_let(n):
     return "%d%s%s" % (n, NB, plural(n, "год", "года", "лет"))
 
 
+# kartochki-dl-tochno-v1 (30.10.2026, [Ночные-2]): рост выручки к прошлому году абзацы «Что это значит» и «Перед оплатой»
+# считали по ОКРУГЛЁННЫМ суммам таблицы страницы («1 трлн ₽» / «944 млрд ₽» → 5,9 %), а вывод «Коротко» — по точным
+# (10 %): на одной странице «Перекрёстка» стояли оба числа, у «Газпром нефти» — 77 % и 80 %. Теперь, если вывод
+# «Выручка за ГГГГ — …, на N % больше/меньше, чем годом раньше» есть на странице, все абзацы берут его N. Нет вывода — как было.
+_ZN_DL_V = re.compile(r"^Выручка за[  ](\d{4})[  ]— .*?₽, на[  ]([\d,]+)[  ]% (больше|меньше), чем годом раньше")
+
+
+def _zn_dl_tochno(V):
+    out = {}
+    for _ton, x in V:
+        m = _ZN_DL_V.match(x.replace("&nbsp;", NB))
+        if m:
+            v = float(m.group(2).replace(",", ".")) / 100
+            out[int(m.group(1))] = v if m.group(3) == "больше" else -v
+    return out
+
+
+def zn_dl(f, p1, p0):
+    """Изменение выручки p0 → p1 (доля): точное из вывода «Коротко», иначе — по суммам таблицы."""
+    if not p0 or not p1 or not p0.get("dohod") or not p1.get("dohod"):
+        return None
+    g = p1.get("god")
+    if g and p0.get("god") == g - 1 and g in (f.get("dl_tochno") or {}):
+        return f["dl_tochno"][g]
+    return p1["dohod"] / p0["dohod"] - 1
+
+
 def zn_fakty(t):
     """Факты со страницы карточки → dict (пустой — не карточка)."""
     t = t.replace("&nbsp;", NB)
@@ -2602,6 +2629,7 @@ def zn_fakty(t):
             if h and zn_summa(h.group(2)):
                 ryad = [{"god": int(h.group(1)) if h.group(1) else None, "dohod": zn_summa(h.group(2)), "pribyl": None, "fns": True}]
         f["ryad"] = sorted(ryad, key=lambda x: x["god"] or 0)
+        f["dl_tochno"] = _zn_dl_tochno(f["V"])
         o = _ZN_OTRASL.search(fin.group(0))
         if o:
             f["otrasl"] = (_zn_txt(o.group(1)), int(o.group(2)), o.group(3))
@@ -2662,7 +2690,7 @@ def zn_frazy(f):
     kap = re.search(r"минус ([^:]+):", _zn_v(f, "warn", "Собственный капитал") or "")
     ub = _zn_v(f, "warn", "Убыток за")
     podryad = re.search(r"(\S+) год подряд", ub or "")
-    dl = (r1 / p0["dohod"] - 1) if p0 else None
+    dl = zn_dl(f, p1, p0) if p0 else None
     if pr1 is not None and pr1 < 0:
         t = "%s компания получила убыток %s" % (za.capitalize(), dengi(-pr1))
         if podryad:
@@ -3474,7 +3502,7 @@ def un_frazy(f):
     g1, r1, pr1 = p1["god"], p1["dohod"], p1.get("pribyl")
     p0 = ryad[-2] if len(ryad) >= 2 and ryad[-2]["god"] == (g1 or 0) - 1 else None
     za = ("за %d год" % g1) if g1 else "за последний год"
-    dl = (r1 / p0["dohod"] - 1) if p0 else None
+    dl = zn_dl(f, p1, p0) if p0 else None
 
     # 1. История: возраст × глубина открытой отчётности × руководитель
     if f["osnovana"] and na:
@@ -3680,9 +3708,9 @@ def un_pered(f):
                     else "обязательства больше активов на %s" % _zn_ed(kap.group(1)))
         s.append('Аванс — частями, по факту поставки или этапов работ: у %s %s. '
                  '<a href="/nalogi/skolko-platit-vpered-neznakomoj-kompanii/">Сколько можно платить вперёд</a>' % (im, prichina))
-    elif p0 and p1.get("dohod") and p1["dohod"] <= p0["dohod"] * 0.7:
+    elif p0 and p1.get("dohod") and zn_dl(f, p1, p0) <= -0.3:
         s.append("Выручка %s за %d год упала на %s — спросите о причине и о том, хватит ли мощностей на ваш заказ." % (
-            im, p1["god"], _zn_proc(1 - p1["dohod"] / p0["dohod"])))
+            im, p1["god"], _zn_proc(-zn_dl(f, p1, p0))))
     if f["osnovana"] and f["na"] and (f["na"] - f["osnovana"]).days < 3 * 365:
         s.append('%s моложе трёх лет — оплату частями или по факту поставки. '
                  '<a href="/nalogi/skolko-platit-vpered-neznakomoj-kompanii/">Сколько можно платить вперёд</a>' % im)
@@ -3931,7 +3959,7 @@ def _un_pered_fakt(f):
     p0 = ryad[-2] if len(ryad) >= 2 and ryad[-2].get("god") == (p1.get("god") or 0) - 1 else None
     g1, r1 = p1.get("god"), p1.get("dohod")
     if p0 and r1 and g1:
-        dl = r1 / p0["dohod"] - 1
+        dl = zn_dl(f, p1, p0)
         if dl <= -0.05:
             return ("Выручка %s за%s%d год — %s, на %s ниже, чем за %d: в длинном договоре закрепите объёмы и сроки "
                     "поставок по этапам." % (im, NB, g1, dengi(r1), _zn_proc(dl), g1 - 1))
@@ -4001,7 +4029,7 @@ def un_pered_varianty(f):
     ryad = [x for x in f["ryad"] if x.get("dohod") and x["dohod"] > 0]
     p1 = ryad[-1] if ryad else {}
     p0 = ryad[-2] if len(ryad) >= 2 and ryad[-2].get("god") == (p1.get("god") or 0) - 1 else None
-    if p0 and p1.get("dohod") and (p1["dohod"] / p0["dohod"] - 1 <= -0.05 or p1["dohod"] / p0["dohod"] - 1 >= 0.3):
+    if p0 and p1.get("dohod") and (zn_dl(f, p1, p0) <= -0.05 or zn_dl(f, p1, p0) >= 0.3):
         return [_un_pered_fakt_do_v8(f)]  # заметное движение выручки — по-прежнему первым и единственным
     var = []
     inn = f.get("inn", "") or ""
@@ -4509,8 +4537,9 @@ def _bv_den(s):
     return _bv_t(s).replace(" ", NB)
 
 
-def bv_frazy(sek, im):
-    """Раздел баланса страницы → предложения выводов (может быть пусто)."""
+def bv_frazy(sek, im, vyr=None):
+    """Раздел баланса страницы → предложения выводов (может быть пусто).
+    vyr — (год, «3,1 трлн ₽») из строки «Выручка за ГГГГ» той же страницы (kartochki-dni-postavshchikov-v1) или None."""
     st = {_bv_t(a): (b, _bv_t(c)) for a, b, c in _BV_STROKA.findall(sek)}
     mg = _BV_GOD.search(_bv_t(sek).replace(" ", NB)) or _BV_GOD.search(_bv_t(sek))
     god = mg.group(1) if mg else ""
@@ -4548,7 +4577,35 @@ def bv_frazy(sek, im):
                 fr.append("Долг %s поставщикам — %s, %s больше, чем компании должны покупатели (%s)." % (im, _bv_den(pay[0]), _bv_razy(1 / r), _bv_den(rec[0])))
             else:
                 fr.append("Покупатели должны %s %s, а компания поставщикам — %s: почти поровну." % (im, _bv_den(rec[0]), _bv_den(pay[0])))
+    d = bv_dni(sek, pay, vyr, im)
+    if d:
+        fr.append(d)
     return fr
+
+
+# ---------------------------------------------------------------- kartochki-dni-postavshchikov-v1 (30.10.2026, [Ночные-2])
+# Идея [ВК] 30.10 (пост «компания дня» про «Тандер»): поставщику важна не сумма долга покупателя, а сколько дней выручки
+# покупатель держит у поставщиков. Строка «Фирма должна поставщикам» ÷ «Выручка за ГГГГ» × 365 — только числа ЭТОЙ
+# страницы и только при совпадении года баланса и года выручки. ◆ рассчитано; оговорка «оценка по балансу, а не срок
+# оплаты по договорам» — в самой фразе. Меньше 1 дня или больше 3 лет выручки — фразы нет (на краях число не помогает).
+_BV_RASCH_GOD = re.compile(r"Кто кому должен[^<]*?на[  ]31\.12\.(\d{4})")
+_BV_VYR = re.compile(r'<span>Выручка за(?:&nbsp;|&#160;|\s| )(\d{4})</span><span class="fact__v">([^<]*)</span>')
+
+
+def bv_dni(sek, pay, vyr, im="компании"):
+    if not pay or not vyr:
+        return ""
+    m = _BV_RASCH_GOD.search(_bv_t(sek).replace(" ", NB)) or _BV_RASCH_GOD.search(_bv_t(sek))
+    if not m or m.group(1) != vyr[0]:
+        return ""
+    a, v = zn_summa(pay[0]), zn_summa(vyr[1])
+    if not a or not v or a <= 0 or v <= 0:
+        return ""
+    n = int(round(a / v * 365))
+    if n < 1 or n > 1095:
+        return ""
+    return ("Долг поставщикам на%s31.12.%s равен примерно %d%s%s выручки %s за%s%s%sгод — это оценка по%sбалансу, "
+            "а%sне%sсрок оплаты по%sдоговорам." % (NB, vyr[0], n, NB, plural(n, "дню", "дням", "дням"), im, NB, vyr[0], NB, NB, NB, NB, NB))
 
 
 def balans_vyvody(t):
@@ -4566,7 +4623,8 @@ def balans_vyvody(t):
     kor = imya.split(" ", 1)[1]
     # «ГК Самолет» — без формы, как в остальном тексте карточки; без кавычек (АО ЦВ ПРОТЕК) — с формой
     im = html.escape(kor if kor.startswith("«") else imya, quote=False).replace(" ", NB, 0 if kor.startswith("«") else 1)
-    fr = bv_frazy(sek, im)
+    mv = _BV_VYR.search(t)
+    fr = bv_frazy(sek, im, (mv.group(1), html.unescape(mv.group(2))) if mv else None)
     if any(STOP_SLOVA.search(x) for x in fr):
         return t
     def blok(hvost):

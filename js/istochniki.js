@@ -134,10 +134,87 @@
     return 'проверить на' + NB + put.split('/')[0].replace(/^www\./, '');
   }
 
+  // ---------- doverie-2 (30.10.2026): единые статусы источников и правило «устарело» ----------
+  // Реестр источников — data/istochniki.json (один файл для страниц и отчёта). Здесь — его часть, нужная отчёту без сети:
+  // какие блоки DaMIA к какому источнику относятся, когда сведения устаревают и в каком состоянии источник. Сторож
+  // tests/istochniki_statusy.test.js сверяет эту копию с data/istochniki.json побайтно по значениям.
+  var REESTR = {
+    kad: { damia: ['sudy', 'bankrotstvo'], ustarelo_dney: 7, sostoyanie: 'zamorozhen', s: '2026-10-12' },
+    fssp: { damia: ['fssp'], ustarelo_dney: 7, sostoyanie: 'zamorozhen', s: '2026-10-12' },
+    eis: { damia: ['rnp', 'kontrakty'], ustarelo_dney: 30, sostoyanie: 'zamorozhen', s: '2026-10-12' },
+    nalog_bi: { damia: ['priostanovki', 'mery'], ustarelo_dney: 1, sostoyanie: 'zamorozhen', s: '2026-10-12' }
+  };
+  var PO_BLOKU = {};
+  Object.keys(REESTR).forEach(function (id) { REESTR[id].damia.forEach(function (k) { PO_BLOKU[k] = id; }); });
+
+  // Единые статусы источника — один словарь для отчёта, Паспорта, досье и экспорта (тексты согласованы юристом 30.10)
+  var STATUSY = ['found', 'not_found', 'not_connected', 'error', 'stale', 'not_applicable', 'user'];
+  function dmyIz(v) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(v || ''));
+    return m ? m[3] + '.' + m[2] + '.' + m[1] : '';
+  }
+  function dniMezhdu(a, b) {
+    var x = Date.parse(String(a || '').slice(0, 10)), y = Date.parse(String(b || '').slice(0, 10));
+    return isFinite(x) && isFinite(y) ? Math.floor((y - x) / 864e5) : null;
+  }
+  // b → код единого статуса
+  function statusIstochnika(b) {
+    if (!b || typeof b !== 'object') return 'not_connected';
+    if (b.otmetka_polzovatelya || b.status === 'user') return 'user';
+    if (b.status === 'stale' || b.ustarelo) return b.status === 'found' ? 'found' : 'stale';
+    if (b.status === 'found' || b.status === 'not_found' || b.status === 'not_applicable') return b.status;
+    if (b.oshibka || b.status === 'error') return 'error';
+    return 'not_connected';
+  }
+  // b → строка для отчёта: что известно, на какую дату, и что «не найдено» ≠ «нарушений нет»
+  function statusTekst(b) {
+    var k = statusIstochnika(b), ist = (b && (b.istochnik || b.nazvanie)) || 'источник', d = dmyIz(b && b.data_svedeniy);
+    if (k === 'found') return (b.ustarelo ? 'Данные на' + NB + d + ' — могли измениться. ' : '') + (b.itog || 'Сведения найдены');
+    if (k === 'not_found') return 'В' + NB + 'источнике записей нет' + (d ? ' — на' + NB + d : '') + '.';
+    if (k === 'stale') return 'Данные устарели: сведения на' + NB + d + ' — могли измениться. Это не значит, что записей нет.';
+    if (k === 'not_applicable') return b.prichina || 'Не применяется.';
+    if (k === 'user') return 'Со слов пользователя · Делоскоп не проверял.';
+    if (k === 'error') return 'Не удалось проверить: ' + ist + ' не ответил. Повторите позже.';
+    return 'Не проверяли: ' + (b && b.zamorozhen ? 'источник сейчас не обновляется.' : ist + ' пока не подключён.');
+  }
+
+  // Сведения из блока DaMIA старше срока источника: «не найдено» перестаёт быть «чисто» (status → stale, в полноту не идёт),
+  // найденное (иск, производство) остаётся видно с пометкой даты — негатив не прячем. Замороженный источник без ответа
+  // не обещает «обновите завтра». Меняет блоки на месте; число групп, снятых из полноты, — в dm.polnota.ustarelo.
+  function ustarevanie(r) {
+    var dm = r && r.damia;
+    if (!dm || typeof dm !== 'object') return r;
+    var na = (r.checked_at || '').slice(0, 10), snyato = 0;
+    Object.keys(PO_BLOKU).forEach(function (k) {
+      var b = dm[k], ist = REESTR[PO_BLOKU[k]];
+      if (!b || typeof b !== 'object' || b.iz_egryul) return;
+      if (ist.sostoyanie === 'zamorozhen' && (b.status === 'not_checked' || b.sostoyanie === 'not_checked')) {
+        b.zamorozhen = true;
+        if (b.prichina && !b.prichina_api) b.prichina_api = b.prichina;
+        b.prichina = 'источник сейчас не' + NB + 'обновляется';
+        b.itog_ne_provereno = 'Не проверяли: источник сейчас не' + NB + 'обновляется.';
+        return;
+      }
+      if (b.status !== 'found' && b.status !== 'not_found') return;
+      var dn = dniMezhdu(b.data_svedeniy, na);
+      if (dn == null || dn <= ist.ustarelo_dney) return;
+      b.ustarelo = true; b.ustarelo_dney = dn; snyato++;
+      if (b.status === 'not_found') {
+        b.status_do = 'not_found'; b.status = 'stale'; b.sostoyanie = 'stale';
+        b.prichina = 'данные на' + NB + dmyIz(b.data_svedeniy) + ' устарели — сведения могли измениться';
+        b.itog_ne_provereno = 'Данные устарели: сведения на' + NB + dmyIz(b.data_svedeniy) + '.';
+      }
+    });
+    if (snyato && dm.polnota && typeof dm.polnota === 'object' && isFinite(dm.polnota.provereno)) {
+      dm.polnota = { provereno: Math.max(0, Number(dm.polnota.provereno) - snyato), iz: dm.polnota.iz, ustarelo: snyato };
+    }
+    return r;
+  }
+
   function dopolnit(r) {
     if (!r || typeof r !== 'object' || !r.company) return r;
     var dm = r.damia && typeof r.damia === 'object' ? r.damia : null;
-    if (dm) { privestiSlovar(dm); sudyItog(dm.sudy); sudyNol(dm.sudy); }
+    if (dm) { privestiSlovar(dm); sudyItog(dm.sudy); sudyNol(dm.sudy); ustarevanie(r); }
     var est = dm && dm.bankrotstvo && typeof dm.bankrotstvo === 'object' ? dm.bankrotstvo : null;
     // ЕГРЮЛ говорит «банкротство», а картотека API — «дел, где компания должник, не нашли»: верим ЕГРЮЛ (запись о процедуре
     // вносит налоговая по решению суда; картотека по роли «должник» могла не сопоставиться)
@@ -148,7 +225,7 @@
         if (!dm) { dm = {}; r.damia = dm; }
         if (est && est.proverit_samim) b.proverit_samim = est.proverit_samim;
         dm.bankrotstvo = b;
-        if (dm.polnota && typeof dm.polnota === 'object' && isFinite(dm.polnota.provereno) && !(est && OTVETIL[est.status])) {
+        if (dm.polnota && typeof dm.polnota === 'object' && isFinite(dm.polnota.provereno) && !(est && OTVETIL[est.status]) && !(est && est.ustarelo)) {
           dm.polnota = { provereno: Number(dm.polnota.provereno) + 1, iz: dm.polnota.iz };
         }
       }
@@ -156,14 +233,16 @@
     // приставы: один словарь для вывода и Индекса
     var f = dm && dm.fssp;
     if (f && typeof f === 'object' && OTVETIL[f.status] && f.sostoyanie !== f.status) f.sostoyanie = f.status;
+    // единый статус у каждого блока — для отчёта, Паспорта, досье и экспорта
+    if (dm) Object.keys(dm).forEach(function (k) { var b = dm[k]; if (b && typeof b === 'object' && k !== 'polnota') { b.status_edinyj = statusIstochnika(b); b.status_edinyj_tekst = statusTekst(b); } });
     return r;
   }
 
   // Для Индекса: реестр учтён в полноте — ответ API с проверкой самого реестра (не подстановка из ЕГРЮЛ)
   function uchten(b) {
-    if (!b || typeof b !== 'object' || b.iz_egryul) return false;
+    if (!b || typeof b !== 'object' || b.iz_egryul || b.ustarelo) return false;
     return b.status === 'provereno' || b.status === 'found' || b.status === 'not_found';
   }
 
-  return { dopolnit: dopolnit, bankrotstvoIzEgryul: bankrotstvoIzEgryul, uchten: uchten, privestiSlovar: privestiSlovar, sudyItog: sudyItog, sudyNol: sudyNol, samiTekst: samiTekst, OGOVORKA_EFRSB: OGOVORKA_EFRSB };
+  return { dopolnit: dopolnit, ustarevanie: ustarevanie, statusIstochnika: statusIstochnika, statusTekst: statusTekst, STATUSY: STATUSY, REESTR: REESTR, bankrotstvoIzEgryul: bankrotstvoIzEgryul, uchten: uchten, privestiSlovar: privestiSlovar, sudyItog: sudyItog, sudyNol: sudyNol, samiTekst: samiTekst, OGOVORKA_EFRSB: OGOVORKA_EFRSB };
 });

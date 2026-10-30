@@ -102,18 +102,41 @@
     return { t: dengi(Number(k.value)), pod: pod, ton: 'neutral' };
   }
   function yNedoimka(r) {
-    var s = sig(r).filter(function (x) { return /задолженност.*налог|недоимк/i.test(String(x.title || '')); })[0];
+    // signal-id-v1: по коду признака (tax_debt), без кода — прежним выражением по заголовку
+    var U = m('Usloviya') || (typeof module === 'object' && typeof require === 'function' ? (function () { try { return require('./usloviya.js'); } catch (e) { return null; } })() : null);
+    var s = sig(r).filter(function (x) {
+      var k = U && U.signalId ? U.signalId(x) : null;
+      if (k && k.po !== 'tekst') return k.id === 'tax_debt';
+      return /задолженност.*налог|недоимк/i.test(String(x.title || ''));
+    })[0];
     if (s) return { t: zaglavnaya(s.detail || (s.status === 'ok' ? 'Нет' : 'Есть')), ton: ton(s.status) };
     var k = kpi(r, /Долг перед бюджетом/);
     if (k) return k.value ? { t: dengi(Number(k.value)), ton: 'warn' } : { t: zaglavnaya(k.text || 'Нет'), ton: k.text === 'Нет' ? 'ok' : 'neutral' };
     return { t: 'Не проверяли', pod: 'свежего набора ФНС в ответе нет', ton: 'neutral', nepr: true };
   }
+  // doverie-2b (30.10): суды — по единому словарю источников (js/istochniki.js, его dopolnit теперь в пакете /sravnit/).
+  // «Дел ответчиком нет» по сведениям старше срока источника (картотека — 7 дней) — не «чисто», а «данные устарели»;
+  // найденные дела остаются видны с датой и «могли измениться». Сырой ответ API (polucheno) и дополненный (found / not_found / stale) — одинаково.
+  var SUDY_DNEJ = 7;
+  function sudyDnej() {
+    var I = m('DlkIstochniki') || (typeof module === 'object' && typeof require === 'function' ? (function () { try { return require('./istochniki.js'); } catch (e) { return null; } })() : null);
+    return I && I.REESTR && I.REESTR.kad && I.REESTR.kad.ustarelo_dney || SUDY_DNEJ;
+  }
+  function sudyStaroe(s, r) {
+    if (s.ustarelo === true) return true;
+    if (s.ustarelo != null) return false;
+    var x = Date.parse(String(s.data_svedeniy || '').slice(0, 10)), y = Date.parse(String((r && r.checked_at) || '').slice(0, 10));
+    return isFinite(x) && isFinite(y) && Math.floor((y - x) / 864e5) > sudyDnej();
+  }
   function ySudy(r) {
     var s = r && r.damia && r.damia.sudy;
-    if (!s || s.status !== 'polucheno' || !s.dannye) return { t: 'Не проверяли', pod: 'проверьте сами в картотеке kad.arbitr.ru', ton: 'neutral', nepr: true };
-    var d = s.dannye, n = +d.otvetchik_nezaversheno || 0, v = +d.vsego || 0;
-    var t = n ? 'Ответчик в' + NB + n + NB + skl(n, 'незавершённом деле', 'незавершённых делах', 'незавершённых делах') : 'Незавершённых дел ответчиком нет';
-    return { t: t, pod: 'всего дел: ' + v + (s.data_svedeniy ? ' · на' + NB + data(s.data_svedeniy) : ''), ton: n ? 'warn' : 'ok' };
+    var est = s && s.dannye && /^(polucheno|found|not_found|stale)$/.test(String(s.status || ''));
+    if (!est) return { t: 'Не проверяли', pod: (s && s.zamorozhen ? 'источник сейчас не' + NB + 'обновляется — ' : '') + 'проверьте сами в картотеке kad.arbitr.ru', ton: 'neutral', nepr: true };
+    var d = s.dannye, n = +d.otvetchik_nezaversheno || 0, v = +d.vsego || 0, na = data(s.data_svedeniy), star = sudyStaroe(s, r);
+    if (n) return { t: 'Ответчик в' + NB + n + NB + skl(n, 'незавершённом деле', 'незавершённых делах', 'незавершённых делах'),
+      pod: 'всего дел: ' + v + (na ? ' · на' + NB + na : '') + (star ? ', могли измениться' : ''), ton: 'warn', ustarelo: star || undefined };
+    if (star) return { t: 'Данные устарели', pod: 'сведения на' + NB + na + ' могли измениться — проверьте в' + NB + 'kad.arbitr.ru', ton: 'neutral', nepr: true, ustarelo: true };
+    return { t: 'Незавершённых дел ответчиком нет', pod: 'всего дел: ' + v + (na ? ' · на' + NB + na : ''), ton: 'ok' };
   }
   function yZsk(r) {
     var z = r && r.zsk;

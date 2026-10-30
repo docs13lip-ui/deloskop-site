@@ -70,8 +70,9 @@ test('(а) дат беты текстом нет нигде, кроме выво
 });
 test('полоса: каркас и тексты A/B/C — дословно ([Право] 05.10 11:10, разд. 1)', () => {
   assert.ok(chast('beta-a.html').includes('<b>Открытая бета: всё бесплатно по&nbsp;{{D}} включительно.</b> <span class="beta-bar__dop">С&nbsp;{{D1}}&nbsp;— тарифы; быстрая проверка останется бесплатной, {{G}}&nbsp;в&nbsp;день.'));
-  // текст B дословно; жирным — только «Открытая бета продолжается:» (на 390 px заголовок в одну строку, полоса ≤ 125 px)
-  assert.ok(chast('beta-b.html').includes('<b>Открытая бета продолжается:</b> <span class="beta-bar__dop">всё бесплатно. О&nbsp;начале тарифов скажем здесь не&nbsp;позже чем за&nbsp;3&nbsp;дня; быстрая проверка останется бесплатной, {{G}}&nbsp;в&nbsp;день.'));
+  // текст B дословно (doverie-2, ТЗ маркетинга 30.10 п. 3.3: бета закончилась 12.10 — без слова «бета», обещание прежнее);
+  // жирным — только «Делоскоп сейчас бесплатный для всех.» (на 390 px — замер в КАК_ВЫЛОЖИТЬ)
+  assert.ok(chast('beta-b.html').includes('<b>Делоскоп сейчас бесплатный для всех.</b> <span class="beta-bar__dop">О&nbsp;начале тарифов скажем здесь не&nbsp;позже чем за&nbsp;3&nbsp;дня; быстрая проверка останется бесплатной, {{G}}&nbsp;в&nbsp;день.'));
   assert.ok(chast('beta-c.html').startsWith('<b>Бета завершилась {{D}}.</b> Быстрая проверка&nbsp;— бесплатно, {{G}}&nbsp;в&nbsp;день. <a href="/tarify/"'));
   // «Цена основателя» — только когда дата начала тарифов назначена (A). Без даты (B: оплаты на паузе, решение
   // владельца 16.10) платное предложение в полосе на каждой странице не показываем — ни в B, ни в запасе B внутри A.
@@ -161,7 +162,7 @@ test('сборка: полоса и сроки на страницах — из 
     'B.sroki("В&nbsp;бете бесплатно по&nbsp;13&nbsp;октября&nbsp;→","2026-10-20")]))';
   const [a, b, c, net, s1, s2, s3] = JSON.parse(execFileSync('python3', ['-c', kod], { cwd: KOREN, encoding: 'utf8' }));
   assert.ok(a.includes('data-beta-rezhim="a" data-beta-do="2026-10-13" data-beta-bar>') && a.includes('по&nbsp;13&nbsp;октября включительно.')
-    && a.includes('С&nbsp;14&nbsp;октября&nbsp;— тарифы') && a.includes('<template data-beta-b><b>Открытая бета продолжается'));
+    && a.includes('С&nbsp;14&nbsp;октября&nbsp;— тарифы') && a.includes('<template data-beta-b><b>Делоскоп сейчас бесплатный для всех.'));
   assert.ok(b.includes('data-beta-rezhim="b" data-beta-do="" data-beta-bar>') && !/октябр|<template/.test(b) && b.includes('data-beta-x'));
   assert.ok(c.includes('class="beta-bar beta-bar--c"') && c.includes('Бета завершилась 13&nbsp;октября.') && !c.includes('data-beta-x'));
   assert.strictEqual(net, '');

@@ -117,7 +117,7 @@
       // istochniki-v1: учтён — ответ самого реестра (provereno / found / not_found); банкротство, подставленное из ЕГРЮЛ
       // (iz_egryul), полноту «Федресурс и ЕФРСБ» не даёт — сообщения ЕФРСБ не проверены
       var b = dm[p[1]];
-      dostupno[p[0]] = !!(b && typeof b === 'object' && !b.iz_egryul && (b.status === 'provereno' || b.status === 'found' || b.status === 'not_found'));
+      dostupno[p[0]] = !!(b && typeof b === 'object' && !b.iz_egryul && !b.ustarelo && (b.status === 'provereno' || b.status === 'found' || b.status === 'not_found'));
     });
 
     // --- статус ЕГРЮЛ ---

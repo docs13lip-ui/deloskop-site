@@ -467,6 +467,71 @@ def zapisat_esli_est(koren=KOREN):
     return izm
 
 
+# kartochki-reyting-v1 (30.10.2026): обратная ссылка карточка → /reyting/. Было: на страницу рейтинга вёл один вход из
+# <main> (хаб /company/). Теперь у каждой карточки, чья выручка стоит в таблице года, — строка в разделе «Финансы».
+# Места числом не пишем: место меняется с каждой новой карточкой — менялась бы и дата текста всех карточек.
+# Ставит tests/kartochki.py sobrat (через zapisat_k — с типографом и датой WebPage), --check сверяет.
+METKA_K = re.compile(r"<!--karta-reyting-->.*?<!--/karta-reyting-->", re.S)
+_FIN_SEK = re.compile(r'<section class="co-sec" aria-labelledby="fin">.*?(?=</section>)', re.S)
+
+
+def stroka_kartochki(k, god):
+    imya = re.sub(r"^(\S{1,4}) «", "\\1&nbsp;«", e(k["imya"]).replace("&laquo;", "«").replace("&raquo;", "»"))  # «АО «…»» не рвать
+    return ('<!--karta-reyting--><p class="small co-otr co-rey">Где %s среди других компаний Делоскопа по&nbsp;выручке, '
+            'прибыли и&nbsp;росту за&nbsp;%d&nbsp;год&nbsp;— <a href="%s#ry-vyr">рейтинг по&nbsp;открытой отчётности&nbsp;›</a></p>'
+            '<!--/karta-reyting-->' % (imya, god, URL))
+
+
+def vstavit_v_kartochku(t, k, god):
+    t = METKA_K.sub("", t)
+    if k is None:
+        return t
+    m = _FIN_SEK.search(t)
+    if not m:
+        return t
+    j = m.end()
+    st = t.rfind("<!--karta-statya-->", m.start(), j)
+    if st >= 0 and t[:j].endswith("<!--/karta-statya-->"):
+        j = st  # строка «По теме раздела» (sobrat_stati_kartochki) — последней в разделе, как ставит её сборщик статей
+    return t[:j] + stroka_kartochki(k, god) + t[j:]
+
+
+def kartochki_so_ssylkoj(koren=KOREN):
+    """{путь карточки: новый текст} — для всех карточек юрлиц на диске; вне таблицы выручки строка снимается.
+    Нет страницы /reyting/ в этой сборке (временные корни тестов) — пусто."""
+    if not os.path.exists(os.path.join(koren, "reyting", "index.html")):
+        return {}
+    D = sobrat_dannye(kartochki(koren))
+    v = {k["url"]: k for k in D["vyruchka"]} if OTKRYT else {}
+    papka = os.path.join(koren, "company")
+    out = {}
+    for d in sorted(os.listdir(papka)) if os.path.isdir(papka) else []:
+        put = os.path.join(papka, d, "index.html")
+        if not re.match(r"^\d{10}-", d) or not os.path.isfile(put):
+            continue
+        with open(put, encoding="utf-8") as fh:
+            t = fh.read()
+        out[put] = vstavit_v_kartochku(t, v.get("/company/%s/" % d), D["god"])
+    return out
+
+
+def _norm(t):
+    return re.sub(r"\s+", " ", t.replace("&#160;", " ").replace("&nbsp;", " ").replace(NB, " "))
+
+
+def kartochki_ustareli(koren=KOREN):
+    """Карточки, где строка рейтинга не та, что поставила бы сборка (сравнение без неразрывных пробелов)."""
+    out = []
+    for put, t in kartochki_so_ssylkoj(koren).items():
+        with open(put, encoding="utf-8") as fh:
+            byl = fh.read()
+        a = METKA_K.findall(_norm(byl))
+        b = METKA_K.findall(_norm(t))
+        if a != b:
+            out.append(os.path.relpath(put, koren))
+    return out
+
+
 def main():
     txt, D = sobrat()
     p = os.path.join(KOREN, "reyting", "index.html")
@@ -474,6 +539,10 @@ def main():
     svyaz = svyazannye(KOREN, D)
     rasn = [f for f, t in svyaz.items() if open(f, encoding="utf-8").read() != t]
     if "--check" in sys.argv:
+        ust = kartochki_ustareli(KOREN)
+        if ust:  # kartochki-reyting-v1: строку на карточках ставит сборка карточек (типограф + дата WebPage)
+            print("Строка рейтинга на карточках устарела (%d): python3 tests/kartochki.py perepechatat" % len(ust))
+            sys.exit(1)
         if stary != txt or rasn:
             print("Нужна сборка рейтинга: python3 tests/sobrat_reyting.py" + ("" if not rasn else " (" + ", ".join(os.path.relpath(f, KOREN) for f in rasn) + ")"))
             sys.exit(1)

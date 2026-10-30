@@ -3673,7 +3673,7 @@ dostupno.girbo = !!dostupno.girbo;
 var dm = r.damia || {};
 [['sudy', 'sudy'], ['fssp', 'fssp'], ['fedresurs', 'bankrotstvo'], ['eis', 'rnp']].forEach(function (p) {
 var b = dm[p[1]];
-dostupno[p[0]] = !!(b && typeof b === 'object' && !b.iz_egryul && (b.status === 'provereno' || b.status === 'found' || b.status === 'not_found'));
+dostupno[p[0]] = !!(b && typeof b === 'object' && !b.iz_egryul && !b.ustarelo && (b.status === 'provereno' || b.status === 'found' || b.status === 'not_found'));
 });
 var st = c.status;
 if (st === 'LIQUIDATED' || ISKLYUCHENA[kod]) fakty.likvidirovana = true;
@@ -4308,6 +4308,12 @@ var TON = { ok: 'ok', warn: 'warn', medium: 'warn', high: 'bad', bad: 'bad', cri
 function skl(n, a, b, c) { var m = Math.abs(n) % 100, k = m % 10; return m > 10 && m < 20 ? c : k === 1 ? a : k > 1 && k < 5 ? b : c; }
 function str(v) { return v == null ? '' : String(v).trim(); }
 function ton(s) { return (s && TON[s.status]) || 'neutral'; }
+function kodPriznaka(s) {
+var U = (W && W.Usloviya) || null;
+if (!U && typeof module === 'object' && typeof require === 'function') { try { U = require('./usloviya.js'); } catch (e) { U = null; } }
+var x = U && U.signalId ? U.signalId(s) : null;
+return x && x.po !== 'tekst' ? x : null;
+}
 function model(r) {
 var c = r && r.company;
 if (!c || c.kind !== 'LEGAL') return null;
@@ -4318,8 +4324,9 @@ var sig = {}, massRuk = null, massAdr = null;
 (r.signals || []).forEach(function (s) {
 if (!s) return;
 sig[s.id] = s;
-if (/^Массовый руководитель/i.test(str(s.title))) massRuk = s;
-if (/^Массовый адрес/i.test(str(s.title))) massAdr = s;
+var k = kodPriznaka(s);
+if (k ? k.id === 'mass_dir' : /^Массовый руководитель/i.test(str(s.title))) massRuk = s;
+if (k ? k.id === 'mass_address' : /^Массовый адрес/i.test(str(s.title))) massAdr = s;
 });
 var uzly = [];
 function dob(k, row, pod, s) {

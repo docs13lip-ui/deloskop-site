@@ -23,18 +23,41 @@ return !!(t && t.status === "utverzhdeno" && t.proveril && dataRu(t.data_proverk
 t.sdelat && (t.bank || t.nalog) && dlina(t) <= MAKS);
 }
 function rx(s) { try { return new RegExp(s, "i"); } catch (e) { return null; } }
+var IZ_API = {
+tax_debt: "tax_debt", employees: "shtat", age: "vozrast",
+mass_address: "mass_address", massovyj_adres: "mass_address", mass_dir: "mass_dir", massovyj_rukovoditel: "mass_dir",
+fssp: "fssp", rnp: "rnp", nedostovernost: "nedostovernost", bankrotstvo: "bankrotstvo", likvidaciya: "likvidaciya",
+reorganizaciya: "reorganizaciya", diskvalifikaciya: "diskvalifikaciya", priostanovki: "priostanovka", shtrafy: "shtrafy"
+};
+function kodSignala(signal) {
+if (!signal) return null;
+var k = signal.signal_id != null && String(signal.signal_id).trim() ? signal.signal_id : signal.rule_id;
+if (k != null && String(k).trim()) return String(k).trim();
+return signal.id != null && Object.prototype.hasOwnProperty.call(IZ_API, String(signal.id)) ? IZ_API[String(signal.id)] : null;
+}
+function itog(list, z) {
+if (!z.kak) return z;
+for (var j = 0; j < list.length; j++) if (list[j].id === z.kak && !list[j].kak) return list[j];
+return null;
+}
 function zapis(sprav, signal) {
 var list = (sprav && sprav.signaly) || [];
 var title = String((signal && signal.title) || "");
 if (!title) return null;
 var vse = title + " · " + String((signal && signal.detail) || "");
-for (var i = 0; i < list.length; i++) {
+var i, u, kod = kodSignala(signal);
+if (kod) {
+for (i = 0; i < list.length; i++) {
+if (!list[i].kody || list[i].kody.indexOf(kod) < 0) continue;
+if (list[i].uslovie) { u = rx(list[i].uslovie); if (!u || !u.test(vse)) continue; }
+return itog(list, list[i]);
+}
+}
+for (i = 0; i < list.length; i++) {
 var re = rx(list[i].re);
 if (!re || !re.test(title)) continue;
-if (list[i].uslovie) { var u = rx(list[i].uslovie); if (!u || !u.test(vse)) continue; }
-if (!list[i].kak) return list[i];
-for (var j = 0; j < list.length; j++) if (list[j].id === list[i].kak && !list[j].kak) return list[j];
-return null;
+if (list[i].uslovie) { u = rx(list[i].uslovie); if (!u || !u.test(vse)) continue; }
+return itog(list, list[i]);
 }
 return null;
 }
@@ -243,7 +266,7 @@ for (var i = 0; i < list.length; i++) if (list[i] && vypiska(sprav, list[i].kod)
 return false;
 }
 return { TON: TON, MAKS: MAKS, OGOVORKA: OGOVORKA, ogovorkaHtml: ogovorkaHtml, postavitOgovorku: postavitOgovorku,
-dlyaSut: dlyaSut, vstavitSut: vstavitSut, CSS_EKRANA: CSS_EKRANA, gotov: gotov, istochnikOtvetil: istochnikOtvetil, NE_OTVETIL: NE_OTVETIL, zapis: zapis, najti: najti, html: html, zagruzit: zagruzit, vstavit: vstavit, dlina: dlina,
+dlyaSut: dlyaSut, vstavitSut: vstavitSut, CSS_EKRANA: CSS_EKRANA, gotov: gotov, istochnikOtvetil: istochnikOtvetil, NE_OTVETIL: NE_OTVETIL, IZ_API: IZ_API, kodSignala: kodSignala, zapis: zapis, najti: najti, html: html, zagruzit: zagruzit, vstavit: vstavit, dlina: dlina,
 dlyaFaktov: dlyaFaktov, vstavitFakty: vstavitFakty,
 TON_VYP: TON_VYP, vypiska: vypiska, vypiskaHtml: vypiskaHtml, estVypiska: estVypiska };
 });

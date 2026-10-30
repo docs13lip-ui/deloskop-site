@@ -44,7 +44,7 @@ test("Паспорт: цифры и метки — как в образце Па
   // предел аванса образца: две недели выручки (÷ 26), одно замечание → половина, вниз до сотен тысяч
   assert.strictEqual(Math.floor(61400000 / 26 / 2 / 100000) * 100000, 1100000);
   // витрина: экспонат «Паспорт» ведёт на показ Паспорта, а не на досье
-  assert.ok(fs.readFileSync(path.join(K, "index.html"), "utf8").includes('href="/kak-rabotaet/#pasport">Как это работает'));
+  assert.ok(fs.readFileSync(path.join(K, "vse-vozmozhnosti/index.html"), "utf8").includes('href="/kak-rabotaet/#pasport">Как это работает'));
 });
 
 test("[data-zam] — только у элементов на смену ушедшему (не на первом шаге)", () => {
@@ -87,7 +87,8 @@ test("страница в sitemap, а витрина ведёт на сущес�
   const kak = [...main.matchAll(/<section class="kr-d" id="([^"]+)" data-eksponat="([^"]+)"/g)];
   assert.strictEqual(kak.length, pokazy.length, "у каждого показа — свой экспонат витрины");
   kak.forEach((m) => assert.ok(ids.has(m[2]), m[1] + " → " + m[2]));
-  const glav = fs.readFileSync(path.join(K, "index.html"), "utf8");
+  // vse-vozmozhnosti-v1: зал витрины — на /vse-vozmozhnosti/ (на главной — строка-вход)
+  const glav = fs.readFileSync(path.join(K, "vse-vozmozhnosti/index.html"), "utf8");
   // у экспоната несколько показов — ссылка на первый (vypiska → «Кому вы платите», а не «Проверь счёт»)
   const pervyj = new Map();
   for (const m of kak) if (!pervyj.has(m[2])) pervyj.set(m[2], m[1]);

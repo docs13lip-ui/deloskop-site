@@ -8,10 +8,12 @@ const { execFileSync } = require('child_process');
 const KOREN = path.join(__dirname, '..');
 const chitat = (f) => fs.readFileSync(path.join(KOREN, f), 'utf8');
 const V = JSON.parse(chitat('partials/vitrina.json'));
-const html = chitat('index.html');
+// vse-vozmozhnosti-v1 (30.10.2026, схема А): зал — на /vse-vozmozhnosti/, на главной между теми же метками — строка-вход
+const html = chitat('vse-vozmozhnosti/index.html');
+const glavnaya = chitat('index.html');
 const blok = () => {
   const a = html.indexOf('<!--vitrina-->'), b = html.indexOf('<!--/vitrina-->');
-  assert.ok(a > 0 && b > a, 'метки <!--vitrina-->…<!--/vitrina--> есть в index.html');
+  assert.ok(a > 0 && b > a, 'метки <!--vitrina-->…<!--/vitrina--> есть в vse-vozmozhnosti/index.html');
   return html.slice(a, b);
 };
 
@@ -66,7 +68,7 @@ test('JSON-LD ItemList: все продукты, якоря витрины, по
   assert.ok(m, 'есть JSON-LD');
   const d = JSON.parse(m[1]);
   assert.strictEqual(d['@type'], 'ItemList');
-  assert.deepStrictEqual(d.itemListElement.map((x) => x.url), V.eksponaty.map((x) => 'https://deloskop.ru/#' + x.id));
+  assert.deepStrictEqual(d.itemListElement.map((x) => x.url), V.eksponaty.map((x) => 'https://deloskop.ru/vse-vozmozhnosti/#' + x.id));
   assert.ok(!d.itemListElement.some((x) => /Индекс Делоскопа/.test(x.name + x.description)), 'ворота п. 71 — и в разметке');
   assert.deepStrictEqual(d.itemListElement.map((x) => x.position), V.eksponaty.map((_, i) => i + 1));
 });
@@ -157,7 +159,7 @@ test('vitrina-v2b: ритм зала (пары, сторона сцены), ин
 
 test('vitrina-v2b: флаг zal.ubrat_dubli — выключен; включение обратимо и не ломает ссылки на секции', () => {
   assert.strictEqual(V.zal.ubrat_dubli, false, 'дубли убираем только после ✓ Арт-директора');
-  assert.ok(!/<template data-dubli=/.test(html));
+  assert.ok(!/<template data-dubli=/.test(glavnaya));
   const kod = `
 import json, sys
 sys.path.insert(0, 'tests')
@@ -195,4 +197,28 @@ test('priemka-1910-v1: таблетка не накрывает заголовк
   assert.match(css, /\.vit-ind\{position:fixed;/);
   // (4) воздух между экспонатами на телефоне 32 → 28 px (−48 px на 12 промежутках)
   assert.match(css, /@media \(max-width:860px\)\{[\s\S]*? \.vit__zal\{gap:28px\}/);
+});
+
+// vse-vozmozhnosti-v1: своя страница каталога и строка-вход на главной
+test('vse-vozmozhnosti-v1: на главной — одна строка-вход #vitrina, зал — на /vse-vozmozhnosti/ (h1, свои title/description, sitemap)', () => {
+  const a = glavnaya.indexOf('<!--vitrina-->'), b = glavnaya.indexOf('<!--/vitrina-->');
+  const g = glavnaya.slice(a, b);
+  assert.ok(a > 0 && b > a);
+  assert.match(g, /<section class="vit-vhod" id="vitrina" aria-labelledby="vitrina-h">/);
+  assert.match(g, /<a class="vit-btn" href="\/vse-vozmozhnosti\/">Все возможности Делоскопа/);
+  assert.ok(!/vit-e |application\/ld\+json|<symbol/.test(g), 'на главной нет зала, рисунков и ItemList');
+  const zhivyh = V.eksponaty.filter((x) => x.status !== 'razrabotka').length;
+  assert.ok(g.includes(zhivyh + '&nbsp;'), 'счёт продуктов — из vitrina.json');
+  assert.strictEqual((html.match(/<h1\b/g) || []).length, 1, 'на странице один h1');
+  assert.match(html, /<h1 class="h2" id="vitrina-h">/);
+  assert.match(html, /<link rel="canonical" href="https:\/\/deloskop\.ru\/vse-vozmozhnosti\/">/);
+  const title = html.match(/<title>([^<]+)<\/title>/)[1], desc = html.match(/<meta name="description" content="([^"]+)">/)[1];
+  assert.ok(title.length <= 70 && desc.length <= 160, title.length + ' / ' + desc.length);
+  assert.ok(!/бета/i.test(title + desc));
+  assert.match(chitat('sitemap.xml'), /<loc>https:\/\/deloskop\.ru\/vse-vozmozhnosti\/<\/loc>/);
+  assert.match(html, /href="\/kak-rabotaet\/"/, 'показы «Как это работает» — с этой страницы');
+  // якоря экспонатов /#proverka … ни одна страница сайта не использует — переезд их не ломает
+  const kod = "import sys, json; sys.path.insert(0, 'tests'); import sobrat_vitrinu as v; d = v.dannye(); print(json.dumps(v.ssylki_na([x['id'] for x in d['eksponaty']])))";
+  const r = JSON.parse(execFileSync('python3', ['-c', kod], { cwd: KOREN, encoding: 'utf8' }));
+  assert.deepStrictEqual(r, {}, 'ссылки на /#<экспонат>: ' + JSON.stringify(r));
 });

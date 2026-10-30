@@ -70,6 +70,17 @@ body{margin:0;background:#F5F5F2;-webkit-font-smoothing:antialiased}
 .pr .btn--vtor{margin-left:12px;background:transparent;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.4)}
 .pr .btn--vtor:hover{background:rgba(255,255,255,.08)}
 @media (max-width:520px){.pr .btn--vtor{display:flex;width:max-content;max-width:100%;margin:12px 0 0}}
+/* forma-razbora-v1: ИНН — прямо в блоке действия (поле и кнопка в ряд; на телефоне — одно под другим во всю ширину).
+   Рамка поля 1,5 px белым 40 % — контраст с фоном блока ≥ 3 : 1, подсказка #A1A1A6 — ≥ 4,5 : 1.
+   Блок тёмный в обеих темах, поэтому белые полупрозрачные цвета поля — запасным значением var(): авто-слой тёмной темы
+   (tests/tema_temnaya.py) их не переводит, иначе рамка в тёмной теме стала бы невидимой (белый 4 %) */
+.pr .dl__f{display:flex;flex-wrap:wrap;gap:12px;max-width:640px;margin:0}
+.pr .dl__f input{flex:1 1 220px;min-width:0;min-height:50px;padding:0 18px;border:1.5px solid var(--dl-ramka,rgba(255,255,255,.4));border-radius:16px;background:var(--dl-pole,rgba(255,255,255,.08));color:#fff;font:500 17px/1.2 var(--font);font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.pr .dl__f input::placeholder{color:#A1A1A6;letter-spacing:0;opacity:1}
+.pr .dl__f input:focus{outline:2px solid var(--accent);outline-offset:2px;border-color:var(--dl-ramka-f,rgba(255,255,255,.7))}
+.pr .dl__f .btn{flex:0 0 auto;border:0;cursor:pointer;padding-top:8px;padding-bottom:8px;line-height:1.2;text-align:center;text-wrap:balance}
+.pr .dl__f + .btn--vtor{margin:12px 0 0}
+@media (max-width:520px){.pr .dl__f{flex-direction:column}.pr .dl__f input,.pr .dl__f .btn{width:100%}.pr .dl__f input{flex:0 0 auto}.pr .dl__f + .btn--vtor{width:100%}}
 /* «Где в законе» */
 .pr .zakon{list-style:none;margin:8px 0 0;padding:0}.pr .zakon li{margin:0;padding:10px 0;border-top:1px solid var(--line);color:var(--ink-2);font-size:17px}
 .pr .red{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);font-size:13px;white-space:nowrap}

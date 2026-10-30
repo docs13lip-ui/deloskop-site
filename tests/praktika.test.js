@@ -51,7 +51,9 @@ for (const r of D.razbory) {
     }
     // ровно одно действие, и ведёт на живую страницу (пп. 45–49 стоп-листа)
     assert.strictEqual((s.match(/class="btn"/g) || []).length, 1, 'одна кнопка');
-    const u = s.match(/class="btn" href="([^"]+)"/)[1];
+    // forma-razbora-v1: кнопка — ссылкой или отправкой формы ИНН (action — тот же адрес)
+    const fm = s.match(/<form class="dl__f" action="([^"]+)"/);
+    const u = fm ? fm[1] : s.match(/class="btn" href="([^"]+)"/)[1];
     const put = u.split('?')[0].split('#')[0].replace(/^\//, '');
     assert.ok(fs.existsSync(path.join(KOREN, put, 'index.html')) || fs.existsSync(path.join(KOREN, put)), 'кнопка на несуществующую страницу ' + u);
     const q = u.split('?s=')[1];

@@ -145,3 +145,16 @@ test('cookie-баннер: одна короткая строка на всех 
   assert.ok(!/ck-bar__(kr|dl)/.test(c));
   assert.ok(/max-width:640px\)\{[^}]*\}\.ck-bar \.ck-bar__t\{font-size:var\(--t-caption\)\}/.test(c));
 });
+
+test('полоса без «беты», когда беты нет (glavnaya-a-v2, ✎ Штаба 31.10)', () => {
+  const kark = chitat('partials/beta.html');
+  assert.ok(kark.includes('aria-label="{{IMYA}}"') && kark.includes('{{METKA}}'), 'метка и имя области — из сборщика по режиму');
+  assert.ok(/data-beta-rezhim","b"\);var m=b\.querySelector\("\.beta-bar__metka"\);if\(m\)m\.remove\(\);b\.setAttribute\("aria-label","Условия Делоскопа"\)/.test(kark),
+    'переход a → b в браузере снимает метку и меняет имя области');
+  const gl = chitat('index.html');
+  const m = gl.match(/<div class="beta-bar[^"]*" role="region" aria-label="([^"]+)" data-beta-rezhim="(\w)"/);
+  if (m && m[2] !== 'a') {
+    assert.strictEqual(m[1], 'Условия Делоскопа');
+    assert.ok(!gl.includes('<span class="beta-bar__metka">бета</span>'), 'в режиме ' + m[2] + ' метки «бета» нет');
+  }
+});

@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """platyat-pozzhe-v1: блок «Контрагенты стали платить позже» на главной — из data/rynok.json.
 
-Цифры — только из data/rynok.json (ТЗ [Продукт] 10.10, разд. 3). Блок стоит между метками
-<!--rynok-glavnaya-->…<!--/rynok-glavnaya--> в index.html (между «Как решают суды» и калькулятором).
-Внутри блока — инлайн-скрипт: кладёт строку «Для сравнения…» в window.DLK_RYNOK для «Условий сделки»
-и прячет блок сам, когда сверке больше 120 дней (устаревшая цифра хуже никакой — даже если сайт не пересобрали).
+Цифры — только из data/rynok.json (ТЗ [Продукт] 10.10, разд. 3).
+glavnaya-a-v2 (31.10, схема А, ТЗ [Продукт] «строка-переход»): сам блок переехал на /vse-vozmozhnosti/
+(метки <!--rynok-vv-->…<!--/rynok-vv-->, перед «В разработке»). На главной между метками
+<!--rynok-glavnaya-->…<!--/rynok-glavnaya--> остался только инлайн-скрипт: кладёт строку «Для сравнения…»
+в window.DLK_RYNOK для «Условий сделки» в настоящем отчёте. Скрипт на /vse-vozmozhnosti/ прячет блок сам,
+когда сверке больше 120 дней (устаревшая цифра хуже никакой — даже если сайт не пересобрали).
 
 Запуск:  python3 tests/sobrat_rynok.py            — пересобрать index.html
          python3 tests/sobrat_rynok.py --check    — только проверить (код 1, если index.html отстал)
@@ -20,6 +22,8 @@ import sys
 
 KOREN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 NACH, KON = "<!--rynok-glavnaya-->", "<!--/rynok-glavnaya-->"
+NACH_VV, KON_VV = "<!--rynok-vv-->", "<!--/rynok-vv-->"
+STRANICA_VV = os.path.join("vse-vozmozhnosti", "index.html")
 SROK_DNEJ = 120
 NB = "&nbsp;"
 MES = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"]
@@ -96,21 +100,32 @@ def data_ru(iso):
     return "%d%s%s%s%d%sг." % (d.day, NB, MES[d.month - 1], NB, d.year, NB)  # tipograf-daty-v1
 
 
-def blok(p):
+def okno(p):
+    return {"tekst": stroka_usloviya(p), "do": srok_do(p).isoformat()}
+
+
+def skript_glavnoj(p):
+    """Главная: только строка для «Условий сделки» (блока на странице нет)."""
     proverit(p)
-    proc = lambda s: s.replace(" %", NB + "%")
+    o = okno(p)
+    return ("<script>(function(){try{var s=document.getElementById('rynok'),R=%s;"
+            "if(Date.now()>=Date.parse(R['do']+'T00:00:00+03:00')){if(s)s.hidden=true;window.DLK_RYNOK=null}"
+            "else window.DLK_RYNOK=R}catch(e){}})()</script>") % json.dumps(o, ensure_ascii=False).replace("\u00a0", "\\u00a0")
+
+
+def blok(p):
+    """Секция «Контрагенты стали платить позже» — для /vse-vozmozhnosti/ (между метками rynok-vv)."""
+    proverit(p)
     vovremya = chislo(p["vovremya"], r"выше (\d+) %", "vovremya")
     do60 = chislo(p["do60"], r"примерно (\d+) %", "do60")
     sv = chislo(p["svyshe60"], r"(\d+–\d+) %", "svyshe60")
     G = god(p)
     ist = e(p["istochnik"]).replace(", ", " и" + NB)
-    okno = {"tekst": stroka_usloviya(p), "do": srok_do(p).isoformat()}
-    skript = ("<script>(function(){try{var s=document.getElementById('rynok'),R=%s;"
-              "if(Date.now()>=Date.parse(R['do']+'T00:00:00+03:00')){if(s)s.hidden=true;window.DLK_RYNOK=null}"
-              "else window.DLK_RYNOK=R}catch(e){}})()</script>") % json.dumps(okno, ensure_ascii=False).replace("\u00a0", "\\u00a0")
+    o = okno(p)
+    skript = ("<script>(function(){try{var s=document.getElementById('rynok');"
+              "if(s&&Date.now()>=Date.parse('%sT00:00:00+03:00'))s.hidden=true}catch(e){}})()</script>") % o["do"]
     return (
-        NACH +
-        '<section class="sect rynok" id="rynok" aria-labelledby="rynok-h" data-rynok-do="%s">' % okno["do"] +
+        '<section class="sect rynok" id="rynok" aria-labelledby="rynok-h" data-rynok-do="%s">' % o["do"] +
         '<div class="wrap"><div class="rynok__in">'
         '<div class="rynok__nad">Рынок сейчас</div>'
         '<h2 class="h2" id="rynok-h">Контрагенты стали платить позже</h2>'
@@ -123,25 +138,34 @@ def blok(p):
         'малого бизнеса во' + NB + 'втором квартале просрочек стало больше, чем в' + NB + 'первом: +' +
         e(p["msb_do60_pp"]) + NB + 'п.' + NB + 'п. до' + NB + '60' + NB + 'дней и' + NB + '+' +
         e(p["msb_svyshe60_pp"]) + NB + 'п.' + NB + 'п.' + NB + '— дольше.</p>'
-        '<p>Поэтому проверка заканчивается не' + NB + 'только словами «можно работать». Мы считаем, какую сумму '
+        '<p>Поэтому проверка заканчивается не' + NB + 'только итогом по' + NB + 'реестрам. Мы считаем, какую сумму '
         'разумно заплатить вперёд,' + NB + '— по' + NB + 'выручке компании, Индексу и' + NB + 'сигналам из' + NB +
         'реестров. Методика открыта.</p>'
-        '<p class="rynok__go"><a href="#check" data-focus-inn data-goal="platyat_pozzhe_klik">Проверить, сколько платить вперёд' +
+        '<p class="rynok__go"><a href="/#inn" data-goal="platyat_pozzhe_klik">Проверить, сколько платить вперёд' +
         NB + '→</a></p>'
         '<p class="rynok__ist">Источник: ' + ist + ' (доли счетов' + NB + '— за' + NB + G + NB + 'год, рост просрочек у' + NB +
         'малого бизнеса' + NB + '— II' + NB + 'квартал к' + NB + 'I); публикация «<a href="' + e(p["url"]) + '" target="_blank" rel="nofollow noopener">Интерфакса</a>» от' + NB +
         data_ru(p["data_publikacii"]) + ' «Около четверти»' + NB + '— наш пересчёт: ' + do60 + NB + '% + ' + sv +
         NB + '%.</p>'
-        '</div></div></div></div></section>' + skript + KON
+        '</div></div></div></div></section>' + skript
     )
 
 
-def sobrat(txt, p, segodnya):
-    a, b = txt.find(NACH), txt.find(KON)
+def zamenit(txt, nach, kon, novoe, imya):
+    a, b = txt.find(nach), txt.find(kon)
     if a < 0 or b < a:
-        raise SystemExit("index.html: нет меток %s…%s" % (NACH, KON))
-    novoe = (NACH + KON) if segodnya >= srok_do(p) else blok(p)
-    return txt[:a] + novoe + txt[b + len(KON):]
+        raise SystemExit("%s: нет меток %s…%s" % (imya, nach, kon))
+    return txt[:a] + nach + novoe + kon + txt[b + len(kon):]
+
+
+def sobrat(txt, p, segodnya):
+    """index.html: между метками — только скрипт DLK_RYNOK (после срока — пусто)."""
+    return zamenit(txt, NACH, KON, "" if segodnya >= srok_do(p) else skript_glavnoj(p), "index.html")
+
+
+def sobrat_vv(txt, p, segodnya):
+    """/vse-vozmozhnosti/: сама секция (после срока — пусто)."""
+    return zamenit(txt, NACH_VV, KON_VV, "" if segodnya >= srok_do(p) else blok(p), STRANICA_VV)
 
 
 def main(argv):
@@ -149,24 +173,26 @@ def main(argv):
     segodnya = segodnya_msk()
     if "--segodnya" in argv:
         segodnya = datetime.date.fromisoformat(argv[argv.index("--segodnya") + 1])
-    put = os.path.join(KOREN, "index.html")
-    with open(put, encoding="utf-8") as f:
-        staroe = f.read()
-    try:
-        novoe = sobrat(staroe, dannye(), segodnya)
-    except StaryjTekst as x:
-        print("sobrat_rynok: " + str(x), file=sys.stderr)
-        return 2
-    if check:
-        if novoe != staroe:
-            print("index.html: блок «Платят позже» отстал от data/rynok.json — python3 tests/sobrat_rynok.py", file=sys.stderr)
-            return 1
-        return 0
-    if novoe != staroe:
+    kod = 0
+    for imya, fn in (("index.html", sobrat), (STRANICA_VV, sobrat_vv)):
+        put = os.path.join(KOREN, imya)
+        with open(put, encoding="utf-8") as f:
+            staroe = f.read()
+        try:
+            novoe = fn(staroe, dannye(), segodnya)
+        except StaryjTekst as x:
+            print("sobrat_rynok: " + str(x), file=sys.stderr)
+            return 2
+        if novoe == staroe:
+            continue
+        if check:
+            print("%s: блок «Платят позже» отстал от data/rynok.json — python3 tests/sobrat_rynok.py" % imya, file=sys.stderr)
+            kod = 1
+            continue
         with open(put, "w", encoding="utf-8") as f:
             f.write(novoe)
-        print("index.html: блок «Платят позже» пересобран")
-    return 0
+        print("%s: блок «Платят позже» пересобран" % imya)
+    return kod
 
 
 if __name__ == "__main__":

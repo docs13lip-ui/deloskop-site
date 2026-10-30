@@ -397,6 +397,10 @@ def korotkij(d):
         '<p class="lead">%s работают сейчас%s: сделка, банк и&nbsp;налоговая, у&nbsp;каждого своя страница.</p>' % (
             chislo(zhivyh, "продукт", "продукта", "продуктов"), hvost) +
         '<p class="vit-vhod__go"><a class="vit-btn" href="/vse-vozmozhnosti/">Все возможности Делоскопа<span aria-hidden="true">→</span></a></p>'
+        # glavnaya-a-v2: блоки «Рынок сейчас» и «Сколько стоит ошибка» — на /vse-vozmozhnosti/; прежние якоря главной
+        # (#rynok, #oshibka) — видимые ссылки тихой строкой (без скрытого текста); /#rynok и /#oshibka уводит скрипт перед <main>
+        '<p class="vit-vhod__yak">Там же: <a id="rynok" href="/vse-vozmozhnosti/#rynok">как сейчас платят контрагенты</a> '
+        'и&nbsp;<a id="oshibka" href="/nalogi/kalkulyator-tehnicheskij-postavshchik/">калькулятор «технического» поставщика</a>.</p>'
         '</div></section>' + KON
     )
 

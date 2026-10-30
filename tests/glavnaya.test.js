@@ -16,7 +16,9 @@ const tekst = (t) => t.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style
 test('порядок блоков: hero → входы → витрина → Щит → разборы → «платят позже» → ошибка → доверие → цены → вопросы', () => {
   // vitrina-v1: «Витрина экосистемы» (tests/sobrat_vitrinu.py) — сразу после входов.
   // platyat-pozzhe-v1: «Контрагенты стали платить позже» — между разборами и калькулятором; при устаревшей сверке сборщик его убирает
-  const ids = ['class="hero"', 'id="vhody"', 'id="vitrina"', 'id="shield"', 'id="praktika"'].concat(MAIN.includes('id="rynok"') ? ['id="rynok"'] : [], ['id="oshibka"', 'id="doverie"', 'id="price"', 'id="faq"']);
+  // glavnaya-a-v2 (31.10, схема А): «платят позже» и калькулятор ошибки — на /vse-vozmozhnosti/; на главной от них — якоря-ссылки в строке витрины
+  const ids = ['class="hero"', 'id="vhody"', 'id="vitrina"', 'id="shield"', 'id="praktika"', 'id="doverie"', 'id="price"', 'id="faq"'];
+  assert.ok(!/<section[^>]+id="(rynok|oshibka)"/.test(MAIN), 'секций #rynok и #oshibka на главной больше нет');
   const poz = ids.map((x) => MAIN.indexOf(x));
   assert.ok(poz.every((p) => p > 0), 'все блоки на месте: ' + ids.filter((x, i) => poz[i] < 0).join(', '));
   assert.deepStrictEqual([...poz].sort((a, b) => a - b), poz);

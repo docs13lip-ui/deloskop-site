@@ -44,6 +44,7 @@ h1,h2,h3{margin:0;font-weight:600;letter-spacing:-0.03em;line-height:1.08}
 p{margin:0}
 .wrap{max-width:1440px;margin:0 auto;padding-inline:var(--pad)}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.vit-vhod__yak{margin:14px 0 0;font-size:15px;color:var(--muted)}.vit-vhod__yak a{color:inherit;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.2em;text-decoration-color:var(--line)}.vit-vhod__yak a:hover{color:var(--accent)}
 .muted{color:var(--ink2)}
 .eyebrow{font-size:15px;font-weight:600;color:var(--accent)}
 .h2{font-size:clamp(32px,4.2vw,48px)}
@@ -259,24 +260,6 @@ footer a{color:var(--ink2)}
 .praktika-gl .vse{margin-top:24px;font-weight:600}
 @media (max-width:860px){.pr-gl{grid-template-columns:1fr}}
 /* platyat-pozzhe-v1: «Контрагенты стали платить позже» — цифра рынка рядом с формулой предоплаты (без цвета тревоги, без графика) */
-.rynok{padding-bottom:0}
-.rynok__nad{font-size:13px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
-.rynok__g{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:24px clamp(32px,5vw,80px);align-items:start;margin-top:clamp(28px,3.5vw,44px)}
-.rynok__ch{display:flex;flex-direction:column;gap:10px}
-.rynok__ch b{align-self:flex-start;font-size:clamp(64px,8.4vw,128px);font-weight:600;line-height:.95;letter-spacing:-.045em;white-space:nowrap;font-variant-numeric:lining-nums proportional-nums}
-.rynok__ch span{font-size:clamp(17px,1.5vw,20px);color:var(--ink2);max-width:300px;line-height:1.4}
-.rynok__t{display:flex;flex-direction:column;gap:16px;max-width:640px}
-.rynok__t p{font-size:clamp(17px,1.4vw,17px);line-height:1.55}
-.rynok__go{font-weight:600}
-.rynok__t .rynok__ist{font-size:13px;line-height:1.45;color:var(--muted);padding-top:12px;border-top:1px solid var(--line)}
-.rynok__ist a{color:inherit;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:2px}
-.rynok__ist a:hover{color:var(--accent)}
-@media (max-width:860px){.rynok__g{grid-template-columns:1fr;gap:20px}}
-.oshibka{padding-block:0}
-.oshibka__in{display:flex;align-items:center;justify-content:space-between;gap:20px 40px;flex-wrap:wrap;background:var(--dark);color:#F5F5F7;border-radius:var(--r-lg);padding:clamp(24px,3vw,36px) clamp(24px,3.5vw,44px);margin-block:var(--sect)}
-.oshibka__in p{font-size:clamp(17px,1.7vw,20px);line-height:1.45;max-width:760px}
-.oshibka__go{display:inline-flex;align-items:center;min-height:48px;padding:0 22px;border-radius:16px;border:1px solid rgba(255,255,255,.28);color:#fff!important;font-weight:600;white-space:nowrap}
-.oshibka__go:hover{border-color:#fff}
 .doverie{padding-top:0}
 .shield{padding-top:0}
 .ceny,.faq{padding-block:clamp(56px,7vw,88px)}
@@ -450,6 +433,7 @@ footer a{color:var(--ink2)}
 <!--beta-polosa--><div class="beta-bar" role="region" aria-label="Открытая бета" data-beta-rezhim="b" data-beta-do="" data-beta-bar><div class="beta-bar__in"><span class="beta-bar__metka">бета</span><details class="beta-bar__d" data-beta-d><summary class="beta-bar__kr"><span><span class="beta-kr-d">Без входа&nbsp;— 10&nbsp;проверок в&nbsp;день</span><span class="beta-kr-k">Без входа&nbsp;— 10&nbsp;в&nbsp;день</span></span></summary><p class="beta-bar__t"><b>Делоскоп сейчас бесплатный для всех.</b> <span class="beta-bar__dop">О&nbsp;начале тарифов скажем здесь не&nbsp;позже чем за&nbsp;3&nbsp;дня; быстрая проверка останется бесплатной, 10&nbsp;в&nbsp;день. </span><a href="mailto:help@deloskop.ru?subject=%D0%91%D0%B5%D1%82%D0%B0%20%D0%94%D0%B5%D0%BB%D0%BE%D1%81%D0%BA%D0%BE%D0%BF%D0%B0">Нашли ошибку&nbsp;— напишите</a></p></details><button class="beta-bar__x" type="button" aria-label="Скрыть на неделю" data-beta-x><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div></div><script>try{(function(d){if(d&&!matchMedia("(max-width:640px)").matches)d.open=true})(document.querySelector("[data-beta-bar] [data-beta-d]"))}catch(e){}try{(function(b){var r=b.getAttribute("data-beta-rezhim"),d=b.getAttribute("data-beta-do"),k=d?Date.parse(d+"T00:00:00+03:00")+864e5:0,n=Date.now();if(r==="c"){if(n>=k+6048e5)b.hidden=true;return}if(r==="a"&&n>=k){var t=b.querySelector("template[data-beta-b]");if(t){b.querySelector(".beta-bar__t").innerHTML=t.innerHTML;var q=b.querySelector("template[data-beta-b-kr]"),s=b.querySelector(".beta-bar__kr>span");if(q&&s)s.innerHTML=q.innerHTML;b.setAttribute("data-beta-rezhim","b")}}if(+localStorage.getItem("dlk_beta_skryt_"+(d||"net"))>n)b.hidden=true})(document.querySelector("[data-beta-bar]"))}catch(e){}</script><!--/beta-polosa-->
 <span id="main" tabindex="-1"></span>
 
+<script>/* glavnaya-a-v2: «Рынок сейчас» и калькулятор ошибки переехали на /vse-vozmozhnosti/ — старые адреса /#rynok и /#oshibka ведут туда */(function(h){if(h==="#rynok"||h==="#oshibka")location.replace("/vse-vozmozhnosti/"+h)})(location.hash)</script>
 <main id="top">
   <section class="hero" data-set data-set-pole="inn">
     <div class="wrap">
@@ -525,7 +509,7 @@ footer a{color:var(--ink2)}
     </div>
   </section>
 
-  <!--vitrina--><section class="vit-vhod" id="vitrina" aria-labelledby="vitrina-h"><div class="wrap"><p class="eyebrow">Экосистема Делоскопа</p><h2 class="h2" id="vitrina-h">Всё, что умеет Делоскоп</h2><p class="lead">13&nbsp;продуктов работают сейчас и&nbsp;3&nbsp;направления в&nbsp;разработке: сделка, банк и&nbsp;налоговая, у&nbsp;каждого своя страница.</p><p class="vit-vhod__go"><a class="vit-btn" href="/vse-vozmozhnosti/">Все возможности Делоскопа<span aria-hidden="true">→</span></a></p></div></section><!--/vitrina-->
+  <!--vitrina--><section class="vit-vhod" id="vitrina" aria-labelledby="vitrina-h"><div class="wrap"><p class="eyebrow">Экосистема Делоскопа</p><h2 class="h2" id="vitrina-h">Всё, что умеет Делоскоп</h2><p class="lead">13&nbsp;продуктов работают сейчас и&nbsp;3&nbsp;направления в&nbsp;разработке: сделка, банк и&nbsp;налоговая, у&nbsp;каждого своя страница.</p><p class="vit-vhod__go"><a class="vit-btn" href="/vse-vozmozhnosti/">Все возможности Делоскопа<span aria-hidden="true">→</span></a></p><p class="vit-vhod__yak">Там же: <a id="rynok" href="/vse-vozmozhnosti/#rynok">как сейчас платят контрагенты</a> и&nbsp;<a id="oshibka" href="/nalogi/kalkulyator-tehnicheskij-postavshchik/">калькулятор «технического» поставщика</a>.</p></div></section><!--/vitrina-->
 
   <section class="sect shield chetyre" id="shield" aria-labelledby="chetyre-h">
     <div class="wrap" data-sobir>
@@ -555,16 +539,8 @@ footer a{color:var(--ink2)}
     </div>
   </section>
 
-  <!--rynok-glavnaya--><section class="sect rynok" id="rynok" aria-labelledby="rynok-h" data-rynok-do="2027-02-09"><div class="wrap"><div class="rynok__in"><div class="rynok__nad">Рынок сейчас</div><h2 class="h2" id="rynok-h">Контрагенты стали платить позже</h2><div class="rynok__g"><p class="rynok__ch"><b>≈&nbsp;1 из&nbsp;4</b><span>счетов в&nbsp;2026 году оплачивают с&nbsp;опозданием</span></p><div class="rynok__t"><p>Вовремя оплачивают чуть больше 70&nbsp;% счетов. Примерно каждый пятый приходит с&nbsp;опозданием до&nbsp;60&nbsp;дней, ещё 5–8&nbsp;%&nbsp;— позже. У&nbsp;малого бизнеса во&nbsp;втором квартале просрочек стало больше, чем в&nbsp;первом: +2,6&nbsp;п.&nbsp;п. до&nbsp;60&nbsp;дней и&nbsp;+3,4&nbsp;п.&nbsp;п.&nbsp;— дольше.</p><p>Поэтому проверка заканчивается не&nbsp;только словами «можно работать». Мы считаем, какую сумму разумно заплатить вперёд,&nbsp;— по&nbsp;выручке компании, Индексу и&nbsp;сигналам из&nbsp;реестров. Методика открыта.</p><p class="rynok__go"><a href="#check" data-focus-inn data-goal="platyat_pozzhe_klik">Проверить, сколько платить вперёд&nbsp;→</a></p><p class="rynok__ist">Источник: СПАРК-Интерфакс (доли счетов&nbsp;— за&nbsp;2026&nbsp;год, рост просрочек у&nbsp;малого бизнеса&nbsp;— II&nbsp;квартал к&nbsp;I); публикация «<a href="https://www.interfax.ru/business/1113862" target="_blank" rel="nofollow noopener">Интерфакса</a>» от&nbsp;8&nbsp;сентября&nbsp;2026&nbsp;г. «Около четверти»&nbsp;— наш пересчёт: 20&nbsp;% + 5–8&nbsp;%.</p></div></div></div></div></section><script>(function(){try{var s=document.getElementById('rynok'),R={"tekst": "Для сравнения, по рынку в целом: около четверти счетов в\u00a02026 году оплачивают с\u00a0опозданием (СПАРК-Интерфакс). О платёжной дисциплине этой компании эта цифра ничего не говорит.", "do": "2027-02-09"};if(Date.now()>=Date.parse(R['do']+'T00:00:00+03:00')){if(s)s.hidden=true;window.DLK_RYNOK=null}else window.DLK_RYNOK=R}catch(e){}})()</script><!--/rynok-glavnaya-->
+  <!--rynok-glavnaya--><script>(function(){try{var s=document.getElementById('rynok'),R={"tekst": "Для сравнения, по рынку в целом: около четверти счетов в\u00a02026 году оплачивают с\u00a0опозданием (СПАРК-Интерфакс). О платёжной дисциплине этой компании эта цифра ничего не говорит.", "do": "2027-02-09"};if(Date.now()>=Date.parse(R['do']+'T00:00:00+03:00')){if(s)s.hidden=true;window.DLK_RYNOK=null}else window.DLK_RYNOK=R}catch(e){}})()</script><!--/rynok-glavnaya-->
 
-  <section class="oshibka" id="oshibka" aria-label="Сколько стоит ошибка">
-    <div class="wrap">
-      <div class="oshibka__in">
-        <p>Поставщик оказался «технической» компанией? Посчитайте, во&nbsp;что это обойдётся: снятый вычет НДС, налог, штраф и&nbsp;пени.</p>
-        <a class="oshibka__go" href="/nalogi/kalkulyator-tehnicheskij-postavshchik/">Открыть калькулятор&nbsp;→</a>
-      </div>
-    </div>
-  </section>
 
   <section class="sect doverie" id="doverie" aria-labelledby="doverie-h">
     <span id="why" class="yakor" aria-hidden="true"></span>

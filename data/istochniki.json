@@ -1,5 +1,5 @@
 {
-  "_kak": "Реестр источников Делоскопа — один файл для страниц и отчёта. sostoyanie: podklyuchen | zamorozhen (сведения есть, но не обновляются с даты zamorozhen_s) | ne_podklyuchen. ustarelo_dney — через сколько дней после даты сведений блок получает статус stale (в полноту не идёт, «не найдено» не считается чистым, найденное видно с датой). damia — блоки ответа /api/check этого источника. Когда источник снова обновляется — поменять sostoyanie здесь и в REESTR js/istochniki.js (сторож tests/istochniki_statusy.test.js сверяет).",
+  "_kak": "Реестр источников Делоскопа — один файл для страниц и отчёта. chto_daet — строка «Что даёт» в таблице источников на главной (glavnaya-a-v1). sostoyanie: podklyuchen | zamorozhen (сведения есть, но не обновляются с даты zamorozhen_s) | ne_podklyuchen. ustarelo_dney — через сколько дней после даты сведений блок получает статус stale (в полноту не идёт, «не найдено» не считается чистым, найденное видно с датой). damia — блоки ответа /api/check этого источника. Когда источник снова обновляется — поменять sostoyanie здесь и в REESTR js/istochniki.js (сторож tests/istochniki_statusy.test.js сверяет).",
   "versiya": "2026-10-30",
   "statusy": {
     "found": "[Источник], [дата данных]: [факт].",
@@ -11,14 +11,14 @@
     "user": "Со слов пользователя · Делоскоп не проверял."
   },
   "istochniki": [
-    { "id": "egrul", "nazvanie": "ЕГРЮЛ и ЕГРИП", "sostoyanie": "podklyuchen", "data_nabora": "на день проверки", "ustarelo_dney": 7, "v_indekse": true, "proverit_samim": "https://egrul.nalog.ru/" },
-    { "id": "fns_open", "nazvanie": "Открытые данные ФНС", "sostoyanie": "podklyuchen", "data_nabora": "2026-10-01", "ustarelo_dney": 62, "v_indekse": true, "proverit_samim": "https://www.nalog.gov.ru/opendata/" },
-    { "id": "girbo", "nazvanie": "Бухотчётность ГИР БО", "sostoyanie": "podklyuchen", "data_nabora": "за 2025 год", "ustarelo_dney": null, "v_indekse": true, "proverit_samim": "https://bo.nalog.gov.ru/" },
-    { "id": "kad", "nazvanie": "Картотека арбитражных дел", "sostoyanie": "zamorozhen", "zamorozhen_s": "2026-10-12", "damia": ["sudy", "bankrotstvo"], "ustarelo_dney": 7, "v_indekse": false, "proverit_samim": "https://kad.arbitr.ru/" },
-    { "id": "fssp", "nazvanie": "ФССП", "sostoyanie": "zamorozhen", "zamorozhen_s": "2026-10-12", "damia": ["fssp"], "ustarelo_dney": 7, "v_indekse": false, "proverit_samim": "https://fssp.gov.ru/iss/ip" },
-    { "id": "eis", "nazvanie": "ЕИС: РНП и контракты", "sostoyanie": "zamorozhen", "zamorozhen_s": "2026-10-12", "damia": ["rnp", "kontrakty"], "ustarelo_dney": 30, "v_indekse": false, "proverit_samim": "https://zakupki.gov.ru/" },
-    { "id": "efrsb", "nazvanie": "Федресурс и ЕФРСБ", "sostoyanie": "ne_podklyuchen", "ustarelo_dney": null, "v_indekse": false, "proverit_samim": "https://bankrot.fedresurs.ru/" },
-    { "id": "nalog_bi", "nazvanie": "Решения ФНС о приостановлении операций и обеспечительные меры", "sostoyanie": "zamorozhen", "zamorozhen_s": "2026-10-12", "damia": ["priostanovki", "mery"], "ustarelo_dney": 1, "v_indekse": false, "proverit_samim": "https://service.nalog.ru/bi.do" },
-    { "id": "zsk_cbr", "nazvanie": "Группа риска Банка России (ЗСК)", "sostoyanie": "ne_podklyuchen", "ustarelo_dney": null, "v_indekse": false, "proverit_samim": "https://www.cbr.ru/counteraction_m_ter/platform_zsk/proverka-po-inn/" }
+    { "id": "egrul", "nazvanie": "ЕГРЮЛ и ЕГРИП", "chto_daet": "Статус, адрес, руководитель и учредители, отметки о недостоверности", "sostoyanie": "podklyuchen", "data_nabora": "на день проверки", "ustarelo_dney": 7, "v_indekse": true, "proverit_samim": "https://egrul.nalog.ru/" },
+    { "id": "fns_open", "nazvanie": "Открытые данные ФНС", "chto_daet": "Уплаченные налоги, долги перед бюджетом, численность, налоговый режим, правонарушения", "sostoyanie": "podklyuchen", "data_nabora": "2026-10-01", "ustarelo_dney": 62, "v_indekse": true, "proverit_samim": "https://www.nalog.gov.ru/opendata/" },
+    { "id": "girbo", "nazvanie": "Бухотчётность ГИР БО", "chto_daet": "Бухгалтерская отчётность: выручка, прибыль, имущество и долги", "sostoyanie": "podklyuchen", "data_nabora": "за 2025 год", "ustarelo_dney": null, "v_indekse": true, "proverit_samim": "https://bo.nalog.gov.ru/" },
+    { "id": "kad", "nazvanie": "Картотека арбитражных дел", "chto_daet": "Арбитражные дела, где компания истец или ответчик", "sostoyanie": "zamorozhen", "zamorozhen_s": "2026-10-12", "damia": ["sudy", "bankrotstvo"], "ustarelo_dney": 7, "v_indekse": false, "proverit_samim": "https://kad.arbitr.ru/" },
+    { "id": "fssp", "nazvanie": "ФССП", "chto_daet": "Исполнительные производства — долги по решениям судов", "sostoyanie": "zamorozhen", "zamorozhen_s": "2026-10-12", "damia": ["fssp"], "ustarelo_dney": 7, "v_indekse": false, "proverit_samim": "https://fssp.gov.ru/iss/ip" },
+    { "id": "eis", "nazvanie": "ЕИС: РНП и контракты", "chto_daet": "Госконтракты и реестр недобросовестных поставщиков", "sostoyanie": "zamorozhen", "zamorozhen_s": "2026-10-12", "damia": ["rnp", "kontrakty"], "ustarelo_dney": 30, "v_indekse": false, "proverit_samim": "https://zakupki.gov.ru/" },
+    { "id": "efrsb", "nazvanie": "Федресурс и ЕФРСБ", "chto_daet": "Банкротство и намерения кредиторов подать на банкротство", "sostoyanie": "ne_podklyuchen", "ustarelo_dney": null, "v_indekse": false, "proverit_samim": "https://bankrot.fedresurs.ru/" },
+    { "id": "nalog_bi", "nazvanie": "Решения ФНС о приостановлении операций и обеспечительные меры", "chto_daet": "Блокировки счетов по решению налоговой", "sostoyanie": "zamorozhen", "zamorozhen_s": "2026-10-12", "damia": ["priostanovki", "mery"], "ustarelo_dney": 1, "v_indekse": false, "proverit_samim": "https://service.nalog.ru/bi.do" },
+    { "id": "zsk_cbr", "nazvanie": "Группа риска Банка России (ЗСК)", "chto_daet": "Группа риска, которую банки видят на платформе «Знай своего клиента»", "sostoyanie": "ne_podklyuchen", "ustarelo_dney": null, "v_indekse": false, "proverit_samim": "https://www.cbr.ru/counteraction_m_ter/platform_zsk/proverka-po-inn/" }
   ]
 }

@@ -62,11 +62,13 @@ test('ЗСК: с какого дня считать 6 месяцев (п. 8 ст
 });
 
 test('38-ФЗ: в бете цена рядом с оговоркой — главная «Сколько стоит» и калькулятор техпоставщика', () => {
-  const OG = 'Цены — справочные, сейчас по ним ничего не продаём. О начале оплат и их условиях объявим на странице тарифов не позже чем за 3 дня.';
+  // glavnaya-a-v1 (31.10): на главной цен нет совсем (0яи) — в бетовой половине «Условий» то же обещание срока, что было
+  const OG = 'О начале оплат объявим на странице тарифов не позже чем за 3 дня.';
   const g = chitat('index.html');
   const ceny = g.slice(g.indexOf('id="ceny-h"'), g.indexOf('</section>', g.indexOf('id="ceny-h"')));
   const bet = norm((ceny.match(/<!--v-bete-->([\s\S]*?)<!--\/v-bete-->/) || [])[1] || '');
   assert.ok(bet.includes(OG), 'главная: оговорка [Право] в бетовой половине');
+  assert.ok(!/₽|data-cena=/.test(ceny), 'главная: в «Условиях» цен нет');
   const k = chitat('nalogi/kalkulyator-tehnicheskij-postavshchik/index.html');
   const vs = k.slice(k.indexOf('<div class="vs">'), k.indexOf('</div>', k.indexOf('<div class="vs">')));
   const opl = (vs.match(/<!--oplata-->([\s\S]*?)<!--\/oplata-->/) || [])[1] || '';

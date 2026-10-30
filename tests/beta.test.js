@@ -94,18 +94,20 @@ test('живой режим: страницы собраны по флагу и�
     assert.ok(!v.includes('href="/schet/'), 'на главной нет ссылок на счёт');
     // glavnaya-v2: карточек тарифов на главной нет — строка «Сколько стоит» с пометкой о бете
     assert.strictEqual((v.match(/>В бете — бесплатно<\/a>/g) || []).length, 0);
-    assert.ok(v.includes('Сейчас открытая бета: все возможности бесплатно'));
+    // glavnaya-a-v1 (31.10, схема А): «Сколько стоит» → «Условия» без цен (0яи)
+    assert.ok(v.includes('<b>Платных тарифов сейчас нет</b>'));
     // glavnaya-h1-v1: метки беты над H1 больше нет — она повторяла полосу беты (полоса остаётся), на её месте H1 «Проверка контрагента по ИНН»
     assert.ok(!v.includes('Открытая бета · всё бесплатно'), 'метки беты над H1 нет — о бете говорит полоса');
     assert.ok(/<!--beta-polosa-->/.test(glav), 'полоса беты на главной есть');
-    assert.ok(v.includes('<summary>Сколько это стоит сейчас?</summary>'));
+    assert.ok(v.includes('<summary>Сколько это стоит?</summary>'));
     assert.ok(!v.includes('<summary>Как оплатить?</summary>'));
   }
   // glavnaya-v2: в «платном» виде на главной — строка цен со ссылкой на /tarify/ (кнопки оплаты — там) и «Как оплатить?»
   const p = vidimoe(platnyj(glav));
-  assert.ok(p.includes('href="/tarify/"') && !p.includes('Сейчас открытая бета'));
+  assert.ok(p.includes('href="/tarify/"') && !p.includes('Сейчас открытая бета') && !p.includes('Платных тарифов сейчас нет'));
   // glavnaya-h1-v1: над лозунгом и в бете, и без неё — один H1 «Проверка контрагента по ИНН» (прежняя метка «для бизнеса и частных лиц» снята)
-  assert.ok(p.includes('<h1 class="hero-h1">Проверка контрагента по&nbsp;ИНН</h1>'), 'H1 главной одинаков в бете и без неё');
+  // glavnaya-a-v1: H1 в два уровня — запрос + обещание (ТЗ [Продукт] 30.10, блок 1)
+  assert.ok(p.includes('<h1 class="hero-h1"><span class="h1-kicker">Проверка контрагента по&nbsp;ИНН</span>'), 'H1 главной одинаков в бете и без неё');
   assert.ok(p.includes('<summary>Как оплатить?</summary>'));
 });
 

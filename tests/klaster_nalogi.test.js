@@ -5,6 +5,10 @@
 // 1) У каждой индексируемой статьи /nalogi/ — не меньше 4 входов из текста других страниц.
 // 2) Карточки «Читайте также» в /nalogi/: адрес живой, без повторов в блоке, без ссылки на саму себя.
 // 3) Добавленные карточки: заголовок — буква в букву h1 статьи (читатель видит то же, что откроет).
+// nalogi-vhody-v1 (31.10.2026, [Ночные запуски]): /obnovleniya/ в счёт входов НЕ идёт — там только последние
+// записи ленты, и каждая новая выкладка вытесняла 4-й вход перечня недружественных государств (v2k6, PR #221).
+// Вход должен быть постоянным — из текста статьи, а не из ленты.
+const VREMENNYE = new Set(['/obnovleniya/']);
 const test = require('node:test');
 const assert = require('node:assert');
 const fs = require('fs');
@@ -45,7 +49,7 @@ test(`у каждой статьи /nalogi/ — не меньше ${MIN_VHODOV} 
   for (const t of STATI) {
     let n = 0;
     for (const [u, h] of VSE) {
-      if (u === t) continue;
+      if (u === t || VREMENNYE.has(u)) continue;
       const m = glavnoe(h);
       if (m.includes(`href="${t}"`) || m.includes(`href="${t}#`)) n += 1;
     }
@@ -71,6 +75,7 @@ const DOBAVLENO = {
   '/nalogi/kalkulyator-tehnicheskij-postavshchik/': ['/nalogi/nedostovernyj-adres-egryul/', '/nalogi/proverka-kontragenta-pered-dogovorom/'],
   '/nalogi/net-otchetnosti-v-otkrytyh-dannyh/': ['/nalogi/svezhest-dannyh-proverki-kontragenta/', '/nalogi/nds-postavshchika-na-usn-po-inn/'],
   '/nalogi/ofshornye-zony-perechen-minfina/': ['/nalogi/chto-oznachayut-cifry-inn-i-kpp/', '/nalogi/izmeneniya-egryul-kontragenta/'],
+  '/nalogi/nedruzhestvennye-gosudarstva-perechen/': ['/nalogi/proverka-kontragenta-pered-dogovorom/', '/nalogi/dokumenty-kontragenta-po-summe-sdelki/'],
 };
 
 test('добавленные карточки: заголовок = h1 статьи', () => {

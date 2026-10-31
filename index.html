@@ -314,6 +314,25 @@ footer a{color:var(--ink2)}
   .ist-t td:nth-child(2){font-size:13px;line-height:1.4}
   .ist-t td:nth-child(3),.ist-t td:nth-child(4){display:inline-block;margin:4px 16px 0 0;font-size:13px}
 }
+/* glavnaya-a-v3: на телефоне плотнее — тот же текст, меньше пустоты (схема А: 390 px — к 9 экранам) */
+@media (max-width:600px){
+  .sect-head{margin-bottom:32px}
+  .grid3{gap:12px}
+  .vhod{padding:20px;gap:10px}
+  .vhod__t{font-size:15px}
+  .vhod__dop{padding-top:12px}
+  .pr-gl{gap:12px}
+  .pr-gl a{padding:20px;gap:8px}
+  .chetyre__l{gap:18px}
+  .ist-t{background:var(--card);border-radius:var(--r-md);overflow:hidden}
+  .ist-t tr{background:transparent;border-radius:0;margin:0;padding:12px 16px}
+  .ist-t tr+tr{border-top:1px solid var(--line)}
+  .ist-t td:nth-child(2){line-height:1.35}
+  .ist-t td:nth-child(3),.ist-t td:nth-child(4){margin-top:2px}
+  .faq details{padding:16px 0}
+  .faq summary{font-size:17px;line-height:1.35}
+  .faq details p{font-size:15px}
+}
 .ceny .usl{list-style:none;margin:20px 0 0;padding:0;display:flex;flex-direction:column;gap:12px;max-width:820px;font-size:17px;color:var(--ink2)}
 .ceny .usl b{color:var(--ink)}
 .ceny .usl a{display:inline;margin:0;white-space:nowrap}

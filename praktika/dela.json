@@ -16,7 +16,7 @@
     "nalogi/nagruzka/index.html": ["utochnenka-i-peni-ens", "podarok-ot-rodstvennika-usn-vs-2026", "podarok-ot-roditelya-ip-ndfl-vs-2026", "droblenie-uplachennaya-usn-zachityvaetsya", "zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/nagruzka-po-otraslyam-2025/index.html": ["zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/priznaki-tehnicheskoj-kompanii/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke"],
-    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026"],
+    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026", "garantiya-vyplachena-otkaz-zakazchika-nezakonen"],
     "pasport/index.html": ["proverka-kontragenta-na-datu-sdelki"],
     "nalogi/svezhest-dannyh-proverki-kontragenta/index.html": ["proverka-kontragenta-na-datu-sdelki"],
     "nalogi/pismo-o-smene-rekvizitov-kak-proverit/index.html": ["dvojnik-postavshchika-bank-poluchatelya"],
@@ -24,7 +24,7 @@
     "nalogi/izmeneniya-egryul-kontragenta/index.html": ["reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p"],
     "nalogi/kody-statusa-egryul/index.html": ["spisali-dolg-subsidiarka", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p"],
     "nalogi/nedostovernyj-adres-egryul/index.html": ["isklyuchili-iz-egryul-dolg-s-direktora"],
-    "nalogi/skolko-platit-vpered-neznakomoj-kompanii/index.html": ["spisali-dolg-subsidiarka", "nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "isklyuchili-iz-egryul-dolg-s-direktora", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026"],
+    "nalogi/skolko-platit-vpered-neznakomoj-kompanii/index.html": ["spisali-dolg-subsidiarka", "nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "isklyuchili-iz-egryul-dolg-s-direktora", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026", "garantiya-vyplachena-otkaz-zakazchika-nezakonen"],
     "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"]
   },
   "razbory": [
@@ -323,6 +323,63 @@
         "nalogovyj-arest-zalog-v-bankrotstve-postavshchika",
         "kompensaciya-poter-406-1-vs-2026",
         "proverka-kontragenta-na-datu-sdelki"
+      ]
+    },
+    {
+      "razdel": "dogovory",
+      "slug": "garantiya-vyplachena-otkaz-zakazchika-nezakonen",
+      "h1": "Заказчик расторг договор незаконно, но банк уже заплатил по гарантии. Кто прав?",
+      "title": "Банк заплатил по гарантии, а отказ заказчика незаконен — разбор ВС",
+      "description": "ВС 20.10.2026 № 305-ЭС26-5649: банк платит по независимой гарантии по документам на день требования. Что делать подрядчику, если заказчик расторг договор.",
+      "zapros": "выплата по независимой гарантии незаконный отказ заказчика от договора",
+      "data": "2026-10-31",
+      "minut": 4,
+      "lid": "Заказчик отказался от договора стройки и потребовал у банка деньги по независимой гарантии — 156 млн ₽. Банк заплатил через две недели. Позже суд признал отказ заказчика незаконным, и страховщик банка решил, что банк платил зря. Верховный суд 20.10.2026 с этим не согласился.",
+      "dela": [
+        {
+          "sud": "Верховный суд РФ, Судебная коллегия по экономическим спорам",
+          "sud_kratko": "ВС",
+          "akt": "Определение",
+          "nomer": "№ 305-ЭС26-5649",
+          "data": "2026-10-20",
+          "delo": "Иск банка-гаранта к страховщику после выплаты по независимой гарантии, когда отказ заказчика от договора подряда позже признали незаконным (№ А40-99642/2025); резолютивная часть — 12.10.2026",
+          "na_konu": "156 010 271,23 ₽ выплаты по гарантии; гарантия — до 162 015 891,06 ₽",
+          "na_konu_kratko": "≈ 156 млн ₽",
+          "itog": "В пользу банка",
+          "itog_nov": false,
+          "istochnik": "https://kad.arbitr.ru/",
+          "istochnik_podpis": "kad.arbitr.ru — поиск по номеру дела А40-99642/2025; текст определения прочитан по garant.ru 30.10, с сайтом Верховного суда ещё сверяем",
+          "sverka": "2026-10-30"
+        }
+      ],
+      "knopka": {
+        "zagolovok": "Подписываете подряд под гарантию — сначала проверьте заказчика",
+        "tekst": "Проверка по ИНН: суды, долги у приставов и признаки банкротства — на дату проверки.",
+        "knopka": "Проверить заказчика по ИНН",
+        "url": "/",
+        "cel": "razbor34_check",
+        "slezh": {
+          "knopka": "Следить за заказчиком",
+          "url": "/cabinet.html#watch",
+          "cel": "razbor34_slezh"
+        }
+      },
+      "zakon": [
+        [
+          "ст. 370, 375.1, 376, 379 ГК РФ — независимая гарантия: независимость от договора, ответственность бенефициара, приостановление платежа до 7 дней, регресс к принципалу",
+          "ред. на 30.10.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_5142/"
+        ],
+        [
+          "ст. 929, 933 ГК РФ — имущественное страхование",
+          "ред. на 30.10.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_9027/"
+        ]
+      ],
+      "pohozhie": [
+        "zalog-odna-veshch-iz-pyati-vs-2026",
+        "kompensaciya-poter-406-1-vs-2026",
+        "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026"
       ]
     },
     {

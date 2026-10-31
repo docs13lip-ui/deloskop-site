@@ -217,7 +217,11 @@ def podval_html(r):
         # seo-svyazi-v1: внешняя ссылка подвала — rel="me" (это наша страница), в той же вкладке, как остальные
         li = "".join('<li><a href="%s"%s>%s</a></li>' % (e(h), ' rel="me noopener"' if h.startswith("https://") else "", e(t))
                      for t, h in ssylki)
-        cols.append('<nav class="podval__col" aria-label="%s"><p class="podval__h">%s</p><ul>%s</ul></nav>' % (e(zag), e(zag), li))
+        # podval-skladnoj-v1 (31.10.2026): колонка — <details open>. С мышью и без JS — как было (все ссылки видны);
+        # на телефоне js/shapka.js сворачивает колонки в 4 строки «+»: подвал 390 px ≈ 1 310 → ≈ 500 px на каждой странице.
+        # Ссылки остаются в разметке (поиск по странице и роботы их видят; Chrome раскрывает <details> при поиске).
+        cols.append('<nav class="podval__col" aria-label="%s"><details class="podval__det" open><summary class="podval__h">%s</summary>'
+                    '<ul>%s</ul></details></nav>' % (e(zag), e(zag), li))
     stroka = "© 2026 Делоскоп"
     if r["_est"]:
         # rekv-podval-v2 (владелец 11.10): в подвале — только ОГРНИП; ФИО и ИНН — на /oferta/ и /rekvizity/ (ссылка «Реквизиты»)
@@ -438,6 +442,23 @@ def podval_css():
             ".podval p{font-size:inherit;line-height:inherit}\n"
             ".podval a{display:inline;padding:0;border-radius:0;font:inherit;color:var(--ink-2);text-decoration:none}.podval a:hover{color:var(--accent);background:none}\n"
             ".podval a:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}\n"
+            # podval-skladnoj-v1: заголовок колонки — <summary>; с мышью он выглядит и ведёт себя как прежний заголовок.
+            # Селекторы с .podval__det> — сильнее страничных «summary», «details summary::after{content:'+'}», «.faq summary»
+            # (замер 31.10: на /pasport/, /indeks/, /tarify/ к заголовкам подвала приклеивался «−» страничного FAQ).
+            ".podval .podval__col>.podval__det{display:block;margin:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none}\n"
+            ".podval .podval__det>.podval__h{display:block;list-style:none;cursor:default;min-height:0;margin:0 0 var(--s-3);padding:0;border:0;background:none;color:var(--ink);font:600 var(--t-small)/1.4 var(--font)}\n"
+            ".podval .podval__det>.podval__h::-webkit-details-marker{display:none}\n"
+            ".podval .podval__det>.podval__h::before,.podval .podval__det>.podval__h::after{content:none}\n"
+            ".podval .podval__det>.podval__h:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}\n"
+            # на телефоне (класс ставит js/shapka.js) — одна колонка строк с шевроном, как подвал Apple; касание 48 px
+            ".podval--skl .podval__cols{grid-template-columns:minmax(0,1fr);gap:0}\n"
+            ".podval--skl .podval__col{border-bottom:1px solid var(--line)}\n"
+            ".podval.podval--skl .podval__det>.podval__h{display:flex;align-items:center;justify-content:space-between;gap:var(--s-3);min-height:48px;margin:0;cursor:pointer;-webkit-tap-highlight-color:transparent}\n"
+            ".podval.podval--skl .podval__det>.podval__h::after{content:\"\";position:static;float:none;display:block;flex:none;width:8px;height:8px;margin:0 var(--s-1) 0 0;font-size:0;line-height:0;background:none;border:0;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:translateY(-2px) rotate(45deg);transition:transform var(--fast) var(--ease)}\n"
+            ".podval.podval--skl .podval__det[open]>.podval__h::after{transform:translateY(2px) rotate(-135deg)}\n"
+            ".podval--skl .podval__det ul{padding:0 0 var(--s-3)}\n"
+            ".podval--skl .podval__niz{margin-top:var(--s-5);border-top:0;padding-top:0}\n"
+            "@media (prefers-reduced-motion:reduce){.podval.podval--skl .podval__det>.podval__h::after{transition:none}}\n"
             ".podval__niz{display:flex;justify-content:space-between;gap:var(--s-3) var(--s-6);flex-wrap:wrap;margin-top:var(--s-7);padding-top:var(--s-5);border-top:1px solid var(--line);font-size:var(--t-caption);line-height:1.4}\n"
             ".podval .podval__niz p{margin:0;color:var(--muted);font-size:var(--t-caption)}\n"
             # dostupnost-v1 (25.10): ссылки внутри строк подвала («Реквизиты», help@) — с подчёркиванием: цветом они отличались

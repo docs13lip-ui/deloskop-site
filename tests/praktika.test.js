@@ -157,7 +157,8 @@ test('цель praktika_cta — клик по кнопке .dl разбора; �
 });
 
 test('«Где в законе»: у каждой нормы — адрес полного текста (правовая база или сайт госоргана), на странице — ссылкой', () => {
-  const BAZY = /^https:\/\/(www\.)?(consultant\.ru\/document\/cons_doc_LAW_\d+\/|garant\.ru\/products\/ipo\/prime\/doc\/\d+\/|base\.garant\.ru\/\d+\/|cbr\.ru\/|nalog\.gov\.ru\/|publication\.pravo\.gov\.ru\/|vsrf\.ru\/|ksrf\.ru\/)/;
+  // razbor35-v1 (31.10): + rg.ru/documents/ — «Российская газета», официальное опубликование указов (Указ № 95 — rg.ru 09.03.2022).
+  const BAZY = /^https:\/\/(www\.)?(consultant\.ru\/document\/cons_doc_LAW_\d+\/|garant\.ru\/products\/ipo\/prime\/doc\/\d+\/|base\.garant\.ru\/\d+\/|cbr\.ru\/|nalog\.gov\.ru\/|publication\.pravo\.gov\.ru\/|rg\.ru\/documents\/|vsrf\.ru\/|ksrf\.ru\/)/;
   for (const r of D.razbory) {
     const t = chitat(`praktika/${r.razdel}/${r.slug}/index.html`);
     const ul = t.match(/<ul class="zakon">([\s\S]*?)<\/ul>/)[1];

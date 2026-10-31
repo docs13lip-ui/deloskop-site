@@ -16,7 +16,8 @@
     "nalogi/nagruzka/index.html": ["utochnenka-i-peni-ens", "podarok-ot-rodstvennika-usn-vs-2026", "podarok-ot-roditelya-ip-ndfl-vs-2026", "droblenie-uplachennaya-usn-zachityvaetsya", "zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/nagruzka-po-otraslyam-2025/index.html": ["zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/priznaki-tehnicheskoj-kompanii/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke"],
-    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026", "garantiya-vyplachena-otkaz-zakazchika-nezakonen"],
+    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026", "garantiya-vyplachena-otkaz-zakazchika-nezakonen", "zaem-inostrannoj-kompanii-schet-s-vs-2026"],
+    "nalogi/nedruzhestvennye-gosudarstva-perechen/index.html": ["zaem-inostrannoj-kompanii-schet-s-vs-2026"],
     "pasport/index.html": ["proverka-kontragenta-na-datu-sdelki"],
     "nalogi/svezhest-dannyh-proverki-kontragenta/index.html": ["proverka-kontragenta-na-datu-sdelki"],
     "nalogi/pismo-o-smene-rekvizitov-kak-proverit/index.html": ["dvojnik-postavshchika-bank-poluchatelya"],
@@ -324,6 +325,70 @@
         "nalogovyj-arest-zalog-v-bankrotstve-postavshchika",
         "kompensaciya-poter-406-1-vs-2026",
         "proverka-kontragenta-na-datu-sdelki"
+      ]
+    },
+    {
+      "razdel": "dogovory",
+      "slug": "zaem-inostrannoj-kompanii-schet-s-vs-2026",
+      "h1": "Вернули заём иностранному владельцу напрямую. Чем это кончается в суде",
+      "title": "Вернули заём иностранной компании мимо счёта «С»: платёж ничтожен",
+      "description": "ВС собрал дела об Указе № 95: платёж свыше 10 млн ₽ мимо счёта «С», дробление и уступка долга — ничтожны. Что проверить до платежа.",
+      "zapros": "возврат займа иностранной компании счёт типа С указ 95",
+      "data": "2026-10-31",
+      "minut": 4,
+      "lid": "Компания вернула заём иностранной компании своей группы напрямую — больше 10 млн ₽ без счёта типа «С». Суд признал платёж ничтожным. Президиум Верховного суда включил это дело в обзор вместе с ещё тремя: о дроблении платежей, уступке долга и о том, где указ не действует.",
+      "dela": [
+        {
+          "vid": "obzor",
+          "sud": "Верховный суд РФ, Президиум",
+          "sud_kratko": "ВС",
+          "akt": "Тематический обзор № 8/2026",
+          "nomer": "",
+          "data": "2026-06-17",
+          "delo_podpis": "Название",
+          "delo": "Тематический обзор о применении арбитражными судами законодательства о специальных экономических мерах для защиты национальных интересов России (утв. постановлением Президиума ВС РФ № 11А/2026), пп. 3–6",
+          "na_konu": "вся сумма платежа иностранному кредитору мимо счёта типа «С»: в деле п. 3 — больше 10 млн ₽, в деле п. 4 — больше 6 млрд ₽",
+          "na_konu_kratko": "платёж свыше 10 млн ₽",
+          "itog": "Позиция ВС",
+          "itog_nov": false,
+          "istochnik": "https://vsrf.ru/documents/all/36053/",
+          "istochnik_podpis": "vsrf.ru — страница обзора; тезисы пп. 3–6 сверены по тексту обзора 31.10",
+          "sverka": "2026-10-31"
+        }
+      ],
+      "knopka": {
+        "zagolovok": "Платите иностранному кредитору — сначала проверьте, кто за ним стоит",
+        "tekst": "Проверка по ИНН: учредители, руководитель, суды и признаки риска — на дату проверки.",
+        "knopka": "Проверить кредитора по ИНН",
+        "url": "/",
+        "cel": "razbor35_check",
+        "slezh": {
+          "knopka": "Следить за кредитором",
+          "url": "/cabinet.html#watch",
+          "cel": "razbor35_slezh"
+        }
+      },
+      "zakon": [
+        [
+          "Указ Президента РФ от 05.03.2022 № 95 — временный порядок исполнения обязательств перед некоторыми иностранными кредиторами: свыше 10 млн ₽ в календарный месяц",
+          "",
+          "https://rg.ru/documents/2022/03/09/ukaz-dok.html"
+        ],
+        [
+          "ст. 10, п. 1 ст. 167, п. 2 ст. 168 ГК РФ — злоупотребление правом и ничтожность сделки",
+          "ред. на 31.10.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_5142/"
+        ],
+        [
+          "Тематический обзор ВС РФ № 8/2026 (утв. Президиумом ВС РФ 17.06.2026), пп. 3–6",
+          "",
+          "https://www.consultant.ru/document/cons_doc_LAW_537231/"
+        ]
+      ],
+      "pohozhie": [
+        "garantiya-vyplachena-otkaz-zakazchika-nezakonen",
+        "kompensaciya-poter-406-1-vs-2026",
+        "zalog-odna-veshch-iz-pyati-vs-2026"
       ]
     },
     {

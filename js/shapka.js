@@ -536,3 +536,37 @@
   window.addEventListener("resize", pozzhe, { passive: true });
   if (typeof module === "object" && module.exports) module.exports.tablicy = { otmetit: otmetit, imya: imya };
 })();
+
+/* podval-skladnoj-v1 (31.10.2026): подвал на телефоне — 4 строки «Продукты · Знания · Компания · Документы» с шевроном,
+   ссылки раскрываются по касанию (как подвал Apple). Замер 390 px: подвал ≈ 1 310 px на каждой странице — больше экрана
+   и половины любой статьи. С мышью и без JS колонки открыты, заголовок не нажимается и не ловит Tab. */
+(function () {
+  var MQ = "(max-width:640px)";
+  function podval(doc, mq) {
+    var pv = doc.querySelector(".podval");
+    if (!pv) return null;
+    var dets = Array.prototype.slice.call(pv.querySelectorAll("details.podval__det"));
+    if (!dets.length) return null;
+    function smena() {
+      var tel = !!mq.matches;
+      pv.classList.toggle("podval--skl", tel);
+      dets.forEach(function (d) {
+        d.open = !tel;
+        var s = d.querySelector("summary");
+        if (s) s.tabIndex = tel ? 0 : -1;
+      });
+    }
+    dets.forEach(function (d) {
+      var s = d.querySelector("summary");
+      if (s) s.addEventListener("click", function (e) { if (!mq.matches) e.preventDefault(); });
+    });
+    smena();
+    if (mq.addEventListener) mq.addEventListener("change", smena); else if (mq.addListener) mq.addListener(smena);
+    return { smena: smena };
+  }
+  if (typeof window === "undefined") return;
+  window.dlkPodval = podval;  // для сторожа tests/podval_skladnoj.test.js
+  if (!window.matchMedia) return;
+  var start = function () { try { podval(document, window.matchMedia(MQ)); } catch (e) {} };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
+})();

@@ -449,6 +449,36 @@ window.addEventListener("load", otmetit);
 window.addEventListener("resize", pozzhe, { passive: true });
 if (typeof module === "object" && module.exports) module.exports.tablicy = { otmetit: otmetit, imya: imya };
 })();
+(function () {
+var MQ = "(max-width:640px)";
+function podval(doc, mq) {
+var pv = doc.querySelector(".podval");
+if (!pv) return null;
+var dets = Array.prototype.slice.call(pv.querySelectorAll("details.podval__det"));
+if (!dets.length) return null;
+function smena() {
+var tel = !!mq.matches;
+pv.classList.toggle("podval--skl", tel);
+dets.forEach(function (d) {
+d.open = !tel;
+var s = d.querySelector("summary");
+if (s) s.tabIndex = tel ? 0 : -1;
+});
+}
+dets.forEach(function (d) {
+var s = d.querySelector("summary");
+if (s) s.addEventListener("click", function (e) { if (!mq.matches) e.preventDefault(); });
+});
+smena();
+if (mq.addEventListener) mq.addEventListener("change", smena); else if (mq.addListener) mq.addListener(smena);
+return { smena: smena };
+}
+if (typeof window === "undefined") return;
+window.dlkPodval = podval;
+if (!window.matchMedia) return;
+var start = function () { try { podval(document, window.matchMedia(MQ)); } catch (e) {} };
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
+})();
 ;
 /* --- /js/metrika.js --- */
 (function () {

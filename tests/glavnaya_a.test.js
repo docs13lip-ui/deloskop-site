@@ -64,7 +64,7 @@ test('главная А: таблица «Откуда данные» = data/ist
 test('главная А: «Что вы увидите в отчёте» — 4 вопроса по порядку, даты из реестра', () => {
   const s = sekciya('shield');
   assert.deepStrictEqual([...s.matchAll(/<h3>([^<]+)<\/h3>/g)].map((m) => m[1].replace(/&nbsp;/g, ' ')),
-    ['Что найдено', 'Насколько полна проверка', 'Что это значит', 'Что сделать']);
+    ['Что это значит для сделки', 'Насколько полна проверка', 'Что сделать до оплаты', 'Что нашли']); // glavnaya-4v-v1: порядок экрана отчёта
   const d = tekst(/<p data-chetyre-daty>([\s\S]*?)<\/p>/.exec(s)[1]);
   const fns = R.istochniki.find((x) => x.id === 'fns_open'), gb = R.istochniki.find((x) => x.id === 'girbo');
   assert.ok(d.includes('открытые данные ФНС — на ' + dmy(fns.data_nabora)), 'дата набора ФНС = реестр');

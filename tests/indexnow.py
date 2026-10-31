@@ -60,7 +60,7 @@ def fajl_v_adres(put):
     return SAJT + "/" + put
 
 
-def vybrat(izmenennye, v_sitemap, novye_kartochki=None):
+def vybrat(izmenennye, v_sitemap, novye_kartochki=None, osvezhennye=None):
     """Оставляет только изменённые страницы, которые есть в sitemap (т. е. открыты для индекса), без повторов.
     kartochki-volna-v1 (ТЗ [Продукт · Данные] 03.10 разд. 3.3): карточки /company/<ИНН>-…/ — только новой партии
     (адреса, которых не было в sitemap-companies.xml до этого слияния): добор волны переписывает «Похожие компании»
@@ -73,7 +73,9 @@ def vybrat(izmenennye, v_sitemap, novye_kartochki=None):
         if not a or a not in dopustimye or a in out:
             continue
         # kartochki-haby-v1: хабы отраслей и регионов (/company/otrasl/…, /company/region/…) — как хаб /company/
+        # indexnow-osvezhit-v1: освежённая карточка (дата сбора фактов сменилась) — тоже, иначе Яндекс не знает о новых сведениях
         if (novye_kartochki is not None and a.startswith(hab) and a != hab and a not in novye_kartochki
+                and a not in (osvezhennye or ())
                 and not a.startswith((hab + "otrasl/", hab + "region/"))):
             continue
         out.append(a)
@@ -91,6 +93,38 @@ def novye_kartochki(ot=None, koren=ROOT):
     r = subprocess.run(["git", "show", "%s:sitemap-companies.xml" % (ot or "HEAD^1")], cwd=koren, capture_output=True, text=True)
     bylo = locs_kart(r.stdout) if r.returncode == 0 else set()
     return seichas - bylo
+
+
+# indexnow-osvezhit-v1 ([Ночные-2] 31.10): Выкладка 31.10 (PR #225) — «IndexNow 2 стр., карточки workflow не шлёт»:
+# освежение (kartochki-osvezhit-*) меняет сведения на уже стоящих в sitemap адресах, а правило волны слало только новые.
+# Признак освежения — дата в строке «Здесь — выводы по фактам, собранным ДД.ММ.ГГГГ.» (kartochki-ramka-daty-v1) другая,
+# чем на коммите `ot`. Правка шаблона (perepechatat) дату не трогает — сотни карточек сами по себе не уйдут.
+_SOBRANO = re.compile(r"по\s+фактам,\s+собранным\s+(\d{2}\.\d{2}\.\d{4})")
+
+
+def data_sbora(tekst):
+    """Дата «…по фактам, собранным ДД.ММ.ГГГГ» карточки или None."""
+    import html as _h
+    m = _SOBRANO.search(_h.unescape(tekst or "").replace("\u00a0", " "))
+    return m.group(1) if m else None
+
+
+def osvezhennye_kartochki(izmenennye, ot=None, koren=ROOT):
+    """Адреса изменённых карточек /company/<ИНН>-…/, у которых дата сбора фактов сменилась с коммита `ot` (HEAD^1)."""
+    out = set()
+    for f in izmenennye:
+        f = f.replace("\\", "/").strip().strip('"')
+        if not re.match(r"^company/\d{10}-[^/]+/index\.html$", f):
+            continue
+        put = koren / f
+        if not put.exists():
+            continue
+        r = subprocess.run(["git", "show", "%s:%s" % (ot or "HEAD^1", f)], cwd=koren, capture_output=True, text=True)
+        bylo = data_sbora(r.stdout) if r.returncode == 0 else None
+        seichas = data_sbora(put.read_text(encoding="utf-8"))
+        if seichas and bylo and seichas != bylo:
+            out.add(fajl_v_adres(f))
+    return out
 
 
 def izmenennye_fajly(ot=None):
@@ -175,7 +209,8 @@ def main(argv):
         adresa = list(dict.fromkeys(v_sitemap))
     else:
         ot = argv[argv.index("--ot") + 1] if "--ot" in argv else None
-        adresa = vybrat(izmenennye_fajly(ot), v_sitemap, novye_kartochki(ot))
+        izm = izmenennye_fajly(ot)
+        adresa = vybrat(izm, v_sitemap, novye_kartochki(ot), osvezhennye_kartochki(izm, ot))
     print(f"Страниц к переобходу: {len(adresa)}")
     for a in adresa:
         print("  " + a)

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<title>Досье контрагента — Делоскоп</title>
+<title>Отчёт о контрагенте по ИНН — Делоскоп</title>
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#F5F5F2">
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -309,6 +309,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
 <script src="/js/chto-provereno.js"></script>
 <script src="/js/sushchestvennoe.js"></script>
 <script src="/js/usloviya.js"></script>
+<script src="/js/chetyre-voprosa.js"></script>
 <script src="/js/kommentarii.js"></script>
 <script src="/js/nedavnie.js"></script>
 <script src="/js/inn.js"></script>
@@ -536,7 +537,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
     var c=r.company||{}, lvl=r.risk_level||'low', at=new Date(r.checked_at);
     var name=c.name_full||c.name_short||('ИНН '+c.inn);
     var link=location.origin+'/report.html?id='+encodeURIComponent(id);
-    document.title='Досье: '+(c.name_short||name)+' — Делоскоп';
+    document.title='Отчёт: '+(c.name_short||name)+' — Делоскоп';
     var rows=[['Полное наименование',c.name_full],['ИНН',c.inn],['КПП',c.kpp],[c.kind==='INDIVIDUAL'?'ОГРНИП':'ОГРН',c.ogrn],
       ['Статус',(window.StatusKod&&c.status?StatusKod.izOtveta(c,{zaglavnaya:true}):(ST[c.status]||c.status))+(window.StatusKod&&StatusKod.reorgForma&&StatusKod.reorgForma(c.status,c.state_code)?' — '+StatusKod.reorgForma(c.status,c.state_code):'')],['Дата регистрации',d(c.reg_date)],['Адрес',c.address],
       [c.kind==='INDIVIDUAL'?'Предприниматель':(c.director_post||'Руководитель'),c.director_name],
@@ -548,17 +549,20 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
     }).join('');
     var D=r.dossier; ZSK=r.zsk; R=r;
     doc.innerHTML=
-      '<div class="dhead"><div class="brand">'+LOGO+'делоскоп</div><div class="dtitle"><b>Досье контрагента</b>№ '+esc(id)+'<br>Сформировано '+at.toLocaleDateString('ru-RU',{timeZone:'Europe/Moscow'})+' в '+at.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Moscow'})+' (МСК)</div></div>'+
+      '<div class="dhead"><div class="brand">'+LOGO+'делоскоп</div><div class="dtitle"><b>Отчёт о контрагенте</b>№ '+esc(id)+'<br>Сформировано '+at.toLocaleDateString('ru-RU',{timeZone:'Europe/Moscow'})+' в '+at.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Moscow'})+' (МСК)</div></div>'+
       '<h1>'+esc(c.name_short||name)+'</h1><div class="sub">ИНН '+esc(c.inn)+(c.status?' · '+esc(window.StatusKod?StatusKod.izOtveta(c):(ST[c.status]||c.status).toLowerCase())+(window.StatusKod&&StatusKod.reorgForma&&StatusKod.reorgForma(c.status,c.state_code)?' ('+esc(StatusKod.reorgForma(c.status,c.state_code))+')':''):'')+'</div>'+
-      '<div class="risk '+lvl+'"><b>'+esc({low:'Без серьёзных сигналов',medium:'Есть вопросы',high:'Есть серьёзные сигналы'}[r.risk_level]||'')+'</b><span>'+esc(r.verdict||'')+'</span></div>'+
+      // ekran-4-voprosa-v1: итог в 4 вопроса (js/chetyre-voprosa.js); модуль не загрузился — прежняя плашка риска
+      (window.ChetyreVoprosa?'<div data-q4></div>':'<div class="risk '+lvl+'"><b>'+esc({low:'Без серьёзных сигналов',medium:'Есть вопросы',high:'Есть серьёзные сигналы'}[r.risk_level]||'')+'</b><span>'+esc(r.verdict||'')+'</span></div>')+
       (D?dossierHtml(D):'<h2>Сведения о компании</h2><table>'+rows+'</table>')+
       '<h2>Светофор по признакам риска</h2><table class="sig">'+sig+'</table>'+
       (window.Usloviya?'<h2>Условия сделки</h2><div data-usl></div>':(D?'<h2>Что запросить у контрагента до оплаты</h2><ul class="checklist">'+D.documents.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>':''))+
       '<h2>Что проверено</h2>'+(window.ChtoProvereno?ChtoProvereno.html(ChtoProvereno.sobrat(r,{razdely:window.PasportKontragenta&&PasportKontragenta.RAZDELY})):'<div class="sub">Опись проверки не загрузилась — обновите страницу.</div>')+
       '<div class="sign"><div>Проверку провёл (ФИО, должность)</div><div>Подпись, дата</div></div>'+
-      '<div class="foot">Досье фиксирует, какие сведения о контрагенте получены и на какую дату, — оно может стать частью доказательств должной осмотрительности. Это оценка риска по открытым данным, а не решение банка или налогового органа.<br>Подлинность досье: <span class="link">'+esc(link)+'</span></div>';
+      '<div class="foot">Отчёт фиксирует, какие сведения о контрагенте получены и на какую дату, — он может стать частью доказательств должной осмотрительности. Это оценка риска по открытым данным, а не решение банка или налогового органа.<br>Подлинность отчёта: <span class="link">'+esc(link)+'</span></div>';
     msg.hidden=true; doc.hidden=false;
     if(window.Nedavnie)Nedavnie.add({inn:c.inn,name:c.name_short||name,level:lvl,id:id});
+    var q4=doc.querySelector('[data-q4]');
+    if(q4)try{ChetyreVoprosa.mount(q4,r,{id:id})}catch(e){q4.textContent=r.verdict||''}
     var ub=doc.querySelector('[data-usl]');
     if(ub)try{Usloviya.mount(ub,r,{open:true,bezNapr:true})}catch(e){ub.textContent=r.verdict||''}
     bindTips(doc);bindQ(doc);

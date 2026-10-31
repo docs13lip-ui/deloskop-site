@@ -12,8 +12,8 @@
     "115-fz/zsk-zony-riska/index.html": ["krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "zagraditelnye-komissii", "isklyuchili-iz-egryul-dolg-s-direktora", "zsk-dolzhnika-sudebnyj-prikaz", "kriterii-zsk-ne-otmenit-vs"],
     "115-fz/proverit-kontragenta-zsk-po-inn/index.html": ["kriterii-zsk-ne-otmenit-vs"],
     "nalogi/statya-54-1-nk-prostymi-slovami/index.html": ["utochnenka-i-peni-ens", "podarok-ot-roditelya-ip-ndfl-vs-2026", "razryv-nds-v-cepochke-krascvetmet", "vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke", "droblenie-uplachennaya-usn-zachityvaetsya", "povtornaya-vyezdnaya-proverka-vs-2026", "podryadchik-ne-vystavil-schet-fakturu"],
-    "nalogi/nds-postavshchika-na-usn-po-inn/index.html": ["nds-postavshchika-usn-cena-dogovora", "podryadchik-ne-vystavil-schet-fakturu"],
-    "nalogi/nagruzka/index.html": ["utochnenka-i-peni-ens", "podarok-ot-roditelya-ip-ndfl-vs-2026", "droblenie-uplachennaya-usn-zachityvaetsya", "zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
+    "nalogi/nds-postavshchika-na-usn-po-inn/index.html": ["nds-postavshchika-usn-cena-dogovora", "podarok-ot-rodstvennika-usn-vs-2026", "podryadchik-ne-vystavil-schet-fakturu"],
+    "nalogi/nagruzka/index.html": ["utochnenka-i-peni-ens", "podarok-ot-rodstvennika-usn-vs-2026", "podarok-ot-roditelya-ip-ndfl-vs-2026", "droblenie-uplachennaya-usn-zachityvaetsya", "zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/nagruzka-po-otraslyam-2025/index.html": ["zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/priznaki-tehnicheskoj-kompanii/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke"],
     "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026"],
@@ -28,6 +28,62 @@
     "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"]
   },
   "razbory": [
+    {
+      "razdel": "nalogi",
+      "slug": "podarok-ot-rodstvennika-usn-vs-2026",
+      "h1": "Подарок от бабушки и упрощёнка: Верховный суд не дал инспекции записать его в доходы",
+      "title": "Подарок от родственника ИП на УСН — не доход (ВС, 2026)",
+      "description": "Инспекция записала долю помещения, подаренную бабушкой внучке-ИП, в доходы по УСН. Три суда и ВС 20.10.2026: подарок от близкого родственника — не доход.",
+      "zapros": "подарок от родственника ип усн доход",
+      "data": "2026-10-31",
+      "minut": 4,
+      "lid": "Предприниматель на УСН получила от бабушки в дар половину нежилого помещения. Инспекция решила, что раз помещение коммерческое, его стоимость — доход по упрощёнке, и доначислила налог. Три суда с этим не согласились. Верховный суд 20.10.2026 отказался пересматривать дело: дарение между близкими родственниками не носит предпринимательского характера, даже если одаряемый — ИП, а имущество — нежилое.",
+      "dela": [
+        {
+          "sud": "Верховный суд РФ",
+          "sud_kratko": "ВС",
+          "akt": "Определение",
+          "nomer": "№ 305-ЭС26-10933",
+          "data": "2026-10-20",
+          "delo": "инспекция против предпринимателя на УСН (№ А41-72872/2025): стоимость 1/2 нежилого помещения, подаренной бабушкой, — в доходах по УСН; отказ в передаче кассационной жалобы инспекции в коллегию",
+          "na_konu": "налог по УСН со стоимости подаренной доли, штраф и пени; сумма в определении не названа",
+          "na_konu_kratko": "налог УСН с подарка",
+          "itog": "В пользу налогоплательщика",
+          "itog_nov": false,
+          "istochnik": "https://kad.arbitr.ru/",
+          "istochnik_podpis": "kad.arbitr.ru — дело № А41-72872/2025",
+          "sverka": "2026-10-30"
+        }
+      ],
+      "knopka": {
+        "zagolovok": "Сдаёте помещения — проверьте арендатора",
+        "tekst": "Проверка по ИНН: статус в ЕГРЮЛ, долги по налогам и отметки, на которые смотрят банк и налоговая, — на дату проверки.",
+        "knopka": "Проверить арендатора по ИНН",
+        "url": "/",
+        "cel": "razbor33_check"
+      },
+      "zakon": [
+        [
+          "п. 8 ст. 250 НК РФ — безвозмездно полученное имущество во внереализационных доходах (довод инспекции)",
+          "ред. на 31.10.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_28165/"
+        ],
+        [
+          "п. 18.1 ст. 217 НК РФ — круг членов семьи и близких родственников",
+          "ред. на 31.10.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_28165/"
+        ],
+        [
+          "Определение СКЭС ВС РФ от 17.04.2026 № 309-ЭС24-21782 — подарок от родителя-ИП и НДФЛ",
+          "",
+          "https://vsrf.ru/lk/practice/stor_pdf_ec/2535286"
+        ]
+      ],
+      "pohozhie": [
+        "podarok-ot-roditelya-ip-ndfl-vs-2026",
+        "droblenie-uplachennaya-usn-zachityvaetsya"
+      ]
+    },
     {
       "razdel": "nalogi",
       "slug": "spisali-dolg-subsidiarka",
@@ -340,7 +396,7 @@
       "description": "Инспекция насчитала 2,43 млн ₽ НДФЛ с 11 помещений, подаренных дочери-ИП. Верховный суд: освобождение для родных не зависит от того, как используют подарок.",
       "zapros": "подарок от родителя ИП НДФЛ недвижимость",
       "data": "2026-10-24",
-      "izmeneno": "2026-10-27",
+      "izmeneno": "2026-10-31",
       "minut": 4,
       "lid": "Мать-предприниматель подарила дочери-предпринимателю 11 помещений, которые сдавались в аренду и до подарка, и после. Инспекция решила, что это доход от бизнеса, и насчитала 2,43 млн ₽ НДФЛ. Верховный суд отменил решения трёх инстанций: подарок от близкого родственника НДФЛ не облагается, как бы его ни использовали. Разбираем, где грань и как оформить дарение.",
       "dela": [
@@ -391,6 +447,7 @@
         ["Обзор судебной практики Верховного суда РФ № 3 (2026), п. 33 (дело № 44-КАД26-3-К7: сын подарил отцу 16 объектов) — подарок от члена семьи освобождается от НДФЛ независимо от того, как его используют", "", "https://www.garant.ru/products/ipo/prime/doc/414981131/"]
       ],
       "pohozhie": [
+        "podarok-ot-rodstvennika-usn-vs-2026",
         "povtornaya-vyezdnaya-proverka-vs-2026",
         "blokirovka-lichnogo-scheta-ip",
         "droblenie-uplachennaya-usn-zachityvaetsya"

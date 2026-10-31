@@ -131,7 +131,11 @@ def polosa_sobrat(beta, bdo):
     zapas = ('<template data-beta-b>' + _chast("beta-b.html").replace("{{G}}", str(gost_v_den())) + '</template>'
              '<template data-beta-b-kr>' + korotko("b") + '</template>') if r == "a" else ""
     krestik = "" if r == "c" else _chast("beta-x.html")
-    return (_chast("beta.html").replace("{{REZHIM}}", r).replace("{{DO}}", bdo or "")
+    # glavnaya-a-v2 (✎ Штаба 31.10): метка «бета» и имя области «Открытая бета» — только пока бета идёт (режим a);
+    # в режимах b и c беты нет — полоса называется «Условия Делоскопа», без метки. Переход a → b делает скрипт полосы.
+    metka = '<span class="beta-bar__metka">бета</span>' if r == "a" else ""
+    imya = "Открытая бета" if r == "a" else "Условия Делоскопа"
+    return (_chast("beta.html").replace("{{REZHIM}}", r).replace("{{METKA}}", metka).replace("{{IMYA}}", imya).replace("{{DO}}", bdo or "")
             .replace("{{KLASS}}", " beta-bar--c" if r == "c" else "")
             .replace("{{KOROTKO}}", korotko(r, D)).replace("{{TEKST}}", tekst).replace("{{ZAPAS}}", zapas).replace("{{KRESTIK}}", krestik))
 

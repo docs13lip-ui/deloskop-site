@@ -71,5 +71,31 @@ class TestIndexNow(unittest.TestCase):
         kod, _, _ = ix.otpravit(["https://deloskop.ru/"], "0" * 32, odin=odin, spat=lambda s: None)
         self.assertEqual(kod, 0)
 
+    # indexnow-osvezhit-v1: освежённые карточки уходят, правка шаблона — нет
+    def test_data_sbora(self):
+        self.assertEqual(ix.data_sbora("Здесь&nbsp;— выводы по фактам, собранным&nbsp;31.10.2026."), "31.10.2026")
+        self.assertIsNone(ix.data_sbora("<p>нет даты</p>"))
+
+    def test_osvezhennye_i_shablon(self):
+        import subprocess, tempfile
+        with tempfile.TemporaryDirectory() as d:
+            k = pathlib.Path(d)
+            g = lambda *a: subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t", *a], cwd=k, check=True,
+                                          capture_output=True)
+            g("init", "-q")
+            for imya in ("1111111111-a", "2222222222-b"):
+                (k / "company" / imya).mkdir(parents=True)
+                (k / "company" / imya / "index.html").write_text("<p>по фактам, собранным 25.10.2026.</p>", encoding="utf-8")
+            g("add", "-A"); g("commit", "-qm", "1")
+            (k / "company/1111111111-a/index.html").write_text("<p>Новое. по фактам, собранным&nbsp;31.10.2026.</p>", encoding="utf-8")
+            (k / "company/2222222222-b/index.html").write_text("<p>Шаблон. по фактам, собранным 25.10.2026.</p>", encoding="utf-8")
+            g("add", "-A"); g("commit", "-qm", "2")
+            izm = ["company/1111111111-a/index.html", "company/2222222222-b/index.html", "index.html"]
+            osv = ix.osvezhennye_kartochki(izm, koren=k)
+            self.assertEqual(osv, {"https://deloskop.ru/company/1111111111-a/"})
+            v = ["https://deloskop.ru/company/1111111111-a/", "https://deloskop.ru/company/2222222222-b/"]
+            self.assertEqual(ix.vybrat(izm, v, set(), osv), ["https://deloskop.ru/company/1111111111-a/"])
+            self.assertEqual(ix.vybrat(izm, v, set()), [])
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

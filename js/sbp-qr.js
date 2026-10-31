@@ -7,7 +7,7 @@
 (function (root) {
   "use strict";
 
-  var SSYLKA = "https://qr.nspk.ru/AS1A002VR3AE0FJH9QBR6JJT2S0SR4L6";
+  var SSYLKA = ""; // qr-pauza-v1, 31.10: касса не подключена — QR снят; вернуть ссылку банка вместе с кассой (54-ФЗ), см. tests/qr_pauza.test.js
 
   function ssylka() {
     var s = (root.DELOSKOP_SBP_SSYLKA != null ? root.DELOSKOP_SBP_SSYLKA : SSYLKA) || "";

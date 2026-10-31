@@ -1,6 +1,7 @@
 /*!
  * Делоскоп · расчёт ступени прямо в статье «Какие документы запросить у контрагента — по сумме сделки» (команда 01.10 15:05, п. 181).
  * Считает тот же js/lestnica.js, что и Паспорт контрагента. В браузере, без сети и хранилищ.
+ * Под итогом — «Без признака „…“ — ступень N» (Lestnica.bezPriznakov): видно, какой признак поднял ступень.
  * Цель Метрики lestnica_iz_stati — один раз за визит, при первом расчёте (только если посетитель разрешил Метрику: dlkGoal сам это проверяет).
  */
 (function () {
@@ -22,6 +23,8 @@
     if (!r.n) { out.innerHTML = '<p class="ls-pusto">' + esc(r.pochemu) + '</p>'; return; }
     var h = '<p class="ls-itog"><span class="ls-n">' + r.n + '<small> из ' + r.iz + '</small></span><b>' + esc(r.nazvanie) + '</b></p>' +
       '<p class="ls-poch">' + nb(r.pochemu) + '</p>';
+    var bz = L.bezPriznakov ? L.bezPriznakov({ summa: f.summa.value, zakupki: f.zakupki.value, priznaki: pr }).stroki : [];
+    if (bz.length) h += '<ul class="ls-bez">' + bz.map(function (t) { return '<li>' + nb(t) + '</li>'; }).join('') + '</ul>';
     if (r.nalichnye) h += '<p class="nal">' + nb(r.nalichnye) + '</p>';
     var st = 0;
     h += r.spisok.map(function (x) {

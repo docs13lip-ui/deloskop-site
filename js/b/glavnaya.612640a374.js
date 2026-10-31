@@ -1,4 +1,4 @@
-/* Делоскоп · пакет «glavnaya» — собран tests/sobrat_js.py из 10 файлов (partials/sborka.json). Правьте исходники, не этот файл. */
+/* Делоскоп · пакет «glavnaya» — собран tests/sobrat_js.py из 11 файлов (partials/sborka.json). Правьте исходники, не этот файл. */
 /* --- /js/vhody.js --- */
 (function () {
 "use strict";
@@ -1217,4 +1217,31 @@ zapusk();
 Array.prototype.forEach.call(sceny, function (s) { io.observe(s); });
 }
 })(window, document);
+;
+/* --- /js/skladnoj.js --- */
+(function () {
+"use strict";
+if (typeof document === "undefined") return;
+var MQ = window.matchMedia ? window.matchMedia("(max-width:640px)") : null;
+function primenit() {
+var tel = !!(MQ && MQ.matches);
+var D = document.querySelectorAll("details[data-skl]");
+for (var i = 0; i < D.length; i++) D[i].open = !tel;
+}
+function start() {
+primenit();
+if (MQ) {
+if (MQ.addEventListener) MQ.addEventListener("change", primenit);
+else if (MQ.addListener) MQ.addListener(primenit);
+}
+window.addEventListener("hashchange", function () {
+var id = (location.hash || "").slice(1);
+var el = id && document.getElementById(id);
+var d = el && el.closest ? el.closest("details[data-skl]") : null;
+if (d && d !== el) d.open = true;
+});
+}
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
+else start();
+})();
 ;

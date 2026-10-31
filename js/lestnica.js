@@ -14,6 +14,8 @@
  *  • ни «гарантий», ни «суд примет»: это ориентир объёма проверки, а не обещание исхода.
  *  • k — ключ для «Папки к договору» (js/papka.js): v_pasporte — пункт исполняется в самом Паспорте, отдельного приложения нет;
  *    egrul_ep — выписка ЕГРЮЛ с ЭП: если она уже отмечена в самопроверке, опись берёт её номер и дату.
+ *  • bezPriznakov — «какой была бы ступень без признака»: тот же stupen() с одним снятым признаком и без всех;
+ *    строки только там, где ступень на самом деле ниже (1–2 признака поднимают на одну — снять один из двух ничего не меняет).
  */
 (function (root, factory) {
   var api = factory();
@@ -109,6 +111,27 @@
       priznaki: pr, pochemu: pochemu, spisok: spisok, nalichnye: summa > LIMIT_NALICHNYH ? NALICHNYE : null, osnovanie: OSNOVANIE, ogovorka: OGOVORKA };
   }
 
-  return { VERSIYA: VERSIYA, STUPENI: STUPENI, PRIZNAKI: PRIZNAKI, GRANICY_RUB: GRANICY_RUB, GRANICY_DOLYA: GRANICY_DOLYA,
+  // «Без признака „…“ — ступень N»: для каждого отмеченного признака — ступень без него; без всех — ступень по сумме и доле.
+  // stroki — готовые фразы (без HTML): одинаковые снижения сворачиваются в одну строку «без любого одного».
+  function bezPriznakov(vvod) {
+    vvod = vvod || {};
+    var r = stupen(vvod), pusto = { n: r.n, bez: [], bezVseh: null, stroki: [] };
+    if (!r.n || !r.priznaki.length) return pusto;
+    var bez = [];
+    r.priznaki.forEach(function (id) {
+      var n = stupen({ summa: vvod.summa, zakupki: vvod.zakupki, priznaki: r.priznaki.filter(function (x) { return x !== id; }) }).n;
+      if (n < r.n) bez.push({ id: id, nazvanie: PRIZNAKI[IDS.indexOf(id)][1], n: n });
+    });
+    var bezVseh = r.baza < r.n ? r.baza : null, stroki = [], iz = '\u00a0из\u00a04.', st = ' — ступень\u00a0';
+    if (bez.length > 1 && bez.length === r.priznaki.length && bez.every(function (b) { return b.n === bez[0].n; }))
+      stroki.push('Без любого одного из отмеченных признаков' + st + bez[0].n + iz);
+    else bez.forEach(function (b) { stroki.push('Без признака «' + b.nazvanie + '»' + st + b.n + iz); });
+    var minBez = bez.reduce(function (m, b) { return Math.min(m, b.n); }, r.n);
+    if (bezVseh !== null && r.priznaki.length > 1 && bezVseh < minBez)
+      stroki.push((r.priznaki.length === 2 ? 'Без обоих отмеченных признаков' : 'Без всех отмеченных признаков') + st + bezVseh + iz);
+    return { n: r.n, bez: bez, bezVseh: bezVseh, stroki: stroki };
+  }
+
+  return { VERSIYA: VERSIYA, bezPriznakov: bezPriznakov, STUPENI: STUPENI, PRIZNAKI: PRIZNAKI, GRANICY_RUB: GRANICY_RUB, GRANICY_DOLYA: GRANICY_DOLYA,
     LIMIT_NALICHNYH: LIMIT_NALICHNYH, OSNOVANIE: OSNOVANIE, OGOVORKA: OGOVORKA, NALICHNYE: NALICHNYE, stupen: stupen, chislo: chislo };
 });

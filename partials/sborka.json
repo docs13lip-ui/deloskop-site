@@ -34,7 +34,8 @@
       "js/portfel.js",
       "js/perehod.js",
       "js/zhivoj-otchet.js",
-      "js/vitrina.js"
+      "js/vitrina.js",
+      "js/skladnoj.js"
     ],
     "glavnaya-sinhr": [
       "js/limit.js",

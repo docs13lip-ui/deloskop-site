@@ -286,6 +286,13 @@ footer a{color:var(--ink2)}
 .chetyre__l h3{margin:0;font-size:20px;letter-spacing:-0.01em}
 .chetyre__l p{margin:0;color:var(--ink2);font-size:15px}
 .chetyre__go{margin:32px 0 0}
+.ex-pl{margin:14px 28px 4px;padding:12px 14px;border-radius:10px;background:var(--surface-2,var(--bg))}
+.ex-pl__bar{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin:0 0 9px}
+.ex-pl__bar i{display:block;height:6px;border-radius:3px;border:1px dashed var(--muted)}
+.ex-pl__bar i.on{background:var(--ok);border:1px solid var(--ok)}
+.ex-pl__t{margin:0;font-size:13px;line-height:1.45;color:var(--ink2)}
+.ex-pl__t b{color:var(--ink);font-weight:600}
+@media (max-width:520px){.ex-pl{margin-left:20px;margin-right:20px}}
 .chetyre__svoya{margin:14px 0 0;font-size:15px;color:var(--muted)}
 @media (max-width:1100px){.chetyre__l{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:600px){.chetyre__l{grid-template-columns:1fr;gap:22px}}
@@ -484,6 +491,7 @@ footer a{color:var(--ink2)}
           </div>
           <div class="ex-vt"><div class="verdict" data-usl-demo>Можно, предоплата&nbsp;— до&nbsp;900&nbsp;000&nbsp;₽. Руководитель сменился недавно: перед оплатой запросите решение о&nbsp;его назначении.</div></div>
         </div>
+        <div class="ex-pl" role="group" aria-label="Насколько полна проверка" data-polnota-primer="3/8"><div class="ex-pl__bar" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div><p class="ex-pl__t"><b>Проверено 3 из&nbsp;8&nbsp;групп источников.</b> Суды, приставы, РНП и&nbsp;приостановки&nbsp;— на&nbsp;12.10.2026, банкротства не&nbsp;подключены. «Не&nbsp;проверяли»&nbsp;— не&nbsp;то&nbsp;же, что «не&nbsp;нашли».</p></div>
         <div class="ex-vid" role="tablist" aria-label="Чьими глазами смотреть" data-pod="Так мы группируем открытые сведения. Банк и налоговая нам не сообщают, как они оценивают компанию." hidden><button type="button" role="tab" aria-selected="true" data-vid="svodka">Все факты</button><button type="button" role="tab" aria-selected="false" tabindex="-1" data-vid="bank" data-zag="Что увидит банк">Глазами банка</button><button type="button" role="tab" aria-selected="false" tabindex="-1" data-vid="nalog" data-zag="Что увидит инспекция">Глазами налоговой</button></div>
         <div class="ex-f">
           <div class="ex-f__h"><b>Существенные факты</b><span>у&nbsp;каждого&nbsp;— источник и&nbsp;дата</span></div>
@@ -537,10 +545,10 @@ footer a{color:var(--ink2)}
         <p class="lead">Каждый отчёт отвечает на&nbsp;четыре вопроса&nbsp;— всегда в&nbsp;этом порядке.</p>
       </div>
       <ol class="chetyre__l">
-        <li><span class="chetyre__n" aria-hidden="true">01</span><h3>Что найдено</h3><p data-chetyre-daty>Факты из&nbsp;реестров. У&nbsp;каждого&nbsp;— источник и&nbsp;дата: ЕГРЮЛ&nbsp;— на&nbsp;день проверки, отчётность&nbsp;— за&nbsp;2025&nbsp;год, открытые данные ФНС&nbsp;— на&nbsp;01.10.2026.</p></li>
-        <li><span class="chetyre__n" aria-hidden="true">02</span><h3>Насколько полна проверка</h3><p>Сколько групп источников проверено и&nbsp;каких нет. «Не&nbsp;проверяли»&nbsp;— не&nbsp;то&nbsp;же&nbsp;самое, что «не&nbsp;нашли», и&nbsp;мы&nbsp;так и&nbsp;пишем.</p></li>
-        <li><span class="chetyre__n" aria-hidden="true">03</span><h3>Что это значит</h3><p>Итог одной строкой и&nbsp;Индекс 1–99 по&nbsp;<a href="/indeks/">открытой методике</a>. Наши оценки так и&nbsp;называем&nbsp;— оценками.</p></li>
-        <li><span class="chetyre__n" aria-hidden="true">04</span><h3>Что сделать</h3><p>Одно действие до&nbsp;оплаты: какие документы запросить и&nbsp;какая предоплата разумна&nbsp;— или почему сумму не&nbsp;считаем.</p></li>
+        <li><span class="chetyre__n" aria-hidden="true">01</span><h3>Что это значит для&nbsp;сделки</h3><p>Итог одной строкой и&nbsp;Индекс 1–99 по&nbsp;<a href="/indeks/">открытой методике</a>. Рядом&nbsp;— разумная предоплата или почему сумму не&nbsp;считаем.</p></li>
+        <li><span class="chetyre__n" aria-hidden="true">02</span><h3>Насколько полна проверка</h3><p>Сколько групп источников проверено и&nbsp;каких нет. «Не&nbsp;проверяли»&nbsp;— не&nbsp;то&nbsp;же&nbsp;самое, что «не&nbsp;нашли», и&nbsp;мы&nbsp;так и&nbsp;пишем. Плашка стоит сразу под&nbsp;итогом.</p></li>
+        <li><span class="chetyre__n" aria-hidden="true">03</span><h3>Что сделать до&nbsp;оплаты</h3><p>Какие документы запросить у&nbsp;поставщика&nbsp;— списком, который можно скопировать. Рядом&nbsp;— сохранить в&nbsp;досье сделки и&nbsp;следить за&nbsp;изменениями.</p></li>
+        <li><span class="chetyre__n" aria-hidden="true">04</span><h3>Что нашли</h3><p data-chetyre-daty>Факты из&nbsp;реестров. У&nbsp;каждого&nbsp;— источник и&nbsp;дата: ЕГРЮЛ&nbsp;— на&nbsp;день проверки, отчётность&nbsp;— за&nbsp;2025&nbsp;год, открытые данные ФНС&nbsp;— на&nbsp;01.10.2026.</p></li>
       </ol>
       <p class="chetyre__go"><a class="vit-btn chetyre__btn" href="/kak-rabotaet/#proverka">Открыть пример целиком<span aria-hidden="true">→</span></a></p>
       <p class="chetyre__svoya">Свою компанию&nbsp;— глазами банка и&nbsp;налоговой: <a href="/kak-vidit-bank/">введите свой ИНН&nbsp;→</a></p>

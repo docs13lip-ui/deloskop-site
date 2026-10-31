@@ -757,6 +757,10 @@
     if (o.r && istochniki(o.r).length) p.push(['sd-ist-h', 'Источники']);
     return '<nav class="sd-nav noprint" aria-label="Разделы досье">' + p.map(function (x) { return '<a href="#' + x[0] + '" data-sd-nav="' + x[0] + '">' + x[1] + '</a>'; }).join('') + '</nav>';
   }
+  // Где хранится досье — видно сразу под заголовком, а не только в шаге 6 (п. 435 Очереди, 31.10.2026)
+  function hranChip(s) {
+    return '<a class="noprint" href="#sd-hran" data-sd-hran>' + (s ? 'Хранится в этом браузере' : 'Не сохранено · хранится только в этом браузере') + '</a>';
+  }
   function html(o) {
     o = o || {};
     var it = o.it || {}, ned = o.ned || [], pr = o.pr || [], rk = o.rekv || {}, g = o.galki || {}, dg = g.docs || {}, U = modul('Usloviya', './usloviya.js');
@@ -770,7 +774,7 @@
       '<header class="sd-cover ' + esc(kod) + '" data-sd-tilt><div class="sd-cover__fon" aria-hidden="true"><i class="sd-cover__setka"></i><i class="sd-cover__blik"></i></div>' +
         '<div class="sd-cover__in"><div class="sd-cover__top"><span class="sd-eyebrow">Досье сделки</span><span class="sd-stamp">' + (o.nomer ? 'Проверка № ' + esc(o.nomer) + ' · ' : '') + 'собрано ' + esc(o.sobrano || '') + '</span></div>' +
         '<h2 id="sd-h" class="sd-cover__name">' + esc(o.nazvanie || '') + '</h2>' +
-        '<div class="sd-chips"><span>ИНН ' + esc(o.inn || '') + '</span>' + (o.summa > 0 ? '<span>Сделка ' + nb(money(o.summa, U)) + '</span>' : '<a href="#sd-summa">Указать сумму</a>') + '<span>Сведения на ' + esc(o.svedeniyaNa || '') + '</span></div>' +
+        '<div class="sd-chips"><span>ИНН ' + esc(o.inn || '') + '</span>' + (o.summa > 0 ? '<span>Сделка ' + nb(money(o.summa, U)) + '</span>' : '<a href="#sd-summa">Указать сумму</a>') + '<span>Сведения на ' + esc(o.svedeniyaNa || '') + '</span>' + hranChip(s) + '</div>' +
         '<div class="sd-cover__main">' + kolco(gotovo, 6, kod) +
           '<div class="sd-verdict" role="status" aria-live="polite"><span class="sd-verdict__l">Итог досье</span><b>' + nb(it.zagolovok) + '</b><p>' + nb(it.tekst) + '</p></div></div>' +
         pulsHtml(o.realnost) +

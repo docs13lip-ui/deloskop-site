@@ -74,7 +74,7 @@ ok('окупаемость на ОСН совпадает с калькулят�
   assert.strictEqual(Math.round(o.peni), Math.round(540983.6 * pen));
   assert.ok(o.razVLet >= 50 && o.razVLet < 100);
 });
-ok('УСН «доходы»: налогового риска нет, считаем от простоя', () => {
+ok('УСН «доходы» без НДС 22%: налоговой части нет, считаем от простоя', () => {
   const o = T.okupaemost(D, { summa: 3000000, rezhim: 'usn6', oborot: 2100000 }, 14300);
   assert.strictEqual(o.naKonu, 0); assert.strictEqual(o.razVLet, null);
   assert.strictEqual(Math.round(o.prostoj), 2000000);

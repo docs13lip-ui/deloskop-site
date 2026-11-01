@@ -218,6 +218,7 @@ h2.big{font-size:clamp(32px,4vw,48px);letter-spacing:-.03em;line-height:1.1;marg
 .f input[type=text]{text-align:right}
 .f input:focus,.f select:focus{outline:2px solid var(--accent);outline-offset:1px;background:#fff}
 .g{display:grid;grid-template-columns:22px 1fr;gap:8px;align-items:start;padding:10px 0;border-bottom:1px solid #F0F0EC;font-size:17px;cursor:pointer}
+.g[hidden]{display:none}
 .g input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--accent)}
 .itog{background:#111113;color:#F5F5F2;padding:26px 26px 28px;display:flex;flex-direction:column;gap:6px}
 .itog .e{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#8E8E93}
@@ -451,6 +452,7 @@ page = f'''<!doctype html>
       <label class="f" for="p-summa"><span>Обычная сумма договора с поставщиком<small>₽, с НДС</small></span><input id="p-summa" type="text" inputmode="numeric" value="1 000 000" data-den="1" autocomplete="off"></label>
       <label class="f" for="p-rezhim"><span>Режим налогов<small>УСН 15% — «доходы минус расходы», 6% — «доходы»</small></span><select id="p-rezhim"><option value="osn" selected>ОСН</option><option value="usn15">УСН 15%</option><option value="usn6">УСН 6%</option></select></label>
       <label class="g" id="p-pribyl-l"><input id="p-pribyl" type="checkbox"><span>Считать худший случай: налоговая снимет и расходы по налогу на прибыль</span></label>
+      <label class="g" id="p-nds22-l" hidden><input id="p-nds22" type="checkbox"><span>Платим НДС по ставке 22% и берём входной НДС к вычету</span></label>
       <label class="f" for="p-oborot"><span>Сколько проходит по расчётному счёту в месяц<small>₽, поступления</small></span><input id="p-oborot" type="text" inputmode="numeric" value="3 000 000" data-den="1" autocomplete="off"></label>
       <label class="g"><input id="p-nal" type="checkbox"><span>Снимаем наличные со счёта или сдаём выручку инкассацией</span></label>
     </fieldset>

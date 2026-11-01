@@ -657,6 +657,7 @@ td b{font-weight:600}
 <script src="/js/smena.js"></script>
 <script src="/js/acc.js"></script>
 <script src="/js/svyazi.js"></script>
+<script src="/js/perepoverit.js"></script>
 <script src="/js/sdelka.js"></script>
 <script src="/js/indeks-vorota.js"></script>
 <script src="/indeks/indeks.js"></script>
@@ -1154,7 +1155,7 @@ td b{font-weight:600}
     var m=TEK.p.meta;sdKesh();var pervyj=!document.getElementById('sd');
     mesto.outerHTML=SDK.html({r:d.r,nomer:d.r.report_id||id,dengi:SD.dg,nagruzka:SD.ng,realnost:SD.rl,svyazi:SD.svz,svyaziNajdeno:SD.najdeno,nazvanie:m.nazvanie,inn:d.inn,summa:d.summa,svedeniyaNa:vremya(m.sformirovan),sobrano:SDK.mskVremya(Date.now()),
       it:d.it,ned:d.ned,pr:d.pr,rekv:d.rk,rekvTekst:SD.rekvTekst,rekvKogda:SD.rekvKogda,galki:SD.galki,docs:d.v.docs,pvBaza:!!(d.v.predvaritelno&&d.v.predvaritelno.baza),
-      fakty:sdFakty(TEK.p),sohraneno:SD.sohraneno,izm:d.izm,svezh:SDK.svezhest(d.r.checked_at),delopis:d.delopis});
+      fakty:sdFakty(TEK.p),sohraneno:SD.sohraneno,izm:d.izm,svezh:SDK.svezhest(d.r.checked_at),napomnit:demo?null:SDK.napominanie(d.r,d.summa),delopis:d.delopis});
     // «Решение о сделке»: «Платить» при незакрытом досье — предупреждение на экране и в PDF
     var w=document.getElementById('rs-w');
     if(w){var bad=RS.resh==='platit'&&d.it.kod!=='sobrano';w.hidden=!bad;w.textContent=bad?('Решение «Платить» принято при незакрытом досье сделки: '+d.it.zagolovok.toLowerCase()+'. '+(d.it.kod==='predv'?'Не проверено — не значит «в порядке».':d.it.tekst)):'';}
@@ -1208,6 +1209,7 @@ td b{font-weight:600}
       if(a==='save'){var ok=sdSohranit();sdObnovit();sdMsg(ok?'Досье сохранено на этом устройстве '+SDK.mskVremya(Date.now())+'.':'Браузер не дал сохранить (приватный режим или запрет хранилища). Сохраните PDF — кнопка наверху.');return;}
       if(a==='del'){SDK.udalit(LS,TEK.p.meta.inn);SD.sohraneno=null;sdObnovit();sdMsg('Удалили с этого устройства.');return;}
       if(a==='povtor')sdPovtor(b);
+      if(a==='ics'){var d=SD.posl||sdDannye(),n=d&&SDK.napominanie(d.r,d.summa);if(!n||!window.Perepoverit)return;try{Perepoverit.skachat(document,n)}catch(x){}try{if(window.dlkGoal)dlkGoal('sdelka_ics')}catch(x){}b.textContent='Файл календаря скачан';sdMsg('Событие на '+n['do']+' — в файле календаря. Откройте его: напоминание придёт за день, ссылка ведёт в это досье.');}
     });
   }
   function pereschitat(v,rezhim){rsZapomnit();RS.summa='';var o=TEK.opts;render(TEK.r,{usloviya:U,indeksVorota:window.IndeksVorota,nomer:o.nomer,dostup:o.dostup,summa:v||null,rezhim:rezhim||o.rezhim});}

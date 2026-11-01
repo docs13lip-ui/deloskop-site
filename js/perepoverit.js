@@ -37,7 +37,8 @@
   function chistyjInn(s) { s = String(s == null ? '' : s).replace(/\D/g, ''); return /^(\d{10}|\d{12})$/.test(s) ? s : ''; }
 
   /* { inn, imya, proveren: 'ДД.ММ.ГГГГ', do: 'ДД.ММ.ГГГГ', napomnit: 'ГГГГММДД', konec: 'ГГГГММДД', ssylka } | null */
-  function srok(r) {
+  // dop (Досье сделки, 01.11.2026): { ssylka, zag } — своя ссылка возврата и заголовок события
+  function srok(r, dop) {
     if (!r || !r.company) return null;
     var c = r.company;
     var inn = chistyjInn(c.inn);
@@ -49,7 +50,8 @@
       imya: String(c.name_short || c.name_full || ('ИНН ' + inn)).replace(/\s+/g, ' ').trim(),
       proveren: ru(den), 'do': ru(dodo),
       napomnit: ymd(dodo - 864e5), konec: ymd(dodo),
-      ssylka: SAJT + '?inn=' + inn + '&utm_source=ics'
+      ssylka: dop && /^https:\/\/deloskop\.ru\//.test(dop.ssylka || '') ? dop.ssylka : SAJT + '?inn=' + inn + '&utm_source=ics',
+      zag: dop && dop.zag ? String(dop.zag) : ''
     };
   }
 
@@ -76,7 +78,7 @@
   // текст файла .ics; seichas — мс (для DTSTAMP), по умолчанию — сейчас
   function ics(s, seichas) {
     if (!s) return '';
-    var zag = 'Перепроверить ' + s.imya + ' перед следующей оплатой';
+    var zag = s.zag || ('Перепроверить ' + s.imya + ' перед следующей оплатой');
     var opis = 'Проверка в Делоскопе от ' + s.proveren + '. Перепроверить до ' + s['do'] +
       ': сведения реестров меняются, открытые данные ФНС обновляются раз в месяц.\n' + s.ssylka;
     var L = [
@@ -166,5 +168,5 @@
     return true;
   }
 
-  return { srok: srok, ics: ics, html: html, kletka: kletka, mount: mount, slozhit: slozhit, DNEJ: DNEJ, CSS: CSS };
+  return { srok: srok, ics: ics, html: html, kletka: kletka, mount: mount, skachat: skachat, slozhit: slozhit, DNEJ: DNEJ, CSS: CSS };
 });

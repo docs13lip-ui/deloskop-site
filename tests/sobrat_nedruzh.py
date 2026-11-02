@@ -18,6 +18,10 @@ KOREN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DANNYE = os.path.join(KOREN, "data", "nedruzhestvennye-430r.json")
 STRANICA = os.path.join(KOREN, "nalogi", "nedruzhestvennye-gosudarstva-perechen", "index.html")
 METKI = re.compile(r"<!--nedruzh-->.*?<!--/nedruzh-->", re.S)
+# sverka-odna-data-v1 (02.11.2026): дата сверки в «Источниках» и dateModified — из того же data_sverki, что и под таблицей
+# (на живом было «сверен 30 октября» под таблицей и «сверена 10 октября» в источниках, dateModified 2026-10-10).
+ISTOCHNIK_DATA = re.compile(r"(Действующая редакция сверена )(.*?)(&nbsp;года\.)")
+DATE_MODIFIED = re.compile(r'("dateModified": ")(\d{4}-\d{2}-\d{2})(")')
 NB = "&nbsp;"
 KOROTKIE = r"(?:в|и|а|к|с|у|о|по|на|не|до|от|за|из|без|для|при|под|со|об)"
 MES = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"]
@@ -72,6 +76,11 @@ def main():
     if not METKI.search(s):
         sys.exit("нет меток <!--nedruzh--> в " + STRANICA)
     novoe = METKI.sub(lambda m: blok(d), s, count=1)
+    ds = d["istochnik"]["data_sverki"]
+    if not ISTOCHNIK_DATA.search(novoe):
+        sys.exit("нет строки «Действующая редакция сверена … года.» в " + STRANICA)
+    novoe = ISTOCHNIK_DATA.sub(lambda m: m.group(1) + data_rus(ds) + m.group(3), novoe, count=1)
+    novoe = DATE_MODIFIED.sub(lambda m: m.group(1) + max(m.group(2), ds) + m.group(3), novoe, count=1)  # назад не идёт
     if "--check" in sys.argv:
         if novoe != s:
             print("нужна сборка: python3 tests/sobrat_nedruzh.py")

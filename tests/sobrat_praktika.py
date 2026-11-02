@@ -108,6 +108,13 @@ def sver_fraza(r, sverka):
     if any(d.get("sverka_vid") == "kopiya" for d in r["dela"]):
         # sverka_vid «kopiya»: полный текст акта прочитан в копии правовой базы, с сайтом суда ещё не сверен ([Ночные запуски] 05.10 11:05)
         return "Нормы сверены по первоисточникам %s; определение суда — по полному тексту в копии правовой базы, с сайтом Верховного суда ещё сверяем" % t
+    if any(d.get("sverka_vid") == "pereskaz" for d in r["dela"]):
+        # razbor37-v1 ([Ночные запуски] 02.11): PDF акта из облака не открылся — нормы сверены, акт — по пересказам профильных СМИ; после сверки Штабом на kad/vsrf поле sverka_vid снять
+        # razbor37-v2 (03.11, [Право] 03.11 разд. 3): называем, чей пересказ, — «pereskaz_gde» у дела
+        gde = next((d.get("pereskaz_gde") for d in r["dela"] if d.get("pereskaz_gde")), "")
+        if gde:
+            return "Нормы сверены по первоисточникам %s; определение Верховного суда — по пересказу решения в %s, текст определения сверим" % (t, e(gde))
+        return "Нормы сверены по первоисточникам %s; определение Верховного суда — по пересказам в профильных изданиях, полный текст акта ещё сверяем" % t
     return "Сверено по первоисточникам %s" % t
 
 
@@ -224,7 +231,7 @@ def kartochka(d, n, vsego):
                   "na_konu_2": ('<br><small class="delo__dop">%s</small>' % e(d["na_konu_2"])) if d.get("na_konu_2") else "",  # [Право] 21:10 разд. 3 п. 6
                   "ist": e(d["istochnik"]), "ist_p": e(d["istochnik_podpis"]), "sv": d["sverka"], "sv_ch": data_ch(d["sverka"]),
                   # sverka_vid «tezis»: акт сверен только по тезису в правовой базе, полный текст не читали — так и пишем ([Ночные запуски] 05.10 06:05)
-                  "sv_slovo": {"tezis": "тезис сверен по правовой базе", "kopiya": "текст сверен по копии в правовой базе"}.get(d.get("sverka_vid"), "сверено")}
+                  "sv_slovo": {"tezis": "тезис сверен по правовой базе", "kopiya": "текст сверен по копии в правовой базе", "pereskaz": "по пересказам, текст акта сверяем"}.get(d.get("sverka_vid"), "сверено")}
 
 
 CITATA = re.compile(r"^https://(www\.)?(vsrf\.ru/lk/practice/stor_pdf|ksrf\.ru/doc/|publication\.pravo\.gov\.ru/document/)")

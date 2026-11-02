@@ -6,7 +6,8 @@
      r — откуда пришли: только адрес сайта (https://yandex.ru), без пути и запроса.
    Не отправляем: «Не отслеживать» (DNT) и Global Privacy Control, роботы автоматизации, кабинет, админка,
    не наш домен (локальная копия, предпросмотр). Страница из prerender — только после показа.
-   Сервер считает, только когда включён SCHETCHIK=1; выключенный отвечает 204 и ничего не пишет. */
+   Сервер считает, только когда включён SCHETCHIK=1; выключенный отвечает 204 и ничего не пишет.
+   sobytiya-v1: нажатия кнопок отчёта — {sobytie: вид}, только общее число за день по виду (ниже, VIDY). */
 (function (koren) {
   "use strict";
   var NASH = /(^|\.)deloskop\.ru$/;
@@ -39,7 +40,30 @@
     return { p: put(okr.pathname, okr.search), r: otkuda(okr.referrer) };
   }
 
-  var api = { put: put, otkuda: otkuda, telo: telo };
+  // sobytiya-v1 (п. 439; правовые условия 01.11 — 5 пунктов): счёт нажатий кнопок отчёта для метрик M1–M2.
+  // На сервер — только вид события: ни пути, ни ИНН, ни номера проверки, ни времени точнее дня (его ставит сервер).
+  // Те же отказы, что у просмотров: чужой домен, «Не отслеживать», GPC, роботы, кабинет и админка.
+  // Перепроверку в окне 7–60 дней считает сам браузер (js/nedavnie.js) и шлёт готовый вид — сервер две проверки не связывает.
+  var VIDY = { deystvie_dokumenty: 1, deystvie_dosje: 1, deystvie_slezhenie: 1, deystvie_pervoe: 1, perepoverka_7_60: 1 };
+  // Включается одной строкой после выкладки API (приём {sobytie} в /api/ping — ТЗ в КАК_ВЫЛОЖИТЬ_sobytiya-v1).
+  var VKL = false;
+  function teloSobytiya(vid, okr) {
+    if (VIDY[vid] !== 1 || !telo(okr)) return null;
+    return { sobytie: vid };
+  }
+  // Какая кнопка нажата: «Запросить документы», «В досье», «Следить» — в экране «4 вопроса», полосе отчёта и разборах.
+  var Q4 = { docs: "deystvie_dokumenty", dosje: "deystvie_dosje", slezh: "deystvie_slezhenie" };
+  var CEL = { otchet_sled: "deystvie_slezhenie", shchit_sled: "deystvie_slezhenie", otchet_pasport: "deystvie_dosje" };
+  function vidKlika(el) {
+    if (!el || !el.closest) return null;
+    var b = el.closest("[data-q4-act]");
+    if (b) return Q4[b.getAttribute("data-q4-act")] || null;
+    b = el.closest("[data-cel]");
+    if (b) return CEL[b.getAttribute("data-cel")] || null;
+    return el.closest("[data-slezh-knopka]") ? "deystvie_slezhenie" : null;
+  }
+
+  var api = { put: put, otkuda: otkuda, telo: telo, teloSobytiya: teloSobytiya, vidKlika: vidKlika, VIDY: VIDY };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   if (!koren || !koren.document || !koren.location) return;
 
@@ -59,6 +83,27 @@
     var go = function () { (koren.requestIdleCallback || function (f) { setTimeout(f, 1); })(otpravit, { timeout: 3000 }); };
     if (d.readyState === "complete") go(); else koren.addEventListener("load", go, { once: true });
   }
+  // sobytiya-v1: одно событие каждого вида за показ страницы (повтор клика — не новое действие) + «первое действие»
+  var poslano = {};
+  function sobytie(vid) {
+    try {
+      if (!VKL || poslano[vid]) return;
+      var b = teloSobytiya(vid, { host: l.hostname, pathname: l.pathname, search: l.search, referrer: "",
+        dnt: n.doNotTrack || koren.doNotTrack, gpc: n.globalPrivacyControl, webdriver: n.webdriver });
+      if (!b || typeof koren.fetch !== "function") return;
+      poslano[vid] = 1;
+      koren.fetch("https://api.deloskop.ru/api/ping", { method: "POST", mode: "cors", credentials: "omit",
+        keepalive: true, headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) })
+        .catch(function () {});
+    } catch (e) {}
+  }
+  koren.dlkSobytie = sobytie;
+  if (d.addEventListener) d.addEventListener("click", function (e) {
+    var v = vidKlika(e && e.target);
+    if (!v) return;
+    if (VKL && !poslano.deystvie_pervoe) sobytie("deystvie_pervoe");
+    sobytie(v);
+  }, true);
   if (d.prerendering) d.addEventListener("prerenderingchange", pozzhe, { once: true }); else pozzhe();
   // вернулись «Назад» из кэша страниц — это новый просмотр
   koren.addEventListener("pageshow", function (e) { if (e && e.persisted) otpravit(); });

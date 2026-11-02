@@ -14,6 +14,9 @@
   }
   function write(a) { try { w.localStorage.setItem(KEY, JSON.stringify(a)); } catch (e) {} }
 
+  var DEN = 24 * 3600 * 1000;
+  function okno(bylo, sejchas) { var d = (sejchas - bylo) / DEN; return d >= 7 && d <= 60; }
+
   function add(r) {
     if (!r || !/^\d{10}(\d{2})?$/.test(String(r.inn || '')) || /^0+$/.test(r.inn)) return;
     var item = {
@@ -23,6 +26,12 @@
       id: /^[A-Za-z0-9_-]{8,24}$/.test(r.id || '') ? r.id : '',
       t: Date.now()
     };
+    // sobytiya-v1 (метрика M2): эту компанию уже проверяли на этом устройстве 7–60 дней назад — сообщаем только вид
+    // события «perepoverka_7_60»; ИНН, даты и номера проверок не уходят. ИНН ИП (12 цифр) — не считаем вовсе.
+    var byl = read().filter(function (x) { return x.inn === item.inn; })[0];
+    if (byl && item.inn.length === 10 && okno(byl.t, item.t) && typeof w.dlkSobytie === 'function') {
+      try { w.dlkSobytie('perepoverka_7_60'); } catch (e) {}
+    }
     var a = read().filter(function (x) { return x.inn !== item.inn; });
     a.unshift(item);
     write(a.slice(0, MAX));
@@ -56,5 +65,5 @@
     return a.length;
   }
 
-  w.Nedavnie = { add: add, list: read, render: render, KEY: KEY };
+  w.Nedavnie = { add: add, list: read, render: render, KEY: KEY, okno: okno };
 })(window);

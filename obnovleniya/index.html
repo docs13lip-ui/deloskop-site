@@ -42,6 +42,7 @@ h1{font-size:clamp(32px,6vw,56px);line-height:1.05;letter-spacing:-.025em;margin
 .p li:before{content:'✓';position:absolute;left:2px;top:7px;color:var(--ok);font-weight:600}
 .note{color:var(--ink2);font-size:17px;margin:18px 0 0;line-height:1.45}
 .empty{color:var(--muted)}
+.esche{margin:8px 0 0;text-align:center}.esche__b{font:inherit;font-size:17px;font-weight:600;color:var(--accent);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:13px 26px;min-height:48px;cursor:pointer;transition:border-color .2s}.esche__b:hover{border-color:var(--accent)}.esche__b:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.esche__b[disabled]{color:var(--muted);cursor:progress}.u:focus{outline:none}
 </style>
 <link rel="preload" href="/fonts/onest-cyrillic-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/onest-latin-400.woff2" as="font" type="font/woff2" crossorigin>
@@ -205,18 +206,46 @@ h1{font-size:clamp(32px,6vw,56px);line-height:1.05;letter-spacing:-.025em;margin
     .replace(/(№(?:&nbsp;|\u00a0| ))([0-9]{1,4}-[ПО])(?![0-9A-Za-zЀ-ӿ_])/g,function(m,a,b){return a+W+b+"</span>";});}
   function kogda(u){var t=tipo(esc(u.data||""))+(u.vremya?", "+esc(u.vremya)+" МСК":"");var m=/^(\d{4}-\d{2}-\d{2})/.exec(u.id||"");
     return m&&u.vremya?'<time datetime="'+m[1]+'T'+esc(u.vremya)+'+03:00">'+t+'</time>':t;}
-  var box=document.getElementById("list");
-  fetch("/obnovleniya.json",{cache:"no-cache"}).then(function(r){return r.json();}).then(function(d){
-    var list=(d&&d.obnovleniya)||[];
-    if(!list.length){box.innerHTML='<p class="empty">Пока обновлений нет.</p>';return;}
-    box.innerHTML=list.map(function(u){
-      var h='<section class="u" id="'+esc(u.id)+'"><span class="tag">'+kogda(u)+'</span><h2>'+nd(tipo(esc(u.zagolovok)))+'</h2>';
-      if(u.chto_novogo&&u.chto_novogo.length)h+='<h3>Что нового</h3><ul class="n">'+u.chto_novogo.map(function(t){return'<li>'+nd(tipo(esc(t)))+'</li>';}).join('')+'</ul>';
-      if(u.chto_proverit&&u.chto_proverit.length)h+='<h3>Что проверить</h3><ul class="p">'+u.chto_proverit.map(function(p){return'<li>'+(p.ssylka?'<a href="'+esc(p.ssylka)+'">'+nd(tipo(esc(p.tekst)))+' →</a>':nd(tipo(esc(p.tekst))))+'</li>';}).join('')+'</ul>';
-      if(u.kuda_pisat)h+='<p class="note">'+nd(tipo(esc(u.kuda_pisat)))+'</p>';
-      return h+'</section>';
-    }).join('');
-  }).catch(function(){box.innerHTML='<p class="empty">Не удалось загрузить список. Обновите страницу.</p>';});
+  // lenta-vsya-po-knopke-v1 (03.11): 20 записей уже в HTML (tests/sobrat_lentu.py) — всю ленту качаем только по кнопке
+  // «Показать ещё N обновлений» или когда адрес ведёт на #id старой записи. Сбой загрузки 20 записей не стирает.
+  var box=document.getElementById("list"),esche=document.querySelector("[data-esche]"),btn=esche&&esche.querySelector("button"),zhdem=null;
+  function zapis(u){
+    var h='<section class="u" id="'+esc(u.id)+'"><span class="tag">'+kogda(u)+'</span><h2>'+nd(tipo(esc(u.zagolovok)))+'</h2>';
+    if(u.chto_novogo&&u.chto_novogo.length)h+='<h3>Что нового</h3><ul class="n">'+u.chto_novogo.map(function(t){return'<li>'+nd(tipo(esc(t)))+'</li>';}).join('')+'</ul>';
+    if(u.chto_proverit&&u.chto_proverit.length)h+='<h3>Что проверить</h3><ul class="p">'+u.chto_proverit.map(function(p){return'<li>'+(p.ssylka?'<a href="'+esc(p.ssylka)+'">'+nd(tipo(esc(p.tekst)))+' →</a>':nd(tipo(esc(p.tekst))))+'</li>';}).join('')+'</ul>';
+    if(u.kuda_pisat)h+='<p class="note">'+nd(tipo(esc(u.kuda_pisat)))+'</p>';
+    return h+'</section>';
+  }
+  function vsya(){
+    if(zhdem)return zhdem;
+    var bylo=box.querySelectorAll("section.u").length;
+    if(btn){btn.disabled=true;btn.textContent="Загружаю…";}
+    zhdem=fetch("/obnovleniya.json",{cache:"no-cache"}).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(d){
+      var list=(d&&d.obnovleniya)||[];
+      if(!list.length)throw 0;
+      box.innerHTML=list.map(zapis).join('');
+      if(esche&&esche.parentNode)esche.parentNode.removeChild(esche);
+      return bylo;
+    }).catch(function(){
+      zhdem=null;
+      if(btn){btn.disabled=false;btn.textContent="Не удалось загрузить. Попробовать ещё раз";}
+      throw 0;
+    });
+    return zhdem;
+  }
+  function kYakoryu(){
+    var id=decodeURIComponent((location.hash||"").slice(1));
+    if(!id||!/^\d{4}-\d{2}-\d{2}-\d+$/.test(id)||document.getElementById(id))return;
+    vsya().then(function(){var el=document.getElementById(id);if(el)el.scrollIntoView();}).catch(function(){});
+  }
+  if(esche&&btn){
+    esche.hidden=false;
+    btn.addEventListener("click",function(){
+      vsya().then(function(bylo){var s=box.querySelectorAll("section.u")[bylo];if(s){s.setAttribute("tabindex","-1");s.focus({preventScroll:true});}}).catch(function(){});
+    });
+  }
+  kYakoryu();
+  window.addEventListener("hashchange",kYakoryu);
 })();
 </script>
 <!--podval--><div class="podval" role="contentinfo"><div class="podval__in"><div class="podval__cols"><nav class="podval__col" aria-label="Продукты"><details class="podval__det" open><summary class="podval__h">Продукты</summary><ul><li><a href="/">Проверка по&nbsp;ИНН</a></li><li><a href="/indeks/">Индекс Делоскопа</a></li><li><a href="/#shield">Щит</a></li><li><a href="/nalichnye/">Наличные глазами банка</a></li><li><a href="/kontragenty-iz-vypiski/">Кому вы&nbsp;платите</a></li><li><a href="/proverit-schet/">Проверь счёт</a></li><li><a href="/skoraya-115-fz/">Скорая 115&#8209;ФЗ</a></li><li><a href="/pasport/">Паспорт</a></li><li><a href="/delopis/">Делопись</a></li><li><a href="/tarify/">Тарифы</a></li></ul></details></nav><nav class="podval__col" aria-label="Знания"><details class="podval__det" open><summary class="podval__h">Знания</summary><ul><li><a href="/kak-rabotaet/">Как это работает&nbsp;— на&nbsp;примере</a></li><li><a href="/115-fz/">115&#8209;ФЗ простыми словами</a></li><li><a href="/kak-vidit-bank/">Как вас видит банк</a></li><li><a href="/nalogi/">Налоги</a></li><li><a href="/obnovleniya/">Что нового</a></li><li><a href="/company/">Компании</a></li><li><a href="/zhurnal/">Журнал</a></li></ul></details></nav><nav class="podval__col" aria-label="Компания"><details class="podval__det" open><summary class="podval__h">Компания</summary><ul><li><a href="/o-proekte/">О&nbsp;проекте</a></li><li><a href="/indeks/#metodika">Методика Индекса</a></li><li><a href="/tochnost/">Точность Индекса</a></li><li><a href="/cabinet.html">Кабинет</a></li><li><a href="/partneram/">Бухгалтерам и&nbsp;партнёрам</a></li><li><a href="/rekvizity/">Реквизиты и&nbsp;контакты</a></li><li><a href="mailto:help@deloskop.ru">help@deloskop.ru</a></li><li><a href="https://vk.com/deloskop_ru?utm_source=site" rel="me noopener">Мы&nbsp;во&nbsp;ВКонтакте</a></li></ul></details></nav><nav class="podval__col" aria-label="Документы"><details class="podval__det" open><summary class="podval__h">Документы</summary><ul><li><a href="/oferta/">Публичная оферта</a></li><li><a href="/politika/">Политика обработки ПДн</a></li><li><a href="/soglasie/">Согласие на&nbsp;обработку ПДн</a></li><li><a href="/rassylki/">Согласие на&nbsp;рассылки</a></li><li><a href="/cookies/">Cookies и&nbsp;Метрика</a></li><li><a href="/vozvrat/">Возврат денег</a></li><li><a href="/partneram/usloviya/">Условия для&nbsp;партнёров</a></li><li><a href="/rekvizity/">Реквизиты</a></li></ul></details></nav></div><div class="podval__niz"><p>© 2026 Делоскоп</p><div class="tema" data-tema hidden><span class="tema__h" id="tema-h">Тема</span><span class="tema__g" role="group" aria-labelledby="tema-h"><button type="button" data-tema-v="dark" aria-pressed="true">Тёмная</button><button type="button" data-tema-v="light" aria-pressed="false">Светлая</button><button type="button" data-tema-v="auto" aria-pressed="false">Как в&nbsp;системе</button></span></div><p>Сотрудничество, отзывы и&nbsp;предложения&nbsp;— <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>. Принимаем 24/7</p><p>Материалы носят информационный характер и&nbsp;не&nbsp;заменяют консультацию юриста</p></div></div></div><!--/podval-->

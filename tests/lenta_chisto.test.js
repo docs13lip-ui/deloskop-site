@@ -28,7 +28,8 @@ test('/obnovleniya/: одна пара меток ленты, записей в�
   assert.strictEqual(h.split('<!--/lenta-->').length - 1, 1, 'закрывающих меток');
   const posle = h.slice(h.indexOf('<!--/lenta-->'), h.indexOf('</main>'));
   assert.ok(!/<section class="u"/.test(posle), 'запись после блока ленты');
-  assert.strictEqual(posle.replace(/\s+/g, ''), '<!--/lenta--></div>', 'после блока — только </div> #list: ' + posle.slice(0, 120));
+  // lenta-vsya-po-knopke-v1: за #list может стоять только блок кнопки «Показать ещё» (<!--esche-->…<!--/esche-->)
+  assert.strictEqual(posle.replace(/<!--esche-->[\s\S]*?<!--\/esche-->/, '').replace(/\s+/g, ''), '<!--/lenta--></div>', 'после блока — только </div> #list: ' + posle.slice(0, 120));
   const ids = [...h.matchAll(/<section class="u" id="([^"]+)"/g)].map((m) => m[1]);
   assert.strictEqual(new Set(ids).size, ids.length, 'повтор id');
 });

@@ -4631,6 +4631,8 @@ return Array.isArray(a) ? a.filter(function (x) { return x && /^\d{10}(\d{2})?$/
 } catch (e) { return []; }
 }
 function write(a) { try { w.localStorage.setItem(KEY, JSON.stringify(a)); } catch (e) {} }
+var DEN = 24 * 3600 * 1000;
+function okno(bylo, sejchas) { var d = (sejchas - bylo) / DEN; return d >= 7 && d <= 60; }
 function add(r) {
 if (!r || !/^\d{10}(\d{2})?$/.test(String(r.inn || '')) || /^0+$/.test(r.inn)) return;
 var item = {
@@ -4640,6 +4642,10 @@ level: LVL[r.level] ? r.level : '',
 id: /^[A-Za-z0-9_-]{8,24}$/.test(r.id || '') ? r.id : '',
 t: Date.now()
 };
+var byl = read().filter(function (x) { return x.inn === item.inn; })[0];
+if (byl && item.inn.length === 10 && okno(byl.t, item.t) && typeof w.dlkSobytie === 'function') {
+try { w.dlkSobytie('perepoverka_7_60'); } catch (e) {}
+}
 var a = read().filter(function (x) { return x.inn !== item.inn; });
 a.unshift(item);
 write(a.slice(0, MAX));
@@ -4668,6 +4674,6 @@ return '<li><a href="' + href + '"><b>' + esc(x.name ? kav(x.name) : ('ИНН ' 
 el.querySelector('.ned__clear').onclick = function () { write([]); render(el); };
 return a.length;
 }
-w.Nedavnie = { add: add, list: read, render: render, KEY: KEY };
+w.Nedavnie = { add: add, list: read, render: render, KEY: KEY, okno: okno };
 })(window);
 ;

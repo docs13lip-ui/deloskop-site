@@ -717,7 +717,7 @@ return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
 function ru(t) { var d = new Date(t); return z(d.getUTCDate()) + '.' + z(d.getUTCMonth() + 1) + '.' + d.getUTCFullYear(); }
 function ymd(t) { var d = new Date(t); return d.getUTCFullYear() + z(d.getUTCMonth() + 1) + z(d.getUTCDate()); }
 function chistyjInn(s) { s = String(s == null ? '' : s).replace(/\D/g, ''); return /^(\d{10}|\d{12})$/.test(s) ? s : ''; }
-function srok(r) {
+function srok(r, dop) {
 if (!r || !r.company) return null;
 var c = r.company;
 var inn = chistyjInn(c.inn);
@@ -729,7 +729,8 @@ inn: inn,
 imya: String(c.name_short || c.name_full || ('ИНН ' + inn)).replace(/\s+/g, ' ').trim(),
 proveren: ru(den), 'do': ru(dodo),
 napomnit: ymd(dodo - 864e5), konec: ymd(dodo),
-ssylka: SAJT + '?inn=' + inn + '&utm_source=ics'
+ssylka: dop && /^https:\/\/deloskop\.ru\//.test(dop.ssylka || '') ? dop.ssylka : SAJT + '?inn=' + inn + '&utm_source=ics',
+zag: dop && dop.zag ? String(dop.zag) : ''
 };
 }
 function tekst(s) { return String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n'); }
@@ -751,7 +752,7 @@ return d.getUTCFullYear() + z(d.getUTCMonth() + 1) + z(d.getUTCDate()) + 'T' + z
 }
 function ics(s, seichas) {
 if (!s) return '';
-var zag = 'Перепроверить ' + s.imya + ' перед следующей оплатой';
+var zag = s.zag || ('Перепроверить ' + s.imya + ' перед следующей оплатой');
 var opis = 'Проверка в Делоскопе от ' + s.proveren + '. Перепроверить до ' + s['do'] +
 ': сведения реестров меняются, открытые данные ФНС обновляются раз в месяц.\n' + s.ssylka;
 var L = [
@@ -831,7 +832,7 @@ b.textContent = 'Файл календаря скачан';
 };
 return true;
 }
-return { srok: srok, ics: ics, html: html, kletka: kletka, mount: mount, slozhit: slozhit, DNEJ: DNEJ, CSS: CSS };
+return { srok: srok, ics: ics, html: html, kletka: kletka, mount: mount, skachat: skachat, slozhit: slozhit, DNEJ: DNEJ, CSS: CSS };
 });
 ;
 /* --- /js/shchit.js --- */

@@ -800,6 +800,8 @@ footer a{color:var(--ink2)}
     if(window.Rentabelnost){try{Rentabelnost.mount(report,r).catch(function(){})}catch(e){}}
     // «НДС в 2027 году» — выручка 2025 года поставщика на упрощёнке рядом с порогом 20 млн ₽ (п. 1 ст. 145 НК), только к сведению; js/nds-porog.js
     if(!svoj&&window.NdsPorog){try{NdsPorog.mount(report,r)}catch(e){}}
+    // «Лимит упрощёнки» — выручка прошлого года организации на УСН от 80 % лимита доходов (п. 4 ст. 346.13 НК), только к сведению; js/usn-limit.js
+    if(!svoj&&window.DlkUsnLimit){try{DlkUsnLimit.mount(report,r)}catch(e){}}
     // golos-klienta-v1/v2: «Что добавить в отчёт?» — вошедшим после 3-й разной компании, гостям после 2-й, не чаще раза в 30 дней (js/golos.js)
     if(window.DlkGolos){try{DlkGolos.posleProverki(report,r,{api:CAPI})}catch(e){}}
   }

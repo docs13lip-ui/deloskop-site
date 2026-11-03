@@ -37,7 +37,7 @@ test('Разбор № 37: текст по [Право] — нормы ТК ЕА
 test('Разбор № 37: на странице — честная строка «Сверено», FAQPage, ссылка из хаба «Налоги»', () => {
   const s = un(chitat('praktika/nalogi/' + SLUG + '/index.html'));
   assert.ok(/"@type": ?"FAQPage"/.test(s) && s.includes('data-goal="razbor37_check"'));
-  assert.ok(s.includes('по пересказу решения в pravo.ru от 26.10.2026, текст определения сверим'), 'строка [Право] 03.11 разд. 3');
+  assert.ok(s.includes('по полному тексту в копии правовой базы, с сайтом Верховного суда ещё сверяем'), 'Штаб 04.11: текст определения № 305-ЭС26-8377 прочитан в копии Гаранта (doc 415055745); vsrf.ru — после ПК');
   assert.ok(!/Сверено по первоисточникам <time/.test(s), 'пока акт не сверен — не пишем «сверено по первоисточникам»');
   assert.ok(un(chitat('praktika/nalogi/index.html')).includes('/praktika/nalogi/' + SLUG + '/'));
 });

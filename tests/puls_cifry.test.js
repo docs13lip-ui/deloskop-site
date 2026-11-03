@@ -55,7 +55,18 @@ test('число записей совпадает с тем, что поста�
   assert.strictEqual(c.podpis.replace(/&nbsp;/g, ' '), f + ' в ленте с 25 сентября 2026',  // tipograf-daty-v1: год — тоже неразрывно
    
     'подпись — та же, что пишет скрипт (textContent)');
-  assert.match(html, /z\.textContent=a\.length/, 'скрипт по-прежнему берёт длину ленты');
+  assert.match(html, /z\.textContent=v;/, 'скрипт ставит vsego лёгкой ленты');
+});
+
+// puls-legkij-v1 (03.11.2026): «Пульсу» нужны 5 строк и одно число — полная лента (688 КБ без сжатия) ему ни к чему.
+test('«Пульс» берёт лёгкую ленту, а число — из vsego', () => {
+  const s = html.slice(html.indexOf('o-proekte-v1'));
+  assert.ok(s.includes('fetch("/obnovleniya-verh.json"'), 'скрипт просит /obnovleniya-verh.json');
+  assert.ok(!html.includes('fetch("/obnovleniya.json"'), 'полную ленту /o-proekte/ не качает');
+  const verh = JSON.parse(fs.readFileSync(path.join(ROOT, 'obnovleniya-verh.json'), 'utf8'));
+  assert.strictEqual(verh.vsego, lenta.length, 'vsego = длина всей ленты — число на странице не прыгает');
+  assert.ok(verh.obnovleniya.length >= 5, 'пяти строкам «Пульса» хватает');
+  assert.match(html, /var v=\+\(j&&j\.vsego\)\|\|a\.length;/, 'без vsego — длина того, что пришло');
 });
 
 test('формы слов при числе', () => {

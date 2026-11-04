@@ -3089,10 +3089,14 @@ if (typeof module === "object" && module.exports) module.exports = api;
 else root.DlkUsnLimit = api;
 })(typeof self !== "undefined" ? self : this, function () {
 "use strict";
-var LIMIT = { 2026: 490.5e6 };
+var LIMIT = { 2026: 490.5e6, 2027: 518.85e6 };
 var DOLYA = 0.8;
 function mln(n) {
 var x = Math.round(n / 1e5) / 10;
+return String(x).replace(".", ",") + " млн ₽";
+}
+function mlnTochno(n) {
+var x = Math.round(n / 1e4) / 100;
 return String(x).replace(".", ",") + " млн ₽";
 }
 function esc(t) { return String(t == null ? "" : t).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
@@ -3130,7 +3134,7 @@ detail: "Выручка за " + god + " год выше лимита упрощ
 "Данные о режиме могут отставать — уточните у компании." };
 }
 return { kod: "u_limita", title: title, vyruchka: v, god: god, limit: L,
-detail: "Выручка за " + god + " год — " + mln(v) + ", это близко к лимиту упрощёнки на " + T + " год (" + mln(L) + "). " +
+detail: "Выручка за " + god + " год — " + mln(v) + ", это близко к лимиту упрощёнки на " + T + " год (" + mlnTochno(L) + "). " +
 "Если компания превысит лимит, она перейдёт на общий режим с начала месяца превышения и начнёт платить НДС 22 %. " +
 "Проверьте, что договор говорит о цене «в том числе НДС» или «плюс НДС»." };
 }
@@ -3144,8 +3148,8 @@ s.split(";").forEach(function (ch) {
 var m = /^\s*(.+?)\s+—\s+(?:на\s+)?(\d{2}\.\d{2}\.\d{4})\s*$/.exec(ch);
 if (m && !data && /режим/i.test(m[1])) data = m[2];
 });
-return "Режим — открытые данные ФНС" + (data ? " на " + data : "") + "; выручка — бухотчётность ГИР БО за " + god +
-" год. Лимит — п. 4 ст. 346.13 НК РФ.";
+return "Режим — открытые данные ФНС" + (data ? " на " + data : "") + "; выручка — бухгалтерская отчётность (ГИР БО) за " + god +
+" год. Это ориентир: для лимита считаются доходы по ст. 346.15 НК РФ, они могут отличаться от выручки. Лимит — п. 4 ст. 346.13 НК РФ.";
 }
 function html(o, pp) {
 if (!o || !o.detail) return "";

@@ -14,7 +14,7 @@ test('Разбор № 37: данные — ВС № 305-ЭС26-8377, «Нало
   const D = JSON.parse(chitat('praktika/dela.json'));
   const r = D.razbory.find((x) => x.slug === SLUG);
   assert.ok(r && r.razdel === 'nalogi');
-  assert.strictEqual(D.razbory[0].slug, SLUG, 'новые разборы — первыми');
+  assert.ok(D.razbory.slice(0, 2).some((x) => x.slug === SLUG), 'новые разборы — первыми'); // razbor39-v1 (04.11): № 39 встал первым
   assert.deepStrictEqual(r.dela.map((d) => d.nomer + ' ' + d.data + ' ' + d.itog), ['№ 305-ЭС26-8377 2026-10-23 В пользу таможни']);
   assert.ok(r.dela[0].delo.includes('А41-31932/2025'));
   assert.strictEqual(r.knopka.cel, 'razbor37_check');

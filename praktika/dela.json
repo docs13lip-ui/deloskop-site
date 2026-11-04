@@ -16,7 +16,7 @@
     "nalogi/nagruzka/index.html": ["utochnenka-i-peni-ens", "podarok-ot-rodstvennika-usn-vs-2026", "podarok-ot-roditelya-ip-ndfl-vs-2026", "droblenie-uplachennaya-usn-zachityvaetsya", "zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/nagruzka-po-otraslyam-2025/index.html": ["zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/priznaki-tehnicheskoj-kompanii/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke"],
-    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026", "garantiya-vyplachena-otkaz-zakazchika-nezakonen", "zaem-inostrannoj-kompanii-schet-s-vs-2026"],
+    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["kontejnery-na-selhozzemle-vs-2026", "nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026", "garantiya-vyplachena-otkaz-zakazchika-nezakonen", "zaem-inostrannoj-kompanii-schet-s-vs-2026"],
     "nalogi/nedruzhestvennye-gosudarstva-perechen/index.html": ["zaem-inostrannoj-kompanii-schet-s-vs-2026"],
     "pasport/index.html": ["proverka-kontragenta-na-datu-sdelki"],
     "nalogi/svezhest-dannyh-proverki-kontragenta/index.html": ["proverka-kontragenta-na-datu-sdelki"],
@@ -24,11 +24,73 @@
     "nalogi/kak-proverit-schet-pered-oplatoj/index.html": ["dvojnik-postavshchika-bank-poluchatelya"],
     "nalogi/izmeneniya-egryul-kontragenta/index.html": ["reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p"],
     "nalogi/kody-statusa-egryul/index.html": ["spisali-dolg-subsidiarka", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p"],
-    "nalogi/nedostovernyj-adres-egryul/index.html": ["isklyuchili-iz-egryul-dolg-s-direktora"],
+    "nalogi/nedostovernyj-adres-egryul/index.html": ["kontejnery-na-selhozzemle-vs-2026", "isklyuchili-iz-egryul-dolg-s-direktora"],
     "nalogi/skolko-platit-vpered-neznakomoj-kompanii/index.html": ["spisali-dolg-subsidiarka", "nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "isklyuchili-iz-egryul-dolg-s-direktora", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026", "garantiya-vyplachena-otkaz-zakazchika-nezakonen"],
     "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"]
   },
   "razbory": [
+    {
+      "razdel": "dogovory",
+      "slug": "kontejnery-na-selhozzemle-vs-2026",
+      "h1": "Склад контейнеров на сельхозземле: Верховный суд разрешил администрации закрыть площадку через суд",
+      "title": "Склад контейнеров на сельхозземле — позиция ВС 2026",
+      "description": "ВС поддержал администрацию: сельхозземлю под контейнерный склад использовать нельзя, площадку освобождают за 60 дней. Что проверить арендатору.",
+      "zapros": "склад контейнеров на сельхозземле суд",
+      "data": "2026-11-04",
+      "minut": 4,
+      "lid": "Компания поставила больше 1 500 портовых контейнеров на сельхозземлю, а суд округа решил, что контейнеры — не недвижимость и вред не доказан. Верховный суд вернул решение первой инстанции: на сельхозземле можно вести только сельхоздеятельность, площадку освобождают за 60 дней. Разбираем, что проверить арендатору склада до того, как туда приедет груз.",
+      "dela": [
+        {
+          "sud": "Верховный суд РФ",
+          "sud_kratko": "ВС",
+          "akt": "Определение СКЭС",
+          "nomer": "№ 305-ЭС26-10700",
+          "data": "2026-10-29",
+          "delo": "Администрация Богородского городского округа против ООО «Тетрис», дело № А41-65384/2025 — контейнерный склад на сельхозземле",
+          "na_konu": "Освободить площадку 10 га за 60 дней; судебная неустойка 10 000 ₽ в день просрочки",
+          "na_konu_kratko": "склад на 10 га и 10 000 ₽ в день",
+          "itog": "В пользу администрации",
+          "itog_nov": false,
+          "istochnik": "https://kad.arbitr.ru/",
+          "istochnik_podpis": "kad.arbitr.ru — дело № А41-65384/2025",
+          "sverka": "2026-11-04",
+          "sverka_vid": "kopiya"
+        }
+      ],
+      "knopka": {
+        "zagolovok": "Арендуете склад — проверьте, у кого",
+        "tekst": "Проверка арендодателя по ИНН: статус в ЕГРЮЛ, долги по налогам и суды — на дату проверки. Категорию земли под площадкой смотрите на публичной кадастровой карте.",
+        "knopka": "Проверить арендодателя по ИНН",
+        "url": "/",
+        "cel": "razbor39_check"
+      },
+      "zakon": [
+        [
+          "ст. 7, 12, 42, 72, 78, 85 ЗК РФ — целевое назначение земель, обязанности владельца, муниципальный контроль, земли сельхозназначения",
+          "ред. на 04.11.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_33773/"
+        ],
+        [
+          "п. 1 ст. 1065, ст. 308.3 ГК РФ — запрет деятельности, создающей опасность вреда; судебная неустойка",
+          "ред. на 04.11.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_9027/"
+        ],
+        [
+          "ст. 8.8 КоАП РФ — использование земельного участка не по целевому назначению",
+          "ред. на 04.11.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_34661/"
+        ],
+        [
+          "Определение СКЭС ВС РФ от 29.10.2026 № 305-ЭС26-10700 — карточка дела в банке решений Верховного суда",
+          "",
+          "https://vsrf.ru/"
+        ]
+      ],
+      "pohozhie": [
+        "zalog-odna-veshch-iz-pyati-vs-2026",
+        "zemelnyj-nalog-izhs-koefficienty-ks-52-p"
+      ]
+    },
     {
       "razdel": "nalogi",
       "slug": "remont-za-rubezhom-nds-pri-vvoze-vs-2026",

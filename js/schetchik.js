@@ -7,7 +7,9 @@
    Не отправляем: «Не отслеживать» (DNT) и Global Privacy Control, роботы автоматизации, кабинет, админка,
    не наш домен (локальная копия, предпросмотр). Страница из prerender — только после показа.
    Сервер считает, только когда включён SCHETCHIK=1; выключенный отвечает 204 и ничего не пишет.
-   sobytiya-v1: нажатия кнопок отчёта — {sobytie: вид}, только общее число за день по виду (ниже, VIDY). */
+   sobytiya-v1: нажатия кнопок отчёта — {sobytie: вид}, только общее число за день по виду (ниже, VIDY).
+   pamyat-proverok-v1: первую и повторную проверку отличает память на устройстве в js/nedavnie.js; сюда приходит
+   только готовый вид события (proverka_novaya, perepoverka_7_60, vozvrat_3_30). */
 (function (koren) {
   "use strict";
   var NASH = /(^|\.)deloskop\.ru$/;
@@ -44,7 +46,10 @@
   // На сервер — только вид события: ни пути, ни ИНН, ни номера проверки, ни времени точнее дня (его ставит сервер).
   // Те же отказы, что у просмотров: чужой домен, «Не отслеживать», GPC, роботы, кабинет и админка.
   // Перепроверку в окне 7–60 дней считает сам браузер (js/nedavnie.js) и шлёт готовый вид — сервер две проверки не связывает.
-  var VIDY = { deystvie_dokumenty: 1, deystvie_dosje: 1, deystvie_slezhenie: 1, deystvie_pervoe: 1, perepoverka_7_60: 1 };
+  var VIDY = { deystvie_dokumenty: 1, deystvie_dosje: 1, deystvie_slezhenie: 1, deystvie_pervoe: 1, perepoverka_7_60: 1,
+    proverka_novaya: 1, vozvrat_3_30: 1 };
+  // Эти виды шлются по разу на компанию или на день (это решает память), а не по разу за показ страницы.
+  var MNOGO = { proverka_novaya: 1, perepoverka_7_60: 1 };
   // Включается одной строкой после выкладки API (приём {sobytie} в /api/ping — ТЗ в КАК_ВЫЛОЖИТЬ_sobytiya-v1).
   var VKL = false;
   function teloSobytiya(vid, okr) {
@@ -87,7 +92,7 @@
   var poslano = {};
   function sobytie(vid) {
     try {
-      if (!VKL || poslano[vid]) return;
+      if (!VKL || (poslano[vid] && !MNOGO[vid])) return;
       var b = teloSobytiya(vid, { host: l.hostname, pathname: l.pathname, search: l.search, referrer: "",
         dnt: n.doNotTrack || koren.doNotTrack, gpc: n.globalPrivacyControl, webdriver: n.webdriver });
       if (!b || typeof koren.fetch !== "function") return;
@@ -98,6 +103,14 @@
     } catch (e) {}
   }
   koren.dlkSobytie = sobytie;
+  // pamyat-proverok-v1: память проверок живёт в js/nedavnie.js (там же, где «Недавние»); счётчик хранилища не трогает.
+  // Память пишется, только когда события и правда уходят: VKL, наш домен, нет DNT/GPC, не робот.
+  koren.dlkSchitaem = function () {
+    try {
+      return VKL && !!teloSobytiya("vozvrat_3_30", { host: l.hostname, pathname: l.pathname, search: "", referrer: "",
+        dnt: n.doNotTrack || koren.doNotTrack, gpc: n.globalPrivacyControl, webdriver: n.webdriver });
+    } catch (e) { return false; }
+  };
   if (d.addEventListener) d.addEventListener("click", function (e) {
     var v = vidKlika(e && e.target);
     if (!v) return;

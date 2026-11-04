@@ -1061,7 +1061,9 @@ if (okr.dnt === "1" || okr.dnt === "yes" || okr.gpc === true || okr.webdriver ==
 if (NE_SCHITAEM.test(String(okr.pathname || ""))) return null;
 return { p: put(okr.pathname, okr.search), r: otkuda(okr.referrer) };
 }
-var VIDY = { deystvie_dokumenty: 1, deystvie_dosje: 1, deystvie_slezhenie: 1, deystvie_pervoe: 1, perepoverka_7_60: 1 };
+var VIDY = { deystvie_dokumenty: 1, deystvie_dosje: 1, deystvie_slezhenie: 1, deystvie_pervoe: 1, perepoverka_7_60: 1,
+proverka_novaya: 1, vozvrat_3_30: 1 };
+var MNOGO = { proverka_novaya: 1, perepoverka_7_60: 1 };
 var VKL = false;
 function teloSobytiya(vid, okr) {
 if (VIDY[vid] !== 1 || !telo(okr)) return null;
@@ -1098,7 +1100,7 @@ if (d.readyState === "complete") go(); else koren.addEventListener("load", go, {
 var poslano = {};
 function sobytie(vid) {
 try {
-if (!VKL || poslano[vid]) return;
+if (!VKL || (poslano[vid] && !MNOGO[vid])) return;
 var b = teloSobytiya(vid, { host: l.hostname, pathname: l.pathname, search: l.search, referrer: "",
 dnt: n.doNotTrack || koren.doNotTrack, gpc: n.globalPrivacyControl, webdriver: n.webdriver });
 if (!b || typeof koren.fetch !== "function") return;
@@ -1109,6 +1111,12 @@ keepalive: true, headers: { "Content-Type": "application/json" }, body: JSON.str
 } catch (e) {}
 }
 koren.dlkSobytie = sobytie;
+koren.dlkSchitaem = function () {
+try {
+return VKL && !!teloSobytiya("vozvrat_3_30", { host: l.hostname, pathname: l.pathname, search: "", referrer: "",
+dnt: n.doNotTrack || koren.doNotTrack, gpc: n.globalPrivacyControl, webdriver: n.webdriver });
+} catch (e) { return false; }
+};
 if (d.addEventListener) d.addEventListener("click", function (e) {
 var v = vidKlika(e && e.target);
 if (!v) return;

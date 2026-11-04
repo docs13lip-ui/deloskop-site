@@ -44,8 +44,8 @@ test("молчим: ИП, другие режимы, режим не назва�
   for (const r of ["АУСН", "УСН, АУСН", "ЕСХН", "Патент", "Общая система (ОСН)", "СРП", null])
     assert.strictEqual(U.stroka(otvet(450e6, r), NOY26), null, String(r));
   assert.strictEqual(U.stroka(otvet(450e6, "УСН", "7707083893", 2024), NOY26), null);
-  assert.strictEqual(U.stroka(otvet(450e6, "УСН", "7707083893", 2026), new Date("2027-05-10T12:00:00+03:00")), null,
-    "лимит 2027 — только после сверки приказа № 732");
+  assert.strictEqual(U.stroka(otvet(450e6, "УСН", "7707083893", 2027), new Date("2028-05-10T12:00:00+03:00")), null,
+    "лимит 2028 — только после сверки приказа о дефляторе на 2028 год");
   assert.strictEqual(U.stroka(null, NOY26), null);
 });
 
@@ -53,7 +53,10 @@ test("вёрстка: серый «к сведению», подпись с да
   const o = U.stroka(otvet(400e6, "УСН"), NOY26);
   const h = U.html(o, U.podpis(otvet(400e6, "УСН"), o.god));
   assert.match(h, /^<section class="ulo" aria-label="Лимит упрощёнки" data-usn-limit="u_limita">/);
-  assert.match(h, /Режим — открытые данные ФНС на 25\.10\.2026; выручка — бухотчётность ГИР БО за 2025 год\./);
+  assert.strictEqual(U.podpis(otvet(400e6, "УСН"), o.god).replace(/\u00a0/g, " "),
+    "Режим — открытые данные ФНС на 25.10.2026; выручка — бухгалтерская отчётность (ГИР БО) за 2025 год. " +
+    "Это ориентир: для лимита считаются доходы по ст. 346.15 НК РФ, они могут отличаться от выручки. Лимит — п. 4 ст. 346.13 НК РФ.",
+    "подпись — дословно по налоговому юристу 04.11.2026");
   assert.ok(!/#E0A100|#D9480F|ulo--(warn|bad)/.test(h + U.CSS), "не жёлтый и не красный");
   assert.ok(!/ИИ|нейросет/i.test(h));
   const karta = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "partials", "sborka.json"), "utf8"));
@@ -62,4 +65,18 @@ test("вёрстка: серый «к сведению», подпись с да
   const ix = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
   assert.match(ix, /if\(!svoj&&window\.DlkUsnLimit\)\{try\{DlkUsnLimit\.mount\(report,r\)\}catch\(e\)\{\}\}/);
   assert.ok(ix.indexOf("DlkUsnLimit.mount") > ix.indexOf("NdsPorog.mount(report,r)"));
+});
+
+// usn-limit-2027-otchet ([Ночные запуски] 04.11): приказ № 732 сверен в тексте ([Право] 04.11 разд. 1) — лимит 2027 = 518,85 млн ₽, без округления.
+test("2027: лимит 518,85 млн ₽ (× 1,153, приказ № 732) — порог 80 % = 415,08 млн ₽, в строке «518,85», не «518,9»", () => {
+  assert.strictEqual(U.LIMIT[2027], 518.85e6);
+  const D27 = new Date("2027-05-10T12:00:00+03:00");
+  const s = U.stroka(otvet(415.08e6, "УСН", "7707083893", 2026), D27);
+  assert.strictEqual(s.kod, "u_limita");
+  assert.strictEqual(s.limit, 518.85e6);
+  assert.ok(s.detail.replace(/\u00a0/g, " ").startsWith("Выручка за 2026 год — 415,1 млн ₽, это близко к лимиту упрощёнки на 2027 год (518,85 млн ₽). "), s.detail);
+  assert.strictEqual(U.stroka(otvet(415.07e6, "УСН", "7707083893", 2026), D27), null);
+  assert.strictEqual(U.stroka(otvet(519e6, "УСН", "7707083893", 2026), D27).kod, "vyshe_limita");
+  // 2026 — по-прежнему 490,5 (не «490,50»)
+  assert.ok(U.stroka(otvet(400e6, "УСН"), new Date("2026-11-04T12:00:00+03:00")).detail.replace(/\u00a0/g, " ").includes("(490,5 млн ₽)"));
 });

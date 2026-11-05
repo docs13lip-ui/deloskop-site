@@ -3142,6 +3142,7 @@ var CSS = ".ulo{display:grid;gap:6px;padding:16px 18px;border-radius:16px;border
 ".ulo__h{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 10px}.ulo__h b{font-size:15px;font-weight:600}" +
 ".ulo__h span{font-size:13px;color:var(--muted,#6B6B70)}.ulo p{margin:0}.ulo__t{font-size:15px;line-height:1.5}" +
 ".ulo__m{font-size:12px;color:var(--muted,#6B6B70)}@media (max-width:520px){.ulo{padding:14px}}@media print{.ulo{break-inside:avoid}}";
+var DEFL_PODPIS = { 2027: "Лимит на 2027 год — с учётом коэффициента-дефлятора 1,153 (приказ Минэкономразвития России от 21.10.2026 № 732)." };
 function podpis(remote, god) {
 var s = String(((remote || {}).dossier || {}).data_dates || ""), data = "";
 s.split(";").forEach(function (ch) {
@@ -3149,7 +3150,8 @@ var m = /^\s*(.+?)\s+—\s+(?:на\s+)?(\d{2}\.\d{2}\.\d{4})\s*$/.exec(ch);
 if (m && !data && /режим/i.test(m[1])) data = m[2];
 });
 return "Режим — открытые данные ФНС" + (data ? " на " + data : "") + "; выручка — бухгалтерская отчётность (ГИР БО) за " + god +
-" год. Это ориентир: для лимита считаются доходы по ст. 346.15 НК РФ, они могут отличаться от выручки. Лимит — п. 4 ст. 346.13 НК РФ.";
+" год. Это ориентир: для лимита считаются доходы по ст. 346.15 НК РФ, они могут отличаться от выручки. Лимит — п. 4 ст. 346.13 НК РФ." +
+(DEFL_PODPIS[god + 1] ? " " + DEFL_PODPIS[god + 1] : "");
 }
 function html(o, pp) {
 if (!o || !o.detail) return "";

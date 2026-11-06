@@ -16,9 +16,9 @@
     "nalogi/nagruzka/index.html": ["utochnenka-i-peni-ens", "podarok-ot-rodstvennika-usn-vs-2026", "podarok-ot-roditelya-ip-ndfl-vs-2026", "droblenie-uplachennaya-usn-zachityvaetsya", "zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/nagruzka-po-otraslyam-2025/index.html": ["zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/priznaki-tehnicheskoj-kompanii/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke"],
-    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["kontejnery-na-selhozzemle-vs-2026", "nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026", "garantiya-vyplachena-otkaz-zakazchika-nezakonen", "zaem-inostrannoj-kompanii-schet-s-vs-2026"],
+    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["svyazannye-kompanii-na-torgah-kartel-vs-2026", "kontejnery-na-selhozzemle-vs-2026", "nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026", "garantiya-vyplachena-otkaz-zakazchika-nezakonen", "zaem-inostrannoj-kompanii-schet-s-vs-2026"],
     "nalogi/nedruzhestvennye-gosudarstva-perechen/index.html": ["zaem-inostrannoj-kompanii-schet-s-vs-2026"],
-    "pasport/index.html": ["proverka-kontragenta-na-datu-sdelki"],
+    "pasport/index.html": ["svyazannye-kompanii-na-torgah-kartel-vs-2026", "proverka-kontragenta-na-datu-sdelki"],
     "nalogi/svezhest-dannyh-proverki-kontragenta/index.html": ["proverka-kontragenta-na-datu-sdelki"],
     "nalogi/pismo-o-smene-rekvizitov-kak-proverit/index.html": ["dvojnik-postavshchika-bank-poluchatelya"],
     "nalogi/kak-proverit-schet-pered-oplatoj/index.html": ["dvojnik-postavshchika-bank-poluchatelya"],
@@ -29,6 +29,68 @@
     "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"]
   },
   "razbory": [
+    {
+      "razdel": "dogovory",
+      "slug": "svyazannye-kompanii-na-torgah-kartel-vs-2026",
+      "h1": "Связанные компании на одних торгах: Верховный суд признал это картелем",
+      "title": "Связанные компании на одних торгах — картель: позиция ВС 2026",
+      "description": "ВС: общий адрес, один IP и общие сотрудники плюс снижение цены на 0,5–1 % — картель на торгах. Дело А56-932/2025. Что проверить участнику и заказчику.",
+      "zapros": "связанные компании на одних торгах картель",
+      "data": "2026-11-06",
+      "minut": 4,
+      "lid": "Две компании с общим адресом, телефоном и сотрудниками десять раз шли на одни закупки и снижали цену на 0,5–1 %. Три инстанции сговора не увидели, Верховный суд — увидел. Разбираем, где грань между связанными компаниями и картелем и что проверить участнику торгов и заказчику.",
+      "dela": [
+        {
+          "sud": "Верховный суд РФ",
+          "sud_kratko": "ВС",
+          "akt": "Определение СКЭС",
+          "nomer": "№ 307-ЭС26-4283",
+          "data": "2026-07-10",
+          "delo": "ООО «Пассажир ТВ» и ООО «Технические проекты» против УФАС по Санкт-Петербургу, дело № А56-932/2025 — связанные участники десяти закупок «Горэлектротранса»",
+          "na_konu": "Решение УФАС о картеле на десяти закупках; в октябре 2026 года судья ВС отказал в передаче дела в Президиум",
+          "na_konu_kratko": "картель на 10 закупках",
+          "itog": "В пользу УФАС",
+          "itog_nov": false,
+          "istochnik": "https://kad.arbitr.ru/",
+          "istochnik_podpis": "kad.arbitr.ru — дело № А56-932/2025",
+          "sverka": "2026-11-06",
+          "sverka_vid": "kopiya"
+        }
+      ],
+      "knopka": {
+        "zagolovok": "Проверьте участников торгов",
+        "tekst": "Если на ваших торгах участвуют компании с общими адресом или телефоном, это ещё не нарушение, но повод присмотреться к их ценам. Адрес, телефон и статус каждой компании — в проверке по ИНН.",
+        "knopka": "Проверить участника по ИНН",
+        "url": "/",
+        "cel": "razbor40_check"
+      },
+      "zakon": [
+        [
+          "п. 2 ч. 1, ч. 7, ч. 8 ст. 11 Федерального закона от 26.07.2006 № 135-ФЗ «О защите конкуренции» — картель на торгах и пределы «иммунитета группы»",
+          "ред. на 06.11.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_61763/"
+        ],
+        [
+          "ч. 2 ст. 14.32 КоАП РФ — соглашение о ценах на торгах",
+          "ред. на 06.11.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_34661/"
+        ],
+        [
+          "Определение СКЭС ВС РФ от 10.07.2026 № 307-ЭС26-4283 — карточка дела в банке решений Верховного суда",
+          "",
+          "https://vsrf.ru/"
+        ],
+        [
+          "Определение судьи ВС РФ № 193-ПЭК26 (1) (октябрь 2026) по делу № А56-932/2025 — отказ в передаче в Президиум",
+          "",
+          "https://vsrf.ru/"
+        ]
+      ],
+      "pohozhie": [
+        "garantiya-vyplachena-otkaz-zakazchika-nezakonen",
+        "kontejnery-na-selhozzemle-vs-2026"
+      ]
+    },
     {
       "razdel": "dogovory",
       "slug": "kontejnery-na-selhozzemle-vs-2026",

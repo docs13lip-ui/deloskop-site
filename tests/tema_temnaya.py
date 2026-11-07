@@ -15,7 +15,7 @@
                жёлтый → #2E220C, оранжевый → #35190D, красный → #3A1513); тёмный полупрозрачный
                (рамки rgba(29,29,31,.06)) → светлый полупрозрачный; фирменный синий → #5B9BFF;
   текст:       тёмный нейтральный → #F5F5F2 / #C7C7CC / #A1A1A6 по яркости; фирменный и цвета риска →
-               светлые пары из css/tema.css; белый текст на фирменном синем → #0B0B0C (ДС v1 §2.5 --on-accent);
+               светлые пары из css/tema.css; белый текст на фирменном синем и на var(--ink) → #0B0B0C (ДС v1 §2.5 --on-accent);
   тени:        светлые блики (inset белым) → почти прозрачные.
 Прозрачность сохраняется. Пользуется tests/sobrat_shapku.py (каждая страница при сборке) — отдельного шага нет.
 
@@ -302,6 +302,9 @@ def _perevedennye(css, nabor):
         dekl = _deklaracii(telo)
         fon = " ".join(zn for sv, zn in dekl if sv.startswith("background")).lower()
         na_akcente = bool(re.search(r"#0b63e5|#084bb0|#0952c2|var\(--[\w-]*acc", fon))
+        # temnye-na-inke-v1 (07.11): фон var(--ink) в тёмной теме светлеет (#F5F5F2) — белый текст на нём пропадал
+        # (номера шагов «Что сделать завтра утром», кнопки-переключатели, тост). Тот же перевод, что на синем: → #0B0B0C
+        na_akcente = na_akcente or bool(re.search(r"var\(--ink\)", fon))
         for sv, zn in dekl:
             if SVOJSTVA.match(sv) and sv not in TOKENY_RUKAMI and not sv.startswith("--"):
                 if perevesti_znachenie(sv, re.sub(r"\s*!important$", "", zn, flags=re.I), na_akcente) is not None:
@@ -336,6 +339,9 @@ def pravila(css, _nabor=None):
         dekl = _deklaracii(telo)
         fon = " ".join(zn for sv, zn in dekl if sv.startswith("background")).lower()
         na_akcente = bool(re.search(r"#0b63e5|#084bb0|#0952c2|var\(--[\w-]*acc", fon))
+        # temnye-na-inke-v1 (07.11): фон var(--ink) в тёмной теме светлеет (#F5F5F2) — белый текст на нём пропадал
+        # (номера шагов «Что сделать завтра утром», кнопки-переключатели, тост). Тот же перевод, что на синем: → #0B0B0C
+        na_akcente = na_akcente or bool(re.search(r"var\(--ink\)", fon))
         nov, povtor = [], {}
         sels = _razdelit_selektory(zag)
         for sv, zn in dekl:

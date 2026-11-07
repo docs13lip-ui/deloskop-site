@@ -35,13 +35,13 @@
     return {
       share: pct(s.value), sharePer100: Math.round((s.value || 0) * 100), amount: rub(s.amount), count: s.count,
       days: s.days, window: s.window, month: s.month ? monthRu(s.month) : '', avg: s.id === 'deposit_big' ? rub(s.avg) : pct(s.avg),
-      risk: rub(s.risk), week: s.weekStart ? dateRu(s.weekStart) : ''
+      risk: rub(s.risk), week: s.weekStart ? dateRu(s.weekStart) : '', day: s.day ? dateRu(s.day) : ''
     };
   }
   function signalText(s, r) {
     var t = TX.signals[s.id]; if (!t) return '';
     var v = vars(s, r);
-    if (s.id === 'deposit_big') v.amount = rub(s.value);
+    if (s.id === 'deposit_big' || s.id === 'deposit_any' || s.id === 'deposit_split') v.amount = rub(s.value);
     if (s.id === 'vague_cash') v.amount = rub(s.value);
     if (s.id === 'big_cash') v.count = s.value;
     if (s.level === 0 && t.calm) return E.fill(t.calm, v);

@@ -93,19 +93,65 @@ test('операции от 1 млн ₽ (ст. 6 115-ФЗ) и пометка д
   assert.equal(sig(ip, 'big_cash').note, 'ip');
 });
 
-test('взносы наличных по 1-МР: 31 млн за 30 дней при обычном приходе 2 млн — опасно', () => {
+test('взносы наличных по 5-МР: 31 млн за 30 дней при обычном приходе 2 млн — опасно', () => {
   const d = [];
   [4, 5, 6].forEach(m => d.push({ out: false, date: D(2026, m, 10), sum: 2000000, ...buyer, purpose: 'Оплата' }));
   for (let i = 0; i < 10; i++) d.push({ out: false, type: 'Объявление на взнос наличными', date: D(2026, 7, 6 + i), sum: 3100000, cpInn: ORG.inn, cpName: ORG.name, purpose: 'Взнос наличных' });
   const r = E.analyze(E.parse1C(build1C(Object.assign({}, ORG, { from: D(2026, 4, 1), to: D(2026, 7, 31), docs: d }))));
   const s = sig(r, 'deposit_big');
   assert.ok(s && s.level === 2 && s.value === 31000000);
+  assert.match(s.source, /5-МР от 26\.10\.2026/);
   assert.equal(r.level, 2);
-  // Розница с той же картиной без превышения порога — не шумим долей взносов
+  // Магазин (галочка «наличный бизнес»): тот же скачок — всё равно опасно, 5-МР делает исключение только без резкого роста
+  assert.equal(sig(E.analyze(E.parse1C(build1C(Object.assign({}, ORG, { from: D(2026, 4, 1), to: D(2026, 7, 31), docs: d }))), { cashBusiness: true }), 'deposit_big').level, 2);
+  // Доля взносов 30 %+ без скачка — внимание; у «наличного» бизнеса — молчим
   const small = d.slice(0, 3).concat([{ out: false, type: 'Объявление на взнос наличными', date: D(2026, 7, 6), sum: 3000000, cpInn: ORG.inn, cpName: ORG.name, purpose: 'Сдача выручки' }]);
   const pr = E.parse1C(build1C(Object.assign({}, ORG, { from: D(2026, 4, 1), to: D(2026, 7, 31), docs: small })));
+  assert.equal(sig(E.analyze(pr), 'deposit_big'), undefined);
   assert.ok(sig(E.analyze(pr), 'deposit_share'));
-  assert.equal(sig(E.analyze(pr, { cashBusiness: true }), 'deposit_share'), undefined);
+  const cb = E.analyze(pr, { cashBusiness: true });
+  assert.equal(cb.signals.filter(x => /^deposit_/.test(x.id)).length, 0);
+});
+
+test('5-МР: порога нет — малый взнос у «безналичного» бизнеса даёт внимание, у магазина — тишину', () => {
+  const d = [];
+  [4, 5, 6, 7].forEach(m => d.push({ out: false, date: D(2026, m, 10), sum: 2000000, ...buyer, purpose: 'Оплата' }));
+  d.push({ out: false, type: 'Объявление на взнос наличными', date: D(2026, 7, 20), sum: 150000, cpInn: ORG.inn, cpName: ORG.name, purpose: 'Взнос наличных' });
+  const p = E.parse1C(build1C(Object.assign({}, ORG, { from: D(2026, 4, 1), to: D(2026, 7, 31), docs: d })));
+  const s = sig(E.analyze(p), 'deposit_any');
+  assert.ok(s && s.level === 1 && s.value === 150000 && s.count === 1);
+  assert.equal(E.analyze(p, { cashBusiness: true }).signals.filter(x => /^deposit_/.test(x.id)).length, 0);
+  // Ни одного взноса — ни одного признака о взносах
+  const none = E.analyze(E.parse1C(build1C(Object.assign({}, ORG, { from: D(2026, 4, 1), to: D(2026, 7, 31), docs: d.slice(0, 4) }))));
+  assert.equal(none.signals.filter(x => /^deposit_/.test(x.id)).length, 0);
+});
+
+test('5-МР: дробление — шесть взносов по 1 млн ₽ в один день — опасно и для магазина', () => {
+  const d = [];
+  [4, 5, 6, 7].forEach(m => d.push({ out: false, date: D(2026, m, 10), sum: 9000000, ...buyer, purpose: 'Оплата' }));
+  for (let i = 0; i < 6; i++) d.push({ out: false, type: 'Объявление на взнос наличными', date: D(2026, 7, 15), sum: 1000000, cpInn: ORG.inn, cpName: ORG.name, purpose: 'Сдача выручки' });
+  const p = E.parse1C(build1C(Object.assign({}, ORG, { from: D(2026, 4, 1), to: D(2026, 7, 31), docs: d })));
+  for (const cb of [false, true]) {
+    const r = E.analyze(p, { cashBusiness: cb });
+    const s = sig(r, 'deposit_split');
+    assert.ok(s && s.level === 2 && s.value === 6000000 && s.count === 6, 'cashBusiness=' + cb);
+    assert.equal(sig(r, 'deposit_big'), undefined, 'скачка нет: 6 млн при обычных 9 млн');
+    assert.equal(sig(r, 'deposit_any'), undefined, 'дробление уже сказало главное');
+  }
+  // Два взноса в день — ещё не дробление
+  const two = d.slice(0, 6);
+  const r2 = E.analyze(E.parse1C(build1C(Object.assign({}, ORG, { from: D(2026, 4, 1), to: D(2026, 7, 31), docs: two }))));
+  assert.equal(sig(r2, 'deposit_split'), undefined);
+  assert.equal(sig(r2, 'deposit_any').level, 1);
+});
+
+test('5-МР: в движке и текстах Щита нет порога 30 млн ₽ и ссылки на 1-МР как действующие', () => {
+  const fs = require('node:fs'), path = require('node:path');
+  const eng = fs.readFileSync(path.join(__dirname, '../shchit-engine.js'), 'utf8');
+  const tx = fs.readFileSync(path.join(__dirname, '../shchit-texts.js'), 'utf8');
+  assert.doesNotMatch(eng, /depositLimit|30000000/);
+  assert.doesNotMatch(eng.replace(/\/\/.*$/gm, ''), /1-МР/);
+  assert.doesNotMatch(tx, /30 млн|1-МР|С мая 2026/);
 });
 
 test('ИП: вывод себе почти всего при малых налогах — опасно', () => {
@@ -133,7 +179,7 @@ test('демо: признаки, деньги и три дела', () => {
 });
 
 test('тексты: у каждого признака есть заголовок, ≥3 варианта и дела; вариант стабилен', () => {
-  for (const id of ['cash_share', 'cash_week', 'transit', 'tax_share', 'pass_through', 'big_cash', 'cash_growth', 'ip_self', 'persons', 'deposit_big', 'deposit_share', 'vague_cash', 'no_ordinary']) {
+  for (const id of ['cash_share', 'cash_week', 'transit', 'tax_share', 'pass_through', 'big_cash', 'cash_growth', 'ip_self', 'persons', 'deposit_big', 'deposit_share', 'deposit_any', 'deposit_split', 'vague_cash', 'no_ordinary']) {
     const t = TX.signals[id];
     assert.ok(t && t.title && t.text.length >= 3 && t.todo.length >= 2, id);
     for (const v of t.text) assert.ok(v.split(/[.!?]\s/).every(f => f.split(/\s+/).length <= 32), 'длинная фраза в ' + id);

@@ -93,7 +93,9 @@ test('дефлятор 2027: 518,85 / 230,6 / 272,5 / 288,25 — только в
       if (propusk.has(e.name)) continue;
       const p = path.join(d, e.name);
       if (e.isDirectory()) { obojti(p); continue; }
-      if (!/\.(html|js|json|xml|txt)$/.test(e.name) || ['sroki.json', 'obnovleniya.json'].includes(e.name)) continue;
+      // obnovleniya-verh.json — механический срез верхних 12 записей obnovleniya.json (tests/sobrat_lentu.py): запись
+      // со строкой дефлятора может уйти из среза раньше соседней с реквизитами — сторож краснел от новой записи ленты (07.11)
+      if (!/\.(html|js|json|xml|txt)$/.test(e.name) || ['sroki.json', 'obnovleniya.json', 'obnovleniya-verh.json'].includes(e.name)) continue;
       const t = norm(fs.readFileSync(p, 'utf8'));
       if (!/518,85|230,6 млн|272,5 млн|288,25 млн/.test(t)) continue;
       vstrecheno++;

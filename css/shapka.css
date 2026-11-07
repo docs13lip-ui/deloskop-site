@@ -178,6 +178,10 @@ dialog.dlo::backdrop{background:rgba(17,17,19,.55)}
 .ck-bar :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 @media (max-width:640px){.ck-bar .ck-bar__in{flex-direction:column;align-items:stretch;gap:var(--s-2);padding:var(--s-2) var(--gutter) calc(var(--s-2) + env(safe-area-inset-bottom))}.ck-bar .ck-bar__t{font-size:var(--t-caption)}.ck-bar .ck-bar__b{flex-wrap:wrap}.ck-bar .ck-bar__b button{flex:1 1 164px;min-height:44px;padding:0 4px}}
 @media print{.ck-bar{display:none!important}}
+/* yakorya-v1: шапка липкая — переход по ссылке «#…» не прячет начало раздела под ней. Правило живёт при шапке:
+   css/ds.css (где оно было) стоит не на всех страницах, а пакет «ds» с шапкой — на всех. 64 / 56 px — высота шапки, +16 px воздуха. */
+html{scroll-padding-top:calc(var(--header-h,64px) + 16px)}
+@media (max-width:640px){html{scroll-padding-top:calc(var(--header-h,56px) + 16px)}}
 /* ck-mesto-v1: пока окно открыто, низ страницы и форма под ним не прячутся — место снизу = высота окна (--ck-h ставит js/metrika.js) */
 @media (max-width:1024px){html.est-ck{scroll-padding-bottom:calc(var(--ck-h,0px) + 12px)}}
 html.est-ck body{padding-bottom:var(--ck-h,0px)}

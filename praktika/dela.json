@@ -16,9 +16,9 @@
     "nalogi/nagruzka/index.html": ["utochnenka-i-peni-ens", "podarok-ot-rodstvennika-usn-vs-2026", "podarok-ot-roditelya-ip-ndfl-vs-2026", "droblenie-uplachennaya-usn-zachityvaetsya", "zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/nagruzka-po-otraslyam-2025/index.html": ["zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/priznaki-tehnicheskoj-kompanii/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke"],
-    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["svyazannye-kompanii-na-torgah-kartel-vs-2026", "kontejnery-na-selhozzemle-vs-2026", "nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026", "garantiya-vyplachena-otkaz-zakazchika-nezakonen", "zaem-inostrannoj-kompanii-schet-s-vs-2026"],
+    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["ustnyy-kartel-dohod-v-byudzhet-vs-2026", "svyazannye-kompanii-na-torgah-kartel-vs-2026", "kontejnery-na-selhozzemle-vs-2026", "nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026", "garantiya-vyplachena-otkaz-zakazchika-nezakonen", "zaem-inostrannoj-kompanii-schet-s-vs-2026"],
     "nalogi/nedruzhestvennye-gosudarstva-perechen/index.html": ["zaem-inostrannoj-kompanii-schet-s-vs-2026"],
-    "pasport/index.html": ["svyazannye-kompanii-na-torgah-kartel-vs-2026", "proverka-kontragenta-na-datu-sdelki"],
+    "pasport/index.html": ["ustnyy-kartel-dohod-v-byudzhet-vs-2026", "svyazannye-kompanii-na-torgah-kartel-vs-2026", "proverka-kontragenta-na-datu-sdelki"],
     "nalogi/svezhest-dannyh-proverki-kontragenta/index.html": ["proverka-kontragenta-na-datu-sdelki"],
     "nalogi/pismo-o-smene-rekvizitov-kak-proverit/index.html": ["dvojnik-postavshchika-bank-poluchatelya"],
     "nalogi/kak-proverit-schet-pered-oplatoj/index.html": ["dvojnik-postavshchika-bank-poluchatelya"],
@@ -29,6 +29,78 @@
     "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"]
   },
   "razbory": [
+    {
+      "razdel": "dogovory",
+      "slug": "ustnyy-kartel-dohod-v-byudzhet-vs-2026",
+      "h1": "Устный сговор на торгах: Верховный суд взыскал в бюджет всё, что получили подрядчики",
+      "title": "Устный картель на торгах: ВС взыскал весь доход в бюджет — разбор 2026",
+      "description": "Пять подрядчиков поделили девять муниципальных закупок без договора. ВС признал сговор ничтожной сделкой и взыскал 314,7 млн ₽ солидарно. Где грань.",
+      "zapros": "картель на торгах взыскание дохода в бюджет 169 ГК",
+      "data": "2026-11-07",
+      "minut": 5,
+      "lid": "Пять подрядчиков поделили девять муниципальных закупок без письменного договора. Верховный суд признал сговор ничтожной сделкой и взыскал в бюджет всё полученное по контрактам — 314,7 млн ₽ солидарно. Разбираем, где грань и что делать участнику торгов и заказчику.",
+      "dela": [
+        {
+          "sud": "Верховный суд РФ",
+          "sud_kratko": "ВС",
+          "akt": "Определение СКЭС",
+          "nomer": "№ 309-ЭС25-15678",
+          "data": "2026-05-22",
+          "delo": "Прокурор Оренбургской области в интересах Российской Федерации против пяти подрядчиков, дело № А47-10662/2024 — картель на девяти муниципальных закупках",
+          "na_konu": "314 722 515 ₽ дохода по контрактам — в бюджет солидарно; позиция включена в Обзор судебной практики ВС № 3 (2026), п. 17",
+          "na_konu_kratko": "314,7 млн ₽ в бюджет",
+          "itog": "В пользу прокуратуры",
+          "itog_nov": false,
+          "istochnik": "https://kad.arbitr.ru/",
+          "istochnik_podpis": "kad.arbitr.ru — дело № А47-10662/2024",
+          "sverka": "2026-11-07",
+          "sverka_vid": "kopiya"
+        }
+      ],
+      "knopka": {
+        "zagolovok": "Проверьте подрядчика до аванса",
+        "tekst": "Солидарное взыскание может обрушить подрядчика посреди вашего договора. Адрес, телефон и статус компании — в проверке по ИНН.",
+        "knopka": "Проверить подрядчика по ИНН",
+        "url": "/",
+        "cel": "razbor41_check"
+      },
+      "zakon": [
+        [
+          "ст. 169 ГК РФ — недействительность сделки, совершённой с целью, противной основам правопорядка или нравственности",
+          "ред. Федерального закона от 07.05.2013 № 100-ФЗ",
+          "https://www.consultant.ru/document/cons_doc_LAW_5142/"
+        ],
+        [
+          "ч. 3 ст. 51 Федерального закона от 26.07.2006 № 135-ФЗ «О защите конкуренции» — доход от монополистической деятельности — в федеральный бюджет",
+          "ред. Федерального закона от 05.10.2015 № 275-ФЗ",
+          "https://www.consultant.ru/document/cons_doc_LAW_61763/"
+        ],
+        [
+          "ч. 2 ст. 14.32 КоАП РФ — соглашение о ценах на торгах",
+          "ред. на 06.11.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_34661/"
+        ],
+        [
+          "ч. 1 ст. 52 АПК РФ — иск прокурора о применении последствий недействительности сделки",
+          "",
+          "https://www.consultant.ru/document/cons_doc_LAW_37800/"
+        ],
+        [
+          "Определение СКЭС ВС РФ от 22.05.2026 № 309-ЭС25-15678 по делу № А47-10662/2024 — карточка дела в банке решений Верховного суда",
+          "",
+          "https://vsrf.ru/"
+        ],
+        [
+          "Обзор судебной практики Верховного Суда РФ № 3 (2026), утв. Президиумом 14.10.2026, п. 17",
+          "",
+          "https://vsrf.ru/"
+        ]
+      ],
+      "pohozhie": [
+        "svyazannye-kompanii-na-torgah-kartel-vs-2026",
+        "garantiya-vyplachena-otkaz-zakazchika-nezakonen"
+      ]
+    },
     {
       "razdel": "dogovory",
       "slug": "svyazannye-kompanii-na-torgah-kartel-vs-2026",
@@ -87,6 +159,7 @@
         ]
       ],
       "pohozhie": [
+        "ustnyy-kartel-dohod-v-byudzhet-vs-2026",
         "garantiya-vyplachena-otkaz-zakazchika-nezakonen",
         "kontejnery-na-selhozzemle-vs-2026"
       ]

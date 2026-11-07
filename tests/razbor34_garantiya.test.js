@@ -18,7 +18,7 @@ test('Разбор № 34: данные — ВС № 305-ЭС26-5649 от 20.10.
   assert.deepStrictEqual(r.dela.map((d) => d.nomer + ' ' + d.data), ['№ 305-ЭС26-5649 2026-10-20']);
   assert.ok(r.dela[0].delo.includes('А40-99642/2025'));
   assert.strictEqual(r.knopka.cel, 'razbor34_check');
-  const svezh = [...D.razbory].sort((a, b) => (a.data < b.data ? 1 : -1)).slice(0, 4).map((x) => x.slug); // razbor40-v1 (06.11): +1 свежий
+  const svezh = [...D.razbory].sort((a, b) => (a.data < b.data ? 1 : -1)).slice(0, 5).map((x) => x.slug); // razbor40-v1 (06.11), razbor41-v1 (07.11): +1 свежий
   assert.ok(svezh.includes(SLUG), 'по дате — среди свежих');
   for (const f of ['nalogi/proverka-kontragenta-pered-dogovorom/index.html', 'nalogi/skolko-platit-vpered-neznakomoj-kompanii/index.html']) {
     assert.ok(D.ssylki_s_sajta[f].includes(SLUG), 'входящая ссылка с ' + f);

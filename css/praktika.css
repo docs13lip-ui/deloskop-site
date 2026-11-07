@@ -42,6 +42,7 @@ body{margin:0;background:#F5F5F2;-webkit-font-smoothing:antialiased}
 .pr .gran{margin:20px 0;padding:18px 20px;border-radius:var(--r-m);background:var(--accent-soft)}
 .pr .gran>b:first-child{display:block;margin-bottom:4px;font:600 13px/1.2 var(--font);letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
 .pr .gran p{margin:0;color:var(--ink)}
+.pr .gran p+p{margin-top:10px} /* razbor41-v1: «Где грань» из нескольких абзацев */
 /* «Какой год закрывается» — срок по норме: без заливки, тонкая рамка (цвет — только у «Где грань»); pravo-0711 */
 .pr .srok{scroll-margin-top:96px;margin:20px 0;padding:16px 20px;border:1px solid var(--line);border-radius:var(--r-m)}
 .pr .srok>b:first-child{display:block;margin-bottom:4px;font:600 13px/1.2 var(--font);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}

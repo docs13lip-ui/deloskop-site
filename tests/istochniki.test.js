@@ -27,17 +27,24 @@ test('в страницах нет ссылок на сервисы-конкур
   }
 });
 
-test('1-МР Банка России: обе ветки порога и ссылка на cbr.ru', () => {
-  const t = fs.readFileSync(path.join(KOREN, '115-fz/snyatie-nalichnyh-s-raschetnogo-scheta/index.html'), 'utf8').replace(/&nbsp;|\u00a0/g, ' ').replace(/&#8209;|\u2011/g, '-'); // типографика (tipograf_statej.py) — пробелы не в счёт
-  assert.ok(t.includes('от 30 млн ₽ за 30 дней'));
-  assert.ok(t.includes('3 предыдущих месяца'), 'ветка 1: больше обычных оборотов');
-  assert.ok(t.includes('в основном безналично'), 'ветка 2: раньше работала безналично');
-  // Оговорка о документах про финансовое положение в 1-МР — только для физлиц (cbr.ru/Crosscut/LawActs/File/12196, сверено 01.10.2026)
-  assert.ok(!t.includes('Исключение — когда у банка есть документы'), 'оговорка для физлиц выдана за исключение для компаний');
-  assert.ok(/только для физлиц — для компаний и ИП её в этих рекомендациях нет/.test(t), 'нет уточнения: оговорка — только для физлиц');
-  for (const f of ['115-fz/snyatie-nalichnyh-s-raschetnogo-scheta/index.html', 'nalichnye/index.html']) {
+test('5-МР Банка России вместо 1-МР: порога нет, ссылка на 5-МР, 1-МР — только как заменённые', () => {
+  // 26.10.2026 Банк России выпустил 5-МР; 1-МР от 20.05.2026 утратили силу (◐ pravo.ru/news/266503, nalog-nalog.ru 27.10; cbr.ru из облака 403)
+  const STR = '115-fz/snyatie-nalichnyh-s-raschetnogo-scheta/index.html';
+  const t = fs.readFileSync(path.join(KOREN, STR), 'utf8').replace(/&nbsp;|\u00a0/g, ' ').replace(/&#8209;|\u2011/g, '-'); // типографика — пробелы не в счёт
+  assert.ok(!t.includes('от 30 млн ₽ за 30 дней'), 'порог 30 млн ₽ за 30 дней из 1-МР');
+  assert.ok(!/только для физлиц/.test(t), 'фраза «оговорка только для физлиц» — в 5-МР исключение есть и для компаний');
+  assert.ok(t.includes('рекомендации № 5-МР'), 'нет абзаца о 5-МР');
+  assert.ok(t.includes('при любой сумме'), 'нет «порога больше нет»');
+  assert.ok(t.includes('На снятие порог 1 млн ₽'), 'не сказано, что порог на снятие по 115-ФЗ в силе');
+  for (const m of t.matchAll(/1-МР/g)) {
+    const okno = t.slice(Math.max(0, m.index - 80), m.index + 20);
+    assert.ok(/заменили/.test(okno), STR + ': 1-МР упомянуты не как заменённые');
+  }
+  for (const f of [STR, 'nalichnye/index.html']) {
     const s = fs.readFileSync(path.join(KOREN, f), 'utf8');
-    assert.ok(s.includes('https://www.cbr.ru/Crosscut/LawActs/File/12196'), f + ': нет ссылки на 1-МР на cbr.ru');
+    assert.ok(!s.includes('LawActs/File/12196'), f + ': ссылка на 1-МР');
+    assert.ok(s.includes('https://www.cbr.ru/Crosscut/LawActs/File/12266'), f + ': нет ссылки на 5-МР');
+    assert.ok(/26\.10\.2026(&nbsp;|\s|\u00a0)+№(&nbsp;|\s|\u00a0)+5-МР/.test(s), f + ': источник 5-МР без даты и номера');
   }
 });
 

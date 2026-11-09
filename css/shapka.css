@@ -189,6 +189,10 @@ html.est-ck body{padding-bottom:var(--ck-h,0px)}
 @media (min-width:1025px){.ck-bar{left:auto;right:24px;bottom:24px;width:440px;border:0;border-radius:var(--r-l);box-shadow:0 12px 40px rgba(29,29,31,.16)}.ck-bar .ck-bar__in{flex-direction:column;align-items:stretch;padding:var(--s-5);gap:var(--s-4)}.ck-bar .ck-bar__b button{flex:1}}
 /* Номера дел, законов и писем не рвутся на переносе (js/shapka.js, п. 8) */
 .nw{white-space:nowrap}
+/* nw-nasledie-v1: .nw и .nw-k — только «не переносить». Цвет, кегль и начертание всегда от родителя:
+   правила вида «.card span{color:muted;font-size:15px}» иначе красили «115-ФЗ» в заголовке карточки серым и мельче
+   (/115-fz/, /nalogi/ и ещё 4 хаба, обе темы). Сторож — tests/nw_nasledie.test.js. */
+span.nw,span.nw-k{color:inherit!important;font-size:inherit!important;font-weight:inherit!important;letter-spacing:inherit!important;text-transform:inherit!important}
 /* vizual-v3.1b (г) — переходы между страницами без белого экрана (cross-document View Transitions).
    Старая страница плавно сменяется новой; заголовок статьи или компании переезжает на место нового.
    Пара «что с чем» решает js/shapka.js (§9, событие pageswap): статья → статья, список → карточка, карточка → карточка;

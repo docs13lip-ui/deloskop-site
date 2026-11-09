@@ -206,6 +206,7 @@ html.est-ck body{padding-bottom:var(--ck-h,0px)}
 @media print{html.est-ck body{padding-bottom:0}}
 @media (min-width:1025px){.ck-bar{left:auto;right:24px;bottom:24px;width:440px;border:0;border-radius:var(--r-l);box-shadow:0 12px 40px rgba(29,29,31,.16)}.ck-bar .ck-bar__in{flex-direction:column;align-items:stretch;padding:var(--s-5);gap:var(--s-4)}.ck-bar .ck-bar__b button{flex:1}}
 .nw{white-space:nowrap}
+span.nw,span.nw-k{color:inherit!important;font-size:inherit!important;font-weight:inherit!important;letter-spacing:inherit!important;text-transform:inherit!important}
 @media (prefers-reduced-motion:no-preference){
 @view-transition{navigation:auto;types:dlk-str}
 html:active-view-transition-type(dlk-str) h1{view-transition-name:dlk-zag}

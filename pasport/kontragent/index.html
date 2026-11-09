@@ -11,7 +11,7 @@
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <style>
-:root{--bg:#F5F5F2;--card:#fff;--ink:#1D1D1F;--ink2:#48484C;--muted:#6B6B70;--line:#E6E6E1;--rule:#1D1D1F;--accent:#0B63E5;
+:root{--bg:#F5F5F2;--card:#fff;--ink:#1D1D1F;--ink2:#48484C;--muted:#66666B;--line:#E6E6E1;--rule:#1D1D1F;--accent:#0B63E5;
   --ok:#16723F;--ok-bg:#E8F5EE;--warn:#9A5B00;--warn-bg:#FFF4E0;--bad:#B3261E;--bad-bg:#FDECEA;--off:#8A8A8F}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -501,8 +501,8 @@ td b{font-weight:600}
 @media print{
   .kom{background:none;break-inside:avoid}
   @page{size:A4;margin:16mm 16mm 18mm;
-    @bottom-left{content:"Делоскоп · Паспорт контрагента · deloskop.ru";font:9pt 'Onest','Onest Zapas','Onest Zapas R',Arial,sans-serif;color:#6B6B70}
-    @bottom-right{content:"стр. " counter(page) " из " counter(pages);font:9pt 'Onest','Onest Zapas','Onest Zapas R',Arial,sans-serif;color:#6B6B70}}
+    @bottom-left{content:"Делоскоп · Паспорт контрагента · deloskop.ru";font:9pt 'Onest','Onest Zapas','Onest Zapas R',Arial,sans-serif;color:#66666B}
+    @bottom-right{content:"стр. " counter(page) " из " counter(pages);font:9pt 'Onest','Onest Zapas','Onest Zapas R',Arial,sans-serif;color:#66666B}}
   body{background:#fff;font-size:10.5pt}
   .bar,.noprint{display:none!important}
   .pk{box-shadow:none;margin:0;padding:0;border-radius:0;max-width:none}
@@ -1075,7 +1075,7 @@ td b{font-weight:600}
     var tiho=!window.matchMedia||window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var phi=SD.orbPhi!=null?SD.orbPhi:-0.6,cel=null,w=0,h=0,raf=0,vidno=true,tyanem=null,C=null;
     function cveta(){var cs=getComputedStyle(box);function v(n,z){return (cs.getPropertyValue(n)||'').trim()||z}
-      return {ink:v('--ink','#1D1D1F'),muted:v('--muted','#6B6B70'),accent:v('--accent','#0B63E5'),line:v('--line','#E6E6E1'),surface:v('--card','#fff'),ok:v('--ok','#16723F'),warn:v('--warn','#9A5B00'),bad:v('--bad','#B3261E'),font:cs.fontFamily||'sans-serif'};}
+      return {ink:v('--ink','#1D1D1F'),muted:v('--muted','#66666B'),accent:v('--accent','#0B63E5'),line:v('--line','#E6E6E1'),surface:v('--card','#fff'),ok:v('--ok','#16723F'),warn:v('--warn','#9A5B00'),bad:v('--bad','#B3261E'),font:cs.fontFamily||'sans-serif'};}
     function razmer(){var r=cv.getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1);w=Math.round(r.width);h=Math.round(r.height);if(!w||!h)return false;cv.width=w*dpr;cv.height=h*dpr;cx.setTransform(dpr,0,0,dpr,0,0);return true;}
     function kadr(){if(!w&&!razmer())return;C=C||cveta();SV._kadr(cx,m,w,h,phi,C);}
     function shag(){raf=0;if(!vidno||!box.isConnected)return;if(cel!=null){phi+=(cel-phi)*0.12;if(Math.abs(cel-phi)<0.001)cel=null;}else if(!tiho&&!tyanem)phi+=0.0035;kadr();if(!tiho||cel!=null)raf=requestAnimationFrame(shag);}

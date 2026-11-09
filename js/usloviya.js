@@ -708,17 +708,17 @@
     '.usl-t{font-size:20px;line-height:1.3;font-weight:600;letter-spacing:-.01em}' +
     '.usl-r{margin:4px 0 0;font-size:15px;color:var(--ink2,#48484C)}' +
     '.usl-a{margin:0;font-size:15px;color:var(--ink2,#48484C)}' +
-    '.usl-cap{font-size:13px;color:var(--muted,#6B6B70)}' +
+    '.usl-cap{font-size:13px;color:var(--muted,#66666B)}' +
     '.usl-kak{display:flex;flex-direction:column;gap:6px;border-top:1px solid #E6E6E1;padding-top:10px}' +
     '.usl-kak p{margin:0;font-size:15px;color:var(--ink2,#48484C);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}' +
     '.usl-kak .usl-ne{color:#8A5A00;background:#FFF6E0;border-radius:10px;padding:8px 10px}' +
     '.usl-kak a{color:var(--accent,#0B63E5)}' +
     '.usl-sum{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border-top:1px solid #E6E6E1;padding-top:12px}' +
-    '.usl-sum label{font-size:13px;color:var(--muted,#6B6B70);grid-column:1/-1}' +
+    '.usl-sum label{font-size:13px;color:var(--muted,#66666B);grid-column:1/-1}' +
     '.usl-in{display:flex;align-items:center;background:#fff;border:1px solid #DADAD4;border-radius:10px;padding:0 12px;min-width:0}' +
     '.usl-in:focus-within{border-color:var(--accent,#0B63E5);box-shadow:0 0 0 3px rgba(11,99,229,.15)}' +
     '.usl-in input{border:0;outline:0;font:inherit;font-size:17px;padding:10px 0;width:100%;min-width:0;background:transparent;font-variant-numeric:tabular-nums}' +
-    '.usl-in span{color:var(--muted,#6B6B70)}' +
+    '.usl-in span{color:var(--muted,#66666B)}' +
     '.usl select{font:inherit;font-size:15px;border:1px solid #DADAD4;border-radius:10px;padding:10px 30px 10px 12px;background:#fff;max-width:190px;color:inherit}' +
     '.usl-out{display:flex;flex-direction:column;gap:6px;font-size:15px}' +
     '.usl-out b{font-variant-numeric:tabular-nums}' +
@@ -728,11 +728,11 @@
     '.usl summary::-webkit-details-marker{display:none}' +
     '.usl summary:after{content:"";width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);margin:5px 4px 0 0;transition:transform .2s}' +
     '.usl details[open] summary:after{transform:rotate(-135deg);margin-top:9px}' +
-    '.usl summary small{font-weight:400;color:var(--muted,#6B6B70);font-size:13px;margin-left:6px}' +
+    '.usl summary small{font-weight:400;color:var(--muted,#66666B);font-size:13px;margin-left:6px}' +
     '.usl ol{margin:10px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:8px;font-size:15px}' +
-    '.usl ol span{display:block;color:var(--muted,#6B6B70);font-size:13px}' +
+    '.usl ol span{display:block;color:var(--muted,#66666B);font-size:13px}' +
     '.usl ol a{color:var(--accent,#0B63E5);text-decoration:none;overflow-wrap:anywhere}.usl ol a:hover{text-decoration:underline}' +
-    '.usl-note{font-size:13px;color:var(--muted,#6B6B70);margin:10px 0 0}' +
+    '.usl-note{font-size:13px;color:var(--muted,#66666B);margin:10px 0 0}' +
     '.usl-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}' +
     '.usl-btns button,.usl-btns a{border:1px solid #D9D9D4;background:#fff;font:inherit;font-size:15px;font-weight:600;border-radius:10px;padding:9px 14px;cursor:pointer;color:var(--ink,#1D1D1F);text-decoration:none}' +
     '.usl-btns button:hover,.usl-btns a:hover{border-color:var(--accent,#0B63E5);color:var(--accent,#0B63E5)}' +
@@ -748,7 +748,7 @@
     '@media print{.usl .usl-napr,.usl .usl-watch,.usl .usl-sum,.usl .usl-btns,.usl summary:after{display:none!important}.usl details>*{display:block}.usl{background:none;border:1px solid #E6E6E1}}';
 
   function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-  CSS += '.usl-rynok{margin:-4px 0 0;font-size:13px;line-height:1.45;color:var(--muted,#6B6B70)}';
+  CSS += '.usl-rynok{margin:-4px 0 0;font-size:13px;line-height:1.45;color:var(--muted,#66666B)}';
   function injectCss(doc) {
     if (doc.getElementById('usl-css')) return;
     var s = doc.createElement('style'); s.id = 'usl-css'; s.textContent = CSS; doc.head.appendChild(s);

@@ -88,7 +88,7 @@
   function cveta(el) {
     var cs = W.getComputedStyle(el);
     function v(n, z) { return (cs.getPropertyValue(n) || '').trim() || z; }
-    return { ink: v('--ink', '#1D1D1F'), muted: v('--muted', '#6B6B70'), accent: v('--accent', '#0B63E5'),
+    return { ink: v('--ink', '#1D1D1F'), muted: v('--muted', '#66666B'), accent: v('--accent', '#0B63E5'),
       soft: v('--accent-soft', '#EAF1FD'), line: v('--line', '#E6E6E1'), surface: v('--surface', '#FFFFFF'),
       ok: v('--ok', '#16723F'), warn: v('--warn', '#9A5B00'), bad: v('--bad', '#B3261E'), font: cs.fontFamily || 'sans-serif' };
   }

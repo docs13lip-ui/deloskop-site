@@ -6,5 +6,5 @@
     <circle cx="44" cy="32" r="16" fill="none" stroke="#1D1D1F" stroke-width="4.5"/>
   </g>
   <text x="54" y="24" font-family="Onest, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="600" fill="#1D1D1F">Паспорт компании</text>
-  <text x="54" y="41" font-family="Onest, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#6B6B70">открытые данные о нас · делоскоп</text>
+  <text x="54" y="41" font-family="Onest, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#66666B">открытые данные о нас · делоскоп</text>
 </svg>

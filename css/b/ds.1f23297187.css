@@ -431,3 +431,9 @@ background:transparent;color:inherit;font-family:inherit;font-weight:600;font-si
 .podel__ok{margin:10px 0 0;min-height:1.4em;font-size:var(--t-13,13px);opacity:.72}
 @media (max-width:420px){.podel .podel__a{padding:0 14px}}
 @media (prefers-reduced-motion:reduce){.podel .podel__a{transition:none}}
+@media (max-width:640px),(pointer:coarse){
+a.avtor,.ist-t td>a,ol.toc li>a,.gde>a,.normy-komp details p>a,.izm__a>a,.kr-crumbs a,a.nazad,a.prt-tekst,a.glavnoe__vn,
+.check>a.tekst,.smena__dalee>a,.zakon a,main.doc td>a,main.pr td>a,button#demo.link{display:inline-block;box-sizing:border-box;min-height:44px;padding-top:12px;padding-bottom:12px;margin-top:-12px;margin-bottom:-12px}
+div.seg button,section.nk .rezh label,label.ls-g,article p>a.btn{min-height:44px}
+label.ls-g{align-items:center}label.ls-g input{margin-top:0}
+}

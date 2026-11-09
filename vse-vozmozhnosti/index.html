@@ -36,6 +36,9 @@
 <link rel="stylesheet" href="/css/glubina.css">
 <script>!function(d,t){try{t=localStorage.tema}catch(e){}t=t=="auto"?(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light"):t=="light"?t:"dark";d.dataset.theme=t;if(t=="dark"&&(t=document.querySelector("meta[name=theme-color]")))t.content="#111113"}(document.documentElement)</script>
 <style data-vv-rynok>/* glavnaya-a-v2: «Рынок сейчас» и «Сколько стоит ошибка» переехали с главной (стили — оттуда же). oshibka-svet-v1: --dark здесь задаёт только тёмная тема (на главной — свой :root), поэтому у плашки запасной #111113; рамка кнопки — через var(), чтобы тёмная тема не перекрашивала её в цвет линии на чёрном */
+/* peremennye-v1: --sect задан только на главной — здесь он был пуст, и отступы разделов витрины, «Рынка» и «Сколько стоит ошибка» падали в 0 */
+.vv{--sect:clamp(64px,9vw,112px)}
+@media (max-width:600px){.vv{--sect:44px}}
 .vv .sect{padding-block:var(--sect)}
 .rynok{padding-bottom:0}
 .rynok__nad{font-size:13px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}

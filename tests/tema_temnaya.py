@@ -27,8 +27,9 @@ import sys
 
 DARK = "[data-theme=dark]"
 # классы, которые ставятся на <html> (тот же элемент, что [data-theme]): index.html (rezhim-otcheta, zhdu-js, est-js),
-# js/zhivoj-indeks.js (zhi-io), js/shapka.js (tema-vt, tema-ik, is-locked) — сверяет tests/zhivoj_otchet.test.js
-KORNEVYE = ("rezhim-otcheta", "zhdu-js", "est-js", "zhi-io", "tema-vt", "tema-ik", "is-locked")
+# js/zhivoj-indeks.js (zhi-io), js/shapka.js (tema-vt, tema-ik, is-locked), js/shablon-pisma.js (pismo-js), js/metrika.js (est-ck) — сверяет
+# tests/zhivoj_otchet.test.js по всем js/*.js
+KORNEVYE = ("rezhim-otcheta", "zhdu-js", "est-js", "zhi-io", "tema-vt", "tema-ik", "is-locked", "pismo-js", "est-ck")
 KORNEVOJ = re.compile(r"\.(?:" + "|".join(KORNEVYE) + r")(?![\w-])")
 # токены, которые задаёт css/tema.css руками (общие имена ДС v1 и старых страниц) — их не трогаем
 TOKENY_RUKAMI = {

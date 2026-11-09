@@ -67,6 +67,14 @@ test('тёмный слой: классы на <html> находятся и на
   // все классы, которые скрипты ставят на <html>, — в списке генератора
   const kornevye = new Set(spisok.split(' '));
   const ist = INDEX + chitat('js/shapka.js') + chitat('js/zhivoj-indeks.js');
+  // и все js/*.js: 09.11 js/shablon-pisma.js ставил pismo-js на <html>, а генератор о нём не знал — поля письма в тёмной теме
+  // оставались кремовыми. Здесь — только явный documentElement или root = document.documentElement (у «d» в виджетах — свой узел)
+  const vse = fs.readdirSync(path.join(K, 'js')).filter((f) => f.endsWith('.js')).map((f) => chitat('js/' + f));
+  const izJs = vse.flatMap((t) => [...t.matchAll(/(?:documentElement|(\broot))\.classList\.add\(([^)]*)\)/g)]
+    .filter((m) => !m[1] || /\broot\s*=\s*document\.documentElement/.test(t)).flatMap((m) => m[2].match(/['"]([\w-]+)['"]/g) || []))
+    .map((x) => x.slice(1, -1));
+  assert.ok(izJs.includes('pismo-js'), 'нашли в js/: ' + izJs);
+  for (const k of izJs) assert.ok(kornevye.has(k), 'нет в KORNEVYE (js/): ' + k);
   const na = [...ist.matchAll(/(?:documentElement|root|\(document\.documentElement\)|\bd)\.classList\.add\(([^)]*)\)/g)]
     .flatMap((m) => m[1].match(/['"]([\w-]+)['"]/g) || []).map((x) => x.slice(1, -1));
   assert.ok(na.includes('rezhim-otcheta') && na.includes('tema-vt'), 'нашли классы: ' + na);

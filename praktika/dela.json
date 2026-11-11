@@ -12,11 +12,11 @@
     "115-fz/zsk-zony-riska/index.html": ["krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "zagraditelnye-komissii", "isklyuchili-iz-egryul-dolg-s-direktora", "zsk-dolzhnika-sudebnyj-prikaz", "kriterii-zsk-ne-otmenit-vs"],
     "115-fz/proverit-kontragenta-zsk-po-inn/index.html": ["kriterii-zsk-ne-otmenit-vs"],
     "nalogi/statya-54-1-nk-prostymi-slovami/index.html": ["remont-za-rubezhom-nds-pri-vvoze-vs-2026", "utochnenka-i-peni-ens", "podarok-ot-roditelya-ip-ndfl-vs-2026", "razryv-nds-v-cepochke-krascvetmet", "vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke", "droblenie-uplachennaya-usn-zachityvaetsya", "povtornaya-vyezdnaya-proverka-vs-2026", "podryadchik-ne-vystavil-schet-fakturu"],
-    "nalogi/nds-postavshchika-na-usn-po-inn/index.html": ["remont-za-rubezhom-nds-pri-vvoze-vs-2026", "nds-postavshchika-usn-cena-dogovora", "podarok-ot-rodstvennika-usn-vs-2026", "podryadchik-ne-vystavil-schet-fakturu"],
+    "nalogi/nds-postavshchika-na-usn-po-inn/index.html": ["sravnenie-cen-bez-nds-usn-zakupka", "remont-za-rubezhom-nds-pri-vvoze-vs-2026", "nds-postavshchika-usn-cena-dogovora", "podarok-ot-rodstvennika-usn-vs-2026", "podryadchik-ne-vystavil-schet-fakturu"],
     "nalogi/nagruzka/index.html": ["utochnenka-i-peni-ens", "podarok-ot-rodstvennika-usn-vs-2026", "podarok-ot-roditelya-ip-ndfl-vs-2026", "droblenie-uplachennaya-usn-zachityvaetsya", "zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/nagruzka-po-otraslyam-2025/index.html": ["zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/priznaki-tehnicheskoj-kompanii/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke"],
-    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["garantiya-sverh-neustojki-vernut", "ustnyy-kartel-dohod-v-byudzhet-vs-2026", "svyazannye-kompanii-na-torgah-kartel-vs-2026", "kontejnery-na-selhozzemle-vs-2026", "nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026", "garantiya-vyplachena-otkaz-zakazchika-nezakonen", "zaem-inostrannoj-kompanii-schet-s-vs-2026"],
+    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["sravnenie-cen-bez-nds-usn-zakupka", "garantiya-sverh-neustojki-vernut", "ustnyy-kartel-dohod-v-byudzhet-vs-2026", "svyazannye-kompanii-na-torgah-kartel-vs-2026", "kontejnery-na-selhozzemle-vs-2026", "nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026", "garantiya-vyplachena-otkaz-zakazchika-nezakonen", "zaem-inostrannoj-kompanii-schet-s-vs-2026"],
     "nalogi/nedruzhestvennye-gosudarstva-perechen/index.html": ["zaem-inostrannoj-kompanii-schet-s-vs-2026"],
     "pasport/index.html": ["ustnyy-kartel-dohod-v-byudzhet-vs-2026", "svyazannye-kompanii-na-torgah-kartel-vs-2026", "proverka-kontragenta-na-datu-sdelki"],
     "nalogi/svezhest-dannyh-proverki-kontragenta/index.html": ["proverka-kontragenta-na-datu-sdelki"],
@@ -29,6 +29,69 @@
     "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"]
   },
   "razbory": [
+    {
+      "razdel": "nalogi",
+      "slug": "sravnenie-cen-bez-nds-usn-zakupka",
+      "h1": "Вы на упрощёнке, а заказчик сравнил цены без НДС: Верховный суд — так нельзя",
+      "title": "Заказчик сравнил цены без НДС: ВС встал на сторону упрощёнки",
+      "description": "Верховный суд: в закупке по 223-ФЗ цены участников на УСН нельзя сравнивать с ценами плательщиков НДС «без налога». Что это значит для поставщика и что делать.",
+      "zapros": "заказчик сравнил цены без ндс участник на усн закупка 223-фз",
+      "data": "2026-11-11",
+      "minut": 4,
+      "lid": "«Я на упрощёнке и без НДС. Подаю на закупку дешевле всех — а выигрывает конкурент с НДС: заказчик вычел из его цены налог и сравнил „чистые“ суммы. Так можно?» Верховный суд ответил: в закупке по 223-ФЗ — нет, цена для всех одна.",
+      "dela": [
+        {
+          "sud": "Верховный суд РФ, Судебная коллегия по экономическим спорам",
+          "sud_kratko": "ВС",
+          "akt": "Определение",
+          "nomer": "№ 308-ЭС26-2840",
+          "data": "2026-07-31",
+          "delo": "Иск организатора закупки к УФАС по Краснодарскому краю об отмене решения и предписания: оценка заявок участников на УСН и плательщиков НДС «без учёта НДС» (№ А32-65269/2024)",
+          "na_konu": "Порядок оценки заявок в закупке по 223-ФЗ: начальная цена 1 105 500 ₽ с НДС; при сравнении «без НДС» упрощенцу не хватало скидки до 18,03 %",
+          "na_konu_kratko": "одна цена для всех",
+          "itog": "В пользу УФАС",
+          "itog_nov": false,
+          "istochnik": "https://kad.arbitr.ru/",
+          "istochnik_podpis": "kad.arbitr.ru — поиск по номеру дела А32-65269/2024",
+          "sverka": "2026-11-11",
+          "sverka_vid": "kopiya"
+        }
+      ],
+      "knopka": {
+        "zagolovok": "Идёте на закупку — сначала проверьте заказчика",
+        "tekst": "Проверка по ИНН: суды, долги у приставов и признаки банкротства — на дату проверки.",
+        "knopka": "Проверить заказчика по ИНН",
+        "url": "/",
+        "cel": "razbor42_check"
+      },
+      "zakon": [
+        [
+          "п. 2 ч. 1, ч. 6 ст. 3, ч. 10 ст. 4 Федерального закона № 223-ФЗ — равноправие и отсутствие дискриминации, одинаковые требования ко всем участникам, порядок оценки заявок",
+          "ред. на 11.11.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_116964/"
+        ],
+        [
+          "ст. 17, ч. 2, 18, 19 ст. 18.1 Федерального закона № 135-ФЗ «О защите конкуренции» — запрет ограничивать конкуренцию на торгах, кто и когда может жаловаться, приостановка закупки и запрет заключать договор до решения",
+          "ред. на 11.11.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_61763/"
+        ],
+        [
+          "Обзор судебной практики ВС РФ по 223-ФЗ от 16.05.2018, п. 6",
+          "",
+          "https://vsrf.ru/"
+        ],
+        [
+          "Определение СКЭС ВС РФ № 308-ЭС26-2840 по делу № А32-65269/2024 (резолютивная часть — 29.07.2026, полный текст — 31.07.2026) — карточка дела в банке решений Верховного суда",
+          "",
+          "https://vsrf.ru/"
+        ]
+      ],
+      "pohozhie": [
+        "nds-postavshchika-usn-cena-dogovora",
+        "svyazannye-kompanii-na-torgah-kartel-vs-2026",
+        "garantiya-sverh-neustojki-vernut"
+      ]
+    },
     {
       "razdel": "dogovory",
       "slug": "garantiya-sverh-neustojki-vernut",
@@ -87,6 +150,7 @@
         ]
       ],
       "pohozhie": [
+        "sravnenie-cen-bez-nds-usn-zakupka",
         "garantiya-vyplachena-otkaz-zakazchika-nezakonen",
         "ustnyy-kartel-dohod-v-byudzhet-vs-2026",
         "svyazannye-kompanii-na-torgah-kartel-vs-2026"
@@ -1084,7 +1148,8 @@
         ["Постановление КС РФ от 25.11.2025 № 41-П", "", "https://www.consultant.ru/document/cons_doc_LAW_519609/"],
         ["п. 17 Постановления Пленума ВАС РФ от 30.05.2014 № 33 — НДС включён в цену, если договор не говорит иное", "", "https://www.consultant.ru/document/cons_doc_LAW_164585/"]
       ],
-      "pohozhie": ["podryadchik-ne-vystavil-schet-fakturu", "vokfors-rekonstrukciya"]
+      "pohozhie": [
+        "sravnenie-cen-bez-nds-usn-zakupka","podryadchik-ne-vystavil-schet-fakturu", "vokfors-rekonstrukciya"]
     },
     {
       "razdel": "nalogi",

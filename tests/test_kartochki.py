@@ -938,7 +938,8 @@ class TestKartochkiV2(unittest.TestCase):
         r = _gazprom_kak_v_api()
         r["dossier"]["sections"][0]["rows"][1] = ["Руководит с", "01.07.2026 (3 месяца)"]
         V = K.vyvody(K.iz_check(r))
-        self.assertIn(("V18", "warn", "Руководитель сменился 3" + NB + "месяца назад"), [(x["kod"], x["ton"], x["tekst"]) for x in V])
+        self.assertIn(("V18", "warn", "Руководитель сменился в" + NB + "июле" + NB + "2026" + NB + "года"),  # rukovod-mesyac-v2
+                      [(x["kod"], x["ton"], x["tekst"]) for x in V])
 
     def test_rukovodit_s_ranshe_registracii_ne_berem(self):
         r = _gazprom_kak_v_api()

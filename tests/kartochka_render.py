@@ -988,7 +988,8 @@ def vyvody(k):
     rs = vozrast_mes({"reg_date": k.get("rukovodit_s")}, na) if k.get("rukovodit_s") and k.get("egrul_data") else None
     if rs is not None and mes is not None and mes >= 12:
         if rs <= 6:
-            out.append(_v("V18", "warn", "Руководитель сменился %s" % (mesyac_predl(k["rukovodit_s"]) if rs < 1 else "%d%s%s назад" % (rs, NB, plural(rs, "месяц", "месяца", "месяцев"))), "ЕГРЮЛ", k["egrul_data"]))
+            # rukovod-mesyac-v2 ([Ночные-2] 11.11): всегда месяц и год — «N месяцев назад» на статичной странице стареет
+            out.append(_v("V18", "warn", "Руководитель сменился %s" % mesyac_predl(k["rukovodit_s"]), "ЕГРЮЛ", k["egrul_data"]))
         elif rs >= 36:
             let = rs // 12
             out.append(_v("V19", "ok", "Руководитель тот же %d%s%s — с%s%d года" % (let, NB, plural(let, "год", "года", "лет"), NB, k["rukovodit_s"].year), "ЕГРЮЛ", k["egrul_data"]))
@@ -3778,13 +3779,41 @@ _RUK_MESYAC = re.compile(r"сменился в(&#160;|\u00a0| )этом меся
 _EGRUL_DEN = re.compile(r"ЕГРЮЛ · сведения на(?:&#160;|\u00a0| )(\d\d\.\d\d\.\d{4})")
 
 
+# rukovod-mesyac-v2 ([Ночные-2] 11.11): «сменился 5 месяцев назад» на статичной странице через квартал неверно.
+# Даты смены в HTML нет; по дню сведений ЕГРЮЛ и числу полных месяцев (vozrast_mes) дата смены лежит в окне
+# [день − (N+1) мес. + 1 день; день − N мес.] — называем его месяцами: «в июне 2026 года» или «в мае или июне 2026 года».
+# Освежённые карточки получают точный месяц из ответа API (V18 — mesyac_predl).
+_RUK_NAZAD = re.compile(r"сменился (\d+)(&#160;|&nbsp;|\u00a0| )(?:месяц|месяца|месяцев) назад")
+
+
+def _minus_mes(d, n):
+    y, m = divmod(d.year * 12 + d.month - 1 - n, 12)
+    m += 1
+    dni = [31, 29 if (y % 4 == 0 and (y % 100 or y % 400 == 0)) else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][m - 1]
+    return d.replace(year=y, month=m, day=min(d.day, dni))
+
+
+def mesyac_okno(den, n, prob=NB):
+    """День сведений и N полных месяцев → «в июне 2026 года» / «в мае или июне 2026 года» (пробел — prob)."""
+    hi = _minus_mes(den, n)
+    lo = _minus_mes(den, n + 1) + dt.timedelta(days=1)
+    if (lo.year, lo.month) == (hi.year, hi.month):
+        return mesyac_predl(hi).replace(NB, prob)
+    if lo.year == hi.year:
+        return prob.join(["в", MESYACY_PREDL[lo.month - 1], "или", MESYACY_PREDL[hi.month - 1], str(hi.year), "года"])
+    return prob.join(["в", MESYACY_PREDL[lo.month - 1], str(lo.year), "года", "или", MESYACY_PREDL[hi.month - 1], str(hi.year), "года"])
+
+
 def pochinit_ruk_mesyac(t):
-    if not _RUK_MESYAC.search(t):
-        return t
     m = _EGRUL_DEN.search(t)
     if not m:
         return t
-    return _RUK_MESYAC.sub(lambda x: "сменился менее чем за" + x.group(1) + "месяц до" + x.group(1) + m.group(1), t)
+    if _RUK_MESYAC.search(t):
+        t = _RUK_MESYAC.sub(lambda x: "сменился менее чем за" + x.group(1) + "месяц до" + x.group(1) + m.group(1), t)
+    if _RUK_NAZAD.search(t):
+        den = dt.datetime.strptime(m.group(1), "%d.%m.%Y").date()
+        t = _RUK_NAZAD.sub(lambda x: "сменился " + mesyac_okno(den, int(x.group(1)), x.group(2)), t)
+    return t
 
 
 def pochinit_rol_znaka(t):

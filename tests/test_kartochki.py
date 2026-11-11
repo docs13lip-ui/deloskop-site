@@ -2085,7 +2085,7 @@ class TestDatyIzReestraV1(unittest.TestCase):
         h = K.pasport_vhod_html("0012345678", 490)
         self.assertIn("У" + NB + "каждого факта" + NB + "— источник и" + NB + "дата, расчёты" + NB + "— по" + NB + "открытой методике.", h)
         # beta-data-v1: дату вписывает сборщик из tarify.json → beta_do (tests/beta.py, sroki)
-        self.assertIn("<!--v-bete--><a href=\"/pasport/kontragent/?inn=0012345678\" rel=\"nofollow\" data-goal=\"kartochka_pasport_vhod\">В" + NB + "бете бесплатно<span data-beta-srok></span>" + NB + "→</a><!--/v-bete-->", h)
+        self.assertIn("<!--v-bete--><a href=\"/pasport/kontragent/?inn=0012345678\" rel=\"nofollow\" data-goal=\"kartochka_pasport_vhod\">Сейчас бесплатно<span data-beta-srok></span>" + NB + "→</a><!--/v-bete-->", h)
         self.assertIn("Полный Паспорт на" + NB + "дату сделки" + NB + "→", h)
         self.assertNotIn("490", h)  # kartochki-bez-ceny-v1: цены нет и в скрытой половине
         self.assertNotIn("«Старт»", h)
@@ -2325,6 +2325,36 @@ class TestVhodyashchie(unittest.TestCase):
         for i, (s, e_) in svyazi.items():
             self.assertNotIn(i, [x["inn"] for x in s + e_], "на себя не ссылаемся")
             self.assertEqual(len({x["inn"] for x in s + e_}), len(s + e_), "без повторов")
+
+
+class TestLinzaMelochiV1(unittest.TestCase):
+    """linza-melochi-v1 (ТЗ [Арт-директор] 11.11): регион — по Конституции; вход в Паспорт — «Сейчас бесплатно»."""
+
+    def test_region_vid(self):
+        self.assertEqual(K.region_vid("Ханты-Мансийский Автономный округ - Югра"), "Ханты-Мансийский автономный округ — Югра")
+        self.assertEqual(K.region_vid("Ямало-Ненецкий АО"), "Ямало-Ненецкий АО")
+        self.assertEqual(K.region_vid("Москва"), "Москва")
+        # адрес хаба не меняется
+        self.assertEqual(K.slug(K.region_vid("Ханты-Мансийский Автономный округ - Югра")),
+                         K.slug("Ханты-Мансийский Автономный округ - Югра"))
+
+    def test_pochinit_region(self):
+        t = "› Ханты-Мансийский Автономный округ - Югра › ; Чукотский Автономный округ"
+        x = K.pochinit_region(t)
+        self.assertEqual(x, "› Ханты-Мансийский автономный округ — Югра › ; Чукотский автономный округ")
+        self.assertEqual(K.pochinit_region(x), x)
+
+    def test_net_syrogo_regiona_na_kartochkah(self):
+        papka = os.path.join(K.KOREN, "company")
+        for d in os.listdir(papka):
+            put = os.path.join(papka, d, "index.html")
+            if os.path.isfile(put):
+                with open(put, encoding="utf-8") as fh:
+                    self.assertNotIn("Автономный округ", fh.read(), d)
+
+    def test_vhod_seichas_besplatno(self):
+        self.assertIn("Сейчас бесплатно", K.pasport_vhod_html("0012345678"))
+        self.assertNotIn("бете", K.PASPORT_VHOD_BETA)
 
 
 if __name__ == "__main__":

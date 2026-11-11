@@ -249,7 +249,7 @@ def kartochki_na_diske(koren=KOREN):
         if not org or org.get("taxID") != m.group(1) or not org.get("name"):
             continue
         adr = org.get("address") or {}
-        k = {"inn": m.group(1), "name": org["name"], "region": adr.get("addressRegion") or "",
+        k = {"inn": m.group(1), "name": org["name"], "region": region_vid(adr.get("addressRegion") or ""),
              "gorod": adr.get("addressLocality") or "", "okved": "", "fakty": {}, "_papka": d, "_s_diska": True}
         md = re.search(r'<meta name="description" content="([^"]*)"', t)
         z = _DOHOD.search(md.group(1)) if md else None
@@ -571,10 +571,12 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         t2 = pochinit_pered(t2)  # kartochki-unik-v2: «Перед оплатой» — по признакам страницы, как у новых
         t2 = pochinit_razbor(t2)  # kartochki-unik-v2: «… в цифрах» — с названием, как у новых
         t2 = pochinit_vozrast(t2, den)  # vozrast-segodnya-v1: возраст — на сегодня, число пересчитывает и браузер
+        t2 = pochinit_region(t2)  # linza-melochi-v1: «…автономный округ — Югра», как у новых
         t2 = pochinit_rol_znaka(t2)  # kartochki-rol-znaka-v1: точке вывода — role="img", подпись читается вслух
         t2 = balans_vyvody(t2)  # kartochki-balans-vyvody-v1: под таблицами баланса — выводы из их чисел, как у новых
         t2 = ramka_imya(t2)  # kartochki-ramka-imya-v1: служебные фразы — в одном предложении с названием компании, как у новых
         t2 = ramka_daty(t2)  # kartochki-ramka-daty-v1: дата в «…здесь — выводы…», дата и имя в строке набора ФНС, как у новых
+        t2 = linza_kartochki(t2)  # linza-indeksa-v1: плашка Индекса — «Линзой» (кольцо 1–99 и кнопка), как у новых
         x["_noindex"] = noindex_html(t2)
         if BEZ_OBOLOCHKI in t2:
             # «голое» тело из комплекта — оболочка той же sobrat_stranicu

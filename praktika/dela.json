@@ -16,7 +16,7 @@
     "nalogi/nagruzka/index.html": ["utochnenka-i-peni-ens", "podarok-ot-rodstvennika-usn-vs-2026", "podarok-ot-roditelya-ip-ndfl-vs-2026", "droblenie-uplachennaya-usn-zachityvaetsya", "zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/nagruzka-po-otraslyam-2025/index.html": ["zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/priznaki-tehnicheskoj-kompanii/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke"],
-    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["ustnyy-kartel-dohod-v-byudzhet-vs-2026", "svyazannye-kompanii-na-torgah-kartel-vs-2026", "kontejnery-na-selhozzemle-vs-2026", "nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026", "garantiya-vyplachena-otkaz-zakazchika-nezakonen", "zaem-inostrannoj-kompanii-schet-s-vs-2026"],
+    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["garantiya-sverh-neustojki-vernut", "ustnyy-kartel-dohod-v-byudzhet-vs-2026", "svyazannye-kompanii-na-torgah-kartel-vs-2026", "kontejnery-na-selhozzemle-vs-2026", "nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026", "garantiya-vyplachena-otkaz-zakazchika-nezakonen", "zaem-inostrannoj-kompanii-schet-s-vs-2026"],
     "nalogi/nedruzhestvennye-gosudarstva-perechen/index.html": ["zaem-inostrannoj-kompanii-schet-s-vs-2026"],
     "pasport/index.html": ["ustnyy-kartel-dohod-v-byudzhet-vs-2026", "svyazannye-kompanii-na-torgah-kartel-vs-2026", "proverka-kontragenta-na-datu-sdelki"],
     "nalogi/svezhest-dannyh-proverki-kontragenta/index.html": ["proverka-kontragenta-na-datu-sdelki"],
@@ -25,10 +25,73 @@
     "nalogi/izmeneniya-egryul-kontragenta/index.html": ["reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p"],
     "nalogi/kody-statusa-egryul/index.html": ["spisali-dolg-subsidiarka", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p"],
     "nalogi/nedostovernyj-adres-egryul/index.html": ["kontejnery-na-selhozzemle-vs-2026", "isklyuchili-iz-egryul-dolg-s-direktora"],
-    "nalogi/skolko-platit-vpered-neznakomoj-kompanii/index.html": ["spisali-dolg-subsidiarka", "nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "isklyuchili-iz-egryul-dolg-s-direktora", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026", "garantiya-vyplachena-otkaz-zakazchika-nezakonen"],
+    "nalogi/skolko-platit-vpered-neznakomoj-kompanii/index.html": ["garantiya-sverh-neustojki-vernut", "spisali-dolg-subsidiarka", "nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "isklyuchili-iz-egryul-dolg-s-direktora", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026", "garantiya-vyplachena-otkaz-zakazchika-nezakonen"],
     "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"]
   },
   "razbory": [
+    {
+      "razdel": "dogovory",
+      "slug": "garantiya-sverh-neustojki-vernut",
+      "h1": "Заказчик взял по гарантии больше, чем неустойка: разницу вернут",
+      "title": "Заказчик взял по гарантии больше неустойки: разницу вернут — ВС",
+      "description": "Верховный суд: сумма требования по банковской гарантии должна быть обоснована нарушениями поставщика. Лишнее — неосновательное обогащение заказчика.",
+      "zapros": "заказчик получил по банковской гарантии больше неустойки вернуть разницу",
+      "data": "2026-11-11",
+      "minut": 4,
+      "lid": "Поставщик сорвал госконтракт. Заказчик расторг его и получил с банка по гарантии 10,3 млн ₽, а неустойки по контракту — около 1,4 млн ₽. Остальное пропало? Верховный суд 23.10.2026 ответил: нет, разницу заказчик вернёт.",
+      "dela": [
+        {
+          "sud": "Верховный суд РФ, Судебная коллегия по экономическим спорам",
+          "sud_kratko": "ВС",
+          "akt": "Определение",
+          "nomer": "№ 305-ЭС26-8011",
+          "data": "2026-10-23",
+          "delo": "Иск поставщика к государственному заказчику о возврате суммы, полученной по банковской гарантии сверх неустойки и штрафов (№ А40-68468/2025)",
+          "na_konu": "8 845 169,86 ₽ неосновательного обогащения и 432 481,73 ₽ процентов; по гарантии выплачено 10 272 393,39 ₽",
+          "na_konu_kratko": "≈ 8,8 млн ₽ вернуть",
+          "itog": "В пользу поставщика",
+          "itog_nov": false,
+          "istochnik": "https://kad.arbitr.ru/",
+          "istochnik_podpis": "kad.arbitr.ru — поиск по номеру дела А40-68468/2025",
+          "sverka": "2026-11-11",
+          "sverka_vid": "kopiya"
+        }
+      ],
+      "knopka": {
+        "zagolovok": "Работаете под гарантию — сначала проверьте заказчика",
+        "tekst": "Проверка по ИНН: суды, долги у приставов и признаки банкротства — на дату проверки.",
+        "knopka": "Проверить заказчика по ИНН",
+        "url": "/",
+        "cel": "razbor43_check"
+      },
+      "zakon": [
+        [
+          "ст. 368, 370, 374, 375.1, 376, 379 ГК РФ — независимая гарантия: требование бенефициара, независимость от договора, ответственность бенефициара, регресс к принципалу",
+          "ред. на 11.11.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_5142/"
+        ],
+        [
+          "ст. 329 ГК РФ — способы обеспечения исполнения обязательств",
+          "ред. на 11.11.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_5142/"
+        ],
+        [
+          "ст. 395, 1102 ГК РФ — проценты за пользование чужими деньгами, неосновательное обогащение",
+          "ред. на 11.11.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_9027/"
+        ],
+        [
+          "Определение СКЭС ВС РФ от 23.10.2026 № 305-ЭС26-8011 по делу № А40-68468/2025 — карточка дела в банке решений Верховного суда",
+          "",
+          "https://vsrf.ru/"
+        ]
+      ],
+      "pohozhie": [
+        "garantiya-vyplachena-otkaz-zakazchika-nezakonen",
+        "ustnyy-kartel-dohod-v-byudzhet-vs-2026",
+        "svyazannye-kompanii-na-torgah-kartel-vs-2026"
+      ]
+    },
     {
       "razdel": "dogovory",
       "slug": "ustnyy-kartel-dohod-v-byudzhet-vs-2026",
@@ -703,6 +766,7 @@
         ]
       ],
       "pohozhie": [
+        "garantiya-sverh-neustojki-vernut",
         "zalog-odna-veshch-iz-pyati-vs-2026",
         "kompensaciya-poter-406-1-vs-2026",
         "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026"

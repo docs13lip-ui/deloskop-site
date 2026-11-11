@@ -15,7 +15,7 @@ test('Разбор № 41: данные — ВС № 309-ЭС25-15678 от 22.05
   const D = JSON.parse(chitat('praktika/dela.json'));
   const r = D.razbory.find((x) => x.slug === SLUG);
   assert.ok(r && r.razdel === 'dogovory');
-  assert.strictEqual(D.razbory[0].slug, SLUG, 'новые разборы — первыми');
+  assert.ok(D.razbory.slice(0, 2).some((x) => x.slug === SLUG), 'новые разборы — первыми'); // razbor43-v1 (11.11): № 43 встал первым
   assert.deepStrictEqual(r.dela.map((d) => d.nomer + ' ' + d.data + ' ' + d.itog + ' ' + d.sverka_vid), ['№ 309-ЭС25-15678 2026-05-22 В пользу прокуратуры kopiya']);
   assert.ok(r.dela[0].delo.includes('А47-10662/2024'));
   assert.ok(!/«(Заря|СКС|ВМ Капитал|ОренСтройМонтаж|СтройГрупп)»/.test(JSON.stringify(r) + chitat('tests/praktika/' + SLUG + '.html')), 'названия компаний не даём');

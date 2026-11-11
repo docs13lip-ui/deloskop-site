@@ -437,6 +437,18 @@ def okved_razdel(okved):
 
 
 # ---------------------------------------------------------------- из ответа /api/check → карточка
+# kartochki-checko-vorota-v1 ([Ночные-2] 12.11): с 12.11 сервер берёт суды, ЕФРСБ и приставов из Checko
+# (источник «… (через Checko)»). Публичная карточка /company/ — это показ всем, а не клиенту в отчёте: пока [Право]
+# не ответило на ✎ «Checko: оферта п. 5.7 / п. 5.4» (claude/Право_✎_Checko_оферта_п5.7_12.11.md), такие сведения
+# на карточки не идут — факт остаётся «не проверяли». Включает [Право]: True — одной строкой.
+CHECKO_NA_KARTOCHKAH = False
+
+
+def posrednik_publichno(istochnik):
+    """True, если сведения с этим источником можно показать на публичной карточке."""
+    return CHECKO_NA_KARTOCHKAH or "checko" not in str(istochnik or "").lower()
+
+
 # Сигналы /api/check узнаём по заголовку; код факта нужен для правил выводов (Данные §2, V01–V22).
 SIGNALY = [
     ("shtat", re.compile(r"численност|сотрудник|работник", re.I)),
@@ -611,7 +623,7 @@ def iz_check(r):
     # Берём только ответ с датой сведений и ясным состоянием; not_checked и «нет даты» — факта нет («не проверяли»).
     fb = (r.get("damia") or {}).get("fssp")
     if "fssp" not in k["fakty"] and isinstance(fb, dict) and fb.get("sostoyanie") in ("found", "not_found") \
-            and data_iz(fb.get("data_svedeniy")):
+            and data_iz(fb.get("data_svedeniy")) and posrednik_publichno(fb.get("istochnik")):
         dn = fb.get("dannye") if isinstance(fb.get("dannye"), dict) else {}
         nashli = fb["sostoyanie"] == "found"
         k["fakty"]["fssp"] = {

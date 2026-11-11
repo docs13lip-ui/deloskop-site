@@ -2301,6 +2301,32 @@ class TestFsspIzDamia(unittest.TestCase):
         self.assertNotIn("fssp", K.iz_check(O.zapis(3))["fakty"])
 
 
+class TestCheckoVorota(unittest.TestCase):
+    """kartochki-checko-vorota-v1: сведения «(через Checko)» на публичные карточки — только после ответа [Право]."""
+    def zap(self, istochnik):
+        z = TestFsspIzDamia.zap(None, "found", ostatok=1000000)
+        z["damia"]["fssp"]["istochnik"] = istochnik
+        return z
+
+    def test_checko_ne_na_kartochke(self):
+        import kartochka_render as R
+        self.assertFalse(R.CHECKO_NA_KARTOCHKAH)
+        k = K.iz_check(self.zap("ФССП (через Checko)"))
+        self.assertNotIn("fssp", k["fakty"])
+        self.assertNotIn("V12", [x["kod"] for x in K.vyvody(k)])
+
+    def test_drugoj_posrednik_kak_byl(self):
+        self.assertIn("fssp", K.iz_check(self.zap("ФССП (через DaMIA)"))["fakty"])
+
+    def test_pravo_vklyuchilo(self):
+        import kartochka_render as R
+        R.CHECKO_NA_KARTOCHKAH = True
+        try:
+            self.assertIn("fssp", K.iz_check(self.zap("ФССП (через Checko)"))["fakty"])
+        finally:
+            R.CHECKO_NA_KARTOCHKAH = False
+
+
 class TestVhodyashchie(unittest.TestCase):
     """kartochki-vhod-v1: у каждой открытой карточки — не меньше 2 входящих ссылок с других карточек."""
 

@@ -1,5 +1,5 @@
 /* Админка: экран «Сегодня» — pult-statistika-v1 (план [Маркетинг] 24.10, разд. 3.2).
- * Один экран, который владелец смотрит каждый день: 8 плиток — Люди · Проверки по ИНН · Откуда приходят · Путь посетителя ·
+ * Один экран, который владелец смотрит каждый день: «одна цифра» (dovedeno-vernulis-v1, 11.11) во всю ширину + 8 плиток — Люди · Проверки по ИНН · Откуда приходят · Путь посетителя ·
  * Что читают · Посты · Поиск Яндекса · Голос клиента. Правило то же, что у «Сейчас»: цифра крупно → что это значит → что сделать.
  *
  * Данные — одной сводкой GET /api/admin/pult/segodnya (контракт — ниже), без
@@ -11,6 +11,8 @@
  *
  * Контракт сводки (все поля можно опустить — плитка станет серой):
  *  { est: true, sformirovano: ISO, chas_msk: 0–23,
+ *    cifra:    { dovedeno_segodnya, dovedeno_vchera, dovedeno_nedelya, dovedeno_pred_nedelya, vernulis_nedelya } — события
+ *              proverka_dovedena / vozvrat_1_7 из sobytiya_den (сегодня, вчера, дни 0–6, дни 7–13, возвраты за дни 0–6)
  *    lyudi:    { segodnya, vchera_k_chasu, vchera, nedelya, proshlaya_nedelya, zahody_nedelya },
  *    proverki: { segodnya, gosti, voshedshie, limit, porog, vchera, nedelya },
  *    otkuda:   { poisk_yandex: n, vk: n, … }   — заходы извне за 7 дней по виду источника счётчика (vnutri не входит)
@@ -42,6 +44,29 @@
   }
   function proc(chast, celoe) { return celoe > 0 ? Math.round(chast * 100 / celoe) : 0; }
   function seraya(zag, tekst, delat) { return { cvet: "seryj", zag: zag, cifra: "—", podpis: "", smysl: tekst, delat: delat || "", stroki: [] }; }
+
+  /* 0. Одна цифра недели (11.11): сколько людей довели проверку до ответа и сколько вернулись в течение 7 дней.
+   * d = { dovedeno_segodnya, dovedeno_vchera, dovedeno_nedelya, dovedeno_pred_nedelya, vernulis_nedelya } — суммы событий
+   * proverka_dovedena и vozvrat_1_7 по дням (js/nedavnie.js: раз в день на устройство). Доля возврата — оценка:
+   * возвраты за 7 дней к числу доведших за 7 дней до них; при доведших < MALO — «мало данных», без процента. */
+  function plCifra(d, S) {
+    var T = S.cifra;
+    if (!d || num(d.dovedeno_segodnya) === null) return seraya(T.zag, T.net, T.net_delat);
+    var seg = +d.dovedeno_segodnya, ned = num(d.dovedeno_nedelya) || 0, pred = num(d.dovedeno_pred_nedelya),
+      vern = num(d.vernulis_nedelya);
+    var p = { cvet: "ok", zag: T.zag, cifra: chislo(seg), podpis: fmt(T.podpis, { n: seg }), stroki: [], delat: T.delat_ok, primechanie: T.ocenka };
+    p.smysl = fmt(T.smysl, { vchera: num(d.dovedeno_vchera) !== null ? +d.dovedeno_vchera : S.net_dannyh, nedelya: ned,
+      vernulis: vern !== null ? vern : S.net_dannyh });
+    p.stroki = [{ tekst: T.stroka_dovedeno, n: ned, proc: null }, { tekst: T.stroka_vernulis, n: vern, proc: null }];
+    if (vern !== null && pred !== null && pred >= MALO) {
+      var dol = Math.min(100, proc(vern, pred));
+      p.stroki[1].proc = dol;
+      p.smysl += " " + fmt(T.dolya, { proc: dol, pred: pred });
+      if (dol < 10) { p.cvet = "warn"; p.delat = T.delat_malo_vernulis; }
+    } else p.smysl += " " + T.malo;
+    if (ned === 0 && seg === 0) { p.cvet = "seryj"; p.delat = T.pusto_delat; }
+    return p;
+  }
 
   /* 1. Люди */
   function plLyudi(d, S) {
@@ -173,7 +198,7 @@
     return p;
   }
 
-  var PLITKI = [["lyudi", plLyudi], ["proverki", plProverki], ["otkuda", plOtkuda], ["voronka", plVoronka],
+  var PLITKI = [["cifra", plCifra], ["lyudi", plLyudi], ["proverki", plProverki], ["otkuda", plOtkuda], ["voronka", plVoronka],
     ["chitayut", plChitayut], ["posty", plPosty], ["poisk", plPoisk], ["golos", plGolos]];
 
   // сводка → 8 плиток; сводки нет (сервер старый) — 8 серых с одной причиной
@@ -189,7 +214,7 @@
   }
 
   var api = { PERIOD_MS: PERIOD_MS, MALO: MALO, fmt: fmt, sklon: sklon, plitki: plitki, plLyudi: plLyudi, plProverki: plProverki,
-    plOtkuda: plOtkuda, plVoronka: plVoronka, plChitayut: plChitayut, plPosty: plPosty, plPoisk: plPoisk, plGolos: plGolos,
+    plCifra: plCifra, plOtkuda: plOtkuda, plVoronka: plVoronka, plChitayut: plChitayut, plPosty: plPosty, plPoisk: plPoisk, plGolos: plGolos,
     tipStranicy: tipStranicy, bezZhargona: bezZhargona, vremyaMsk: vremyaMsk };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   if (typeof document === "undefined") return;
@@ -208,7 +233,7 @@
       '</span><span class="sg__n num">' + n + "</span>" + pr + "</li>";
   }
   function risovat(p, S) {
-    return '<div class="pl pl--' + p.cvet + '" data-pl="' + esc(p.id || "") + '">' +
+    return '<div class="pl pl--' + p.cvet + (p.id === "cifra" ? " sg-glavnaya" : "") + '" data-pl="' + esc(p.id || "") + '">' +
       '<p class="sg__zag">' + esc(p.zag) + (p.metka ? ' <span class="sg__metka">' + esc(p.metka) + "</span>" : "") + "</p>" +
       '<div class="pl__top"><span class="pl__dot" role="img" aria-label="' + esc(SLOVO[p.cvet]) + '"></span><b class="pl__n num">' + esc(p.cifra) + "</b></div>" +
       (p.podpis ? '<p class="pl__p">' + esc(p.podpis) + "</p>" : "") +

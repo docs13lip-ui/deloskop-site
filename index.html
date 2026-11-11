@@ -396,7 +396,7 @@ footer a{color:var(--ink2)}
 <!-- vizual-v3.0a: стили и скрипты главной — пятью файлами вместо 17 (partials/sborka.json, tests/sobrat_js.py) -->
 <link rel="stylesheet" href="/css/b/ds.bdf62ed606.css">
 <link rel="stylesheet" href="/css/b/glavnaya-stil.5e6a1d6072.css">
-<script src="/js/b/yadro.fcc924eb60.js" defer></script>
+<script src="/js/b/yadro.7b9634842d.js" defer></script>
 <script src="/js/b/glavnaya.8f484d418f.js" defer></script>
 <link rel="icon" type="image/png" sizes="120x120" href="/favicon-120.png">
 <link rel="alternate" type="application/rss+xml" title="Разборы дел — Делоскоп" href="/praktika/rss.xml">
@@ -766,6 +766,8 @@ footer a{color:var(--ink2)}
       '<div class="report-actions">'+(r.report_id?'<a class="btn-doc" href="/report.html?id='+encodeURIComponent(r.report_id)+'" target="_blank" rel="noopener">PDF-досье</a><button type="button" data-act="link">Ссылка на отчёт</button>':'<button type="button" data-act="copy">'+(svoj?'Скопировать разбор':'Скопировать вывод')+'</button>')+'<button type="button" data-act="again">Проверить другую</button></div>'+
       '<div class="src">Источники: ЕГРЮЛ/ЕГРИП и открытые данные ФНС. Это оценка риска, а не решение банка.</div>';
     if(window.Nedavnie)Nedavnie.add({inn:c.inn,name:name,level:lvl,id:r.report_id});
+    // dovedeno-vernulis-v1: «довёл проверку до конца» — отчёт с выводом на экране 1,5 с (js/nedavnie.js); смотрим сам контейнер — шапку перерисует js/otchet.js; своя компания — не проверка контрагента
+    if(!svoj&&window.Nedavnie&&Nedavnie.dovedena)Nedavnie.dovedena(report,c.inn);
     var ub=report.querySelector('[data-usl]');
     // «Откуда данные» вместо строки «Источники: …» — опись: какой реестр ответил, на какую дату, кто не ответил (js/otkuda.js)
     if(window.Otkuda){try{Otkuda.mount(report.querySelector('.src'),r)}catch(e){}}
@@ -825,7 +827,7 @@ footer a{color:var(--ink2)}
   // primer-legkij-v1 (25.10): пример «Условий сделки» просит только пакет «primer» (usloviya + sushchestvennoe + status-kod, ~130 КБ), а не весь отчёт (~535 КБ):
   // сервер пока отдаёт без сжатия, и каждый заход на главную без проверки скачивал полмегабайта. Весь отчёт — при проверке и намерении проверить.
   // Оба тега — async=false: исполняются в порядке вставки (как defer), «primer» всегда раньше «otchet».
-  var PRIMER_JS='/js/b/primer.e16a2211fe.js', OTCHET_JS='/js/b/otchet.bc90a08b08.js', primerP=null, moduliP=null;
+  var PRIMER_JS='/js/b/primer.e16a2211fe.js', OTCHET_JS='/js/b/otchet.1942507b08.js', primerP=null, moduliP=null;
   function teg(src){return new Promise(function(ok){var s=document.createElement('script');s.src=src;s.async=false;s.onload=s.onerror=function(){ok()};document.head.appendChild(s);});}
   function gruzitPrimer(){if(!primerP)primerP=teg(PRIMER_JS);return primerP;}
   function gruzitModuli(){if(moduliP)return moduliP;var p=gruzitPrimer();moduliP=Promise.all([p,teg(OTCHET_JS)]);return moduliP;}

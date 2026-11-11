@@ -4639,9 +4639,12 @@ return Array.isArray(a) ? a.filter(function (x) { return x && /^\d{10}(\d{2})?$/
 function write(a) { try { w.localStorage.setItem(KEY, JSON.stringify(a)); } catch (e) {} }
 var PAMYAT = 'dlk_pamyat', PAMYAT_MAX = 200, PAMYAT_DNEJ = 60, DEN = 864e5;
 function denIz(t) { return Math.floor(Number(t) / DEN); }
+function den0(x, den) { return typeof x === 'number' && x === Math.floor(x) && x > 0 && x <= den ? x : 0; }
 function pamyatChist(p, den) {
 var o = { d: {}, vz: 0 }, src = p && typeof p === 'object' && p.d && typeof p.d === 'object' ? p.d : {}, a = [];
 if (p && typeof p.vz === 'number' && p.vz <= den) o.vz = p.vz;
+var dv = den0(p && p.dv, den), v7 = den0(p && p.v7, den);
+if (dv && den - dv <= PAMYAT_DNEJ) { o.dv = dv; if (v7 === dv) o.v7 = v7; }
 for (var k in src) {
 if (!Object.prototype.hasOwnProperty.call(src, k) || !/^\d{10}$/.test(k)) continue;
 var v = src[k];
@@ -4657,7 +4660,13 @@ if (o.vz !== den) for (var k in o.d) {
 var x = den - o.d[k];
 if (x >= 3 && x <= 30) { vidy.push('vozvrat_3_30'); o.vz = den; break; }
 }
+if (o.dv && o.v7 !== o.dv && den - o.dv >= 1 && den - o.dv <= 7) { vidy.push('vozvrat_1_7'); o.v7 = o.dv; }
 return { p: o, vidy: vidy };
+}
+function pamyatDovedena(p, den) {
+var r = pamyatVozvrat(p, den), o = r.p;
+if (o.dv !== den) { r.vidy.push('proverka_dovedena'); o.dv = den; delete o.v7; }
+return r;
 }
 function pamyatProverka(p, inn, den) {
 inn = String(inn || '');
@@ -4697,6 +4706,27 @@ var a = read().filter(function (x) { return x.inn !== item.inn; });
 a.unshift(item);
 write(a.slice(0, MAX));
 }
+var DOVEDENA_MS = 1500;
+function dovedena(el, inn) {
+if (!el || !/^\d{10}(\d{2})?$/.test(String(inn || '')) || /^0+$/.test(String(inn))) return;
+var gotovo = false, t = null, io = null;
+function zaschitat() {
+if (gotovo) return; gotovo = true;
+if (io) try { io.disconnect(); } catch (e) {}
+pamyatShag(pamyatDovedena);
+}
+if (typeof w.IntersectionObserver !== 'function') { zaschitat(); return; }
+try {
+io = new w.IntersectionObserver(function (z) {
+var x = z && z[z.length - 1], vh = w.innerHeight || 0;
+var vidno = !!x && x.isIntersecting && (!w.document || w.document.visibilityState !== 'hidden') &&
+x.intersectionRect.height >= Math.min(x.boundingClientRect.height / 2, vh / 3);
+if (vidno && !t) t = setTimeout(zaschitat, DOVEDENA_MS);
+else if (!vidno && t) { clearTimeout(t); t = null; }
+}, { threshold: [0, 0.1, 0.25, 0.5, 0.75, 1] });
+io.observe(el);
+} catch (e) { zaschitat(); }
+}
 function kav(t) { return w.DlkImya ? w.DlkImya.kavychki(t) : t; }
 function esc(t) {
 return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
@@ -4724,7 +4754,7 @@ write([]); try { w.localStorage.removeItem('dlk_pamyat'); } catch (e) {} render(
 };
 return a.length;
 }
-w.Nedavnie = { add: add, list: read, render: render, KEY: KEY,
-pamyat: { chist: pamyatChist, vozvrat: pamyatVozvrat, proverka: pamyatProverka, KEY: PAMYAT } };
+w.Nedavnie = { add: add, list: read, render: render, dovedena: dovedena, KEY: KEY,
+pamyat: { chist: pamyatChist, vozvrat: pamyatVozvrat, proverka: pamyatProverka, dovedena: pamyatDovedena, KEY: PAMYAT } };
 })(window);
 ;

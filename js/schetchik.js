@@ -9,7 +9,9 @@
    Сервер считает, только когда включён SCHETCHIK=1; выключенный отвечает 204 и ничего не пишет.
    sobytiya-v1: нажатия кнопок отчёта — {sobytie: вид}, только общее число за день по виду (ниже, VIDY).
    pamyat-proverok-v1: первую и повторную проверку отличает память на устройстве в js/nedavnie.js; сюда приходит
-   только готовый вид события (proverka_novaya, perepoverka_7_60, vozvrat_3_30). */
+   только готовый вид события (proverka_novaya, perepoverka_7_60, vozvrat_3_30).
+   dovedeno-vernulis-v1 («одна цифра», 11.11): proverka_dovedena — вывод отчёта был на экране (раз в день на устройство),
+   vozvrat_1_7 — вернулись к проверке через 1–7 дней после этого. Тоже только вид события. */
 (function (koren) {
   "use strict";
   var NASH = /(^|\.)deloskop\.ru$/;
@@ -47,7 +49,7 @@
   // Те же отказы, что у просмотров: чужой домен, «Не отслеживать», GPC, роботы, кабинет и админка.
   // Перепроверку в окне 7–60 дней считает сам браузер (js/nedavnie.js) и шлёт готовый вид — сервер две проверки не связывает.
   var VIDY = { deystvie_dokumenty: 1, deystvie_dosje: 1, deystvie_slezhenie: 1, deystvie_pervoe: 1, perepoverka_7_60: 1,
-    proverka_novaya: 1, vozvrat_3_30: 1 };
+    proverka_novaya: 1, vozvrat_3_30: 1, proverka_dovedena: 1, vozvrat_1_7: 1 };
   // Эти виды шлются по разу на компанию или на день (это решает память), а не по разу за показ страницы.
   var MNOGO = { proverka_novaya: 1, perepoverka_7_60: 1 };
   // Включается одной строкой после выкладки API (приём {sobytie} в /api/ping — ТЗ в КАК_ВЫЛОЖИТЬ_sobytiya-v1).

@@ -10,6 +10,7 @@ const T = Date.parse('2026-10-24T15:00:00Z');
 
 const POLNAYA = {
   est: true, sformirovano: '2026-10-24T15:00:00Z', chas_msk: 18,
+  cifra: { dovedeno_segodnya: 23, dovedeno_vchera: 31, dovedeno_nedelya: 180, dovedeno_pred_nedelya: 150, vernulis_nedelya: 27 },
   lyudi: { segodnya: 412, vchera_k_chasu: 380, vchera: 530, nedelya: 3100, proshlaya_nedelya: 2600, zahody_nedelya: 1240 },
   proverki: { segodnya: 57, gosti: 41, voshedshie: 16, limit: 3, porog: 10, vchera: 70, nedelya: 402 },
   otkuda: { poisk_yandex: 700, pryamoj: 300, vk: 120, dzen: 60, telegram: 40, sajty: 20, vnutri: 5000 },
@@ -20,9 +21,9 @@ const POLNAYA = {
   golos: { sutki: 2, nedelya: 9, temy: { sudy: 4, api: 3, bank: 2 }, poslednij: '2026-10-24T11:00:00Z' }
 };
 
-test('(1) полная сводка — 8 плиток по порядку, у каждой есть «что значит» и «что сделать», без жаргона', () => {
+test('(1) полная сводка — «одна цифра» и 8 плиток по порядку, у каждой есть «что значит» и «что сделать», без жаргона', () => {
   const p = G.plitki(POLNAYA, S, T);
-  assert.deepStrictEqual(p.map(x => x.id), ['lyudi', 'proverki', 'otkuda', 'voronka', 'chitayut', 'posty', 'poisk', 'golos']);
+  assert.deepStrictEqual(p.map(x => x.id), ['cifra', 'lyudi', 'proverki', 'otkuda', 'voronka', 'chitayut', 'posty', 'poisk', 'golos']);
   for (const x of p) {
     assert.ok(x.smysl && x.smysl.length > 10, x.id + ': что значит');
     assert.ok(x.delat && /^(Что сделать:|Делать ничего не нужно\.)/.test(x.delat), x.id + ': что сделать — ' + x.delat);
@@ -111,9 +112,9 @@ test('(8) Посты, Поиск, Голос: без токена Яндекса
   assert.match(tish.smysl, /^Новых отзывов нет 9 дней\. За неделю — 0\.$/); assert.strictEqual(tish.cvet, 'seryj');
 });
 
-test('(9) сервер без сводки (старый) — 8 серых с одной причиной; пустая сводка {est:true} — все серые «не подключено», не нули', () => {
+test('(9) сервер без сводки (старый) — 9 серых с одной причиной; пустая сводка {est:true} — все серые «не подключено», не нули', () => {
   const st = G.plitki({ est: false }, S, T);
-  assert.strictEqual(st.length, 8); assert.ok(st.every(p => p.cvet === 'seryj' && p.smysl === S.net_svodki));
+  assert.strictEqual(st.length, 9); assert.ok(st.every(p => p.cvet === 'seryj' && p.smysl === S.net_svodki));
   const pust = G.plitki({ est: true }, S, T);
   assert.ok(pust.every(p => p.cvet === 'seryj' && p.cifra === '—'), JSON.stringify(pust.map(p => [p.id, p.cifra])));
   for (const p of st.concat(pust)) assert.ok(G.bezZhargona(p), p.zag);
@@ -124,7 +125,7 @@ test('(10) шаблоны и словарь: {n|…} склоняет, у сло
   assert.strictEqual(G.fmt('{n|человек упёрся|человека упёрлись|человек упёрлись}', { n: 11 }), 'человек упёрлись');
   const vse = JSON.stringify(S);
   assert.ok(!/\b(5xx|latency|uptime|endpoint|API|HTTP|timeout)\b/.test(vse.replace(/"api"/g, '')), 'жаргон в словаре');
-  for (const k of ['lyudi', 'proverki', 'otkuda', 'voronka', 'chitayut', 'posty', 'poisk', 'golos']) {
+  for (const k of ['cifra', 'lyudi', 'proverki', 'otkuda', 'voronka', 'chitayut', 'posty', 'poisk', 'golos']) {
     assert.ok(S[k] && S[k].zag && S[k].net, k);
   }
 });
@@ -140,4 +141,27 @@ test('(11) админка: «Сегодня» — первым экраном, �
   const js = chitat('js/admin-segodnya.js');
   assert.ok(js.includes('/api/admin/pult/segodnya') && js.includes('credentials: "include"') && js.includes('"/data/pult_slova.json"'));
   assert.strictEqual(G.PERIOD_MS, 60000);
+});
+
+// dovedeno-vernulis-v1 (11.11, «одна задача, одна цифра»)
+test('(12) «Довели проверку · вернулись»: цифра сегодня, неделя, доля — оценка; мало данных — без процента; нет сервера — серая с шагом', () => {
+  let p = G.plCifra(POLNAYA.cifra, S);
+  assert.strictEqual(p.cvet, 'ok'); assert.strictEqual(p.cifra, '23');
+  assert.strictEqual(p.podpis, 'человека довели проверку до ответа сегодня');
+  assert.match(p.smysl, /Вчера — 31\. За 7 дней довели до ответа 180, вернулись к проверке в течение недели — 27\./);
+  assert.match(p.smysl, /примерно 18\u00a0% из 150/);
+  assert.strictEqual(p.stroki[1].proc, 18);
+  assert.match(p.primechanie, /без cookie и без ИНН/);
+  p = G.plCifra({ dovedeno_segodnya: 1, dovedeno_nedelya: 9, dovedeno_pred_nedelya: 7, vernulis_nedelya: 2 }, S);
+  assert.strictEqual(p.podpis, 'человек довёл проверку до ответа сегодня');
+  assert.match(p.smysl, /считать рано/); assert.ok(!/%/.test(p.smysl), 'при 7 доведших процента нет');
+  assert.match(p.smysl, /Вчера — нет данных/, 'нет поля — «нет данных», а не 0');
+  p = G.plCifra({ dovedeno_segodnya: 4, dovedeno_nedelya: 60, dovedeno_pred_nedelya: 80, vernulis_nedelya: 5 }, S);
+  assert.strictEqual(p.cvet, 'warn'); assert.match(p.delat, /Перепроверить до/);
+  const n = G.plCifra(undefined, S);
+  assert.strictEqual(n.cvet, 'seryj'); assert.strictEqual(n.cifra, '—'); assert.match(n.delat, /^Что сделать: Штабу/);
+  const nol = G.plCifra({ dovedeno_segodnya: 0, dovedeno_nedelya: 0 }, S);
+  assert.strictEqual(nol.cifra, '0'); assert.strictEqual(nol.cvet, 'seryj');
+  for (const x of [G.plCifra(POLNAYA.cifra, S), n, nol]) assert.ok(G.bezZhargona(x));
+  assert.ok(/sg-glavnaya\{grid-column:1\/-1\}/.test(chitat('admin.html')), 'одна цифра — во всю ширину');
 });

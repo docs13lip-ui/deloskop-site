@@ -562,6 +562,8 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
     msg.hidden=true; doc.hidden=false;
     if(window.Nedavnie)Nedavnie.add({inn:c.inn,name:c.name_short||name,level:lvl,id:id});
     var q4=doc.querySelector('[data-q4]');
+    // dovedeno-vernulis-v1: вывод («4 вопроса» или плашка уровня) на экране 1,5 с — проверка доведена до ответа (js/nedavnie.js)
+    if(window.Nedavnie&&Nedavnie.dovedena)Nedavnie.dovedena(q4||doc.querySelector('.risk')||doc,c.inn);
     if(q4)try{ChetyreVoprosa.mount(q4,r,{id:id})}catch(e){q4.textContent=r.verdict||''}
     var ub=doc.querySelector('[data-usl]');
     if(ub)try{Usloviya.mount(ub,r,{open:true,bezNapr:true})}catch(e){ub.textContent=r.verdict||''}

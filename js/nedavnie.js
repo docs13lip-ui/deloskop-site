@@ -3,7 +3,8 @@
    Нет доступа к хранилищу (приватный режим, запрет cookies) — список просто пустой.
    pamyat-proverok-v1: пока включён счёт событий (js/schetchik.js, VKL), рядом лежит память dlk_pamyat —
    какие организации (только ИНН ЮЛ) и в какой день проверяли на этом устройстве, до 200 записей, 60 дней.
-   Она только отличает первую проверку от повторной; сервер получает лишь вид события. */
+   Она только отличает первую проверку от повторной; сервер получает лишь вид события.
+   dovedeno-vernulis-v1: там же два номера дня — когда здесь последний раз довели проверку до ответа и засчитан ли возврат. */
 (function (w) {
   'use strict';
   var KEY = 'dlk_nedavnie', MAX = 5;
@@ -22,9 +23,14 @@
   // Память: { d: { 'ИНН ЮЛ': номер дня }, vz: день последнего «возврата» }. День, а не время: точнее не нужно.
   var PAMYAT = 'dlk_pamyat', PAMYAT_MAX = 200, PAMYAT_DNEJ = 60, DEN = 864e5;
   function denIz(t) { return Math.floor(Number(t) / DEN); }
+  // dovedeno-vernulis-v1: dv — день последней проверки, доведённой до ответа; v7 — тот день dv, за который уже засчитан возврат.
+  // Только номера дней, без ИНН: «довёл» считается и для ИП — в памяти от этого ничего не прибавляется.
+  function den0(x, den) { return typeof x === 'number' && x === Math.floor(x) && x > 0 && x <= den ? x : 0; }
   function pamyatChist(p, den) {
     var o = { d: {}, vz: 0 }, src = p && typeof p === 'object' && p.d && typeof p.d === 'object' ? p.d : {}, a = [];
     if (p && typeof p.vz === 'number' && p.vz <= den) o.vz = p.vz;
+    var dv = den0(p && p.dv, den), v7 = den0(p && p.v7, den);
+    if (dv && den - dv <= PAMYAT_DNEJ) { o.dv = dv; if (v7 === dv) o.v7 = v7; }
     for (var k in src) {
       if (!Object.prototype.hasOwnProperty.call(src, k) || !/^\d{10}$/.test(k)) continue;
       var v = src[k];
@@ -35,13 +41,23 @@
     return o;
   }
   // Вернулось устройство, где 3–30 дней назад проверяли компанию, — один раз в день.
+  // dovedeno-vernulis-v1 («одна цифра» 11.11): устройство, где 1–7 дней назад довели проверку до ответа, снова открыло
+  // проверку — vozvrat_1_7, один раз на каждый такой день «довёл» (вернулся трижды за неделю — всё равно один возврат).
   function pamyatVozvrat(p, den) {
     var o = pamyatChist(p, den), vidy = [];
     if (o.vz !== den) for (var k in o.d) {
       var x = den - o.d[k];
       if (x >= 3 && x <= 30) { vidy.push('vozvrat_3_30'); o.vz = den; break; }
     }
+    if (o.dv && o.v7 !== o.dv && den - o.dv >= 1 && den - o.dv <= 7) { vidy.push('vozvrat_1_7'); o.v7 = o.dv; }
     return { p: o, vidy: vidy };
+  }
+  // Проверку довели до ответа (вывод был на экране) — proverka_dovedena, один раз в день на устройство:
+  // плитка «Довели проверку» считает людей, а не перезагрузки отчёта.
+  function pamyatDovedena(p, den) {
+    var r = pamyatVozvrat(p, den), o = r.p;
+    if (o.dv !== den) { r.vidy.push('proverka_dovedena'); o.dv = den; delete o.v7; }
+    return r;
   }
   // Проверка организации: впервые на устройстве (за 60 дней) → proverka_novaya; 7–60 дней назад → perepoverka_7_60;
   // в тот же день или раньше 7 дней — ничего. ИП (12 цифр) и пример 0000000000 — мимо памяти и счёта.
@@ -89,6 +105,32 @@
     write(a.slice(0, MAX));
   }
 
+  // dovedeno-vernulis-v1: «довёл проверку до конца» = отчёт с выводом был на экране (половина отчёта или треть экрана)
+  // не меньше 1,5 с подряд, пока вкладка видна. Смотрим контейнер отчёта: его шапку потом перерисовывает js/otchet.js. Пример (0000000000) и пустой отчёт не считаются. Нет IntersectionObserver —
+  // засчитываем сразу: отчёт уже нарисован, а вывод стоит в его начале.
+  var DOVEDENA_MS = 1500;
+  function dovedena(el, inn) {
+    if (!el || !/^\d{10}(\d{2})?$/.test(String(inn || '')) || /^0+$/.test(String(inn))) return;
+    var gotovo = false, t = null, io = null;
+    function zaschitat() {
+      if (gotovo) return; gotovo = true;
+      if (io) try { io.disconnect(); } catch (e) {}
+      pamyatShag(pamyatDovedena);
+    }
+    if (typeof w.IntersectionObserver !== 'function') { zaschitat(); return; }
+    try {
+      io = new w.IntersectionObserver(function (z) {
+        // высокий отчёт на телефоне целиком в экран не влезает: хватит половины отчёта или трети экрана
+        var x = z && z[z.length - 1], vh = w.innerHeight || 0;
+        var vidno = !!x && x.isIntersecting && (!w.document || w.document.visibilityState !== 'hidden') &&
+          x.intersectionRect.height >= Math.min(x.boundingClientRect.height / 2, vh / 3);
+        if (vidno && !t) t = setTimeout(zaschitat, DOVEDENA_MS);
+        else if (!vidno && t) { clearTimeout(t); t = null; }
+      }, { threshold: [0, 0.1, 0.25, 0.5, 0.75, 1] });
+      io.observe(el);
+    } catch (e) { zaschitat(); }
+  }
+
   // kavychki-v1: старые записи на устройстве — с прямыми кавычками из ЕГРЮЛ; показываем «ёлочками» (js/imya.js)
   function kav(t) { return w.DlkImya ? w.DlkImya.kavychki(t) : t; }
   function esc(t) {
@@ -121,6 +163,6 @@
     return a.length;
   }
 
-  w.Nedavnie = { add: add, list: read, render: render, KEY: KEY,
-    pamyat: { chist: pamyatChist, vozvrat: pamyatVozvrat, proverka: pamyatProverka, KEY: PAMYAT } };
+  w.Nedavnie = { add: add, list: read, render: render, dovedena: dovedena, KEY: KEY,
+    pamyat: { chist: pamyatChist, vozvrat: pamyatVozvrat, proverka: pamyatProverka, dovedena: pamyatDovedena, KEY: PAMYAT } };
 })(window);

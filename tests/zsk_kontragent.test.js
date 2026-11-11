@@ -15,7 +15,7 @@ const CBR = 'https://cbr.ru/counteraction_m_ter/platform_zsk/proverka-po-inn/';
 
 test('мета, canonical, один H1 и разметка Article + HowTo + FAQPage + BreadcrumbList', () => {
   assert.match(S, /<link rel="canonical" href="https:\/\/deloskop\.ru\/115-fz\/proverit-kontragenta-zsk-po-inn\/">/);
-  assert.ok(S.includes('<title>ЗСК контрагента по ИНН: проверить поставщика перед оплатой — Делоскоп</title>'));
+  assert.ok(S.includes('<title>Как проверить контрагента по 115-ФЗ бесплатно: ЗСК по ИНН</title>'));
   assert.strictEqual((S.match(/<h1>/g) || []).length, 1);
   const ld = JSON.parse(S.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
   assert.deepStrictEqual(ld.map((x) => x['@type']), ['Article', 'HowTo', 'FAQPage', 'BreadcrumbList']);

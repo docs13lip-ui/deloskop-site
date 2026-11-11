@@ -1571,7 +1571,7 @@ def indeks_v_otchete_html(inn):
             'Посчитать Индекс на сегодня ›</a></p></div></section>' % (NB, NB, POROG_INDEKSA, NB, NB, inn))
 
 
-_IND_STARYJ = re.compile(r'<section class="co-ind co-ind--wait" aria-label="Индекс Делоскопа">.*?</section>', re.S)
+_IND_STARYJ = re.compile(r'<section class="co-ind co-ind--wait(?: linza linza--zhdet)?" aria-label="Индекс Делоскопа">.*?</section>', re.S)
 _KANON_INN = re.compile(r'<link rel="canonical" href="[^"]*/(\d{10})-')
 
 
@@ -4893,3 +4893,38 @@ _vstavit_znachit_do_povtora = vstavit_znachit
 
 def vstavit_znachit(t):  # noqa: F811 — kartochki-bez-povtora-v1: пересобранный блок — без абзацев-повторов
     return bez_povtora(_vstavit_znachit_do_povtora(t))
+
+
+# ---------------------------------------------------------------- linza-indeksa-v1 ([Ночные запуски] 11.11)
+# Решение владельца 11.11 «Да, на всё» (claude/Решения_владельца_11.11_да_на_всё_все_отделы_в_работу.md, [Ночные-код] п. 1),
+# ТЗ [Арт-директор] 11.11 разд. А: на карточке компании вместо плашки — «Линза Индекса» в состоянии «ждёт» (балла на карточке
+# нет → кольцо без числа, в центре «1–99»), ссылка «Посчитать Индекс на сегодня ›» → кнопка .btn--secondary (одна синяя на экране —
+# «Проверить сейчас»), data-goal kartochka_indeks — прежний. Текст плашки и подпись не меняем. Сцена — js/linza.js (WebGL),
+# запасной кадр — CSS. Последним шагом у новых (html_kartochki) и у опубликованных (kartochki.py → perepechatat). Идемпотентна.
+_LZ_SEKCIYA = '<section class="co-ind co-ind--wait" aria-label="Индекс Делоскопа"><p class="co-ind__n">'
+_LZ_SSYLKA = re.compile(r'<p class="caption"><a href="/\?inn=(\d{10})" data-goal="kartochka_indeks">Посчитать Индекс на(?: |%s)сегодня ›</a></p></div></section>' % NB)
+LINZA_KOLCO = ('<div class="linza__k" aria-hidden="true"><canvas class="linza__gl"></canvas><span class="linza__c">1–99</span></div>')
+
+
+def linza_kartochki(t):
+    if not t or _LZ_SEKCIYA not in t:
+        return t
+    i = t.index(_LZ_SEKCIYA)
+    j = t.find('</section>', i)
+    blok = t[i:j + len('</section>')]
+    m = _LZ_SSYLKA.search(blok)
+    if not m or '</p><div>' not in blok:
+        return t
+    novyj = blok.replace(_LZ_SEKCIYA, '<section class="co-ind co-ind--wait linza linza--zhdet" aria-label="Индекс Делоскопа">%s<div><p class="co-ind__n">' % LINZA_KOLCO, 1)
+    novyj = novyj.replace('</p><div>', '</p>', 1)
+    novyj = _LZ_SSYLKA.sub(lambda x: '<p class="linza__d"><a class="btn btn--secondary" href="/?inn=%s" data-goal="kartochka_indeks">'
+                           'Посчитать Индекс на%sсегодня</a></p></div><script src="/js/linza.js" defer></script></section>' % (x.group(1), NB), novyj, count=1)
+    return t[:i] + novyj + t[j + len('</section>'):]
+
+
+_html_kartochki_bez_linzy = html_kartochki
+
+
+def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811
+    """linza-indeksa-v1: та же карточка, плашка Индекса — «Линзой»."""
+    return linza_kartochki(_html_kartochki_bez_linzy(k, V, sosedi, kom, normy, cena, segodnya))

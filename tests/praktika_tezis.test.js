@@ -32,7 +32,7 @@ test('остальные разборы — прежняя строка «Све
 
 test('sverka_vid — только известное значение', () => {
   for (const r of razbory) for (const d of r.dela) {
-    if ('sverka_vid' in d) assert.ok(['tezis', 'kopiya'].includes(d.sverka_vid), r.slug);
+    if ('sverka_vid' in d) assert.ok(['tezis', 'kopiya', 'pereskaz'].includes(d.sverka_vid), r.slug); // razbor37-v1 (02.11): «pereskaz» — акт по пересказам профильных изданий
   }
 });
 

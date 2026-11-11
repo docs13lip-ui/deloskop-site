@@ -563,6 +563,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         t2 = beta_poloviny(t2, r["_beta"], r.get("_beta_do"))  # половины беты — по флагу, как sobrat_shapku
         t2 = primenit_vorota_indeksa(t2)  # kartochki-indeks-v1: те же ворота индексации, что у новых карточек
         t2 = ssylki_kroshek(t2, kg)  # kartochki-haby-v1: регион и раздел в крошках — ссылкой на хаб группы
+        t2 = pochinit_ruk_mesyac(t2)  # rukovod-mesyac-v1: «в этом месяце» → «менее чем за месяц до <день сведений>»
         t2 = shablon_v2(t2)  # kartochki-shablon-v1: H1 с ИНН, строка под H1, description — как у новых
         t2 = pochinit_imya(t2)  # kartochki-imya-v1: советы и заголовок реестров — с названием, как у новых
         t2 = svodka_zel(t2)  # kartochki-svodka-v1: зелёные комментарии — одним блоком под реестрами, как у новых
@@ -864,8 +865,12 @@ def iz_api(spisok, vyhod, api="https://api.deloskop.ru", pauza=6.0, maks=MAKS_ZA
     inns = inns[:max(0, int(maks))]
     print("Служебный доступ: %s · к запросу: %d ИНН (не больше %d за запуск)" % ("да" if sluzhebnyj else "нет — анонимно, 10 проверок в день", len(inns), maks))
     if not sluzhebnyj and osvezhit is None and inns:
-        print("Внимание: анонимный /api/check отдаёт реестр без финансов — новые карточки не пройдут ворота «нет финансов», "
-              "в отсев такие ответы не пишутся (kartochki-anonim-v1). Новые компании — со служебным доступом.")
+        # kartochki-osvezhit-anonim-v1 ([Ночные-2] 09.11): сверено живым /api/check 09.11 — анонимно финансы ГИР БО приходят
+        # у компаний, уже проверенных раньше (опубликованные карточки: 4 из 4), и не приходят у новых (КАМАЗ, «Адмиралтейские
+        # верфи», «Самотлорнефтегаз» — только «Долг перед бюджетом»). Поэтому анонимно — освежение (--osvezhit), не новые.
+        print("Внимание: анонимный /api/check у новых компаний отдаёт реестр без финансов — такие карточки не пройдут ворота "
+              "«нет финансов», в отсев эти ответы не пишутся (kartochki-anonim-v1). Новые компании — со служебным доступом; "
+              "анонимно — освежать опубликованные (--osvezhit N, до 10 в сутки).")
     ok = oshibki = 0
     with open(vyhod, "a", encoding="utf-8") as fh:
         for i, inn in enumerate(inns, 1):

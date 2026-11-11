@@ -59,7 +59,7 @@
       '.pwa__da{min-height:44px;padding:0 18px;border:0;border-radius:999px;background:var(--accent,#0B63E5);color:#fff;font-weight:600;font-size:15px;line-height:1;font-family:inherit;cursor:pointer}' +
       '.pwa__da:hover{background:var(--accent-hover,#084BB0)}' +
       '.pwa__net{min-height:44px;padding:0 12px;border:0;border-radius:999px;background:transparent;color:var(--accent,#0B63E5);font-weight:600;font-size:15px;line-height:1;font-family:inherit;cursor:pointer}' +
-      '.pwa__x{flex:none;width:44px;height:44px;margin:-10px -10px 0 0;border:0;border-radius:50%;background:transparent;color:var(--muted,#6B6B70);cursor:pointer;display:grid;place-items:center}' +
+      '.pwa__x{flex:none;width:44px;height:44px;margin:-10px -10px 0 0;border:0;border-radius:50%;background:transparent;color:var(--muted,#66666B);cursor:pointer;display:grid;place-items:center}' +
       '.pwa__sh{display:inline-block;width:16px;height:16px;vertical-align:-2px;margin:0 2px}' +
       '@media (prefers-reduced-motion:reduce){.pwa{transition:none}}';
     d.head.appendChild(s);

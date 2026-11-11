@@ -1,6 +1,6 @@
 /* Делоскоп — дизайн-система v1 (документ команды §2.5). Шрифт Onest — /css/fonts.css (подключать рядом, со своего сервера). */
 :root{
- --bg:#F5F5F2;--surface:#FFFFFF;--surface-2:#EEEEEA;--ink:#1D1D1F;--ink-2:#48484C;--muted:#6B6B70;--line:#E6E6E1;
+ --bg:#F5F5F2;--surface:#FFFFFF;--surface-2:#EEEEEA;--ink:#1D1D1F;--ink-2:#48484C;--muted:#66666B;--line:#E6E6E1;
  --accent:#0B63E5;--accent-hover:#084BB0;--accent-soft:#EAF1FD;--on-accent:#FFFFFF;
  --ok:#16723F;--ok-bg:#E8F5EE;--warn:#9A5B00;--warn-bg:#FFF4E0;--high:#C2410C;--high-bg:#FFEDE3;--bad:#B3261E;--bad-bg:#FDECEA;
  --font:Onest,"Onest Zapas","Onest Zapas R",-apple-system,"Segoe UI",Roboto,Arial,sans-serif;

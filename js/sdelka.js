@@ -235,6 +235,22 @@
     if (n == null) return null;
     return { dnej: n, staroe: n > STARYJ_DNEJ, tekst: n > STARYJ_DNEJ ? 'Сведениям ' + n + NB + plural(n, 'день', 'дня', 'дней') + ' — перед оплатой проверьте заново.' : '' };
   }
+  // Напоминание перепроверить перед оплатой (01.11.2026, шаг 6): тот же срок, что у отчёта (js/perepoverit.js, 30 дней
+  // от проверки), но событие календаря ведёт обратно в досье этой сделки. Срок прошёл — строки нет: обложка уже говорит
+  // «перед оплатой проверьте заново» (svezhest). Без даты проверки или ИНН — тоже нет.
+  function napominanie(r, summa, seichas) {
+    var P = modul('Perepoverit', './perepoverit.js');
+    if (!P || !r || !r.company) return null;
+    var inn = cifry(r.company.inn), sm = summa > 0 ? Math.round(summa) : 0;
+    var s = P.srok(r, {
+      ssylka: 'https://deloskop.ru/pasport/kontragent/?inn=' + inn + (sm ? '&summa=' + sm : '') + '&utm_source=ics#sd',
+      zag: 'Перепроверить ' + String(r.company.name_short || r.company.name_full || ('ИНН ' + inn)).replace(/\s+/g, ' ').trim() + ' перед оплатой по сделке' + (sm ? ' на ' + money(sm) : '')
+    });
+    if (!s) return null;
+    var d = new Date((seichas == null ? Date.now() : +seichas) + 3 * 3600 * 1000);
+    var segodnya = d.getUTCFullYear() * 10000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
+    return +s.konec > segodnya ? s : null;
+  }
   function chitat(ls) { try { var a = JSON.parse(ls && ls.getItem(KEY) || '[]'); return Array.isArray(a) ? a.filter(function (x) { return x && /^\d{10}(\d{2})?$/.test(x.inn); }) : []; } catch (e) { return []; } }
   function pisat(ls, a) { try { ls.setItem(KEY, JSON.stringify(a)); return true; } catch (e) { return false; } }
   function spisok(ls) { return chitat(ls).sort(function (a, b) { return (b.t || 0) - (a.t || 0); }); }
@@ -823,8 +839,10 @@
       (s ? '<p class="sd-p">Сохранено на этом устройстве ' + esc(mskVremya(s.t)) + (s.snimok && s.snimok.checked_at ? ' · проверка от ' + esc(mskData(s.snimok.checked_at)) : '') + '.</p>' : '<p class="sd-p">Пока не сохранено.</p>') +
       (o.izm ? (o.izm.length ? '<div class="sd-izm"><b>С сохранения изменилось:</b><ul>' + o.izm.map(function (x) { return '<li>' + nb(x) + '</li>'; }).join('') + '</ul></div>'
         : '<p class="sd-p">С сохранения статус, итог и замечания не изменились.</p>') : '') +
+      (o.napomnit ? '<p class="sd-p" data-sd-pp>Перед оплатой проверьте заново' + NB + '— до' + NB + '<b>' + esc(o.napomnit['do']) + '</b>: через ' + STARYJ_DNEJ + NB + 'дней после проверки сведения уже могли измениться.</p>' : '') +
       '<div class="sd-btns noprint"><button class="btn primary" type="button" data-sd-act="save">' + (s ? 'Обновить сохранённое' : 'Сохранить на этом устройстве') + '</button>' +
-        '<button class="btn" type="button" data-sd-act="povtor">Проверить заново</button>' + (s ? '<button class="btn sd-del" type="button" data-sd-act="del">Удалить с устройства</button>' : '') + '</div>' +
+        '<button class="btn" type="button" data-sd-act="povtor">Проверить заново</button>' + (o.napomnit ? '<button class="btn" type="button" data-sd-act="ics">Напомнить в' + NB + 'календаре</button>' : '') +
+        (s ? '<button class="btn sd-del" type="button" data-sd-act="del">Удалить с устройства</button>' : '') + '</div>' +
       '<p class="sd-s noprint" data-sd-msg role="status" aria-live="polite">Сохраняем только в этом браузере — Делоскоп досье не получает. Повторная проверка — одна из бесплатных проверок дня: сравним с сохранённым.</p>', s ? 'есть изменения' : 'не сохранено');
     h += '</ol>' + istochnikiHtml(o.r) + '<p class="stroka">' + esc(OGOVORKA) + ' ' + esc(OGOVORKA_OTM) + ' ' + esc(VERSIYA) + '.</p></section>';
     return h;
@@ -843,7 +861,7 @@
   return {
     VERSIYA: VERSIYA, KEY: KEY, MAX: MAX, KLYUCH: KLYUCH, OGOVORKA: OGOVORKA, OGOVORKA_OTM: OGOVORKA_OTM, STARYJ_DNEJ: STARYJ_DNEJ,
     rekvizity: rekvizity, nedostaet: nedostaet, problemy: problemy, itog: itog, otmetkiZakazchika: otmetkiZakazchika, delopisSsylka: delopisSsylka,
-    snimok: snimok, sravnit: sravnit, svezhest: svezhest, spisok: spisok, najti: najti, sohranit: sohranit, udalit: udalit,
+    snimok: snimok, sravnit: sravnit, svezhest: svezhest, napominanie: napominanie, spisok: spisok, najti: najti, sohranit: sohranit, udalit: udalit,
     mskData: mskData, mskVremya: mskVremya, html: html, spisokHtml: spisokHtml, esc: esc, realnost: realnost, svyazi: svyazi, obshchijAdres: obshchijAdres, adresKlyuch: adresKlyuch, kratko: kratko, zaprosImeni: zaprosImeni, kratkoGraf: kratkoGraf, svyaziDop: svyaziDop, dengi: dengi, dengiSvg: dengiSvg, dengiGod: dengiGod, dengiHtml: dengiHtml, rubIz: rubIz, krupno: krupno, istochniki: istochniki
   };
 });

@@ -2,7 +2,7 @@
    Страница «Скорой» пока на своих стилях, поэтому токены ds.css заведены только в области блока (.pkg).
    Значения токенов обязаны совпадать с /css/ds.css — это держит tests/skoraya_paket.test.js. */
 .pkg{
- --bg:#F5F5F2;--surface:#FFFFFF;--surface-2:#EEEEEA;--ink:#1D1D1F;--ink-2:#48484C;--muted:#6B6B70;--line:#E6E6E1;
+ --bg:#F5F5F2;--surface:#FFFFFF;--surface-2:#EEEEEA;--ink:#1D1D1F;--ink-2:#48484C;--muted:#66666B;--line:#E6E6E1;
  --accent:#0B63E5;--accent-hover:#084BB0;--on-accent:#FFFFFF;
  --font:Onest,"Onest Zapas","Onest Zapas R",-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
  --t-h2:clamp(32px,3.2vw,48px);--t-h3:24px;--t-lead:20px;--t-body:17px;--t-small:15px;--t-caption:13px;

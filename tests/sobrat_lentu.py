@@ -34,6 +34,13 @@
 /obnovleniya-verh.json — верхние VERH_SKOLKO записей и «vsego» (≈ 11 КБ, в 50 с лишним раз меньше). Полная лента — только на
 /obnovleniya/ и в Пульте. Сторож — tests/lenta_legkaya.test.js.
 
+Вся лента — по кнопке (03.11.2026, [Ночные запуски] lenta-vsya-po-knopke-v1): скрипт /obnovleniya/ при каждом заходе
+качал всю obnovleniya.json — 688 КБ без сжатия на 03.11 (508 записей, +1,5 КБ на запись) — и перерисовывал те же 20
+записей, что уже стоят в HTML. Теперь посетитель видит 20 записей из HTML сразу, а под ними — кнопку «Показать ещё N
+обновлений» (блок <!--esche-->…<!--/esche--> сразу за #list; N считается здесь, кнопка hidden до запуска скрипта).
+Полная лента грузится по нажатию или когда адрес ведёт на #id старой записи; сбой загрузки 20 записей не стирает.
+Сторож — tests/lenta_vsya.test.js.
+
 Запуск: python3 tests/sobrat_lentu.py [--check]
 Вызывается сам из tests/postavit_vremya.py — то есть при каждой выкладке, вместе с проставлением времени.
 """
@@ -104,7 +111,16 @@ def blok():
 
 LIST = re.compile(r'<div id="list">(.*?)(?=</main>)', re.S)
 # что может стоять в #list между метками ленты и </main>: записи, метки, пустые <p class="empty">, закрывающие </div>
-LIST_MUSOR = re.compile(r'<section class="u"[^>]*>.*?</section>|<p class="empty">[^<]*</p>|<!--/?lenta-->|</div>|\s+', re.S)
+LIST_MUSOR = re.compile(r'<section class="u"[^>]*>.*?</section>|<p class="empty">[^<]*</p>|<!--/?lenta-->|<!--esche-->.*?<!--/esche-->|</div>|\s+', re.S)
+
+
+def esche():
+    """Кнопка «Показать ещё N обновлений» под 20 записями HTML — только если в ленте их больше (lenta-vsya-po-knopke-v1)."""
+    n = len(json.loads(LENTA.read_text(encoding="utf-8"))["obnovleniya"]) - SKOLKO
+    if n <= 0:
+        return ""
+    return ('<!--esche--><p class="esche" data-esche hidden><button type="button" class="esche__b">'
+            'Показать ещё %d&nbsp;%s</button></p><!--/esche-->\n') % (n, forma(n, ("обновление", "обновления", "обновлений")))
 
 
 def sobrat(txt):
@@ -114,11 +130,11 @@ def sobrat(txt):
     if m and "<!--lenta-->" in m.group(1):
         if LIST_MUSOR.sub("", m.group(1)):
             raise SystemExit("sobrat_lentu: в #list на /obnovleniya/ после ленты стоит что-то кроме записей — разметку правили руками")
-        return txt[:m.start()] + '<div id="list">' + b + "</div>\n" + txt[m.end():]
+        return txt[:m.start()] + '<div id="list">' + b + "</div>\n" + esche() + txt[m.end():]
     stary = '<div id="list"><p class="empty">Загружаю…</p></div>'
     if stary not in txt:
         raise SystemExit("sobrat_lentu: на /obnovleniya/ нет ни меток <!--lenta-->, ни блока #list — разметку правили руками")
-    return txt.replace(stary, '<div id="list">' + b + "</div>", 1)
+    return txt.replace(stary, '<div id="list">' + b + "</div>\n" + esche().rstrip("\n"), 1)
 
 
 def esc_js(s):

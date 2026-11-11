@@ -26,11 +26,12 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <style>
 :root{
-  --bg:#F5F5F2; --card:#FFFFFF; --ink:#1D1D1F; --ink2:#48484C; --muted:#6B6B70;
+  --bg:#F5F5F2; --card:#FFFFFF; --ink:#1D1D1F; --ink2:#48484C; --muted:#66666B;
   --line:#E6E6E1; --accent:#0B63E5; --accent-hover:#084BB0;
   --ok:#16723F; --ok-bg:#E8F5EE; --warn:#9A5B00;
   --dark:#111113; --dark2:#1C1C1F;
   --r-lg:28px; --r-md:16px;
+  --ease:cubic-bezier(.2,.7,.2,1); /* peremennye-v1: кнопки витрины и отзыва звали --ease, а на главной его не было — переходы молча выключались */
   --pad:clamp(20px, 6.5vw, 96px);
   --sect:clamp(64px, 9vw, 112px);
 }
@@ -353,6 +354,39 @@ footer a{color:var(--ink2)}
   .faq summary{font-size:17px;line-height:1.35}
   .faq details p{font-size:15px}
 }
+/* glavnaya-9e-v1 (п. 435): 390 px — к 9 экранам без потери текста и ссылок.
+   Разборы — лентой с прокруткой вбок (следующая карточка выглядывает); номер этапа — в строку с заголовком;
+   «В отчёте ещё…» под примером на телефоне не дублирует блок «Что вы увидите в отчёте» сразу ниже. */
+@media (max-width:600px){
+  :root{--sect:44px}
+  .ceny,.faq{padding-block:44px}
+  .sect-head{margin-bottom:24px;gap:12px}
+  .hero-text{gap:14px}
+  .vhod__go{display:none}
+  .vhody__head{margin-bottom:16px}
+  .vhod h3{font-size:20px}
+  .hero{padding-bottom:32px}
+  section.vit-vhod{padding-block:32px}
+  .chetyre__go{margin-top:20px}
+  .vhod h3::after{content:"\00a0→";content:"\00a0→" / "";color:var(--accent);font-weight:600}
+  .chetyre__l{margin-top:20px}
+  .chetyre__l li{display:grid;grid-template-columns:auto 1fr;column-gap:10px;row-gap:6px;align-items:baseline;padding-top:12px}
+  .chetyre__l li>p{grid-column:1/-1}
+  .ex-pod{display:none}
+  .pr-gl{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;
+    margin-inline:calc(-1 * var(--pad));padding:0 var(--pad) 4px;scroll-padding-inline:var(--pad)}
+  .pr-gl::-webkit-scrollbar{display:none}
+  .pr-gl a{flex:0 0 84%;scroll-snap-align:start}
+  .praktika-gl .vse{margin-top:16px}
+}
+/* glavnaya-9e-v2 (п. 435): запас под 9 экранов на 390 px и ровный левый край.
+   «Посмотреть пример →» на телефоне всегда своей строкой — без отступа 10 px, который на переносе висел в начале строки;
+   пояснения под источниками («Не проверено…», ЗСК) — вторым кеглем, как строка доверия в первом экране. */
+@media (max-width:600px){
+  .doverie-str .primer-ssylka{display:block;margin:4px 0 0}
+  .ist-ne,.ist-zsk{font-size:15px;line-height:1.5;margin-top:16px}
+  .ist-go{margin-top:18px;row-gap:4px}
+}
 .ceny .usl{list-style:none;margin:20px 0 0;padding:0;display:flex;flex-direction:column;gap:12px;max-width:820px;font-size:17px;color:var(--ink2)}
 .ceny .usl b{color:var(--ink)}
 .ceny .usl a{display:inline;margin:0;white-space:nowrap}
@@ -360,9 +394,9 @@ footer a{color:var(--ink2)}
 .ceny .kanaly-glav a{display:inline;margin:0}
 </style>
 <!-- vizual-v3.0a: стили и скрипты главной — пятью файлами вместо 17 (partials/sborka.json, tests/sobrat_js.py) -->
-<link rel="stylesheet" href="/css/b/ds.55ccf08254.css">
-<link rel="stylesheet" href="/css/b/glavnaya-stil.932d0cb909.css">
-<script src="/js/b/yadro.c3d054070b.js" defer></script>
+<link rel="stylesheet" href="/css/b/ds.bdf62ed606.css">
+<link rel="stylesheet" href="/css/b/glavnaya-stil.a4a72f1269.css">
+<script src="/js/b/yadro.fcc924eb60.js" defer></script>
 <script src="/js/b/glavnaya.612640a374.js" defer></script>
 <link rel="icon" type="image/png" sizes="120x120" href="/favicon-120.png">
 <link rel="alternate" type="application/rss+xml" title="Разборы дел — Делоскоп" href="/praktika/rss.xml">
@@ -370,7 +404,7 @@ footer a{color:var(--ink2)}
 <meta name="apple-mobile-web-app-title" content="Делоскоп">
 <script>!function(d,t){try{t=localStorage.tema}catch(e){}t=t=="auto"?(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light"):t=="light"?t:"dark";d.dataset.theme=t;if(t=="dark"&&(t=document.querySelector("meta[name=theme-color]")))t.content="#111113"}(document.documentElement)</script>
 <meta name="deloskop-rezhim" content="beta">
-<style data-tema>[data-theme=dark] .top{background:rgba(17,17,19,0.86)}[data-theme=dark] .btn{color:#0B0B0C}[data-theme=dark] .btn:hover{color:#0B0B0C}[data-theme=dark] .check button{color:#0B0B0C}[data-theme=dark] .note.err{color:#FF7B72}[data-theme=dark] .row{border-top:1px solid #2E2E33}[data-theme=dark] .verdict{color:#C7C7CC}[data-theme=dark] .row .bad{color:#FF7B72}[data-theme=dark] .pill.medium{background:#2E220C}[data-theme=dark] .pill.high{background:#3A1513;color:#FF7B72}[data-theme=dark] .report-actions button{border:1px solid #2E2E33}[data-theme=dark] .report-actions .btn-doc{color:#0B0B0C}[data-theme=dark] .report-actions .btn-doc:hover{color:#0B0B0C}[data-theme=dark] .tagnew{background:#16243D}[data-theme=dark] .plan.pro{background:#1C1C1F}[data-theme=dark] .badge{color:#0B0B0C}[data-theme=dark] .period button.on{background:#1C1C1F}[data-theme=dark] .cta2:hover{background:rgba(91,155,255,0.06)}[data-theme=dark] .cta.primary{color:#0B0B0C}[data-theme=dark] .cta.primary:hover{color:#0B0B0C}[data-theme=dark] .cta.ghost{border:1px solid #2E2E33}[data-theme=dark] .faq details{border-top:1px solid #2E2E33}[data-theme=dark] .faq details:last-child{border-bottom:1px solid #2E2E33}[data-theme=dark] .fb-btn{background:#1C1C1F}[data-theme=dark] .fb-panel{background:#1C1C1F}[data-theme=dark] .fb-kinds button,[data-theme=dark] .fb-stars button{background:#1C1C1F}[data-theme=dark] .fb-kinds button[aria-pressed="true"]{background:#16243D}[data-theme=dark] .fb-stars button[aria-pressed="true"]{color:#0B0B0C}[data-theme=dark] .fb-send{color:#0B0B0C}[data-theme=dark] .fb-toast button{background:#1C1C1F}[data-theme=dark] :focus-visible{outline:3px solid rgba(91,155,255,0.45)}[data-theme=dark] .vhod:hover{border-color:#2E2E33}</style>
+<style data-tema>[data-theme=dark] .top{background:rgba(17,17,19,0.86)}[data-theme=dark] .btn{color:#0B0B0C}[data-theme=dark] .btn:hover{color:#0B0B0C}[data-theme=dark] .check button{color:#0B0B0C}[data-theme=dark] .note.err{color:#FF7B72}[data-theme=dark] .row{border-top:1px solid #2E2E33}[data-theme=dark] .verdict{color:#C7C7CC}[data-theme=dark] .row .bad{color:#FF7B72}[data-theme=dark] .pill.medium{background:#2E220C}[data-theme=dark] .pill.high{background:#3A1513;color:#FF7B72}[data-theme=dark] .report-actions button{border:1px solid #2E2E33}[data-theme=dark] .report-actions .btn-doc{color:#0B0B0C}[data-theme=dark] .report-actions .btn-doc:hover{color:#0B0B0C}[data-theme=dark] .tagnew{background:#16243D}[data-theme=dark] .plan.pro{background:#1C1C1F}[data-theme=dark] .badge{color:#0B0B0C}[data-theme=dark] .period button.on{background:#1C1C1F}[data-theme=dark] .cta2:hover{background:rgba(91,155,255,0.06)}[data-theme=dark] .cta.primary{color:#0B0B0C}[data-theme=dark] .cta.primary:hover{color:#0B0B0C}[data-theme=dark] .cta.ghost{border:1px solid #2E2E33}[data-theme=dark] .faq details{border-top:1px solid #2E2E33}[data-theme=dark] .faq details:last-child{border-bottom:1px solid #2E2E33}[data-theme=dark] .fb-btn{background:#1C1C1F}[data-theme=dark] .fb-panel{background:#1C1C1F}[data-theme=dark] .fb-kinds button,[data-theme=dark] .fb-stars button{background:#1C1C1F}[data-theme=dark] .fb-kinds button[aria-pressed="true"]{background:#16243D}[data-theme=dark] .fb-stars button[aria-pressed="true"]{color:#0B0B0C}[data-theme=dark] .fb-send{color:#0B0B0C}[data-theme=dark] .fb-toast{color:#0B0B0C}[data-theme=dark] .fb-toast button{background:#1C1C1F}[data-theme=dark] :focus-visible{outline:3px solid rgba(91,155,255,0.45)}[data-theme=dark] .vhod:hover{border-color:#2E2E33}</style>
 </head>
 <body>
 
@@ -574,7 +608,7 @@ footer a{color:var(--ink2)}
         <h2 class="h2" id="praktika-h">Как решают суды: разборы дел</h2>
         <p class="lead">Настоящие дела с&nbsp;номером и&nbsp;датой: о&nbsp;чём спорили, чем кончилось и&nbsp;что из&nbsp;этого следует для&nbsp;вас.</p>
       </div>
-      <!--praktika-glavnaya--><div class="pr-gl"><a href="/praktika/nalogi/podarok-ot-rodstvennika-usn-vs-2026/"><small>Налоги</small><b>Подарок от бабушки и упрощёнка: Верховный суд не дал инспекции записать его в доходы</b><span>Верховный суд РФ · определение № <span class="nw">305-ЭС26-10933</span> · 20 октября 2026</span></a><a href="/praktika/dogovory/zaem-inostrannoj-kompanii-schet-s-vs-2026/"><small>Договоры</small><b>Вернули заём иностранному владельцу напрямую. Чем это кончается в суде</b><span>Верховный суд РФ, Президиум · тематический обзор № 8/2026 · 17 июня 2026</span></a><a href="/praktika/115-fz/kriterii-zsk-ne-otmenit-vs/"><small>115&#8209;ФЗ</small><b>Критерии «светофора» ЦБ: почему их не отменить и с чем спорить на самом деле</b><span>Верховный суд РФ · решение № АКПИ25-52 · 11 марта 2025</span></a></div><!--/praktika-glavnaya-->
+      <!--praktika-glavnaya--><div class="pr-gl"><a href="/praktika/dogovory/ustnyy-kartel-dohod-v-byudzhet-vs-2026/"><small>Договоры</small><b>Устный сговор на торгах: Верховный суд взыскал в бюджет всё, что получили подрядчики</b><span>Верховный суд РФ · определение СКЭС № <span class="nw">309-ЭС25-15678</span> · 22 мая 2026</span></a><a href="/praktika/nalogi/remont-za-rubezhom-nds-pri-vvoze-vs-2026/"><small>Налоги</small><b>Отремонтировали за границей — заплатите НДС при ввозе: Верховный суд о ремонте за рубежом</b><span>Верховный суд РФ · определение СКЭС № <span class="nw">305-ЭС26-8377</span> · 23 октября 2026</span></a><a href="/praktika/115-fz/kriterii-zsk-ne-otmenit-vs/"><small>115&#8209;ФЗ</small><b>Критерии «светофора» ЦБ: почему их не отменить и с чем спорить на самом деле</b><span>Верховный суд РФ · решение № АКПИ25-52 · 11 марта 2025</span></a></div><!--/praktika-glavnaya-->
       <p class="vse"><a href="/praktika/" data-praktika-gl>Все разборы&nbsp;→</a></p>
     </div>
   </section>
@@ -775,6 +809,8 @@ footer a{color:var(--ink2)}
     if(window.Rentabelnost){try{Rentabelnost.mount(report,r).catch(function(){})}catch(e){}}
     // «НДС в 2027 году» — выручка 2025 года поставщика на упрощёнке рядом с порогом 20 млн ₽ (п. 1 ст. 145 НК), только к сведению; js/nds-porog.js
     if(!svoj&&window.NdsPorog){try{NdsPorog.mount(report,r)}catch(e){}}
+    // «Лимит упрощёнки» — выручка прошлого года организации на УСН от 80 % лимита доходов (п. 4 ст. 346.13 НК), только к сведению; js/usn-limit.js
+    if(!svoj&&window.DlkUsnLimit){try{DlkUsnLimit.mount(report,r)}catch(e){}}
     // golos-klienta-v1/v2: «Что добавить в отчёт?» — вошедшим после 3-й разной компании, гостям после 2-й, не чаще раза в 30 дней (js/golos.js)
     if(window.DlkGolos){try{DlkGolos.posleProverki(report,r,{api:CAPI})}catch(e){}}
   }
@@ -789,7 +825,7 @@ footer a{color:var(--ink2)}
   // primer-legkij-v1 (25.10): пример «Условий сделки» просит только пакет «primer» (usloviya + sushchestvennoe + status-kod, ~130 КБ), а не весь отчёт (~535 КБ):
   // сервер пока отдаёт без сжатия, и каждый заход на главную без проверки скачивал полмегабайта. Весь отчёт — при проверке и намерении проверить.
   // Оба тега — async=false: исполняются в порядке вставки (как defer), «primer» всегда раньше «otchet».
-  var PRIMER_JS='/js/b/primer.c9818f2b75.js', OTCHET_JS='/js/b/otchet.36dca6215e.js', primerP=null, moduliP=null;
+  var PRIMER_JS='/js/b/primer.e16a2211fe.js', OTCHET_JS='/js/b/otchet.bc90a08b08.js', primerP=null, moduliP=null;
   function teg(src){return new Promise(function(ok){var s=document.createElement('script');s.src=src;s.async=false;s.onload=s.onerror=function(){ok()};document.head.appendChild(s);});}
   function gruzitPrimer(){if(!primerP)primerP=teg(PRIMER_JS);return primerP;}
   function gruzitModuli(){if(moduliP)return moduliP;var p=gruzitPrimer();moduliP=Promise.all([p,teg(OTCHET_JS)]);return moduliP;}

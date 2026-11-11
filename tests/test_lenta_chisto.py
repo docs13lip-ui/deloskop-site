@@ -33,7 +33,11 @@ ok("хвост старой сборки убран", "old-1" not in nov and "ol
 ok("одна пара меток в <main>", nov[:nov.index("</main>")].count("<!--lenta-->") == 1
    and nov[:nov.index("</main>")].count("<!--/lenta-->") == 1)
 ok("скрипт после </main> не тронут", nov.endswith(konec))
-ok("после метки — только </div> #list", nov[nov.index("<!--/lenta-->"):nov.index("</main>")].split() == ["<!--/lenta--></div>"])
+import re as _re  # lenta-vsya-po-knopke-v1: за #list — только блок кнопки «Показать ещё» (если записей в ленте больше 20)
+posle = nov[nov.index("<!--/lenta-->"):nov.index("</main>")]
+ok("после метки — только </div> #list", _re.sub(r"<!--esche-->.*?<!--/esche-->", "", posle, flags=_re.S).split() == ["<!--/lenta--></div>"])
+ok("кнопка «Показать ещё» — одна и только когда записей больше 20",
+   posle.count("<!--esche-->") == (1 if len(S.json.loads(S.LENTA.read_text(encoding="utf-8"))["obnovleniya"]) > S.SKOLKO else 0))
 ok("повторная сборка ничего не меняет", S.sobrat(nov) == nov)
 
 ruchnoe = shapka + '<div id="list"><!--lenta--><!--/lenta--></div>\n<p>Абзац руками</p>\n' + konec

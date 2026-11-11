@@ -155,7 +155,7 @@
   ref();
 
   var CSS = "" +
-    ".sf{--sf-ink:var(--ink,#1D1D1F);--sf-ink2:var(--ink2,#48484C);--sf-muted:var(--muted,#6B6B70);--sf-line:var(--line,#E6E6E1);--sf-acc:var(--accent,#0B63E5);--sf-ok:var(--ok,#16723F);--sf-bad:var(--bad,#B3261E);color:var(--sf-ink);font-size:17px;line-height:1.45}" +
+    ".sf{--sf-ink:var(--ink,#1D1D1F);--sf-ink2:var(--ink2,#48484C);--sf-muted:var(--muted,#66666B);--sf-line:var(--line,#E6E6E1);--sf-acc:var(--accent,#0B63E5);--sf-ok:var(--ok,#16723F);--sf-bad:var(--bad,#B3261E);color:var(--sf-ink);font-size:17px;line-height:1.45}" +
     ".sf h2{font-size:24px;letter-spacing:-.02em;line-height:1.2;margin:0 0 6px;font-weight:600;outline:0}" +
     ".sf .sf-lead{color:var(--sf-ink2);font-size:15px;margin:0 0 18px}" +
     ".sf .sf-na{font-size:15px;font-weight:600;color:var(--sf-ink);margin:0 0 8px;padding:10px 12px;border-radius:10px;background:#EEF3FC}.sf .sf-na[hidden]{display:none}" +

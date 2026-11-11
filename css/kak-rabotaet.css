@@ -58,7 +58,7 @@
 .kr-f .kr-sovet--w{background:var(--warn-bg);color:var(--warn)}
 .kr-f .kr-sovet::before{display:none}
 .kr-fajl{display:flex;align-items:center;gap:12px;padding:16px;border-radius:var(--r-m);border:1.5px dashed var(--accent);background:var(--accent-soft)}
-.kr-fajl__i{display:grid;place-items:center;width:40px;height:48px;border-radius:6px;background:var(--bad);color:#fff;font-size:12px;font-weight:700}
+.kr-fajl__i{display:grid;place-items:center;width:40px;height:48px;border-radius:6px;background:var(--bad);color:var(--on-accent,#fff);font-size:12px;font-weight:700}
 .kr-niz{max-width:var(--text);margin-top:var(--s-6);font-size:var(--t-small);color:var(--muted)}
 /* сцена: со скриптом — элементы появляются по шагам */
 .kr-js [data-ot]{opacity:0;transform:translateY(10px);transition:opacity .45s var(--ease),transform .45s var(--ease)}

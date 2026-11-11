@@ -829,7 +829,7 @@ s.textContent =
 '.pwa__da{min-height:44px;padding:0 18px;border:0;border-radius:999px;background:var(--accent,#0B63E5);color:#fff;font-weight:600;font-size:15px;line-height:1;font-family:inherit;cursor:pointer}' +
 '.pwa__da:hover{background:var(--accent-hover,#084BB0)}' +
 '.pwa__net{min-height:44px;padding:0 12px;border:0;border-radius:999px;background:transparent;color:var(--accent,#0B63E5);font-weight:600;font-size:15px;line-height:1;font-family:inherit;cursor:pointer}' +
-'.pwa__x{flex:none;width:44px;height:44px;margin:-10px -10px 0 0;border:0;border-radius:50%;background:transparent;color:var(--muted,#6B6B70);cursor:pointer;display:grid;place-items:center}' +
+'.pwa__x{flex:none;width:44px;height:44px;margin:-10px -10px 0 0;border:0;border-radius:50%;background:transparent;color:var(--muted,#66666B);cursor:pointer;display:grid;place-items:center}' +
 '.pwa__sh{display:inline-block;width:16px;height:16px;vertical-align:-2px;margin:0 2px}' +
 '@media (prefers-reduced-motion:reduce){.pwa{transition:none}}';
 d.head.appendChild(s);
@@ -1061,7 +1061,25 @@ if (okr.dnt === "1" || okr.dnt === "yes" || okr.gpc === true || okr.webdriver ==
 if (NE_SCHITAEM.test(String(okr.pathname || ""))) return null;
 return { p: put(okr.pathname, okr.search), r: otkuda(okr.referrer) };
 }
-var api = { put: put, otkuda: otkuda, telo: telo };
+var VIDY = { deystvie_dokumenty: 1, deystvie_dosje: 1, deystvie_slezhenie: 1, deystvie_pervoe: 1, perepoverka_7_60: 1,
+proverka_novaya: 1, vozvrat_3_30: 1 };
+var MNOGO = { proverka_novaya: 1, perepoverka_7_60: 1 };
+var VKL = false;
+function teloSobytiya(vid, okr) {
+if (VIDY[vid] !== 1 || !telo(okr)) return null;
+return { sobytie: vid };
+}
+var Q4 = { docs: "deystvie_dokumenty", dosje: "deystvie_dosje", slezh: "deystvie_slezhenie" };
+var CEL = { otchet_sled: "deystvie_slezhenie", shchit_sled: "deystvie_slezhenie", otchet_pasport: "deystvie_dosje" };
+function vidKlika(el) {
+if (!el || !el.closest) return null;
+var b = el.closest("[data-q4-act]");
+if (b) return Q4[b.getAttribute("data-q4-act")] || null;
+b = el.closest("[data-cel]");
+if (b) return CEL[b.getAttribute("data-cel")] || null;
+return el.closest("[data-slezh-knopka]") ? "deystvie_slezhenie" : null;
+}
+var api = { put: put, otkuda: otkuda, telo: telo, teloSobytiya: teloSobytiya, vidKlika: vidKlika, VIDY: VIDY };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 if (!koren || !koren.document || !koren.location) return;
 var d = koren.document, n = koren.navigator || {}, l = koren.location;
@@ -1079,6 +1097,32 @@ function pozzhe() {
 var go = function () { (koren.requestIdleCallback || function (f) { setTimeout(f, 1); })(otpravit, { timeout: 3000 }); };
 if (d.readyState === "complete") go(); else koren.addEventListener("load", go, { once: true });
 }
+var poslano = {};
+function sobytie(vid) {
+try {
+if (!VKL || (poslano[vid] && !MNOGO[vid])) return;
+var b = teloSobytiya(vid, { host: l.hostname, pathname: l.pathname, search: l.search, referrer: "",
+dnt: n.doNotTrack || koren.doNotTrack, gpc: n.globalPrivacyControl, webdriver: n.webdriver });
+if (!b || typeof koren.fetch !== "function") return;
+poslano[vid] = 1;
+koren.fetch("https://api.deloskop.ru/api/ping", { method: "POST", mode: "cors", credentials: "omit",
+keepalive: true, headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) })
+.catch(function () {});
+} catch (e) {}
+}
+koren.dlkSobytie = sobytie;
+koren.dlkSchitaem = function () {
+try {
+return VKL && !!teloSobytiya("vozvrat_3_30", { host: l.hostname, pathname: l.pathname, search: "", referrer: "",
+dnt: n.doNotTrack || koren.doNotTrack, gpc: n.globalPrivacyControl, webdriver: n.webdriver });
+} catch (e) { return false; }
+};
+if (d.addEventListener) d.addEventListener("click", function (e) {
+var v = vidKlika(e && e.target);
+if (!v) return;
+if (VKL && !poslano.deystvie_pervoe) sobytie("deystvie_pervoe");
+sobytie(v);
+}, true);
 if (d.prerendering) d.addEventListener("prerenderingchange", pozzhe, { once: true }); else pozzhe();
 koren.addEventListener("pageshow", function (e) { if (e && e.persisted) otpravit(); });
 })(typeof window !== "undefined" ? window : null);

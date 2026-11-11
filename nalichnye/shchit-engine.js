@@ -43,12 +43,14 @@
     // Переводы физлицам вне зарплаты
     personsShare: 0.20,
     personsMinCount: 10,
-    // Взносы наличных — методические рекомендации Банка России № 1-МР от 20.05.2026:
-    // от 30 млн ₽ за 30 дней, если заметно больше обычных оборотов за 3 предыдущих месяца
+    // Взносы наличных — методические рекомендации Банка России № 5-МР от 26.10.2026
+    // (заменили 1-МР от 20.05.2026): для компаний и ИП порога нет — банк может спросить
+    // об источнике при любой сумме; «наличному» бизнесу — пока взносы не выросли резко
     depositWindowDays: 30,
-    depositLimit: 30000000,
-    depositVsAvg: 2,               // «заметно больше» — наш ориентир: вдвое выше среднего
+    depositVsAvg: 2,               // «резко выросли» — наш ориентир: вдвое выше среднего месячного прихода
     depositShareAttention: 0.30,   // доля наличных во всех поступлениях, если бизнес не «наличный»
+    depositSplitCount: 3,          // дробление: столько взносов за один день…
+    depositSplitSum: 1000000,      // …на сумму от 1 млн ₽ (5-МР п. 3 называет «дробление общих сумм» без чисел; 3 взноса и 1 млн ₽ — наш порог)
     // Наличные «на хознужды» без следа: риск доначисления НДФЛ 13% + взносы до 30%
     hiddenSalaryRate: 0.43,
     vagueMonthly: 100000,
@@ -368,18 +370,29 @@
     if (T.outAll && T.person / T.outAll >= C.personsShare && personCount >= C.personsMinCount)
       add('persons', 1, T.person / T.outAll, { amount: T.person, count: personCount, source: 'ориентир Делоскопа' });
 
-    // 4.10 Взносы наличных (1-МР от 20.05.2026)
+    // 4.10 Взносы наличных (5-МР от 26.10.2026; порога для компаний и ИП нет)
     if (T.cashIn > 0) {
+      var MR5 = 'Методические рекомендации Банка России № 5-МР от 26.10.2026';
       var cashIns = ops.filter(function (o) { return o.kind === 'cash_in'; }), peak = 0, peakEnd = 0;
       cashIns.forEach(function (o) {
         var s = 0; cashIns.forEach(function (q) { if (q.t <= o.t && q.t > o.t - C.depositWindowDays * DAY) s += q.sum; });
         if (s > peak) { peak = s; peakEnd = o.t; }
       });
-      var before = ops.filter(function (o) { return o.dir === 'in' && o.kind !== 'own' && o.t <= peakEnd - C.depositWindowDays * DAY && o.t > peakEnd - (C.depositWindowDays + 90) * DAY; })
-        .reduce(function (s, o) { return s + o.sum; }, 0) / 3;
+      // Обычный месячный приход — за 3 месяца до окна; если выписка короче, делим на покрытые месяцы, меньше месяца — сравнивать не с чем
+      var wStart = peakEnd - C.depositWindowDays * DAY, bFrom = Math.max(start, wStart - 90 * DAY), bMonths = (wStart - bFrom) / (30 * DAY);
+      var before = bMonths < 1 ? 0 : ops.filter(function (o) { return o.dir === 'in' && o.kind !== 'own' && o.t <= wStart && o.t > bFrom; })
+        .reduce(function (s, o) { return s + o.sum; }, 0) / bMonths;
       var cashInShare = T.inAll ? T.cashIn / T.inAll : 0;
-      if (peak >= C.depositLimit && (!before || peak >= before * C.depositVsAvg)) add('deposit_big', 2, peak, { avg: before, source: 'Методические рекомендации Банка России № 1-МР от 20.05.2026' });
-      else if (!opts.cashBusiness && cashInShare >= C.depositShareAttention) add('deposit_share', 1, cashInShare, { amount: T.cashIn, source: 'ориентир Делоскопа; 1-МР от 20.05.2026' });
+      // Резкий рост: есть с чем сравнить, и за 30 дней внесено вдвое больше обычного месячного прихода
+      var spike = before > 0 && peak >= before * C.depositVsAvg;
+      // Дробление: несколько взносов в один день на крупную сумму
+      var byDay = {}, split = null;
+      cashIns.forEach(function (o) { var k = Math.floor(o.t / DAY); var d = byDay[k] || (byDay[k] = { t: o.t, n: 0, sum: 0 }); d.n++; d.sum += o.sum; });
+      Object.keys(byDay).forEach(function (k) { var d = byDay[k]; if (d.n >= C.depositSplitCount && d.sum >= C.depositSplitSum && (!split || d.sum > split.sum)) split = d; });
+      if (split) add('deposit_split', 2, split.sum, { count: split.n, day: split.t, source: MR5 });
+      if (spike) add('deposit_big', 2, peak, { avg: before, source: MR5 });
+      else if (!opts.cashBusiness && cashInShare >= C.depositShareAttention) add('deposit_share', 1, cashInShare, { amount: T.cashIn, source: 'ориентир Делоскопа; ' + MR5 });
+      else if (!opts.cashBusiness && !split) add('deposit_any', 1, T.cashIn, { count: cashIns.length, source: MR5 });
     }
 
     // 4.11 Наличные без следа: «хознужды», «прочие выдачи», подотчёт

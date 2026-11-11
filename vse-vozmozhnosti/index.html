@@ -27,22 +27,25 @@
 <link rel="preload" href="/fonts/onest-cyrillic-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/onest-latin-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/onest-cyrillic-600.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/css/b/ds.55ccf08254.css">
-<script src="/js/b/yadro.c3d054070b.js" defer></script>
+<link rel="stylesheet" href="/css/b/ds.bdf62ed606.css">
+<script src="/js/b/yadro.fcc924eb60.js" defer></script>
 <link rel="icon" type="image/png" sizes="120x120" href="/favicon-120.png">
 <link rel="alternate" type="application/rss+xml" title="Разборы дел — Делоскоп" href="/praktika/rss.xml">
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="apple-mobile-web-app-title" content="Делоскоп">
 <link rel="stylesheet" href="/css/glubina.css">
 <script>!function(d,t){try{t=localStorage.tema}catch(e){}t=t=="auto"?(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light"):t=="light"?t:"dark";d.dataset.theme=t;if(t=="dark"&&(t=document.querySelector("meta[name=theme-color]")))t.content="#111113"}(document.documentElement)</script>
-<style data-vv-rynok>/* glavnaya-a-v2: «Рынок сейчас» и «Сколько стоит ошибка» переехали с главной (стили — оттуда же) */
+<style data-vv-rynok>/* glavnaya-a-v2: «Рынок сейчас» и «Сколько стоит ошибка» переехали с главной (стили — оттуда же). oshibka-svet-v1: --dark здесь задаёт только тёмная тема (на главной — свой :root), поэтому у плашки запасной #111113; рамка кнопки — через var(), чтобы тёмная тема не перекрашивала её в цвет линии на чёрном */
+/* peremennye-v1: --sect задан только на главной — здесь он был пуст, и отступы разделов витрины, «Рынка» и «Сколько стоит ошибка» падали в 0 */
+.vv{--sect:clamp(64px,9vw,112px)}
+@media (max-width:600px){.vv{--sect:44px}}
 .vv .sect{padding-block:var(--sect)}
 .rynok{padding-bottom:0}
 .rynok__nad{font-size:13px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
 .rynok__g{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:24px clamp(32px,5vw,80px);align-items:start;margin-top:clamp(28px,3.5vw,44px)}
 .rynok__ch{display:flex;flex-direction:column;gap:10px}
 .rynok__ch b{align-self:flex-start;font-size:clamp(64px,8.4vw,128px);font-weight:600;line-height:.95;letter-spacing:-.045em;white-space:nowrap;font-variant-numeric:lining-nums proportional-nums}
-.rynok__ch span{font-size:clamp(17px,1.5vw,20px);color:var(--ink2);max-width:300px;line-height:1.4}
+.rynok__ch span{font-size:clamp(17px,1.5vw,20px);color:var(--ink-2);max-width:300px;line-height:1.4}
 .rynok__t{display:flex;flex-direction:column;gap:16px;max-width:640px}
 .rynok__t p{font-size:clamp(17px,1.4vw,17px);line-height:1.55}
 .rynok__go{font-weight:600}
@@ -51,13 +54,12 @@
 .rynok__ist a:hover{color:var(--accent)}
 @media (max-width:860px){.rynok__g{grid-template-columns:1fr;gap:20px}}
 .oshibka{padding-block:0}
-.oshibka__in{display:flex;align-items:center;justify-content:space-between;gap:20px 40px;flex-wrap:wrap;background:var(--dark);color:#F5F5F7;border-radius:var(--r-lg,28px);padding:clamp(24px,3vw,36px) clamp(24px,3.5vw,44px);margin-block:var(--sect)}
+.oshibka__in{display:flex;align-items:center;justify-content:space-between;gap:20px 40px;flex-wrap:wrap;background:var(--dark,#111113);color:#F5F5F7;border-radius:var(--r-lg,28px);padding:clamp(24px,3vw,36px) clamp(24px,3.5vw,44px);margin-block:var(--sect)}
 .oshibka__in p{font-size:clamp(17px,1.7vw,20px);line-height:1.45;max-width:760px}
-.oshibka__go{display:inline-flex;align-items:center;min-height:48px;padding:0 22px;border-radius:16px;border:1px solid rgba(255,255,255,.28);color:#fff!important;font-weight:600;white-space:nowrap}
-.oshibka__go:hover{border-color:#fff}
+.oshibka__go{display:inline-flex;align-items:center;min-height:48px;padding:0 22px;border-radius:16px;border:1px solid var(--oshibka-ramka,rgba(255,255,255,.28));color:#fff!important;font-weight:600;white-space:nowrap}
+.oshibka__go:hover{border-color:var(--oshibka-ramka-h,#fff)}
 </style>
 <meta name="deloskop-rezhim" content="beta">
-<style data-tema>[data-theme=dark] .oshibka__go{border:1px solid rgba(46,46,51,0.28)}[data-theme=dark] .oshibka__go:hover{border-color:#2E2E33}</style>
 </head>
 <body>
 <!--shapka-->

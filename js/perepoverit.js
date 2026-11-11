@@ -37,7 +37,8 @@
   function chistyjInn(s) { s = String(s == null ? '' : s).replace(/\D/g, ''); return /^(\d{10}|\d{12})$/.test(s) ? s : ''; }
 
   /* { inn, imya, proveren: 'ДД.ММ.ГГГГ', do: 'ДД.ММ.ГГГГ', napomnit: 'ГГГГММДД', konec: 'ГГГГММДД', ssylka } | null */
-  function srok(r) {
+  // dop (Досье сделки, 01.11.2026): { ssylka, zag } — своя ссылка возврата и заголовок события
+  function srok(r, dop) {
     if (!r || !r.company) return null;
     var c = r.company;
     var inn = chistyjInn(c.inn);
@@ -49,7 +50,8 @@
       imya: String(c.name_short || c.name_full || ('ИНН ' + inn)).replace(/\s+/g, ' ').trim(),
       proveren: ru(den), 'do': ru(dodo),
       napomnit: ymd(dodo - 864e5), konec: ymd(dodo),
-      ssylka: SAJT + '?inn=' + inn + '&utm_source=ics'
+      ssylka: dop && /^https:\/\/deloskop\.ru\//.test(dop.ssylka || '') ? dop.ssylka : SAJT + '?inn=' + inn + '&utm_source=ics',
+      zag: dop && dop.zag ? String(dop.zag) : ''
     };
   }
 
@@ -76,7 +78,7 @@
   // текст файла .ics; seichas — мс (для DTSTAMP), по умолчанию — сейчас
   function ics(s, seichas) {
     if (!s) return '';
-    var zag = 'Перепроверить ' + s.imya + ' перед следующей оплатой';
+    var zag = s.zag || ('Перепроверить ' + s.imya + ' перед следующей оплатой');
     var opis = 'Проверка в Делоскопе от ' + s.proveren + '. Перепроверить до ' + s['do'] +
       ': сведения реестров меняются, открытые данные ФНС обновляются раз в месяц.\n' + s.ssylka;
     var L = [
@@ -115,7 +117,7 @@
   var CSS = '.pp{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;padding:12px 0;border-bottom:1px solid var(--line,#E6E6E1)}' +
     '.pp__t{margin:0;font-size:var(--t-15,15px);color:var(--ink,#1D1D1F);min-width:0}' +
     '.pp__t b{font-weight:600;font-variant-numeric:tabular-nums}' +
-    '.pp__t small{display:block;font-size:var(--t-13,13px);color:var(--muted,#6B6B70);margin-top:2px}' +
+    '.pp__t small{display:block;font-size:var(--t-13,13px);color:var(--muted,#66666B);margin-top:2px}' +
     '.pp__b{min-height:44px;border:1px solid var(--line,#D9D9D4);background:transparent;font:inherit;font-size:var(--t-15,15px);font-weight:600;' +
     'border-radius:var(--r-small,10px);padding:10px 16px;cursor:pointer;color:var(--ink,#1D1D1F)}' +
     '.pp__b:hover,.pp__b:focus-visible{border-color:var(--accent,#0B63E5);color:var(--accent,#0B63E5)}' +
@@ -166,5 +168,5 @@
     return true;
   }
 
-  return { srok: srok, ics: ics, html: html, kletka: kletka, mount: mount, slozhit: slozhit, DNEJ: DNEJ, CSS: CSS };
+  return { srok: srok, ics: ics, html: html, kletka: kletka, mount: mount, skachat: skachat, slozhit: slozhit, DNEJ: DNEJ, CSS: CSS };
 });

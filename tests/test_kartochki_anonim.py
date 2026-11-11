@@ -109,7 +109,8 @@ class TestIzApiDostup(unittest.TestCase):
             K.iz_api(sp, vyhod, pauza=0)
         r = K.chitat_jsonl(vyhod)[0]
         self.assertEqual(r["_dostup"], "anonimno")
-        self.assertIn("анонимный /api/check отдаёт реестр без финансов", out.getvalue())
+        self.assertIn("анонимный /api/check у новых компаний отдаёт реестр без финансов", out.getvalue())
+        self.assertIn("--osvezhit", out.getvalue())
 
 
 if __name__ == "__main__":

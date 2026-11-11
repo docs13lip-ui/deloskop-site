@@ -200,15 +200,15 @@
     '.otk__t{font-size:15px;font-weight:600;color:var(--ink,#1D1D1F)}' +
     '.otk__t::after{content:"";display:inline-block;width:6px;height:6px;margin-left:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-3px) rotate(45deg);transition:transform .2s}' +
     '.otk[open] .otk__t::after{transform:translateY(0) rotate(225deg)}' +
-    '.otk__s{font-variant-numeric:tabular-nums;color:var(--muted,#6B6B70)}' +
-    '.otk__m{margin-left:auto;letter-spacing:2px;color:var(--muted,#6B6B70);font-size:12px}' +
+    '.otk__s{font-variant-numeric:tabular-nums;color:var(--muted,#66666B)}' +
+    '.otk__m{margin-left:auto;letter-spacing:2px;color:var(--muted,#66666B);font-size:12px}' +
     '.otk ul{list-style:none;margin:0;padding:0}' +
     '.otk__r{display:grid;grid-template-columns:16px minmax(0,1fr) auto;gap:4px 10px;padding:8px 0;border-top:1px solid #EFEFEA;align-items:baseline}' +
-    '.otk__z{color:var(--ok,#16723F)}.otk__r--net .otk__z,.otk__r--nep .otk__z{color:var(--muted,#6B6B70)}.otk__r--raschet .otk__z{color:var(--ink2,#48484C)}' +
-    '.otk__n{display:grid;gap:2px;min-width:0}.otk__n b{font-weight:500;color:var(--ink,#1D1D1F)}.otk__n small{font-size:12px;color:var(--muted,#6B6B70)}' +
+    '.otk__z{color:var(--ok,#16723F)}.otk__r--net .otk__z,.otk__r--nep .otk__z{color:var(--muted,#66666B)}.otk__r--raschet .otk__z{color:var(--ink2,#48484C)}' +
+    '.otk__n{display:grid;gap:2px;min-width:0}.otk__n b{font-weight:500;color:var(--ink,#1D1D1F)}.otk__n small{font-size:12px;color:var(--muted,#66666B)}' +
     '.otk__d{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}.otk__d a{color:var(--accent,#0B63E5)}' +
     '.otk__r--net .otk__d,.otk__r--nep .otk__d{white-space:normal;max-width:220px}' +
-    '.otk__p{margin:8px 0 0;font-size:12px;color:var(--muted,#6B6B70)}' +
+    '.otk__p{margin:8px 0 0;font-size:12px;color:var(--muted,#66666B)}' +
     '@media (max-width:520px){.otk__r{grid-template-columns:16px minmax(0,1fr)}.otk__d{grid-column:2;text-align:left;white-space:normal;max-width:none}.otk__m{display:none}}' +
     '@media print{.otk:not([open])>*:not(summary){display:block}.otk__m{display:none}}';
 

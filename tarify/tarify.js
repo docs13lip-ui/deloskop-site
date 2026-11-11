@@ -38,7 +38,8 @@
   }
 
   /* Окупаемость: что стоит на кону и во сколько раз это больше цены тарифа.
-     rezhim: "osn" — вычет НДС 22%; "usn15" — расходы по ставке 15%; "usn6" — налогового риска по вычетам нет. */
+     rezhim: "osn" — вычет НДС 22%; "usn15" — расходы по ставке 15%; "usn6" — расходов в налоге нет.
+     nds22 (только УСН): платите НДС 22% и берёте вычет — на кону и вычет; при 15% расходы считаем без НДС. */
   function okupaemost(D, vvod, cenaGodTarifa) {
     var r = D.raschet;
     var S = Math.max(0, vvod.summa || 0);
@@ -46,8 +47,9 @@
     if (vvod.rezhim === "osn") {
       nalog = S * r.nds / (100 + r.nds);
       if (vvod.pribyl) nalog += (S - S * r.nds / (100 + r.nds)) * r.nalog_na_pribyl / 100;
-    } else if (vvod.rezhim === "usn15") {
-      nalog = S * 0.15;
+    } else {
+      var vychet = vvod.nds22 ? S * r.nds / (100 + r.nds) : 0;
+      nalog = vychet + (vvod.rezhim === "usn15" ? (S - vychet) * 0.15 : 0);
     }
     var shtraf = nalog * r.shtraf_122 / 100;
     var peni = nalog * doliPenej(r.klyuchevaya_stavka);
@@ -159,7 +161,7 @@
     var inp = $(id); if (!inp) return;
     inp.addEventListener("input", function () { if (inp.dataset.den) format(inp); schet(); });
   });
-  ["p-delopis", "p-rezhim", "p-pribyl", "p-nal"].forEach(function (id) { var x = $(id); if (x) x.addEventListener("change", schet); });
+  ["p-delopis", "p-rezhim", "p-pribyl", "p-nds22", "p-nal"].forEach(function (id) { var x = $(id); if (x) x.addEventListener("change", schet); });
 
   function schet() {
     var nuzhno = { otchetov: chislo($("p-otch")), slezhenie: chislo($("p-slezh")), polzovatelej: chislo($("p-lyudi")) || 1, delopis: $("p-delopis").checked };
@@ -203,13 +205,14 @@
   }
 
   function okup(t, godCena) {
-    var vvod = { summa: chislo($("p-summa")), rezhim: $("p-rezhim").value, pribyl: $("p-pribyl").checked, oborot: chislo($("p-oborot")) };
+    var vvod = { summa: chislo($("p-summa")), rezhim: $("p-rezhim").value, pribyl: $("p-pribyl").checked, nds22: $("p-nds22").checked, oborot: chislo($("p-oborot")) };
     $("p-pribyl-l").hidden = vvod.rezhim !== "osn";
+    $("p-nds22-l").hidden = vvod.rezhim === "osn";
     var o = okupaemost(D, vvod, godCena);
     $("o-nalog").textContent = rub(o.naKonu);
     $("o-nalog-sost").textContent = tipo(o.naKonu > 0
       ? "налог " + rub(o.nalog) + " + штраф " + rub(o.shtraf) + " + пени за 2 года " + rub(o.peni)
-      : "на УСН «доходы» вычетов нет — налоговая не снимет их из-за поставщика");
+      : "по расходам снимать нечего, вычета нет — риск в самих деньгах и в блокировке счёта");
     $("o-prostoj").textContent = rub(o.prostoj);
     var vyvod;
     if (godCena === 0) vyvod = "Бесплатный тариф ничего не стоит — но и не следит за партнёрами. Когда появятся постоянные поставщики, вернитесь к расчёту.";

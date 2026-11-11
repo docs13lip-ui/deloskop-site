@@ -50,8 +50,10 @@
   var REGIMES = {
     osn:      { title: 'ОСН',                       vat: true,  base: NORMS.profitTax },
     usn15vat: { title: 'УСН 15% с НДС 22%',         vat: true,  base: NORMS.usnDr },
+    // usn6-nds-v1: на УСН 6% с НДС 22% вычет входного НДС есть — его и снимут (расходов в налоге нет)
+    usn6vat:  { title: 'УСН 6% с НДС 22%',          vat: true,  base: 0 },
     usn15:    { title: 'УСН 15% без НДС или 5–7%',  vat: false, base: NORMS.usnDr },
-    usn6:     { title: 'УСН 6%',                    vat: false, base: 0 }
+    usn6:     { title: 'УСН 6% без НДС или 5–7%',   vat: false, base: 0 }
   };
 
   /* ---------- контрольные числа ---------- */
@@ -348,7 +350,7 @@
     if (s.share >= NORMS.shareKey) add('warn', 'key', 'Ключевой поставщик: ' + pct(s.share) + ' всех расходов. Проверять в первую очередь и держать папку документов — договор, акты, переписку.');
     if (s.count === 1 && s.share >= NORMS.shareOneShot) add('warn', 'oneshot', 'Разовый крупный платёж. Такие сделки налоговая проверяет чаще — сохраните договор, акт и доказательства, что работа сделана.');
     if (s.vague >= Math.max(1, Math.ceil(s.count / 2))) add('info', 'vague', 'В назначении не видно, за что платите. Банк и налоговая читают назначение первым — пишите предмет: «за доставку бетона по договору № …».');
-    if (regime.vat && s.noVat >= s.sum * 0.9 && s.kind === 'org' && s.sum >= 300000) add('info', 'novat', 'Поставщик работает без НДС — вычета по нему нет. Для ОСН это минус ' + money(round2(s.sum * NORMS.vatMain / (100 + NORMS.vatMain))) + ' ₽ к цене в сравнении с плательщиком НДС.');
+    if (regime.vat && s.noVat >= s.sum * 0.9 && s.kind === 'org' && s.sum >= 300000) add('info', 'novat', 'Поставщик работает без НДС — вычета по нему нет. Для вас это минус ' + money(round2(s.sum * NORMS.vatMain / (100 + NORMS.vatMain))) + ' ₽ к цене в сравнении с плательщиком НДС.');
     if (s.count >= 4 && s.round === s.count) add('info', 'round', 'Все платежи — круглые суммы. Само по себе не нарушение, но банк замечает, если за ними нет счетов и актов.');
     return out;
   }

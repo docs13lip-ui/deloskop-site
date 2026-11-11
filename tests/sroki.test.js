@@ -58,7 +58,7 @@ test('sroki.json: логика дат — день срока зелёный, с
 // Краснеет, если такая цифра появилась на странице, в скрипте или данных сайта раньше, чем её разрешили [Право].
 test('sroki.json: цифры «не публикуем» не стоят на сайте', () => {
   const zapret = S.sroki.flatMap((s) => (s.ne_publikuem || []).map((f) => [s.id, f]));
-  assert.ok(zapret.length >= 1);
+  // 02.11.2026: 518,85 / 230,6 / 288,25 сняты из ne_publikuem (приказ № 732 опубликован) — список может быть пуст.
   const propusk = new Set(['.git', 'node_modules', 'tests', 'deploy', '.github']);
   const fajly = [];
   const obojti = (d) => {
@@ -77,4 +77,33 @@ test('sroki.json: цифры «не публикуем» не стоят на с
     for (const [id, fr] of zapret) if (t.includes(fr)) najdeno.push(`${path.relative(KOREN, f)}: «${fr}» (${id})`);
   }
   assert.deepEqual(najdeno, [], 'Цифра из проекта попала на сайт — до опубликования акта не ставим:\n' + najdeno.join('\n'));
+});
+
+// usn-limit-2027-v1 (02.11.2026, [Ночные запуски]; строка — [Право · Налоговый юрист] 02.11):
+// числа дефлятора 2027 — только все вместе, с номером и датой приказа (правило [Право] 01.11).
+// Краснеет, если где-то на сайте стоит хоть одно из трёх чисел без остальных или без «№ 732» и «21.10.2026».
+test('дефлятор 2027: 518,85 / 230,6 / 272,5 / 288,25 — только вместе и с реквизитами приказа', () => {
+  const chisla = ['518,85 млн ₽', '230,6 млн ₽', '272,5 млн ₽', '288,25 млн ₽'];
+  const rekv = ['1,090', '1,153', '№ 732', '21.10.2026'];
+  const propusk = new Set(['.git', 'node_modules', 'tests', 'deploy', '.github']);
+  const plohie = [];
+  let vstrecheno = 0;
+  const obojti = (d) => {
+    for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+      if (propusk.has(e.name)) continue;
+      const p = path.join(d, e.name);
+      if (e.isDirectory()) { obojti(p); continue; }
+      // obnovleniya-verh.json — механический срез верхних 12 записей obnovleniya.json (tests/sobrat_lentu.py): запись
+      // со строкой дефлятора может уйти из среза раньше соседней с реквизитами — сторож краснел от новой записи ленты (07.11)
+      if (!/\.(html|js|json|xml|txt)$/.test(e.name) || ['sroki.json', 'obnovleniya.json', 'obnovleniya-verh.json'].includes(e.name)) continue;
+      const t = norm(fs.readFileSync(p, 'utf8'));
+      if (!/518,85|230,6 млн|272,5 млн|288,25 млн/.test(t)) continue;
+      vstrecheno++;
+      const net = [...chisla, ...rekv].filter((f) => !t.includes(f));
+      if (net.length) plohie.push(`${path.relative(KOREN, p)}: нет ${net.map((f) => '«' + f + '»').join(', ')}`);
+    }
+  };
+  obojti(KOREN);
+  assert.deepEqual(plohie, [], 'Числа дефлятора 2027 — только одной строкой с реквизитами приказа:\n' + plohie.join('\n'));
+  assert.ok(vstrecheno >= 1, 'строка о лимите УСН 2027 пропала со страницы');
 });

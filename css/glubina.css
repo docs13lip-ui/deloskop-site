@@ -54,7 +54,7 @@ body::after{content:"";position:fixed;z-index:-1;inset:0;pointer-events:none;opa
 .zhi__strelka{position:absolute;left:50%;top:50%;width:2px;height:50%;margin-left:-1px;transform-origin:50% 0;transform:rotate(calc(45deg + var(--p)*2.7273deg));pointer-events:none}
 .zhi__strelka::after{content:"";position:absolute;left:-3px;bottom:-1px;width:8px;height:8px;border-radius:50%;background:var(--ink,#1D1D1F);box-shadow:0 0 0 3px #fff}
 .zhi__chislo{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:inherit;font-size:calc(var(--d)*.34);font-weight:600;line-height:1;letter-spacing:-.03em;color:var(--ink,#1D1D1F);font-variant-numeric:tabular-nums;transform:translateZ(24px)}
-.zhi__chislo small{font-size:.32em;font-weight:500;color:var(--muted,#6B6B70);margin-left:2px}
+.zhi__chislo small{font-size:.32em;font-weight:500;color:var(--muted,#66666B);margin-left:2px}
 .zhi__pod::before{content:"Индекс Делоскопа · 1–99"}
 /* пример (компания вымышленная): вместо числа — знак зоны цветом зоны */
 .ex-ix .zhi__chislo::before{content:"";width:30%;height:30%;background:var(--zona-cvet);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-6.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-6.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}

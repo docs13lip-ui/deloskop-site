@@ -808,6 +808,16 @@ def _v(kod, ton, tekst, istochnik, data, s_chislom=True, status="podtverzhdeno")
     return {"kod": kod, "ton": ton, "tekst": tekst, "istochnik": istochnik, "data": data, "s_chislom": s_chislom, "status": status}
 
 
+# rukovod-mesyac-v1 ([Ночные-2] 10.11): «сменился в этом месяце» на карточке со сведениями на 26.10 в ноябре читается
+# как «в ноябре» — неверно. Месяц и год называем словами: «в октябре 2026 года» — та же точность, что и раньше.
+MESYACY_PREDL = ["январе", "феврале", "марте", "апреле", "мае", "июне", "июле", "августе", "сентябре", "октябре", "ноябре", "декабре"]
+
+
+def mesyac_predl(d):
+    """date → 'в октябре 2026 года' (неразрывные пробелы)."""
+    return "в%s%s%s%d%sгода" % (NB, MESYACY_PREDL[d.month - 1], NB, d.year, NB)
+
+
 def vozrast_mes(k, na):
     r = k.get("reg_date")
     if not r or not na or r > na:
@@ -978,7 +988,7 @@ def vyvody(k):
     rs = vozrast_mes({"reg_date": k.get("rukovodit_s")}, na) if k.get("rukovodit_s") and k.get("egrul_data") else None
     if rs is not None and mes is not None and mes >= 12:
         if rs <= 6:
-            out.append(_v("V18", "warn", "Руководитель сменился %s" % ("в этом месяце" if rs < 1 else "%d%s%s назад" % (rs, NB, plural(rs, "месяц", "месяца", "месяцев"))), "ЕГРЮЛ", k["egrul_data"]))
+            out.append(_v("V18", "warn", "Руководитель сменился %s" % (mesyac_predl(k["rukovodit_s"]) if rs < 1 else "%d%s%s назад" % (rs, NB, plural(rs, "месяц", "месяца", "месяцев"))), "ЕГРЮЛ", k["egrul_data"]))
         elif rs >= 36:
             let = rs // 12
             out.append(_v("V19", "ok", "Руководитель тот же %d%s%s — с%s%d года" % (let, NB, plural(let, "год", "года", "лет"), NB, k["rukovodit_s"].year), "ЕГРЮЛ", k["egrul_data"]))
@@ -3760,6 +3770,21 @@ def un_pered(f):
 # у span без роли aria-label запрещён (aria-prohibited-attr) и читалка подпись («хорошо», «обратите внимание»…) не произносит.
 # role="img" — точка как значок с именем. Новые карточки — в шаблоне; опубликованные — здесь. Идемпотентна.
 _ZNAK_BEZ_ROLI = re.compile(r'<span class="co-v__z" aria-label="')
+
+
+# rukovod-mesyac-v1: на опубликованных карточках «сменился в этом месяце» — даты смены в HTML нет, есть день сведений
+# ЕГРЮЛ: «сменился менее чем за месяц до 26.10.2026». Новые карточки — месяцем и годом (mesyac_predl).
+_RUK_MESYAC = re.compile(r"сменился в(&#160;|\u00a0| )этом месяце")
+_EGRUL_DEN = re.compile(r"ЕГРЮЛ · сведения на(?:&#160;|\u00a0| )(\d\d\.\d\d\.\d{4})")
+
+
+def pochinit_ruk_mesyac(t):
+    if not _RUK_MESYAC.search(t):
+        return t
+    m = _EGRUL_DEN.search(t)
+    if not m:
+        return t
+    return _RUK_MESYAC.sub(lambda x: "сменился менее чем за" + x.group(1) + "месяц до" + x.group(1) + m.group(1), t)
 
 
 def pochinit_rol_znaka(t):

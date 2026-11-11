@@ -327,28 +327,28 @@
   }
 
   var CSS = '.fc{background:#fff;border-radius:28px;padding:24px;margin:0 0 26px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 16px 40px rgba(0,0,0,.05)}' +
-    '.fc-eyebrow{font-size:13px;color:#6B6B70;letter-spacing:.01em;margin:0 0 6px}' +
+    '.fc-eyebrow{font-size:13px;color:#66666B;letter-spacing:.01em;margin:0 0 6px}' +
     '.fc-vyvod{font-size:24px;line-height:1.3;font-weight:600;letter-spacing:-.02em;margin:0 0 18px;color:#1D1D1F}' +
     '.fc-blok{margin:18px 0 0}.fc-blok h3{font-size:15px;font-weight:600;margin:0 0 8px;color:#1D1D1F}' +
     '.fc-cifry{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}' +
     '.fc-c{background:#F5F5F2;border-radius:16px;padding:12px 14px}.fc-c b{display:block;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.01em}' +
-    '.fc-c span{display:block;font-size:13px;color:#6B6B70;line-height:1.35}.fc-c--svoi b{color:#6B6B70}' +
+    '.fc-c span{display:block;font-size:13px;color:#66666B;line-height:1.35}.fc-c--svoi b{color:#66666B}' +
     '@media (max-width:640px){.fc{padding:18px}.fc-cifry{grid-template-columns:repeat(2,1fr)}.fc-vyvod{font-size:20px}.fc-tabl table{font-size:13px}.fc-tabl td,.fc-tabl th{padding-right:6px}.fc-t{margin-left:4px}}' +
     '.fc-tabl{overflow-x:auto}.fc-tabl table{width:100%;border-collapse:collapse;font-size:15px;font-variant-numeric:tabular-nums}' +
-    '.fc-tabl th{text-align:left;font-weight:500;font-size:12px;color:#6B6B70;padding:0 8px 6px 0;border-bottom:1px solid #E6E6E1}' +
+    '.fc-tabl th{text-align:left;font-weight:500;font-size:12px;color:#66666B;padding:0 8px 6px 0;border-bottom:1px solid #E6E6E1}' +
     '.fc-tabl td{padding:8px 8px 8px 0;border-bottom:1px solid #E6E6E1;vertical-align:top}.fc-tabl td+td,.fc-tabl th+th{text-align:right;white-space:nowrap}' +
     '.fc-vse td{font-weight:600;border-bottom:0}.fc-n{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}' +
     '.fc-t{display:inline-block;width:8px;height:8px;border-radius:50%;background:#E0A100;margin-left:6px;vertical-align:middle;cursor:help}' +
-    '.fc-m{color:#6B6B70}.fc-pr{font-size:13px;color:#6B6B70;margin:8px 0 0;line-height:1.45}' +
+    '.fc-m{color:#66666B}.fc-pr{font-size:13px;color:#66666B;margin:8px 0 0;line-height:1.45}' +
     '.fc-komu,.fc-dela{margin:0;padding:0 0 0 20px;font-size:15px}.fc-komu li{padding:3px 0}.fc-komu li span{display:inline}.fc-komu li b{float:right;font-weight:600;font-variant-numeric:tabular-nums;margin-left:12px}' +
     '.fc-dela li{padding:3px 0;color:#48484C}.fc-vse-pol{display:inline-block;font-size:15px;margin-top:6px}' +
     '.fc-akt{display:inline-flex;align-items:center;min-height:46px;margin:20px 0 0;padding:0 18px;border-radius:10px;background:#0B63E5;color:#fff!important;font-weight:600;font-size:17px}' +
-    '.fc-akt:hover{background:#084BB0}.fc-og{font-size:13px;color:#6B6B70;margin:12px 0 0;line-height:1.45}' +
+    '.fc-akt:hover{background:#084BB0}.fc-og{font-size:13px;color:#66666B;margin:12px 0 0;line-height:1.45}' +
     // 390 px — карточка на каждый банк вместо таблицы ([команда] 04.10 22:55, разд. 2)
     '@media (max-width:600px){.fc-tabl{overflow:visible}.fc-tabl thead{display:none}.fc-tabl table,.fc-tabl tbody{display:block}' +
     '.fc-tabl tr{display:block;background:#FAFAF8;border-radius:16px;padding:10px 14px;margin:0 0 8px}.fc-tabl tr.fc-vse{background:#F0F0EC}' +
     '.fc-tabl td,.fc-tabl td+td{display:flex;align-items:center;gap:4px;padding:5px 0;border:0;text-align:left;white-space:normal}' +
-    '.fc-tabl td:first-child{font-weight:600;padding-bottom:7px}.fc-tabl td[data-k]::before{content:attr(data-k);color:#6B6B70;font-weight:400;margin-right:auto}}' +
+    '.fc-tabl td:first-child{font-weight:600;padding-bottom:7px}.fc-tabl td[data-k]::before{content:attr(data-k);color:#66666B;font-weight:400;margin-right:auto}}' +
     '@media print{.fc-akt{display:none}}';
 
   /* ---------- браузер: показать лист, только если в data/fincentr.json `vklyuchen: true` ---------- */

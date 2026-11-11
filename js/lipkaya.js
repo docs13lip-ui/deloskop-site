@@ -3,7 +3,10 @@
    уровень вывода и кнопка «Что делать завтра утром». Кнопка открывает <dialog> с тем же выводом и теми же действиями.
    Новых утверждений нет: текст берётся из уже нарисованного вывода отчёта (Условия сделки / Щит) в момент открытия —
    сумма сделки и «кто кому платит», поменянные выше, попадают в окно как есть. Кнопки окна — ссылки вывода (их цели Метрики те же).
-   Шире 600 px строки нет: вывод и так рядом. Нет IntersectionObserver или <dialog> — ничего не делаем. */
+   Шире 600 px строки нет: вывод и так рядом. Нет IntersectionObserver или <dialog> — ничего не делаем.
+   pervyj-ekran-60s-v1 (11.11.2026): на телефоне вывод стоял на 1,2 экрана ниже названия (реквизиты и Индекс выше) —
+   ответ «платить или нет» теперь и на первом экране отчёта: строка «Ответ» под названием компании, тот же текст вывода,
+   по нажатию — к выводу. Меняется вместе с выводом («Я плачу им / Они платят мне», сумма). Шире 600 px — скрыта (CSS). */
 (function (root, factory) {
   var api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
@@ -95,10 +98,49 @@
     s.doc.body.classList.toggle('lip-on', on);
   }
 
+  // pervyj-ekran-60s-v1: строка «Ответ» под названием компании — текст из вывода отчёта (без новых утверждений)
+  var OTV = 'Ответ';
+  function otvetSverhu(s) {
+    var doc = s.doc, w = doc.defaultView, rep = s.report;
+    var who = rep.querySelector('.ot-who'), vd = rep.querySelector('.ot-vd');
+    if (!who || !vd) return null;
+    var cel = vd.querySelector('.ot-vt') || vd;
+    var a = el(doc, 'a', 'lip-o');
+    a.href = '#vyvod';
+    if (!cel.id) cel.id = 'vyvod';
+    a.appendChild(el(doc, 'span', 'lip-o__z', OTV));
+    a.appendChild(el(doc, 'span', 'lip-o__t'));
+    a.appendChild(el(doc, 'span', 'lip-o__s', 'почему\u00a0↓'));
+    var obnovit = function () {
+      var v = vyvod(rep);
+      a.hidden = !v;
+      a.querySelector('.lip-o__t').textContent = v ? v.kratko : '';
+      a.setAttribute('data-ton', v ? v.ton : '');
+    };
+    obnovit();
+    a.addEventListener('click', function (e) {
+      if (e.ctrlKey || e.metaKey || e.shiftKey || e.button) return;
+      e.preventDefault();
+      var plavno = !(w.matchMedia && w.matchMedia('(prefers-reduced-motion: reduce)').matches);
+      try { cel.scrollIntoView({ block: 'start', behavior: plavno ? 'smooth' : 'auto' }); } catch (er) { cel.scrollIntoView(); }
+      try { if (w.dlkGoal) w.dlkGoal('otvet_sverhu'); } catch (er) {}
+    });
+    who.appendChild(a);
+    var mo = null;
+    if (typeof w.MutationObserver === 'function') {
+      mo = new w.MutationObserver(function (z) {
+        for (var i = 0; i < z.length; i++) if (!a.contains(z[i].target)) { obnovit(); return; }
+      });
+      mo.observe(vd, { subtree: true, childList: true, characterData: true });
+    }
+    return { a: a, mo: mo };
+  }
+
   function snyat() {
     var s = sostoyanie;
     if (!s) return;
     sostoyanie = null;
+    try { if (s.otv) { if (s.otv.mo) s.otv.mo.disconnect(); if (s.otv.a.parentNode) s.otv.a.parentNode.removeChild(s.otv.a); } } catch (e) {}
     try { if (s.io) s.io.disconnect(); if (s.ro) s.ro.disconnect(); } catch (e) {}
     try { if (s.dlg.open) s.dlg.close(); } catch (e) {}
     if (s.bar.parentNode) s.bar.parentNode.removeChild(s.bar);
@@ -155,6 +197,7 @@
 
     doc.body.appendChild(bar);
     doc.body.appendChild(dlg);
+    try { s.otv = otvetSverhu(s); } catch (e) { s.otv = null; }
 
     // вывод ушёл за верх экрана — строка видна; вернулся или ниже — прячем
     s.io = new w.IntersectionObserver(function (z) {
@@ -176,5 +219,5 @@
     return true;
   }
 
-  return { mount: mount, snyat: snyat, vyvod: vyvod, ZAG: ZAG, UZKO: UZKO };
+  return { mount: mount, snyat: snyat, vyvod: vyvod, ZAG: ZAG, UZKO: UZKO, OTV: OTV };
 });

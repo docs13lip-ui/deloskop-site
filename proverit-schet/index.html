@@ -66,6 +66,7 @@ footer a{color:var(--muted)}
 .drop{display:block;border:2px dashed var(--line);border-radius:16px;padding:26px 18px;text-align:center;cursor:pointer;color:var(--ink2)}
 .drop.over,.drop:hover{border-color:var(--accent);background:#F3F7FE}
 .drop b{display:block;color:var(--ink);font-size:20px;margin-bottom:4px}.drop input{display:none}
+/* pervyj-ekran-60s-v1: на телефоне счёт не перетаскивают — выбирают */.drop__palec{display:none}@media (hover:none) and (pointer:coarse){.drop__mysh{display:none}.drop__palec{display:inline}.drop{padding:20px 16px}}
 .or{text-align:center;color:var(--muted);font-size:15px;margin:14px 0}
 .tool textarea{width:100%;min-height:150px;border:1px solid var(--line);border-radius:16px;padding:12px 14px;font:inherit;font-size:15px;resize:vertical}
 .tool .go{margin-top:12px;min-height:52px;width:100%;border:0;border-radius:16px;background:var(--accent);color:#fff;font:inherit;font-weight:600;font-size:17px;cursor:pointer}
@@ -231,7 +232,7 @@ footer a{color:var(--muted)}
 <h1>Проверь счёт перед оплатой</h1>
 <p class="meta" style="font-size:17px;color:var(--ink2)">Загрузите счёт&nbsp;— за&nbsp;минуту скажем, можно ли&nbsp;платить: реквизиты, НДС и&nbsp;признаки риска поставщика.</p>
 <section class="tool" aria-label="Проверка счёта">
-  <label class="drop" id="drop"><b>Перетащите счёт в&nbsp;PDF</b>или нажмите, чтобы выбрать файл<input type="file" id="file" accept="application/pdf,.pdf,.txt,image/*"></label>
+  <label class="drop" id="drop"><b><span class="drop__mysh">Перетащите счёт в&nbsp;PDF</span><span class="drop__palec">Выберите счёт в&nbsp;PDF</span></b><span class="drop__mysh">или нажмите, чтобы выбрать файл</span><span class="drop__palec">из&nbsp;файлов, почты или мессенджера</span><input type="file" id="file" accept="application/pdf,.pdf,.txt,image/*"></label>
   <div class="or">или вставьте текст счёта / реквизиты</div>
   <textarea id="txt" placeholder="Например: ООО «Ромашка», ИНН …, КПП …, р/с 40702810…, БИК 04…, Итого к оплате 120 000,00, в т.ч. НДС 22% 21 639,34"></textarea>
   <button type="button" class="go" id="go">Проверить счёт</button>

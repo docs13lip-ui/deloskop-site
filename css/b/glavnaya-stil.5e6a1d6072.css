@@ -636,6 +636,10 @@ background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' wid
 .zhi__chislo small{font-size:.32em;font-weight:500;color:var(--muted,#66666B);margin-left:2px}
 .zhi__pod::before{content:"Индекс Делоскопа · 1–99"}
 .ex-ix .zhi__chislo::before{content:"";width:30%;height:30%;background:var(--zona-cvet);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-6.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-6.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}
+.zhi__gl{position:absolute;left:-15%;top:-15%;width:130%;height:130%;display:none;pointer-events:none}
+.zhi.linza--gl .zhi__gl{display:block}
+.zhi.linza--gl .zhi__fon,.zhi.linza--gl .zhi__duga,.zhi.linza--gl .zhi__strelka,.zhi.linza--gl .zhi__svet{display:none}
+@media print{.zhi .zhi__gl{display:none!important}.zhi.linza--gl .zhi__fon,.zhi.linza--gl .zhi__duga,.zhi.linza--gl .zhi__strelka{display:block}}
 .zhi__pod{font-size:12px;color:var(--ink-2,#48484C);white-space:nowrap}
 .zhi.is-idet{transition:--p 1.2s var(--ease,cubic-bezier(.2,.7,.2,1))}
 .ex-ix .zhi{align-self:flex-start;--d:120px}

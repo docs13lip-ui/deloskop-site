@@ -243,3 +243,45 @@ test('pamyat-proverok-v1: события включаются только вм�
   const vkl = /var VKL = true;/.test(chitat('js/schetchik.js'));
   if (vkl) assert.ok(/dlk_pamyat|памят[ьи] проверок/i.test(chitat('politika/index.html')), 'VKL = true без текста юристов о памяти на устройстве');
 });
+
+// dovedeno-vernulis-v1 (11.11): «довели проверку до ответа» и «вернулись в течение 7 дней»
+test('dovedeno-vernulis-v1: довёл — раз в день; вернулся через 1–7 дней — раз на каждый «довёл»; в памяти только номера дней', () => {
+  const D = 20000, vid = (x) => Array.from(x.vidy);
+  const a = P.dovedena(null, D);
+  assert.deepStrictEqual(vid(a), ['proverka_dovedena']);
+  assert.deepStrictEqual(vid(P.dovedena(a.p, D)), [], 'второй раз за день — тот же человек');
+  assert.deepStrictEqual(vid(P.vozvrat(a.p, D)), [], 'в тот же день — не возврат');
+  const v = P.vozvrat(a.p, D + 3);
+  assert.deepStrictEqual(vid(v), ['vozvrat_1_7']);
+  assert.deepStrictEqual(vid(P.vozvrat(v.p, D + 4)), [], 'за тот же «довёл» — второй возврат не считаем');
+  assert.deepStrictEqual(vid(P.vozvrat(a.p, D + 7)), ['vozvrat_1_7'], '7 дней — ещё возврат');
+  assert.deepStrictEqual(vid(P.vozvrat(a.p, D + 8)), [], '8 дней — уже нет');
+  const b = P.dovedena(v.p, D + 5);
+  assert.deepStrictEqual(vid(b), ['proverka_dovedena']);
+  assert.deepStrictEqual(vid(P.vozvrat(b.p, D + 6)), ['vozvrat_1_7'], 'новый «довёл» — новый возможный возврат');
+  const c = P.dovedena(P.vozvrat(a.p, D + 2).p, D + 2);
+  assert.deepStrictEqual(vid(P.dovedena(a.p, D + 2)), ['vozvrat_1_7', 'proverka_dovedena'], 'вернулся и довёл снова — оба события');
+  assert.ok(/^\{"d":\{\},"vz":0,"dv":\d+\}$/.test(JSON.stringify(c.p)), 'в памяти — только номер дня: ' + JSON.stringify(c.p));
+  const ch = P.chist({ d: {}, vz: 0, dv: D + 9, v7: 'x' }, D);
+  assert.ok(!('dv' in ch), 'день из будущего — вон');
+  assert.ok(!('dv' in P.chist({ d: {}, vz: 0, dv: D - 61 }, D)), 'старше 60 дней — вон');
+  assert.strictEqual(P.chist({ d: {}, vz: 0, dv: D - 2, v7: D - 9 }, D).v7, undefined, 'v7 от прошлого «довёл» — не мешает');
+});
+
+test('dovedeno-vernulis-v1 в браузере: вывод на экране 1,5 с — одно событие; пример и выкл. — тишина; без IntersectionObserver — сразу', () => {
+  const b = brauzerPam();
+  b.N.dovedena({}, '7707083893');
+  assert.deepStrictEqual(b.zaprosy(), [{ sobytie: 'proverka_dovedena' }], 'нет IntersectionObserver — засчитали сразу');
+  b.N.dovedena({}, '500100732259');
+  assert.strictEqual(b.zaprosy().length, 1, 'тот же день — второго нет (ИП тоже «довёл», но день один)');
+  const e = brauzerPam(); e.N.dovedena({}, '0000000000'); e.N.dovedena(null, '7707083893');
+  assert.strictEqual(e.zaprosy().length, 0, 'пример и пустой отчёт — не считаем');
+  const vyk = brauzerPam({ vkl: false }); vyk.N.dovedena({}, '7707083893');
+  assert.strictEqual(vyk.zaprosy().length, 0, 'до сервера — ни событий, ни памяти');
+  assert.ok(!('dlk_pamyat' in vyk.hran));
+  const nd = chitat('js/nedavnie.js');
+  assert.ok(/Math\.min\(x\.boundingClientRect\.height \/ 2, vh \/ 3\)/.test(nd) && /DOVEDENA_MS = 1500/.test(nd) && /visibilityState !== 'hidden'/.test(nd), 'половина отчёта или треть экрана, 1,5 с, вкладка не скрыта');
+  assert.ok(/Nedavnie\.dovedena\(report,c\.inn\)/.test(chitat('index.html')) && /if\(!svoj&&window\.Nedavnie&&Nedavnie\.dovedena\)/.test(chitat('index.html')), 'главная: контейнер отчёта, своя компания — мимо');
+  assert.ok(/Nedavnie\.dovedena\(q4\|\|doc\.querySelector\('\.risk'\)\|\|doc,c\.inn\)/.test(chitat('report.html')), 'отчёт: «4 вопроса» или плашка');
+  assert.ok(S.VIDY.proverka_dovedena === 1 && S.VIDY.vozvrat_1_7 === 1);
+});

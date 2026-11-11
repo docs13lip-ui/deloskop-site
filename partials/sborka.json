@@ -27,6 +27,7 @@
     "glavnaya": [
       "js/vhody.js",
       "js/zhivoj-indeks.js",
+      "js/linza.js",
       "js/vizual2.js",
       "js/istochniki.js",
       "js/imya.js",

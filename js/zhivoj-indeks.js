@@ -23,6 +23,8 @@
       k.appendChild(el('zhi__chislo', centr));
     }
     z.setAttribute('data-zona', zn);
+    z.setAttribute('data-ball', n); // linza-otchet-v1: стекло Линзы поверх CSS-дуги (js/linza.js); нет WebGL или «тише» — остаётся CSS
+    if (W.Linza) W.Linza.zhi(z);
     kolca.push(z);
     // indeks-srazu-v1 (23.10): итог — в разметке сразу (число и дуга верны, даже если докрутка не начнётся).
     // На живом 22–23.10 отчёт стоял на «0 / 99»: число обнулялось заранее, а наблюдатель видимости, поставленный

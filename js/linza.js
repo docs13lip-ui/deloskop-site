@@ -1,7 +1,8 @@
 /* linza-indeksa-v1 (11.11): «Линза Индекса» — объёмное кольцо 1–99 (WebGL, без библиотек).
    Разметка — section.linza: data-ball="N" — балл посчитан (заливка цветом зоны), без него — «ждёт» (пустая дорожка, блик раз в 4 с).
    Запасной кадр — CSS (.linza__k::before): нет WebGL, ошибка шейдера, prefers-reduced-motion, печать. Вне экрана — 0 кадров.
-   Цвета — только токены ДС (getComputedStyle), перечитываются при смене темы. DPR ≤ 2. Наклон за мышью ≤ 10°, покачивание ≤ 4°. */
+   Цвета — только токены ДС (getComputedStyle), перечитываются при смене темы. DPR ≤ 2. Наклон за мышью ≤ 10°, покачивание ≤ 4°.
+   linza-otchet-v1: то же стекло в кольце .zhi[data-ball] (отчёт, пример на главной); число и слова — в разметке, наклон — CSS. */
 (function () {
   'use strict';
   var mm = window.matchMedia;
@@ -34,12 +35,13 @@
     return t ? t === 'dark' : mm('(prefers-color-scheme: dark)').matches;
   }
 
-  function linza(el) {
-    var cv = el.querySelector('.linza__gl');
-    if (!cv) return;
+  function linza(el, cv, z) {
+    if (!cv || el.linza) return;
+    el.linza = 1;
     var gl = null;
     try { gl = cv.getContext('webgl', { alpha: true, antialias: false, premultipliedAlpha: true }); } catch (e) { gl = null; }
     if (!gl) return;
+    if (z) el.querySelector('.zhi__kolco').appendChild(cv);
     function sh(tip, src) { var s = gl.createShader(tip); gl.shaderSource(s, src); gl.compileShader(s); return gl.getShaderParameter(s, gl.COMPILE_STATUS) ? s : null; }
     var v = sh(gl.VERTEX_SHADER, VS), f = sh(gl.FRAGMENT_SHADER, FS);
     if (!v || !f) return;
@@ -54,12 +56,12 @@
     var U = {};
     'R T F G A C D'.split(' ').forEach(function (k) { U[k] = gl.getUniformLocation(pr, k); });
 
-    var ball = parseInt(el.getAttribute('data-ball'), 10), est = ball >= 1 && ball <= 99;
+    var ball = parseInt(el.getAttribute('data-ball'), 10), dlit = z ? 1200 : 600, est = ball >= 1 && ball <= 99;
     var cel = est ? ball / 99 * .96 : 0, fill = 0, start = 0;
     var col, dim, alfa, vid = false, raf = 0, tx = 0, ty = 0, cx = 0, cy = 0, gotov = false;
     function cveta() {
       var cs = getComputedStyle(el);
-      col = hex(cs.getPropertyValue(est ? zona(ball) : '--muted'));
+      col = hex(cs.getPropertyValue(z ? '--zona-cvet' : est ? zona(ball) : '--muted')); // .zhi — как слова уровня
       dim = hex(cs.getPropertyValue('--line'));
       alfa = temnaya() ? .35 : .15;
     }
@@ -67,12 +69,15 @@
 
     function kadr(now) {
       raf = 0;
-      var d = Math.min(window.devicePixelRatio || 1, 2), w = Math.round(cv.parentNode.clientWidth * d); // canvas скрыт до первого кадра — меряем обёртку
+      if (!el.isConnected) { // отчёт сменился: стоп, контекст отдаём
+        vid = false; io.disconnect(); var x = gl.getExtension('WEBGL_lose_context'); if (x) x.loseContext(); return;
+      }
+      var d = Math.min(window.devicePixelRatio || 1, 2), w = Math.round(cv.parentNode.clientWidth * (z ? 1.3 : 1) * d); // canvas скрыт до первого кадра — меряем обёртку
       if (!w) return;
       if (cv.width !== w) { cv.width = w; cv.height = w; }
-      if (!start) start = now;
+      if (!start) { start = now; cveta(); } // кольцо отчёта собрано вне документа
       var s = now / 1000;
-      if (est) { var k = Math.min(1, (now - start) / 600); fill = cel * (1 - Math.pow(1 - k, 3)); }
+      if (est) { var k = Math.min(1, (now - start) / dlit); fill = cel * (z ? k * (2 - k) : 1 - Math.pow(1 - k, 3)); }
       cx += (tx - cx) * .08; cy += (ty - cy) * .08;
       var kach = Math.sin(s * 6.2831853 / 12) * .07; // ≈ 4°
       gl.viewport(0, 0, w, w);
@@ -89,8 +94,9 @@
       if (vid) raf = requestAnimationFrame(kadr);
     }
     function pusk() { if (!raf && vid) raf = requestAnimationFrame(kadr); }
-    new IntersectionObserver(function (z) { vid = z[0].isIntersecting; if (vid) pusk(); else if (raf) { cancelAnimationFrame(raf); raf = 0; } }).observe(el);
-    el.addEventListener('pointermove', function (e) {
+    var io = new IntersectionObserver(function (e) { vid = e[e.length - 1].isIntersecting; if (vid) pusk(); else if (raf) { cancelAnimationFrame(raf); raf = 0; } });
+    io.observe(el);
+    if (!z) el.addEventListener('pointermove', function (e) {
       if (e.pointerType !== 'mouse') return;
       var b = cv.getBoundingClientRect();
       tx = Math.max(-1, Math.min(1, ((e.clientX - b.left) / b.width - .5) * 2));
@@ -102,6 +108,16 @@
     cv.addEventListener('webglcontextlost', function (e) { e.preventDefault(); vid = false; el.classList.remove('linza--gl'); });
   }
 
-  function vse() { Array.prototype.forEach.call(document.querySelectorAll('.linza'), linza); }
+  function zhi(z) {
+    if (!z || z.linza || !(+z.getAttribute('data-ball') >= 1)) return;
+    var cv = document.createElement('canvas');
+    cv.className = 'zhi__gl'; cv.setAttribute('aria-hidden', 'true');
+    linza(z, cv, 1);
+  }
+  window.Linza = { zhi: zhi }; // зовёт js/zhivoj-indeks.js
+  function vse() {
+    Array.prototype.forEach.call(document.querySelectorAll('.linza'), function (el) { linza(el, el.querySelector('.linza__gl')); });
+    Array.prototype.forEach.call(document.querySelectorAll('.zhi[data-ball]'), zhi);
+  }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', vse); else vse();
 })();

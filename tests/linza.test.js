@@ -43,3 +43,18 @@ test('css/co.css: запасной кадр — CSS-кольцо, место п�
   assert.ok(/\.linza__gl\{[^}]*display:none/.test(css), 'canvas скрыт до первого кадра WebGL');
   assert.ok(/@media print\{\.linza__gl\{display:none!important\}/.test(css));
 });
+
+// linza-otchet-v1 ([Ночные запуски] 11.11): стекло Линзы — в кольце «Живого Индекса» (отчёт и пример на главной), где балл посчитан.
+test('linza-otchet-v1: .zhi[data-ball] — canvas поверх CSS-дуги, число и слова в разметке, CSS — запасной кадр', () => {
+  const js = chitat('js/linza.js'), zh = chitat('js/zhivoj-indeks.js'), css = chitat('css/glubina.css');
+  assert.ok(/z\.setAttribute\('data-ball', n\);[^\n]*\n\s*if \(W\.Linza\) W\.Linza\.zhi\(z\);/.test(zh), 'zhivoj-indeks отдаёт балл Линзе');
+  assert.ok(js.includes("window.Linza = { zhi: zhi }") && js.includes("querySelectorAll('.zhi[data-ball]')"), 'кольцо примера — при загрузке, отчёта — по вызову');
+  assert.ok(js.includes("cv.setAttribute('aria-hidden', 'true')"), 'canvas скрыт от чтения с экрана');
+  assert.ok(js.includes("'--zona-cvet'"), 'цвет — как у слов уровня');
+  assert.ok(js.includes('WEBGL_lose_context') && js.includes('el.isConnected'), 'отчёт сменился — кадры стоп, контекст отдан');
+  assert.ok(/\.zhi__gl\{[^}]*display:none/.test(css), 'canvas скрыт до первого кадра');
+  assert.ok(/\.zhi\.linza--gl \.zhi__duga[^{]*\{display:none\}/.test(css), 'CSS-дуга прячется только при кадре WebGL');
+  assert.ok(/@media print\{\.zhi \.zhi__gl\{display:none!important\}/.test(css), 'печать — CSS-кольцо');
+  const k = JSON.parse(chitat('partials/sborka.json')).pakety.glavnaya;
+  assert.ok(k.indexOf('js/linza.js') === k.indexOf('js/zhivoj-indeks.js') + 1, 'в пакете главной — сразу после zhivoj-indeks');
+});

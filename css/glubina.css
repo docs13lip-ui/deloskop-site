@@ -58,6 +58,12 @@ body::after{content:"";position:fixed;z-index:-1;inset:0;pointer-events:none;opa
 .zhi__pod::before{content:"Индекс Делоскопа · 1–99"}
 /* пример (компания вымышленная): вместо числа — знак зоны цветом зоны */
 .ex-ix .zhi__chislo::before{content:"";width:30%;height:30%;background:var(--zona-cvet);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-6.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-6.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}
+/* linza-otchet-v1 (11.11): стекло Линзы (js/linza.js) поверх кольца — шире сцены на 15 % с каждой стороны, чтобы просвет совпал с CSS-дугой (79 %).
+   Есть кадр WebGL (.linza--gl) — CSS-дуга, шкала, стрелка и свечение прячутся; число и подпись — те же узлы. Печать — CSS-кольцо. */
+.zhi__gl{position:absolute;left:-15%;top:-15%;width:130%;height:130%;display:none;pointer-events:none}
+.zhi.linza--gl .zhi__gl{display:block}
+.zhi.linza--gl .zhi__fon,.zhi.linza--gl .zhi__duga,.zhi.linza--gl .zhi__strelka,.zhi.linza--gl .zhi__svet{display:none}
+@media print{.zhi .zhi__gl{display:none!important}.zhi.linza--gl .zhi__fon,.zhi.linza--gl .zhi__duga,.zhi.linza--gl .zhi__strelka{display:block}}
 .zhi__pod{font-size:12px;color:var(--ink-2,#48484C);white-space:nowrap}
 .zhi.is-idet{transition:--p 1.2s var(--ease,cubic-bezier(.2,.7,.2,1))}
 /* пример на главной: кольцо сверху колонки; на 390 — слева от «Уровень риска» */

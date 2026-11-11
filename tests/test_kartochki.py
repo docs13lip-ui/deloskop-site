@@ -941,6 +941,16 @@ class TestKartochkiV2(unittest.TestCase):
         self.assertIn(("V18", "warn", "Руководитель сменился в" + NB + "июле" + NB + "2026" + NB + "года"),  # rukovod-mesyac-v2
                       [(x["kod"], x["ton"], x["tekst"]) for x in V])
 
+    def test_director_since_iz_api(self):
+        # kartochki-director-since-v1: живой API отдаёт company.director_since (ISO), а не director_date
+        r = _gazprom_kak_v_api()
+        r["company"].pop("director_date", None)
+        r["company"]["director_since"] = "2026-06-10"
+        r["dossier"]["sections"][0]["rows"][1] = ["Руководит с", "—"]
+        self.assertEqual(K.iz_check(r)["rukovodit_s"], K.dt.date(2026, 6, 10))
+        V = K.vyvody(K.iz_check(r))
+        self.assertIn("Руководитель сменился в" + NB + "июне" + NB + "2026" + NB + "года", [x["tekst"] for x in V])
+
     def test_rukovodit_s_ranshe_registracii_ne_berem(self):
         r = _gazprom_kak_v_api()
         r["dossier"]["sections"][0]["rows"][1] = ["Руководит с", "01.01.1990"]

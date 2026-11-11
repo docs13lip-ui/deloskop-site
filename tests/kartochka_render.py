@@ -741,7 +741,9 @@ def iz_check(r):
         if any(x is not None and x > 0 for x in ras):
             k["raschety"] = {"god": _god(db.get("year")), "rec": ras[0], "pay": ras[1], "loan": ras[2]}
     # kartochki-v2: с какой даты руководитель тот же (ЕГРЮЛ) — только дата, без ФИО (люди — при PERSONS_PUBLIC)
-    k["rukovodit_s"] = data_iz(c.get("director_date")) or _rukovodit_s(D)
+    # kartochki-director-since-v1 ([Ночные-2] 11.11): живой /api/check отдаёт дату как company.director_since
+    # (сверено 11.11 на 7841322249: «2026-06-10»); director_date — прежнее имя, оставлено для старых .jsonl.
+    k["rukovodit_s"] = data_iz(c.get("director_date") or c.get("director_since")) or _rukovodit_s(D)
     if k["rukovodit_s"] and ((k["reg_date"] and k["rukovodit_s"] < k["reg_date"]) or (proverka and k["rukovodit_s"] > proverka)):
         k["rukovodit_s"] = None
     k["finansy_data"] = data_iz(r.get("finansy_data")) or data_iz(r.get("girbo_data"))

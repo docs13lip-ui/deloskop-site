@@ -21,7 +21,14 @@
     // Наличные — те же пороги, что в «Наличных глазами банка» (nalichnye/shchit-engine.js, CONFIG):
     bigCashOp: 1000000,   // ст. 6 115-ФЗ: операции юрлица с наличными от 1 млн ₽ — обязательный контроль
     cashShare: 0.15,      // доля наличных в расходах — ориентир Делоскопа (как cashShareAttention в «Наличных»)
-    depositShare: 0.30    // доля взносов наличных в поступлениях — ориентир Делоскопа (как в «Наличных»)
+    depositShare: 0.30,   // доля взносов наличных в поступлениях — ориентир Делоскопа (как в «Наличных»)
+    // vyplaty-fiz-v1 (11.11): «Выплаты физлицам» — ставки 2026 года ([команда] 11.11 (в) п. 3):
+    // 13% НДФЛ (ст. 224 НК, до 2,4 млн ₽ дохода человека за год) + 30% взносов (до предельной базы)
+    // + штраф 20% от НДФЛ (ст. 123 НК) и от взносов (п. 1 ст. 122 НК) = 51,6% ≈ 52%. Поэтому «до».
+    // Пени и КоАП — сверх суммы, в формулу не входят.
+    fizNdfl: 13,
+    fizVznosy: 30,
+    fizMesyacev: 3        // «регулярно» — выплаты в 3 разных месяцах и больше
   };
 
   /* ---------- наличные: снятие и взнос (правила — как в «Наличных глазами банка») ---------- */
@@ -275,6 +282,7 @@
       self: self, period: period, regime: opts.regime || 'osn', totals: roundAll(totals), counts: counts,
       suppliers: list, docs: docs.length
     };
+    res.fiz = vyplatyFiz(docs, self, accSet, period);
     res.flows = flowSignals(res);
     res.todo = todo(res);
     return res;
@@ -355,6 +363,64 @@
     return out;
   }
 
+  /* ---------- vyplaty-fiz-v1: выплаты гражданам (не ИП) ---------- */
+  // Получатель — гражданин: личный счёт 40817/40820 или 12-значный ИНН не на счёте ИП.
+  // Не сюда: счёт 40802 (ИП — у него свой риск, ст. 54.1), 10-значный ИНН (организация), свои счета,
+  // наличные, бюджет. Не считаем выплаты не за работу — по назначению платежа ([команда] 11.11 (в) п. 4б).
+  // Всё считается в браузере: имена и ИНН граждан на сервер не уходят.
+  var FIZ_ISKL = /(заработн|зарплат|з\/п|аванс\s+(по|за)\s+(з|заработ)|отпускн|больничн|преми[яиюй]|подотч|под\s+отч|командиров|суточн|займ|за[её]м|дивиденд|алимент|пособи|материальн\S*\s+помощ|аренд|возврат|ндфл\s+удержан|удержан\S*\s+ндфл|за\s+вычетом\s+ндфл)/i;
+  function fizStavka() {
+    var n = NORMS.fizNdfl + NORMS.fizVznosy;
+    return n * (1 + NORMS.fineCareless / 100) / 100;          // 0,516
+  }
+  function vyplatyFiz(docs, self, accSet, period) {
+    var res = { lyudi: [], iskl: { sum: 0, count: 0 }, stavka: fizStavka(), s: null, po: period.to };
+    if (!period.to) return res;
+    var to = new Date(period.to + 'T00:00:00Z');
+    var from = new Date(to.getTime()); from.setUTCFullYear(from.getUTCFullYear() - 1); from.setUTCDate(from.getUTCDate() + 1);
+    var fromIso = from.toISOString().slice(0, 10);
+    res.s = fromIso < (period.from || fromIso) ? period.from : fromIso;
+    var map = {};
+    docs.forEach(function (d) {
+      var sum = num(d.Сумма);
+      if (!(sum > 0) || !accSet[d.ПлательщикСчет]) return;
+      var acc = d.ПолучательСчет || '', inn = (d.ПолучательИНН || '').replace(/\D/g, '');
+      if (accSet[acc] || (self.inn && inn === self.inn) || isCashOut(d, self)) return;
+      if (/^40802/.test(acc) || /^\d{10}$/.test(inn)) return;
+      if (/^(03100|03212|03221|40101|40102)/.test(acc) || d.ПоказательКБК) return;
+      var lichnyj = /^(40817|40820)/.test(acc), inn12 = /^\d{12}$/.test(inn);
+      if (!lichnyj && !inn12) return;
+      var iso = toIso(d.ДатаСписано || d.Дата || '');
+      if (!iso || iso < fromIso || iso > period.to) return;
+      if (FIZ_ISKL.test(d.НазначениеПлатежа || '')) { res.iskl.sum += sum; res.iskl.count++; return; }
+      var key = inn12 ? inn : 'acc:' + acc;
+      var p = map[key] || (map[key] = { key: key, inn: inn12 ? inn : null, account: acc, name: cleanName(d.Получатель1 || d.Получатель || ''),
+        sum: 0, count: 0, months: {}, first: null, last: null });
+      p.sum += sum; p.count++; p.months[iso.slice(0, 7)] = 1;
+      if (!p.first || iso < p.first) p.first = iso; if (!p.last || iso > p.last) p.last = iso;
+    });
+    res.lyudi = Object.keys(map).map(function (k) {
+      var p = map[k]; p.sum = round2(p.sum); p.mesyacev = Object.keys(p.months).length; delete p.months;
+      p.regulyarno = p.mesyacev >= NORMS.fizMesyacev; p.schet = tail(p.account);
+      return p;
+    }).sort(function (a, b) { return (b.regulyarno - a.regulyarno) || (b.sum - a.sum); });
+    res.iskl.sum = round2(res.iskl.sum);
+    return res;
+  }
+  // Итог с учётом отметок «это сотрудник или учредитель» (bez — {key: true}, живёт только в памяти страницы).
+  function fizItog(fiz, bez) {
+    bez = bez || {};
+    var it = { n: 0, reg: 0, sum: 0, regSum: 0, naKonu: 0, bez: 0 };
+    (fiz && fiz.lyudi || []).forEach(function (p) {
+      if (bez[p.key]) { it.bez++; return; }
+      it.n++; it.sum += p.sum;
+      if (p.regulyarno) { it.reg++; it.regSum += p.sum; }
+    });
+    it.sum = round2(it.sum); it.regSum = round2(it.regSum);
+    it.naKonu = Math.round(it.sum * (fiz ? fiz.stavka : fizStavka()));
+    return it;
+  }
+
   /* ---------- сигналы по потокам (что видит банк по 115-ФЗ) ---------- */
   function flowSignals(r) {
     var out = [], t = r.totals;
@@ -399,6 +465,8 @@
       cash: 'Закрыть подотчёт по снятым наличным авансовыми отчётами и чеками — банк попросит их первыми.'
     };
     r.flows.forEach(function (f) { if (t.length < 3 && f.level === 'warn' && FLOW_TODO[f.code]) t.push(FLOW_TODO[f.code]); });
+    var fr = r.fiz ? r.fiz.lyudi.filter(function (p) { return p.regulyarno; }).length : 0;
+    if (fr && t.length < 3) t.push('Проверить статус самозанятого на даты выплат у ' + fr + ' ' + (fr % 10 === 1 && fr % 100 !== 11 ? 'получателя' : 'получателей') + ', которым платите регулярно, и собрать договоры и чеки.');
     if (t.length < 3) t.push('Раз в месяц повторять разбор — новые поставщики появляются незаметно.');
     return t.slice(0, 3);
   }
@@ -445,6 +513,6 @@
   return {
     NORMS: NORMS, REGIMES: REGIMES, innOk: innOk, decode: decode, parse: parse, detectSelf: detectSelf,
     category: category, isCashOut: isCashOut, isCashIn: isCashIn, vatOf: vatOf, vaguePurpose: vaguePurpose, analyze: analyze, stake: stake,
-    exposure: exposure, remoteReasons: remoteReasons, remoteNotInBase: remoteNotInBase, money: money, pct: pct, toIso: toIso
+    exposure: exposure, vyplatyFiz: vyplatyFiz, fizItog: fizItog, fizStavka: fizStavka, FIZ_ISKL: FIZ_ISKL, remoteReasons: remoteReasons, remoteNotInBase: remoteNotInBase, money: money, pct: pct, toIso: toIso
   };
 });

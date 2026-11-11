@@ -118,6 +118,29 @@ footer a{color:var(--muted)}
 .faq summary{cursor:pointer;font-weight:600;font-size:17px;list-style:none}.faq summary::-webkit-details-marker{display:none}
 .faq summary::after{content:'+';float:right;color:var(--muted);font-weight:400}.faq details[open] summary::after{content:'–'}
 .faq p{margin:10px 0 0;color:var(--ink2);font-size:17px}
+/* vyplaty-fiz-v1: «Выплаты физлицам» — считается в браузере, на сервер не уходит */
+.vf-itog{background:var(--card);border-radius:16px;padding:18px 20px}
+.vf-itog .k{font-size:15px;color:var(--muted)}
+.vf-itog .v{font-size:clamp(28px,5vw,40px);font-weight:600;letter-spacing:-.03em;line-height:1.1;margin:4px 0 6px;font-variant-numeric:tabular-nums}
+.vf-itog p{margin:0;color:var(--ink2)}.vf-itog p b{color:var(--ink);font-weight:600;white-space:nowrap}
+.vf-dva{list-style:none;padding:0;margin:10px 0 0;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.vf-dva li{background:var(--card);border-radius:16px;padding:14px 16px;font-size:15px;color:var(--ink2);line-height:1.5}
+.vf-dva b{display:block;color:var(--ink);font-size:17px;font-weight:600;margin-bottom:2px}
+@media (max-width:640px){.vf-dva{grid-template-columns:1fr}}
+.vf-ramka{font-size:13px;line-height:1.45;color:var(--muted);margin:10px 2px 0}
+.vf-zakon{font-size:15px;color:var(--ink2);margin:14px 0 0}
+.vf-l{margin-top:14px}
+.vf-p{background:var(--card);border-radius:16px;padding:14px 16px;margin:0 0 8px}
+.vf-p .h{display:flex;gap:12px;align-items:baseline;justify-content:space-between}
+.vf-p .n{font-weight:600;min-width:0;overflow-wrap:anywhere}
+.vf-p .s{font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+.vf-p .m{font-size:15px;color:var(--muted);margin-top:2px;display:flex;gap:4px 14px;flex-wrap:wrap}
+.vf-reg{display:inline-block;font-size:12px;font-weight:600;border-radius:999px;padding:2px 9px;vertical-align:2px;margin-left:6px;white-space:nowrap;background:var(--warnbg);color:var(--warn)}
+.vf-bez{border:0;background:none;color:var(--accent);font:inherit;font-size:15px;cursor:pointer;padding:6px 0 0;min-height:32px}
+.vf-p.off{background:transparent;border:1px dashed var(--line)}.vf-p.off .n,.vf-p.off .s{color:var(--muted);font-weight:500}
+.vf-sm{font-size:15px;color:var(--muted);margin:8px 2px 0}
+.vf h3{font-size:20px;letter-spacing:-.01em;margin:22px 0 10px;font-weight:600}
+@media print{.vf-bez{display:none}}
 </style>
 <script type="application/ld+json">[{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Делоскоп", "item": "https://deloskop.ru/"}, {"@type": "ListItem", "position": 2, "name": "Кому вы платите", "item": "https://deloskop.ru/kontragenty-iz-vypiski/"}]}, {"@context": "https://schema.org", "@type": "WebApplication", "name": "Кому вы платите — Делоскоп", "url": "https://deloskop.ru/kontragenty-iz-vypiski/", "applicationCategory": "BusinessApplication", "operatingSystem": "Any", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "RUB"}, "description": "Проверка поставщиков по выписке из 1С: деньги на кону по статье 54.1 НК и три дела на неделю. Выписка не уходит с компьютера."}]</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
@@ -308,7 +331,9 @@ var E=window.DeloVypiska;
 var API=(location.hostname.endsWith('deloskop.ru')?'https://api.deloskop.ru':'');
 var $=function(id){return document.getElementById(id)};
 var drop=$('drop'),file=$('file'),out=$('out'),msg=$('msg'),seg=$('regime');
-var state={parsed:null,regime:'osn',res:null,risk:null,remote:null,locked:0,showAll:false,demo:false,kom:null};
+var state={parsed:null,regime:'osn',res:null,risk:null,remote:null,locked:0,showAll:false,demo:false,kom:null,fizBez:{},fizVse:false};
+/* vyplaty-fiz-v1: флаг vyplaty_fiz (решение команды 11.11 п. 2). vkl:false — блок «Выплаты физлицам» не показывается */
+var VYPLATY={vkl:true};
 /* «Комментарий команды»: только утверждённые [команда] тексты; нет текстов или файла — страница как раньше */
 var K=window.Kommentarii;
 if(K)K.zagruzit().then(function(s){state.kom=s;if(state.res&&K.estVypiska(s))render()});
@@ -337,7 +362,7 @@ function recalc(){state.res=E.analyze(state.parsed,{regime:state.regime});render
 
 function render(){
   var r=state.res,t=r.totals;
-  if(!r.suppliers.length){out.hidden=false;out.innerHTML='<div class="flow warn">В выписке нет платежей поставщикам — только налоги, зарплата, наличные или переводы между своими счетами.</div>';return}
+  if(!r.suppliers.length){out.hidden=false;out.innerHTML='<div class="flow warn">В выписке нет платежей поставщикам — только налоги, зарплата, наличные или переводы между своими счетами.</div>'+fizHtml();return}
   var ex=E.exposure(r,state.risk),reg=E.REGIMES[state.regime];
   var checked=!!state.risk, n=r.suppliers.length;
   var head;
@@ -378,7 +403,7 @@ function render(){
     (r.suppliers.length>10&&!state.showAll?'<button type="button" class="more-btn" id="all">Показать всех — '+r.suppliers.length+'</button>':'')+'</div>';
 
   var og=K&&/class="kom /.test(flows+sup)?K.ogovorkaHtml():'';
-  out.innerHTML='<div class="stake">'+head+cta+'</div>'+facts+todo+flows+sup+og+
+  out.innerHTML='<div class="stake">'+head+cta+'</div>'+facts+todo+fizHtml()+flows+sup+og+
     '<p class="note">Суммы НДС взяты из назначений платежей; где НДС не указан, вычет не считаем. Пени в сумму на кону не входят. Это автоматический разбор, а не заключение налогового консультанта.</p>';
   out.hidden=false;
   if(window.DeloFincentr&&!state.demo)DeloFincentr.pokazat(out,state.parsed,r);
@@ -386,6 +411,48 @@ function render(){
   var a=$('all');if(a)a.onclick=function(){state.showAll=true;render()};
 }
 function fact(v,k){return '<div class="fact"><b>'+v+'</b><span>'+k+'</span></div>'}
+
+/* vyplaty-fiz-v1: «Выплаты физлицам». Тексты — [команда] 11.11 (в): рамка дословно, № 1191451-8, «может увидеть ваших получателей».
+   Имена и ИНН граждан остаются в браузере: в проверку по реестрам уходят только ИНН поставщиков. */
+function fizHtml(){
+  var f=state.res&&state.res.fiz;
+  if(!VYPLATY.vkl||!f||!f.lyudi.length)return '';
+  var it=E.fizItog(f,state.fizBez),sp=f.lyudi.length;
+  var stav=Math.round(f.stavka*100)+'%';
+  var head=it.n?'<div class="k">'+(f.s?'С&nbsp;'+dt(f.s)+' по&nbsp;'+dt(f.po)+' гражданам ушло':'Гражданам ушло')+'</div><div class="v">'+rub(it.sum)+'</div><p>'+it.n+'&nbsp;'+plural(it.n,'получатель','получателя','получателей')+
+      (it.reg?', '+(it.reg===it.n?(it.n===1?'ему':'всем')+' платите регулярно':it.reg+'&nbsp;из&nbsp;них&nbsp;— регулярно')+', 3&nbsp;месяца и&nbsp;дольше':'')+
+      '. На&nbsp;кону&nbsp;— до&nbsp;≈&nbsp;<b>'+rub(it.naKonu)+'</b>, если эти выплаты&nbsp;— оплата работ или услуг, а&nbsp;НДФЛ и&nbsp;взносы с&nbsp;них не&nbsp;платили.</p>'
+    :'<div class="k">Выплаты физлицам</div><div class="v">0&nbsp;₽</div><p>Всех получателей вы&nbsp;отметили как сотрудников или учредителей&nbsp;— их&nbsp;не&nbsp;считаем.</p>';
+  var spisok=state.fizVse?f.lyudi:f.lyudi.slice(0,8);
+  var lyudi=spisok.map(function(p){
+    var off=!!state.fizBez[p.key];
+    var per=p.first===p.last?dt(p.first):dt(p.first)+'&nbsp;— '+dt(p.last);
+    return '<div class="vf-p'+(off?' off':'')+'"><div class="h"><div class="n">'+esc(p.name||'Без имени')+(p.regulyarno&&!off?'<span class="vf-reg">регулярно</span>':'')+'</div><div class="s">'+rub(p.sum)+'</div></div>'+
+      '<div class="m"><span>'+(p.inn?'ИНН '+p.inn:'счёт '+esc(p.schet))+'</span><span>'+p.count+'&nbsp;'+plural(p.count,'выплата','выплаты','выплат')+'</span><span>'+p.mesyacev+'&nbsp;'+plural(p.mesyacev,'месяц','месяца','месяцев')+'</span><span>'+per+'</span></div>'+
+      '<button type="button" class="vf-bez" data-fiz-key="'+esc(p.key)+'" aria-pressed="'+off+'">'+(off?'Не считаем&nbsp;— вернуть в&nbsp;расчёт':'Это сотрудник или учредитель')+'</button></div>';
+  }).join('')+(sp>8&&!state.fizVse?'<button type="button" class="more-btn" data-fiz-vse>Показать всех&nbsp;— '+sp+'</button>':'');
+  var iskl=f.iskl.count?'<p class="vf-sm">Не&nbsp;считали '+f.iskl.count+'&nbsp;'+plural(f.iskl.count,'выплату','выплаты','выплат')+' на&nbsp;'+rub(f.iskl.sum)+': по&nbsp;назначению это зарплата, подотчёт, командировочные, займы, дивиденды, аренда, пособия, возвраты или выплаты с&nbsp;удержанным НДФЛ.</p>':'';
+  return '<div class="block vf" id="vyplaty-fiz" data-vyplaty-fiz><h2>Выплаты физлицам</h2>'+
+    '<div class="vf-itog">'+head+'</div>'+
+    '<ul class="vf-dva"><li><b>Самозанятый со&nbsp;статусом</b>Если отношения признают трудовыми, придётся доплатить НДФЛ, взносы и&nbsp;штрафы&nbsp;— до&nbsp;≈&nbsp;'+stav+' выплат.</li>'+
+    '<li><b>Гражданин без статуса, за&nbsp;работу</b>НДФЛ и&nbsp;взносы с&nbsp;таких выплат обязательны уже сейчас. Если не&nbsp;удержали&nbsp;— до&nbsp;≈&nbsp;'+stav+' выплат.</li></ul>'+
+    '<p class="vf-ramka">Оценка по&nbsp;ставкам Налогового кодекса 2026 года, если выплаты&nbsp;— оплата работ или услуг. Не&nbsp;прогноз и&nbsp;не&nbsp;вывод о&nbsp;ваших отношениях с&nbsp;получателями. Пени и&nbsp;штрафы по&nbsp;КоАП&nbsp;— сверх этой суммы.</p>'+
+    '<p class="vf-zakon">Почему это важно: по&nbsp;законопроекту №&nbsp;1191451&#8209;8 (внесён в&nbsp;Госдуму 30&nbsp;марта 2026 года, не&nbsp;принят) Банк России будет передавать в&nbsp;налоговую сведения о&nbsp;гражданах с&nbsp;признаками предпринимательской деятельности. Так налоговая может увидеть ваших получателей. Применять его предполагается с&nbsp;2027 года.</p>'+
+    '<div class="vf-l">'+lyudi+'</div>'+iskl+
+    '<h3>Что сделать</h3><ol class="todo">'+
+      '<li>С&nbsp;каждым исполнителем&nbsp;— договор на&nbsp;результат работ и&nbsp;акт на&nbsp;каждую выплату; в&nbsp;назначении платежа&nbsp;— номер договора и&nbsp;за&nbsp;что платите.</li>'+
+      '<li>Самозанятому&nbsp;— чек на&nbsp;каждую выплату; статус проверьте на&nbsp;дату выплаты на&nbsp;сайте ФНС <a href="https://npd.nalog.ru/check-status/" target="_blank" rel="noopener">«Мой налог»</a>.</li>'+
+      '<li>Гражданину без статуса&nbsp;— удержите НДФЛ и&nbsp;начислите взносы с&nbsp;выплат за&nbsp;работу.</li>'+
+      '<li>Чеки, акты и&nbsp;результат проверки статуса&nbsp;— в&nbsp;папку по&nbsp;каждому получателю.</li></ol>'+
+    '<p class="vf-sm">Имена и&nbsp;ИНН получателей остаются у&nbsp;вас в&nbsp;браузере&nbsp;— на&nbsp;сервер не&nbsp;уходят. Отметка «сотрудник или учредитель» живёт до&nbsp;закрытия страницы.</p></div>';
+}
+function fizPerersovat(){var b=out.querySelector('[data-vyplaty-fiz]');if(!b)return;var t=document.createElement('div');t.innerHTML=fizHtml();var n=t.firstChild;if(n)b.replaceWith(n);else b.remove()}
+out.addEventListener('click',function(ev){
+  var b=ev.target.closest&&ev.target.closest('[data-fiz-key],[data-fiz-vse]');if(!b)return;
+  if(b.hasAttribute('data-fiz-vse')){state.fizVse=true;fizPerersovat();return}
+  var k=b.getAttribute('data-fiz-key');if(state.fizBez[k])delete state.fizBez[k];else state.fizBez[k]=true;
+  fizPerersovat();var nb=out.querySelector('[data-fiz-key="'+k.replace(/"/g,'')+'"]');if(nb)nb.focus();
+});
 
 var LVL={high:['high','серьёзные сигналы'],medium:['medium','есть вопросы'],low:['low','сигналов мало']};
 function supCard(s){
@@ -439,7 +506,7 @@ function readFiles(files){
       var good=list.filter(function(p){return p.ok});
       if(!good.length){msg.textContent='Не нашли платежей. Нужен файл обмена с 1С (.txt, начинается с «1CClientBankExchange»): в интернет-банке — «Выписка → Экспорт в 1С».';out.hidden=true;return}
       msg.textContent=good.length<list.length?'Часть файлов не похожа на выписку 1С — их пропустили.':'';
-      state.parsed=good;state.risk=null;state.remote=null;state.locked=0;state.showAll=false;state.demo=false;recalc();
+      state.parsed=good;state.risk=null;state.remote=null;state.locked=0;state.showAll=false;state.demo=false;state.fizBez={};state.fizVse=false;recalc();
       out.scrollIntoView({behavior:'smooth',block:'start'});
     })
     .catch(function(){msg.textContent='Не получилось прочитать файл. Выгрузите выписку ещё раз в формате 1С.'});
@@ -463,10 +530,14 @@ $('demo').onclick=function(){
     d(6,'25.07.2026','95000.00','40702810100000000055','5001000059','ООО «Пример-Офис»','Оплата по договору'),
     d(7,'28.07.2026','60000.00','03100643000000017300','7727406020','Казначейство России (ФНС России)','Единый налоговый платеж').replace('КонецДокумента','ПоказательКБК=18201061201010000510\nКонецДокумента'),
     d(8,'30.07.2026','420000.00','40817810100000000066','','Сотрудники','Заработная плата за июль 2026'),
+    d(12,'15.07.2026','45000.00','40817810100000000088','500100007170','Примерова Анна Сергеевна','Оплата по договору оказания услуг № 3 от 01.07.2026 (дизайн упаковки), этап 1'),
+    d(13,'14.08.2026','45000.00','40817810100000000088','500100007170','Примерова Анна Сергеевна','Оплата по договору оказания услуг № 3 от 01.07.2026 (дизайн упаковки), этап 2'),
+    d(14,'01.09.2026','45000.00','40817810100000000088','500100007170','Примерова Анна Сергеевна','Оплата по договору оказания услуг № 3 от 01.07.2026 (дизайн упаковки), этап 3'),
+    d(15,'21.08.2026','60000.00','40817810100000000099','','Образцов Илья Петрович','Оплата по договору подряда № 5 (монтаж витрины)'),
     d(10,'14.08.2026','1200000.00',me,'7700000016','ООО «Пример»','Выдача наличных по чеку на хозяйственные нужды').replace('Платежное поручение','Денежный чек'),
     d(11,'28.08.2026','300000.00','30232810000000000001','','','Снятие наличных в банкомате по корпоративной карте'),
     'КонецФайла'].join('\n');
-  state.parsed=[E.parse(t)];state.risk=null;state.remote=null;state.locked=0;state.showAll=false;state.demo=true;msg.textContent='';recalc();
+  state.parsed=[E.parse(t)];state.risk=null;state.remote=null;state.locked=0;state.showAll=false;state.demo=true;state.fizBez={};state.fizVse=false;msg.textContent='';recalc();
   out.scrollIntoView({behavior:'smooth',block:'start'});
 };
 window.__kontr={state:state,render:render};

@@ -376,6 +376,15 @@ def region_gorod(adres):
     return reg, (g.group(1) if g else "")
 
 
+def region_vid(r):
+    """linza-melochi-v1 (ТЗ [Арт-директор] 11.11): название региона по Конституции (ст. 65) — «Ханты-Мансийский автономный
+    округ — Югра», а не «…Автономный округ - Югра», как отдаёт реестр. Только вид: адрес страницы (slug) не меняется."""
+    s = re.sub(r"\s+", " ", str(r or "")).strip()
+    s = re.sub(r"\bАвтономн(ый|ая)\b", lambda m: "автономн" + m.group(1), s)
+    s = re.sub(r"\s+-\s+", " — ", s)
+    return s
+
+
 OKVED_RAZDELY = [
     (1, 3, "Сельское и лесное хозяйство, рыболовство"), (5, 9, "Добыча полезных ископаемых"),
     (10, 33, "Обрабатывающие производства"), (35, 35, "Энергетика"), (36, 39, "Водоснабжение и отходы"),
@@ -570,7 +579,7 @@ def iz_check(r):
     if not k["okved_name"]:
         k["okved_name"] = okved_nazvanie_iz_dosie(r, okved_kod(k["okved"]))  # kartochki-okved-v1
     reg, gor = region_gorod(k["address"])
-    k["region"] = r.get("region") or c.get("region") or reg
+    k["region"] = region_vid(r.get("region") or c.get("region") or reg)
     k["gorod"] = r.get("gorod") or c.get("city") or gor
     # сигналы: источник и дата — от сервера
     for s in r.get("signals") or []:
@@ -1399,7 +1408,8 @@ PASPORT_VHOD_TEKST = ("Полный Паспорт контрагента: ру�
                       "под вашу сумму и" + NB + "документы, которые стоит запросить. У" + NB + "каждого факта" + NB + "— источник и" + NB +
                       "дата, расчёты" + NB + "— по" + NB + "открытой методике.")
 # beta-data-v1: дату вписывает сборщик из tarify.json → beta_do (tests/beta.py, sroki), после конца беты span убирает браузер.
-PASPORT_VHOD_BETA = "В" + NB + "бете бесплатно<span data-beta-srok></span>" + NB + "→"
+# linza-melochi-v1 (ТЗ [Арт-директор] 11.11): бета закончилась, режим «бесплатно для всех» (решение 16.10) — «Сейчас бесплатно».
+PASPORT_VHOD_BETA = "Сейчас бесплатно<span data-beta-srok></span>" + NB + "→"
 
 
 def rkn_otpravleno():
@@ -2217,7 +2227,7 @@ GRUPPY_VIDY = ("otrasl", "region")
 
 def region_polnyj(r):
     """«Челябинская обл» → «Челябинская область», «Респ Татарстан» → «Республика Татарстан» (только вид, не смысл)."""
-    s = str(r or "").strip()
+    s = region_vid(r)
     s = re.sub(r"\bобл\.?$", "область", s)
     s = re.sub(r"^Респ\.?\s", "Республика ", s)
     s = re.sub(r"\sРесп\.?$", " Республика", s)
@@ -3246,7 +3256,7 @@ def un_fakty(t):
             f["shtat"] = int(re.sub(r"\D", "", s.group(1)) or 0)
     org = _sh_org(t)
     adr = org.get("address") or {}
-    f["region"], f["gorod"] = adr.get("addressRegion") or "", adr.get("addressLocality") or ""
+    f["region"], f["gorod"] = region_vid(adr.get("addressRegion") or ""), adr.get("addressLocality") or ""
     kr = _UN_KROSH.search(t)
     zv = [z.strip() for z in _zn_txt(kr.group(1)).split("›")] if kr else []
     f["razdel"] = zv[-1] if zv and zv[-1] in _UN_RAZDELY else ""
@@ -3814,6 +3824,15 @@ def pochinit_ruk_mesyac(t):
         den = dt.datetime.strptime(m.group(1), "%d.%m.%Y").date()
         t = _RUK_NAZAD.sub(lambda x: "сменился " + mesyac_okno(den, int(x.group(1)), x.group(2)), t)
     return t
+
+
+_REGION_SYROJ = re.compile(r"([А-ЯЁ][а-яё]+(?:-[А-ЯЁ][а-яё]+)*(?:ий|ая)) Автономн(ый|ая) (округ|область)(?: - ([А-ЯЁ][а-яё]+))?")
+
+
+def pochinit_region(t):
+    """linza-melochi-v1: у опубликованных карточек и хабов — регион как у новых (region_vid). Повтор ничего не меняет."""
+    return _REGION_SYROJ.sub(lambda m: "%s автономн%s %s%s" % (m.group(1), m.group(2), m.group(3),
+                                                             (" — " + m.group(4)) if m.group(4) else ""), t)
 
 
 def pochinit_rol_znaka(t):

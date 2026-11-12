@@ -1,27 +1,27 @@
 {
- "_kak": "sha256 от JSON.stringify(Usloviya.decide(...)) до комплекта (main c7bd42c + склейка NBSP в reasonText), по ответам tests/otsrochka_fixtures.js",
+ "_kak": "sha256 от JSON.stringify(Usloviya.decide(...)) до комплекта (main c7bd42c + склейка NBSP в reasonText), по ответам tests/otsrochka_fixtures.js; с zapros-dokumentov-v1 (12.11.2026) — без поля letter (сверено: без письма хэши до и после комплекта совпали)",
  "go": {
-  "bez": "77e112f6d315e8ff8717530f80c1b9252f75051bc76661712f3823b6138f0ca3",
-  "summa": "f88effaf4cf4bc8241e30de34ab59ccdaa27ae7753824931881de4c7539acfc2"
+  "bez": "42a2223cd3ce50de9ce1216bd8ecc52833fbb51cb59078d3c4a2e76e170cdcde",
+  "summa": "413c4cfabf6bc35088993ad47be95bdc6c781a0c80bc9d35bcdc44e5ee3e42b6"
  },
  "cap": {
-  "bez": "61140f7be3b7e6c21c54696ed7449ead05180bcd3fb3f053b423e697869a0816",
-  "summa": "a7608b802914723b59be6d87fce1a0345ac23601648cd62e425ba686be656941"
+  "bez": "c6ff5b8713b2c05038cceb8a566cad511a27aa6526405c05548dbb3b2e0c6acb",
+  "summa": "4db791c0d009bb59274ebef0679989887a84f16d7acd4350d2bde3f4e9187fb2"
  },
  "capMalo": {
-  "bez": "43760d94b8c418bfdb153568ea644dbbc940ae0cfc70f67d7ba3ee97159d9858",
-  "summa": "2656c1a775b901fa301f13844214a6d3106a5185c2b5b66edbb6acbad470f902"
+  "bez": "178c8a06c32f43ee5168dd35b29cecef3ce9222df826ce30738fcf0e514aea9c",
+  "summa": "19e14e6eeda822bf0c6aa1ba50919ec3c2f7fec59fcbe3f6e895cc86ca1dfdb2"
  },
  "post": {
-  "bez": "a030a544ae526826f75deda479c42d86356104425b8ddb32291019aad5c5c92b",
-  "summa": "f449469c4091a7683af71bf7bcbce5bae7d61088862bca4d11e60a48e47eac77"
+  "bez": "4d7da83c5292e8d0b03381a568d57505404af187968eda54934eaed81a917853",
+  "summa": "56e34296746953bc064cba4a6af3e2f8a4379b5616a6debe55ac7b08c13a6aba"
  },
  "stop": {
-  "bez": "bab86fa5e0b8229af08a76ba0c97d741b60801e0fd9f96f192e96b1de425fc7d",
-  "summa": "e3fc1fdac23851d4b5178aaedc9b374e51de240d42cb29492c9a0c7b108143a7"
+  "bez": "aa15f3607f4ec1d0b6b82aa4c60452669266c8da5cfad0b8ee1b1f061afe572e",
+  "summa": "5d0d87c3347b14a0f839ae9927a9aad2d8ad88b8a0d4a1c52c3a07df4633394d"
  },
  "liquidated": {
-  "bez": "5c30b6f7a3623dac945fcdcffc15d46c19adf1dc2e3204a4dda517b7976ac832",
-  "summa": "f6d13b3494a55277be37e4f1790f71a0299b5c3a307dfb1cac36a9cb6876ed50"
+  "bez": "247a6aa10793d65bae38e3dd7fb9d3bb7b4f7aca41a621b0727a7488c097d303",
+  "summa": "9ff7e14067f084c4acee25a03be1fac36a4b62df046d6e779ddf2373e3885d7b"
  }
 }

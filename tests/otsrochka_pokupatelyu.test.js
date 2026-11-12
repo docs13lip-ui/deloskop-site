@@ -13,8 +13,10 @@ const P = require('../indeks/predoplata.js');
 const F = require('./otsrochka_fixtures.js');
 const SNIMOK = JSON.parse(fs.readFileSync(path.join(__dirname, 'otsrochka_pokupatelyu.snapshot.json'), 'utf8'));
 const NB = '\u00a0';
-// doverie-v1: новое поле predel (состояние предела и версия правила) в снимок не входит — остальной вывод побайтно прежний
-const sha = (x) => require('node:crypto').createHash('sha256').update(JSON.stringify(x, (k, v) => (k === 'predel' ? undefined : v))).digest('hex');
+// doverie-v1: новое поле predel (состояние предела и версия правила) в снимок не входит — остальной вывод побайтно прежний.
+// zapros-dokumentov-v1: письмо «Я плачу им» переписано по тексту юриста 11.11 — его стережёт tests/zapros_dokumentov.test.js,
+// в снимок оно не входит (остальной вывод сверен: хэши без письма до и после комплекта совпали).
+const sha = (x) => require('node:crypto').createHash('sha256').update(JSON.stringify(x, (k, v) => (k === 'predel' || k === 'letter' ? undefined : v))).digest('hex');
 const OTG = { napravlenie: 'otgruzhaem' };
 const otg = (r, o) => U.decide(r, Object.assign({}, o || {}, OTG));
 const rub = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, NB) + NB + '₽';
@@ -128,8 +130,9 @@ test('v1.1 «Что запросить» в «Они платят мне» — �
   assert.strictEqual(v.letter.subject, 'Документы для отгрузки с отсрочкой платежа — ' + v.facts.name);
   assert.ok(v.letter.body.includes(' с отсрочкой платежа на сумму 500 000 ₽. '), v.letter.body);
   assert.ok(otg(F.cap).letter.body.includes(' с отсрочкой платежа. '), 'без суммы — без «на сумму»');
-  // «Я плачу им» — письмо по-прежнему со ст. 54.1
-  assert.ok(U.decide(F.cap, { amount: 500000 }).letter.body.includes('ст. 54.1 НК РФ'));
+  // «Я плачу им» — с zapros-dokumentov-v1 письмо тоже без норм (текст юриста 11.11), но свой текст
+  const pl = U.decide(F.cap, { amount: 500000 }).letter;
+  assert.ok(!/54\.1|БВ-4-7/.test(pl.body) && pl.body.includes('собираем стандартный комплект документов'), pl.body);
 });
 
 test('v1.1 подпись под списком: продавцу — «Список зависит от суммы отгрузки…», покупателю — п. 16 письма ФНС', () => {

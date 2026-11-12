@@ -79,7 +79,7 @@ test('счётчик — в общем пакете «yadro» и отдельн�
   assert.ok(!/localStorage|document\.cookie|sendBeacon/.test(chitat('js/schetchik.js')), 'без хранилища браузера и cookie');
 });
 
-test('/politika/: цели 7 и 8 дословно по тексту [Право], редакция 2 ноября 2026 (sobytiya-v1)', () => {
+test('/politika/: цели 7 и 8 дословно по тексту [Право], редакция 12 ноября 2026 (sobytiya-v1, dovedeno-vernulis 12.11)', () => {
   const t = chitat('politika/index.html');
   const s = bezTegov(t);
   for (const f of [
@@ -87,9 +87,11 @@ test('/politika/: цели 7 и 8 дословно по тексту [Право
     'Мы считаем просмотры страниц сами, без файлов cookie. Сохраняем только адрес страницы сайта, вид источника перехода (например, «поиск Яндекса» или «ВКонтакте») и час. IP-адрес используем меньше 2 секунд — чтобы не посчитать один просмотр дважды — и не сохраняем. Связать записи с человеком нельзя. Если в браузере включён запрет отслеживания, просмотр не учитываем.',
     // sobytiya-v1: строка [Право] 01.11 (разд. 2, п. 5) дословно
     'Так же, без cookie и IP, считаем, сколько раз за день нажали кнопки отчёта («Запросить документы», «В досье», «Следить», «Перепроверить») — только общее число по каждой кнопке.',
+    // dovedeno-vernulis: строка [Право] 12.11 (Право_блоки_12.11, ответ 2) дословно — выкладывается до VKL = true или вместе с ним
+    'Так же — без cookie и без IP-адреса — считаем, сколько проверок за день доведено до ответа и сколько людей вернулись к проверке в течение недели. Для этого браузер хранит у вас на устройстве номера дней, в которые вы проверяли компании, — не дольше 60 дней. На сервер уходит только вид события; дату сервер записывает с точностью до дня. Кнопка «Очистить список» стирает эти записи.',
   ]) assert.ok(s.includes(f), 'в политике нет: ' + f.slice(0, 40));
-  assert.ok(t.includes('<p class="meta">Редакция от 2 ноября 2026 '));
-  assert.ok(t.includes('"dateModified": "2026-11-02"'));
+  assert.ok(t.includes('<p class="meta">Редакция от 12 ноября 2026 '));
+  assert.ok(t.includes('"dateModified": "2026-11-12"'));
   // seo-svyazi-v1: lastmod — по смене текста страницы (tests/sitemap_lastmod.py), не раньше редакции
   const lm = chitat('sitemap.xml').match(/<loc>https:\/\/deloskop\.ru\/politika\/<\/loc><lastmod>([\d-]+)</);
   assert.ok(lm && lm[1] >= '2026-10-20');
@@ -136,7 +138,7 @@ function brauzerSob({ dnt = null, vkl = true } = {}) {
     fetch: (u, o) => { zaprosy.push(JSON.parse(o.body)); return Promise.resolve({}); },
   };
   let kod = chitat('js/schetchik.js');
-  if (vkl) kod = kod.replace('var VKL = false;', 'var VKL = true;');
+  kod = kod.replace(/var VKL = (true|false);/, 'var VKL = ' + (vkl ? 'true' : 'false') + ';');
   vm.runInNewContext(kod, { window: okno, setTimeout });
   const klik = (act) => dsob.click({ target: { closest: (q) => (q === '[data-q4-act]' ? { getAttribute: () => act } : null) } });
   return { zaprosy, klik, okno };
@@ -145,8 +147,9 @@ function brauzerSob({ dnt = null, vkl = true } = {}) {
 test('события в браузере: выключены до API; включены — первое действие + вид, повтор не шлём; DNT — ничего', () => {
   const vyk = brauzerSob({ vkl: false });
   vyk.klik('docs');
-  assert.strictEqual(vyk.zaprosy.length, 0, 'до выкладки API сайт событий не шлёт');
-  assert.ok(chitat('js/schetchik.js').includes('var VKL = false;'), 'включение — одной строкой после API');
+  assert.strictEqual(vyk.zaprosy.length, 0, 'выключено — сайт событий не шлёт');
+  // 12.11: API событий выложен, строка юриста в /politika/ — включено одной строкой
+  assert.ok(chitat('js/schetchik.js').includes('var VKL = true;'), 'включение — одной строкой после API');
 
   const b = brauzerSob();
   b.klik('docs'); b.klik('docs'); b.klik('slezh'); b.klik('close');
@@ -171,7 +174,7 @@ function brauzerPam({ vkl = true, dnt = null, hran = {}, slomano = false, den = 
     fetch: (u, o) => { zaprosy.push(JSON.parse(o.body)); return Promise.resolve({}); },
   };
   let kod = chitat('js/schetchik.js');
-  if (vkl) kod = kod.replace('var VKL = false;', 'var VKL = true;');
+  kod = kod.replace(/var VKL = (true|false);/, 'var VKL = ' + (vkl ? 'true' : 'false') + ';');
   const Dt = class extends Date {}; Dt.now = () => den * 864e5 + 3600e3;
   const ctx = vm.createContext({ window: okno, self: okno, setTimeout, Date: Dt });
   vm.runInContext(kod, ctx);
@@ -241,7 +244,7 @@ test('pamyat-proverok-v1 в браузере: выключено — ни пам
 
 test('pamyat-proverok-v1: события включаются только вместе со строкой о памяти в /politika/ (✎ [Право] п. 459)', () => {
   const vkl = /var VKL = true;/.test(chitat('js/schetchik.js'));
-  if (vkl) assert.ok(/dlk_pamyat|памят[ьи] проверок/i.test(chitat('politika/index.html')), 'VKL = true без текста юристов о памяти на устройстве');
+  if (vkl) assert.ok(/dlk_pamyat|памят[ьи] проверок|браузер хранит у&nbsp;вас на&nbsp;устройстве номера дней/i.test(chitat('politika/index.html')), 'VKL = true без текста юристов о памяти на устройстве');
 });
 
 // dovedeno-vernulis-v1 (11.11): «довели проверку до ответа» и «вернулись в течение 7 дней»

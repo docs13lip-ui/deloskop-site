@@ -98,9 +98,10 @@ for (var i = 0; i < SAMI.length; i++) if (SAMI[i][0].test(put)) return 'пров
 return 'проверить на' + NB + put.split('/')[0].replace(/^www\./, '');
 }
 var REESTR = {
-kad: { damia: ['sudy', 'bankrotstvo'], ustarelo_dney: 7, sostoyanie: 'zamorozhen', s: '2026-10-12' },
-fssp: { damia: ['fssp'], ustarelo_dney: 7, sostoyanie: 'zamorozhen', s: '2026-10-12' },
+kad: { damia: ['sudy'], ustarelo_dney: 7, sostoyanie: 'podklyuchen' },
+fssp: { damia: ['fssp'], ustarelo_dney: 7, sostoyanie: 'podklyuchen' },
 eis: { damia: ['rnp', 'kontrakty'], ustarelo_dney: 30, sostoyanie: 'zamorozhen', s: '2026-10-12' },
+efrsb: { damia: ['bankrotstvo'], ustarelo_dney: 7, sostoyanie: 'podklyuchen' },
 nalog_bi: { damia: ['priostanovki', 'mery'], ustarelo_dney: 1, sostoyanie: 'zamorozhen', s: '2026-10-12' }
 };
 var PO_BLOKU = {};
@@ -146,6 +147,10 @@ b.prichina = 'источник сейчас не' + NB + 'обновляется
 b.itog_ne_provereno = 'Не проверяли: источник сейчас не' + NB + 'обновляется.';
 return;
 }
+if (ist.sostoyanie === 'podklyuchen' && (b.status === 'not_checked' || b.status === 'ne_provereno' || b.sostoyanie === 'not_checked')) {
+b.oshibka = true;
+return;
+}
 if (b.status !== 'found' && b.status !== 'not_found') return;
 var dn = dniMezhdu(b.data_svedeniy, na);
 if (dn == null || dn <= ist.ustarelo_dney) return;
@@ -161,10 +166,40 @@ dm.polnota = { provereno: Math.max(0, Number(dm.polnota.provereno) - snyato), iz
 }
 return r;
 }
+var KLYUCHI_STORON = { istcy: 1, istec: 1, otvetchiki: 1, otvetchik_imya: 1, storony: 1, vzyskatel: 1, vzyskateli: 1, dolzhnik: 1,
+'Ист': 1, 'Ответ': 1, 'ДолжНаим': 1, 'Должник': 1, 'Взыскатель': 1, 'Истец': 1, 'Ответчик': 1, 'ВзыскНаим': 1 };
+var RE_IP = /^\s*(ИП|индивидуальный\s+предприниматель)(\s|$)/i;
+var RE_FIO_INIC = /^\s*[А-ЯЁ][а-яё]+(?:-[А-ЯЁ][а-яё]+)?\s+[А-ЯЁ]\.\s*(?:[А-ЯЁ]\.?)?\s*$/;
+var RE_FIO_INIC2 = /^\s*[А-ЯЁ]\.\s*(?:[А-ЯЁ]\.)?\s*[А-ЯЁ][а-яё]+(?:-[А-ЯЁ][а-яё]+)?\s*$/;
+var RE_FIO_POLN = /^\s*(?:[А-ЯЁ][А-ЯЁа-яё-]+\s+){2,3}(?:[А-ЯЁ][А-ЯЁа-яё-]*(?:вич|вна|ична|ВИЧ|ВНА|ИЧНА)|[Оо]глы|[Кк]ызы|ОГЛЫ|КЫЗЫ)\s*$/;
+function storona(v) {
+if (typeof v !== 'string') return v;
+if (RE_IP.test(v)) return 'индивидуальный предприниматель';
+if (RE_FIO_INIC.test(v) || RE_FIO_INIC2.test(v) || RE_FIO_POLN.test(v)) return 'физическое лицо';
+return v;
+}
+function obStorony(o, gl) {
+['naimenovanie', 'name', 'fio', 'imya', 'Наим', 'НаимПолн', 'НаимСокр', 'ФИО'].forEach(function (p) { if (typeof o[p] === 'string') o[p] = storona(o[p]); });
+if (typeof o.fio === 'string' && o.fio) o.fio = 'физическое лицо';
+['inn', 'ИНН', 'ogrn', 'ОГРН', 'ogrnip', 'ОГРНИП'].forEach(function (p) { if (/^\d{12}$|^\d{15}$/.test(String(o[p] == null ? '' : o[p]))) delete o[p]; });
+return maskaStoron(o, gl);
+}
+function maskaStoron(x, gl) {
+if (!x || typeof x !== 'object' || (gl = gl || 0) > 6) return x;
+Object.keys(x).forEach(function (k) {
+var v = x[k];
+if (KLYUCHI_STORON[k] === 1) {
+if (typeof v === 'string') x[k] = storona(v);
+else if (Array.isArray(v)) x[k] = v.map(function (e) { return typeof e === 'string' ? storona(e) : (e && typeof e === 'object' ? obStorony(e, gl + 1) : e); });
+else if (v && typeof v === 'object') obStorony(v, gl + 1);
+} else if (v && typeof v === 'object') maskaStoron(v, gl + 1);
+});
+return x;
+}
 function dopolnit(r) {
 if (!r || typeof r !== 'object' || !r.company) return r;
 var dm = r.damia && typeof r.damia === 'object' ? r.damia : null;
-if (dm) { privestiSlovar(dm); sudyItog(dm.sudy); sudyNol(dm.sudy); ustarevanie(r); }
+if (dm) { maskaStoron(dm); privestiSlovar(dm); sudyItog(dm.sudy); sudyNol(dm.sudy); ustarevanie(r); }
 var est = dm && dm.bankrotstvo && typeof dm.bankrotstvo === 'object' ? dm.bankrotstvo : null;
 var bankrotEgryul = String((r.company || {}).status || '').toUpperCase() === 'BANKRUPT';
 if (!est || !OTVETIL[est.status] || (bankrotEgryul && est.status === 'not_found')) {
@@ -187,7 +222,7 @@ function uchten(b) {
 if (!b || typeof b !== 'object' || b.iz_egryul || b.ustarelo) return false;
 return b.status === 'provereno' || b.status === 'found' || b.status === 'not_found';
 }
-return { dopolnit: dopolnit, ustarevanie: ustarevanie, statusIstochnika: statusIstochnika, statusTekst: statusTekst, STATUSY: STATUSY, REESTR: REESTR, bankrotstvoIzEgryul: bankrotstvoIzEgryul, uchten: uchten, privestiSlovar: privestiSlovar, sudyItog: sudyItog, sudyNol: sudyNol, samiTekst: samiTekst, OGOVORKA_EFRSB: OGOVORKA_EFRSB };
+return { dopolnit: dopolnit, ustarevanie: ustarevanie, statusIstochnika: statusIstochnika, statusTekst: statusTekst, STATUSY: STATUSY, REESTR: REESTR, bankrotstvoIzEgryul: bankrotstvoIzEgryul, uchten: uchten, privestiSlovar: privestiSlovar, maskaStoron: maskaStoron, storona: storona, sudyItog: sudyItog, sudyNol: sudyNol, samiTekst: samiTekst, OGOVORKA_EFRSB: OGOVORKA_EFRSB };
 });
 ;
 /* --- /js/imya.js --- */
@@ -372,7 +407,7 @@ return isFinite(x) && isFinite(y) && Math.floor((y - x) / 864e5) > sudyDnej();
 function ySudy(r) {
 var s = r && r.damia && r.damia.sudy;
 var est = s && s.dannye && /^(polucheno|found|not_found|stale)$/.test(String(s.status || ''));
-if (!est) return { t: 'Не проверяли', pod: (s && s.zamorozhen ? 'источник сейчас не' + NB + 'обновляется — ' : '') + 'проверьте сами в картотеке kad.arbitr.ru', ton: 'neutral', nepr: true };
+if (!est) return { t: 'Не проверяли', pod: (s && s.zamorozhen ? 'источник сейчас не' + NB + 'обновляется — ' : s && s.oshibka ? 'источник не' + NB + 'ответил — ' : '') + 'проверьте сами в картотеке kad.arbitr.ru', ton: 'neutral', nepr: true };
 var d = s.dannye, n = +d.otvetchik_nezaversheno || 0, v = +d.vsego || 0, na = data(s.data_svedeniy), star = sudyStaroe(s, r);
 if (n) return { t: 'Ответчик в' + NB + n + NB + skl(n, 'незавершённом деле', 'незавершённых делах', 'незавершённых делах'),
 pod: 'всего дел: ' + v + (na ? ' · на' + NB + na : '') + (star ? ', могли измениться' : ''), ton: 'warn', ustarelo: star || undefined };

@@ -39,7 +39,7 @@ const SVEZHEE = () => I.dopolnit(otvet('2026-10-15T09:00:00Z', '2026-10-14T04:08
 test('реестр: копия в js/istochniki.js совпадает с data/istochniki.json', () => {
   const R = JSON.parse(chitat('data/istochniki.json'));
   const izJson = {};
-  R.istochniki.filter((x) => x.damia).forEach((x) => { izJson[x.id] = { damia: x.damia, ustarelo_dney: x.ustarelo_dney, sostoyanie: x.sostoyanie, s: x.zamorozhen_s }; });
+  R.istochniki.filter((x) => x.damia).forEach((x) => { izJson[x.id] = { damia: x.damia, ustarelo_dney: x.ustarelo_dney, sostoyanie: x.sostoyanie }; if (x.zamorozhen_s) izJson[x.id].s = x.zamorozhen_s; });
   assert.deepStrictEqual(JSON.parse(JSON.stringify(I.REESTR)), izJson);
   assert.deepStrictEqual(Object.keys(R.statusy), I.STATUSY);
 });
@@ -107,7 +107,8 @@ test('семь единых статусов: у каждого свой тек�
 test('страницы говорят о судах одно и то же: заморожены — «не обновляются», ЦБ — «не получаем», без «как есть» и «новый иск»', () => {
   const kr = plain(chitat('kak-rabotaet/index.html'));
   assert.ok(!/Суды пока не подключены/.test(kr));
-  assert.match(kr, /Суды, приставы и госзакупки сейчас не обновляются/);
+  // istochniki-checko-v1 (12.11): суды, приставы и банкротство — через Checko; не обновляются РНП и решения ФНС
+  assert.match(kr, /Суды, приставы и банкротство — на день проверки\. Реестр недобросовестных поставщиков и решения ФНС о блокировке счетов сейчас не обновляются/);
   const ix = plain(chitat('indeks/index.html')) + plain(chitat('indeks/metodika-v1.json'));
   assert.ok(!/как есть/.test(ix), '/indeks/: «показываем группу ЦБ как есть» — неверно, мы её не получаем');
   assert.ok(!/новый иск/.test(ix), '/indeks/: суды не обновляются — «новый иск» не пересчитывает Индекс');

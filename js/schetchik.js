@@ -53,7 +53,8 @@
   // Эти виды шлются по разу на компанию или на день (это решает память), а не по разу за показ страницы.
   var MNOGO = { proverka_novaya: 1, perepoverka_7_60: 1 };
   // Включается одной строкой после выкладки API (приём {sobytie} в /api/ping — ТЗ в КАК_ВЫЛОЖИТЬ_sobytiya-v1).
-  var VKL = false;
+  // istochniki-checko-v1 (12.11): сервер событий выложен (api-sobytiya-segodnya-v2), строка юриста о памяти — в /politika/ цель 8.
+  var VKL = true;
   function teloSobytiya(vid, okr) {
     if (VIDY[vid] !== 1 || !telo(okr)) return null;
     return { sobytie: vid };

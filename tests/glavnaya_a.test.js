@@ -76,8 +76,11 @@ test('главная А: «Условия» без цен; кабинет — п
   assert.ok(!/₽/.test(p));
   assert.match(p, /10 проверок в день — бесплатно, без регистрации\./);
   assert.match(p, /вход по коду на почту, без пароля/);
-  for (const id of ['inn', 'vhody', 'shield', 'praktika', 'doverie', 'price', 'faq', 'vitrina']) {
+  for (const id of ['inn', 'vhody', 'shield', 'praktika', 'doverie', 'price', 'faq']) {
     assert.ok(new RegExp('id="' + id + '"').test(G), 'нет якоря #' + id);
   }
+  // glavnaya-6-blokov-v1: строки витрины нет — старый адрес /#vitrina уводит на /vse-vozmozhnosti/ (и по hashchange)
+  assert.match(G, /h==="#vitrina"\)location\.replace\("\/vse-vozmozhnosti\/"\)/);
+  assert.match(G, /addEventListener\("hashchange"/);
   assert.ok(!/Как оплатить\?/.test(tekst(MAIN)), 'вопрос «Как оплатить?» — только с включением оплат');
 });

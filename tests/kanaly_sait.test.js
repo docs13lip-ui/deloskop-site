@@ -50,12 +50,14 @@ test('/boty/: пока ссылок нет — noindex и не в sitemap; кн�
   assert.ok(tekst.includes('данные ИП мы не публикуем'));
 });
 
-test('главная: кнопка «Написать в MAX» есть, но скрыта, пока нет ссылки; кабинет подставляет ИНН из ссылки бота', () => {
+test('главная: в «Условиях» — help@ и ВКонтакте (скрыт, пока нет ссылки), MAX и бота нет; кабинет подставляет ИНН из ссылки бота', () => {
   const s = chitat('index.html');
   assert.ok(s.includes('<script src="/js/kanaly.js" defer></script>'));
   // glavnaya-a-v1: строка ботов переехала из первого экрана в «Условия» (#price)
   const pr = s.slice(s.indexOf('id="price"'), s.indexOf('</section>', s.indexOf('id="price"')));
-  assert.ok(/<p class="note kanaly-glav" data-kanaly-blok hidden>[^<]*<a data-kanal="max" hidden>в&nbsp;MAX<\/a>/.test(pr));
+  // glavnaya-6-blokov-v1 (Стратег 12.11, разд. 2; пауза MAX — решение 11.11): строка видна всегда — help@, ВКонтакте — по ссылке
+  assert.ok(/<p class="note kanaly-glav">Вопрос&nbsp;— на&nbsp;<a href="mailto:help@deloskop\.ru">help@deloskop\.ru<\/a><span data-kanaly-blok hidden> или <a data-kanal="vk" hidden>во&nbsp;ВКонтакте<\/a><\/span>\.<\/p>/.test(pr));
+  assert.ok(!/data-kanal="max"|MAX|\/boty\//.test(pr), 'MAX и бота в «Условиях» нет');
   const c = chitat('cabinet.html');
   const m = c.match(/var m=(\/\[\?&\]inn=[^;]+\/)\.exec\(location\.search\)/);
   assert.ok(m, 'нет подстановки ИНН');

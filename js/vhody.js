@@ -1,4 +1,4 @@
-/* Делоскоп — «Три входа» на главной (Стратег 27.09 §1.2; приёмка 13.10, стр. 6).
+/* Делоскоп — входы на главной (Стратег 27.09 §1.2; приёмка 13.10, стр. 6; glavnaya-6-blokov-v1 12.11: две карточки + строка «Банк спросил»).
    Считаем, как делятся клики между входами: цели entry_pay / entry_watch / entry_bank
    (только с согласия на Метрику — window.dlkGoal сам это проверяет).
    Вход «Перед оплатой» не уводит со страницы: прокручивает к полю ИНН и ставит в него курсор. */
@@ -9,7 +9,7 @@
     return v ? v.getAttribute("data-vhod") : null;
   }
   document.addEventListener("click", function (e) {
-    var a = e.target.closest ? e.target.closest(".vhod a") : null;
+    var a = e.target.closest ? e.target.closest(".vhod a, .vhody__bank a") : null;
     if (!a) return;
     var c = cel(a);
     if (c && typeof window.dlkGoal === "function") {

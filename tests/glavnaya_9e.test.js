@@ -27,7 +27,7 @@ test('правила телефона — одним блоком внутри @
 
 test('текст не теряется: «В отчёте ещё…» и «Ввести ИНН →» остаются в разметке, прячется только вид на телефоне', () => {
   assert.match(gl, /<p class="ex-pod">В&nbsp;отчёте ещё:/);
-  assert.ok((gl.match(/<div class="vhod__go" aria-hidden="true">/g) || []).length >= 3);
+  assert.ok((gl.match(/<div class="vhod__go" aria-hidden="true">/g) || []).length >= 2); // glavnaya-6-blokov-v1: два входа
   assert.match(blok, /\.vhod h3::after\{content:"\\00a0→"/, 'стрелка у заголовка входа вместо строки «Ввести ИНН →»');
 });
 

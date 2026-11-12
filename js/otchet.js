@@ -57,12 +57,13 @@
   }
 
   // Действия полосы: одна главная («Следить»), одна второстепенная («Паспорт» — только юрлицу).
+  // sledit-v1 (13.11): у организации в адресе «Следить» — ИНН: кабинет подставляет его в поле (kanaly-v1), js/sledit.js при SLEDIT открывает форму почты.
   // Щит: главное действие — первый шаг разбора со ссылкой (Shchit.glavnyj), иначе «Следить за своей компанией».
   function dejstviya(r, svoj, g) {
     var inn = String(r && r.company && r.company.inn || '').replace(/\D/g, '');
     var a = [svoj && g && g.href && !g.sled
       ? { t: g.knopka || 'Что сделать', href: g.href, glavnaya: true, cel: 'shchit_shag', ext: !!g.ext }
-      : { t: svoj ? 'Следить за своей компанией' : 'Следить за компанией', href: '/cabinet.html#watch', glavnaya: true, cel: svoj ? 'shchit_sled' : 'otchet_sled' }];
+      : { t: svoj ? 'Следить за своей компанией' : 'Следить за компанией', href: '/cabinet.html' + (inn.length === 10 ? '?inn=' + inn : '') + '#watch', glavnaya: true, cel: svoj ? 'shchit_sled' : 'otchet_sled' }];
     // dosje-sdelki-v1: с номером проверки — «Досье сделки» на странице Паспорта по этому номеру (без второй проверки)
     var rid = /^[A-Za-z0-9_-]{8,24}$/.test(String(r && r.report_id || '')) ? String(r.report_id) : '';
     if (!svoj && inn.length === 10) a.push(rid ? { t: 'Досье сделки', href: '/pasport/kontragent/?id=' + rid + '#sd', cel: 'otchet_pasport' } : { t: 'Паспорт контрагента', href: '/pasport/kontragent/?inn=' + inn, cel: 'otchet_pasport' });

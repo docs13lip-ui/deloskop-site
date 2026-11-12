@@ -177,32 +177,38 @@ def gorod(r):
 # Organization «Делоскоп» на всех страницах (sobrat_stranicu, шаг 6в) и ссылка в подвале. Новое — одной строкой сюда.
 VK = "https://vk.com/deloskop_ru"  # сообщество club242169479, верифицировано через Госуслуги 10.10
 SOOBSHCHESTVA = [VK]
+# fokus-shapka-v1 (12.11.2026, решение владельца 11.11 ~21:42, claude/Стратег_что_убрать_12.11.md): в шапке — 5 мест
+# (Проверить · Проверь счёт · Кому вы платите · Разборы дел · Войти), всё прежнее меню — здесь, в 4 колонках по задачам
+# человека: «Перед оплатой» → «Если банк спросил» → «Знания» → «Компания». Документы — строкой внизу (DOKUMENTY).
+# Страницы не удаляются, прежние адреса шапки — все в подвале (tests/fokus_shapka.test.js сверяет список).
 KOLONKI = [
-    ("Продукты", [
-        ("Проверка по ИНН", "/"), ("Индекс Делоскопа", "/indeks/"), ("Щит", "/#shield"),
-        ("Наличные глазами банка", "/nalichnye/"), ("Кому вы платите", "/kontragenty-iz-vypiski/"),
-        ("Проверь счёт", "/proverit-schet/"), ("Скорая 115-ФЗ", "/skoraya-115-fz/"),
-        ("Паспорт", "/pasport/"), ("Делопись", "/delopis/"), ("Тарифы", "/tarify/")]),
+    ("Перед оплатой", [
+        ("Проверка по ИНН", "/"), ("Проверь счёт", "/proverit-schet/"), ("Кому вы платите", "/kontragenty-iz-vypiski/"),
+        ("Паспорт контрагента", "/pasport/kontragent/"), ("Делопись", "/delopis/"), ("Индекс Делоскопа", "/indeks/"),
+        ("Щит", "/#shield"), ("Всё, что умеет Делоскоп", "/vse-vozmozhnosti/"), ("Тарифы", "/tarify/")]),
+    ("Если банк спросил", [
+        ("Скорая 115-ФЗ", "/skoraya-115-fz/"), ("Как вас видит банк", "/kak-vidit-bank/"),  # 3.3b (19.10): vizual-v3.3
+        ("Наличные глазами банка", "/nalichnye/"), ("Паспорт компании", "/pasport/"),
+        ("115-ФЗ простыми словами", "/115-fz/")]),
     ("Знания", [
         # doverie-2 (30.10.2026, ТЗ маркетинга п. 2): вход на /kak-rabotaet/ — первой строкой «Знаний»
-        ("Как это работает — на примере", "/kak-rabotaet/"),
-        ("115-ФЗ простыми словами", "/115-fz/"),
-        ("Как вас видит банк", "/kak-vidit-bank/"),  # 3.3b (19.10): страница vizual-v3.3
-        ("Налоги", "/nalogi/"), ("Что нового", "/obnovleniya/")]),
+        ("Как это работает — на примере", "/kak-rabotaet/"), ("Разборы дел", "/praktika/"), ("Налоги", "/nalogi/"),
+        # Стратег 12.11: методика и точность — одной ссылкой «Откуда данные и точность»; методика — на /indeks/ (колонка 1)
+        ("Откуда данные и точность", "/tochnost/"), ("Что нового", "/obnovleniya/")]),
     ("Компания", [
         ("О проекте", "/o-proekte/"),  # o-proekte-v1 (11.10): миссия, принципы, роли команды, пульс
-        ("Методика Индекса", "/indeks/#metodika"), ("Точность Индекса", "/tochnost/"),
         ("Кабинет", "/cabinet.html"), ("Бухгалтерам и партнёрам", "/partneram/"),
         ("Реквизиты и контакты", "/rekvizity/"), ("help@deloskop.ru", "mailto:help@deloskop.ru"),
         # seo-svyazi-v1 (24.10.2026, план [Маркетинг] 24.10 разд. 2.2 п. 3): сообщество — в подвале всех страниц;
         # метка utm_source=site — переходы с сайта видны в статистике сообщества. Адрес без метки — в sameAs (SOOBSHCHESTVA).
         ("Мы во ВКонтакте", VK + "?utm_source=site")]),
-    ("Документы", [
-        ("Публичная оферта", "/oferta/"), ("Политика обработки ПДн", "/politika/"),
-        ("Согласие на обработку ПДн", "/soglasie/"), ("Согласие на рассылки", "/rassylki/"),
-        ("Cookies и Метрика", "/cookies/"), ("Возврат денег", "/vozvrat/"),
-        ("Условия для партнёров", "/partneram/usloviya/"), ("Реквизиты", "/rekvizity/")]),
 ]
+# Документы — одной строкой под колонками (как правовая строка внизу подвала Apple): нужны редко, но всегда на виду и в Tab.
+DOKUMENTY = [
+    ("Публичная оферта", "/oferta/"), ("Политика обработки ПДн", "/politika/"),
+    ("Согласие на обработку ПДн", "/soglasie/"), ("Согласие на рассылки", "/rassylki/"),
+    ("Cookies и Метрика", "/cookies/"), ("Возврат денег", "/vozvrat/"),
+    ("Условия для партнёров", "/partneram/usloviya/")]
 
 
 def podval_html(r):
@@ -233,6 +239,8 @@ def podval_html(r):
     # (служебные блоки): «и партнёрам», «для партнёров», «не заменяют» висели на каждой странице (замер 390 px).
     return ('<!--podval-->' + TS.fragment('<div class="podval" role="contentinfo"><div class="podval__in">'
             '<div class="podval__cols">' + "".join(cols) + '</div>'
+            '<nav class="podval__doki" aria-label="Документы"><ul>' +
+            "".join('<li><a href="%s">%s</a></li>' % (e(h), e(t)) for t, h in DOKUMENTY) + '</ul></nav>'
             '<div class="podval__niz"><p>' + stroka + '</p>' + TEMA_PODVAL +
             '<p>Сотрудничество, отзывы и предложения — <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>. Принимаем 24/7</p>'
             '<p>Материалы носят информационный характер и не заменяют консультацию юриста</p></div>'
@@ -459,7 +467,15 @@ def podval_css():
             ".podval--skl .podval__det ul{padding:0 0 var(--s-3)}\n"
             ".podval--skl .podval__niz{margin-top:var(--s-5);border-top:0;padding-top:0}\n"
             "@media (prefers-reduced-motion:reduce){.podval.podval--skl .podval__det>.podval__h::after{transition:none}}\n"
-            ".podval__niz{display:flex;justify-content:space-between;gap:var(--s-3) var(--s-6);flex-wrap:wrap;margin-top:var(--s-7);padding-top:var(--s-5);border-top:1px solid var(--line);font-size:var(--t-caption);line-height:1.4}\n"
+            # fokus-shapka-v1: строка документов — под колонками, мелким кеглем, через «·»; на телефоне — переносится, касание 44 px
+            ".podval .podval__doki{margin-top:var(--s-7);padding-top:var(--s-5);border-top:1px solid var(--line)}\n"
+            ".podval .podval__doki ul{display:flex;flex-wrap:wrap;gap:var(--s-1) 0}\n"
+            ".podval .podval__doki li{margin:0;font-size:var(--t-caption);line-height:1.4}\n"
+            ".podval .podval__doki li+li::before{content:\"·\";margin:0 var(--s-2);color:var(--muted)}\n"
+            ".podval .podval__doki a{color:var(--muted)}.podval .podval__doki a:hover{color:var(--accent)}\n"
+            ".podval--skl .podval__doki{margin-top:var(--s-5);border-top:0;padding-top:0}\n"
+            "@media (max-width:640px){.podval .podval__doki ul{gap:0 var(--s-4)}.podval .podval__doki li+li::before{content:none}.podval .podval__doki a{display:inline-flex;align-items:center;min-height:44px}}\n"
+            ".podval__niz{display:flex;justify-content:space-between;gap:var(--s-3) var(--s-6);flex-wrap:wrap;margin-top:var(--s-4);font-size:var(--t-caption);line-height:1.4}\n"
             ".podval .podval__niz p{margin:0;color:var(--muted);font-size:var(--t-caption)}\n"
             # dostupnost-v1 (25.10): ссылки внутри строк подвала («Реквизиты», help@) — с подчёркиванием: цветом они отличались
             # от текста строки на 1,5 : 1 (нужно ≥ 3 : 1, WCAG 1.4.1) и читались как обычный текст; колонки — списки ссылок, их не трогаем

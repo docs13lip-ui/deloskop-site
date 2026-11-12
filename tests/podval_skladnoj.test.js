@@ -8,7 +8,8 @@ const vm = require('vm');
 
 const KOREN = path.join(__dirname, '..');
 const chitat = f => fs.readFileSync(path.join(KOREN, f), 'utf8');
-const KOLONKI = ['Продукты', 'Знания', 'Компания', 'Документы'];
+// fokus-shapka-v1 (12.11): колонки по задачам человека; документы — строкой под колонками
+const KOLONKI = ['Перед оплатой', 'Если банк спросил', 'Знания', 'Компания'];
 
 function podvalIz(html) {
   const m = html.match(/<!--podval-->([\s\S]*?)<!--\/podval-->/);

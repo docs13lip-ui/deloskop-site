@@ -73,9 +73,9 @@ test('3.3b: последняя строка — оговорка [Право] с
   assert.ok(!/заблокиру|откаж|отказ(ет|ать)|приостанов/i.test(tekst(main)), 'решения банка в тексте');
 });
 
-test('3.3b: на страницу ведут подвал («Знания») и /nalichnye/ («Читайте также»)', () => {
+test('3.3b: на страницу ведут подвал («Если банк спросил», fokus-shapka-v1) и /nalichnye/ («Читайте также»)', () => {
   assert.match(chitat('tests/sobrat_shapku.py'), /\("Как вас видит банк", "\/kak-vidit-bank\/"\)/);
-  assert.match(S, /aria-label="Знания">[\s\S]*?<a href="\/kak-vidit-bank\/">Как вас видит банк<\/a>/);
+  assert.match(S, /aria-label="Если банк спросил">[\s\S]*?<a href="\/kak-vidit-bank\/">Как вас видит банк<\/a>/);
   const n = chitat('nalichnye/index.html');
   assert.match(n, /<section class="more">[\s\S]*?<a class="card" href="\/kak-vidit-bank\/">/);
 });

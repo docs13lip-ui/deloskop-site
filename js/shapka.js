@@ -181,39 +181,9 @@
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
 
-    // 3. Выпадающие «Выписка» и «115-ФЗ» — кнопка-раскрывашка
-    var dds = Array.prototype.slice.call(h.querySelectorAll(".shapka__dd"));
-    var hover = window.matchMedia && matchMedia("(hover:hover) and (pointer:fine)").matches;
-    function btnOf(dd) { return dd.querySelector("button"); }
-    function close(dd, focus) { dd.classList.remove("is-open"); btnOf(dd).setAttribute("aria-expanded", "false"); if (focus) btnOf(dd).focus(); }
-    function open(dd) { dds.forEach(function (o) { if (o !== dd) close(o); }); dd.classList.add("is-open"); btnOf(dd).setAttribute("aria-expanded", "true"); }
-    dds.forEach(function (dd) {
-      var b = btnOf(dd), t, byHover = false;
-      b.addEventListener("click", function () {
-        var isOpen = dd.classList.contains("is-open");
-        if (isOpen && !byHover) close(dd); else open(dd);
-        byHover = false;
-      });
-      b.addEventListener("keydown", function (e) {
-        if (e.key === "ArrowDown") { e.preventDefault(); open(dd); dd.querySelector(".shapka__menu a").focus(); }
-      });
-      if (hover) {
-        dd.addEventListener("mouseenter", function () { clearTimeout(t); if (!dd.classList.contains("is-open")) { byHover = true; open(dd); } });
-        dd.addEventListener("mouseleave", function () { t = setTimeout(function () { close(dd); byHover = false; }, 150); });
-      }
-      dd.addEventListener("focusout", function (e) { if (!dd.contains(e.relatedTarget)) close(dd); });
-      dd.addEventListener("keydown", function (e) {
-        if (e.key === "Escape" && dd.classList.contains("is-open")) { e.stopPropagation(); close(dd, true); }
-        if ((e.key === "ArrowDown" || e.key === "ArrowUp") && e.target.closest(".shapka__menu")) {
-          e.preventDefault();
-          var l = Array.prototype.slice.call(dd.querySelectorAll(".shapka__menu a")), i = l.indexOf(e.target);
-          l[(i + (e.key === "ArrowDown" ? 1 : -1) + l.length) % l.length].focus();
-        }
-      });
-    });
-    document.addEventListener("click", function (e) { dds.forEach(function (dd) { if (!dd.contains(e.target)) close(dd); }); });
+    // 3. fokus-shapka-v1 (12.11): выпадающих меню в шапке нет — три ссылки, «Войти» и «Проверить»; остальное в подвале
 
-    // 4. Мобильное меню ≤ 1024 px: <dialog> + showModal() — фон инертен, фокус внутри, Esc закрывает
+    // 4. Мобильное меню ≤ 860 px: <dialog> + showModal() — фон инертен, фокус внутри, Esc закрывает
     var burger = h.querySelector(".shapka__burger");
     if (m && burger && m.showModal) {
       var shut = function () { if (m.open) m.close(); };
@@ -227,7 +197,7 @@
         if (e.target === m || e.target.closest("[data-close]") || e.target.closest("a")) shut();
       });
       if (window.matchMedia) {
-        var mq = matchMedia("(min-width:1025px)");
+        var mq = matchMedia("(min-width:861px)");
         var f = function (e) { if (e.matches) shut(); };
         if (mq.addEventListener) mq.addEventListener("change", f); else if (mq.addListener) mq.addListener(f);
       }

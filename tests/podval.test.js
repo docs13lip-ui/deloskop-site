@@ -29,8 +29,9 @@ test('на каждой публичной странице ровно один 
   assert.ok(s.length >= 30, 'страниц ' + s.length);
   const obrazec = podval(chitat('index.html'))[0];
   assert.ok(obrazec && obrazec.includes('/oferta/') && obrazec.includes('/politika/') && obrazec.includes('/vozvrat/'));
-  // «Точность Индекса» — единственная внутренняя ссылка на страницу доверия со всех страниц ([Продукт] 02.10 21:50)
-  assert.ok(obrazec.includes('<a href="/tochnost/">Точность Индекса</a>'), 'нет «Точность Индекса» в подвале');
+  // /tochnost/ — единственная внутренняя ссылка на страницу доверия со всех страниц ([Продукт] 02.10 21:50);
+  // fokus-shapka-v1 (12.11): методика и точность — одной строкой «Откуда данные и точность» (Стратег 12.11, разд. 1)
+  assert.ok(/<a href="\/tochnost\/">Откуда данные и(&nbsp;| )точность<\/a>/.test(obrazec), 'нет ссылки на /tochnost/ в подвале');
   for (const f of s) {
     const t = chitat(f);
     assert.strictEqual(podval(t).length, 1, f + ': подвалов ' + podval(t).length);

@@ -1,4 +1,4 @@
-/* Делоскоп · пакет «otchet» — собран tests/sobrat_js.py из 24 файлов (partials/sborka.json). Правьте исходники, не этот файл. */
+/* Делоскоп · пакет «otchet» — собран tests/sobrat_js.py из 25 файлов (partials/sborka.json). Правьте исходники, не этот файл. */
 /* --- /js/kommentarii.js --- */
 (function (root, factory) {
 var api = factory();
@@ -4202,7 +4202,7 @@ function dejstviya(r, svoj, g) {
 var inn = String(r && r.company && r.company.inn || '').replace(/\D/g, '');
 var a = [svoj && g && g.href && !g.sled
 ? { t: g.knopka || 'Что сделать', href: g.href, glavnaya: true, cel: 'shchit_shag', ext: !!g.ext }
-: { t: svoj ? 'Следить за своей компанией' : 'Следить за компанией', href: '/cabinet.html#watch', glavnaya: true, cel: svoj ? 'shchit_sled' : 'otchet_sled' }];
+: { t: svoj ? 'Следить за своей компанией' : 'Следить за компанией', href: '/cabinet.html' + (inn.length === 10 ? '?inn=' + inn : '') + '#watch', glavnaya: true, cel: svoj ? 'shchit_sled' : 'otchet_sled' }];
 var rid = /^[A-Za-z0-9_-]{8,24}$/.test(String(r && r.report_id || '')) ? String(r.report_id) : '';
 if (!svoj && inn.length === 10) a.push(rid ? { t: 'Досье сделки', href: '/pasport/kontragent/?id=' + rid + '#sd', cel: 'otchet_pasport' } : { t: 'Паспорт контрагента', href: '/pasport/kontragent/?inn=' + inn, cel: 'otchet_pasport' });
 if (!svoj && inn.length === 10) a.push({ t: '+' + NB + 'Сравнить с другой компанией', href: '/sravnit/?a=' + inn, cel: 'otchet_sravnit', tihaya: true });
@@ -4602,6 +4602,126 @@ if (s.mq.addEventListener) s.mq.addEventListener('change', s.naMq);
 return true;
 }
 return { mount: mount, snyat: snyat, vyvod: vyvod, ZAG: ZAG, UZKO: UZKO, OTV: OTV };
+});
+;
+/* --- /js/sledit.js --- */
+(function (root, factory) {
+var api = factory();
+if (typeof module === 'object' && module.exports) module.exports = api;
+else {
+root.DlkSledit = api;
+if (root.document) api.zapusk(root.document, root.fetch && root.fetch.bind(root));
+}
+})(typeof self !== 'undefined' ? self : this, function () {
+'use strict';
+var SLEDIT = false;
+var ADRES = '/api/slezhenie/zayavka';
+var NB = ' ';
+var SOGLASIE = 'Согласен на обработку адреса почты, чтобы получать письма об изменениях по этой компании.';
+function innIzSsylki(href) {
+var m = /[?&]inn=(\d+)(?:[&#]|$)/.exec(String(href || ''));
+return m && m[1].length === 10 ? m[1] : '';
+}
+function pochtaOk(s) {
+var v = String(s == null ? '' : s).trim();
+return v.length >= 6 && v.length <= 254 && /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>".]{2,}$/.test(v);
+}
+function oshibka(pochta, soglasen) {
+var v = String(pochta == null ? '' : pochta).trim();
+if (!v) return 'Впишите адрес почты' + NB + '— на него придёт письмо со ссылкой.';
+if (!pochtaOk(v)) return 'Проверьте адрес: нужен вид имя@почта.ru.';
+if (!soglasen) return 'Отметьте согласие' + NB + '— без него письма слать нельзя.';
+return '';
+}
+function telo(inn, pochta) {
+return { inn: String(inn), email: String(pochta).trim(), soglasie: true };
+}
+function itog(status, pochta) {
+if (status >= 200 && status < 300) return { ok: true, t: 'Письмо отправлено на ' + String(pochta).trim() + '. Откройте ссылку из него' + NB + '— и слежение включится. Письма нет за 10 минут' + NB + '— загляните в «Спам».' };
+if (status === 429) return { ok: false, t: 'Слишком много заявок с этого устройства. Попробуйте через час.' };
+if (status === 400 || status === 422) return { ok: false, t: 'Сервер не принял адрес. Проверьте его и отправьте ещё раз.' };
+return { ok: false, t: 'Не получилось отправить. Попробуйте ещё раз через минуту или следите из кабинета.', kabinet: true };
+}
+function esc(s) {
+return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
+}
+var schet = 0;
+function htmlForma(inn) {
+var n = ++schet, p = 'sl' + n;
+return '<form class="sl-f" novalidate data-sl-inn="' + esc(inn) + '" aria-label="Следить за компанией">' +
+'<label class="sl-l" for="' + p + 'e">Почта для писем об изменениях</label>' +
+'<input class="sl-i" id="' + p + 'e" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" maxlength="254" placeholder="имя@почта.ru" required>' +
+'<label class="sl-s"><input type="checkbox" id="' + p + 's"> <span>' + esc(SOGLASIE) + ' <a href="/soglasie/" target="_blank" rel="noopener">Текст согласия</a></span></label>' +
+'<button class="ot-btn p sl-b" type="submit">Следить</button>' +
+'<p class="sl-p">На этот адрес придёт письмо со ссылкой; слежение включится, когда вы её откроете. Без регистрации. В письмах' + NB + '— изменения в реестрах: иск, долг у приставов, сообщение о банкротстве, смена руководителя или статуса. Отписка' + NB + '— в каждом письме.</p>' +
+'<p class="sl-o" role="status" aria-live="polite"></p>' +
+'</form>';
+}
+function otkryt(doc, a) {
+var inn = innIzSsylki(a.getAttribute('href'));
+if (!inn) return null;
+var f = a.nextElementSibling && a.nextElementSibling.classList.contains('sl-f') ? a.nextElementSibling : null;
+if (!f) {
+var t = doc.createElement('div');
+t.innerHTML = htmlForma(inn);
+f = t.firstChild;
+a.parentNode.insertBefore(f, a.nextSibling);
+}
+a.setAttribute('aria-expanded', 'true');
+var i = f.querySelector('.sl-i');
+if (i && i.focus) i.focus();
+return f;
+}
+function otpravit(f, fetchFn) {
+var i = f.querySelector('.sl-i'), s = f.querySelector('input[type=checkbox]'), o = f.querySelector('.sl-o'), b = f.querySelector('.sl-b');
+var inn = f.getAttribute('data-sl-inn') || '';
+var e = oshibka(i.value, s.checked);
+o.className = 'sl-o';
+if (e || !/^\d{10}$/.test(inn)) { o.textContent = e || 'Следить можно только за организацией.'; o.className = 'sl-o sl-o--err'; if (e && !pochtaOk(i.value)) i.focus(); return Promise.resolve(null); }
+if (!fetchFn) return Promise.resolve(null);
+b.disabled = true;
+o.textContent = 'Отправляем…';
+var pochta = i.value;
+return fetchFn(ADRES, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(telo(inn, pochta)) })
+.then(function (r) { return r ? r.status : 0; }, function () { return 0; })
+.then(function (st) {
+var it = itog(st, pochta);
+o.textContent = it.t;
+o.className = 'sl-o ' + (it.ok ? 'sl-o--ok' : 'sl-o--err');
+if (it.kabinet) {
+var k = f.ownerDocument.createElement('a');
+k.href = '/cabinet.html?inn=' + inn + '#watch';
+k.textContent = ' Открыть кабинет →';
+o.appendChild(k);
+}
+if (it.ok) { i.disabled = true; s.disabled = true; b.hidden = true; var p = f.querySelector('.sl-p'); if (p) p.hidden = true; } else b.disabled = false;
+return it;
+});
+}
+function slushat(doc, fetchFn, vkl) {
+if (!(vkl === undefined ? SLEDIT : vkl) || !doc || !doc.addEventListener) return false;
+doc.addEventListener('click', function (ev) {
+var a = ev.target && ev.target.closest ? ev.target.closest('a[data-cel="otchet_sled"]') : null;
+if (!a || ev.defaultPrevented || ev.button > 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey) return;
+if (otkryt(doc, a)) ev.preventDefault();
+});
+doc.addEventListener('submit', function (ev) {
+var f = ev.target;
+if (!f || !f.classList || !f.classList.contains('sl-f')) return;
+ev.preventDefault();
+otpravit(f, fetchFn);
+});
+return true;
+}
+function zapusk(doc, fetchFn, vkl) {
+if (!(vkl === undefined ? SLEDIT : vkl) || !fetchFn) return Promise.resolve(false);
+return fetchFn('/tarify/tarify.json', { credentials: 'same-origin' })
+.then(function (r) { return r && r.ok ? r.json() : null; })
+.then(function (t) { return !!(t && t.slezhenie_pisma === true) && slushat(doc, fetchFn, true); })
+.catch(function () { return false; });
+}
+return { SLEDIT: SLEDIT, zapusk: zapusk, ADRES: ADRES, SOGLASIE: SOGLASIE, innIzSsylki: innIzSsylki, pochtaOk: pochtaOk, oshibka: oshibka,
+telo: telo, itog: itog, htmlForma: htmlForma, otkryt: otkryt, otpravit: otpravit, slushat: slushat };
 });
 ;
 /* --- /js/svyazi.js --- */

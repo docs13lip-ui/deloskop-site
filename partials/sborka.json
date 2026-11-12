@@ -36,7 +36,8 @@
       "js/perehod.js",
       "js/zhivoj-otchet.js",
       "js/vitrina.js",
-      "js/skladnoj.js"
+      "js/skladnoj.js",
+      "js/poisk.js"
     ],
     "glavnaya-sinhr": [
       "js/limit.js",

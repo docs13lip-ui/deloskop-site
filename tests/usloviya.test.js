@@ -121,11 +121,12 @@ t('предоплата сверх предела → доля слитно со
   assert.ok(/\(15% суммы\)/.test(v.prepay), v.prepay);
 });
 
-t('письмо: ИНН, сумма, нумерация, ссылка на письмо ФНС, без неразрывных пробелов в теме', function () {
+t('письмо (zapros-dokumentov-v1, текст [Право] 11.11): нумерация, без норм и сумм, без неразрывных пробелов в теме', function () {
   var v = U.decide(resp(), { amount: 2000000 });
-  assert.ok(/ИНН 7700000000/.test(v.letter.body));
-  assert.ok(/2 000 000 ₽/.test(v.letter.body));
-  assert.ok(/1\. /.test(v.letter.body) && /БВ-4-7\/3060@/.test(v.letter.body));
+  assert.ok(/1\. /.test(v.letter.body));
+  assert.ok(v.letter.body.indexOf('Готовим договор с ООО «Тест» и собираем стандартный комплект документов') >= 0, v.letter.body);
+  assert.ok(!/БВ-4-7|54\.1|2 000 000/.test(v.letter.body), 'норм и суммы в письме нет');
+  assert.strictEqual(v.letter.subject, 'Документы для договора с [Наша компания]');
   assert.ok(v.letter.subject.indexOf(NB) < 0);
 });
 

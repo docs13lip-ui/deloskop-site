@@ -560,7 +560,7 @@
     experience: { t: '2–3 исполненных похожих договора или отзывы клиентов', why: 'опыт и деловая репутация — прямо названы ФНС среди признаков реальной компании', ask: 'Копии 2–3 исполненных договоров, похожих на наш (цены можно скрыть), или отзывы клиентов' },
     regime: { t: 'Подтверждение режима налогообложения', why: 'для вычета НДС нужен счёт-фактура от плательщика НДС; на УСН — уведомление о переходе', ask: 'Подтверждение режима налогообложения (для УСН — уведомление о переходе)' },
     fssp: { t: 'Пояснение по долгам у приставов', why: 'как и когда погасят: при аресте счёта ваша предоплата застрянет', ask: 'Информация о погашении исполнительных производств или план погашения' },
-    unblock: { t: 'Решение ФНС об отмене приостановления операций по счёту', why: 'пока счёт заблокирован налоговой, компания не сможет тратить ваши деньги', ask: 'Решение налоговой об отмене приостановления операций по счёту' },
+    unblock: { t: 'Решение ФНС об отмене приостановления операций по счёту', why: 'пока счёт заблокирован налоговой, компания не сможет тратить ваши деньги', ask: 'Решение ФНС об отмене приостановления операций по счёту' },
     bank: { t: 'Письмо о том, что счёт не ограничен банком, и реквизиты второго банка', why: 'прогноз ЗСК повышен — запасной счёт спасёт сделку, если банк остановит платёж', ask: 'Подтверждение, что расчётный счёт не ограничен, и реквизиты второго банка' },
     license: { t: 'Лицензия или выписка из СРО, если работа этого требует', why: 'строительство, перевозки, медицина — без допуска сделку могут признать недействительной', ask: 'Лицензия или выписка из реестра СРО — если работы по договору этого требуют' },
     // только «Они платят мне» (ТЗ [команда] 05.10, документ команды, п. 1.1)
@@ -612,19 +612,24 @@
     return ids.slice(0, 7).map(docItem);
   }
 
-  function letter(f, list, amount) {
-    amount = parseAmount(amount);
+  // zapros-dokumentov-v1 (текст юриста 11.11, п. «а», дословно): письмо отправляет сам пользователь со своей почты —
+  // с сервера ничего не уходит. Без слов «проверка», «риск», «подозрение», «115-ФЗ», «налоговая», без норм и обещаний,
+  // без Индекса и без подписи Делоскопа. Ссылка — только на опубликованную карточку организации (у ИП её нет и не будет).
+  var SAJT = 'https://deloskop.ru';
+  function letter(f, list, amount, o) {
+    o = o || {};
     var lines = list.map(function (d, i) { return (i + 1) + '. ' + (d.ask || d.title) + '.'; }).join('\n');
-    var subj = 'Документы для договора — ' + f.name;
-    var body = 'Добрый день!\n\n' +
-      'Готовимся заключить договор с ' + f.name + (f.inn ? ' (ИНН ' + f.inn + ')' : '') +
-      (amount ? ' на сумму ' + money(amount).replace(/ /g, ' ') : '') + '. ' +
-      'По нашим внутренним правилам проверки контрагентов просим прислать скан-копии:\n\n' + lines + '\n\n' +
-      'Это стандартная процедура должной осмотрительности (ст. 54.1 НК РФ, письмо ФНС России от 10.03.2021 № БВ-4-7/3060@) — ' +
-      'мы проходим её со всеми партнёрами. Будем благодарны за ответ в течение трёх рабочих дней.\n\n' +
-      'С уважением,\n[Имя, должность]\n[Компания, телефон]';
+    var put = f.kind !== 'INDIVIDUAL' && /^\/company\/\d{10}-[a-z0-9-]+\/$/.test(String(o.kartochka || '')) ? o.kartochka : '';
+    var subj = 'Документы для договора с [Наша компания]';
+    var body = 'Здравствуйте!\n\n' +
+      'Готовим договор с ' + f.name + ' и собираем стандартный комплект документов — так мы делаем со всеми новыми партнёрами. ' +
+      'Пришлите, пожалуйста, сканы или выписки:\n\n' + lines + '\n\n' +
+      (put ? 'Сведения из открытых реестров о вашей компании' + (o.data ? ' на ' + o.data : '') + ' мы уже посмотрели: ' + SAJT + put + '. Если там что-то неточно — напишите, учтём.\n\n' : '') +
+      'Спасибо!\n[Имя, должность, телефон]';
     return { subject: subj, body: body };
   }
+  // Слова, которых в письме контрагенту быть не должно (юрист, 11.11) — сторож для тестов
+  var LETTER_NELZYA = /провер|риск|подозр|115-ФЗ|налогов(ая|ой|ую|ые|ых)\b|над\u0451жн|Индекс|Делоскоп|54\.1|БВ-4-7/i;
 
   function letterOtg(f, list, amount) {
     amount = parseAmount(amount);
@@ -684,7 +689,7 @@
       kak: kakPoschitali(f, t, pc, reasons(f), np, null, pv),
       headline: headline(f, t, pc.cap, pc.malo, pv, pc.nedostatochno), reasons: reasons(f), advice: advice(f, t, pc.malo),
       amount: amount, regime: regime, stake: atStake(amount, regime), prepay: pc.nedostatochno && amount ? NEDOST_SOVET(false) : prepayAdvice(amount, pc.cap, t, pv),
-      docs: list, letter: letter(f, list, amount)
+      docs: list, letter: letter(f, list, amount, { kartochka: opts.kartochka, data: dataRu(r.checked_at) || '' })
     }, pv);
   }
   // finorg — только у банка или страховой: у остальных вывод побайтно прежний (снимок tests/otsrochka_pokupatelyu.test.js);
@@ -822,6 +827,24 @@
 
   // mount(el, r, {compact, open, bezNapr}) — рисует карточку в el, возвращает объект с методом update().
   // bezNapr — без переключателя «Я плачу им / Они платят мне» (PDF-досье): текст — в выбранном раньше режиме.
+  // zapros-dokumentov-v1: есть ли у организации опубликованная карточка — по карте сайта /company/ (один запрос за страницу).
+  // Карточки нет → в письме нет и ссылки: ссылки на несуществующую страницу контрагенту не даём.
+  var KART = null, KART_ZHDUT = null;
+  function kartaKartochek(xml) {
+    var m = {}, re = /\/company\/(\d{10})-[a-z0-9-]+\//g, x;
+    while ((x = re.exec(String(xml || '')))) if (!m[x[1]]) m[x[1]] = x[0];
+    return m;
+  }
+  function kartochki(win, cb) {
+    if (KART) return cb(KART);
+    if (KART_ZHDUT) return KART_ZHDUT.push(cb);
+    if (!win || typeof win.fetch !== 'function') return;
+    KART_ZHDUT = [cb];
+    win.fetch('/sitemap-companies.xml', { credentials: 'omit' }).then(function (o) { return o.ok ? o.text() : ''; })
+      .then(function (s) { KART = kartaKartochek(s); }, function () { KART = {}; })
+      .then(function () { var z = KART_ZHDUT; KART_ZHDUT = null; z.forEach(function (f) { try { f(KART); } catch (_) {} }); });
+  }
+
   function mount(el, r, o) {
     o = o || {};
     if (!r || !r.company || !r.company.inn) throw new Error('usloviya: нет данных о компании');
@@ -832,6 +855,14 @@
     var box = doc.createElement('section');
     box.setAttribute('aria-label', 'Условия сделки');
     el.innerHTML = ''; el.appendChild(box);
+    var win = doc.defaultView || (typeof window !== 'undefined' ? window : null);
+    if (/^\d{10}$/.test(String(r.company.inn))) kartochki(win, function (m) {
+      var put = m[String(r.company.inn)];
+      if (!put || st.kartochka === put) return;
+      st.kartochka = put;
+      var a = doc.activeElement, fokus = !!a && a.tagName === 'INPUT' && box.contains(a);
+      last = draw(fokus);
+    });
 
     function draw(keepFocus) {
       var v = decide(r, st), f = v.facts;
@@ -844,7 +875,7 @@
           : '<div>На кону при претензии налоговой: <b>' + (v.stake.soft ? money(v.stake.soft).replace(/\s₽$/, '') + '–' : 'до\u00a0') + money(v.stake.hard) + '</b> плюс пени. Досье Делоскопа — ваш довод, что поставщика проверили.</div>';
       }
       var sel = REGIMES.map(function (x) { return '<option value="' + x.id + '"' + (x.id === st.regime ? ' selected' : '') + '>' + esc(x.name) + '</option>'; }).join('');
-      var openAttr = o.open ? ' open' : '', otg = v.napravlenie === 'otgruzhaem';
+      var det = box.querySelector('details'), openAttr = (det ? det.open : o.open) ? ' open' : '', otg = v.napravlenie === 'otgruzhaem';
       var rynok = o.compact ? '' : rynokStroka(o.rynok, v);
       var napr = (o.compact || o.bezNapr) ? '' : '<div class="usl-napr" role="group" aria-label="Кто кому платит">' + NAPR.map(function (x) {
         return '<button type="button" data-napr="' + x.id + '" aria-pressed="' + (x.id === st.napravlenie) + '">' + esc(x.t) + '</button>'; }).join('') + '</div>';
@@ -894,8 +925,13 @@
           var nb = box.querySelector('[data-napr="' + n + '"]'); if (nb) nb.focus();
         });
       });
+      // zapros-dokumentov-v1: событие zapros_copy — только вид, без ИНН и текста письма (юрист, 11.11)
+      var sobytie = function () { try { if (win && win.dlkSobytie && !otg) win.dlkSobytie('zapros_copy'); } catch (_) {} };
+      var ml = box.querySelector('[data-u="mail"]');
+      if (ml) ml.addEventListener('click', sobytie);
       var cp = box.querySelector('[data-u="copy"]');
       if (cp) cp.addEventListener('click', function () {
+        sobytie();
         var txt = 'Тема: ' + v.letter.subject + '\n\n' + v.letter.body;
         var done = function () { cp.textContent = 'Письмо скопировано'; };
         try { navigator.clipboard.writeText(txt).then(done, function () { window.prompt('Скопируйте письмо:', txt); }); } catch (_) { window.prompt('Скопируйте письмо:', txt); }
@@ -908,7 +944,7 @@
 
   return {
     decide: decide, mount: mount, rynokStroka: rynokStroka, facts: facts, tone: tone, reorgPrekr: reorgPrekr, REORG_PREKRASHCHENIE: REORG_PREKRASHCHENIE, REORG_SDELAT: REORG_SDELAT, REORG_DOLG: REORG_DOLG, prepayCap: prepayCap, atStake: atStake,
-    docs: docs, letter: letter, parseAmount: parseAmount, money: money, moneyKrupno: moneyKrupno, niceFloor: niceFloor, kindOf: kindOf, signalId: signalId, SIGNALY: SIGNALY.map(function (x) { return x[0]; }),
+    docs: docs, letter: letter, LETTER_NELZYA: LETTER_NELZYA, kartaKartochek: kartaKartochek, parseAmount: parseAmount, money: money, moneyKrupno: moneyKrupno, niceFloor: niceFloor, kindOf: kindOf, signalId: signalId, SIGNALY: SIGNALY.map(function (x) { return x[0]; }),
     neProvereno: neProvereno, kakPoschitali: kakPoschitali, otgruzkaAdvice: otgruzkaAdvice, NAPR: NAPR, bezPovtora: bezPovtora, chestnoPoyasnenie: chestnoPoyasnenie, neProverenyKlyuchevye: neProverenyKlyuchevye, vVyvode: vVyvode, STATYA: STATYA, FORMULA: FORMULA,
     predvaritelno: predvaritelno, METODIKA: { DELITEL: DELITEL, POTOLKI: POTOLKI, OSTOROZHNO: OSTOROZHNO, MINIMUM: MINIMUM, PRAVILO: PRAVILO },
     RATES: { VAT: VAT, PROFIT: PROFIT, USN_DR: USN_DR }

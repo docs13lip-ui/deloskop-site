@@ -49,7 +49,9 @@
   // Те же отказы, что у просмотров: чужой домен, «Не отслеживать», GPC, роботы, кабинет и админка.
   // Перепроверку в окне 7–60 дней считает сам браузер (js/nedavnie.js) и шлёт готовый вид — сервер две проверки не связывает.
   var VIDY = { deystvie_dokumenty: 1, deystvie_dosje: 1, deystvie_slezhenie: 1, deystvie_pervoe: 1, perepoverka_7_60: 1,
-    proverka_novaya: 1, vozvrat_3_30: 1, proverka_dovedena: 1, vozvrat_1_7: 1 };
+    proverka_novaya: 1, vozvrat_3_30: 1, proverka_dovedena: 1, vozvrat_1_7: 1,
+    // zapros-dokumentov-v1: «Скопировать письмо» / «Открыть в почте» в «Что запросить у них» (js/usloviya.js)
+    zapros_copy: 1 };
   // Эти виды шлются по разу на компанию или на день (это решает память), а не по разу за показ страницы.
   var MNOGO = { proverka_novaya: 1, perepoverka_7_60: 1 };
   // Включается одной строкой после выкладки API (приём {sobytie} в /api/ping — ТЗ в КАК_ВЫЛОЖИТЬ_sobytiya-v1).

@@ -40,25 +40,23 @@ test('логотип — фирменная линза, дважды (шапка
   assert.ok(!p.includes('favicon'));
 });
 
-test('5 пунктов меню, без aria-current/is-active/style, цвета — только цвета логотипа', () => {
-  // tipograf-obolochka-v1: «115&#8209;ФЗ» (неразрывный дефис) — не цвет и не другой пункт
-  const p = chitat('partials/shapka.html').replace(/&#8209;/g, '-');
+test('5 мест в шапке без выпадающих меню (fokus-shapka-v1), без aria-current/is-active/style, цвета — только цвета логотипа', () => {
+  const p = chitat('partials/shapka.html');
+  const shapka = p.slice(p.indexOf('<header'), p.indexOf('</header>'));
   const nav = p.slice(p.indexOf('<ul class="shapka__list">'), p.indexOf('</nav>'));
-  const punkty = [...nav.matchAll(/<li(?: class="shapka__dd")?>\s*<(?:a|button) class="shapka__link"[^>]*>([^<]+)/g)].map(m => m[1].trim());
-  // shapka-5-v1 (схема А, 30.10): Проверка · Сделка ▾ · Банк и 115-ФЗ ▾ · Знания ▾ · Тарифы
-  assert.deepStrictEqual(punkty, ['Проверка', 'Сделка', 'Банк и&nbsp;115-ФЗ', 'Знания', 'Тарифы']);
-  const podmenu = (id) => [...p.slice(p.indexOf('id="' + id + '"'), p.indexOf('</ul>', p.indexOf('id="' + id + '"'))).matchAll(/<a href="([^"]+)"/g)].map(m => m[1]);
-  assert.deepStrictEqual(podmenu('dd-sdelka'), ['/proverit-schet/', '/kontragenty-iz-vypiski/', '/pasport/kontragent/', '/delopis/']);
-  assert.deepStrictEqual(podmenu('dd-115'), ['/skoraya-115-fz/', '/kak-vidit-bank/', '/nalichnye/', '/pasport/', '/115-fz/']);
-  assert.deepStrictEqual(podmenu('dd-znaniya'), ['/praktika/', '/nalogi/', '/zhurnal/', '/indeks/', '/tochnost/', '/kak-rabotaet/', '/obnovleniya/']);
+  const punkty = [...nav.matchAll(/<a class="shapka__link" href="([^"]+)"[^>]*>([^<]+)</g)].map(m => [m[1], m[2].replace(/&nbsp;/g, ' ')]);
+  // решение владельца 11.11 ~21:42: Проверить · Проверь счёт · Кому вы платите · Разборы дел · Войти
+  assert.deepStrictEqual(punkty, [['/proverit-schet/', 'Проверь счёт'], ['/kontragenty-iz-vypiski/', 'Кому вы платите'], ['/praktika/', 'Разборы дел']]);
+  assert.match(shapka, /<a class="shapka__link shapka__login" href="\/cabinet\.html" data-auth-out>Войти<\/a>/);
+  assert.match(shapka, /<a class="shapka__btn" href="\/#inn" data-check>Проверить<\/a>/);
+  const kuda = new Set([...shapka.matchAll(/<a [^>]*href="([^"]+)"/g)].map(m => m[1]).filter(h => h !== '/' && h !== '#main'));
+  assert.deepStrictEqual([...kuda].sort(), ['/#inn', '/cabinet.html', '/kontragenty-iz-vypiski/', '/praktika/', '/proverit-schet/']);
+  assert.ok(!/shapka__dd|shapka__menu|aria-controls="dd-|data-whatsnew/.test(p), 'выпадающие меню и «Что нового» — не в шапке (они в подвале)');
   assert.ok(!/href="\/sdelka\/"/.test(p), '«Досье сделки» — без своего адреса (/sdelka/ — мягкая 404), в меню не ставим');
   // мобильное меню — тот же состав и порядок, что верхнее
   const mob = [...p.slice(p.indexOf('<ul class="mnav__list">'), p.indexOf('<div class="mnav__extra">')).matchAll(/href="([^"]+)"/g)].map(m => m[1]);
   const verh = [...nav.matchAll(/href="([^"]+)"/g)].map(m => m[1]);
   assert.deepStrictEqual(mob, verh);
-  // непрочитанное — точкой у «Знания» и у «Что нового» внутри
-  assert.match(nav, /aria-controls="dd-znaniya"[^>]*>Знания<span class="shapka__dot" data-whatsnew-dot hidden>/);
-  assert.match(nav, /<a href="\/obnovleniya\/"><b>Что нового<span class="shapka__dot" data-whatsnew-dot hidden>/);
   assert.ok(!/aria-current|is-active|style=/.test(p));
   const hex = (p.match(/#[0-9A-Fa-f]{3,6}\b/g) || []).filter(x => !['#0B63E5', '#1D1D1F'].includes(x));
   assert.deepStrictEqual(hex, []);

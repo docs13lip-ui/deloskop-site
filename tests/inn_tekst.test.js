@@ -80,7 +80,7 @@ test('главная: проверка, подсказки и вставка —
   const s = chitat('index.html');
   assert.match(s, /DlkInn\.pohozh\(v\)\)\{var ti=DlkInn\.izTeksta\(v\)/, 'submit главной чистит реквизит');
   assert.match(s, /if\(!ti\)\{note\.className='note err';note\.textContent=DlkInn\.DLINA/, 'реквизит без ИНН — отказ, а не поиск по названию');
-  assert.match(s, /\|\|\(window\.DlkInn&&DlkInn\.pohozh&&DlkInn\.pohozh\(q\)\)\)\{hide\(\);return;\}/, 'реквизит не уходит в /api/suggest');
+  assert.match(s, /\|\|\(window\.DlkInn&&DlkInn\.pohozh&&DlkInn\.pohozh\(q\)\)\)return;/, 'реквизит не уходит в /api/suggest (poisk-v2-a: строка «что распознано» остаётся)');
   assert.match(s, /DlkInn\.vstavka\(input\);DlkInn\.vstavka\(document\.getElementById\('myinn'\),true\)/);
   assert.match(s, /d=\(window\.DlkInn&&DlkInn\.izTeksta&&DlkInn\.izTeksta\(mi\.value\)\)\|\|/, 'Щит');
   // DlkInn — в синхронном пакете главной, до встроенного скрипта

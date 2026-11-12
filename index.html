@@ -127,8 +127,10 @@ p{margin:0}
 .soon{margin-top:14px;font-size:15px;color:var(--muted)}
 .report{scroll-margin-top:120px}
 .tagnew{display:inline-block;font-size:12px;font-weight:600;color:var(--accent);background:#EEF3FD;border-radius:999px;padding:2px 9px;margin-left:8px;vertical-align:2px}
-.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
-@media (max-width:980px){.grid3{grid-template-columns:1fr}}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.vhody__bank{margin:20px 0 0;font-size:15px;color:var(--ink2)}
+.vhody__bank a{color:var(--accent);text-underline-offset:3px;white-space:nowrap}
+@media (max-width:760px){.grid2{grid-template-columns:1fr}}
 .shield .sect-head{max-width:760px}
 .shield .num{font-size:15px;font-weight:600;color:var(--accent)}
 .shield .check{margin-top:28px}
@@ -294,7 +296,6 @@ footer a{color:var(--ink2)}
 .ex-pl__t{margin:0;font-size:13px;line-height:1.45;color:var(--ink2)}
 .ex-pl__t b{color:var(--ink);font-weight:600}
 @media (max-width:520px){.ex-pl{margin-left:20px;margin-right:20px}}
-.chetyre__svoya{margin:14px 0 0;font-size:15px;color:var(--muted)}
 @media (max-width:1100px){.chetyre__l{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:600px){.chetyre__l{grid-template-columns:1fr;gap:22px}}
 .doverie .lead{margin-top:14px;max-width:820px}
@@ -338,7 +339,8 @@ footer a{color:var(--ink2)}
 /* glavnaya-a-v3: на телефоне плотнее — тот же текст, меньше пустоты (схема А: 390 px — к 9 экранам) */
 @media (max-width:600px){
   .sect-head{margin-bottom:32px}
-  .grid3{gap:12px}
+  .grid2{gap:12px}
+  .vhody__bank{margin-top:16px}
   .vhod{padding:20px;gap:10px}
   .vhod__t{font-size:15px}
   .vhod__dop{padding-top:12px}
@@ -395,9 +397,9 @@ footer a{color:var(--ink2)}
 </style>
 <!-- vizual-v3.0a: стили и скрипты главной — пятью файлами вместо 17 (partials/sborka.json, tests/sobrat_js.py) -->
 <link rel="stylesheet" href="/css/b/ds.b32568c5d7.css">
-<link rel="stylesheet" href="/css/b/glavnaya-stil.75e4f1759e.css">
+<link rel="stylesheet" href="/css/b/glavnaya-stil.c2e98008f1.css">
 <script src="/js/b/yadro.587d6aff90.js" defer></script>
-<script src="/js/b/glavnaya.8f484d418f.js" defer></script>
+<script src="/js/b/glavnaya.79de4aeeb2.js" defer></script>
 <link rel="icon" type="image/png" sizes="120x120" href="/favicon-120.png">
 <link rel="alternate" type="application/rss+xml" title="Разборы дел — Делоскоп" href="/praktika/rss.xml">
 <link rel="manifest" href="/manifest.webmanifest">
@@ -451,7 +453,7 @@ footer a{color:var(--ink2)}
 <!--beta-polosa--><div class="beta-bar" role="region" aria-label="Условия Делоскопа" data-beta-rezhim="b" data-beta-do="" data-beta-bar><div class="beta-bar__in"><details class="beta-bar__d" data-beta-d><summary class="beta-bar__kr"><span><span class="beta-kr-d">Без входа&nbsp;— 10&nbsp;проверок в&nbsp;день</span><span class="beta-kr-k">Без входа&nbsp;— 10&nbsp;в&nbsp;день</span></span></summary><p class="beta-bar__t"><b>Делоскоп сейчас бесплатный для всех.</b> <span class="beta-bar__dop">О&nbsp;начале тарифов скажем здесь не&nbsp;позже чем за&nbsp;3&nbsp;дня; быстрая проверка останется бесплатной, 10&nbsp;в&nbsp;день. </span><a href="mailto:help@deloskop.ru?subject=%D0%91%D0%B5%D1%82%D0%B0%20%D0%94%D0%B5%D0%BB%D0%BE%D1%81%D0%BA%D0%BE%D0%BF%D0%B0">Нашли ошибку&nbsp;— напишите</a></p></details><button class="beta-bar__x" type="button" aria-label="Скрыть на неделю" data-beta-x><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div></div><script>try{(function(d){if(d&&!matchMedia("(max-width:640px)").matches)d.open=true})(document.querySelector("[data-beta-bar] [data-beta-d]"))}catch(e){}try{(function(b){var r=b.getAttribute("data-beta-rezhim"),d=b.getAttribute("data-beta-do"),k=d?Date.parse(d+"T00:00:00+03:00")+864e5:0,n=Date.now();if(r==="c"){if(n>=k+6048e5)b.hidden=true;return}if(r==="a"&&n>=k){var t=b.querySelector("template[data-beta-b]");if(t){b.querySelector(".beta-bar__t").innerHTML=t.innerHTML;var q=b.querySelector("template[data-beta-b-kr]"),s=b.querySelector(".beta-bar__kr>span");if(q&&s)s.innerHTML=q.innerHTML;b.setAttribute("data-beta-rezhim","b");var m=b.querySelector(".beta-bar__metka");if(m)m.remove();b.setAttribute("aria-label","Условия Делоскопа")}}if(+localStorage.getItem("dlk_beta_skryt_"+(d||"net"))>n)b.hidden=true})(document.querySelector("[data-beta-bar]"))}catch(e){}</script><!--/beta-polosa-->
 <span id="main" tabindex="-1"></span>
 
-<script>/* glavnaya-a-v2: «Рынок сейчас» и калькулятор ошибки переехали на /vse-vozmozhnosti/ — старые адреса /#rynok и /#oshibka ведут туда */(function(h){if(h==="#rynok"||h==="#oshibka")location.replace("/vse-vozmozhnosti/"+h)})(location.hash)</script>
+<script>/* glavnaya-a-v2: «Рынок сейчас» и калькулятор ошибки переехали на /vse-vozmozhnosti/ — старые адреса /#rynok и /#oshibka ведут туда; glavnaya-6-blokov-v1: и /#vitrina (строки-входа на главной больше нет) */(function(){function g(h){if(h==="#rynok"||h==="#oshibka")location.replace("/vse-vozmozhnosti/"+h);else if(h==="#vitrina")location.replace("/vse-vozmozhnosti/")}g(location.hash);addEventListener("hashchange",function(){g(location.hash)})})()</script>
 <main id="top">
   <section class="hero" data-set data-set-pole="inn">
     <div class="wrap">
@@ -500,9 +502,9 @@ footer a{color:var(--ink2)}
     <div class="wrap">
       <div class="vhody__head">
         <h2 id="vhody-h">С&nbsp;чего начнём?</h2>
-        <p>Три частые задачи&nbsp;— три входа. Быстрая проверка&nbsp;— бесплатно, 10&nbsp;в&nbsp;день.</p>
+        <p>Перед оплатой&nbsp;— два входа. Быстрая проверка&nbsp;— бесплатно, 10&nbsp;в&nbsp;день.</p>
       </div>
-      <div class="grid3" data-sobir>
+      <div class="grid2" data-sobir>
         <article class="vhod" data-vhod="entry_pay">
           <div class="vhod__n">01 · Перед оплатой</div>
           <h3><a href="/#inn" data-vhod-inn>Проверить поставщика</a></h3>
@@ -517,18 +519,12 @@ footer a{color:var(--ink2)}
           <div class="vhod__go" aria-hidden="true">Загрузить выписку <span>→</span></div>
           <nav class="vhod__dop" aria-label="Ещё о поставщиках"><a href="/cabinet.html">Слежение в&nbsp;кабинете</a><a href="/nalogi/proverka-kontragenta-pered-dogovorom/">Что хранить по&nbsp;поставщику</a></nav>
         </article>
-        <article class="vhod" data-vhod="entry_bank">
-          <div class="vhod__n">03 · Банк спросил</div>
-          <h3><a href="/skoraya-115-fz/">Ответить банку по&nbsp;115&#8209;ФЗ</a></h3>
-          <p class="vhod__t">Запрос документов, отказ в&nbsp;платеже или ограничили счёт&nbsp;— план по&nbsp;дням, сроки и&nbsp;черновик заявления. Считается в&nbsp;вашем браузере.</p>
-          <div class="vhod__go" aria-hidden="true">Собрать план <span>→</span></div>
-          <nav class="vhod__dop" aria-label="Ещё о 115-ФЗ"><a href="/115-fz/zapros-banka-po-115-fz-kak-otvetit/">Как ответить на&nbsp;запрос</a><a href="/nalichnye/">Наличные глазами банка</a></nav>
-        </article>
       </div>
+      <p class="vhody__bank" data-vhod="entry_bank">Банк спросил о&nbsp;платеже или ограничил счёт? <a href="/skoraya-115-fz/">План ответа по&nbsp;115&#8209;ФЗ&nbsp;→</a></p>
     </div>
   </section>
 
-  <!--vitrina--><section class="vit-vhod" id="vitrina" aria-labelledby="vitrina-h"><div class="wrap"><p class="eyebrow">Экосистема Делоскопа</p><h2 class="h2" id="vitrina-h">Всё, что умеет Делоскоп</h2><p class="lead">13&nbsp;продуктов работают сейчас и&nbsp;3&nbsp;направления в&nbsp;разработке: сделка, банк и&nbsp;налоговая, у&nbsp;каждого своя страница.</p><p class="vit-vhod__go"><a class="vit-btn" href="/vse-vozmozhnosti/">Все возможности Делоскопа<span aria-hidden="true">→</span></a></p><p class="vit-vhod__yak">Там же: <a id="rynok" href="/vse-vozmozhnosti/#rynok">как сейчас платят контрагенты</a> и&nbsp;<a id="oshibka" href="/nalogi/kalkulyator-tehnicheskij-postavshchik/">калькулятор «технического» поставщика</a>.</p></div></section><!--/vitrina-->
+  <!--vitrina--><!--/vitrina-->
 
   <section class="sect shield chetyre" id="shield" aria-labelledby="chetyre-h">
     <div class="wrap" data-sobir>
@@ -543,7 +539,6 @@ footer a{color:var(--ink2)}
         <li><span class="chetyre__n" aria-hidden="true">04</span><h3>Что нашли</h3><p data-chetyre-daty>Факты из&nbsp;реестров. У&nbsp;каждого&nbsp;— источник и&nbsp;дата: ЕГРЮЛ&nbsp;— на&nbsp;день проверки, отчётность&nbsp;— за&nbsp;2025&nbsp;год, открытые данные ФНС&nbsp;— на&nbsp;01.10.2026.</p></li>
       </ol>
       <p class="chetyre__go"><a class="vit-btn chetyre__btn" href="/kak-rabotaet/#proverka">Открыть пример целиком<span aria-hidden="true">→</span></a></p>
-      <p class="chetyre__svoya">Свою компанию&nbsp;— глазами банка и&nbsp;налоговой: <a href="/kak-vidit-bank/">введите свой ИНН&nbsp;→</a></p>
     </div>
   </section>
 
@@ -582,7 +577,7 @@ footer a{color:var(--ink2)}
         <li><b>Кабинет</b>&nbsp;— вход по&nbsp;коду на&nbsp;почту, без&nbsp;пароля: история проверок и&nbsp;слежение за&nbsp;компаниями.</li>
         <li><!--oplata--><template data-oplata><b>Платные тарифы</b>&nbsp;— для тех, кому нужно больше проверок и&nbsp;слежение за&nbsp;многими компаниями. </template><!--/oplata--><!--v-bete--><b>Платных тарифов сейчас нет</b>&nbsp;— все возможности открыты. О&nbsp;начале оплат объявим на&nbsp;странице тарифов не&nbsp;позже чем за&nbsp;3&nbsp;дня. <!--/v-bete--><a href="/tarify/">Тарифы&nbsp;→</a></li>
       </ul>
-      <p class="note kanaly-glav" data-kanaly-blok hidden>Вопрос&nbsp;— <a data-kanal="max" hidden>в&nbsp;MAX</a> <a data-kanal="vk" hidden>во&nbsp;ВКонтакте</a>: бот там&nbsp;же&nbsp;проверит ИНН. <a href="/boty/">Что умеет бот</a></p>
+      <p class="note kanaly-glav">Вопрос&nbsp;— на&nbsp;<a href="mailto:help@deloskop.ru">help@deloskop.ru</a><span data-kanaly-blok hidden> или <a data-kanal="vk" hidden>во&nbsp;ВКонтакте</a></span>.</p>
     </div>
   </section>
 
@@ -772,7 +767,7 @@ footer a{color:var(--ink2)}
   // primer-legkij-v1 (25.10): пример «Условий сделки» просит только пакет «primer» (usloviya + sushchestvennoe + status-kod, ~130 КБ), а не весь отчёт (~535 КБ):
   // сервер пока отдаёт без сжатия, и каждый заход на главную без проверки скачивал полмегабайта. Весь отчёт — при проверке и намерении проверить.
   // Оба тега — async=false: исполняются в порядке вставки (как defer), «primer» всегда раньше «otchet».
-  var PRIMER_JS='/js/b/primer.e16a2211fe.js', OTCHET_JS='/js/b/otchet.053dce9d44.js', primerP=null, moduliP=null;
+  var PRIMER_JS='/js/b/primer.e16a2211fe.js', OTCHET_JS='/js/b/otchet.d9d74207a6.js', primerP=null, moduliP=null;
   function teg(src){return new Promise(function(ok){var s=document.createElement('script');s.src=src;s.async=false;s.onload=s.onerror=function(){ok()};document.head.appendChild(s);});}
   function gruzitPrimer(){if(!primerP)primerP=teg(PRIMER_JS);return primerP;}
   function gruzitModuli(){if(moduliP)return moduliP;var p=gruzitPrimer();moduliP=Promise.all([p,teg(OTCHET_JS)]);return moduliP;}

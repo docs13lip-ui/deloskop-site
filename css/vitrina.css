@@ -284,10 +284,6 @@
 .vv-inn__f button:hover{background:var(--accent-hover)}
 .vv-inn__n{margin:12px 0 0;color:var(--ink-2);font-size:15px} /* fon-v1: строка лежит в тени поля ИНН — серый --muted давал 4,2:1 по пикселю (390 px, светлая); как .note на главной */
 @media (max-width:520px){.vv-inn__f{flex-direction:column}.vv-inn__f input{padding:0 12px}}
+/* glavnaya-6-blokov-v1 (12.11.2026): строку-вход .vit-vhod с главной сняли — её стили удалены */
 /* vse-vozmozhnosti-v1 (30.10.2026, схема А): на главной вместо зала — одна строка-вход на /vse-vozmozhnosti/; там же — блок показов */
-.vit-vhod{padding:56px 0}
-.vit-vhod .wrap{display:flex;flex-direction:column;gap:14px;max-width:760px}
-.vit-vhod .lead{margin:0}
-.vit-vhod__go{display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px;margin:8px 0 0}
 .vv .vit{padding-top:24px}
-@media (max-width:860px){.vit-vhod{padding:40px 0}}

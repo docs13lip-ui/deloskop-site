@@ -11,7 +11,9 @@ const chitat = (f) => fs.readFileSync(path.join(KOREN, f), 'utf8');
 const glavnaya = chitat('index.html');
 const blok = (glavnaya.match(/<section class="vhody"[\s\S]*?<\/section>/) || [''])[0];
 
-test('на главной ровно три входа с целями Метрики', () => {
+// glavnaya-6-blokov-v1 (решение владельца 11.11 «Все да»; Стратег_что_убрать_12.11 разд. 2): две карточки перед оплатой,
+// «Банк спросил» — строкой под ними; цель entry_bank сохранена (строка несёт data-vhod)
+test('на главной два входа-карточки и строка «Банк спросил» — все с целями Метрики', () => {
   assert.ok(blok, 'блока «Три входа» нет');
   const celi = [...blok.matchAll(/data-vhod="([a-z_]+)"/g)].map((m) => m[1]);
   assert.deepStrictEqual(celi, ['entry_pay', 'entry_watch', 'entry_bank']);
@@ -35,7 +37,9 @@ test('каждая ссылка входа ведёт на существующ�
 
 test('у каждого входа одна главная ссылка (заголовок) — одна дверь, одна задача', () => {
   const karty = blok.split('<article').slice(1);
-  assert.strictEqual(karty.length, 3);
+  assert.strictEqual(karty.length, 2);
+  assert.match(blok, /<p class="vhody__bank" data-vhod="entry_bank">[^<]*<a href="\/skoraya-115-fz\/">/);
+  assert.match(chitat('js/vhody.js'), /closest\("\.vhod a, \.vhody__bank a"\)/, 'клик по строке тоже считается');
   for (const k of karty) assert.strictEqual((k.match(/<h3><a /g) || []).length, 1);
 });
 
@@ -53,5 +57,5 @@ test('тексты входов — без обещаний и с неразры
   assert.doesNotMatch(tekst, /гарант|безопасн|100\s*%|не заблокируют|точно/i);
   assert.doesNotMatch(tekst, /"[А-Яа-яЁё]/, 'прямые кавычки вместо ёлочек');
   assert.doesNotMatch(tekst, / - /, 'дефис вместо тире');
-  assert.match(blok, /115-ФЗ/);
+  assert.match(blok, /115&#8209;ФЗ/);
 });

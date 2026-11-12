@@ -534,12 +534,7 @@ border:1px solid var(--line);border-radius:999px;background:color-mix(in srgb,va
 .vv-inn__f button:hover{background:var(--accent-hover)}
 .vv-inn__n{margin:12px 0 0;color:var(--ink-2);font-size:15px}
 @media (max-width:520px){.vv-inn__f{flex-direction:column}.vv-inn__f input{padding:0 12px}}
-.vit-vhod{padding:56px 0}
-.vit-vhod .wrap{display:flex;flex-direction:column;gap:14px;max-width:760px}
-.vit-vhod .lead{margin:0}
-.vit-vhod__go{display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px;margin:8px 0 0}
 .vv .vit{padding-top:24px}
-@media (max-width:860px){.vit-vhod{padding:40px 0}}
 /* --- /css/vizual2.css --- */
 .ex-vid{display:flex;gap:4px;padding:4px;margin:18px 28px 2px;border-radius:999px;background:rgba(29,29,31,.05);width:max-content;max-width:calc(100% - 56px)}
 .ex-vid[hidden]{display:none}

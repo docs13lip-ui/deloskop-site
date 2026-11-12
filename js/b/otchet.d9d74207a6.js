@@ -4145,7 +4145,7 @@ return true;
 var OGOVORKA = 'Оценка по открытым данным на дату проверки, а не решение банка или налоговой.';
 var DRUGIE = [['Проверить счёт', '/proverit-schet/'], ['Кому вы' + NB + 'платите', '/kontragenty-iz-vypiski/'],
 ['Наличные глазами банка', '/nalichnye/'], ['Скорая 115\u2011ФЗ', '/skoraya-115-fz/'], ['Разборы дел', '/praktika/'],
-['Все инструменты', '/#vitrina']];
+['Все инструменты', '/vse-vozmozhnosti/']];
 function tekstPilyuli(pill, t) {
 var uz = null;
 for (var i = pill.childNodes.length - 1; i >= 0; i--) if (pill.childNodes[i].nodeType === 3) { uz = pill.childNodes[i]; break; }

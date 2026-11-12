@@ -13,11 +13,13 @@ const G = chitat('index.html');
 const MAIN = vidimoe(G.slice(G.indexOf('<main'), G.indexOf('</main>')));
 const tekst = (t) => t.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;|\u00a0/g, ' ');
 
-test('порядок блоков: hero → входы → витрина → Щит → разборы → «платят позже» → ошибка → доверие → цены → вопросы', () => {
+test('порядок блоков: hero → входы → Щит → разборы → доверие → цены → вопросы', () => {
   // vitrina-v1: «Витрина экосистемы» (tests/sobrat_vitrinu.py) — сразу после входов.
   // platyat-pozzhe-v1: «Контрагенты стали платить позже» — между разборами и калькулятором; при устаревшей сверке сборщик его убирает
   // glavnaya-a-v2 (31.10, схема А): «платят позже» и калькулятор ошибки — на /vse-vozmozhnosti/; на главной от них — якоря-ссылки в строке витрины
-  const ids = ['class="hero"', 'id="vhody"', 'id="vitrina"', 'id="shield"', 'id="praktika"', 'id="doverie"', 'id="price"', 'id="faq"'];
+  // glavnaya-6-blokov-v1 (решение владельца 11.11 «Все да»): строки-входа в витрину на главной нет — каталог в подвале
+  assert.ok(!/id="vitrina"/.test(MAIN), 'витрины на главной нет');
+  const ids = ['class="hero"', 'id="vhody"', 'id="shield"', 'id="praktika"', 'id="doverie"', 'id="price"', 'id="faq"'];
   assert.ok(!/<section[^>]+id="(rynok|oshibka)"/.test(MAIN), 'секций #rynok и #oshibka на главной больше нет');
   const poz = ids.map((x) => MAIN.indexOf(x));
   assert.ok(poz.every((p) => p > 0), 'все блоки на месте: ' + ids.filter((x, i) => poz[i] < 0).join(', '));
@@ -90,7 +92,8 @@ test('главная без цен (0яи, glavnaya-a-v1): блок «Услов
 test('калькулятор — на своей странице, в sitemap и в хабе /nalogi/', () => {
   const U = '/nalogi/kalkulyator-tehnicheskij-postavshchik/';
   const K = chitat(U.slice(1) + 'index.html');
-  assert.match(G, new RegExp('href="' + U + '"'));
+  // glavnaya-6-blokov-v1: с главной ссылки нет (строка витрины снята) — вход с /vse-vozmozhnosti/ и хаба /nalogi/
+  assert.match(chitat('vse-vozmozhnosti/index.html'), new RegExp('href="' + U + '"'));
   assert.ok(!/id="sv-sum"/.test(G), 'на главной калькулятора больше нет');
   assert.match(K, /id="sv-sum"/);
   assert.match(K, /<h1 id="calc-h">Во что обойдётся «технический» поставщик<\/h1>/);

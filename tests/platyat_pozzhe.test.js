@@ -43,8 +43,9 @@ test('главная — только скрипт строки «Для сра�
   assert.ok(VV.includes('<style data-vv-rynok>'), 'стили блока — на странице');
   // старые якоря главной ведут туда
   assert.match(HTML, /location\.replace\("\/vse-vozmozhnosti\/"\+h\)/);
-  assert.match(HTML, /<a id="rynok" href="\/vse-vozmozhnosti\/#rynok">/);
-  assert.match(HTML, /<a id="oshibka" href="\/nalogi\/kalkulyator-tehnicheskij-postavshchik\/">/);
+  // glavnaya-6-blokov-v1: строка витрины с якорями-ссылками снята — /#rynok и /#oshibka уводит только скрипт
+  assert.match(HTML, /if\(h==="#rynok"\|\|h==="#oshibka"\)location\.replace/);
+  assert.doesNotMatch(HTML, /<a id="(rynok|oshibka)"/);
   assert.ok(HTML.indexOf('location.replace("/vse-vozmozhnosti/"') < HTML.indexOf('<main id="top">'), 'уводим до отрисовки главной');
   execFileSync('python3', [path.join(K, 'tests/sobrat_rynok.py'), '--check', '--segodnya', P.sverka], { stdio: 'pipe' });
 });

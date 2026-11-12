@@ -484,9 +484,15 @@ def dubli(s, d, koren=KOREN):
     return s
 
 
+# glavnaya-6-blokov-v1 (решение владельца 11.11 ~21:42, «Все да», Стратег_что_убрать_12.11 разд. 2): на главной строки-входа
+# в витрину больше нет — она уводила со страницы с полем ИНН. Метки остаются пустыми (место известно сборщику);
+# каталог живёт на /vse-vozmozhnosti/, ссылка на него — в подвале; /#vitrina, /#rynok, /#oshibka уводит скрипт перед <main>.
+NA_GLAVNOJ = False
+
+
 def sobrat(s, d, koren=KOREN):
     proverit(d, s)
-    b = korotkij(d)
+    b = korotkij(d) if NA_GLAVNOJ else NACH + KON
     if NACH in s:
         a = s.index(NACH)
         z = s.index(KON, a) + len(KON)

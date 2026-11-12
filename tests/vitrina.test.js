@@ -200,15 +200,13 @@ test('priemka-1910-v1: таблетка не накрывает заголовк
 });
 
 // vse-vozmozhnosti-v1: своя страница каталога и строка-вход на главной
-test('vse-vozmozhnosti-v1: на главной — одна строка-вход #vitrina, зал — на /vse-vozmozhnosti/ (h1, свои title/description, sitemap)', () => {
+// glavnaya-6-blokov-v1 (решение владельца 11.11 «Все да»): строка-вход тоже снята — метки на главной пустые, каталог — в подвале
+test('vse-vozmozhnosti-v1 + glavnaya-6-blokov-v1: на главной витрины нет (метки пустые), ссылка — в подвале; зал — на /vse-vozmozhnosti/ (h1, свои title/description, sitemap)', () => {
   const a = glavnaya.indexOf('<!--vitrina-->'), b = glavnaya.indexOf('<!--/vitrina-->');
-  const g = glavnaya.slice(a, b);
-  assert.ok(a > 0 && b > a);
-  assert.match(g, /<section class="vit-vhod" id="vitrina" aria-labelledby="vitrina-h">/);
-  assert.match(g, /<a class="vit-btn" href="\/vse-vozmozhnosti\/">Все возможности Делоскопа/);
-  assert.ok(!/vit-e |application\/ld\+json|<symbol/.test(g), 'на главной нет зала, рисунков и ItemList');
-  const zhivyh = V.eksponaty.filter((x) => x.status !== 'razrabotka').length;
-  assert.ok(g.includes(zhivyh + '&nbsp;'), 'счёт продуктов — из vitrina.json');
+  assert.ok(a > 0 && b === a + '<!--vitrina-->'.length, 'метки на главной пустые');
+  assert.ok(!/id="vitrina"|class="vit-vhod"/.test(glavnaya), 'строки-входа нет');
+  const podval = glavnaya.slice(glavnaya.indexOf('<!--podval-->'));
+  assert.match(podval, /href="\/vse-vozmozhnosti\/"/, 'каталог — в подвале главной');
   assert.strictEqual((html.match(/<h1\b/g) || []).length, 1, 'на странице один h1');
   assert.match(html, /<h1 class="h2" id="vitrina-h">/);
   assert.match(html, /<link rel="canonical" href="https:\/\/deloskop\.ru\/vse-vozmozhnosti\/">/);

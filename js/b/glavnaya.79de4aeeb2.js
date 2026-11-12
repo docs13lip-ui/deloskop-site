@@ -7,7 +7,7 @@ var v = el.closest ? el.closest("[data-vhod]") : null;
 return v ? v.getAttribute("data-vhod") : null;
 }
 document.addEventListener("click", function (e) {
-var a = e.target.closest ? e.target.closest(".vhod a") : null;
+var a = e.target.closest ? e.target.closest(".vhod a, .vhody__bank a") : null;
 if (!a) return;
 var c = cel(a);
 if (c && typeof window.dlkGoal === "function") {

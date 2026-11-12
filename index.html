@@ -743,6 +743,8 @@ footer a{color:var(--ink2)}
     if(window.Otchet){try{Otchet.razlozhit(report,r,{svoj:!!shR,shR:shR,usl:ub,api:CAPI})}catch(e){}}
     // vizual-v3.1b: на телефоне — липкая строка «Что делать завтра утром» из вывода отчёта, по нажатию — окно (js/lipkaya.js)
     if(window.DlkLipkaya){try{DlkLipkaya.mount(report)}catch(e){}}
+    // dengi-na-konu-v1: «Деньги на кону» — иски, приставы и недоимка против годовой выручки (поле dengi; слова юриста 12.11 п. 3); только организации, не «своя компания»; js/dengi-na-konu.js
+    if(!svoj&&window.DengiNaKonu){try{DengiNaKonu.mount(report,r)}catch(e){}}
     // «Что изменилось» с прошлой проверки из кабинета — на любом устройстве (вошедшим; js/dinamika.js)
     if(window.Dinamika&&Dinamika.dogruzit&&CAPI){try{Dinamika.dogruzit(report,r,{api:CAPI})}catch(e){}}
     // «Рентабельность активов против отрасли» — оценка по ГИР БО против нормы ФНС (приложение 4 к ММ-3-06/333@), после «Динамики»; js/rentabelnost.js
@@ -767,7 +769,7 @@ footer a{color:var(--ink2)}
   // primer-legkij-v1 (25.10): пример «Условий сделки» просит только пакет «primer» (usloviya + sushchestvennoe + status-kod, ~130 КБ), а не весь отчёт (~535 КБ):
   // сервер пока отдаёт без сжатия, и каждый заход на главную без проверки скачивал полмегабайта. Весь отчёт — при проверке и намерении проверить.
   // Оба тега — async=false: исполняются в порядке вставки (как defer), «primer» всегда раньше «otchet».
-  var PRIMER_JS='/js/b/primer.e16a2211fe.js', OTCHET_JS='/js/b/otchet.d9d74207a6.js', primerP=null, moduliP=null;
+  var PRIMER_JS='/js/b/primer.e16a2211fe.js', OTCHET_JS='/js/b/otchet.1dc246d715.js', primerP=null, moduliP=null;
   function teg(src){return new Promise(function(ok){var s=document.createElement('script');s.src=src;s.async=false;s.onload=s.onerror=function(){ok()};document.head.appendChild(s);});}
   function gruzitPrimer(){if(!primerP)primerP=teg(PRIMER_JS);return primerP;}
   function gruzitModuli(){if(moduliP)return moduliP;var p=gruzitPrimer();moduliP=Promise.all([p,teg(OTCHET_JS)]);return moduliP;}

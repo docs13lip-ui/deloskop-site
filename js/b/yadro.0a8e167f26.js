@@ -1034,7 +1034,7 @@ return { p: put(okr.pathname, okr.search), r: otkuda(okr.referrer) };
 var VIDY = { deystvie_dokumenty: 1, deystvie_dosje: 1, deystvie_slezhenie: 1, deystvie_pervoe: 1, perepoverka_7_60: 1,
 proverka_novaya: 1, vozvrat_3_30: 1, proverka_dovedena: 1, vozvrat_1_7: 1 };
 var MNOGO = { proverka_novaya: 1, perepoverka_7_60: 1 };
-var VKL = false;
+var VKL = true;
 function teloSobytiya(vid, okr) {
 if (VIDY[vid] !== 1 || !telo(okr)) return null;
 return { sobytie: vid };

@@ -27,10 +27,10 @@
     { id: 'egrul', nazv: 'ЕГРЮЛ и ЕГРИП', sam: 'https://egrul.nalog.ru/', ustarelo_dney: 7 },
     { id: 'fns_open', nazv: 'Открытые данные ФНС', sam: 'https://www.nalog.gov.ru/opendata/', ustarelo_dney: 62 },
     { id: 'girbo', nazv: 'Бухотчётность ГИР БО', sam: 'https://bo.nalog.gov.ru/', ustarelo_dney: null },
-    { id: 'kad', nazv: 'Картотека арбитражных дел', sam: 'https://kad.arbitr.ru/', damia: ['sudy', 'bankrotstvo'] },
+    { id: 'kad', nazv: 'Картотека арбитражных дел', sam: 'https://kad.arbitr.ru/', damia: ['sudy'] },
     { id: 'fssp', nazv: 'ФССП', sam: 'https://fssp.gov.ru/iss/ip', damia: ['fssp'] },
     { id: 'eis', nazv: 'ЕИС: РНП и контракты', sam: 'https://zakupki.gov.ru/', damia: ['rnp', 'kontrakty'] },
-    { id: 'efrsb', nazv: 'Федресурс и ЕФРСБ', sam: 'https://bankrot.fedresurs.ru/' },
+    { id: 'efrsb', nazv: 'ЕФРСБ', sam: 'https://bankrot.fedresurs.ru/', damia: ['bankrotstvo'] },
     { id: 'nalog_bi', nazv: 'Решения ФНС о приостановлении операций и обеспечительные меры', sam: 'https://service.nalog.ru/bi.do', damia: ['priostanovki', 'mery'] }
   ];
   var KOROTKO = { egrul: 'ЕГРЮЛ', fns_open: 'открытые данные ФНС', girbo: 'бухотчётность', kad: 'суды', fssp: 'приставы', eis: 'РНП и контракты', nalog_bi: 'приостановки счетов', efrsb: 'сообщения о банкротстве (ЕФРСБ)' };

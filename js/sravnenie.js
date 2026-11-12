@@ -131,7 +131,7 @@
   function ySudy(r) {
     var s = r && r.damia && r.damia.sudy;
     var est = s && s.dannye && /^(polucheno|found|not_found|stale)$/.test(String(s.status || ''));
-    if (!est) return { t: 'Не проверяли', pod: (s && s.zamorozhen ? 'источник сейчас не' + NB + 'обновляется — ' : '') + 'проверьте сами в картотеке kad.arbitr.ru', ton: 'neutral', nepr: true };
+    if (!est) return { t: 'Не проверяли', pod: (s && s.zamorozhen ? 'источник сейчас не' + NB + 'обновляется — ' : s && s.oshibka ? 'источник не' + NB + 'ответил — ' : '') + 'проверьте сами в картотеке kad.arbitr.ru', ton: 'neutral', nepr: true };
     var d = s.dannye, n = +d.otvetchik_nezaversheno || 0, v = +d.vsego || 0, na = data(s.data_svedeniy), star = sudyStaroe(s, r);
     if (n) return { t: 'Ответчик в' + NB + n + NB + skl(n, 'незавершённом деле', 'незавершённых делах', 'незавершённых делах'),
       pod: 'всего дел: ' + v + (na ? ' · на' + NB + na : '') + (star ? ', могли измениться' : ''), ton: 'warn', ustarelo: star || undefined };

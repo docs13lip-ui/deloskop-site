@@ -147,7 +147,7 @@
     var U = modul('Usloviya', './usloviya.js');
     if (!v && U) { try { v = U.decide(r); } catch (e) { v = null; } }
     if (!v) return { ton: 'ned', tekst: (r && r.verdict) || 'Вывод не посчитан', avans: '', pravilo: '' };
-    var ton = /^Предварительно/.test(v.headline || '') ? 'ned' : v.tone;
+    var ton = /^(Предварительно|Проверили не всё)/.test(v.headline || '') ? 'ned' : v.tone;   // chestnyj-nol-v2
     var pr = (v.predel && v.predel.pravilo) || (U && U.METODIKA && U.METODIKA.PRAVILO) || '', dp = dataPravila(pr);
     var sost = (v.predel && v.predel.sostoyanie) || (v.cap > 0 ? 'positive' : v.cap === 0 ? 'zero' : 'insufficient_data'), a;
     var money = U ? U.money : function (x) { return Math.round(x) + NB + '₽'; };

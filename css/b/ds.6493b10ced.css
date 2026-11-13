@@ -383,6 +383,7 @@ radial-gradient(38% 34% at 82% 64%,rgba(46,34,12,0.95),rgba(46,34,12,0) 70%)}
 [data-theme=dark] .usl-napr{background:rgba(255,255,255,0.097)}
 [data-theme=dark] .usl-napr button[aria-pressed=true]{background:#1C1C1F}
 [data-theme=dark] .usl-watch{border:1px solid #2E2E33;background:#1C1C1F}
+[data-theme=dark] .usl-zavtra{border:1px solid #2E2E33;background:#1C1C1F}
 /* --- /css/detali.css --- */
 :root{--t-12:12px;--t-13:13px;--t-15:15px;--t-17:17px;--t-20:20px;--t-24:24px;--t-32:32px;--t-48:48px;--r-small:10px;--r-inner:16px;--r-card:28px;--r-pill:999px}
 p,li,dd,dt,figcaption,blockquote,summary,legend,h1,h2,h3,h4{text-wrap:pretty}

@@ -51,9 +51,14 @@
   var VIDY = { deystvie_dokumenty: 1, deystvie_dosje: 1, deystvie_slezhenie: 1, deystvie_pervoe: 1, perepoverka_7_60: 1,
     proverka_novaya: 1, vozvrat_3_30: 1, proverka_dovedena: 1, vozvrat_1_7: 1,
     // zapros-dokumentov-v1: «Скопировать письмо» / «Открыть в почте» в «Что запросить у них» (js/usloviya.js)
-    zapros_copy: 1 };
+    zapros_copy: 1,
+    // pomoglo-v1 (13.11): «Ответ помог?» под выводом отчёта — «Да» / «Нет» (js/pomoglo.js)
+    otvet_pomog_da: 1, otvet_pomog_net: 1,
+    // primer-otcheta-v1 (13.11): «Посмотреть пример отчёта» на главной — открыли отчёт по образцу
+    primer_otchet: 1 };
   // Эти виды шлются по разу на компанию или на день (это решает память), а не по разу за показ страницы.
-  var MNOGO = { proverka_novaya: 1, perepoverka_7_60: 1 };
+  // otvet_pomog_*: на главной за один показ страницы бывает несколько отчётов; один ответ на отчёт держит сам js/pomoglo.js.
+  var MNOGO = { proverka_novaya: 1, perepoverka_7_60: 1, otvet_pomog_da: 1, otvet_pomog_net: 1 };
   // Включается одной строкой после выкладки API (приём {sobytie} в /api/ping — ТЗ в КАК_ВЫЛОЖИТЬ_sobytiya-v1).
   // istochniki-checko-v1 (12.11): сервер событий выложен (api-sobytiya-segodnya-v2), строка юриста о памяти — в /politika/ цель 8.
   var VKL = true;

@@ -91,6 +91,7 @@ p{margin:0}
 /* report card */
 .report{background:var(--card);border-radius:var(--r-lg);padding:32px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 24px 60px rgba(0,0,0,.08);display:flex;flex-direction:column;gap:22px}
 .report-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.primer-podpis{margin:12px 0 0;max-width:560px;padding:12px 16px;border-radius:16px;background:var(--surface-2);color:var(--ink2);font-size:15px;line-height:1.5}
 .tag{font-size:13px;font-weight:600;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
 .company{font-size:24px;font-weight:600;letter-spacing:-0.02em;margin-top:6px}
 .sub{font-size:15px;color:var(--muted);margin-top:4px}
@@ -427,9 +428,9 @@ footer a{color:var(--ink2)}
 @media print{.lp{display:none!important}}
 </style>
 <!-- vizual-v3.0a: стили и скрипты главной — пятью файлами вместо 17 (partials/sborka.json, tests/sobrat_js.py) -->
-<link rel="stylesheet" href="/css/b/ds.c6634a0936.css">
-<link rel="stylesheet" href="/css/b/glavnaya-stil.18724cf177.css">
-<script src="/js/b/yadro.2d80e8380a.js" defer></script>
+<link rel="stylesheet" href="/css/b/ds.8bbf9da185.css">
+<link rel="stylesheet" href="/css/b/glavnaya-stil.9e49808b4f.css">
+<script src="/js/b/yadro.15246be2b0.js" defer></script>
 <script src="/js/b/glavnaya.c1e69dc1ae.js" defer></script>
 <link rel="icon" type="image/png" sizes="120x120" href="/favicon-120.png">
 <link rel="alternate" type="application/rss+xml" title="Разборы дел — Делоскоп" href="/praktika/rss.xml">
@@ -716,7 +717,7 @@ footer a{color:var(--ink2)}
   var ICON='<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5L6.5 11.5L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var WARNI='<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 4.5V9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="8" cy="11.8" r="1.1" fill="currentColor"/></svg>';
   function render(r,o){
-    o=o||{};var svoj=!!(o.svoj&&window.Shchit);
+    o=o||{};var svoj=!!(o.svoj&&window.Shchit),primer=!!o.primer&&!svoj;
     var c=r.company||{}, lvl=r.risk_level||'low';
     var name=c.name_short||c.name_full||('ИНН '+c.inn);
     var sub='ИНН '+esc(c.inn)+(c.status?' · '+esc(window.StatusKod?StatusKod.izOtveta(c):(ST[c.status]||c.status)):'');
@@ -732,15 +733,18 @@ footer a{color:var(--ink2)}
     report.classList.remove('ex');
     if(window.Portfel)Portfel.skryt();
     report.setAttribute('aria-label','Отчёт о проверке');
-    report.innerHTML='<div class="report-head"><div><div class="tag">'+(svoj?(String(c.inn||'').length===12?'Ваш бизнес':'Ваша компания')+' глазами банка и налоговой · на ':'Проверка на ')+d.toLocaleDateString('ru-RU')+'</div>'+
+    report.innerHTML='<div class="report-head"><div><div class="tag">'+(primer?'Пример отчёта · сведения реестров на ':svoj?(String(c.inn||'').length===12?'Ваш бизнес':'Ваша компания')+' глазами банка и налоговой · на ':'Проверка на ')+d.toLocaleDateString('ru-RU')+'</div>'+
       '<div class="company">'+esc(name)+'</div><div class="sub">'+sub+'</div></div>'+
       (svoj?'':'<div class="pill '+lvl+'">'+(lvl==='low'?ICON:WARNI)+esc({low:'Без серьёзных сигналов',medium:'Есть вопросы',high:'Есть серьёзные сигналы'}[r.risk_level]||'')+'</div>')+'</div>'+
       '<div class="rows">'+rows+'</div>'+(window.Dinamika?Dinamika.html(r):'')+'<div class="verdict" data-usl>'+esc(r.verdict||'')+'</div>'+
       '<div class="report-actions">'+(r.report_id?'<a class="btn-doc" href="/report.html?id='+encodeURIComponent(r.report_id)+'" target="_blank" rel="noopener">PDF-досье</a><button type="button" data-act="link">Ссылка на отчёт</button>':'<button type="button" data-act="copy">'+(svoj?'Скопировать разбор':'Скопировать вывод')+'</button>')+'<button type="button" data-act="again">Проверить другую</button></div>'+
       '<div class="src">Источники: ЕГРЮЛ/ЕГРИП и открытые данные ФНС. Это оценка риска, а не решение банка.</div>';
-    if(window.Nedavnie)Nedavnie.add({inn:c.inn,name:name,level:lvl,id:r.report_id});
+    // primer-otcheta-v1: полная подпись юриста в шапке примера, под названием (13.11 п. 1.5); js/otchet.js переносит этот блок в .ot-who целиком
+    var pw=primer&&report.querySelector('.report-head > div');if(pw)pw.insertAdjacentHTML('beforeend','<p class="primer-podpis" data-primer-podpis>Пример отчёта. Компания выбрана как образец: она не связана с Делоскопом и не заказывала проверку. Сведения открытых реестров на '+d.toLocaleDateString('ru-RU')+'.</p>');
+    // primer-otcheta-v1: пример — не проверка человека: ни «Недавних», ни «доведено», ни «Ответ помог?»
+    if(window.Nedavnie&&!primer)Nedavnie.add({inn:c.inn,name:name,level:lvl,id:r.report_id});
     // dovedeno-vernulis-v1: «довёл проверку до конца» — отчёт с выводом на экране 1,5 с (js/nedavnie.js); смотрим сам контейнер — шапку перерисует js/otchet.js; своя компания — не проверка контрагента
-    if(!svoj&&window.Nedavnie&&Nedavnie.dovedena)Nedavnie.dovedena(report,c.inn);
+    if(!svoj&&window.Nedavnie&&Nedavnie.dovedena&&!primer)Nedavnie.dovedena(report,c.inn);
     var ub=report.querySelector('[data-usl]');
     // «Откуда данные» вместо строки «Источники: …» — опись: какой реестр ответил, на какую дату, кто не ответил (js/otkuda.js)
     if(window.Otkuda){try{Otkuda.mount(report.querySelector('.src'),r)}catch(e){}}
@@ -776,6 +780,8 @@ footer a{color:var(--ink2)}
     if(window.Otchet){try{Otchet.razlozhit(report,r,{svoj:!!shR,shR:shR,usl:ub,api:CAPI})}catch(e){}}
     // vizual-v3.1b: на телефоне — липкая строка «Что делать завтра утром» из вывода отчёта, по нажатию — окно (js/lipkaya.js)
     if(window.DlkLipkaya){try{DlkLipkaya.mount(report)}catch(e){}}
+    // pomoglo-v1: «Ответ помог? Да / Нет» под выводом — только вид события в свой счёт, без текста и cookie (js/pomoglo.js)
+    if(!svoj&&window.DlkPomoglo&&!primer){try{DlkPomoglo.mount(report,r,{svoj:svoj})}catch(e){}}
     // dengi-na-konu-v1: «Деньги на кону» — иски, приставы и недоимка против годовой выручки (поле dengi; слова юриста 12.11 п. 3); только организации, не «своя компания»; js/dengi-na-konu.js
     if(!svoj&&window.DengiNaKonu){try{DengiNaKonu.mount(report,r)}catch(e){}}
     // krug-v1: «Кто рядом» — организации с тем же руководителем, участником или учредителем-организацией по ИНН из ЕГРЮЛ (/api/krug; слова [команда] ✎ 9, ✎ 11 от 13.11); перед «Все данные из реестров»; только организации, не «своя компания»; js/krug.js
@@ -791,7 +797,7 @@ footer a{color:var(--ink2)}
     // «Лимит упрощёнки» — выручка прошлого года организации на УСН от 80 % лимита доходов (п. 4 ст. 346.13 НК), только к сведению; js/usn-limit.js
     if(!svoj&&window.DlkUsnLimit){try{DlkUsnLimit.mount(report,r)}catch(e){}}
     // golos-klienta-v1/v2: «Что добавить в отчёт?» — вошедшим после 3-й разной компании, гостям после 2-й, не чаще раза в 30 дней (js/golos.js)
-    if(window.DlkGolos){try{DlkGolos.posleProverki(report,r,{api:CAPI})}catch(e){}}
+    if(window.DlkGolos&&!primer){try{DlkGolos.posleProverki(report,r,{api:CAPI})}catch(e){}}
   }
   // moduli-do-otveta-v1 [команда]: модули отчёта (Usloviya, Otchet, Dinamika, IndeksOtvet…) подключены с defer и исполняются только
   // перед DOMContentLoaded, а проверка по ?inn=… (карточки /company/, «Проверить снова» из кабинета) стартует раньше. Быстрый ответ API
@@ -804,7 +810,7 @@ footer a{color:var(--ink2)}
   // primer-legkij-v1 (25.10): пример «Условий сделки» просит только пакет «primer» (usloviya + sushchestvennoe + status-kod, ~130 КБ), а не весь отчёт (~535 КБ):
   // сервер пока отдаёт без сжатия, и каждый заход на главную без проверки скачивал полмегабайта. Весь отчёт — при проверке и намерении проверить.
   // Оба тега — async=false: исполняются в порядке вставки (как defer), «primer» всегда раньше «otchet».
-  var PRIMER_JS='/js/b/primer.ee3f3432b5.js', OTCHET_JS='/js/b/otchet.41bfd0d007.js', primerP=null, moduliP=null;
+  var PRIMER_JS='/js/b/primer.ee3f3432b5.js', OTCHET_JS='/js/b/otchet.6065e8afcf.js', primerP=null, moduliP=null;
   function teg(src){return new Promise(function(ok){var s=document.createElement('script');s.src=src;s.async=false;s.onload=s.onerror=function(){ok()};document.head.appendChild(s);});}
   function gruzitPrimer(){if(!primerP)primerP=teg(PRIMER_JS);return primerP;}
   function gruzitModuli(){if(moduliP)return moduliP;var p=gruzitPrimer();moduliP=Promise.all([p,teg(OTCHET_JS)]);return moduliP;}
@@ -817,11 +823,24 @@ footer a{color:var(--ink2)}
   // (так работает на любом сервере). OTCHET_PUT — адрес /otchet/<ИНН>/: включить после переезда на nginx
   // (deploy/nginx.conf уже отдаёт для него главную; tests/perehod.test.js сверяет, что флаг выключен, пока переезда нет).
   var OTCHET_PUT=false;
+  // primer-otcheta-v1 (13.11): «Посмотреть пример отчёта» — отчёт по компании-образцу одним нажатием, без ввода ИНН.
+  // PRIMER_INN — ИНН организации-образца; пусто — выключено (ссылка ведёт, как раньше, на /kak-rabotaet/#proverka).
+  // Включается одной строкой после ответа юриста: какую компанию брать и как подписать пример (tests/primer_otcheta.test.js сторожит,
+  // что ИНН — 10 цифр организации, не ИП). Пример: шапка «Пример отчёта · сведения реестров на <дата>», в «Недавние», «доведено»,
+  // лимит на устройстве и «Ответ помог?» не идёт; адрес страницы не меняется; на сервер — /api/check?q=…&primer=1 и событие primer_otchet.
+  var PRIMER_INN='2309085638';
+  // юрист 13.11 п. 1.5: образец — ПАО «Магнит» (крупное, не банк, отчётность в ГИР БО). Перед включением сверено по живому /api/check 13.11:
+  // действующая; ЕФРСБ — сообщений, где компания должник, 0; выручка за 2025 есть; отметок о недостоверности нет. Хоть одно «нет» — взять другую.
+  // Пример без ФИО и списков дел: имя руководителя заменяем на «указан в ЕГРЮЛ» по всему ответу, список дел (damia.sudy.dannye.dela) — пустой.
+  function primerBezLyudej(j){try{var c=j&&j.company||{},im=String(c.director_name||'').trim();
+    if(im&&!/[«"]/.test(im)&&c.kind!=='INDIVIDUAL'){var s=JSON.stringify(j).split(im).join('указан в ЕГРЮЛ'),p=im.split(/\s+/);
+      if(p.length>1)s=s.split(p[0]+' '+p[1].charAt(0)+'.').join('руководитель');var n=JSON.parse(s);for(var k in n)j[k]=n[k];}
+    if(j.damia&&j.damia.sudy&&j.damia.sudy.dannye)j.damia.sudy.dannye.dela=[];}catch(e){}}
   var exUzly=null,exAtr=null;
   function perehod(fn){if(window.DlkPerehod)return DlkPerehod.smena(report,fn);fn();return Promise.resolve(false);}
   function innIzAdresa(){var m=/^\/otchet\/(\d{10}(?:\d{2})?)\/?$/.exec(location.pathname);if(m)return m[1];
     var q=new URLSearchParams(location.search).get('inn');return q&&/^\d{10}(\d{2})?$/.test(q)?q:'';}
-  function adres(inn,o){if(o&&(o.svoj||o.izIstorii)||!/^\d{10}(\d{2})?$/.test(String(inn))||!history.pushState)return;
+  function adres(inn,o){if(o&&(o.svoj||o.izIstorii)||o&&o.primer||!/^\d{10}(\d{2})?$/.test(String(inn))||!history.pushState)return;
     var u=OTCHET_PUT?'/otchet/'+inn+'/':'/?inn='+inn;
     try{if(innIzAdresa()===String(inn))history.replaceState({dlkInn:String(inn)},'',u);else history.pushState({dlkInn:String(inn)},'',u);}catch(e){}}
   function bezOtcheta(){document.documentElement.classList.remove('rezhim-otcheta');if(document.readyState==='complete')kogdaPrimer(primerUslovij);}
@@ -839,16 +858,18 @@ footer a{color:var(--ink2)}
     // а ответ API только меняет пример на отчёт на том же месте. Ошибка — шапка возвращается (bezOtcheta).
     document.documentElement.classList.add('rezhim-otcheta');
     note.className='note';note.textContent='Проверяем по реестрам…';if(window.DlkZhivoj)try{DlkZhivoj.zhdu(note,v)}catch(e){}report.classList.add('loading');report.setAttribute('aria-busy','true');if(window.dlkGoal)dlkGoal('check_started');
-    fetch(CAPI+'/api/check?q='+encodeURIComponent(v),{credentials:'include'})
+    fetch(CAPI+'/api/check?q='+encodeURIComponent(v)+(o&&o.primer?'&primer=1':''),{credentials:'include'})
       .then(function(res){return res.json().then(function(j){return {ok:res.ok,s:res.status,j:j}},function(){return {ok:false,s:res.status,j:{}}})})
       .then(function(x){kogdaModuli(function(){report.classList.remove('loading');
         // лимит бесплатных проверок — понятный экран вместо текста API (js/limit.js); `detail` не выводим
         if(x.s!==200||!x.ok){report.removeAttribute('aria-busy');bezOtcheta();}
         if(x.s===429){note.className='note';note.textContent='';if(window.dlkLimit)dlkLimit.pokazat(note,{stranica:'glavnaya',inn:v});else note.textContent='На сегодня бесплатные проверки закончились. Завтра — снова 10.';return;}
         if(!x.ok){note.className='note err';note.textContent=(x.j&&x.j.detail)||'Не получилось проверить. Попробуйте ещё раз.';return;}
-        if(window.dlkLimit)dlkLimit.proveren((x.j.company&&x.j.company.inn)||v);
+        if(window.dlkLimit&&!(o&&o.primer))dlkLimit.proveren((x.j.company&&x.j.company.inn)||v);
         // kavychki-v1: ПАО "РОССЕТИ ЮГ" → ПАО «РОССЕТИ ЮГ» — до всех модулей отчёта (js/imya.js; буквы — как в ЕГРЮЛ)
         if(window.DlkImya)DlkImya.ispravitOtvet(x.j);
+        // primer-otcheta-v1 (юрист 13.11 п. 1.5): в примере — без ФИО и без списков дел, как на публичной карточке
+        if(o&&o.primer)primerBezLyudej(x.j);
         // vizual-v3.1a: пример перетекает в отчёт (js/perehod.js — View Transitions; нет поддержки или «уменьшить движение» — сразу)
         perehod(function(){render(x.j,o);if(window.DlkZhivoj)try{DlkZhivoj.pojav(report)}catch(e){}}).then(function(){report.removeAttribute('aria-busy');note.className='note ok';note.textContent='Готово. Отчёт — рядом.';
         adres((x.j.company&&x.j.company.inn)||v,o);
@@ -957,6 +978,12 @@ footer a{color:var(--ink2)}
       b.onclick=function(){t.remove();openFb('idea')}; t.appendChild(b); document.body.appendChild(t);
       setTimeout(function(){t.remove()},12000); },8000); }
   form.addEventListener('submit',askLater);
+  // primer-otcheta-v1: ссылка «Посмотреть пример» под полем — при PRIMER_INN открывает отчёт по образцу на месте примера
+  function pokazatPrimer(e){if(e)e.preventDefault();if(window.dlkSobytie)try{dlkSobytie('primer_otchet')}catch(_){}
+    if(window.dlkGoal)try{dlkGoal('primer_otcheta')}catch(_){}runCheck(PRIMER_INN,{primer:true});}
+  var primA=document.querySelector('.doverie-str .primer-ssylka');
+  if(PRIMER_INN&&/^\d{10}$/.test(PRIMER_INN)&&primA&&CAPI){primA.href='/?primer=1';primA.innerHTML='Посмотреть пример отчёта&nbsp;→';
+    primA.setAttribute('data-primer-otcheta','');primA.addEventListener('click',pokazatPrimer);}
   // ИНН из адреса (?inn=…) — например, «Проверить снова» из кабинета
   // sravnit-v1: /?inn=A&vs=B — сравнение двух компаний живёт на /sravnit/ (здесь проверку не запускаем — не тратим лимит)
   var qvs=new URLSearchParams(location.search).get('vs')||'', svs=/^\d{10}$/.test(qvs)&&/^\d{10}$/.test(innIzAdresa());
@@ -968,6 +995,8 @@ footer a{color:var(--ink2)}
   // poisk-v2-b: пришли из окна поиска («Проверить «название»» → /?inn=<текст>#poisk) — сразу подсказки ЕГРЮЛ под строкой
   else if(qi&&qi.trim()){input.value=qi.trim().slice(0,120);if(location.hash==='#poisk'){try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}input.focus();input.dispatchEvent(new Event('input'))}}
   // вчера упёрлись в лимит — ИНН сохранён на устройстве: «Вчера не успели проверить: … ›» (js/limit.js, только ИНН организаций)
+  // primer-otcheta-v1: /?primer=1 (ссылка «Посмотреть пример отчёта» без скрипта) — тот же пример, когда флаг включён
+  else if(PRIMER_INN&&/^\d{10}$/.test(PRIMER_INN)&&CAPI&&new URLSearchParams(location.search).get('primer')==='1')pokazatPrimer();
   else if(window.dlkLimit&&CAPI)dlkLimit.napomnit(note,function(inn){input.value=inn;runCheck(inn);});
   // Щит: своя компания глазами банка и налоговой (js/shchit.js) — в том же окне отчёта, наверху страницы
   var sf=document.getElementById('shieldForm');

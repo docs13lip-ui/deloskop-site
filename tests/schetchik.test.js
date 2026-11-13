@@ -285,7 +285,7 @@ test('dovedeno-vernulis-v1 в браузере: вывод на экране 1,5
   assert.ok(!('dlk_pamyat' in vyk.hran));
   const nd = chitat('js/nedavnie.js');
   assert.ok(/Math\.min\(x\.boundingClientRect\.height \/ 2, vh \/ 3\)/.test(nd) && /DOVEDENA_MS = 1500/.test(nd) && /visibilityState !== 'hidden'/.test(nd), 'половина отчёта или треть экрана, 1,5 с, вкладка не скрыта');
-  assert.ok(/Nedavnie\.dovedena\(report,c\.inn\)/.test(chitat('index.html')) && /if\(!svoj&&window\.Nedavnie&&Nedavnie\.dovedena\)/.test(chitat('index.html')), 'главная: контейнер отчёта, своя компания — мимо');
+  assert.ok(/Nedavnie\.dovedena\(report,c\.inn\)/.test(chitat('index.html')) && /if\(!svoj&&window\.Nedavnie&&Nedavnie\.dovedena(&&!primer)?\)/.test(chitat('index.html')), 'главная: контейнер отчёта, своя компания — мимо');
   assert.ok(/Nedavnie\.dovedena\(q4\|\|doc\.querySelector\('\.risk'\)\|\|doc,c\.inn\)/.test(chitat('report.html')), 'отчёт: «4 вопроса» или плашка');
   assert.ok(S.VIDY.proverka_dovedena === 1 && S.VIDY.vozvrat_1_7 === 1);
 });

@@ -34,31 +34,10 @@ test('главная А: снятое ТЗ (разд. 0) не возвращае
   }
 });
 
-test('главная А: таблица «Откуда данные» = data/istochniki.json (без ЗСК — у неё своя строка)', () => {
-  const blok = /<!--istochniki-glavnaya-->([\s\S]*?)<!--\/istochniki-glavnaya-->/.exec(G)[1];
-  const stroki = [...blok.matchAll(/<tr data-ist="([a-z_]+)">([\s\S]*?)<\/tr>/g)];
-  const ozhid = R.istochniki.filter((x) => x.id !== 'zsk_cbr');
-  assert.deepStrictEqual(stroki.map((m) => m[1]), ozhid.map((x) => x.id));
-  for (const [, id, html] of stroki) {
-    const x = R.istochniki.find((y) => y.id === id);
-    const t = tekst(html);
-    assert.ok(x.chto_daet && t.includes(x.chto_daet), id + ': «Что даёт» из реестра');
-    assert.ok(html.includes('href="' + x.proverit_samim + '"'), id + ': ссылка «Проверить самим»');
-    if (x.sostoyanie === 'podklyuchen') {
-      assert.match(html, /ist-s--ok/, id);
-      if (/^\d{4}-\d\d-\d\d$/.test(x.data_nabora)) assert.ok(t.includes('работает, набор на ' + dmy(x.data_nabora)), id + ': дата набора');
-      else assert.ok(t.includes(x.data_nabora), id + ': ' + x.data_nabora);
-    } else if (x.sostoyanie === 'zamorozhen') {
-      assert.match(html, /ist-s--zam/, id);
-      assert.ok(t.includes('не обновляется с ' + dmy(x.zamorozhen_s)), id + ': дата заморозки');
-    } else {
-      assert.match(html, /ist-s--net/, id);
-      assert.ok(t.includes('не подключён'), id);
-    }
-  }
-  const zsk = R.istochniki.find((x) => x.id === 'zsk_cbr');
-  assert.ok(sekciya('doverie').includes(zsk.proverit_samim.replace('https://www.', 'https://')), 'ЗСК — ссылка на проверку Банка России');
-  assert.match(tekst(sekciya('doverie')), /Мы её не получаем и не подменяем/);
+test('главная А: таблицы «Откуда данные» нет (bez-otkuda-v1, решение 13.11); реестр источников остаётся данными', () => {
+  assert.ok(!G.includes('<!--istochniki-glavnaya-->'), 'таблицы источников на главной нет');
+  assert.ok(!/id="(doverie|why)"|data-skl|data-ne-proveryaem/.test(G), 'ни раздела, ни складной строки');
+  assert.ok(Array.isArray(R.istochniki) && R.istochniki.length >= 8, 'data/istochniki.json на месте — его читают отчёт и «Четыре вопроса»');
 });
 
 test('главная А: «Что вы увидите в отчёте» — 4 вопроса по порядку, даты из реестра', () => {
@@ -76,7 +55,7 @@ test('главная А: «Условия» без цен; кабинет — п
   assert.ok(!/₽/.test(p));
   assert.match(p, /10 проверок в день — бесплатно, без регистрации\./);
   assert.match(p, /вход по коду на почту, без пароля/);
-  for (const id of ['inn', 'vhody', 'shield', 'praktika', 'doverie', 'price', 'faq']) {
+  for (const id of ['inn', 'vhody', 'shield', 'praktika', 'price', 'faq']) {
     assert.ok(new RegExp('id="' + id + '"').test(G), 'нет якоря #' + id);
   }
   // glavnaya-6-blokov-v1: строки витрины нет — старый адрес /#vitrina уводит на /vse-vozmozhnosti/ (и по hashchange)

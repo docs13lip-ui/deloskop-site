@@ -6,7 +6,6 @@ const test = require('node:test');
 const assert = require('node:assert');
 const I = require('../js/istochniki.js');
 const S = require('../js/sushchestvennoe.js');
-const O = require('../js/otkuda.js');
 const IO = require('../js/indeks-otvet.js');
 IO.ustanovit(require('../indeks/metodika-v1.json'), require('../indeks/indeks.js'));
 const NB = ' ';
@@ -81,14 +80,6 @@ test('доля выручки «bad» → уровень bad; без анали�
   assert.strictEqual(I.dopolnit(otvet({ sudy: s })).damia.sudy.uroven, 'bad');
   const bez = sudyNajdeno({ analitika: { oshibka: 'KeyError' } });
   assert.ok(I.dopolnit(otvet({ sudy: bez })).damia.sudy.itog.startsWith('Компания — ответчик в 3'));
-});
-
-test('«Откуда данные»: найденные дела — «●» с датой, а не «ответа нет»', () => {
-  const r = I.dopolnit(otvet({ sudy: sudyNajdeno() }));
-  const o = O.istochniki(r, {});
-  const x = o.spisok.find((v) => v.k === 'damia:sudy');
-  assert.strictEqual(x.status, 'ok');
-  assert.strictEqual(x.znak, '●');
 });
 
 test('«Существенные факты»: суды — среди найденного, не в «Не проверяли»', () => {

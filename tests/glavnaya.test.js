@@ -13,13 +13,15 @@ const G = chitat('index.html');
 const MAIN = vidimoe(G.slice(G.indexOf('<main'), G.indexOf('</main>')));
 const tekst = (t) => t.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;|\u00a0/g, ' ');
 
-test('порядок блоков: hero → входы → Щит → разборы → доверие → цены → вопросы', () => {
+test('порядок блоков: hero → входы → Щит → разборы → цены → вопросы', () => {
+  // bez-otkuda-v1 (13.11): раздела «Откуда данные и чего мы не проверяем» (#doverie, #why) на главной нет
   // vitrina-v1: «Витрина экосистемы» (tests/sobrat_vitrinu.py) — сразу после входов.
   // platyat-pozzhe-v1: «Контрагенты стали платить позже» — между разборами и калькулятором; при устаревшей сверке сборщик его убирает
   // glavnaya-a-v2 (31.10, схема А): «платят позже» и калькулятор ошибки — на /vse-vozmozhnosti/; на главной от них — якоря-ссылки в строке витрины
   // glavnaya-6-blokov-v1 (решение владельца 11.11 «Все да»): строки-входа в витрину на главной нет — каталог в подвале
   assert.ok(!/id="vitrina"/.test(MAIN), 'витрины на главной нет');
-  const ids = ['class="hero"', 'id="vhody"', 'id="shield"', 'id="praktika"', 'id="doverie"', 'id="price"', 'id="faq"'];
+  const ids = ['class="hero"', 'id="vhody"', 'id="shield"', 'id="praktika"', 'id="price"', 'id="faq"'];
+  assert.ok(!/id="(doverie|why)"/.test(MAIN), 'раздела об источниках на главной нет');
   assert.ok(!/<section[^>]+id="(rynok|oshibka)"/.test(MAIN), 'секций #rynok и #oshibka на главной больше нет');
   const poz = ids.map((x) => MAIN.indexOf(x));
   assert.ok(poz.every((p) => p > 0), 'все блоки на месте: ' + ids.filter((x, i) => poz[i] < 0).join(', '));
@@ -42,7 +44,7 @@ test('первый экран: H1, title и description по ТЗ', () => {
   assert.ok(title.length <= 70, 'title ' + title.length);
   assert.ok(desc.length >= 120 && desc.length <= 160, 'description ' + desc.length);
   assert.match(MAIN, /class="doverie-str"[^>]*>У&nbsp;каждого факта&nbsp;— источник и&nbsp;дата/);
-  assert.match(MAIN, /href="#doverie"/);
+  assert.doesNotMatch(MAIN, /href="#(doverie|why)"|Откуда данные/);
 });
 
 test('«Разборы дел»: 3 карточки, все адреса существуют, обе рубрики', () => {

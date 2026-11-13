@@ -84,11 +84,11 @@ test('печать: отчёт печатается без шапки сайта
   assert.ok(R.CSS.includes('tabular-nums'));
 });
 
-test('index.html подключает модуль и зовёт его после «Откуда данные»', () => {
+test('index.html подключает модуль и зовёт его (описи «Откуда данные» под отчётом нет — bez-otkuda-v1, 13.11)', () => {
   const s = fs.readFileSync(path.join(KOREN, 'index.html'), 'utf8');
   assert.ok(s.includes('<script src="/js/rekvizity-proverki.js" defer></script>'));
   const i = s.indexOf('Otkuda.mount('), j = s.indexOf('RekvizityProverki.mount(report,r,{polucheno:new Date()})');
-  assert.ok(i > 0 && j > i);
+  assert.ok(i < 0 && j > 0);
 });
 
 test('тексты без обещаний и превосходных степеней', () => {

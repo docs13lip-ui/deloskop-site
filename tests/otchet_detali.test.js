@@ -36,7 +36,7 @@ test('ссылки «проверить …»: известные первоис
 });
 
 test('модули отчёта зовут samiTekst, а не пишут «проверьте сами» сами', () => {
-  for (const f of ['js/sushchestvennoe.js', 'js/otkuda.js', 'js/reestry-sami.js']) {
+  for (const f of ['js/sushchestvennoe.js', 'js/reestry-sami.js']) {
     const s = fs.readFileSync(path.join(KOREN, f), 'utf8');
     assert.ok(/samiT\(/.test(s), f);
     assert.ok(!/>проверьте сами<\/a>/.test(s), f + ': текст ссылки зашит');

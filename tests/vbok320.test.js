@@ -16,11 +16,6 @@ test('общий пакет: длинное слово переносится, �
   assert.match(css, /@media \(max-width:640px\)\{\.co-ind--wait \.co-ind__n\{white-space:normal\}\}/);
 });
 
-test('главная: плашки «Откуда данные» с переносами, на 320 px поля меньше', () => {
-  const h = chitat('index.html');
-  assert.match(h, /@media \(max-width:520px\)\{\.doverie \.chip\{-webkit-hyphens:auto;hyphens:auto\}\}/);
-  assert.match(h, /@media \(max-width:360px\)\{\.doverie \.chip\{padding:14px\}\}/);
-});
 
 test('поле ИНН в ряду с кнопкой сжимается (Паспорт)', () => {
   assert.match(chitat('pasport/index.html'), /\.ask input\{flex:1 1 240px;min-width:0;/);

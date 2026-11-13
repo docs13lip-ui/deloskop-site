@@ -32,12 +32,8 @@ test('реестр: суды, приставы и ЕФРСБ подключен�
   for (const id of ['eis', 'nalog_bi']) assert.strictEqual(po(id).sostoyanie, 'zamorozhen', id);
 });
 
-test('главная: таблица и строка состояния — «через Checko», без «суды не обновляем»', () => {
-  const blok = /<!--istochniki-glavnaya-->([\s\S]*?)<!--\/istochniki-glavnaya-->/.exec(G)[1];
-  for (const id of ['kad', 'fssp', 'efrsb']) {
-    const tr = new RegExp('<tr data-ist="' + id + '">([\\s\\S]*?)</tr>').exec(blok)[1];
-    assert.match(plain(tr), /ist-s--ok">работает, через Checko, на день проверки/, id);
-  }
+test('главная: без «суды не обновляем» (таблицы источников на главной нет — bez-otkuda-v1, 13.11; «через Checko» — у факта в отчёте)', () => {
+  assert.ok(!G.includes('<!--istochniki-glavnaya-->'));
   assert.ok(!/Суды, приставов и&nbsp;госзакупки сейчас не&nbsp;обновляем/.test(G));
   assert.ok(!/банкротства не&nbsp;подключены/.test(G));
 });

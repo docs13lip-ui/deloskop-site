@@ -26,14 +26,8 @@ test('правила — одним блоком только для телеф�
 
 test('«Посмотреть пример →» на телефоне — своей строкой без левого отступа (на переносе не висит в начале строки)', () => {
   assert.match(blok, /\.doverie-str \.primer-ssylka\{display:block;margin:4px 0 0\}/);
-  assert.match(gl, /<a href="#doverie">Откуда данные&nbsp;→<\/a> <a class="primer-ssylka" href="\/kak-rabotaet\/#proverka">Посмотреть пример&nbsp;→<\/a>/,
-    'обе ссылки на месте');
+  // bez-otkuda-v1 (13.11): ссылки «Откуда данные →» в строке доверия нет — остался только пример
+  assert.match(gl, /источник и&nbsp;дата\. <a class="primer-ssylka" href="\/kak-rabotaet\/#proverka">Посмотреть пример&nbsp;→<\/a>/, 'ссылка на пример на месте');
+  assert.ok(!gl.includes('href="#doverie"'), 'ссылки на раздел об источниках нет');
 });
 
-test('пояснения под источниками — вторым кеглем, текст и ссылка на ЦБ не тронуты', () => {
-  const k = Number((blok.match(/\.ist-ne,\.ist-zsk\{font-size:(\d+)px/) || [])[1]);
-  assert.ok(k >= 14 && k <= 15, 'кегль 14–15 px — не мельче строки доверия первого экрана');
-  assert.match(gl, /<p class="ist-ne" data-ne-proveryaem><b>«Не&nbsp;проверено»&nbsp;— не&nbsp;«не&nbsp;найдено»\.<\/b>/);
-  assert.ok(gl.includes('href="https://cbr.ru/counteraction_m_ter/platform_zsk/proverka-po-inn/" target="_blank" rel="noopener">Проверить по&nbsp;ИНН на&nbsp;сайте Банка России'));
-  assert.ok((gl.match(/<p class="ist-go"><a href="\/indeks\/">Как считаем Индекс&nbsp;→<\/a> <a href="\/tochnost\/">Отчёт точности&nbsp;→<\/a> <a href="\/o-proekte\/">Кто делает Делоскоп&nbsp;→<\/a><\/p>/) || []).length === 1);
-});

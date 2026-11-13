@@ -350,7 +350,9 @@ radial-gradient(38% 34% at 82% 64%,rgba(46,34,12,0.95),rgba(46,34,12,0) 70%)}
 [data-theme=dark] .otz__n{background:#1C1C1F}
 [data-theme=dark] .otz__n .otz__s{color:#A1A1A6}
 [data-theme=dark] .pp__q{border:1px solid #2E2E33;background:#1C1C1F}
-[data-theme=dark] dialog.pso::backdrop{background:rgba(255,255,255,0.468)}
+[data-theme=dark] dialog.pso{background:radial-gradient(60% 46% at 50% 18%,rgba(91,155,255,.20),transparent 70%),radial-gradient(40% 34% at 14% 78%,rgba(91,155,255,.10),transparent 70%),radial-gradient(38% 32% at 88% 70%,rgba(22,114,63,.08),transparent 70%),var(--bg,#111113)}
+[data-theme=dark] .pso__f{box-shadow:0 18px 60px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,0.035)}
+[data-theme=dark] .pso__f:focus-within{box-shadow:0 18px 60px rgba(0,0,0,.16),0 0 0 4px rgba(91,155,255,.22),inset 0 1px 0 rgba(255,255,255,0.035)}
 [data-theme=dark] .pwa__da{color:#0B0B0C}
 [data-theme=dark] .rkv>div:nth-child(even){border-left:1px solid #2E2E33}
 [data-theme=dark] .rkv>div:nth-child(n+3){border-top:1px solid #2E2E33}

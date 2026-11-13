@@ -431,7 +431,7 @@ if (u.nedostatochno) return { t: 'Не считаем', pod: 'выручка и 
 return { t: zaglavnaya(u.capRule || 'Не считаем'), ton: TON_USL[u.tone] || 'neutral' };
 }
 function yVyvod(r, u) {
-if (u) return { t: u.headline || '', pod: u.advice || '', ton: TON_USL[u.tone] || 'neutral' };
+if (u) return { t: u.headline || '', pod: u.advice || '', ton: /^Проверили не всё/.test(u.headline || '') ? 'neutral' : TON_USL[u.tone] || 'neutral' };
 return { t: (r && r.verdict) || '', ton: r && r.risk_level === 'low' ? 'ok' : r && r.risk_level === 'high' ? 'bad' : 'warn' };
 }
 function stroki(rA, rB, o) {

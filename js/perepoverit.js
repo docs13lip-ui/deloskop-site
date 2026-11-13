@@ -55,6 +55,19 @@
     };
   }
 
+  // chestnyj-nol-v1 ([команда] 13.11 п. 2, [команда] п. 1.1): суды или приставы не ответили — «Напомнить завтра»:
+  // тот же файл календаря, событие на следующий день после проверки. Ответ источника завтра не обещаем — только напоминание.
+  function srokZavtra(r) {
+    var s = srok(r);
+    if (!s) return null;
+    var den = denProverki(r.checked_at);
+    s.napomnit = ymd(den + 864e5); s.konec = ymd(den + 2 * 864e5); s['do'] = ru(den + 864e5);
+    s.zag = 'Проверить ' + s.imya + ' ещё раз: суды и приставы';
+    s.opis = 'Проверка в Делоскопе от ' + s.proveren + ': суды и приставы в этот день не ответили, вывода о рисках не было. Проверьте компанию ещё раз.\n' + s.ssylka;
+    s.uid = 'zavtra';
+    return s;
+  }
+
   // RFC 5545 §3.3.11: \ ; , и перевод строки — экранируются
   function tekst(s) { return String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n'); }
   // RFC 5545 §3.1: строка не длиннее 75 октетов, продолжение — CRLF + пробел; символ UTF-8 не режем
@@ -79,12 +92,12 @@
   function ics(s, seichas) {
     if (!s) return '';
     var zag = s.zag || ('Перепроверить ' + s.imya + ' перед следующей оплатой');
-    var opis = 'Проверка в Делоскопе от ' + s.proveren + '. Перепроверить до ' + s['do'] +
-      ': сведения реестров меняются, открытые данные ФНС обновляются раз в месяц.\n' + s.ssylka;
+    var opis = s.opis || ('Проверка в Делоскопе от ' + s.proveren + '. Перепроверить до ' + s['do'] +
+      ': сведения реестров меняются, открытые данные ФНС обновляются раз в месяц.\n' + s.ssylka);
     var L = [
       'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Deloskop//Perepoverit//RU', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
       'BEGIN:VEVENT',
-      'UID:perepoverit-' + s.inn + '-' + s.konec + '@deloskop.ru',
+      'UID:' + (s.uid ? s.uid + '-' : 'perepoverit-') + s.inn + '-' + s.konec + '@deloskop.ru',
       'DTSTAMP:' + shtamp(seichas == null ? Date.now() : seichas),
       'DTSTART;VALUE=DATE:' + s.napomnit,
       'DTEND;VALUE=DATE:' + s.konec,
@@ -133,7 +146,7 @@
 
   function skachat(doc, s) {
     var txt = ics(s);
-    var imya = 'perepoverit-' + s.inn + '.ics';
+    var imya = (s.uid ? s.uid + '-' : 'perepoverit-') + s.inn + '.ics';
     var url, blob = null;
     try { blob = new Blob([txt], { type: 'text/calendar;charset=utf-8' }); url = URL.createObjectURL(blob); }
     catch (e) { url = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(txt); }
@@ -168,5 +181,5 @@
     return true;
   }
 
-  return { srok: srok, ics: ics, html: html, kletka: kletka, mount: mount, skachat: skachat, slozhit: slozhit, DNEJ: DNEJ, CSS: CSS };
+  return { srok: srok, srokZavtra: srokZavtra, ics: ics, html: html, kletka: kletka, mount: mount, skachat: skachat, slozhit: slozhit, DNEJ: DNEJ, CSS: CSS };
 });

@@ -301,7 +301,9 @@
   var NE_ZNACHIT = 'Не проверено — не значит «не обнаружено».';
   var TXT_TOCHNOST = 'Индекс — оценка признаков по' + NB + 'открытым данным. Насколько она совпадает с' + NB + 'реальными исходами, покажем в' + NB + '<a href="/tochnost/">публичном отчёте точности</a>.';
   function strokaNe(v) { return 'Не учитывали в этот раз: ' + v.neUchityvali.join('; ') + '. ' + NE_ZNACHIT; }
-  var TXT_NEIZV = 'Индекс — считаем: в' + NB + 'проверке есть сигнал, который методика v1 пока не' + NB + 'оценивает. Он показан в' + NB + 'фактах ниже.';
+  // chestnyj-nol-v2 ([команда] 13.11 09:40 п. 7): «Индекс — считаем» читалось как загрузка, а это итог
+  var ZAG_NEIZV = 'Индекс не' + NB + 'выводим';
+  var TXT_NEIZV = 'Индекс не' + NB + 'выводим: есть сигнал, который методика v1 не' + NB + 'оценивает. Он' + NB + '— в' + NB + 'фактах ниже.';
   var ZAG_SOKR = 'Индекс — данных пока' + NB + 'мало';
   // chestnyj-nol-v1: причина — суды и приставы, а не полнота; одна формулировка счёта «Проверено N из M источников»
   var ZAG_MALO = 'Индекс — мало сведений для' + NB + 'расчёта';
@@ -345,7 +347,7 @@
         '<div class="ot-ix__po n">' + podpis(v) + ' · <a href="/indeks/">методика</a></div>';
     }
     if (v.rezhim === 'neizv')
-      return h + '<div class="ot-ix__ne">Индекс — считаем</div><div class="ot-ix__po">' + TXT_NEIZV.replace(/^Индекс — считаем: в/, 'В') + '</div>' +
+      return h + '<div class="ot-ix__ne">' + ZAG_NEIZV + '</div><div class="ot-ix__po">' + TXT_NEIZV.replace(/^Индекс не\u00a0выводим: е/, 'Е') + '</div>' +
         '<div class="ot-ix__lv"><a href="/indeks/">методика</a></div>';
     if (v.rezhim === 'stop')
       return h + '<div class="ot-ix__big ot-ix__lv--bad">Стоп</div><div class="ot-ix__lv ot-ix__lv--bad">' + esc(v.stop) + '</div>' +
@@ -389,5 +391,5 @@
   }
 
   return { izOtveta: izOtveta, vid: vid, ball: ball, htmlKolonka: htmlKolonka, gotov: gotov, gotovo: gotovo, ustanovit: ustanovit, faktor: faktor, shkala: shkala, versiya: versiya,
-    rubli: rubli, TXT_NEIZV: TXT_NEIZV, ZAG_SOKR: ZAG_SOKR, ZAG_MALO: ZAG_MALO, txtSokr: txtSokr, neHvataet: neHvataet, strokaNe: strokaNe, podpis: podpis };
+    rubli: rubli, TXT_NEIZV: TXT_NEIZV, ZAG_NEIZV: ZAG_NEIZV, ZAG_SOKR: ZAG_SOKR, ZAG_MALO: ZAG_MALO, txtSokr: txtSokr, neHvataet: neHvataet, strokaNe: strokaNe, podpis: podpis };
 });

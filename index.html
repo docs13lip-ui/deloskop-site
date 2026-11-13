@@ -428,7 +428,7 @@ footer a{color:var(--ink2)}
 @media print{.lp{display:none!important}}
 </style>
 <!-- vizual-v3.0a: стили и скрипты главной — пятью файлами вместо 17 (partials/sborka.json, tests/sobrat_js.py) -->
-<link rel="stylesheet" href="/css/b/ds.8bbf9da185.css">
+<link rel="stylesheet" href="/css/b/ds.6493b10ced.css">
 <link rel="stylesheet" href="/css/b/glavnaya-stil.9e49808b4f.css">
 <script src="/js/b/yadro.15246be2b0.js" defer></script>
 <script src="/js/b/glavnaya.c1e69dc1ae.js" defer></script>
@@ -810,7 +810,7 @@ footer a{color:var(--ink2)}
   // primer-legkij-v1 (25.10): пример «Условий сделки» просит только пакет «primer» (usloviya + sushchestvennoe + status-kod, ~130 КБ), а не весь отчёт (~535 КБ):
   // сервер пока отдаёт без сжатия, и каждый заход на главную без проверки скачивал полмегабайта. Весь отчёт — при проверке и намерении проверить.
   // Оба тега — async=false: исполняются в порядке вставки (как defer), «primer» всегда раньше «otchet».
-  var PRIMER_JS='/js/b/primer.20f12ec7b6.js', OTCHET_JS='/js/b/otchet.5761330b19.js', primerP=null, moduliP=null;
+  var PRIMER_JS='/js/b/primer.502e7a7609.js', OTCHET_JS='/js/b/otchet.c84dc66228.js', primerP=null, moduliP=null;
   function teg(src){return new Promise(function(ok){var s=document.createElement('script');s.src=src;s.async=false;s.onload=s.onerror=function(){ok()};document.head.appendChild(s);});}
   function gruzitPrimer(){if(!primerP)primerP=teg(PRIMER_JS);return primerP;}
   function gruzitModuli(){if(moduliP)return moduliP;var p=gruzitPrimer();moduliP=Promise.all([p,teg(OTCHET_JS)]);return moduliP;}

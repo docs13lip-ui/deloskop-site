@@ -1156,6 +1156,8 @@ var CSS = '' +
 '@media (max-width:520px){.usl{padding:16px 14px}.usl-t{font-size:17px}.usl-sum{grid-template-columns:1fr}.usl select{max-width:none;width:100%}}' +
 '@media print{.usl .usl-napr,.usl .usl-watch,.usl .usl-sum,.usl .usl-btns,.usl summary:after{display:none!important}.usl details>*{display:block}.usl{background:none;border:1px solid #E6E6E1}}';
 function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+CSS += '.usl-zavtra{align-self:flex-start;min-height:44px;border:1px solid #D9D9D4;background:#fff;font:inherit;font-size:15px;font-weight:600;border-radius:10px;padding:9px 14px;cursor:pointer;color:var(--ink,#1D1D1F)}' +
+'.usl-zavtra:hover,.usl-zavtra:focus-visible{border-color:var(--accent,#0B63E5);color:var(--accent,#0B63E5)}@media print{.usl .usl-zavtra{display:none!important}}';
 CSS += '.usl-rynok{margin:-4px 0 0;font-size:13px;line-height:1.45;color:var(--muted,#66666B)}';
 function injectCss(doc) {
 if (doc.getElementById('usl-css')) return;
@@ -1244,7 +1246,9 @@ last = draw(fokus);
 });
 function draw(keepFocus) {
 var v = decide(r, st), f = v.facts;
-box.className = 'usl ' + v.tone + (v.nedostatochno || (v.tone === 'go' && neOtvetiliSudyFssp(v.predvaritelno)) ? ' ned' : '');
+var neVse = v.tone === 'go' && !!neOtvetiliSudyFssp(v.predvaritelno);
+var PP = win && win.Perepoverit, zavtra = neVse && !o.compact && PP && PP.srokZavtra ? PP.srokZavtra(r) : null;
+box.className = 'usl ' + v.tone + (v.nedostatochno || neVse ? ' ned' : '');
 var why = v.reasons.length ? v.reasons.join(', ') : chestnoPoyasnenie(r, bezPovtora(r && r.verdict, v.headline));
 var stake = '';
 if (v.stake) {
@@ -1264,7 +1268,7 @@ box.innerHTML = napr +
 '<div class="usl-t">' + esc(v.headline) + '</div>' +
 (why ? '<p class="usl-r">' + esc(why.charAt(0).toUpperCase() + why.slice(1)) + '.</p>' : '') +
 '</div></div>' +
-'<p class="usl-a">' + esc(v.advice) + '</p>' + (rynok ? '<p class="usl-rynok">' + esc(rynok) + '</p>' : '') + watch +
+'<p class="usl-a">' + esc(v.advice) + '</p>' + (zavtra ? '<button type="button" class="usl-zavtra" data-u="zavtra">Напомнить завтра</button>' : '') + (rynok ? '<p class="usl-rynok">' + esc(rynok) + '</p>' : '') + watch +
 (o.compact ? '' :
 '<div class="usl-sum"><label for="' + uid + 'a">' + (otg ? 'Сумма отгрузки' : 'Сумма сделки — посчитаем предоплату и деньги на кону') + '</label>' +
 '<div class="usl-in"><input id="' + uid + 'a" inputmode="numeric" autocomplete="off" placeholder="например, 500 000" value="' + (st.amount ? esc(money(st.amount).replace(/ ₽$/, '')) : '') + '"><span>₽</span></div>' +
@@ -1306,6 +1310,12 @@ var nb = box.querySelector('[data-napr="' + n + '"]'); if (nb) nb.focus();
 var sobytie = function () { try { if (win && win.dlkSobytie && !otg) win.dlkSobytie('zapros_copy'); } catch (_) {} };
 var ml = box.querySelector('[data-u="mail"]');
 if (ml) ml.addEventListener('click', sobytie);
+var zb = box.querySelector('[data-u="zavtra"]');
+if (zb) zb.addEventListener('click', function () {
+try { PP.skachat(doc, zavtra); } catch (_) {}
+cel('napomnit_zavtra');
+zb.textContent = 'Файл календаря скачан';
+});
 var cp = box.querySelector('[data-u="copy"]');
 if (cp) cp.addEventListener('click', function () {
 sobytie();

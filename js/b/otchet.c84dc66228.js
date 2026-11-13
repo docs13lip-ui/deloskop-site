@@ -733,6 +733,16 @@ ssylka: dop && /^https:\/\/deloskop\.ru\//.test(dop.ssylka || '') ? dop.ssylka :
 zag: dop && dop.zag ? String(dop.zag) : ''
 };
 }
+function srokZavtra(r) {
+var s = srok(r);
+if (!s) return null;
+var den = denProverki(r.checked_at);
+s.napomnit = ymd(den + 864e5); s.konec = ymd(den + 2 * 864e5); s['do'] = ru(den + 864e5);
+s.zag = 'Проверить ' + s.imya + ' ещё раз: суды и приставы';
+s.opis = 'Проверка в Делоскопе от ' + s.proveren + ': суды и приставы в этот день не ответили, вывода о рисках не было. Проверьте компанию ещё раз.\n' + s.ssylka;
+s.uid = 'zavtra';
+return s;
+}
 function tekst(s) { return String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n'); }
 function slozhit(line) {
 var out = [], cur = '', n = 0, lim = 75;
@@ -753,12 +763,12 @@ return d.getUTCFullYear() + z(d.getUTCMonth() + 1) + z(d.getUTCDate()) + 'T' + z
 function ics(s, seichas) {
 if (!s) return '';
 var zag = s.zag || ('Перепроверить ' + s.imya + ' перед следующей оплатой');
-var opis = 'Проверка в Делоскопе от ' + s.proveren + '. Перепроверить до ' + s['do'] +
-': сведения реестров меняются, открытые данные ФНС обновляются раз в месяц.\n' + s.ssylka;
+var opis = s.opis || ('Проверка в Делоскопе от ' + s.proveren + '. Перепроверить до ' + s['do'] +
+': сведения реестров меняются, открытые данные ФНС обновляются раз в месяц.\n' + s.ssylka);
 var L = [
 'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Deloskop//Perepoverit//RU', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
 'BEGIN:VEVENT',
-'UID:perepoverit-' + s.inn + '-' + s.konec + '@deloskop.ru',
+'UID:' + (s.uid ? s.uid + '-' : 'perepoverit-') + s.inn + '-' + s.konec + '@deloskop.ru',
 'DTSTAMP:' + shtamp(seichas == null ? Date.now() : seichas),
 'DTSTART;VALUE=DATE:' + s.napomnit,
 'DTEND;VALUE=DATE:' + s.konec,
@@ -800,7 +810,7 @@ var st = doc.createElement('style'); st.id = 'pp-css'; st.textContent = CSS; (do
 }
 function skachat(doc, s) {
 var txt = ics(s);
-var imya = 'perepoverit-' + s.inn + '.ics';
+var imya = (s.uid ? s.uid + '-' : 'perepoverit-') + s.inn + '.ics';
 var url, blob = null;
 try { blob = new Blob([txt], { type: 'text/calendar;charset=utf-8' }); url = URL.createObjectURL(blob); }
 catch (e) { url = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(txt); }
@@ -832,7 +842,7 @@ b.textContent = 'Файл календаря скачан';
 };
 return true;
 }
-return { srok: srok, ics: ics, html: html, kletka: kletka, mount: mount, skachat: skachat, slozhit: slozhit, DNEJ: DNEJ, CSS: CSS };
+return { srok: srok, srokZavtra: srokZavtra, ics: ics, html: html, kletka: kletka, mount: mount, skachat: skachat, slozhit: slozhit, DNEJ: DNEJ, CSS: CSS };
 });
 ;
 /* --- /js/shchit.js --- */
@@ -4333,7 +4343,8 @@ return 'По открытой методике v' + esc(v.versiya) + ' · ' + v.
 var NE_ZNACHIT = 'Не проверено — не значит «не обнаружено».';
 var TXT_TOCHNOST = 'Индекс — оценка признаков по' + NB + 'открытым данным. Насколько она совпадает с' + NB + 'реальными исходами, покажем в' + NB + '<a href="/tochnost/">публичном отчёте точности</a>.';
 function strokaNe(v) { return 'Не учитывали в этот раз: ' + v.neUchityvali.join('; ') + '. ' + NE_ZNACHIT; }
-var TXT_NEIZV = 'Индекс — считаем: в' + NB + 'проверке есть сигнал, который методика v1 пока не' + NB + 'оценивает. Он показан в' + NB + 'фактах ниже.';
+var ZAG_NEIZV = 'Индекс не' + NB + 'выводим';
+var TXT_NEIZV = 'Индекс не' + NB + 'выводим: есть сигнал, который методика v1 не' + NB + 'оценивает. Он' + NB + '— в' + NB + 'фактах ниже.';
 var ZAG_SOKR = 'Индекс — данных пока' + NB + 'мало';
 var ZAG_MALO = 'Индекс — мало сведений для' + NB + 'расчёта';
 function txtSokr(v) {
@@ -4370,7 +4381,7 @@ return h + '<div class="ot-ix__ne">' + ZAG_SOKR + '</div>' +
 '<div class="ot-ix__po n">' + podpis(v) + ' · <a href="/indeks/">методика</a></div>';
 }
 if (v.rezhim === 'neizv')
-return h + '<div class="ot-ix__ne">Индекс — считаем</div><div class="ot-ix__po">' + TXT_NEIZV.replace(/^Индекс — считаем: в/, 'В') + '</div>' +
+return h + '<div class="ot-ix__ne">' + ZAG_NEIZV + '</div><div class="ot-ix__po">' + TXT_NEIZV.replace(/^Индекс не\u00a0выводим: е/, 'Е') + '</div>' +
 '<div class="ot-ix__lv"><a href="/indeks/">методика</a></div>';
 if (v.rezhim === 'stop')
 return h + '<div class="ot-ix__big ot-ix__lv--bad">Стоп</div><div class="ot-ix__lv ot-ix__lv--bad">' + esc(v.stop) + '</div>' +
@@ -4405,7 +4416,7 @@ else if (root.addEventListener) root.addEventListener('DOMContentLoaded', functi
 }).catch(function () {});
 }
 return { izOtveta: izOtveta, vid: vid, ball: ball, htmlKolonka: htmlKolonka, gotov: gotov, gotovo: gotovo, ustanovit: ustanovit, faktor: faktor, shkala: shkala, versiya: versiya,
-rubli: rubli, TXT_NEIZV: TXT_NEIZV, ZAG_SOKR: ZAG_SOKR, ZAG_MALO: ZAG_MALO, txtSokr: txtSokr, neHvataet: neHvataet, strokaNe: strokaNe, podpis: podpis };
+rubli: rubli, TXT_NEIZV: TXT_NEIZV, ZAG_NEIZV: ZAG_NEIZV, ZAG_SOKR: ZAG_SOKR, ZAG_MALO: ZAG_MALO, txtSokr: txtSokr, neHvataet: neHvataet, strokaNe: strokaNe, podpis: podpis };
 });
 ;
 /* --- /js/otchet.js --- */

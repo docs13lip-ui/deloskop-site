@@ -103,7 +103,9 @@ test('(в) неизвестная warn/bad-строка → числа нет, �
   assert.strictEqual(v.rezhim, 'neizv');
   assert.strictEqual(v.ball, undefined);
   const h = IO.htmlKolonka(v);
-  assert.ok(h.includes('Индекс — считаем') && h.includes('методика v1 пока не' + NB + 'оценивает'));
+  // chestnyj-nol-v2 ([команда] 13.11 09:40 п. 7): итог, а не загрузка — «Индекс не выводим»
+  assert.ok(h.includes('Индекс не' + NB + 'выводим') && h.includes('Есть сигнал, который методика v1 не' + NB + 'оценивает. Он' + NB + '— в' + NB + 'фактах ниже.'), h);
+  assert.ok(!h.includes('считаем'), h);
   assert.ok(!/ot-ix__big/.test(h));
 });
 

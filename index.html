@@ -409,6 +409,22 @@ footer a{color:var(--ink2)}
 .ceny .usl a{display:inline;margin:0;white-space:nowrap}
 .ceny .kanaly-glav{margin-top:18px}
 .ceny .kanaly-glav a{display:inline;margin:0}
+/* poisk-v2-c: линза поиска (js/linza-poisk.js, пакет грузится, когда блок виден) — два кольца сходятся по мере ввода; холст только в своём блоке; CSS-кадр — запасной */
+.hero-text{position:relative}
+.lp{position:relative;align-self:flex-start;height:clamp(84px,8.6vw,116px);aspect-ratio:1.6;margin:-30px 0 -8px -6px;pointer-events:none;contain:layout style}
+.lp__gl{position:absolute;inset:-22% -16%;width:132%;height:144%;display:block;opacity:0;transition:opacity .4s var(--ease,ease)}
+.lp--gl .lp__gl{opacity:1}
+.lp__k{position:absolute;inset:0;display:block}
+.lp__k::before,.lp__k::after{content:"";position:absolute;top:50%;left:50%;height:61%;aspect-ratio:1;border-radius:50%;border:max(3px,.09em) solid var(--ink);transform:translate(-86%,-50%);transition:transform .5s var(--ease,ease),border-color .3s;font-size:clamp(36px,4vw,56px)}
+.lp__k::after{border-color:var(--accent);transform:translate(-14%,-50%)}
+.lp[data-sost=vvod] .lp__k::before{transform:translate(-74%,-50%)}.lp[data-sost=vvod] .lp__k::after{transform:translate(-26%,-50%)}
+.lp[data-sost=raspoznano] .lp__k::before{transform:translate(-64%,-50%)}.lp[data-sost=raspoznano] .lp__k::after{transform:translate(-36%,-50%)}
+.lp[data-sost=opechatka] .lp__k::after{border-color:var(--warn)}
+.lp--gl .lp__k{visibility:hidden}
+.rezhim-otcheta .lp{display:none}
+@media (max-width:520px){.lp{position:absolute;top:-10px;right:-4px;height:36px;aspect-ratio:auto;width:56px;margin:0}.lp__gl{inset:-30% -18%;width:136%;height:160%}.lp__k::before,.lp__k::after{border-width:2.5px}.hero h1.hero-h1 .h1-kicker{padding-right:64px}}
+@media (prefers-reduced-motion:reduce){.lp__k::before,.lp__k::after,.lp__gl{transition:none}}
+@media print{.lp{display:none!important}}
 </style>
 <!-- vizual-v3.0a: стили и скрипты главной — пятью файлами вместо 17 (partials/sborka.json, tests/sobrat_js.py) -->
 <link rel="stylesheet" href="/css/b/ds.c6634a0936.css">
@@ -474,6 +490,7 @@ footer a{color:var(--ink2)}
   <section class="hero" data-set data-set-pole="inn">
     <div class="wrap">
       <div class="hero-text">
+        <div class="lp" data-sost="zhdet" data-lp-src="/js/b/linza-poisk.1b1aad882b.js" aria-hidden="true"><span class="lp__k"></span><canvas class="lp__gl"></canvas></div><script>/* poisk-v2-c: пакет линзы — только когда блок виден и браузер свободен; без WebGL и при «уменьшить движение» CSS-кадр остаётся */!function(d,w){var e=d.currentScript.previousElementSibling,s;if(!e||!("IntersectionObserver"in w))return;var o=new IntersectionObserver(function(z){if(!z[0].isIntersecting||s)return;o.disconnect();(w.requestIdleCallback||function(f){setTimeout(f,300)})(function(){s=d.createElement("script");s.src=e.getAttribute("data-lp-src");s.async=!0;d.head.appendChild(s)},{timeout:2500})});o.observe(e)}(document,window)</script>
         <h1 class="hero-h1"><span class="h1-kicker">Проверка контрагента по&nbsp;ИНН</span> <span class="glavnaya-display">Проверьте контрагента. Поймите, что сделать до&nbsp;оплаты.</span></h1>
         <p class="lead">Открытые госреестры&nbsp;— простыми словами: что известно о&nbsp;компании, насколько полна проверка и&nbsp;что запросить до&nbsp;оплаты.</p>
         <form class="check" id="check" novalidate>

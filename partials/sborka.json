@@ -82,6 +82,9 @@
       "js/poisk.js",
       "js/poisk-okno.js"
     ],
+    "linza-poisk": [
+      "js/linza-poisk.js"
+    ],
     "sravnit": [
       "js/istochniki.js",
       "js/imya.js",
@@ -96,7 +99,8 @@
       "glavnaya",
       "glavnaya-sinhr",
       "primer",
-      "otchet"
+      "otchet",
+      "linza-poisk"
     ],
     "sravnit/index.html": [
       "glavnaya-sinhr",

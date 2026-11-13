@@ -50,8 +50,8 @@ test('«Щит»: вставка названия с ИНН — сам ИНН; �
 test('главная и пустой отчёт подключены', () => {
   const g = chitat('index.html');
   assert.match(g, /else if\(window\.DlkInn&&DlkInn\.vNazvanii\)\{var tn=DlkInn\.vNazvanii\(v\);if\(tn\)\{v=digits=tn;input\.value=tn;\}\}/, 'submit');
-  assert.match(g, /var qn=\(window\.DlkInn&&DlkInn\.vNazvanii&&DlkInn\.vNazvanii\(q\)\)\|\|PR\.nazvanie;/, 'подсказка по ИНН из названия (poisk-v2-a: иначе — текст с исправленной раскладкой)');
-  assert.match(g, /encodeURIComponent\(qn\)/);
+  assert.match(g, /if\(PR\.nazvanie&&qs===PR\.nazvanie\)qs=\(window\.DlkInn&&DlkInn\.vNazvanii&&DlkInn\.vNazvanii\(q\)\)\|\|qs;/, 'подсказка по ИНН из названия (poisk-v2-d: иначе — текст с исправленной раскладкой)');
+  assert.match(g, /P\.zapros\(CAPI,qs,fetch\.bind\(window\)\)/, "запрос — уточнённой строкой qs (encodeURIComponent — внутри DlkPoisk.zapros)");
   assert.match(g, /DlkInn\.izTeksta\(mi\.value\)\)\|\|\(window\.DlkInn&&DlkInn\.vNazvanii&&DlkInn\.vNazvanii\(mi\.value\)\)\|\|/, 'Щит');
   const r = chitat('report.html');
   assert.match(r, /var vn=!rk&&window\.DlkInn&&DlkInn\.vNazvanii&&DlkInn\.vNazvanii\(i\.value\);if\(vn\)\{rk=true;v=vn;\}/);

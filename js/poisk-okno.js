@@ -39,6 +39,7 @@
     '.pso .sugg li.ps-gh{cursor:default;padding:10px 12px 2px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#66666B)}' +
     '.pso .ps-tag{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-style:normal;font-size:12px;color:var(--muted,#66666B);border:1px solid var(--line,#E6E6E1);border-radius:999px;padding:2px 8px;white-space:nowrap}' +
     '.pso .ps-tag--ent{color:var(--ink,#1D1D1F);border-color:var(--accent,#0B63E5)}' +
+    '.pso .ps-tag--warn{color:var(--warn,#9A5B00);border-color:currentColor}.pso .ps-tag--niz{position:static;transform:none;align-self:flex-start;margin-top:4px}' +
     '.pso .sugg li.ps-ex{flex-direction:row;flex-wrap:wrap;gap:8px;cursor:default;padding:6px 12px 10px}' +
     '.pso .ps-ex button{border:1px solid var(--line,#E6E6E1);background:transparent;color:var(--ink-2,#55555A);border-radius:999px;padding:7px 13px;font:inherit;font-size:13px;cursor:pointer;min-height:36px}' +
     '.pso .ps-ex button:hover{color:var(--ink,#1D1D1F);border-color:var(--accent,#0B63E5)}' +
@@ -96,24 +97,27 @@
   }
   function vidVybora(r) { return r.inn ? (r.imya ? 'kompaniya' : 'inn') : r.q ? 'nazvanie' : r.razdel ? 'razdel' : 'instrument'; }
   function vybrat(i, sposob) {
-    var r = rows[i], u = kuda(r);
+    var r = rows[i];
+    if (r && r.dopisat) { goal('poisk_vybor', { vid: 'dopisat', mesto: 'okno', sposob: sposob, nomer: i }); input.value = r.q; input.focus(); input.dispatchEvent(new Event('input')); return true; }
+    var u = kuda(r);
     if (!u) return false;
     goal('poisk_vybor', { vid: pustoe ? 'nedavnie' : vidVybora(r), mesto: 'okno', sposob: sposob, nomer: i });
     zakryt(true);
     location.href = u;
     return true;
   }
+  // poisk-v2-d: тот же сервер, что у главной, — /api/poisk (банк по БИК, компании по ОКВЭД и названию); молчит — /api/suggest
   function podskazki() {
     clearTimeout(tmr);
-    var q = input.value.trim();
+    var q = input.value.trim(), qs = P.chtoSprosit ? P.chtoSprosit(PR, q) : '';
     items = [];
-    if (!API || !PR || !PR.nazvanie || q.length < 3 || /^\d+$/.test(q)) return;
+    if (!API || !qs) return;
     tmr = setTimeout(function () {
       lastQ = q;
-      fetch(API + '/api/suggest?q=' + encodeURIComponent(PR.nazvanie)).then(function (r) { return r.ok ? r.json() : { items: [] }; })
+      P.zapros(API, qs, fetch.bind(window))
         .then(function (j) {
           if (lastQ !== input.value.trim() || !dlg.open) return;
-          items = P.stroki(j.items, window.DlkImya ? window.DlkImya.kavychki : null);
+          items = P.otvet(PR, j, window.DlkImya ? window.DlkImya.kavychki : null, q);
           rows = P.sobrat(PR, items); sel = P.pervoe(rows); list.innerHTML = P.html(PR, rows, sel); otmetit();
         }).catch(function () {});
     }, 250);

@@ -94,7 +94,7 @@
     });
     if (acc && bik) {
       var ok = kluchOk(bik, acc), tip = TIP[acc.slice(0, 5)] || 'счёт', val = VAL[acc.slice(5, 8)] || 'валюта ' + acc.slice(5, 8);
-      R.vid = 'schet_bik'; R.exact = ok; R.err = !ok;
+      R.vid = 'schet_bik'; R.exact = ok; R.err = !ok; R.bik = bik;
       R.chip = ok ? 'Счёт и БИК: ключ сходится' : 'Счёт и БИК: ключ не сходится';
       R.hint = tip + ' · ' + val + (ok ? '' : '. В номере счёта или БИК опечатка' + NB + '— платёж не пройдёт');
       row('Действие', 'Проверить счёт перед оплатой', (inn ? 'ИНН ' + inn + ' · ' : '') + 'счёт ' + acc.slice(0, 5) + '…' + acc.slice(-4) + ' · БИК ' + bik, { href: '/proverit-schet/' });
@@ -104,6 +104,8 @@
     }
     if (!bukv && inn && kpp) { R.vid = 'inn_kpp'; R.exact = true; R.chip = 'ИНН и КПП'; R.hint = 'ИНН ' + inn + ' · КПП ' + kpp + NB + '— контрольная цифра ИНН верна'; otchet(inn); return R; }
 
+    // ОКВЭД — до «только цифры»: «47.11» не ИНН с нехваткой цифр (poisk-v2-d)
+    if (/^\d{2}(\.\d{1,2}){1,2}$/.test(t)) { R.vid = 'okved'; R.exact = true; R.chip = 'Код ОКВЭД'; R.hint = 'Вид деятельности ' + t; row('Действие', 'Рейтинг компаний', 'По регионам и отраслям', { href: '/reyting/' }); return R; }
     // только цифры
     if (!bukv && d.length >= 1) {
       if (d.length === 10 || d.length === 12) {
@@ -124,7 +126,7 @@
         else { R.vid = 'ogrn_oshibka'; R.err = true; R.chip = 'ОГРН с опечаткой'; R.hint = 'Контрольная цифра не сходится'; row('Подсказка', 'Проверьте цифры ОГРН', 'В ОГРН 13 цифр, в ОГРНИП' + NB + '— 15', { tag: 'опечатка' }); }
         return R;
       }
-      if (d.length === 9 && /^04/.test(d)) { R.vid = 'bik'; R.exact = true; R.chip = 'БИК банка'; R.hint = 'Добавьте номер счёта через пробел' + NB + '— сверим ключ'; row('Действие', 'Проверить счёт перед оплатой', 'Банк по БИК, ключ счёта, поставщик', { href: '/proverit-schet/' }); return R; }
+      if (d.length === 9 && /^04/.test(d)) { R.vid = 'bik'; R.bik = d; R.exact = true; R.chip = 'БИК банка'; R.hint = 'Добавьте номер счёта через пробел' + NB + '— сверим ключ'; row('Действие', 'Проверить счёт перед оплатой', 'Банк по БИК, ключ счёта, поставщик', { href: '/proverit-schet/' }); return R; }
       if (d.length === 9) { R.vid = 'kpp'; R.chip = 'Похоже на КПП'; R.hint = 'КПП сам компанию не определяет' + NB + '— добавьте ИНН'; row('Подсказка', 'Добавьте ИНН', 'ИНН и КПП стоят рядом в счёте и договоре', { tag: 'нужно ещё' }); return R; }
       if (d.length === 20) {
         R.vid = 'schet'; R.chip = 'Номер счёта'; R.hint = (TIP[d.slice(0, 5)] || 'счёт') + ' · ' + (VAL[d.slice(5, 8)] || 'валюта ' + d.slice(5, 8)) + '. Добавьте БИК' + NB + '— сверим ключ';
@@ -146,8 +148,6 @@
     // почта и сайт
     var mail = t.match(/^[^\s@]+@([a-z0-9а-яё\-]+\.[a-zа-яё.\-]{2,})$/i), dom = t.match(/^(?:https?:\/\/)?(?:www\.)?([a-z0-9а-яё\-]+(?:\.[a-zа-яё0-9\-]+)*\.[a-zа-яё]{2,})(?:\/\S*)?$/i);
     if (mail || dom) { R.vid = mail ? 'pochta' : 'sajt'; R.exact = true; R.chip = mail ? 'Почта' : 'Сайт'; R.hint = 'Поиск организации по ' + (mail ? 'почте из ЕГРЮЛ' : 'сайту') + NB + '— скоро'; row('Скоро', mail ? 'Организация по почте' : 'Организация по сайту', mail ? 'Только адрес, который указан в ЕГРЮЛ' : 'Только если организация сама указала сайт', { tag: 'скоро' }); return R; }
-    // ОКВЭД
-    if (/^\d{2}(\.\d{1,2}){1,2}$/.test(t)) { R.vid = 'okved'; R.exact = true; R.chip = 'Код ОКВЭД'; R.hint = 'Вид деятельности ' + t; row('Действие', 'Рейтинг компаний', 'По регионам и отраслям', { href: '/reyting/' }); return R; }
 
     // текст: раскладка → компании (подсказки ЕГРЮЛ с сервера) → разделы → руководитель
     var txt = t, popr = '';
@@ -176,17 +176,73 @@
     for (var i = 0; i < ch.length; i++) if (/^(г|город)\.?\s/i.test(ch[i])) return ch[i].replace(/^(г|город)\.?\s+/i, '');
     return '';
   }
-  // Только организации (10 цифр); вторая строка — то, что отличает тёзок: город · с какого года · вид деятельности · ИНН
-  function stroki(items, imya) {
-    return (items || []).filter(function (it) { return it && /^\d{10}$/.test(String(it.inn || '')); }).slice(0, 7).map(function (it) {
-      var c = [], g = it.gorod || gorod(it.address);
+  // Только организации (10 цифр); вторая строка — то, что отличает тёзок: город · годы · вид деятельности · ИНН.
+  // poisk-v2-d: порядок сервера сохраняем, затем устойчиво — действующие → филиалы → закрытые (их тоже проверяют — не прячем);
+  // вид деятельности словами, пока сервер не отдаёт okved_tekst, — кодом «ОКВЭД 47.11»; метка «ликвидирована», «банкротство» — тёплым цветом
+  var WARN = { LIQUIDATING: 1, LIQUIDATED: 1, BANKRUPT: 1 };
+  // ровно одна пара прямых кавычек → «ёлочки»; вложенные оставляем прямыми, чтобы не перевернуть
+  function kavychki(n) { n = String(n == null ? '' : n); return (n.match(/"/g) || []).length === 2 ? n.replace(/"([^"]+)"/, '«$1»') : n; }
+  function zakryta(it) { return it.status === 'LIQUIDATED' || !!it.god_po; }
+  function stroki(items, imya, gruppa) {
+    var a = (items || []).filter(function (it) { return it && /^\d{10}$/.test(String(it.inn || '')); });
+    a = a.map(function (it, i) { return [zakryta(it) ? 2 : it.filial ? 1 : 0, i, it]; })
+      .sort(function (x, y) { return x[0] - y[0] || x[1] - y[1]; }).map(function (x) { return x[2]; });
+    return a.slice(0, 7).map(function (it) {
+      var c = [], g = it.gorod || gorod(it.address), ok = String(it.okved_tekst || '');
       if (g) c.push(g);
       if (it.god_s) c.push(it.god_po ? it.god_s + '–' + it.god_po : 'с ' + it.god_s);
-      if (it.okved_tekst) c.push(String(it.okved_tekst).length > 38 ? String(it.okved_tekst).slice(0, 37) + '…' : it.okved_tekst);
+      if (ok) c.push(ok.length > 38 ? ok.slice(0, 37) + '…' : ok);
+      else if (/^\d{2}(\.\d{1,2}){0,2}$/.test(String(it.okved || ''))) c.push('ОКВЭД ' + it.okved);
       c.push('ИНН ' + it.inn);
-      var n = imya ? imya(it.name) : it.name;
-      return { g: 'Компании', t: n, s: c.join(NB + '· '), inn: String(it.inn), href: '', tag: ST[it.status] || (it.filial ? 'филиал' : ''), imya: n };
+      // нет DlkImya (окно поиска на страницах без js/imya.js) — хотя бы прямые кавычки → «ёлочки», регистр не трогаем
+      var n = imya ? imya(it.name) : kavychki(it.name);
+      return { g: gruppa || 'Компании', t: n, s: c.join(NB + '· '), inn: String(it.inn), href: '', tag: ST[it.status] || (it.filial ? 'филиал' : ''), warn: !!WARN[it.status], imya: n };
     });
+  }
+
+  // ---------- poisk-v2-d: ответ сервера /api/poisk → строки ----------
+  // Что спросить у сервера: БИК — карточка банка; код ОКВЭД — компании этого вида; название (от 3 знаков) — компании ЕГРЮЛ
+  function chtoSprosit(R, q) {
+    if (!R) return '';
+    if (R.bik) return R.bik;
+    if (R.vid === 'okved') return String(q || '').trim();
+    return R.nazvanie && String(q || '').trim().length >= 3 && !/^\d+$/.test(String(q).trim()) ? R.nazvanie : '';
+  }
+  var GRUPPA = { adres: 'Компании по адресу', okved: 'Компании с этим видом деятельности' };
+  function data(iso) { var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || '')); return m ? m[3] + '.' + m[2] + '.' + m[1] : ''; }
+  function bankStroka(b) {
+    if (!b || !/^\d{9}$/.test(String(b.bik || '')) || !b.nazvanie) return null;
+    var s = 'БИК ' + b.bik + (/^\d{20}$/.test(String(b.korschet || '')) ? NB + '· к/с ' + b.korschet : '') + (data(b.data_spravochnika) ? NB + '· справочник Банка России на ' + data(b.data_spravochnika) : '');
+    var tag = b.licenziya_deystvuet === true ? '' : b.licenziya_deystvuet === false ? 'проверьте лицензию' : 'лицензию не проверяли';
+    return { g: 'Банк по БИК', t: String(b.nazvanie), s: s, inn: '', href: '', tag: tag, warn: b.licenziya_deystvuet === false };
+  }
+  // j — ответ /api/poisk (или старого /api/suggest: {items}); R — разбор строки; q — что ввёл человек
+  function otvet(R, j, imya, q) {
+    j = j || {};
+    var po = j.ponyal || {}, out = [];
+    if (po.ispravleno && R && R.vid !== 'raskladka')
+      out.push({ g: 'Раскладка', t: 'Ищем «' + po.ispravleno + '»', s: 'Вы печатали в английской раскладке' + NB + '— исправили сами', inn: '', href: '', tag: 'исправлено' });
+    var b = bankStroka(j.bank);
+    if (b) out.push(b);
+    var spisok = j.kompanii || j.items || [], k = stroki(spisok, imya, GRUPPA[po.tip]);
+    out = out.concat(k);
+    // семь «Ромашек» в одном городе — подсказка дописать город (одно слово в запросе — значит, города в нём ещё нет)
+    var slova = norm(q).split(/\s+/).filter(Boolean), imena = {};
+    spisok.forEach(function (it) { if (it && it.name) { var n = norm(it.name).replace(/^(ооо|ао|пао|зао|оао)\s+/, ''); imena[n] = (imena[n] || 0) + 1; } });
+    var max = 0; for (var n in imena) if (imena[n] > max) max = imena[n];
+    if (k.length >= 5 && max >= 5 && slova.length === 1 && (!po.tip || po.tip === 'nazvanie'))
+      out.push({ g: k.length ? k[0].g : 'Компании', t: 'Много компаний с таким названием', s: 'Допишите город через пробел' + NB + '— найдём точнее', inn: '', href: '', tag: '', q: String(q).trim() + ' ', dopisat: true });
+    return out;
+  }
+  // Запрос: сначала /api/poisk; сервер молчит или ошибается — прежний /api/suggest (только для названия)
+  function zapros(api, q, f) {
+    var u = encodeURIComponent(q), nazv = !/^\d/.test(q);
+    function zapas() {
+      if (!nazv) return { kompanii: [] };
+      return f(api + '/api/suggest?q=' + u).then(function (r) { return r.ok ? r.json() : { items: [] }; }).then(function (j) { return { kompanii: (j && j.items) || [] }; });
+    }
+    return f(api + '/api/poisk?q=' + u).then(function (r) { if (!r.ok) throw r.status; return r.json(); })
+      .then(function (j) { if (!j || typeof j !== 'object') throw 0; return j; }).catch(zapas);
   }
 
   // ---------- разметка списка ----------
@@ -197,7 +253,8 @@
     var a = (R && R.rows) || [];
     var k = kompanii || [];
     // пришли подсказки ЕГРЮЛ — «Проверить «текст»» уже не нужна: первой встаёт компания
-    return a.filter(function (r) { return !r.razdel && !(r.q && k.length); }).concat(k, a.filter(function (r) { return r.razdel; }));
+    var est = k.some(function (r) { return r.inn; });
+    return a.filter(function (r) { return !r.razdel && !(r.q && est); }).concat(k, a.filter(function (r) { return r.razdel; }));
   }
   function pervoe(rows) { for (var i = 0; i < rows.length; i++) if (deystvie(rows[i])) return i; return -1; }
   // R — разбор, rows — все строки (разбор + компании), sel — выбранная. → HTML для <ul role=listbox>
@@ -210,7 +267,7 @@
       var on = i === sel;
       h += '<li role="option" id="ps' + i + '" data-i="' + i + '" class="ps-row' + (deystvie(r) ? '' : ' ps-row--info') + '" aria-selected="' + on + '"' + (deystvie(r) ? '' : ' aria-disabled="true"') + '>' +
         '<b>' + esc(r.t) + '</b><span>' + esc(r.s) + '</span>' +
-        (r.tag ? '<em class="ps-tag">' + esc(r.tag) + '</em>' : on && deystvie(r) ? '<em class="ps-tag ps-tag--ent">Enter ↵</em>' : '') + '</li>';
+        (r.tag ? '<em class="ps-tag' + (r.warn ? ' ps-tag--warn' : '') + (r.tag.length > 13 ? ' ps-tag--niz' : '') + '">' + esc(r.tag) + '</em>' : on && deystvie(r) ? '<em class="ps-tag ps-tag--ent">Enter ↵</em>' : '') + '</li>';
     });
     return h;
   }
@@ -242,6 +299,6 @@
   function vstavka(s) { return String(s == null ? '' : s).replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 300); }
 
   return { PRIMER_INN: PRIMER_INN, PRIMERY: PRIMERY, cif: cif, innOk: innOk, ogrnOk: ogrnOk, kluchOk: kluchOk, vRus: vRus, norm: norm,
-    ischiRazdely: ischiRazdely, razobrat: razobrat, stroki: stroki, gorod: gorod, html: html, htmlPusto: htmlPusto,
+    ischiRazdely: ischiRazdely, razobrat: razobrat, stroki: stroki, chtoSprosit: chtoSprosit, otvet: otvet, zapros: zapros, bankStroka: bankStroka, gorod: gorod, html: html, htmlPusto: htmlPusto,
     deystvie: deystvie, pervoe: pervoe, sobrat: sobrat, vstavka: vstavka, sdelatSchet: sdelatSchet };
 });

@@ -51,7 +51,7 @@ test('стили: место под линзу с первого кадра (CLS
   assert.match(h, /\.lp--gl \.lp__k\{visibility:hidden\}/, 'CSS-кадр прячется только после первого кадра WebGL');
   assert.match(h, /\.lp\[data-sost=raspoznano\] \.lp__k::before/, 'CSS-кадр тоже сходится');
   assert.match(h, /\.lp\[data-sost=opechatka\] \.lp__k::after\{border-color:var\(--warn\)\}/);
-  assert.match(h, /@media \(max-width:520px\)\{\.lp\{position:absolute;[^}]*height:36px;[^}]*width:56px/, 'на телефоне линза не сдвигает строку проверки');
+  assert.match(h, /@media \(max-width:520px\)\{\.lp\{position:absolute;[^}]*height:54px;[^}]*width:86px/, 'на телефоне линза не сдвигает строку проверки');
   assert.match(h, /\.rezhim-otcheta \.lp\{display:none\}/, 'на экране отчёта — нет');
   assert.match(h, /@media print\{\.lp\{display:none!important\}\}/);
 });

@@ -118,7 +118,7 @@ test('разделы: файл собран сборщиком, все адре�
 
 test('главная: строка подключена; текст запроса не в адрес, не в Метрику; /politika/ — строки юриста', () => {
   const g = chitat('index.html');
-  assert.match(g, /placeholder="ИНН, название или реквизиты из счёта"/);
+  assert.match(g, /placeholder="ИНН, название или реквизиты"/);
   assert.match(g, /dlkGoal\('poisk_tip',\{vid:PR\.vid\}\)/, 'в Метрику — только вид');
   assert.doesNotMatch(g, /history\.(push|replace)State\([^)]*(input\.value|q\b)/, 'текст запроса не в адрес');
   assert.match(g, /location\.href=r\.href/, 'разделы — в этой же вкладке');

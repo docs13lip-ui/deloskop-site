@@ -25,8 +25,8 @@ test('манифест: имя, цвета дизайн-системы, standalo
   assert.strictEqual(m.display, 'standalone');
   assert.strictEqual(m.scope, '/');
   assert.ok(m.start_url.startsWith('/'));
-  assert.strictEqual(m.background_color, '#F5F5F2');
-  assert.strictEqual(m.theme_color, '#F5F5F2');
+  assert.strictEqual(m.background_color, '#111113', 'тёмная тема — основная: заставка приложения тёмная');
+  assert.strictEqual(m.theme_color, '#111113');
   const nuzhno = { 'any 192x192': 0, 'any 512x512': 0, 'maskable 192x192': 0, 'maskable 512x512': 0 };
   for (const i of m.icons) {
     const src = i.src.replace(/^\//, '');

@@ -15,7 +15,7 @@ function resp(o) {
 t('чистая старая компания без выручки и проверок → «Предварительно», предел 3 млн по возрасту — только «после проверки»', function () {
   var v = U.decide(resp({ signals: [sig('Недостоверные сведения в ЕГРЮЛ', 'ok', 'Нет')] }), { amount: 500000 });
   assert.strictEqual(v.tone, 'go');
-  assert.strictEqual(v.headline, 'Предварительно: серьёзного не нашли');
+  assert.strictEqual(v.headline, 'Проверили не всё: приставы сегодня не\u00a0ответили'); // chestnyj-nol-v1 (13.11)
   assert.strictEqual(v.cap, 3000000);
   assert.ok(v.predvaritelno && v.predvaritelno.baza === 'age', JSON.stringify(v.predvaritelno));
   assert.ok(/платите по факту поставки/.test(v.prepay) && !/допустима|подойдут/.test(v.prepay), v.prepay);

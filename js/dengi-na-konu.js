@@ -53,9 +53,22 @@
 
   // raschet(r, segodnya) → null (блока нет) или {stroki, neProvereno, summa, dolya, porog, podpis, dejstvie, dataNashli, nepolno}
   // porog: net (сумм нет) · malaya (< 10 %) · srednyaya (10–50 %) · bolshaya (> 50 %) · bez_vyruchki (сравнить не с чем)
+  // chestnyj-nol-v1 ([команда] 13.11 12:40 п. 1.4): банк (основной ОКВЭД 64.1x, как js/sushchestvennoe.js) — сумму не считаем;
+  // «а не в ГИР БО» не пишем (сторож tests/bank_girbo: Банк России сам передаёт её в ГИР БО, ч. 9 ст. 18 402-ФЗ)
+  function bank(r) { return /^64\.1(\.|\d|$)/.test(String(((r && r.company) || {}).okved || "")); }
+  var BANK = { tekst: "Для банков сумму не считаем: банки сдают отчётность в Банк России. Отчётность и устойчивость банка — на сайте Банка России",
+    u: "https://www.cbr.ru/finorg/foinfo/" };
+  // «1 дело / 2 дела / 5 дел»; разряды — неразрывным пробелом
+  function skl(n, f) { var a = Math.abs(n) % 100, b = a % 10; return a > 10 && a < 20 ? f[2] : b === 1 ? f[0] : b >= 2 && b <= 4 ? f[1] : f[2]; }
+  function chislo(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, NB); }
   function raschet(r, segodnya) {
     var D = r && r.dengi;
     if (!D || typeof D !== "object" || ip(r)) return null;
+    if (bank(r)) {
+      var cO = (r.company || {}).ogrn;
+      return { porog: "bank", stroki: [], neProvereno: [], summa: null, dolya: null, podpis: "", dejstvie: "", dataNashli: "", nepolno: false, vyruchka: null,
+        bank: { tekst: BANK.tekst, u: BANK.u + (/^\d{13}$/.test(String(cO || "")) ? "?ogrn=" + cO : "") } };
+    }
     var sost = Array.isArray(D.sostavlyayushchie) ? D.sostavlyayushchie : [];
     var po = {};
     sost.forEach(function (x) { if (x && VIDY[x.vid] && x.summa != null && isFinite(Number(x.summa))) po[x.vid] = x; });
@@ -76,6 +89,14 @@
       .filter(Boolean).sort(function (a, b) { return a.split(".").reverse().join("") < b.split(".").reverse().join("") ? 1 : -1; })[0] || "";
     var o = { stroki: stroki, neProvereno: neProvereno, summa: summa, dolya: null, porog: "", podpis: "", dejstvie: "", dataNashli: dataNashli,
       nepolno: stroki.some(function (x) { return x.nepolno; }), vyruchka: null };
+    // chestnyj-nol-v1 (п. 1.3): иски или приставы сегодня не проверили — суммы нет вовсе («Не посчитали»), а не «0 ₽ … не нашли»
+    var neIF = ["iski_otvetchik", "fssp_ostatok"].filter(function (v) { return neProvereno.indexOf(v) >= 0; });
+    if (neIF.length) {
+      o.porog = "ne_poschitali"; o.neIF = neIF;
+      var nd = po.nedoimka && neProvereno.indexOf("nedoimka") < 0 ? po.nedoimka : null;
+      o.nedoimka = nd ? { summa: Math.max(0, Number(nd.summa)), data: data(nd.data_svedeniy || nd.data_nabora) } : null;
+      return o;
+    }
     if (summa <= 0) { o.porog = "net"; return o; }
     var V = D.vyruchka || {}, god = Number(V.god), tek = (segodnya || new Date()).getFullYear();
     // юрист п. 3: нет отчёта, выручка 0 или отчёт старше 2 лет → процент не показываем
@@ -108,7 +129,18 @@
   function html(o) {
     if (!o) return "";
     var shk = "", itog;
-    if (o.porog === "net") {
+    if (o.porog === "bank") {
+      return '<section class="dnk" aria-labelledby="dnk-h" data-dengi="bank">' +
+        '<div class="dnk__h"><h2 id="dnk-h">Деньги на кону</h2></div>' +
+        '<p class="dnk__dolya">' + esc(o.bank.tekst) + ' <a href="' + esc(o.bank.u) + '" target="_blank" rel="noopener">→</a></p></section>';
+    }
+    if (o.porog === "ne_poschitali") {
+      var kto = o.neIF.length === 2 ? "Иски и" + NB + "долги у" + NB + "приставов" : o.neIF[0] === "iski_otvetchik" ? "Иски" : "Долги у" + NB + "приставов";
+      var nd = o.nedoimka ? (o.nedoimka.summa > 0 ? " Недоимка: " + rub(o.nedoimka.summa) + " (ФНС" + (o.nedoimka.data ? ", на " + esc(o.nedoimka.data) : "") + ")."
+        : " Недоимки нет (ФНС" + (o.nedoimka.data ? ", на " + esc(o.nedoimka.data) : "") + ").") : "";
+      itog = '<p class="dnk__sum">Не посчитали</p>' +
+        '<p class="dnk__dolya">' + kto + " сегодня не" + NB + "проверили — без них сумма неполная." + nd + "</p>";
+    } else if (o.porog === "net") {
       itog = '<p class="dnk__sum">0' + NB + "₽</p>" +
         '<p class="dnk__dolya">Исков, долгов у приставов и недоимки на ' + esc(o.dataNashli) + " не нашли" +
         (o.neProvereno.length ? " (" + o.neProvereno.map(function (v) { return VIDY[v].kratko; }).join(", ") + " — не проверено)" : "") + "</p>";
@@ -122,18 +154,19 @@
         shk = '<div class="dnk__shk" role="img" aria-label="Доля в годовой выручке: ' + esc(o.podpis) + '"><i style="width:' + w + '%"></i><b style="left:10%"></b><b style="left:50%"></b></div>';
       }
     }
-    var rows = o.stroki.map(function (x) {
+    // «Не посчитали»: нулевые строки не показываем — «0 ₽» рядом с непроверенными читалось бы как «проверили — пусто» (п. 1.7)
+    var rows = o.stroki.filter(function (x) { return o.porog !== "ne_poschitali" || x.summa > 0; }).map(function (x) {
       return '<li><span class="dnk__p">' + esc(x.podpis) + '</span><span class="dnk__v">' + rub(x.summa) + "</span>" +
-        "<small>" + esc(x.istochnik) + (x.chislo ? " · " + esc(x.vid === "iski_otvetchik" ? x.chislo + " дел" : x.chislo + " производств") : "") +
+        "<small>" + esc(x.istochnik) + (x.chislo ? " · " + esc(x.vid === "iski_otvetchik" ? chislo(x.chislo) + NB + skl(x.chislo, ["дело", "дела", "дел"]) : chislo(x.chislo) + NB + skl(x.chislo, ["производство", "производства", "производств"])) : "") +
         (x.nepolno ? " · " + esc(x.nepolno) : "") + "</small></li>";
     }).join("");
-    var np = o.porog !== "net" && o.neProvereno.length ? '<p class="dnk__np">Не проверено: ' + o.neProvereno.map(function (v) { return VIDY[v].kratko; }).join(", ") +
+    var np = o.porog !== "net" && o.porog !== "ne_poschitali" && o.neProvereno.length ? '<p class="dnk__np">Не проверено: ' + o.neProvereno.map(function (v) { return VIDY[v].kratko; }).join(", ") +
       " — источник не ответил, в сумму не вошло.</p>" : "";
     return '<section class="dnk" aria-labelledby="dnk-h" data-dengi="' + esc(o.porog) + '">' +
       '<div class="dnk__h"><h2 id="dnk-h">Деньги на кону</h2><span>иски, приставы и недоимка против выручки</span></div>' +
       '<div class="dnk__itog">' + itog + shk + "</div>" +
       (o.dejstvie ? '<p class="dnk__act"><b>Что сделать:</b> ' + esc(o.dejstvie) + ".</p>" : "") +
-      '<ul class="dnk__rows">' + rows + "</ul>" + np +
+      (rows ? '<ul class="dnk__rows">' + rows + "</ul>" : "") + np +
       '<p class="dnk__og">' + esc(OGOVORKA) + "</p></section>";
   }
 
@@ -163,5 +196,5 @@
     return nov;
   }
 
-  return { raschet: raschet, html: html, mount: mount, rub: rub, OGOVORKA: OGOVORKA, DEJSTVIE: DEJSTVIE, VIDY: VIDY, CSS: CSS };
+  return { raschet: raschet, html: html, mount: mount, rub: rub, skl: skl, BANK: BANK, OGOVORKA: OGOVORKA, DEJSTVIE: DEJSTVIE, VIDY: VIDY, CSS: CSS };
 });

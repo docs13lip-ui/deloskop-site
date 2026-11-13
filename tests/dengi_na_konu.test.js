@@ -38,7 +38,7 @@ test('меньше 10 %: подпись без строки действия, и
   assert.ok(t.includes('Картотека арбитражных дел — через Checko, на 12.11.2026'));
   assert.ok(t.includes('ФССП, банк данных исполнительных производств — через Checko, на 12.11.2026'));
   assert.ok(t.includes('ФНС, открытые данные, на 01.10.2026'));
-  assert.ok(t.includes('497 производств · в сумме — первые 100, по всем она может быть больше'));
+  assert.ok(t.includes('497' + NB + 'производств · в сумме — первые 100, по всем она может быть больше'));
   assert.ok(t.includes('выручка за 2025' + NB + 'год по бухгалтерской отчётности (ГИР' + NB + 'БО)'));
   assert.ok(!/Что сделать/.test(t));
 });
@@ -77,11 +77,34 @@ test('сумм нет — «не нашли на дату»; не ответив
   const o = D.raschet(otvet({ iski: 0, fssp: 0, ned: 0 }), SEG);
   assert.strictEqual(o.porog, 'net');
   assert.ok(tekst(D.html(o)).includes('Исков, долгов у приставов и недоимки на 12.11.2026 не нашли'));
+  // chestnyj-nol-v1 (13.11, [команда] п. 1.3): иски или приставы не проверены — «Не посчитали», без «0 ₽» и «не нашли»
   const p = D.raschet(otvet({ iski: 0, ned: 0, fssp: 0, bez: ['iski_otvetchik'] }), SEG);
-  assert.ok(tekst(D.html(p)).includes('(иски — не проверено)'));
+  assert.strictEqual(p.porog, 'ne_poschitali');
+  const tp = tekst(D.html(p));
+  assert.ok(tp.includes('Не посчитали'));
+  assert.ok(tp.includes('Иски сегодня не' + NB + 'проверили — без них сумма неполная. Недоимки нет (ФНС, на 01.10.2026).'), tp);
+  assert.ok(!/0\u00a0₽|не нашли/.test(tp), tp);
   const q = D.raschet(otvet({ ne: ['fssp_ostatok'] }), SEG);
+  assert.strictEqual(q.porog, 'ne_poschitali');
   assert.deepStrictEqual(q.stroki.map((x) => x.vid), ['iski_otvetchik', 'nedoimka']);
-  assert.ok(tekst(D.html(q)).includes('Не проверено: производства у приставов — источник не ответил, в сумму не вошло.'));
+  const tq = tekst(D.html(q));
+  assert.ok(/Долги у\u00a0приставов сегодня не\u00a0проверили — без них сумма неполная\. (Недоимка: [\d\u00a0,]+(млн\u00a0)?₽|Недоимки нет) \(ФНС, на 01\.10\.2026\)\./.test(tq), tq);
+  assert.ok(!/не нашли|годовой выручки|Что сделать/.test(tq), 'без суммы — без доли и без действия');
+});
+
+test('chestnyj-nol-v1: банк (ОКВЭД 64.19) — суммы нет, одна строка и ссылка на Банк России', () => {
+  const r = otvet();
+  r.company = Object.assign({}, r.company, { okved: '64.19', ogrn: '1027700132195' });
+  const o = D.raschet(r, SEG);
+  assert.strictEqual(o.porog, 'bank');
+  const h = D.html(o), t = tekst(h);
+  assert.ok(t.includes('Для банков сумму не считаем: банки сдают отчётность в Банк России. Отчётность и устойчивость банка — на сайте Банка России'), t);
+  assert.ok(h.includes('href="https://www.cbr.ru/finorg/foinfo/?ogrn=1027700132195"'));
+  assert.ok(!/млрд|млн|\d\u00a0₽/.test(t), t);
+});
+
+test('chestnyj-nol-v1: склонение и разряды — «1 дело», «3 дела», «6 748 дел», «353 производства»', () => {
+  assert.deepStrictEqual([1, 3, 11, 21, 6748, 353].map((n) => D.skl(n, ['дело', 'дела', 'дел'])), ['дело', 'дела', 'дел', 'дело', 'дел', 'дела']);
 });
 
 test('ИП, нет поля dengi, ни один источник не ответил — блока нет', () => {

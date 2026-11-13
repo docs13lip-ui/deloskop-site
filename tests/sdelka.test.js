@@ -73,7 +73,7 @@ test('Паспорт: банкротство «нет» по ЕГРЮЛ не з�
 
 test('«Условия сделки»: без выручки и проверок — «Предварительно», совет по сумме не разрешает платить вперёд', () => {
   const v = U.decide(otvet(), { amount: 1500000 });
-  assert.match(v.headline, /^Предварительно/);
+  assert.match(v.headline, /^(Предварительно|Проверили не всё)/);
   assert.ok(v.predvaritelno && v.predvaritelno.baza === 'age');
   assert.doesNotMatch(v.prepay, /допустима|подойдут/);
   assert.match(v.prepay, /платите по факту поставки/);

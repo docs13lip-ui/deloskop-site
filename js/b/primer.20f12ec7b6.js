@@ -748,7 +748,7 @@ var DOLGI = [
 function statusIstochnika(r, klyuchi) {
 var dm = r && r.damia || {}, spisok = r && r.istochniki || [];
 for (var i = 0; i < klyuchi.length; i++) {
-var b = dm[klyuchi[i]]; if (b && b.status) return b.status;
+var b = dm[klyuchi[i]]; if (b && b.sostoyanie) return b.sostoyanie; if (b && b.status) return b.status;
 for (var j = 0; j < spisok.length; j++) if (spisok[j] && (spisok[j].kod === klyuchi[i] || spisok[j].id === klyuchi[i]) && spisok[j].status) return spisok[j].status;
 }
 return null;
@@ -891,7 +891,15 @@ if ((f.staff === 0 || f.staff === 1) && !vzyali.staff) { if (out.length < 3) out
 if (f.zsk === 'medium' && out.length < 3) out.push('средний прогноз ЗСК');
 return out.slice(0, 3);
 }
+function neOtvetiliSudyFssp(pv) {
+var a = (pv && pv.ne) || [], s = a.some(function (x) { return /^арбитражные суды/.test(x); }), p = a.some(function (x) { return /^(долги у приставов|приставы)/.test(x); });
+return s && p ? 'суды и приставы' : s ? 'суды' : p ? 'приставы' : '';
+}
+function zagNeVse(pv) { var k = neOtvetiliSudyFssp(pv); return 'Проверили не всё: ' + k + ' сегодня не\u00a0ответили'; }
+var NET_VYVODA = 'Вывода о рисках пока нет.';
+function sNetVyvoda(pv, t, sovet) { return neOtvetiliSudyFssp(pv) && t === 'go' ? NET_VYVODA + ' ' + sovet : sovet; }
 function headline(f, t, cap, malo, pv, ned) {
+if (neOtvetiliSudyFssp(pv) && t === 'go') return zagNeVse(pv);
 if (ned && (t === 'go' || t === 'cap')) return t === 'cap' ? 'Предварительно: есть замечания' : 'Предварительно: данных мало';
 if (pv && t === 'go') return 'Предварительно: серьёзного не нашли';
 if (pv && t === 'cap' && !malo && cap != null) return 'Предварительно: есть замечания';
@@ -904,6 +912,7 @@ if (t === 'cap') return 'Можно, предоплата — до ' + money(ca
 return 'Работать можно';
 }
 function headlineOtg(f, t, cap, malo, pv, ned) {
+if (neOtvetiliSudyFssp(pv) && t === 'go') return zagNeVse(pv);
 if (ned && (t === 'go' || t === 'cap')) return t === 'cap' ? 'Предварительно: есть замечания' : 'Предварительно: данных мало';
 if (pv && t === 'go') return 'Предварительно: серьёзного не нашли';
 if (pv && t === 'cap' && !malo && cap != null) return 'Предварительно: есть замечания';
@@ -1079,7 +1088,7 @@ return sFinorg(pc, {
 napravlenie: 'otgruzhaem',
 facts: f, tone: t, cap: pc.cap, malo: !!pc.malo, capRule: pc.rule, raschet: pc.raschet, neProvereno: np,
 kak: kakPoschitali(f, t, pc, reasons(f), np, 'otgruzhaem', pv),
-headline: headlineOtg(f, t, pc.cap, pc.malo, pv, pc.nedostatochno), reasons: reasons(f), advice: adviceOtg(f, t, pc.malo),
+headline: headlineOtg(f, t, pc.cap, pc.malo, pv, pc.nedostatochno), reasons: reasons(f), advice: sNetVyvoda(pv, t, adviceOtg(f, t, pc.malo)),
 amount: amount, regime: regime, stake: null, prepay: pc.nedostatochno && amount ? NEDOST_SOVET(true) : otgruzkaAdvice(amount, pc.cap, t, pv),
 docs: list, letter: letterOtg(f, list, amount)
 }, pv);
@@ -1087,7 +1096,7 @@ docs: list, letter: letterOtg(f, list, amount)
 return sFinorg(pc, {
 facts: f, tone: t, cap: pc.cap, malo: !!pc.malo, capRule: pc.rule, raschet: pc.raschet, neProvereno: np,
 kak: kakPoschitali(f, t, pc, reasons(f), np, null, pv),
-headline: headline(f, t, pc.cap, pc.malo, pv, pc.nedostatochno), reasons: reasons(f), advice: advice(f, t, pc.malo),
+headline: headline(f, t, pc.cap, pc.malo, pv, pc.nedostatochno), reasons: reasons(f), advice: sNetVyvoda(pv, t, advice(f, t, pc.malo)),
 amount: amount, regime: regime, stake: atStake(amount, regime), prepay: pc.nedostatochno && amount ? NEDOST_SOVET(false) : prepayAdvice(amount, pc.cap, t, pv),
 docs: list, letter: letter(f, list, amount, { kartochka: opts.kartochka, data: dataRu(r.checked_at) || '' })
 }, pv);
@@ -1235,7 +1244,7 @@ last = draw(fokus);
 });
 function draw(keepFocus) {
 var v = decide(r, st), f = v.facts;
-box.className = 'usl ' + v.tone + (v.nedostatochno ? ' ned' : '');
+box.className = 'usl ' + v.tone + (v.nedostatochno || (v.tone === 'go' && neOtvetiliSudyFssp(v.predvaritelno)) ? ' ned' : '');
 var why = v.reasons.length ? v.reasons.join(', ') : chestnoPoyasnenie(r, bezPovtora(r && r.verdict, v.headline));
 var stake = '';
 if (v.stake) {
@@ -1313,7 +1322,7 @@ return {
 decide: decide, mount: mount, rynokStroka: rynokStroka, facts: facts, tone: tone, reorgPrekr: reorgPrekr, REORG_PREKRASHCHENIE: REORG_PREKRASHCHENIE, REORG_SDELAT: REORG_SDELAT, REORG_DOLG: REORG_DOLG, prepayCap: prepayCap, atStake: atStake,
 docs: docs, letter: letter, LETTER_NELZYA: LETTER_NELZYA, kartaKartochek: kartaKartochek, parseAmount: parseAmount, money: money, moneyKrupno: moneyKrupno, niceFloor: niceFloor, kindOf: kindOf, signalId: signalId, SIGNALY: SIGNALY.map(function (x) { return x[0]; }),
 neProvereno: neProvereno, kakPoschitali: kakPoschitali, otgruzkaAdvice: otgruzkaAdvice, NAPR: NAPR, bezPovtora: bezPovtora, chestnoPoyasnenie: chestnoPoyasnenie, neProverenyKlyuchevye: neProverenyKlyuchevye, vVyvode: vVyvode, STATYA: STATYA, FORMULA: FORMULA,
-predvaritelno: predvaritelno, METODIKA: { DELITEL: DELITEL, POTOLKI: POTOLKI, OSTOROZHNO: OSTOROZHNO, MINIMUM: MINIMUM, PRAVILO: PRAVILO },
+predvaritelno: predvaritelno, neOtvetiliSudyFssp: neOtvetiliSudyFssp, NET_VYVODA: NET_VYVODA, METODIKA: { DELITEL: DELITEL, POTOLKI: POTOLKI, OSTOROZHNO: OSTOROZHNO, MINIMUM: MINIMUM, PRAVILO: PRAVILO },
 RATES: { VAT: VAT, PROFIT: PROFIT, USN_DR: USN_DR }
 };
 });

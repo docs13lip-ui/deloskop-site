@@ -51,8 +51,14 @@
     return n >= 0 && n <= 100 ? Math.round(n) : null;
   }
   // Цвет полосы вывода — по risk_level ответа (low/medium/high); неизвестное — нейтральный «есть вопросы».
+  // chestnyj-nol-v1: суды или приставы сегодня не ответили (sostoyanie not_checked) — зелёной полосы нет, «есть вопросы»
+  function neOtvetiliSF(r) {
+    var dm = (r && r.damia) || {};
+    return ['sudy', 'fssp'].some(function (k) { return dm[k] && typeof dm[k] === 'object' && dm[k].sostoyanie === 'not_checked'; });
+  }
   function tonPolosy(r) {
     var l = r && r.risk_level;
+    if (l === 'low' && neOtvetiliSF(r)) return 'warn';
     return l === 'low' ? 'ok' : l === 'high' ? 'bad' : 'warn';
   }
 
@@ -133,9 +139,16 @@
     var t = 'Учтено реестров: ' + v.istochnikov + NB + 'из' + NB + v.vsego;
     return v.istochnikov < v.vsego ? t + '. По остальным не' + NB + 'проверяли — это не' + NB + 'значит «нарушений нет».' : t;
   }
+  var PILL_NE_VSE = 'Проверили не всё';
+  function podNeVse(v) {
+    var k = v.neSF === 'суды и приставы' ? 'Суды и' + NB + 'приставы' : v.neSF === 'суды' ? 'Суды' : 'Приставы';
+    return k + ' сегодня не' + NB + 'ответили. Вывода о' + NB + 'рисках пока нет.';
+  }
   // pilyulya(r, v) → { t, pod } — что написать в пилюле и под ней; t = null — текст пилюли не трогаем.
   // v — IndeksOtvet.vid(r).
   function pilyulya(r, v) {
+    // chestnyj-nol-v1 ([команда] 13.11 12:40 п. 1.1, 1.7): суды или приставы не ответили — ни «серьёзных сигналов нет», ни «не нашли»
+    if (r && r.risk_level === 'low' && v && v.rezhim === 'sokr' && v.neSF) return { t: PILL_NE_VSE, pod: podNeVse(v) };
     if (r && r.risk_level === 'low' && v && v.rezhim === 'sokr') return { t: PILL_SOKR, pod: podSokr(v) || POD_PILL };
     return { t: null, pod: POD_PILL };
   }
@@ -229,6 +242,8 @@
         try { pv = IO && indeks(r) == null && IO.gotov && IO.gotov() ? IO.vid(r) : null; } catch (e) { pv = null; }
         var pp = pilyulya(r, pv);
         tekstPilyuli(pill, pp.t);
+        // chestnyj-nol-v1: «Проверили не всё» — не зелёная галочка «всё хорошо», а тон «есть вопросы»; иконку убираем
+        if (pp.t === PILL_NE_VSE) { pill.classList.remove('low'); pill.classList.add('medium'); var ik = pill.querySelector('svg'); if (ik) ik.parentNode.removeChild(ik); }
         // правка [команда] 02.10 13:35: уровень риска — не Индекс, подписываем, откуда он
         ix.insertBefore(el(doc, 'div', 'ot-ix__pod', esc(pp.pod)), ix.lastChild);
       }
@@ -316,7 +331,7 @@
     return true;
   }
 
-  return { razlozhit: razlozhit, indeks: indeks, polnota: polnota, uroven: uroven, tonPolosy: tonPolosy, dejstviya: dejstviya,
+  return { PILL_NE_VSE: PILL_NE_VSE, razlozhit: razlozhit, indeks: indeks, polnota: polnota, uroven: uroven, tonPolosy: tonPolosy, dejstviya: dejstviya,
     htmlIndeks: htmlIndeks, htmlIndeksIz: htmlIndeksIz, htmlKak: htmlKak, prokrutit: prokrutit, UROVNI: UROVNI, OGOVORKA: OGOVORKA, POD_PILL: POD_PILL,
     pilyulya: pilyulya, PILL_SOKR: PILL_SOKR };
 });

@@ -255,6 +255,13 @@
     if (rez.stop) { out.rezhim = 'stop'; out.stop = rez.stop.tekst; out.ton = 'bad'; return out; }
     if (rez.indeks == null && !rez.sokrashchennaya) { out.rezhim = 'net'; return out; } // нет ЕГРЮЛ — не считаем
     if (x.neizvestnye.length) { out.rezhim = 'neizv'; out.signaly = x.neizvestnye.map(function (s) { return t(s); }); return out; }
+    // chestnyj-nol-v1 ([команда] 13.11 12:40 п. 1.2, 1.7): суды или приставы не ответили — числа и уровня нет при любой полноте:
+    // «77 · Без серьёзных сигналов» без судов и приставов — положительный вывод без проверки
+    // живой формат (istochniki-v1): блок реестра с sostoyanie = not_checked — реестр сегодня не ответил; старый формат без sostoyanie — как раньше
+    var dmx = r.damia || {}, nc = function (b) { return !!b && typeof b === 'object' && b.sostoyanie === 'not_checked'; };
+    var neS = nc(dmx.sudy) && !x.dostupno.sudy, neF = nc(dmx.fssp) && !x.dostupno.fssp;
+    var neSF = neS && neF ? 'суды и приставы' : neS ? 'суды' : neF ? 'приставы' : '';
+    if (neSF) { out.rezhim = 'sokr'; out.porog = M.polnota.porog_sokrashchennoj; out.neSF = neSF; return out; }
     // v1.1: «данных пока мало» — без уровня и тона; методика 1.0.1 — ниже порога числа нет и в расчёте (indeks/indeks.js)
     if (rez.sokrashchennaya || rez.polnota < M.polnota.porog_sokrashchennoj) { out.rezhim = 'sokr'; out.porog = M.polnota.porog_sokrashchennoj; return out; }
     out.uroven = rez.uroven.nazvanie; out.ton = TON[rez.uroven.ton] || 'warn';
@@ -296,7 +303,12 @@
   function strokaNe(v) { return 'Не учитывали в этот раз: ' + v.neUchityvali.join('; ') + '. ' + NE_ZNACHIT; }
   var TXT_NEIZV = 'Индекс — считаем: в' + NB + 'проверке есть сигнал, который методика v1 пока не' + NB + 'оценивает. Он показан в' + NB + 'фактах ниже.';
   var ZAG_SOKR = 'Индекс — данных пока' + NB + 'мало';
-  function txtSokr(v) { return 'Собрано ' + v.polnota + NB + '% данных — число и' + NB + 'уровень покажем, когда наберётся ' + (v.porog || 60) + NB + '%'; }
+  // chestnyj-nol-v1: причина — суды и приставы, а не полнота; одна формулировка счёта «Проверено N из M источников»
+  var ZAG_MALO = 'Индекс — мало сведений для' + NB + 'расчёта';
+  function txtSokr(v) {
+    if (v && v.neSF) return (v.neSF === 'суды и приставы' ? 'Суды и приставы' : v.neSF === 'суды' ? 'Суды' : 'Приставы') + ' сегодня не' + NB + 'ответили — без них число и' + NB + 'уровень не' + NB + 'показываем. Проверено ' + v.istochnikov + NB + 'из' + NB + v.vsego + ' источников';
+    return 'Собрано ' + v.polnota + NB + '% данных — число и' + NB + 'уровень покажем, когда наберётся ' + (v.porog || 60) + NB + '%';
+  }
   // первый пункт «Не учитывали», которого не хватает именно для полноты (без «не подключён» и «налоговой нагрузки»)
   function neHvataet(v) {
     var a = (v.neUchityvali || []).filter(function (x) { return !/не\s?подключён/.test(x) && !/^налоговая нагрузка/.test(x); });
@@ -321,11 +333,17 @@
         // tochnost-vhody-v1 (30.10): строка — из абзаца методики на /indeks/ (короче на одну оговорку — сторож (ж) indeks_otvet), ведёт на /tochnost/
         '<p class="ot-ix__ne-uch">' + TXT_TOCHNOST + '</p></details>';
     }
-    if (v.rezhim === 'sokr')
+    if (v.rezhim === 'sokr') {
       // v1.2 ([команда] 16:07 разд. 1 п. 4): числа нет — «по сокращённым данным» читалось бы как «посчитали, но грубо»
+      // chestnyj-nol-v1: «сегодня не ответили» скажет пилюля под колонкой — здесь без повтора; счёт источников — один, без «полноты %»
+      if (v.neSF) return h + '<div class="ot-ix__ne">' + ZAG_MALO + '</div>' +
+        '<div class="ot-ix__po n">Без ' + (v.neSF === 'суды и приставы' ? 'судов и' + NB + 'приставов' : v.neSF === 'суды' ? 'судов' : 'приставов') +
+        ' число и' + NB + 'уровень не' + NB + 'показываем.</div>' +
+        '<div class="ot-ix__po n">По открытой методике v' + esc(v.versiya) + ' · проверено ' + v.istochnikov + NB + 'из' + NB + v.vsego + ' источников · <a href="/indeks/">методика</a></div>';
       return h + '<div class="ot-ix__ne">' + ZAG_SOKR + '</div>' +
         '<div class="ot-ix__po n">' + esc(txtSokr(v)) + '.' + (neHvataet(v) ? ' Не хватает: ' + nwFz(esc(neHvataet(v)) + '.') : '') + '</div>' +
         '<div class="ot-ix__po n">' + podpis(v) + ' · <a href="/indeks/">методика</a></div>';
+    }
     if (v.rezhim === 'neizv')
       return h + '<div class="ot-ix__ne">Индекс — считаем</div><div class="ot-ix__po">' + TXT_NEIZV.replace(/^Индекс — считаем: в/, 'В') + '</div>' +
         '<div class="ot-ix__lv"><a href="/indeks/">методика</a></div>';
@@ -371,5 +389,5 @@
   }
 
   return { izOtveta: izOtveta, vid: vid, ball: ball, htmlKolonka: htmlKolonka, gotov: gotov, gotovo: gotovo, ustanovit: ustanovit, faktor: faktor, shkala: shkala, versiya: versiya,
-    rubli: rubli, TXT_NEIZV: TXT_NEIZV, ZAG_SOKR: ZAG_SOKR, txtSokr: txtSokr, neHvataet: neHvataet, strokaNe: strokaNe, podpis: podpis };
+    rubli: rubli, TXT_NEIZV: TXT_NEIZV, ZAG_SOKR: ZAG_SOKR, ZAG_MALO: ZAG_MALO, txtSokr: txtSokr, neHvataet: neHvataet, strokaNe: strokaNe, podpis: podpis };
 });

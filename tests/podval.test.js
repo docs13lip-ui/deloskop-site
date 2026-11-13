@@ -31,7 +31,9 @@ test('на каждой публичной странице ровно один 
   assert.ok(obrazec && obrazec.includes('/oferta/') && obrazec.includes('/politika/') && obrazec.includes('/vozvrat/'));
   // /tochnost/ — единственная внутренняя ссылка на страницу доверия со всех страниц ([Продукт] 02.10 21:50);
   // fokus-shapka-v1 (12.11): методика и точность — одной строкой «Откуда данные и точность» (Стратег 12.11, разд. 1)
-  assert.ok(/<a href="\/tochnost\/">Откуда данные и(&nbsp;| )точность<\/a>/.test(obrazec), 'нет ссылки на /tochnost/ в подвале');
+  // bez-otkuda-v1 (решение 13.11): «Откуда данные» в навигации не показываем — ссылка «Точность Индекса»; /o-proekte/ — без ссылки из подвала
+  assert.ok(/<a href="\/tochnost\/">Точность Индекса<\/a>/.test(obrazec), 'нет ссылки на /tochnost/ в подвале');
+  assert.ok(!/Откуда данные/.test(obrazec) && !obrazec.includes('href="/o-proekte/"'), 'в подвале нет «Откуда данные» и /o-proekte/');
   for (const f of s) {
     const t = chitat(f);
     assert.strictEqual(podval(t).length, 1, f + ': подвалов ' + podval(t).length);

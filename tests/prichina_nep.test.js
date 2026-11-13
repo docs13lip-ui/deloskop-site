@@ -9,7 +9,6 @@ const assert = require('node:assert');
 const fs = require('node:fs');
 const path = require('node:path');
 const S = require('../js/sushchestvennoe.js');
-const O = require('../js/otkuda.js');
 
 const ZAPAS = 'сегодняшний запас проверок по этому источнику распределён — обновите отчёт завтра или откройте его в платном тарифе';
 const ZAVTRA = 'сегодня источник недоступен для новых проверок — обновите отчёт завтра';
@@ -69,23 +68,4 @@ test('«Все данные из реестров»: не запрошенный
   r1.forEach((s) => assert.strictEqual(s[1], 'Не проверяли: эти реестры мы пока не проверяем'));
   const g2 = S.glubina(otvet(damia(ZAPAS, undefined))).razdely;
   g2.filter((x) => x.zag === 'Внешние реестры')[0].stroki.forEach((s) => assert.strictEqual(bezNb(s[1]), 'Не ответили в этот раз: сегодняшний запас проверок по этому источнику распределён — обновите отчёт завтра'));
-});
-
-test('«Откуда данные»: та же причина один раз, без «тарифа» и «завтра»', () => {
-  const r = otvet(damia(ZAPAS, 'not_checked'));
-  const o = O.istochniki(r);
-  o.spisok.filter((x) => x.status === 'nep').forEach((x) => assert.strictEqual(x.prichina, 'эти реестры мы пока не проверяем'));
-  const h = bezNb(O.html(r));
-  assert.doesNotMatch(h, /тариф|завтра/i);
-  assert.ok(h.includes('Не проверяли 7 реестров — мы их пока не проверяем.'), 'общая строка без повтора «не проверяли… не проверяем»');
-  const o2 = O.istochniki(otvet(damia(ZAPAS, undefined)));
-  o2.spisok.filter((x) => x.status === 'net').forEach((x) => assert.doesNotMatch(x.prichina, /тариф/));
-});
-
-test('правила одинаковые в sushchestvennoe.js и otkuda.js', () => {
-  const vzyat = (f, imya) => { const m = new RegExp('var ' + imya + ' = ([^;]+);').exec(fs.readFileSync(path.join(__dirname, '..', 'js', f), 'utf8')); return m && m[1]; };
-  for (const imya of ['POKA_NE', 'OBESHCHANIE', 'PLATNYJ']) {
-    assert.ok(vzyat('sushchestvennoe.js', imya), imya);
-    assert.strictEqual(vzyat('otkuda.js', imya), vzyat('sushchestvennoe.js', imya), imya);
-  }
 });

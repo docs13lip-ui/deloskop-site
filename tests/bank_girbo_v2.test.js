@@ -5,7 +5,6 @@ const test = require('node:test');
 const assert = require('node:assert');
 const path = require('path');
 const ROOT = path.join(__dirname, '..');
-const O = require(path.join(ROOT, 'js', 'otkuda.js'));
 const P = require(path.join(ROOT, 'js', 'pasport-kontragenta.js'));
 const U = require(path.join(ROOT, 'js', 'usloviya.js'));
 const IV = require(path.join(ROOT, 'js', 'indeks-vorota.js'));
@@ -18,31 +17,6 @@ const otvet = (okved, charts) => ({
   dossier: { kpi: [], charts: charts || {} }
 });
 const plain = (s) => String(s).replace(/\u00a0/g, ' ');
-
-test('«Откуда данные»: банк без ГИР БО — причина по 402-ФЗ и ссылка на карточку банка в cbr.ru', () => {
-  const g = O.istochniki(otvet('64.19')).spisok.find((x) => x.k === 'girbo');
-  assert.ok(g, 'строка ГИР БО есть');
-  assert.strictEqual(g.status, 'net');
-  assert.match(plain(g.prichina), /сдаёт её в Банк России; в ГИР БО её передаёт Банк России, доступ может быть ограничен \(ч\. 9 и 12 ст\. 18 402-ФЗ\)/);
-  assert.strictEqual(g.ssylka, 'https://www.cbr.ru/finorg/foinfo/?ogrn=1027700132195');
-});
-
-test('«Откуда данные»: не банк без ГИР БО — как было (отчётности в ответе нет, bo.nalog.gov.ru)', () => {
-  const g = O.istochniki(otvet('46.71')).spisok.find((x) => x.k === 'girbo');
-  assert.strictEqual(g.prichina, 'отчётности в ответе нет');
-  assert.strictEqual(g.ssylka, 'https://bo.nalog.gov.ru/');
-});
-
-test('«Откуда данные»: банк с отчётностью в ответе — ●, как у всех', () => {
-  const g = O.istochniki(otvet('64.19', { revenue: [{ year: 2025, value: 1e9 }] })).spisok.find((x) => x.k === 'girbo');
-  assert.strictEqual(g.status, 'ok');
-});
-
-test('«Откуда данные»: html — «402-ФЗ)» одним куском, без «а не в ГИР БО»', () => {
-  const h = O.html(otvet('64.19'));
-  assert.ok(h.includes('<span style="white-space:nowrap">402-ФЗ)</span>'), h);
-  assert.ok(!/а не в\s?ГИР/.test(plain(h)));
-});
 
 test('Паспорт контрагента: банк без ГИР БО — раздел «Финансы» не пишет «могла её не сдавать», первая ссылка — cbr.ru', () => {
   const p = P.sobrat(otvet('64.19'), { usloviya: U, indeksVorota: IV });

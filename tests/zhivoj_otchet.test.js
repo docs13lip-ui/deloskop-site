@@ -28,12 +28,10 @@ test('модуль в пакете главной, index.html зовёт его 
   assert.ok(INDEX.includes("note.textContent='Проверяем по реестрам…';if(window.DlkZhivoj)"));
 });
 
-test('реестры в строке ожидания — те, что в «Откуда данные»; у ИП — ЕГРИП и без ГИР БО; галочек «готово» до ответа нет', () => {
+test('реестры в строке ожидания; у ИП — ЕГРИП и без ГИР БО; галочек «готово» до ответа нет', () => {
   const Z = modul();
   assert.deepStrictEqual(Z.reestry('7707083893'), ['ЕГРЮЛ', 'ГИР БО', 'суды', 'ФССП', 'ФНС', 'ЕИС']);
   assert.deepStrictEqual(Z.reestry('500100732259'), ['ЕГРИП', 'суды', 'ФССП', 'ФНС', 'ЕИС']);
-  const otk = chitat('js/otkuda.js');
-  for (const r of ['ЕГРЮЛ', 'ЕГРИП', 'ГИР БО', 'ФНС']) assert.ok(otk.includes(r), 'есть в «Откуда данные»: ' + r);
   assert.ok(!/[✓✔]|получено|готово/i.test(JS.slice(JS.indexOf('function zhdu'), JS.indexOf('function pojav'))), 'до ответа ничего не отмечаем');
   assert.match(JS, /setAttribute\('aria-hidden', 'true'\)/, 'разделители скрыты от диктора');
 });

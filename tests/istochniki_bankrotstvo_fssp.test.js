@@ -11,7 +11,6 @@ const I = require('../js/istochniki.js');
 const IM = require('../js/imya.js');
 const U = require('../js/usloviya.js');
 const S = require('../js/sushchestvennoe.js');
-const O = require('../js/otkuda.js');
 const IO = require('../js/indeks-otvet.js');
 IO.ustanovit(require('../indeks/metodika-v1.json'), require('../indeks/indeks.js'));
 const bezNb = (h) => String(h).replace(/ /g, ' ');
@@ -83,14 +82,6 @@ test('общая точка: DlkImya.ispravitOtvet дополняет ответ
   const r = IM.ispravitOtvet(otvet('ACTIVE', 'Действующая'));
   assert.strictEqual(r.damia.bankrotstvo.status, 'not_found');
   assert.strictEqual(r.company.name_short, 'ООО «ПРИМЕР»');
-});
-
-test('«Откуда данные»: банкротство — ответил, «по отметке в ЕГРЮЛ, сообщения ЕФРСБ не проверяли»', () => {
-  const o = O.istochniki(I.dopolnit(otvet('ACTIVE', 'Действующая')));
-  const x = o.spisok.find(s => s.k === 'damia:bankrotstvo');
-  assert.strictEqual(x.status, 'ok');
-  assert.strictEqual(bezNb(x.dop), 'по отметке в ЕГРЮЛ, сообщения ЕФРСБ не проверяли');
-  assert.match(bezNb(O.html(I.dopolnit(otvet('ACTIVE', 'Действующая')))), /дела о банкротстве; по отметке в ЕГРЮЛ/);
 });
 
 test('Индекс: банкротство из ЕГРЮЛ полноту «Федресурс и ЕФРСБ» не даёт; ответ приставов — даёт', () => {

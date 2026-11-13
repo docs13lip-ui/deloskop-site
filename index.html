@@ -150,10 +150,6 @@ p{margin:0}
 .shield .sect-head{max-width:760px}
 .shield .num{font-size:15px;font-weight:600;color:var(--accent)}
 .shield .check{margin-top:28px}
-.doverie .principles{margin-top:36px}
-.doverie .principles article{border-top:2px solid var(--ink);padding-top:18px;display:flex;flex-direction:column;gap:10px}
-.doverie .principles h3{font-size:20px;letter-spacing:-0.01em}
-.doverie .principles p{color:var(--ink2)}
 .chip{background:var(--card);border-radius:16px;padding:20px 22px;font-size:17px;font-weight:500}
 @media (max-width:520px){.chips{gap:8px}.chip{padding:14px 14px;font-size:15px;border-radius:16px}}
 
@@ -279,16 +275,9 @@ footer a{color:var(--ink2)}
 .praktika-gl .vse{margin-top:24px;font-weight:600}
 @media (max-width:860px){.pr-gl{grid-template-columns:1fr}}
 /* platyat-pozzhe-v1: «Контрагенты стали платить позже» — цифра рынка рядом с формулой предоплаты (без цвета тревоги, без графика) */
-.doverie{padding-top:0}
 .shield{padding-top:0}
 .ceny,.faq{padding-block:clamp(56px,7vw,88px)}
-.doverie .h2{margin-bottom:8px}
-.doverie .chips-h{margin:44px 0 14px;font-size:15px;font-weight:600;color:var(--ink2)}
-.doverie .chips{grid-template-columns:repeat(5,minmax(0,1fr))}
-@media (max-width:1100px){.doverie .chips{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .chip{padding:16px 18px;font-size:15px}
-@media (max-width:520px){.doverie .chip{-webkit-hyphens:auto;hyphens:auto}}
-@media (max-width:360px){.doverie .chip{padding:14px}}
 .ceny .lead{max-width:820px;margin-top:16px}
 .ceny .startovaya-gl{max-width:820px;margin:10px 0 0;font-size:15px;line-height:1.5;color:var(--muted)}
 .ceny p a{display:inline-block;margin-top:18px;font-weight:600}
@@ -314,44 +303,6 @@ footer a{color:var(--ink2)}
 @media (max-width:520px){.ex-pl{margin-left:20px;margin-right:20px}}
 @media (max-width:1100px){.chetyre__l{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:600px){.chetyre__l{grid-template-columns:1fr;gap:22px}}
-.doverie .lead{margin-top:14px;max-width:820px}
-.ist-t{margin-top:28px;overflow-x:auto;border-radius:var(--r-md);background:var(--card)}
-.ist-t table{width:100%;border-collapse:collapse;font-size:15px;line-height:1.45}
-.ist-t th,.ist-t td{text-align:left;vertical-align:top;padding:14px 18px;border-top:1px solid var(--line)}
-.ist-t thead th{border-top:0;font-size:13px;font-weight:600;color:var(--muted)}
-.ist-t tbody th{font-weight:600}
-.ist-t td{color:var(--ink2)}
-.ist-s{display:inline-block;font-weight:500;color:var(--ink)}
-.ist-s::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;vertical-align:1px;background:var(--muted)}
-.ist-s--ok::before{background:var(--ok)}
-.ist-s--zam::before{background:transparent;box-shadow:inset 0 0 0 2px var(--warn)}
-.ist-s--net::before{background:transparent;box-shadow:inset 0 0 0 2px var(--muted)}
-.ist-ne,.ist-zsk{max-width:820px;margin:20px 0 0;color:var(--ink2)}
-.ist-ne b,.ist-zsk b{color:var(--ink)}
-.ist-go{margin:22px 0 0;display:flex;flex-wrap:wrap;gap:8px 24px;font-weight:600}
-@media (max-width:700px){
-  .ist-t{background:transparent;border-radius:0;overflow:visible}
-  .ist-t table,.ist-t tbody,.ist-t tr,.ist-t th,.ist-t td{display:block}
-  .ist-t thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-  .ist-t tr{background:var(--card);border-radius:var(--r-md);padding:12px 16px;margin-bottom:8px}
-  .ist-t th,.ist-t td{border:0;padding:2px 0}
-  .ist-t tbody th{font-size:15px}
-  .ist-t td:nth-child(2){font-size:13px;line-height:1.4}
-  .ist-t td:nth-child(3),.ist-t td:nth-child(4){display:inline-block;margin:4px 16px 0 0;font-size:13px}
-}
-/* dover-skladnoj-v1: «Откуда данные» на телефоне — строка состояния, все 8 источников по касанию (js/skladnoj.js) */
-.ist-det>summary{display:none}
-@media (max-width:640px){
-  .ist-det{margin-top:24px}
-  .ist-det>.ist-t{margin-top:8px}
-  .ist-det>summary.ist-sv{display:flex;align-items:center;flex-wrap:wrap;position:relative;gap:12px;min-height:48px;padding:14px 44px 14px 16px;background:var(--card);border-radius:var(--r-md);cursor:pointer;list-style:none}
-  .ist-det>summary::-webkit-details-marker{display:none}
-  .ist-sv__s{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:15px;color:var(--ink2)}
-  .ist-sv__t{font-weight:600;color:var(--ink)}
-  .ist-sv__go{display:block;flex:1 0 100%;order:2;font-size:15px;font-weight:600;color:var(--accent)}
-  .ist-det>summary.ist-sv::after{content:"";position:absolute;right:20px;bottom:22px;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg)}
-  .ist-det[open]>summary.ist-sv::after{transform:rotate(-135deg);bottom:18px}
-}
 /* glavnaya-a-v3: на телефоне плотнее — тот же текст, меньше пустоты (схема А: 390 px — к 9 экранам) */
 @media (max-width:600px){
   .sect-head{margin-bottom:32px}
@@ -363,11 +314,6 @@ footer a{color:var(--ink2)}
   .pr-gl{gap:12px}
   .pr-gl a{padding:20px;gap:8px}
   .chetyre__l{gap:18px}
-  .ist-t{background:var(--card);border-radius:var(--r-md);overflow:hidden}
-  .ist-t tr{background:transparent;border-radius:0;margin:0;padding:12px 16px}
-  .ist-t tr+tr{border-top:1px solid var(--line)}
-  .ist-t td:nth-child(2){line-height:1.35}
-  .ist-t td:nth-child(3),.ist-t td:nth-child(4){margin-top:2px}
   .faq details{padding:16px 0}
   .faq summary{font-size:17px;line-height:1.35}
   .faq details p{font-size:15px}
@@ -402,8 +348,6 @@ footer a{color:var(--ink2)}
    пояснения под источниками («Не проверено…», ЗСК) — вторым кеглем, как строка доверия в первом экране. */
 @media (max-width:600px){
   .doverie-str .primer-ssylka{display:block;margin:4px 0 0}
-  .ist-ne,.ist-zsk{font-size:15px;line-height:1.5;margin-top:16px}
-  .ist-go{margin-top:18px;row-gap:4px}
 }
 .ceny .usl{list-style:none;margin:20px 0 0;padding:0;display:flex;flex-direction:column;gap:12px;max-width:820px;font-size:17px;color:var(--ink2)}
 .ceny .usl b{color:var(--ink)}
@@ -428,10 +372,10 @@ footer a{color:var(--ink2)}
 @media print{.lp{display:none!important}}
 </style>
 <!-- vizual-v3.0a: стили и скрипты главной — пятью файлами вместо 17 (partials/sborka.json, tests/sobrat_js.py) -->
-<link rel="stylesheet" href="/css/b/ds.6493b10ced.css">
+<link rel="stylesheet" href="/css/b/ds.b6a9f29e5a.css">
 <link rel="stylesheet" href="/css/b/glavnaya-stil.9e49808b4f.css">
 <script src="/js/b/yadro.15246be2b0.js" defer></script>
-<script src="/js/b/glavnaya.c1e69dc1ae.js" defer></script>
+<script src="/js/b/glavnaya.c38e25a042.js" defer></script>
 <link rel="icon" type="image/png" sizes="120x120" href="/favicon-120.png">
 <link rel="alternate" type="application/rss+xml" title="Разборы дел — Делоскоп" href="/praktika/rss.xml">
 <link rel="manifest" href="/manifest.webmanifest">
@@ -500,7 +444,7 @@ footer a{color:var(--ink2)}
           <button type="submit">Проверить</button>
         </form>
         <p class="note" id="note" role="status" aria-live="polite">10&nbsp;проверок в&nbsp;день&nbsp;— бесплатно, без&nbsp;регистрации.</p><script>/* zagruzka-v1: открыто адресом отчёта (/?inn=…) — проверка начнётся сразу, поэтому строка под полем с первого кадра «Проверяем по реестрам…». Иначе на телефоне в первый кадр попадала двухстрочная «10 проверок в день…», а через 100–200 мс — однострочная, и всё ниже прыгало на 22 px (CLS). Прежний текст — в data-def: его возвращает «Назад». */(function(n){if(n&&document.documentElement.classList.contains('rezhim-otcheta')){n.setAttribute('data-def',n.textContent);n.textContent='Проверяем по реестрам…'}})(document.getElementById('note'))</script>
-        <p class="doverie-str">У&nbsp;каждого факта&nbsp;— источник и&nbsp;дата. Чего не&nbsp;проверили, так и&nbsp;пишем. <a href="#doverie">Откуда данные&nbsp;→</a> <a class="primer-ssylka" href="/kak-rabotaet/#proverka">Посмотреть пример&nbsp;→</a></p>
+        <p class="doverie-str">У&nbsp;каждого факта&nbsp;— источник и&nbsp;дата. <a class="primer-ssylka" href="/kak-rabotaet/#proverka">Посмотреть пример&nbsp;→</a></p>
       </div>
 
       <div class="pf" id="portfel" role="region" aria-labelledby="pf-h" hidden></div>
@@ -589,19 +533,6 @@ footer a{color:var(--ink2)}
 
   <!--rynok-glavnaya--><script>(function(){try{var s=document.getElementById('rynok'),R={"tekst": "Для сравнения, по рынку в целом: около четверти счетов в\u00a02026 году оплачивают с\u00a0опозданием (СПАРК-Интерфакс). О платёжной дисциплине этой компании эта цифра ничего не говорит.", "do": "2027-02-09"};if(Date.now()>=Date.parse(R['do']+'T00:00:00+03:00')){if(s)s.hidden=true;window.DLK_RYNOK=null}else window.DLK_RYNOK=R}catch(e){}})()</script><!--/rynok-glavnaya-->
 
-
-  <section class="sect doverie" id="doverie" aria-labelledby="doverie-h">
-    <span id="why" class="yakor" aria-hidden="true"></span>
-    <div class="wrap">
-      <h2 class="h2" id="doverie-h">Откуда данные и&nbsp;чего мы&nbsp;не&nbsp;проверяем</h2>
-      <p class="lead">Только открытые государственные источники. Состояние каждого&nbsp;— на&nbsp;сегодня.</p>
-      <details class="ist-det" data-skl open><summary class="ist-sv"><span class="ist-sv__s"><span class="ist-sv__t">Сейчас:</span> <span class="ist-s ist-s--ok">6&nbsp;работают</span> <span class="ist-s ist-s--zam">2&nbsp;не&nbsp;обновляются</span></span><span class="ist-sv__go">Все 8&nbsp;источников и&nbsp;ссылки на&nbsp;них</span></summary>
-      <!--istochniki-glavnaya--><div class="ist-t" role="region" aria-labelledby="doverie-h" tabindex="0"><table><thead><tr><th scope="col">Источник</th><th scope="col">Что даёт</th><th scope="col">Сейчас</th><th scope="col">Проверить самим</th></tr></thead><tbody data-sobir><tr data-ist="egrul"><th scope="row">ЕГРЮЛ и&nbsp;ЕГРИП</th><td>Статус, адрес, руководитель и&nbsp;учредители, отметки о&nbsp;недостоверности</td><td><span class="ist-s ist-s--ok">работает, на&nbsp;день проверки</span></td><td><a href="https://egrul.nalog.ru/" target="_blank" rel="noopener nofollow">egrul.nalog.ru</a></td></tr><tr data-ist="fns_open"><th scope="row">Открытые данные ФНС</th><td>Уплаченные налоги, долги перед бюджетом, численность, налоговый режим, правонарушения</td><td><span class="ist-s ist-s--ok">работает, набор на&nbsp;01.10.2026</span></td><td><a href="https://www.nalog.gov.ru/opendata/" target="_blank" rel="noopener nofollow">nalog.gov.ru</a></td></tr><tr data-ist="girbo"><th scope="row">Бухотчётность ГИР БО</th><td>Бухгалтерская отчётность: выручка, прибыль, имущество и&nbsp;долги</td><td><span class="ist-s ist-s--ok">работает, отчётность за&nbsp;2025&nbsp;год</span></td><td><a href="https://bo.nalog.gov.ru/" target="_blank" rel="noopener nofollow">bo.nalog.gov.ru</a></td></tr><tr data-ist="kad"><th scope="row">Картотека арбитражных дел</th><td>Арбитражные дела, где компания истец или ответчик</td><td><span class="ist-s ist-s--ok">работает, через Checko, на&nbsp;день проверки</span></td><td><a href="https://kad.arbitr.ru/" target="_blank" rel="noopener nofollow">kad.arbitr.ru</a></td></tr><tr data-ist="fssp"><th scope="row">ФССП</th><td>Исполнительные производства — долги по&nbsp;решениям судов</td><td><span class="ist-s ist-s--ok">работает, через Checko, на&nbsp;день проверки</span></td><td><a href="https://fssp.gov.ru/iss/ip" target="_blank" rel="noopener nofollow">fssp.gov.ru</a></td></tr><tr data-ist="eis"><th scope="row">ЕИС: РНП и&nbsp;контракты</th><td>Госконтракты и&nbsp;реестр недобросовестных поставщиков</td><td><span class="ist-s ist-s--zam">не&nbsp;обновляется с&nbsp;12.10.2026</span></td><td><a href="https://zakupki.gov.ru/" target="_blank" rel="noopener nofollow">zakupki.gov.ru</a></td></tr><tr data-ist="efrsb"><th scope="row">ЕФРСБ</th><td>Сообщения о&nbsp;банкротстве компании</td><td><span class="ist-s ist-s--ok">работает, через Checko, на&nbsp;день проверки</span></td><td><a href="https://bankrot.fedresurs.ru/" target="_blank" rel="noopener nofollow">bankrot.fedresurs.ru</a></td></tr><tr data-ist="nalog_bi"><th scope="row">Решения ФНС о&nbsp;приостановлении операций и&nbsp;обеспечительные меры</th><td>Блокировки счетов по&nbsp;решению налоговой</td><td><span class="ist-s ist-s--zam">не&nbsp;обновляется с&nbsp;12.10.2026</span></td><td><a href="https://service.nalog.ru/bi.do" target="_blank" rel="noopener nofollow">service.nalog.ru</a></td></tr></tbody></table></div><!--/istochniki-glavnaya--></details>
-      <p class="ist-ne" data-ne-proveryaem><b>«Не&nbsp;проверено»&nbsp;— не&nbsp;«не&nbsp;найдено».</b> Реестр недобросовестных поставщиков и&nbsp;решения ФНС о&nbsp;блокировке счетов сейчас не&nbsp;обновляем: где сведения есть, показываем их&nbsp;с&nbsp;датой и&nbsp;пометкой «устарело», где нет&nbsp;— пишем «не&nbsp;проверяли» и&nbsp;даём ссылку, где проверить самим.</p>
-      <p class="ist-zsk"><b>Группа риска ЦБ (ЗСК)</b>&nbsp;— её&nbsp;присваивает и&nbsp;показывает только Банк России. Мы&nbsp;её&nbsp;не&nbsp;получаем и&nbsp;не&nbsp;подменяем. <a href="https://cbr.ru/counteraction_m_ter/platform_zsk/proverka-po-inn/" target="_blank" rel="noopener">Проверить по&nbsp;ИНН на&nbsp;сайте Банка России&nbsp;→</a></p>
-      <p class="ist-go"><a href="/indeks/">Как считаем Индекс&nbsp;→</a> <a href="/tochnost/">Отчёт точности&nbsp;→</a> <a href="/o-proekte/">Кто делает Делоскоп&nbsp;→</a></p>
-    </div>
-  </section>
 
   <section class="sect white ceny" id="price" aria-labelledby="ceny-h" data-ceny-net>
     <div class="wrap">
@@ -738,7 +669,7 @@ footer a{color:var(--ink2)}
       (svoj?'':'<div class="pill '+lvl+'">'+(lvl==='low'?ICON:WARNI)+esc({low:'Без серьёзных сигналов',medium:'Есть вопросы',high:'Есть серьёзные сигналы'}[r.risk_level]||'')+'</div>')+'</div>'+
       '<div class="rows">'+rows+'</div>'+(window.Dinamika?Dinamika.html(r):'')+'<div class="verdict" data-usl>'+esc(r.verdict||'')+'</div>'+
       '<div class="report-actions">'+(r.report_id?'<a class="btn-doc" href="/report.html?id='+encodeURIComponent(r.report_id)+'" target="_blank" rel="noopener">PDF-досье</a><button type="button" data-act="link">Ссылка на отчёт</button>':'<button type="button" data-act="copy">'+(svoj?'Скопировать разбор':'Скопировать вывод')+'</button>')+'<button type="button" data-act="again">Проверить другую</button></div>'+
-      '<div class="src">Источники: ЕГРЮЛ/ЕГРИП и открытые данные ФНС. Это оценка риска, а не решение банка.</div>';
+      '<div class="src">Это оценка риска по&nbsp;открытым данным, а&nbsp;не&nbsp;решение банка.</div>';
     // primer-otcheta-v1: полная подпись юриста в шапке примера, под названием (13.11 п. 1.5); js/otchet.js переносит этот блок в .ot-who целиком
     var pw=primer&&report.querySelector('.report-head > div');if(pw)pw.insertAdjacentHTML('beforeend','<p class="primer-podpis" data-primer-podpis>Пример отчёта. Компания выбрана как образец: она не связана с Делоскопом и не заказывала проверку. Сведения открытых реестров на '+d.toLocaleDateString('ru-RU')+'.</p>');
     // primer-otcheta-v1: пример — не проверка человека: ни «Недавних», ни «доведено», ни «Ответ помог?»
@@ -746,8 +677,7 @@ footer a{color:var(--ink2)}
     // dovedeno-vernulis-v1: «довёл проверку до конца» — отчёт с выводом на экране 1,5 с (js/nedavnie.js); смотрим сам контейнер — шапку перерисует js/otchet.js; своя компания — не проверка контрагента
     if(!svoj&&window.Nedavnie&&Nedavnie.dovedena&&!primer)Nedavnie.dovedena(report,c.inn);
     var ub=report.querySelector('[data-usl]');
-    // «Откуда данные» вместо строки «Источники: …» — опись: какой реестр ответил, на какую дату, кто не ответил (js/otkuda.js)
-    if(window.Otkuda){try{Otkuda.mount(report.querySelector('.src'),r)}catch(e){}}
+    // bez-otkuda-v1 (13.11): отдельной описи «Откуда данные» под отчётом нет — источник и дата стоят у каждого факта
     // реквизиты проверки (№, дата и время МСК, самые давние сведения, год бухотчётности) + печать только отчёта — js/rekvizity-proverki.js
     if(window.RekvizityProverki){try{RekvizityProverki.mount(report,r,{polucheno:new Date()})}catch(e){}}
     // «Перепроверить до {дата + 30 дней}» + «Напомнить в календаре» (.ics собирается в браузере) — js/perepoverit.js; своя компания — без строки
@@ -810,7 +740,7 @@ footer a{color:var(--ink2)}
   // primer-legkij-v1 (25.10): пример «Условий сделки» просит только пакет «primer» (usloviya + sushchestvennoe + status-kod, ~130 КБ), а не весь отчёт (~535 КБ):
   // сервер пока отдаёт без сжатия, и каждый заход на главную без проверки скачивал полмегабайта. Весь отчёт — при проверке и намерении проверить.
   // Оба тега — async=false: исполняются в порядке вставки (как defer), «primer» всегда раньше «otchet».
-  var PRIMER_JS='/js/b/primer.502e7a7609.js', OTCHET_JS='/js/b/otchet.c84dc66228.js', primerP=null, moduliP=null;
+  var PRIMER_JS='/js/b/primer.502e7a7609.js', OTCHET_JS='/js/b/otchet.396a170358.js', primerP=null, moduliP=null;
   function teg(src){return new Promise(function(ok){var s=document.createElement('script');s.src=src;s.async=false;s.onload=s.onerror=function(){ok()};document.head.appendChild(s);});}
   function gruzitPrimer(){if(!primerP)primerP=teg(PRIMER_JS);return primerP;}
   function gruzitModuli(){if(moduliP)return moduliP;var p=gruzitPrimer();moduliP=Promise.all([p,teg(OTCHET_JS)]);return moduliP;}
@@ -1012,6 +942,6 @@ footer a{color:var(--ink2)}
 })();
 
 </script>
-<!--podval--><div class="podval" role="contentinfo"><div class="podval__in"><div class="podval__cols"><nav class="podval__col" aria-label="Перед оплатой"><details class="podval__det" open><summary class="podval__h">Перед оплатой</summary><ul><li><a href="/">Проверка по&nbsp;ИНН</a></li><li><a href="/proverit-schet/">Проверь счёт</a></li><li><a href="/kontragenty-iz-vypiski/">Кому вы&nbsp;платите</a></li><li><a href="/pasport/kontragent/">Паспорт контрагента</a></li><li><a href="/delopis/">Делопись</a></li><li><a href="/indeks/">Индекс Делоскопа</a></li><li><a href="/#shield">Щит</a></li><li><a href="/vse-vozmozhnosti/">Всё, что умеет Делоскоп</a></li><li><a href="/tarify/">Тарифы</a></li></ul></details></nav><nav class="podval__col" aria-label="Если банк спросил"><details class="podval__det" open><summary class="podval__h">Если банк спросил</summary><ul><li><a href="/skoraya-115-fz/">Скорая 115&#8209;ФЗ</a></li><li><a href="/kak-vidit-bank/">Как вас видит банк</a></li><li><a href="/nalichnye/">Наличные глазами банка</a></li><li><a href="/pasport/">Паспорт компании</a></li><li><a href="/115-fz/">115&#8209;ФЗ простыми словами</a></li></ul></details></nav><nav class="podval__col" aria-label="Знания"><details class="podval__det" open><summary class="podval__h">Знания</summary><ul><li><a href="/kak-rabotaet/">Как это работает&nbsp;— на&nbsp;примере</a></li><li><a href="/praktika/">Разборы дел</a></li><li><a href="/nalogi/">Налоги</a></li><li><a href="/tochnost/">Откуда данные и&nbsp;точность</a></li><li><a href="/obnovleniya/">Что нового</a></li><li><a href="/company/">Компании</a></li><li><a href="/zhurnal/">Журнал</a></li></ul></details></nav><nav class="podval__col" aria-label="Компания"><details class="podval__det" open><summary class="podval__h">Компания</summary><ul><li><a href="/o-proekte/">О&nbsp;проекте</a></li><li><a href="/cabinet.html">Кабинет</a></li><li><a href="/partneram/">Бухгалтерам и&nbsp;партнёрам</a></li><li><a href="/rekvizity/">Реквизиты и&nbsp;контакты</a></li><li><a href="mailto:help@deloskop.ru">help@deloskop.ru</a></li><li><a href="https://vk.com/deloskop_ru?utm_source=site" rel="me noopener">Мы&nbsp;во&nbsp;ВКонтакте</a></li></ul></details></nav></div><nav class="podval__doki" aria-label="Документы"><ul><li><a href="/oferta/">Публичная оферта</a></li><li><a href="/politika/">Политика обработки ПДн</a></li><li><a href="/soglasie/">Согласие на&nbsp;обработку ПДн</a></li><li><a href="/rassylki/">Согласие на&nbsp;рассылки</a></li><li><a href="/cookies/">Cookies и&nbsp;Метрика</a></li><li><a href="/vozvrat/">Возврат денег</a></li><li><a href="/partneram/usloviya/">Условия для&nbsp;партнёров</a></li></ul></nav><div class="podval__niz"><p>© 2026 Делоскоп</p><div class="tema" data-tema hidden><span class="tema__h" id="tema-h">Тема</span><span class="tema__g" role="group" aria-labelledby="tema-h"><button type="button" data-tema-v="dark" aria-pressed="true">Тёмная</button><button type="button" data-tema-v="light" aria-pressed="false">Светлая</button><button type="button" data-tema-v="auto" aria-pressed="false">Как в&nbsp;системе</button></span></div><p>Сотрудничество, отзывы и&nbsp;предложения&nbsp;— <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>. Принимаем 24/7</p><p>Материалы носят информационный характер и&nbsp;не&nbsp;заменяют консультацию юриста</p></div></div></div><!--/podval-->
+<!--podval--><div class="podval" role="contentinfo"><div class="podval__in"><div class="podval__cols"><nav class="podval__col" aria-label="Перед оплатой"><details class="podval__det" open><summary class="podval__h">Перед оплатой</summary><ul><li><a href="/">Проверка по&nbsp;ИНН</a></li><li><a href="/proverit-schet/">Проверь счёт</a></li><li><a href="/kontragenty-iz-vypiski/">Кому вы&nbsp;платите</a></li><li><a href="/pasport/kontragent/">Паспорт контрагента</a></li><li><a href="/delopis/">Делопись</a></li><li><a href="/indeks/">Индекс Делоскопа</a></li><li><a href="/#shield">Щит</a></li><li><a href="/vse-vozmozhnosti/">Всё, что умеет Делоскоп</a></li><li><a href="/tarify/">Тарифы</a></li></ul></details></nav><nav class="podval__col" aria-label="Если банк спросил"><details class="podval__det" open><summary class="podval__h">Если банк спросил</summary><ul><li><a href="/skoraya-115-fz/">Скорая 115&#8209;ФЗ</a></li><li><a href="/kak-vidit-bank/">Как вас видит банк</a></li><li><a href="/nalichnye/">Наличные глазами банка</a></li><li><a href="/pasport/">Паспорт компании</a></li><li><a href="/115-fz/">115&#8209;ФЗ простыми словами</a></li></ul></details></nav><nav class="podval__col" aria-label="Знания"><details class="podval__det" open><summary class="podval__h">Знания</summary><ul><li><a href="/kak-rabotaet/">Как это работает&nbsp;— на&nbsp;примере</a></li><li><a href="/praktika/">Разборы дел</a></li><li><a href="/nalogi/">Налоги</a></li><li><a href="/tochnost/">Точность Индекса</a></li><li><a href="/obnovleniya/">Что нового</a></li><li><a href="/company/">Компании</a></li><li><a href="/zhurnal/">Журнал</a></li></ul></details></nav><nav class="podval__col" aria-label="Компания"><details class="podval__det" open><summary class="podval__h">Компания</summary><ul><li><a href="/cabinet.html">Кабинет</a></li><li><a href="/partneram/">Бухгалтерам и&nbsp;партнёрам</a></li><li><a href="/rekvizity/">Реквизиты и&nbsp;контакты</a></li><li><a href="mailto:help@deloskop.ru">help@deloskop.ru</a></li><li><a href="https://vk.com/deloskop_ru?utm_source=site" rel="me noopener">Мы&nbsp;во&nbsp;ВКонтакте</a></li></ul></details></nav></div><nav class="podval__doki" aria-label="Документы"><ul><li><a href="/oferta/">Публичная оферта</a></li><li><a href="/politika/">Политика обработки ПДн</a></li><li><a href="/soglasie/">Согласие на&nbsp;обработку ПДн</a></li><li><a href="/rassylki/">Согласие на&nbsp;рассылки</a></li><li><a href="/cookies/">Cookies и&nbsp;Метрика</a></li><li><a href="/vozvrat/">Возврат денег</a></li><li><a href="/partneram/usloviya/">Условия для&nbsp;партнёров</a></li></ul></nav><div class="podval__niz"><p>© 2026 Делоскоп</p><div class="tema" data-tema hidden><span class="tema__h" id="tema-h">Тема</span><span class="tema__g" role="group" aria-labelledby="tema-h"><button type="button" data-tema-v="dark" aria-pressed="true">Тёмная</button><button type="button" data-tema-v="light" aria-pressed="false">Светлая</button><button type="button" data-tema-v="auto" aria-pressed="false">Как в&nbsp;системе</button></span></div><p>Сотрудничество, отзывы и&nbsp;предложения&nbsp;— <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>. Принимаем 24/7</p><p>Материалы носят информационный характер и&nbsp;не&nbsp;заменяют консультацию юриста</p></div></div></div><!--/podval-->
 </body>
 </html>

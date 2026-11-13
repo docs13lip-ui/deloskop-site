@@ -52,8 +52,8 @@ test('Г: Индекс не обещает вероятностей до отч�
   assert.match(m.shkala ? m.shkala.poyasnenie : JSON.stringify(m), /не проверена/);
 });
 
-test('Д: «не проверено» ≠ «не обнаружено» — объяснено на главной и в методике', () => {
-  assert.match(chitat('index.html'), /[Нн]е&nbsp;проверено/);
+test('Д: «не проверено» ≠ «не обнаружено» — объяснено в методике (bez-otkuda-v1, 13.11: на главной раздела об источниках нет)', () => {
+  assert.doesNotMatch(chitat('index.html'), /id="doverie"/);
   assert.match(chitat('indeks/index.html').replace(/&nbsp;/g, ' '), /Нет данных — не нарушение/); // типограф: пробелы неразрывные
 });
 

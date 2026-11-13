@@ -36,7 +36,6 @@
       "js/perehod.js",
       "js/zhivoj-otchet.js",
       "js/vitrina.js",
-      "js/skladnoj.js",
       "js/poisk.js"
     ],
     "glavnaya-sinhr": [
@@ -45,7 +44,6 @@
     ],
     "otchet": [
       "js/kommentarii.js",
-      "js/otkuda.js",
       "js/reestry-sami.js",
       "js/rekvizity-proverki.js",
       "js/perepoverit.js",

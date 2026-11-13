@@ -7,7 +7,6 @@ const test = require('node:test');
 const assert = require('node:assert');
 const fs = require('node:fs');
 const path = require('node:path');
-const O = require('../js/otkuda.js');
 const U = require('../js/usloviya.js');
 const D = require('../js/dinamika.js');
 const NB = ' ';
@@ -37,28 +36,6 @@ function otvet(sost, over) {
   }, over || {});
 }
 const txt = (h) => h.replace(/<[^>]+>/g, '').split(NB).join(' ');
-
-test('опись: not_checked — «не проверяли», в счёт запрошенных не идут', () => {
-  const o = O.istochniki(otvet('not_checked'));
-  assert.strictEqual(o.nep, 7);
-  assert.strictEqual(o.oprosheno, o.otvetili, 'запрошенные = ответившие');
-  const h = O.html(otvet('not_checked')), t = txt(h);
-  assert.match(t, /ответили (\d+) из \1 запрошенных · 7 реестров не проверяли · проверка 11\.10\.2026/);
-  // prichina-nep-v1: общая строка без повтора «Не проверяли … : эти реестры мы пока не проверяем»
-  assert.ok(t.includes('Не проверяли 7 реестров — мы их пока не проверяем.'));
-  assert.ok(!/Не ответили \d/.test(t) && !/ не ответил/.test(h.replace(/aria-label="[^"]*"/g, '')), 'нет «не ответил»');
-  assert.strictEqual((h.match(/otk__r--nep/g) || []).length, 7);
-  assert.ok(h.includes('href="https://kad.arbitr.ru/"'), 'ссылка «проверьте сами» осталась');
-  assert.ok(t.includes('– не проверяли — не значит «не нашли»'));
-  assert.ok(!t.includes('не ответил'), 'строка без ссылки — «не проверяли», а не «не ответил»');
-});
-
-test('опись: без маркера not_checked — как раньше («не ответили»)', () => {
-  const h = O.html(otvet(undefined)), t = txt(h);
-  assert.ok(t.includes('Не ответили 7 из'));
-  assert.ok(!t.includes('не проверяли ·'));
-  assert.strictEqual(O.istochniki(otvet(undefined)).nep, 0);
-});
 
 test('предел: «ответили 0 из 7» не пишем, когда реестры не запрашивали; при сбое — пишем', () => {
   const a = U.decide(otvet('not_checked'));

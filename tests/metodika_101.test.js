@@ -16,7 +16,6 @@ const M = require('../indeks/metodika-v1.json');
 const KALK = require('../indeks/indeks.js');
 const IO = require('../js/indeks-otvet.js');
 const O = require('../js/otchet.js');
-const OT = require('../js/otkuda.js');
 const NB = '\u00a0';
 
 function otvet(over) {

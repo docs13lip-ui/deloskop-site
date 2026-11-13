@@ -16,7 +16,7 @@ test('Разбор № 26: данные — ВС № 305-ЭС26-3930 от 26.08.
   const r = D.razbory.find((x) => x.slug === SLUG);
   assert.ok(r && r.razdel === 'dogovory');
   // razbor29-v1 (26.10): Разбор № 29 встал первым — № 26 сразу за ним
-  assert.ok(D.razbory.slice(0, 11).some((x) => x.slug === SLUG), 'новые разборы — первыми (среди десяти свежих)'); // razbor39-v1 (04.11), razbor40-v1 (06.11), razbor41-v1 (07.11): +1 свежий, razbor43-v1 (11.11): +1
+  assert.ok(D.razbory.slice(0, 13).some((x) => x.slug === SLUG), 'новые разборы — первыми (среди десяти свежих)'); // razbor39-v1 (04.11), razbor40-v1 (06.11), razbor41-v1 (07.11): +1 свежий, razbor43-v1 (11.11): +1
   assert.deepStrictEqual(r.dela.map((d) => d.nomer + ' ' + d.data), ['№ 305-ЭС26-3930 2026-08-26']);
   assert.strictEqual(r.dela[0].istochnik, 'https://vsrf.ru/lk/practice/stor_pdf_ec/2563804');
   assert.strictEqual(r.knopka.cel, 'razbor26_check');

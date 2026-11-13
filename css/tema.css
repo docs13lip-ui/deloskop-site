@@ -89,6 +89,7 @@
 @media (max-width:520px){[data-theme=dark] .pf__d--star{color:#E8A23A}
 }
 [data-theme=dark] .report.loading{--zh-pereliv:rgba(28,28,31,0.55)}
+[data-theme=dark] .pmg{border-top:1px solid rgba(255,255,255,0.132)}
 [data-theme=dark] .co .kom{background:#19191C}
 [data-theme=dark] body{background:#111113}
 [data-theme=dark] .pr .shagi li::before{color:#0B0B0C}

@@ -1,4 +1,4 @@
-/* Делоскоп · пакет «otchet» — собран tests/sobrat_js.py из 26 файлов (partials/sborka.json). Правьте исходники, не этот файл. */
+/* Делоскоп · пакет «otchet» — собран tests/sobrat_js.py из 27 файлов (partials/sborka.json). Правьте исходники, не этот файл. */
 /* --- /js/kommentarii.js --- */
 (function (root, factory) {
 var api = factory();
@@ -5265,4 +5265,59 @@ return a.length;
 w.Nedavnie = { add: add, list: read, render: render, dovedena: dovedena, KEY: KEY,
 pamyat: { chist: pamyatChist, vozvrat: pamyatVozvrat, proverka: pamyatProverka, dovedena: pamyatDovedena, KEY: PAMYAT } };
 })(window);
+;
+/* --- /js/pomoglo.js --- */
+(function (root, factory) {
+var api = factory();
+if (typeof module !== "undefined" && module.exports) module.exports = api;
+if (root) root.DlkPomoglo = api;
+})(typeof window !== "undefined" ? window : null, function () {
+"use strict";
+var VKL = true;
+var T = { vopros: "Ответ помог?", da: "Да", net: "Нет", spasibo: "Спасибо" };
+var VID = { da: "otvet_pomog_da", net: "otvet_pomog_net" };
+function vidSobytiya(otvet) { return VID[otvet] || null; }
+function html() {
+return '<p class="pmg__q" id="pmg-q">' + T.vopros + "</p>" +
+'<div class="pmg__r" role="group" aria-labelledby="pmg-q">' +
+'<button type="button" class="pmg__b" data-pmg="da">' + T.da + "</button>" +
+'<button type="button" class="pmg__b" data-pmg="net">' + T.net + "</button></div>";
+}
+function mesto(report) {
+if (!report || !report.querySelector) return null;
+var vt = report.querySelector(".ot-vt");
+if (vt) return { v: vt, posle: null };
+var u = report.querySelector(".usl") || report.querySelector(".verdict");
+return u && u.parentNode ? { v: u.parentNode, posle: u } : null;
+}
+function mount(report, r, o, w) {
+o = o || {}; w = w || (typeof window !== "undefined" ? window : null);
+if (!VKL || !w || !report || o.svoj) return null;
+var inn = String(r && r.company && r.company.inn || "");
+if (!/^\d{10}(\d{2})?$/.test(inn) || /^0+$/.test(inn)) return null;
+try { if (typeof w.dlkSobytie !== "function" || (w.dlkSchitaem && !w.dlkSchitaem())) return null; } catch (e) { return null; }
+if (report.querySelector("[data-pomoglo]")) return null;
+var m = mesto(report);
+if (!m) return null;
+var doc = report.ownerDocument || w.document;
+var b = doc.createElement("div");
+b.className = "pmg"; b.setAttribute("data-pomoglo", "");
+b.innerHTML = html();
+if (m.posle) m.v.insertBefore(b, m.posle.nextSibling); else m.v.appendChild(b);
+var otvecheno = false;
+Array.prototype.forEach.call(b.querySelectorAll("[data-pmg]"), function (k) {
+k.addEventListener("click", function () {
+if (otvecheno) return;
+otvecheno = true;
+var v = vidSobytiya(k.getAttribute("data-pmg"));
+try { if (v) w.dlkSobytie(v); } catch (e) {}
+b.classList.add("pmg--ok");
+b.innerHTML = '<p class="pmg__s" role="status" tabindex="-1">' + T.spasibo + "</p>";
+try { b.firstChild.focus({ preventScroll: true }); } catch (e) {}
+});
+});
+return b;
+}
+return { VKL: VKL, T: T, VID: VID, vidSobytiya: vidSobytiya, html: html, mesto: mesto, mount: mount };
+});
 ;

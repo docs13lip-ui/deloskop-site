@@ -288,3 +288,13 @@ dialog.po::backdrop{background:rgba(17,17,19,.4)}
 .report.ot details[open]>:not(summary){animation:zh-akk .26s cubic-bezier(.2,.7,.2,1) backwards}
 @keyframes zh-akk{from{opacity:0;transform:translateY(-6px)}}
 @media (prefers-reduced-motion:reduce){.zh-ist__i::after,.report.loading::after{animation:none;opacity:0}.ot-vd--pojav .ot-vt>*,.ot-vd--pojav .ot-act>*,.report.ot details[open]>:not(summary){animation:none}}
+/* pomoglo-v1 (13.11): «Ответ помог?» под выводом — тихая строка, две равные кнопки контуром: ни одна не подсказывает ответ (js/pomoglo.js) */
+.pmg{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin-top:8px;padding-top:12px;border-top:1px solid rgba(0,0,0,.08)}
+.pmg__q,.pmg__s{margin:0;font-size:15px;line-height:1.4;color:var(--ink2,#48484C)}
+.pmg__r{display:flex;gap:8px}
+.pmg__b{min-width:72px;min-height:44px;padding:0 18px;border:0;border-radius:999px;background:transparent;box-shadow:inset 0 0 0 1px var(--line-2,#D9D9D4);color:var(--ink,#1D1D1F);font:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:box-shadow .16s,color .16s}
+.pmg__b:hover{box-shadow:inset 0 0 0 1px var(--accent,#0B63E5);color:var(--accent,#0B63E5)}
+.pmg__b:focus-visible{outline:3px solid var(--accent,#0B63E5);outline-offset:2px}
+.pmg--ok .pmg__s{min-height:44px;display:flex;align-items:center;outline:0}
+[data-theme=dark] .pmg{border-top-color:rgba(255,255,255,.132)}
+@media print{.pmg{display:none}}

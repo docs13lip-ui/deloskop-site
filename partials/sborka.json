@@ -69,7 +69,8 @@
       "js/lipkaya.js",
       "js/sledit.js",
       "js/svyazi.js",
-      "js/nedavnie.js"
+      "js/nedavnie.js",
+      "js/pomoglo.js"
     ],
     "primer": [
       "js/sushchestvennoe.js",

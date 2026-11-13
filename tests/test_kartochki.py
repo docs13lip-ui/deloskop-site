@@ -2308,12 +2308,15 @@ class TestCheckoVorota(unittest.TestCase):
         z["damia"]["fssp"]["istochnik"] = istochnik
         return z
 
-    def test_checko_ne_na_kartochke(self):
+    def test_checko_ne_na_kartochke_esli_vyklyuchit(self):
         import kartochka_render as R
-        self.assertFalse(R.CHECKO_NA_KARTOCHKAH)
-        k = K.iz_check(self.zap("ФССП (через Checko)"))
-        self.assertNotIn("fssp", k["fakty"])
-        self.assertNotIn("V12", [x["kod"] for x in K.vyvody(k)])
+        R.CHECKO_NA_KARTOCHKAH = False
+        try:
+            k = K.iz_check(self.zap("ФССП (через Checko)"))
+            self.assertNotIn("fssp", k["fakty"])
+            self.assertNotIn("V12", [x["kod"] for x in K.vyvody(k)])
+        finally:
+            R.CHECKO_NA_KARTOCHKAH = True
 
     def test_drugoj_posrednik_kak_byl(self):
         self.assertIn("fssp", K.iz_check(self.zap("ФССП (через DaMIA)"))["fakty"])
@@ -2321,10 +2324,87 @@ class TestCheckoVorota(unittest.TestCase):
     def test_pravo_vklyuchilo(self):
         import kartochka_render as R
         R.CHECKO_NA_KARTOCHKAH = True
-        try:
-            self.assertIn("fssp", K.iz_check(self.zap("ФССП (через Checko)"))["fakty"])
-        finally:
-            R.CHECKO_NA_KARTOCHKAH = False
+        self.assertTrue(R.CHECKO_NA_KARTOCHKAH)  # решение владельца 12.11 «Checko по полной», рамка [Право] 12.11 п. 1
+        self.assertIn("fssp", K.iz_check(self.zap("ФССП (через Checko)"))["fakty"])
+
+
+class TestCheckoNaKartochke(unittest.TestCase):
+    """kartochki-checko-v1: из Checko на публичной карточке — только числа и суммы; подпись «— через Checko, на …»;
+    номеров дел, названий и ФИО сторон нет; ошибка или пустой ответ — «не проверяли», не ноль."""
+    FIO = "Иванов Иван Иванович"
+    NOMER = "А40-123456/2026"
+    STORONA = "ООО «РОМАШКА-СТОРОНА»"
+
+    def zap(self, sudy="found", fssp="found", bankr="not_found"):
+        z = TestFsspIzDamia.zap(None, "found", ostatok=1000000)
+        d = z["checked_at"]
+        z["damia"] = {
+            "sudy": {"istochnik": "Картотека арбитражных дел (через Checko)", "status": "polucheno", "data_svedeniy": d,
+                     "sostoyanie": sudy, "itog": "Компания — ответчик в делах. " + self.NOMER,
+                     "dannye": {"otvetchik_nezaversheno": 149, "otvetchik_nezaversheno_ohvat": "vse",
+                                "otvetchik_summa_nezaversheno": 307710754.97,
+                                "dela": [{"nomer": self.NOMER, "istcy": [self.FIO, self.STORONA], "summa": 5}]}},
+            "fssp": {"istochnik": "ФССП (через Checko)", "status": "polucheno", "data_svedeniy": d, "sostoyanie": fssp,
+                     "itog": self.FIO, "dannye": {"otkryto": 497, "ostatok": 1621198.51, "ostatok_ohvat": "pervye_100_iz_497",
+                                                    "proizvodstva": [{"vzyskatel": self.FIO, "nomer": "12345/26/77001-ИП"}]}},
+            "bankrotstvo": {"istochnik": "ЕФРСБ (через Checko)", "status": "polucheno", "data_svedeniy": d, "sostoyanie": bankr,
+                            "dannye": {"vsego": 0, "soobshcheniya": []}},
+        }
+        return z
+
+    def html(self, z):
+        k = K.iz_check(z)
+        return k, K.vyvody(k)
+
+    def test_tolko_chisla(self):
+        k, V = self.html(self.zap())
+        kody = [x["kod"] for x in V]
+        self.assertIn("V26", kody)
+        self.assertIn("V12", kody)
+        self.assertEqual(k["fakty"]["bankrotstvo"]["ton"], "ok")  # V29 — ниже предела «6 выводов» у образца
+        vse = " ".join(x["tekst"] for x in V) + " ".join(str(f.get("detal")) for f in k["fakty"].values())
+        for zapret in (self.FIO, self.NOMER, self.STORONA, "77001-ИП", "checko.ru"):
+            self.assertNotIn(zapret, vse)
+        v26 = [x for x in V if x["kod"] == "V26"][0]
+        self.assertIn("149", v26["tekst"])
+        self.assertIn("308\xa0млн", v26["tekst"])
+        self.assertEqual(v26["istochnik"], "Картотека арбитражных дел — через Checko")
+
+    def test_podpisi_prava(self):
+        k, _ = self.html(self.zap())
+        self.assertEqual(k["fakty"]["fssp"]["istochnik"], "ФССП, банк данных исполнительных производств — через Checko")
+        self.assertEqual(k["fakty"]["bankrotstvo"]["istochnik"], "ЕФРСБ — через Checko")
+
+    def test_fssp_ohvat_nazvan(self):
+        _, V = self.html(self.zap())
+        t = [x for x in V if x["kod"] == "V12"][0]["tekst"]
+        self.assertIn("497", t)
+        self.assertIn("100", t)
+
+    def test_oshibka_ne_nol(self):
+        z = self.zap()
+        for b in z["damia"].values():
+            b["sostoyanie"], b["status"] = "not_checked", "oshibka"
+        k, V = self.html(z)
+        for kod in ("sudy", "fssp", "bankrotstvo"):
+            self.assertNotIn(kod, k["fakty"])
+        self.assertFalse({"V11", "V12", "V26", "V27", "V28", "V29"} & {x["kod"] for x in V})
+
+    def test_ne_nashli(self):
+        k, V = self.html(self.zap(sudy="not_found", fssp="not_found"))
+        kody = {x["kod"] for x in V}
+        self.assertTrue({"V27", "V11"} <= kody, kody)
+        self.assertEqual(k["fakty"]["sudy"]["detal"], "незавершённых дел не нашли")
+
+    def test_html_karta_bez_storon(self):
+        import kartochka_render as R
+        z = self.zap()
+        ok, pr, adres, telo = R.kartochka_iz_check(z, {})
+        if not ok:
+            self.skipTest(pr)
+        for zapret in (self.FIO, self.NOMER, self.STORONA, "77001-ИП", "checko.ru"):
+            self.assertNotIn(zapret, telo)
+        self.assertIn("через Checko", telo)
 
 
 class TestVhodyashchie(unittest.TestCase):

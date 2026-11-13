@@ -73,7 +73,7 @@ test('подключено там, где показываем ответ API: �
   const idx = chitat('index.html');
   assert.ok(idx.includes('<script src="/js/imya.js" defer></script>'));
   assert.ok(/DlkImya\.ispravitOtvet\(x\.j\)/.test(idx), 'главная: ответ /api/check не исправляется');
-  assert.ok(/DlkPoisk\.stroki\(j\.items,window\.DlkImya\?DlkImya\.kavychki:null\)/.test(idx), 'подсказки при вводе (poisk-v2-a: кавычки — в строках компаний)');
+  assert.ok(/P\.otvet\(PR,j,window\.DlkImya\?DlkImya\.kavychki:null,q\)/.test(idx), 'подсказки при вводе (poisk-v2-d: кавычки — в строках компаний из /api/poisk)');
   const rep = chitat('report.html');
   assert.ok(rep.includes('<script src="/js/imya.js"></script>') && /DlkImya\.ispravitOtvet\(d\);return render\(d\)/.test(rep), 'PDF-досье');
   const pas = chitat('pasport/kontragent/index.html');

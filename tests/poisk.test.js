@@ -127,7 +127,8 @@ test('главная: строка подключена; текст запрос
   assert.ok(sb.pakety.glavnaya.includes('js/poisk.js'));
   const pol = chitat('politika/index.html');
   assert.ok(pol.includes('ИНН компании или текст, который вы&nbsp;ввели в&nbsp;строку поиска'));
-  assert.ok(pol.includes('Индивидуальных предпринимателей по&nbsp;ФИО не&nbsp;ищем.'));
+  assert.ok(pol.includes('показываем действующих индивидуальных предпринимателей из&nbsp;ЕГРИП и&nbsp;организации, где этот человек сейчас указан в&nbsp;ЕГРЮЛ руководителем или участником. Текст запроса не&nbsp;храним.'), '/politika/ — строка «Поиск» [Право] ✎ 8 п. 7');
+  assert.doesNotMatch(pol, /Индивидуальных предпринимателей по&nbsp;ФИО не&nbsp;ищем/);
   assert.doesNotMatch(pol, /только ИНН компании для&nbsp;получения сведений/);
   assert.doesNotMatch(chitat('js/poisk.js'), /искусствен|нейросет|лучш|гарантир/i);
 });

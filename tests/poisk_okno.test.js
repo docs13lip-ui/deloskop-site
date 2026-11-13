@@ -71,6 +71,6 @@ test('главная: шапка ставит курсор в строку; вы
   assert.match(s, /function glavnaya\(\) \{ var i = document\.getElementById\("inn"\); return i && i\.getAttribute\("role"\) === "combobox"/);
   assert.match(s, /if \(okno && !okno\.classList\.contains\("pso"\)\) return;/, 'открыто другое окно — клавиши не перехватываем');
   const g = chitat('index.html');
-  assert.match(g, /dlkGoal\('poisk_vybor',\{vid:pustoe\?'nedavnie':r\.inn\?\(r\.imya\?'kompaniya':'inn'\):r\.q\?'nazvanie':r\.razdel\?'razdel':'instrument',mesto:'glavnaya',sposob:sposob\|\|'enter',nomer:i\}\)/);
+  assert.match(g, /dlkGoal\('poisk_vybor',\{vid:pustoe\?'nedavnie':r\.inn\?\(r\.imya\?'kompaniya':'inn'\):r\.dopisat\?'dopisat':r\.q\?'nazvanie':r\.razdel\?'razdel':'instrument',mesto:'glavnaya',sposob:sposob\|\|'enter',nomer:i\}\)/);
   assert.match(g, /if\(location\.hash==='#poisk'\)\{try\{history\.replaceState\(null,'',location\.pathname\+location\.search\)\}catch\(e\)\{\}input\.focus\(\);input\.dispatchEvent\(new Event\('input'\)\)\}/);
 });

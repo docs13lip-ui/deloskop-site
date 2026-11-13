@@ -41,7 +41,8 @@ test('(б) заголовки «Они платят мне» — дословн�
   assert.strictEqual(otg(F.capMalo).headline, 'Можно, но без отсрочки');
   // predvaritelno-v1 (аудит 22.10): в образцах go и cap долги не проверены (у cap и выручки нет) — заголовок «Предварительно»
   assert.strictEqual(otg(F.cap).headline, 'Предварительно: есть замечания');
-  assert.strictEqual(otg(F.go).headline, 'Предварительно: серьёзного не нашли');
+  // chestnyj-nol-v1 (13.11): в образце go приставы не проверены — положительного вывода нет
+  assert.strictEqual(otg(F.go).headline, 'Проверили не всё: приставы сегодня не\u00a0ответили');
 });
 
 test('(б) советы «Они платят мне» — дословно из ТЗ п. 4', () => {
@@ -50,7 +51,7 @@ test('(б) советы «Они платят мне» — дословно из
   assert.strictEqual(otg(F.post).advice, STOP);
   assert.strictEqual(otg(F.capMalo).advice, 'Отсрочку — только под банковскую гарантию платежа или аккредитив.');
   assert.strictEqual(otg(F.cap).advice, 'Больше предела — под банковскую гарантию или аккредитив. Держите долг покупателя в пределе: следующая отгрузка — после оплаты предыдущей.');
-  assert.strictEqual(otg(F.go).advice, 'Сохраните досье с датой проверки: если покупатель задержит оплату, оно покажет, на каких данных вы дали отсрочку.');
+  assert.strictEqual(otg(F.go).advice, 'Вывода о рисках пока нет. Сохраните досье с датой проверки: если покупатель задержит оплату, оно покажет, на каких данных вы дали отсрочку.');
   const bankrot = Object.assign({}, F.go, { company: Object.assign({}, F.go.company, { status: 'BANKRUPT' }) });
   assert.strictEqual(otg(bankrot).advice, 'Новые отгрузки — только после оплаты и по согласованию с арбитражным управляющим.');
   const likv = Object.assign({}, F.go, { company: Object.assign({}, F.go.company, { status: 'LIQUIDATING' }) });

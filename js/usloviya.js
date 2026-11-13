@@ -295,7 +295,9 @@
   function statusIstochnika(r, klyuchi) {
     var dm = r && r.damia || {}, spisok = r && r.istochniki || [];
     for (var i = 0; i < klyuchi.length; i++) {
-      var b = dm[klyuchi[i]]; if (b && b.status) return b.status;
+      // chestnyj-nol-v1: живой формат istochniki-v1 — ответ реестра в sostoyanie (status там «polucheno»), иначе приставы,
+      // которые ответили, читались бы «не проверяли»
+      var b = dm[klyuchi[i]]; if (b && b.sostoyanie) return b.sostoyanie; if (b && b.status) return b.status;
       for (var j = 0; j < spisok.length; j++) if (spisok[j] && (spisok[j].kod === klyuchi[i] || spisok[j].id === klyuchi[i]) && spisok[j].status) return spisok[j].status;
     }
     return null;
@@ -459,7 +461,17 @@
   // predvaritelno-v1 (аудит 22.10, приоритет 1 «Безопасность денежных рекомендаций»): ориентир, посчитанный без выручки
   // (по возрасту) или при непроверенных судах, приставах, долгах, — предварительный. Неизвестное не считаем безопасным:
   // заголовок не говорит «работать можно», совет по сумме — «до проверки по факту поставки», число — «после проверки».
+  // chestnyj-nol-v1 ([команда] 13.11 12:40 п. 1.1, дословно): суды или приставы не ответили — положительного вывода нет вовсе.
+  // «Предварительно: серьёзного не нашли» при непроверенных судах — утверждение о компании без проверки (ст. 152 ГК, решение 02.10).
+  function neOtvetiliSudyFssp(pv) {
+    var a = (pv && pv.ne) || [], s = a.some(function (x) { return /^арбитражные суды/.test(x); }), p = a.some(function (x) { return /^(долги у приставов|приставы)/.test(x); });
+    return s && p ? 'суды и приставы' : s ? 'суды' : p ? 'приставы' : '';
+  }
+  function zagNeVse(pv) { var k = neOtvetiliSudyFssp(pv); return 'Проверили не всё: ' + k + ' сегодня не\u00a0ответили'; }
+  var NET_VYVODA = 'Вывода о рисках пока нет.';
+  function sNetVyvoda(pv, t, sovet) { return neOtvetiliSudyFssp(pv) && t === 'go' ? NET_VYVODA + ' ' + sovet : sovet; }
   function headline(f, t, cap, malo, pv, ned) {
+    if (neOtvetiliSudyFssp(pv) && t === 'go') return zagNeVse(pv);
     if (ned && (t === 'go' || t === 'cap')) return t === 'cap' ? 'Предварительно: есть замечания' : 'Предварительно: данных мало';
     if (pv && t === 'go') return 'Предварительно: серьёзного не нашли';
     if (pv && t === 'cap' && !malo && cap != null) return 'Предварительно: есть замечания';
@@ -472,6 +484,7 @@
     return 'Работать можно';
   }
   function headlineOtg(f, t, cap, malo, pv, ned) {
+    if (neOtvetiliSudyFssp(pv) && t === 'go') return zagNeVse(pv);
     if (ned && (t === 'go' || t === 'cap')) return t === 'cap' ? 'Предварительно: есть замечания' : 'Предварительно: данных мало';
     if (pv && t === 'go') return 'Предварительно: серьёзного не нашли';
     if (pv && t === 'cap' && !malo && cap != null) return 'Предварительно: есть замечания';
@@ -679,7 +692,7 @@
         napravlenie: 'otgruzhaem',
         facts: f, tone: t, cap: pc.cap, malo: !!pc.malo, capRule: pc.rule, raschet: pc.raschet, neProvereno: np,
         kak: kakPoschitali(f, t, pc, reasons(f), np, 'otgruzhaem', pv),
-        headline: headlineOtg(f, t, pc.cap, pc.malo, pv, pc.nedostatochno), reasons: reasons(f), advice: adviceOtg(f, t, pc.malo),
+        headline: headlineOtg(f, t, pc.cap, pc.malo, pv, pc.nedostatochno), reasons: reasons(f), advice: sNetVyvoda(pv, t, adviceOtg(f, t, pc.malo)),
         amount: amount, regime: regime, stake: null, prepay: pc.nedostatochno && amount ? NEDOST_SOVET(true) : otgruzkaAdvice(amount, pc.cap, t, pv),
         docs: list, letter: letterOtg(f, list, amount)
       }, pv);
@@ -687,7 +700,7 @@
     return sFinorg(pc, {
       facts: f, tone: t, cap: pc.cap, malo: !!pc.malo, capRule: pc.rule, raschet: pc.raschet, neProvereno: np,
       kak: kakPoschitali(f, t, pc, reasons(f), np, null, pv),
-      headline: headline(f, t, pc.cap, pc.malo, pv, pc.nedostatochno), reasons: reasons(f), advice: advice(f, t, pc.malo),
+      headline: headline(f, t, pc.cap, pc.malo, pv, pc.nedostatochno), reasons: reasons(f), advice: sNetVyvoda(pv, t, advice(f, t, pc.malo)),
       amount: amount, regime: regime, stake: atStake(amount, regime), prepay: pc.nedostatochno && amount ? NEDOST_SOVET(false) : prepayAdvice(amount, pc.cap, t, pv),
       docs: list, letter: letter(f, list, amount, { kartochka: opts.kartochka, data: dataRu(r.checked_at) || '' })
     }, pv);
@@ -866,7 +879,7 @@
 
     function draw(keepFocus) {
       var v = decide(r, st), f = v.facts;
-      box.className = 'usl ' + v.tone + (v.nedostatochno ? ' ned' : '');   // doverie-v1: неизвестное — нейтральным цветом
+      box.className = 'usl ' + v.tone + (v.nedostatochno || (v.tone === 'go' && neOtvetiliSudyFssp(v.predvaritelno)) ? ' ned' : ''); // chestnyj-nol-v1: «Проверили не всё» — серым, не зелёным   // doverie-v1: неизвестное — нейтральным цветом
       var why = v.reasons.length ? v.reasons.join(', ') : chestnoPoyasnenie(r, bezPovtora(r && r.verdict, v.headline)); // точку ставит строка ниже — без «найдено..»
       var stake = '';
       if (v.stake) {
@@ -946,7 +959,7 @@
     decide: decide, mount: mount, rynokStroka: rynokStroka, facts: facts, tone: tone, reorgPrekr: reorgPrekr, REORG_PREKRASHCHENIE: REORG_PREKRASHCHENIE, REORG_SDELAT: REORG_SDELAT, REORG_DOLG: REORG_DOLG, prepayCap: prepayCap, atStake: atStake,
     docs: docs, letter: letter, LETTER_NELZYA: LETTER_NELZYA, kartaKartochek: kartaKartochek, parseAmount: parseAmount, money: money, moneyKrupno: moneyKrupno, niceFloor: niceFloor, kindOf: kindOf, signalId: signalId, SIGNALY: SIGNALY.map(function (x) { return x[0]; }),
     neProvereno: neProvereno, kakPoschitali: kakPoschitali, otgruzkaAdvice: otgruzkaAdvice, NAPR: NAPR, bezPovtora: bezPovtora, chestnoPoyasnenie: chestnoPoyasnenie, neProverenyKlyuchevye: neProverenyKlyuchevye, vVyvode: vVyvode, STATYA: STATYA, FORMULA: FORMULA,
-    predvaritelno: predvaritelno, METODIKA: { DELITEL: DELITEL, POTOLKI: POTOLKI, OSTOROZHNO: OSTOROZHNO, MINIMUM: MINIMUM, PRAVILO: PRAVILO },
+    predvaritelno: predvaritelno, neOtvetiliSudyFssp: neOtvetiliSudyFssp, NET_VYVODA: NET_VYVODA, METODIKA: { DELITEL: DELITEL, POTOLKI: POTOLKI, OSTOROZHNO: OSTOROZHNO, MINIMUM: MINIMUM, PRAVILO: PRAVILO },
     RATES: { VAT: VAT, PROFIT: PROFIT, USN_DR: USN_DR }
   };
 });

@@ -59,13 +59,13 @@ test('бета: строка с ценой «Старта» — только е�
   const DO = { betaDo: '2026-10-13' }, DO_T = Date.parse('2026-10-10T12:00:00+03:00'); // beta-data-v1: дата и момент фиксированы
   const sejchas = P.sostoyanie({ tarify: Object.assign(P.iz(TJ), DO), beta: true, inn: INN, sejchas: DO_T });
   if (start.startovaya.god_soglasovan !== true) {
-    assert.strictEqual(sejchas.stroka, 'В бете — бесплатно. После 13.10 — ' + cena + NB + '₽ или в тарифе «' + start.nazvanie + '».');
+    assert.strictEqual(sejchas.stroka, 'Сейчас — бесплатно. После 13.10 — ' + cena + NB + '₽ или в тарифе «' + start.nazvanie + '».');
   }
   // обычная цена «Старта» (после снятия беты сборщик хранит её в startovaya.obychnaya)
   const obych = (start.startovaya.obychnaya || {}).mesyac || start.mesyac;
   const D = sTsenoj(obych, (D, st) => { D.beta = true; st.startovaya.god_soglasovan = true; });
   const s = P.sostoyanie({ tarify: Object.assign(P.iz(D), DO), beta: true, inn: INN, sejchas: DO_T });
-  assert.strictEqual(s.stroka, 'В бете — бесплатно. После 13.10 — ' + cena + NB + '₽ или в тарифе «' + start.nazvanie + '»: '
+  assert.strictEqual(s.stroka, 'Сейчас — бесплатно. После 13.10 — ' + cena + NB + '₽ или в тарифе «' + start.nazvanie + '»: '
     + start.startovaya.mesyac + NB + '₽ в месяц, ' + start.otchetov + NB + 'Паспорта включены.');
   assert.ok(!s.ssylka, 'в бете ссылки на оплату нет');
   // vklyuchit: false — «Старт» по обычной цене, подсказки нет

@@ -77,8 +77,8 @@ test('Условия сделки на чистой компании: «Рабо
 test('совет «Работать можно» без обещания исхода — «может стать частью доказательств», как в PDF-досье', () => {
   const d = U.decide(otvet('46.19'), {});
   // predvaritelno-v1: в образце долги не проверены — заголовок «Предварительно», совет тот же
-  assert.strictEqual(d.headline, d.predvaritelno ? 'Предварительно: серьёзного не нашли' : 'Работать можно');
-  assert.strictEqual(d.advice, 'Сохраните досье с датой проверки — оно может стать частью доказательств должной осмотрительности.');
+  assert.strictEqual(d.headline, d.predvaritelno ? 'Проверили не всё: приставы сегодня не\u00a0ответили' : 'Работать можно');
+  assert.strictEqual(d.advice, (d.predvaritelno ? 'Вывода о рисках пока нет. ' : '') + 'Сохраните досье с датой проверки — оно может стать частью доказательств должной осмотрительности.');
   const src = fs.readFileSync(path.join(KOREN, 'js/usloviya.js'), 'utf8');
   assert.ok(!/это ваше доказательство/.test(src));
   const rep = fs.readFileSync(path.join(KOREN, 'report.html'), 'utf8');

@@ -3224,9 +3224,19 @@ function ip(r) {
 var c = (r && r.company) || {};
 return c.kind === "INDIVIDUAL" || String(c.inn || "").replace(/\D/g, "").length === 12;
 }
+function bank(r) { return /^64\.1(\.|\d|$)/.test(String(((r && r.company) || {}).okved || "")); }
+var BANK = { tekst: "Для банков сумму не считаем: банки сдают отчётность в Банк России. Отчётность и устойчивость банка — на сайте Банка России",
+u: "https://www.cbr.ru/finorg/foinfo/" };
+function skl(n, f) { var a = Math.abs(n) % 100, b = a % 10; return a > 10 && a < 20 ? f[2] : b === 1 ? f[0] : b >= 2 && b <= 4 ? f[1] : f[2]; }
+function chislo(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, NB); }
 function raschet(r, segodnya) {
 var D = r && r.dengi;
 if (!D || typeof D !== "object" || ip(r)) return null;
+if (bank(r)) {
+var cO = (r.company || {}).ogrn;
+return { porog: "bank", stroki: [], neProvereno: [], summa: null, dolya: null, podpis: "", dejstvie: "", dataNashli: "", nepolno: false, vyruchka: null,
+bank: { tekst: BANK.tekst, u: BANK.u + (/^\d{13}$/.test(String(cO || "")) ? "?ogrn=" + cO : "") } };
+}
 var sost = Array.isArray(D.sostavlyayushchie) ? D.sostavlyayushchie : [];
 var po = {};
 sost.forEach(function (x) { if (x && VIDY[x.vid] && x.summa != null && isFinite(Number(x.summa))) po[x.vid] = x; });
@@ -3247,6 +3257,13 @@ var dataNashli = stroki.map(function (x) { var p = po[x.vid]; return data(p.data
 .filter(Boolean).sort(function (a, b) { return a.split(".").reverse().join("") < b.split(".").reverse().join("") ? 1 : -1; })[0] || "";
 var o = { stroki: stroki, neProvereno: neProvereno, summa: summa, dolya: null, porog: "", podpis: "", dejstvie: "", dataNashli: dataNashli,
 nepolno: stroki.some(function (x) { return x.nepolno; }), vyruchka: null };
+var neIF = ["iski_otvetchik", "fssp_ostatok"].filter(function (v) { return neProvereno.indexOf(v) >= 0; });
+if (neIF.length) {
+o.porog = "ne_poschitali"; o.neIF = neIF;
+var nd = po.nedoimka && neProvereno.indexOf("nedoimka") < 0 ? po.nedoimka : null;
+o.nedoimka = nd ? { summa: Math.max(0, Number(nd.summa)), data: data(nd.data_svedeniy || nd.data_nabora) } : null;
+return o;
+}
 if (summa <= 0) { o.porog = "net"; return o; }
 var V = D.vyruchka || {}, god = Number(V.god), tek = (segodnya || new Date()).getFullYear();
 if (!(Number(V.summa) > 0) || !god || tek - god > 2) { o.porog = "bez_vyruchki"; return o; }
@@ -3276,7 +3293,18 @@ var CSS = ".dnk{display:grid;gap:12px;padding:20px 22px;border-radius:16px;borde
 function html(o) {
 if (!o) return "";
 var shk = "", itog;
-if (o.porog === "net") {
+if (o.porog === "bank") {
+return '<section class="dnk" aria-labelledby="dnk-h" data-dengi="bank">' +
+'<div class="dnk__h"><h2 id="dnk-h">Деньги на кону</h2></div>' +
+'<p class="dnk__dolya">' + esc(o.bank.tekst) + ' <a href="' + esc(o.bank.u) + '" target="_blank" rel="noopener">→</a></p></section>';
+}
+if (o.porog === "ne_poschitali") {
+var kto = o.neIF.length === 2 ? "Иски и" + NB + "долги у" + NB + "приставов" : o.neIF[0] === "iski_otvetchik" ? "Иски" : "Долги у" + NB + "приставов";
+var nd = o.nedoimka ? (o.nedoimka.summa > 0 ? " Недоимка: " + rub(o.nedoimka.summa) + " (ФНС" + (o.nedoimka.data ? ", на " + esc(o.nedoimka.data) : "") + ")."
+: " Недоимки нет (ФНС" + (o.nedoimka.data ? ", на " + esc(o.nedoimka.data) : "") + ").") : "";
+itog = '<p class="dnk__sum">Не посчитали</p>' +
+'<p class="dnk__dolya">' + kto + " сегодня не" + NB + "проверили — без них сумма неполная." + nd + "</p>";
+} else if (o.porog === "net") {
 itog = '<p class="dnk__sum">0' + NB + "₽</p>" +
 '<p class="dnk__dolya">Исков, долгов у приставов и недоимки на ' + esc(o.dataNashli) + " не нашли" +
 (o.neProvereno.length ? " (" + o.neProvereno.map(function (v) { return VIDY[v].kratko; }).join(", ") + " — не проверено)" : "") + "</p>";
@@ -3289,18 +3317,18 @@ var w = Math.max(1, Math.min(100, Math.round(o.dolya * 100)));
 shk = '<div class="dnk__shk" role="img" aria-label="Доля в годовой выручке: ' + esc(o.podpis) + '"><i style="width:' + w + '%"></i><b style="left:10%"></b><b style="left:50%"></b></div>';
 }
 }
-var rows = o.stroki.map(function (x) {
+var rows = o.stroki.filter(function (x) { return o.porog !== "ne_poschitali" || x.summa > 0; }).map(function (x) {
 return '<li><span class="dnk__p">' + esc(x.podpis) + '</span><span class="dnk__v">' + rub(x.summa) + "</span>" +
-"<small>" + esc(x.istochnik) + (x.chislo ? " · " + esc(x.vid === "iski_otvetchik" ? x.chislo + " дел" : x.chislo + " производств") : "") +
+"<small>" + esc(x.istochnik) + (x.chislo ? " · " + esc(x.vid === "iski_otvetchik" ? chislo(x.chislo) + NB + skl(x.chislo, ["дело", "дела", "дел"]) : chislo(x.chislo) + NB + skl(x.chislo, ["производство", "производства", "производств"])) : "") +
 (x.nepolno ? " · " + esc(x.nepolno) : "") + "</small></li>";
 }).join("");
-var np = o.porog !== "net" && o.neProvereno.length ? '<p class="dnk__np">Не проверено: ' + o.neProvereno.map(function (v) { return VIDY[v].kratko; }).join(", ") +
+var np = o.porog !== "net" && o.porog !== "ne_poschitali" && o.neProvereno.length ? '<p class="dnk__np">Не проверено: ' + o.neProvereno.map(function (v) { return VIDY[v].kratko; }).join(", ") +
 " — источник не ответил, в сумму не вошло.</p>" : "";
 return '<section class="dnk" aria-labelledby="dnk-h" data-dengi="' + esc(o.porog) + '">' +
 '<div class="dnk__h"><h2 id="dnk-h">Деньги на кону</h2><span>иски, приставы и недоимка против выручки</span></div>' +
 '<div class="dnk__itog">' + itog + shk + "</div>" +
 (o.dejstvie ? '<p class="dnk__act"><b>Что сделать:</b> ' + esc(o.dejstvie) + ".</p>" : "") +
-'<ul class="dnk__rows">' + rows + "</ul>" + np +
+(rows ? '<ul class="dnk__rows">' + rows + "</ul>" : "") + np +
 '<p class="dnk__og">' + esc(OGOVORKA) + "</p></section>";
 }
 function stil(doc) {
@@ -3325,7 +3353,7 @@ else return null;
 if (typeof self !== "undefined" && self.dlkGoal) { try { self.dlkGoal("dengi_na_konu_view", { porog: o.porog }); } catch (e) {} }
 return nov;
 }
-return { raschet: raschet, html: html, mount: mount, rub: rub, OGOVORKA: OGOVORKA, DEJSTVIE: DEJSTVIE, VIDY: VIDY, CSS: CSS };
+return { raschet: raschet, html: html, mount: mount, rub: rub, skl: skl, BANK: BANK, OGOVORKA: OGOVORKA, DEJSTVIE: DEJSTVIE, VIDY: VIDY, CSS: CSS };
 });
 ;
 /* --- /js/krug.js --- */
@@ -3359,7 +3387,7 @@ netVBaze: 'Связи не проверили' + NB + '— этой органи
 ao: 'Акционеров в ЕГРЮЛ нет' + NB + '— у акционерного общества видим только руководителя.',
 dolgi: 'Суды и долги у приставов организаций рядом здесь не проверяем' + NB + '— откройте нужную, отчёт по ней покажет.',
 isklyuchena: 'Если эта фирма вам должна, долг можно попробовать взыскать с её руководителя или участников через суд. Срок считают с момента, когда вы узнали о прекращении фирмы.',
-deystvie: 'откройте организацию с меткой' + NB + '— отчёт по ней покажет суды, приставов и банкротство.',
+deystvie: 'откройте организацию с меткой' + NB + '— в её отчёте проверим суды, приставов и банкротство.',
 ogovorka: 'Общий руководитель или участник не означает общего бизнеса, контроля или нарушений.'
 };
 function prekrashchena(o) { return o.status === 'LIQUIDATED' || !!o.god_po; }
@@ -3778,7 +3806,7 @@ var kogda = vremyaRu(g.sformirovan);
 return { sost: 'gotov', knopka: 'Открыть Паспорт № ' + g.nomer, stroka: kogda ? 'Сформирован ' + kogda : '', href: g.url || put };
 }
 if (o.beta || (T && T.beta)) {
-var s = 'В бете — бесплатно.';
+var s = 'Сейчас — бесплатно.';
 var srok = srokBety(T && T.betaDo, o.sejchas);
 if (T && T.start && srok) s += ' После ' + srok.kratko + ' — ' + rub(T.cena) + ' или в тарифе «' + T.start + '»' + (startVygodnee(T) ? ': ' + startPodskazka(T) : '') + '.';
 return { sost: 'beta', knopka: rid ? 'Досье сделки' : 'Паспорт контрагента', stroka: s, href: put };
@@ -4271,6 +4299,10 @@ var out = { polnota: rez.polnota, istochnikov: n, vsego: Object.keys(M.istochnik
 if (rez.stop) { out.rezhim = 'stop'; out.stop = rez.stop.tekst; out.ton = 'bad'; return out; }
 if (rez.indeks == null && !rez.sokrashchennaya) { out.rezhim = 'net'; return out; }
 if (x.neizvestnye.length) { out.rezhim = 'neizv'; out.signaly = x.neizvestnye.map(function (s) { return t(s); }); return out; }
+var dmx = r.damia || {}, nc = function (b) { return !!b && typeof b === 'object' && b.sostoyanie === 'not_checked'; };
+var neS = nc(dmx.sudy) && !x.dostupno.sudy, neF = nc(dmx.fssp) && !x.dostupno.fssp;
+var neSF = neS && neF ? 'суды и приставы' : neS ? 'суды' : neF ? 'приставы' : '';
+if (neSF) { out.rezhim = 'sokr'; out.porog = M.polnota.porog_sokrashchennoj; out.neSF = neSF; return out; }
 if (rez.sokrashchennaya || rez.polnota < M.polnota.porog_sokrashchennoj) { out.rezhim = 'sokr'; out.porog = M.polnota.porog_sokrashchennoj; return out; }
 out.uroven = rez.uroven.nazvanie; out.ton = TON[rez.uroven.ton] || 'warn';
 out.rezhim = 'chislo'; out.ball = rez.indeks; out.baza = M.shkala.baza; out.vklady = rez.vklady;
@@ -4303,7 +4335,11 @@ var TXT_TOCHNOST = 'Индекс — оценка признаков по' + NB 
 function strokaNe(v) { return 'Не учитывали в этот раз: ' + v.neUchityvali.join('; ') + '. ' + NE_ZNACHIT; }
 var TXT_NEIZV = 'Индекс — считаем: в' + NB + 'проверке есть сигнал, который методика v1 пока не' + NB + 'оценивает. Он показан в' + NB + 'фактах ниже.';
 var ZAG_SOKR = 'Индекс — данных пока' + NB + 'мало';
-function txtSokr(v) { return 'Собрано ' + v.polnota + NB + '% данных — число и' + NB + 'уровень покажем, когда наберётся ' + (v.porog || 60) + NB + '%'; }
+var ZAG_MALO = 'Индекс — мало сведений для' + NB + 'расчёта';
+function txtSokr(v) {
+if (v && v.neSF) return (v.neSF === 'суды и приставы' ? 'Суды и приставы' : v.neSF === 'суды' ? 'Суды' : 'Приставы') + ' сегодня не' + NB + 'ответили — без них число и' + NB + 'уровень не' + NB + 'показываем. Проверено ' + v.istochnikov + NB + 'из' + NB + v.vsego + ' источников';
+return 'Собрано ' + v.polnota + NB + '% данных — число и' + NB + 'уровень покажем, когда наберётся ' + (v.porog || 60) + NB + '%';
+}
 function neHvataet(v) {
 var a = (v.neUchityvali || []).filter(function (x) { return !/не\s?подключён/.test(x) && !/^налоговая нагрузка/.test(x); });
 return a.length ? a[0] : '';
@@ -4324,10 +4360,15 @@ return h + '<div class="ot-ix__big n">' + v.ball + '<small>' + NB + '/' + NB + '
 '<p class="ot-ix__ne-uch">' + strokaNe(v) + '</p>' +
 '<p class="ot-ix__ne-uch">' + TXT_TOCHNOST + '</p></details>';
 }
-if (v.rezhim === 'sokr')
+if (v.rezhim === 'sokr') {
+if (v.neSF) return h + '<div class="ot-ix__ne">' + ZAG_MALO + '</div>' +
+'<div class="ot-ix__po n">Без ' + (v.neSF === 'суды и приставы' ? 'судов и' + NB + 'приставов' : v.neSF === 'суды' ? 'судов' : 'приставов') +
+' число и' + NB + 'уровень не' + NB + 'показываем.</div>' +
+'<div class="ot-ix__po n">По открытой методике v' + esc(v.versiya) + ' · проверено ' + v.istochnikov + NB + 'из' + NB + v.vsego + ' источников · <a href="/indeks/">методика</a></div>';
 return h + '<div class="ot-ix__ne">' + ZAG_SOKR + '</div>' +
 '<div class="ot-ix__po n">' + esc(txtSokr(v)) + '.' + (neHvataet(v) ? ' Не хватает: ' + nwFz(esc(neHvataet(v)) + '.') : '') + '</div>' +
 '<div class="ot-ix__po n">' + podpis(v) + ' · <a href="/indeks/">методика</a></div>';
+}
 if (v.rezhim === 'neizv')
 return h + '<div class="ot-ix__ne">Индекс — считаем</div><div class="ot-ix__po">' + TXT_NEIZV.replace(/^Индекс — считаем: в/, 'В') + '</div>' +
 '<div class="ot-ix__lv"><a href="/indeks/">методика</a></div>';
@@ -4364,7 +4405,7 @@ else if (root.addEventListener) root.addEventListener('DOMContentLoaded', functi
 }).catch(function () {});
 }
 return { izOtveta: izOtveta, vid: vid, ball: ball, htmlKolonka: htmlKolonka, gotov: gotov, gotovo: gotovo, ustanovit: ustanovit, faktor: faktor, shkala: shkala, versiya: versiya,
-rubli: rubli, TXT_NEIZV: TXT_NEIZV, ZAG_SOKR: ZAG_SOKR, txtSokr: txtSokr, neHvataet: neHvataet, strokaNe: strokaNe, podpis: podpis };
+rubli: rubli, TXT_NEIZV: TXT_NEIZV, ZAG_SOKR: ZAG_SOKR, ZAG_MALO: ZAG_MALO, txtSokr: txtSokr, neHvataet: neHvataet, strokaNe: strokaNe, podpis: podpis };
 });
 ;
 /* --- /js/otchet.js --- */
@@ -4403,8 +4444,13 @@ if (!isFinite(n)) return null;
 if (n > 0 && n <= 1) n = n * 100;
 return n >= 0 && n <= 100 ? Math.round(n) : null;
 }
+function neOtvetiliSF(r) {
+var dm = (r && r.damia) || {};
+return ['sudy', 'fssp'].some(function (k) { return dm[k] && typeof dm[k] === 'object' && dm[k].sostoyanie === 'not_checked'; });
+}
 function tonPolosy(r) {
 var l = r && r.risk_level;
+if (l === 'low' && neOtvetiliSF(r)) return 'warn';
 return l === 'low' ? 'ok' : l === 'high' ? 'bad' : 'warn';
 }
 function dejstviya(r, svoj, g) {
@@ -4467,7 +4513,13 @@ if (!v || !(v.vsego > 0) || !(v.istochnikov >= 0)) return '';
 var t = 'Учтено реестров: ' + v.istochnikov + NB + 'из' + NB + v.vsego;
 return v.istochnikov < v.vsego ? t + '. По остальным не' + NB + 'проверяли — это не' + NB + 'значит «нарушений нет».' : t;
 }
+var PILL_NE_VSE = 'Проверили не всё';
+function podNeVse(v) {
+var k = v.neSF === 'суды и приставы' ? 'Суды и' + NB + 'приставы' : v.neSF === 'суды' ? 'Суды' : 'Приставы';
+return k + ' сегодня не' + NB + 'ответили. Вывода о' + NB + 'рисках пока нет.';
+}
 function pilyulya(r, v) {
+if (r && r.risk_level === 'low' && v && v.rezhim === 'sokr' && v.neSF) return { t: PILL_NE_VSE, pod: podNeVse(v) };
 if (r && r.risk_level === 'low' && v && v.rezhim === 'sokr') return { t: PILL_SOKR, pod: podSokr(v) || POD_PILL };
 return { t: null, pod: POD_PILL };
 }
@@ -4544,6 +4596,7 @@ var pv = null;
 try { pv = IO && indeks(r) == null && IO.gotov && IO.gotov() ? IO.vid(r) : null; } catch (e) { pv = null; }
 var pp = pilyulya(r, pv);
 tekstPilyuli(pill, pp.t);
+if (pp.t === PILL_NE_VSE) { pill.classList.remove('low'); pill.classList.add('medium'); var ik = pill.querySelector('svg'); if (ik) ik.parentNode.removeChild(ik); }
 ix.insertBefore(el(doc, 'div', 'ot-ix__pod', esc(pp.pod)), ix.lastChild);
 }
 var pch = ix.querySelector('.ot-ix__pch');
@@ -4618,7 +4671,7 @@ if (pa) pa.addEventListener('click', function () { summaVSsylku(pa, report); });
 if (doc.body) doc.body.classList.add('rezhim-otcheta');
 return true;
 }
-return { razlozhit: razlozhit, indeks: indeks, polnota: polnota, uroven: uroven, tonPolosy: tonPolosy, dejstviya: dejstviya,
+return { PILL_NE_VSE: PILL_NE_VSE, razlozhit: razlozhit, indeks: indeks, polnota: polnota, uroven: uroven, tonPolosy: tonPolosy, dejstviya: dejstviya,
 htmlIndeks: htmlIndeks, htmlIndeksIz: htmlIndeksIz, htmlKak: htmlKak, prokrutit: prokrutit, UROVNI: UROVNI, OGOVORKA: OGOVORKA, POD_PILL: POD_PILL,
 pilyulya: pilyulya, PILL_SOKR: PILL_SOKR };
 });

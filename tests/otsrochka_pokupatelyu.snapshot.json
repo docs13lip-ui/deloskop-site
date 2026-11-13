@@ -1,8 +1,8 @@
 {
- "_kak": "sha256 от JSON.stringify(Usloviya.decide(...)) до комплекта (main c7bd42c + склейка NBSP в reasonText), по ответам tests/otsrochka_fixtures.js; с zapros-dokumentov-v1 (12.11.2026) — без поля letter (сверено: без письма хэши до и после комплекта совпали)",
+ "_kak": "sha256 от JSON.stringify(Usloviya.decide(...)) до комплекта (main c7bd42c + склейка NBSP в reasonText), по ответам tests/otsrochka_fixtures.js; с zapros-dokumentov-v1 (12.11.2026) — без поля letter (сверено: без письма хэши до и после комплекта совпали); с chestnyj-nol-v1 (13.11.2026) обновлён только go — заголовок «Проверили не всё…» и «Вывода о рисках пока нет.» в совете (приставы в образце не проверены)",
  "go": {
-  "bez": "42a2223cd3ce50de9ce1216bd8ecc52833fbb51cb59078d3c4a2e76e170cdcde",
-  "summa": "413c4cfabf6bc35088993ad47be95bdc6c781a0c80bc9d35bcdc44e5ee3e42b6"
+  "bez": "159117ad216dc5617880e2c9956f1f47aefd97f1ed47f226e5df99512ee4784b",
+  "summa": "464be42b7ec359679076a575c658129d8b9907a70494960bb7ad2f4b2dc8ec00"
  },
  "cap": {
   "bez": "c6ff5b8713b2c05038cceb8a566cad511a27aa6526405c05548dbb3b2e0c6acb",

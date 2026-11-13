@@ -30,10 +30,10 @@ test('бета: «Паспорт контрагента» + строка ТЗ д
   const s = P.sostoyanie({ tarify: DO, beta: true, inn: INN, sejchas: Date.parse('2026-10-13T23:59:00+03:00') });
   // день прошёл или даты нет — без даты и без цены ([Право] 05.10 11:10, разд. 1, п. 3)
   for (const o of [{ tarify: DO, sejchas: Date.parse('2026-10-14T00:00:00+03:00') }, { tarify: Object.assign({}, T, { betaDo: null }) }])
-    assert.strictEqual(P.sostoyanie(Object.assign({ beta: true, inn: INN }, o)).stroka, 'В бете — бесплатно.');
+    assert.strictEqual(P.sostoyanie(Object.assign({ beta: true, inn: INN }, o)).stroka, 'Сейчас — бесплатно.');
   assert.strictEqual(s.sost, 'beta');
   assert.strictEqual(s.knopka, 'Паспорт контрагента');
-  assert.strictEqual(s.stroka, 'В бете — бесплатно. После 13.10 — ' + TJ.pasport_razovyj.cena_rub + NB + '₽ или в тарифе «Старт».');
+  assert.strictEqual(s.stroka, 'Сейчас — бесплатно. После 13.10 — ' + TJ.pasport_razovyj.cena_rub + NB + '₽ или в тарифе «Старт».');
   assert.strictEqual(s.href, '/pasport/kontragent/?inn=' + INN);
   assert.ok(!s.ssylka);
   assert.doesNotMatch(s.href, /schet|oplat/);

@@ -441,12 +441,48 @@ def okved_razdel(okved):
 # (источник «… (через Checko)»). Публичная карточка /company/ — это показ всем, а не клиенту в отчёте: пока [Право]
 # не ответило на ✎ «Checko: оферта п. 5.7 / п. 5.4» (claude/Право_✎_Checko_оферта_п5.7_12.11.md), такие сведения
 # на карточки не идут — факт остаётся «не проверяли». Включает [Право]: True — одной строкой.
-CHECKO_NA_KARTOCHKAH = False
+# kartochki-checko-v1 ([Ночные-2] 12.11): решение владельца 12.11 «Checko по полной» + рамка [Право] (claude/Право_блоки_12.11.md
+# п. 1): на публичной карточке из Checko — только числа и суммы; списков дел, номеров, сторон нет; подпись «<реестр> — через
+# Checko, на ДД.ММ.ГГГГ»; ссылки на checko.ru нет; ошибка или пустой ответ — «не проверяли», не ноль.
+CHECKO_NA_KARTOCHKAH = True
 
 
 def posrednik_publichno(istochnik):
     """True, если сведения с этим источником можно показать на публичной карточке."""
     return CHECKO_NA_KARTOCHKAH or "checko" not in str(istochnik or "").lower()
+
+
+# подписи источников через Checko — дословно по рамке [Право] 12.11 п. 1
+CHECKO_PODPIS = [
+    (re.compile(r"картотек|арбитраж", re.I), "Картотека арбитражных дел — через Checko"),
+    (re.compile(r"ФССП|пристав", re.I), "ФССП, банк данных исполнительных производств — через Checko"),
+    (re.compile(r"ЕФРСБ|банкрот", re.I), "ЕФРСБ — через Checko"),
+]
+
+
+def istochnik_publichno(ist):
+    """«ФССП (через Checko)» → «ФССП, банк данных исполнительных производств — через Checko»; другие — как есть."""
+    ist = str(ist or "")
+    if "checko" not in ist.lower():
+        return ist
+    for rx, podpis in CHECKO_PODPIS:
+        if rx.search(ist):
+            return podpis
+    return re.sub(r"\s*\(через Checko\)", " — через Checko", ist)
+
+
+def _checko_blok(r, kod):
+    """Блок damia.<kod> с ясным состоянием, датой сведений и разрешённым посредником; иначе None («не проверяли»)."""
+    b = (r.get("damia") or {}).get(kod)
+    if isinstance(b, dict) and b.get("sostoyanie") in ("found", "not_found") and data_iz(b.get("data_svedeniy")) \
+            and posrednik_publichno(b.get("istochnik")):
+        return b
+    return None
+
+
+def _celoe(v):
+    x = chislo(v)
+    return int(x) if x is not None and x >= 0 and x == int(x) else None
 
 
 # Сигналы /api/check узнаём по заголовку; код факта нужен для правил выводов (Данные §2, V01–V22).
@@ -621,18 +657,67 @@ def iz_check(r):
     # kartochki-fssp-v1 (Ночные-2, 12.10): после istochniki-v1 приставы приходят не сигналом светофора, а блоком
     # damia.fssp (status «polucheno», sostoyanie found/not_found, data_svedeniy) — V11/V12 не выходили ни у кого.
     # Берём только ответ с датой сведений и ясным состоянием; not_checked и «нет даты» — факта нет («не проверяли»).
-    fb = (r.get("damia") or {}).get("fssp")
-    if "fssp" not in k["fakty"] and isinstance(fb, dict) and fb.get("sostoyanie") in ("found", "not_found") \
-            and data_iz(fb.get("data_svedeniy")) and posrednik_publichno(fb.get("istochnik")):
+    fb = _checko_blok(r, "fssp")
+    if "fssp" not in k["fakty"] and fb:
         dn = fb.get("dannye") if isinstance(fb.get("dannye"), dict) else {}
         nashli = fb["sostoyanie"] == "found"
-        k["fakty"]["fssp"] = {
-            "kod": "fssp", "zagolovok": str(fb.get("nazvanie") or "Приставы"), "detal": str(fb.get("itog") or ""),
-            "ton": "warn" if nashli else "ok",
-            "istochnik": str(fb.get("istochnik") or "ФССП: исполнительные производства"),
-            "data": data_iz(fb.get("data_svedeniy")),
-            "znachenie": chislo(dn.get("ostatok")) if nashli else None, "god": None,
-        }
+        # kartochki-checko-v1: на карточке только числа — свой текст из чисел, не «itog» сервера; остаток по первым 100
+        # из N — «по 100 самым свежим из N» (сумма неполная, так и говорим)
+        n_ip = _celoe(dn.get("otkryto")) if nashli else 0
+        ost = chislo(dn.get("ostatok")) if nashli else None
+        ohv = str(dn.get("ostatok_ohvat") or "")
+        m = re.match(r"pervye_(\d+)_iz_(\d+)$", ohv)
+        chast = (int(m.group(1)), int(m.group(2))) if m and int(m.group(1)) < int(m.group(2)) else None
+        if not nashli:
+            detal = "не нашли"
+        elif n_ip:
+            detal = "%d%s%s" % (n_ip, NB, plural(n_ip, "производство", "производства", "производств"))
+            if ost:
+                detal += (", остаток долга по%s%d самым свежим — %s" % (NB, chast[0], dengi(ost))) if chast else (", остаток долга — %s" % dengi(ost))
+        else:
+            detal = ""
+        if not nashli or detal:
+            k["fakty"]["fssp"] = {
+                "kod": "fssp", "zagolovok": "Исполнительные производства", "detal": detal,
+                "ton": "warn" if nashli else "ok",
+                "istochnik": istochnik_publichno(fb.get("istochnik") or "ФССП: исполнительные производства"),
+                "data": data_iz(fb.get("data_svedeniy")),
+                "znachenie": ost, "god": None, "n": n_ip, "chast": chast,
+            }
+    # kartochki-checko-v1: арбитражные суды — только число незавершённых дел, где компания ответчик, и их сумма
+    sb = _checko_blok(r, "sudy")
+    if sb:
+        dn = sb.get("dannye") if isinstance(sb.get("dannye"), dict) else {}
+        if sb["sostoyanie"] == "not_found":
+            n_d, summa, polno = 0, None, True
+        else:
+            n_d, summa = _celoe(dn.get("otvetchik_nezaversheno")), chislo(dn.get("otvetchik_summa_nezaversheno"))
+            polno = str(dn.get("otvetchik_nezaversheno_ohvat") or "") == "vse"
+        if n_d is not None:
+            if n_d:
+                detal = "%s%d%s%s" % ("" if polno else "не меньше ", n_d, NB, plural(n_d, "незавершённое дело", "незавершённых дела", "незавершённых дел"))
+                if summa and summa > 0:
+                    detal += " на " + dengi(summa)
+            else:
+                detal = "незавершённых дел не нашли"
+            k["fakty"]["sudy"] = {
+                "kod": "sudy", "zagolovok": "Арбитражные дела, где компания — ответчик", "detal": detal,
+                "ton": "warn" if n_d else "ok", "istochnik": istochnik_publichno(sb.get("istochnik")),
+                "data": data_iz(sb.get("data_svedeniy")), "znachenie": summa if n_d else None, "god": None,
+                "n": n_d, "polno": polno,
+            }
+    # kartochki-checko-v1: ЕФРСБ — только число сообщений о банкротстве компании
+    bb = _checko_blok(r, "bankrotstvo")
+    if bb and "bankrotstvo" not in k["fakty"]:
+        dn = bb.get("dannye") if isinstance(bb.get("dannye"), dict) else {}
+        n_s = 0 if bb["sostoyanie"] == "not_found" else _celoe(dn.get("vsego"))
+        if n_s is not None and (n_s or bb["sostoyanie"] == "not_found"):
+            k["fakty"]["bankrotstvo"] = {
+                "kod": "bankrotstvo", "zagolovok": "Сообщения о банкротстве компании",
+                "detal": ("%d%s%s" % (n_s, NB, plural(n_s, "сообщение", "сообщения", "сообщений"))) if n_s else "не нашли",
+                "ton": "warn" if n_s else "ok", "istochnik": istochnik_publichno(bb.get("istochnik")),
+                "data": data_iz(bb.get("data_svedeniy")), "znachenie": None, "god": None, "n": n_s,
+            }
     # числа из досье (kpi) — дополняют сигналы; дата — у одноимённого сигнала или общая дата наборов ФНС
     D = r.get("dossier") or {}
     fns_data = data_iz(r.get("fns_data")) or data_iz(((r.get("daty") or {}).get("dannye") or {}).get("ФНС")
@@ -991,8 +1076,32 @@ def vyvody(k):
     if fs and fs.get("data") and na and (na - fs["data"]).days <= 7:
         if fs.get("ton") == "ok":
             out.append(_v("V11", "ok", "Долгов у приставов не нашли (на%s%s)" % (NB, data_tekst(fs["data"])), fs["istochnik"], fs["data"], s_chislom=False))
+        elif fs.get("znachenie") and fs.get("chast") and fs.get("n"):
+            # kartochki-checko-v1: сумма по первым 100 из N — неполная, называем охват
+            out.append(_v("V12", "warn", "У приставов %d%s%s; остаток долга по%s%d самым свежим — %s (на%s%s)" % (
+                fs["n"], NB, plural(fs["n"], "исполнительное производство", "исполнительных производства", "исполнительных производств"),
+                NB, fs["chast"][0], dengi(fs["znachenie"]), NB, data_tekst(fs["data"])), fs["istochnik"], fs["data"]))
         elif fs.get("znachenie"):
             out.append(_v("V12", "warn", "У приставов есть производства на %s (на%s%s)" % (dengi(fs["znachenie"]), NB, data_tekst(fs["data"])), fs["istochnik"], fs["data"]))
+    # kartochki-checko-v1: V26/V27 — арбитраж (ответчик, незавершённые), V28/V29 — ЕФРСБ; свежесть — как у приставов
+    sd = F.get("sudy")
+    if sd and sd.get("data") and na and (na - sd["data"]).days <= 7:
+        if sd.get("n"):
+            out.append(_v("V26", "warn", "Компания — ответчик в %s%d%s%s%s (на%s%s)" % (
+                "" if sd.get("polno") else "не меньше чем ", sd["n"], NB,
+                plural(sd["n"], "незавершённом арбитражном деле", "незавершённых арбитражных делах", "незавершённых арбитражных делах"),
+                (" на " + dengi(sd["znachenie"])) if sd.get("znachenie") else "", NB, data_tekst(sd["data"])), sd["istochnik"], sd["data"]))
+        else:
+            out.append(_v("V27", "ok", "Незавершённых арбитражных дел, где компания — ответчик, не нашли (на%s%s)" % (NB, data_tekst(sd["data"])),
+                          sd["istochnik"], sd["data"], s_chislom=False))
+    bk = F.get("bankrotstvo")
+    if bk and bk.get("data") and na and (na - bk["data"]).days <= 7 and "ЕФРСБ" in str(bk.get("istochnik") or ""):
+        if bk.get("n"):
+            out.append(_v("V28", "warn", "В ЕФРСБ есть сообщения о банкротстве компании: %d (на%s%s)" % (bk["n"], NB, data_tekst(bk["data"])),
+                          bk["istochnik"], bk["data"]))
+        else:
+            out.append(_v("V29", "ok", "Сообщений о банкротстве компании в ЕФРСБ не нашли (на%s%s)" % (NB, data_tekst(bk["data"])),
+                          bk["istochnik"], bk["data"], s_chislom=False))
     sn = F.get("snr")
     if sn and sn.get("data") and re.search(r"УСН|упрощ", sn.get("detal", "") + sn.get("zagolovok", ""), re.I):
         nds = vyvod_nds_porog(k, na)
@@ -1739,7 +1848,7 @@ def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None):
     pered = "".join("<li>%s</li>" % s for s in sovety[:3])
     # реестры
     stroki = []
-    for kod in ("nedoimka", "shtrafy", "shtat", "nalogi", "dohod", "otchetnost", "snr", "nedostovernost", "diskval", "fssp", "msp"):
+    for kod in ("nedoimka", "shtrafy", "shtat", "nalogi", "dohod", "otchetnost", "snr", "nedostovernost", "diskval", "sudy", "fssp", "bankrotstvo", "msp"):
         f = k["fakty"].get(kod)
         if not f:
             continue

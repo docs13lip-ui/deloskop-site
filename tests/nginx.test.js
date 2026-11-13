@@ -32,6 +32,9 @@ test('Dockerfile: порт = listen, конфиг в conf.d, проверка ng
   assert.match(DOCKERFILE, /^FROM nginx:\d+\.\d+-alpine$/m, 'версия образа закреплена');
   assert.match(DOCKERFILE, /gzip -9 -n -c "\$1" > "\$1\.gz"/, 'vizual-v3.0b: сжатые копии при сборке образа');
   assert.match(CONF, /^\s*gzip_static on;/m, 'и сервер их отдаёт');
+  // szhatie-proxied-v1: за балансировщиком запрос проксированный — без этих двух строк сжатия на живом нет
+  assert.match(CONF, /^\s*gzip_proxied any;/m, 'сжимаем и проксированные запросы (заголовок Via)');
+  assert.match(CONF, /^\s*gzip_http_version 1\.0;/m, 'сжимаем и запросы по HTTP/1.0 от балансировщика');
 });
 
 test('.dockerignore: служебное и данные карточек не попадают на сайт', () => {
@@ -66,6 +69,23 @@ function mimeTypes(bin) {
   const pref = /--prefix=(\S+)/.exec(out);
   const kand = [cp && path.join(path.dirname(cp[1]), 'mime.types'), pref && path.join(pref[1], 'conf/mime.types'), '/etc/nginx/mime.types'];
   return kand.find(k => k && fs.existsSync(k)) || null;
+}
+// szhatie-proxied-v1: запрос так, как его шлёт балансировщик, — HTTP/1.0 и заголовок Via (http.request умеет только 1.1)
+function zaprosKakBalansirovshchik(port, put, versiya = '1.0') {
+  return new Promise((ok, ne) => {
+    const s = require('net').connect(port, '127.0.0.1', () => {
+      s.write(`GET ${put} HTTP/${versiya}\r\nHost: 127.0.0.1\r\nAccept-Encoding: gzip\r\nVia: ${versiya} balansirovshchik\r\nConnection: close\r\n\r\n`);
+    });
+    let vse = Buffer.alloc(0);
+    s.on('data', c => { vse = Buffer.concat([vse, c]); });
+    s.on('end', () => {
+      const i = vse.indexOf('\r\n\r\n');
+      const shapka = vse.slice(0, i).toString('latin1').toLowerCase();
+      ok({ kod: Number((/^http\/\d\.\d (\d+)/.exec(shapka) || [])[1]), szhato: /\ncontent-encoding: gzip/.test(shapka),
+        kuskami: /\ntransfer-encoding: chunked/.test(shapka), telo: vse.slice(i + 4) });
+    });
+    s.on('error', ne);
+  });
 }
 function zapros(port, put, metod = 'GET') {
   return new Promise((ok, ne) => {
@@ -104,6 +124,14 @@ http { include ${MIME}; default_type application/octet-stream; access_log off;
   assert.strictEqual(glavnaya.h['cache-control'], 'no-cache');
   assert.strictEqual(glavnaya.h['x-content-type-options'], 'nosniff');
   assert.strictEqual(glavnaya.h['content-encoding'], 'gzip');
+
+  // szhatie-proxied-v1: то же самое, когда запрос пришёл через балансировщик (на живом 13.11 сжатия не было)
+  for (const versiya of ['1.0', '1.1']) for (const put of ['/', '/css/ds.css', '/obnovleniya.json']) {
+    const b = await zaprosKakBalansirovshchik(port, put, versiya);
+    assert.strictEqual(b.kod, 200, `${put} по HTTP/${versiya} через балансировщик`);
+    assert.ok(b.szhato, `${put}: ответ балансировщику (HTTP/${versiya}, Via) сжат`);
+    if (!b.kuskami) assert.ok(require('zlib').gunzipSync(b.telo).length > b.telo.length, `${put}: тело распаковывается`);
+  }
 
   const net = await zapros(port, '/net-takoj-stranicy-xyz/');
   assert.strictEqual(net.kod, 404, 'выдуманный адрес → 404');

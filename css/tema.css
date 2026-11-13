@@ -101,6 +101,9 @@
 [data-theme=dark] body{background:#111113}
 [data-theme=dark] .zh-btn{color:#0B0B0C!important}
 [data-theme=dark] .pusto__btn{color:#0B0B0C}
+[data-theme=dark] .dok__f input,[data-theme=dark] .dok__f select,[data-theme=dark] .dok__f textarea{border:1px solid #2E2E33;background:#1C1C1F}
+[data-theme=dark] .dok__l{background:#26262A}
+[data-theme=dark] .dok__l iframe{background:#1C1C1F}
 [data-theme=dark] .din__r--vniz .din__k{color:#FF7B72}
 [data-theme=dark] .din__sv .din__0{stroke:#48484E}
 [data-theme=dark] .din__b--kor{background:#26262A}

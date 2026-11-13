@@ -228,6 +228,11 @@ select:disabled,input:disabled{background:var(--bg);color:var(--muted)}
       </form>
       <p class="note" id="rekNote" role="status" aria-live="polite"></p>
     </section>
+    <section class="card" id="dokSek" hidden>
+      <h2>Документы в фирменном стиле</h2>
+      <p class="sub" style="margin:0 0 12px">Договор, счёт, акт и письмо — в одном оформлении. Введите ИНН и нажмите «Заполнить по ИНН» — название, КПП, ОГРН, адрес и руководитель встанут сами, подпись — на свою строку. «Сохранить PDF» открывает окно печати: выберите «Сохранить как PDF». Счета клиентам с номером и актом — в разделе «Счета» выше; здесь — документы вручную.</p>
+      <div id="dokBox"></div>
+    </section>
     <section class="card" id="bzSek" hidden>
       <div class="bz-head"><h2 style="margin:0">Базы</h2><span class="bz-itog" id="bzItog"></span></div>
       <p class="sub" style="margin:0 0 4px" id="bzKogda">Каждый источник данных: работает, требует внимания или не подключён.</p>
@@ -391,6 +396,7 @@ select:disabled,input:disabled{background:var(--bg);color:var(--muted)}
     $('loading').hidden=true;$('adm').hidden=false;
     if(window.DlkScheta)DlkScheta.start(call,function(){return isAdmin},$('me').textContent);
     if(window.DlkBazy)DlkBazy.start(call,function(){return isAdmin});
+    if(window.DlkDokumenty)try{DlkDokumenty.start(call,function(){return isAdmin})}catch(_){}
     return Promise.all([loadData(),loadUsers(),loadFeedback(),loadLog()]);
   }).catch(function(err){
     $('loading').hidden=true;$('deny').hidden=false;
@@ -400,6 +406,7 @@ select:disabled,input:disabled{background:var(--bg);color:var(--muted)}
 </script>
 <script src="/js/schet.js"></script>
 <script src="/js/admin-scheta.js"></script>
+<script src="/js/admin-dokumenty.js"></script>
 <script src="/js/admin-bazy.js"></script>
 <script src="/js/admin-pult.js"></script>
 <script src="/js/admin-segodnya.js"></script>

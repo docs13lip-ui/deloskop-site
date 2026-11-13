@@ -449,6 +449,62 @@ if (!window.matchMedia) return;
 var start = function () { try { podval(document, window.matchMedia(MQ)); } catch (e) {} };
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();
+(function () {
+"use strict";
+function klavisha(e) {
+if (!e || e.defaultPrevented || e.isComposing || e.repeat) return "";
+var k = e.key || "", c = e.code || "";
+if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && (c === "KeyK" || k === "k" || k === "K" || k === "л" || k === "Л")) return "ctrlk";
+if (e.ctrlKey || e.metaKey || e.altKey) return "";
+if (k !== "/" && !(c === "Slash" && !e.shiftKey)) return "";
+var t = e.target;
+if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName || ""))) return "";
+return "slash";
+}
+if (typeof window === "undefined") return;
+window.dlkPoiskKlavisha = klavisha;
+if (!document.querySelector) return;
+var zhdu = false;
+function glavnaya() { var i = document.getElementById("inn"); return i && i.getAttribute("role") === "combobox" ? i : null; }
+function gruzit(potom) {
+if (window.DlkPoiskOkno) { if (potom) potom(); return; }
+if (potom) window.__dlkPoiskZhdet = potom;
+if (zhdu) return;
+var kn = document.querySelector("[data-poisk-src]"), src = kn && kn.getAttribute("data-poisk-src");
+if (!src) { if (potom) location.href = "/#inn"; return; }
+zhdu = true;
+var s = document.createElement("script");
+s.src = src; s.async = true;
+s.onerror = function () { zhdu = false; if (window.__dlkPoiskZhdet) location.href = "/#inn"; };
+document.head.appendChild(s);
+}
+function otkryt(kto, kak) {
+if (window.dlkGoal) try { window.dlkGoal("poisk_otkryt", { kak: kak }); } catch (e) {}
+var i = glavnaya();
+if (i) {
+var tiho = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+try { i.scrollIntoView({ block: "center", behavior: tiho ? "auto" : "smooth" }); } catch (e) {}
+try { i.focus({ preventScroll: true }); } catch (e) { i.focus(); }
+if (i.value && i.select) i.select();
+return;
+}
+gruzit(function () { window.DlkPoiskOkno.otkryt(kto); });
+}
+[].forEach.call(document.querySelectorAll("[data-poisk-knopka]"), function (b) {
+b.addEventListener("click", function () { otkryt(b, "znachok"); });
+var zaranee = function () { if (!glavnaya()) gruzit(null); };
+b.addEventListener("pointerenter", zaranee, { once: true });
+b.addEventListener("focus", zaranee, { once: true });
+});
+document.addEventListener("keydown", function (e) {
+var v = klavisha(e);
+if (!v) return;
+var okno = document.querySelector("dialog[open]");
+if (okno && !okno.classList.contains("pso")) return;
+e.preventDefault();
+otkryt(null, v);
+});
+})();
 ;
 /* --- /js/metrika.js --- */
 (function () {

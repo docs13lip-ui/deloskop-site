@@ -134,6 +134,7 @@
 [data-theme=dark] .otz__n{background:#1C1C1F}
 [data-theme=dark] .otz__n .otz__s{color:#A1A1A6}
 [data-theme=dark] .pp__q{border:1px solid #2E2E33;background:#1C1C1F}
+[data-theme=dark] dialog.pso::backdrop{background:rgba(255,255,255,0.468)}
 [data-theme=dark] .pwa__da{color:#0B0B0C}
 [data-theme=dark] .rkv>div:nth-child(even){border-left:1px solid #2E2E33}
 [data-theme=dark] .rkv>div:nth-child(n+3){border-top:1px solid #2E2E33}

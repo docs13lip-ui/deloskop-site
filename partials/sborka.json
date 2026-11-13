@@ -82,6 +82,9 @@
       "js/poisk.js",
       "js/poisk-okno.js"
     ],
+    "scena": [
+      "js/scena.js"
+    ],
     "linza-poisk": [
       "js/linza-poisk.js"
     ],

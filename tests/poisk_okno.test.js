@@ -36,7 +36,7 @@ test('клавиши: «/» вне полей, Ctrl+K и ⌘K в любой ра
 
 test('шапка: лупа с подписью, сочетаниями и адресом пакета; пакет poisk-okno = разбор + окно', () => {
   const h = chitat('partials/shapka.html');
-  assert.match(h, /<button class="shapka__poisk" type="button" data-poisk-knopka data-poisk-src="\/js\/b\/poisk-okno\.[0-9a-f]{10}\.js" aria-label="Найти: ИНН, название, счёт или вопрос" aria-keyshortcuts="\/ Control\+K"/);
+  assert.match(h, /<button class="shapka__poisk" type="button" data-poisk-knopka data-poisk-src="\/js\/b\/poisk-okno\.[0-9a-f]{10}\.js" data-scena-src="\/js\/b\/scena\.[0-9a-f]{10}\.js" aria-label="Найти: ИНН, название, счёт или вопрос" aria-keyshortcuts="\/ Control\+K"/);
   assert.ok(h.indexOf('shapka__poisk') < h.indexOf('shapka__tema'), 'лупа — перед кнопкой темы');
   const sb = JSON.parse(chitat('partials/sborka.json'));
   assert.deepStrictEqual(sb.pakety['poisk-okno'], ['js/poisk.js', 'js/poisk-okno.js']);

@@ -41,7 +41,7 @@ test('главная: WebSite с SearchAction на проверку по ИНН;
   assert.deepStrictEqual(ws.potentialAction, { '@type': 'SearchAction', target: 'https://deloskop.ru/?inn={search_term_string}',
     'query-input': 'required name=search_term_string' });
   assert.match(html, /new URLSearchParams\(location\.search\)\.get\('inn'\)/);
-  assert.match(html, /else if\(qi&&qi\.trim\(\)\)\{input\.value=qi\.trim\(\)\.slice\(0,120\);\}/);
+  assert.match(html, /else if\(qi&&qi\.trim\(\)\)\{input\.value=qi\.trim\(\)\.slice\(0,120\);(\}|if\(location\.hash==='#poisk'\))/, 'не-ИНН — в поле; проверку не запускаем (poisk-v2-b: из окна поиска — подсказки)');
   assert.match(chitat('tests/sobrat_tarify.py'), /"@type": "SearchAction"/, 'сборщик главной не теряет SearchAction');
 });
 

@@ -1,0 +1,371 @@
+/* Делоскоп · пакет «poisk-okno» — собран tests/sobrat_js.py из 2 файлов (partials/sborka.json). Правьте исходники, не этот файл. */
+/* --- /js/poisk.js --- */
+(function (root, factory) {
+var api = factory();
+if (typeof module === 'object' && module.exports) module.exports = api;
+else root.DlkPoisk = api;
+})(typeof self !== 'undefined' ? self : this, function () {
+'use strict';
+var NB = ' ';
+var PRIMER_INN = '2309085638';
+function cif(s) { return String(s == null ? '' : s).replace(/\D/g, ''); }
+function innOk(s) {
+if (!/^(\d{10}|\d{12})$/.test(s)) return false;
+var d = s.split('').map(Number);
+function k(w) { var x = 0; for (var i = 0; i < w.length; i++) x += w[i] * d[i]; return x % 11 % 10; }
+if (d.length === 10) return k([2, 4, 10, 3, 5, 9, 4, 6, 8]) === d[9];
+return k([7, 2, 4, 10, 3, 5, 9, 4, 6, 8]) === d[10] && k([3, 7, 2, 4, 10, 3, 5, 9, 4, 6, 8]) === d[11];
+}
+function modStr(s, m) { var r = 0; for (var i = 0; i < s.length; i++) r = (r * 10 + (+s[i])) % m; return r; }
+function ogrnOk(s) {
+if (s.length === 13) return modStr(s.slice(0, 12), 11) % 10 === +s[12];
+if (s.length === 15) return modStr(s.slice(0, 14), 13) % 10 === +s[14];
+return false;
+}
+function kluchOk(bik, acc) {
+var s = bik.slice(-3) + acc, w = [7, 1, 3], sum = 0;
+for (var i = 0; i < 23; i++) sum += (+s[i]) * w[i % 3] % 10;
+return sum % 10 === 0;
+}
+var TIP = { '40702': 'счёт коммерческой организации', '40802': 'счёт ИП', '40817': 'счёт физического лица',
+'40703': 'счёт некоммерческой организации', '40701': 'счёт финансовой организации' };
+var VAL = { '810': 'рубли', '840': 'доллары США', '978': 'евро', '156': 'юани' };
+var EN = "qwertyuiop[]asdfghjkl;'zxcvbnm,.`", RU = 'йцукенгшщзхъфывапролджэячсмитьбюё';
+function vRus(s) { var o = ''; for (var i = 0; i < s.length; i++) { var c = s[i].toLowerCase(), j = EN.indexOf(c); o += j >= 0 ? RU[j] : s[i]; } return o; }
+function norm(s) { return String(s == null ? '' : s).toLowerCase().replace(/ё/g, 'е').replace(/[«»"']/g, '').trim(); }
+var STOP = { как: 1, что: 1, где: 1, для: 1, или: 1, это: 1, мне: 1, нам: 1, вам: 1, если: 1, когда: 1, почему: 1, зачем: 1, можно: 1, нужно: 1, сколько: 1, ооо: 1, пао: 1, оао: 1, зао: 1 };
+function koren(w) { return w.length > 5 ? w.slice(0, 5) : w; }
+function ischiRazdely(t, razdely) {
+var ws = norm(t).split(/[^a-zа-я0-9.]+/).filter(function (w) { return w.length >= 3 && !STOP[w]; });
+if (!ws.length || !razdely || !razdely.length) return [];
+var out = [];
+razdely.forEach(function (r, n) {
+var hay = norm(r.t + ' ' + r.k).split(/\s+/), sc = 0;
+ws.forEach(function (w) {
+var k = koren(w);
+for (var i = 0; i < hay.length; i++) {
+if (hay[i].indexOf(k) === 0 || (hay[i].length >= 4 && w.indexOf(koren(hay[i])) === 0)) { sc += (i < 4 ? 2 : 1) * (w.length >= 6 ? 1.5 : 1); break; }
+}
+});
+if (sc > 0) out.push([sc, n, r]);
+});
+out.sort(function (a, b) { return b[0] - a[0] || a[1] - b[1]; });
+return out.slice(0, 4).map(function (x) { return x[2]; });
+}
+function razobrat(raw, razdely) {
+var t = String(raw == null ? '' : raw).replace(/\s+/g, ' ').trim();
+var R = { vid: '', chip: '', hint: '', err: false, exact: false, rows: [], nazvanie: '' };
+if (!t) return R;
+var d = cif(t), bukv = /[a-zа-яё]/i.test(t.replace(/инн|кпп|огрнип|огрн|бик|р\/с|к\/с|сч[её]т|№/gi, ''));
+function row(g, title, sub, o) { o = o || {}; R.rows.push({ g: g, t: title, s: sub, inn: o.inn || '', href: o.href || '', tag: o.tag || '' }); }
+function otchet(inn) { row('Действие', inn.length === 10 ? 'Проверить компанию' : 'Проверить ИП', 'Отчёт по ИНН ' + inn + ' — статус, долги, суды, Индекс', { inn: inn }); }
+var acc = null, bik = null, inn = null, kpp = null, ogrn = null;
+var grp = (t.match(/\d[\d \-]{7,}\d/g) || []).map(cif).concat(t.match(/\d{9,20}/g) || []);
+grp.forEach(function (g) {
+if (g.length === 20 && !acc) acc = g;
+else if (g.length === 9 && /^04/.test(g) && !bik) bik = g;
+else if ((g.length === 10 || g.length === 12) && innOk(g) && !inn) inn = g;
+else if (g.length === 9 && !kpp && !/^04/.test(g)) kpp = g;
+else if ((g.length === 13 || g.length === 15) && ogrnOk(g) && !ogrn) ogrn = g;
+});
+if (acc && bik) {
+var ok = kluchOk(bik, acc), tip = TIP[acc.slice(0, 5)] || 'счёт', val = VAL[acc.slice(5, 8)] || 'валюта ' + acc.slice(5, 8);
+R.vid = 'schet_bik'; R.exact = ok; R.err = !ok;
+R.chip = ok ? 'Счёт и БИК: ключ сходится' : 'Счёт и БИК: ключ не сходится';
+R.hint = tip + ' · ' + val + (ok ? '' : '. В номере счёта или БИК опечатка' + NB + '— платёж не пройдёт');
+row('Действие', 'Проверить счёт перед оплатой', (inn ? 'ИНН ' + inn + ' · ' : '') + 'счёт ' + acc.slice(0, 5) + '…' + acc.slice(-4) + ' · БИК ' + bik, { href: '/proverit-schet/' });
+if (inn) otchet(inn);
+row('Важно', 'Принадлежность счёта поставщику не подтверждается', 'Ни один открытый источник не связывает номер счёта с ИНН. Сверьте счёт с договором', { tag: 'правило' });
+return R;
+}
+if (!bukv && inn && kpp) { R.vid = 'inn_kpp'; R.exact = true; R.chip = 'ИНН и КПП'; R.hint = 'ИНН ' + inn + ' · КПП ' + kpp + NB + '— контрольная цифра ИНН верна'; otchet(inn); return R; }
+if (!bukv && d.length >= 1) {
+if (d.length === 10 || d.length === 12) {
+if (innOk(d)) {
+R.vid = d.length === 10 ? 'inn' : 'inn_ip'; R.exact = true;
+R.chip = d.length === 10 ? 'ИНН организации' : 'ИНН предпринимателя';
+R.hint = 'Контрольная цифра верна' + (d.length === 12 ? '. По ИП показываем только сведения реестра' : '');
+otchet(d);
+if (d.length === 10) row('Ещё', 'Паспорт контрагента', 'Одна страница о компании' + NB + '— переслать директору', { href: '/pasport/kontragent/?inn=' + d });
+} else {
+R.vid = 'inn_oshibka'; R.err = true; R.chip = 'ИНН с опечаткой'; R.hint = 'Контрольная цифра не сходится. Сверьте цифры с договором или счётом';
+row('Подсказка', 'Проверьте цифры ИНН', 'Цифр ' + d.length + ', как и нужно, но одна из них неверна', { tag: 'опечатка' });
+}
+return R;
+}
+if (d.length === 13 || d.length === 15) {
+if (ogrnOk(d)) { R.vid = 'ogrn'; R.exact = true; R.chip = d.length === 13 ? 'ОГРН' : 'ОГРНИП'; R.hint = 'Контрольная цифра верна. Проверка идёт по ИНН' + NB + '— введите ИНН из той же выписки'; row('Подсказка', 'Нужен ИНН', 'ИНН есть в выписке ЕГРЮЛ рядом с ОГРН', { tag: 'нужно ещё' }); }
+else { R.vid = 'ogrn_oshibka'; R.err = true; R.chip = 'ОГРН с опечаткой'; R.hint = 'Контрольная цифра не сходится'; row('Подсказка', 'Проверьте цифры ОГРН', 'В ОГРН 13 цифр, в ОГРНИП' + NB + '— 15', { tag: 'опечатка' }); }
+return R;
+}
+if (d.length === 9 && /^04/.test(d)) { R.vid = 'bik'; R.exact = true; R.chip = 'БИК банка'; R.hint = 'Добавьте номер счёта через пробел' + NB + '— сверим ключ'; row('Действие', 'Проверить счёт перед оплатой', 'Банк по БИК, ключ счёта, поставщик', { href: '/proverit-schet/' }); return R; }
+if (d.length === 9) { R.vid = 'kpp'; R.chip = 'Похоже на КПП'; R.hint = 'КПП сам компанию не определяет' + NB + '— добавьте ИНН'; row('Подсказка', 'Добавьте ИНН', 'ИНН и КПП стоят рядом в счёте и договоре', { tag: 'нужно ещё' }); return R; }
+if (d.length === 20) {
+R.vid = 'schet'; R.chip = 'Номер счёта'; R.hint = (TIP[d.slice(0, 5)] || 'счёт') + ' · ' + (VAL[d.slice(5, 8)] || 'валюта ' + d.slice(5, 8)) + '. Добавьте БИК' + NB + '— сверим ключ';
+row('Действие', 'Проверить счёт перед оплатой', 'Допишите БИК банка через пробел', { href: '/proverit-schet/' });
+row('Важно', 'Принадлежность счёта поставщику не подтверждается', 'Ни один открытый источник не связывает номер счёта с ИНН. Сверьте счёт с договором', { tag: 'правило' });
+return R;
+}
+if (d.length === 11 && /^[78]/.test(t.replace(/[\s()+\-]/g, '')) && /^[\s()+\-\d]+$/.test(t)) { R.vid = 'telefon'; R.chip = 'Телефон'; R.hint = 'Поиск по телефону' + NB + '— скоро'; row('Скоро', 'Компании по телефону', 'Только организации', { tag: 'скоро' }); return R; }
+if (d.length < 10) { R.vid = 'malo_cifr'; R.err = true; R.chip = 'Не хватает цифр'; R.hint = 'В ИНН компании 10 цифр' + NB + '— сейчас ' + d.length; row('Подсказка', 'Допишите ИНН', 'ИНН компании' + NB + '— 10 цифр, ИП' + NB + '— 12', { tag: 'ещё ' + (10 - d.length) }); return R; }
+R.vid = 'cifry'; R.err = true; R.chip = 'Не похоже на ИНН'; R.hint = 'Цифр ' + d.length + ': в ИНН 10 или 12, в ОГРН 13 или 15, в счёте 20';
+row('Подсказка', 'Проверьте, что скопировали', 'Возможно, в строку попали лишние цифры', { tag: 'опечатка' });
+return R;
+}
+if (inn && /инн|огрн|кпп/i.test(t)) { R.vid = 'rekvizity'; R.exact = true; R.chip = 'Реквизиты'; R.hint = 'Нашли ИНН ' + inn + (kpp ? ' и КПП ' + kpp : ''); otchet(inn); return R; }
+if (/^[аa]\s?\d{1,3}\s?-\s?\d{1,7}\s?\/\s?(\d{2}|\d{4})$/i.test(t)) { R.vid = 'delo'; R.exact = true; R.chip = 'Арбитражное дело'; R.hint = 'Стороны-организации и сумма требований' + NB + '— скоро'; row('Скоро', 'Дело ' + t.toUpperCase().replace(/A/, 'А').replace(/\s/g, ''), 'Стороны-организации, сумма требований, стадия', { tag: 'скоро' }); return R; }
+var mail = t.match(/^[^\s@]+@([a-z0-9а-яё\-]+\.[a-zа-яё.\-]{2,})$/i), dom = t.match(/^(?:https?:\/\/)?(?:www\.)?([a-z0-9а-яё\-]+(?:\.[a-zа-яё0-9\-]+)*\.[a-zа-яё]{2,})(?:\/\S*)?$/i);
+if (mail || dom) { R.vid = mail ? 'pochta' : 'sajt'; R.exact = true; R.chip = mail ? 'Почта' : 'Сайт'; R.hint = 'Поиск организации по ' + (mail ? 'почте из ЕГРЮЛ' : 'сайту') + NB + '— скоро'; row('Скоро', mail ? 'Организация по почте' : 'Организация по сайту', mail ? 'Только адрес, который указан в ЕГРЮЛ' : 'Только если организация сама указала сайт', { tag: 'скоро' }); return R; }
+if (/^\d{2}(\.\d{1,2}){1,2}$/.test(t)) { R.vid = 'okved'; R.exact = true; R.chip = 'Код ОКВЭД'; R.hint = 'Вид деятельности ' + t; row('Действие', 'Рейтинг компаний', 'По регионам и отраслям', { href: '/reyting/' }); return R; }
+var txt = t, popr = '';
+if (/^[a-z\[\];',.` ]+$/i.test(t) && /[a-z]/i.test(t)) {
+var ru = vRus(t);
+if (!ischiRazdely(t, razdely).length && /[а-я]{3}/.test(ru)) { popr = ru; txt = ru; }
+}
+if (popr) { R.rows.push({ g: 'Раскладка', t: 'Ищем «' + popr + '»', s: 'Вы печатали в английской раскладке' + NB + '— исправили сами', inn: '', href: '', tag: 'исправлено' }); }
+var razd = ischiRazdely(txt, razdely);
+var fio = /^[А-ЯЁ][а-яё]+\s[А-ЯЁ][а-яё]+\s[А-ЯЁ][а-яё]+(вич|вна|ична|чна)$/.test(t);
+var vopros = /\?$|^(как|что|почему|зачем|можно|нужно|сколько|когда|где)\s/i.test(txt);
+R.nazvanie = norm(txt).length >= 3 && !vopros ? txt : '';
+if (R.nazvanie) R.rows.push({ g: 'Действие', t: 'Проверить «' + txt + '»', s: 'Найдём организацию в ЕГРЮЛ по названию', inn: '', href: '', tag: '', q: txt });
+if (fio) row('Скоро', 'Организации, где человек' + NB + '— руководитель', 'Только организации, по сведениям ЕГРЮЛ', { tag: 'скоро' });
+razd.forEach(function (r) { row(vopros ? 'Ответы и разделы' : 'Разделы', r.t, r.s, { href: r.u }); R.rows[R.rows.length - 1].razdel = true; });
+R.vid = popr ? 'raskladka' : fio ? 'rukovoditel' : vopros ? 'vopros' : 'nazvanie';
+R.chip = popr ? 'Другая раскладка' : fio ? 'Похоже на ФИО' : vopros ? 'Вопрос' : 'Название или вопрос';
+R.hint = vopros ? 'Нашли в разделах Делоскопа' : R.nazvanie ? 'Ищем в ЕГРЮЛ по названию' + (razd.length ? ' и в разделах Делоскопа' : '') : 'Допишите ещё пару букв';
+return R;
+}
+var ST = { LIQUIDATING: 'ликвидируется', LIQUIDATED: 'ликвидирована', BANKRUPT: 'банкротство', REORGANIZING: 'реорганизация' };
+function gorod(adr) {
+var ch = String(adr || '').split(',').map(function (x) { return x.trim(); });
+for (var i = 0; i < ch.length; i++) if (/^(г|город)\.?\s/i.test(ch[i])) return ch[i].replace(/^(г|город)\.?\s+/i, '');
+return '';
+}
+function stroki(items, imya) {
+return (items || []).filter(function (it) { return it && /^\d{10}$/.test(String(it.inn || '')); }).slice(0, 7).map(function (it) {
+var c = [], g = it.gorod || gorod(it.address);
+if (g) c.push(g);
+if (it.god_s) c.push(it.god_po ? it.god_s + '–' + it.god_po : 'с ' + it.god_s);
+if (it.okved_tekst) c.push(String(it.okved_tekst).length > 38 ? String(it.okved_tekst).slice(0, 37) + '…' : it.okved_tekst);
+c.push('ИНН ' + it.inn);
+var n = imya ? imya(it.name) : it.name;
+return { g: 'Компании', t: n, s: c.join(NB + '· '), inn: String(it.inn), href: '', tag: ST[it.status] || (it.filial ? 'филиал' : ''), imya: n };
+});
+}
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function deystvie(r) { return !!(r && (r.inn || r.href || r.q)); }
+function sobrat(R, kompanii) {
+var a = (R && R.rows) || [];
+var k = kompanii || [];
+return a.filter(function (r) { return !r.razdel && !(r.q && k.length); }).concat(k, a.filter(function (r) { return r.razdel; }));
+}
+function pervoe(rows) { for (var i = 0; i < rows.length; i++) if (deystvie(rows[i])) return i; return -1; }
+function html(R, rows, sel) {
+var h = '';
+if (R && R.chip) h += '<li class="ps-seen' + (R.err ? ' ps-seen--err' : '') + '" role="presentation"><span class="ps-chip"><i></i>' + esc(R.chip) + '</span> <span>' + esc(R.hint) + '</span></li>';
+var g = '';
+rows.forEach(function (r, i) {
+if (r.g !== g) { g = r.g; h += '<li class="ps-gh" role="presentation">' + esc(g) + '</li>'; }
+var on = i === sel;
+h += '<li role="option" id="ps' + i + '" data-i="' + i + '" class="ps-row' + (deystvie(r) ? '' : ' ps-row--info') + '" aria-selected="' + on + '"' + (deystvie(r) ? '' : ' aria-disabled="true"') + '>' +
+'<b>' + esc(r.t) + '</b><span>' + esc(r.s) + '</span>' +
+(r.tag ? '<em class="ps-tag">' + esc(r.tag) + '</em>' : on && deystvie(r) ? '<em class="ps-tag ps-tag--ent">Enter ↵</em>' : '') + '</li>';
+});
+return h;
+}
+function sdelatSchet(bik, nach, hvost) { for (var k = 0; k < 10; k++) { var a = nach + k + hvost; if (kluchOk(bik, a)) return a; } return nach + '0' + hvost; }
+var PRIMER_BIK = '044525225', PRIMER_SCHET = sdelatSchet(PRIMER_BIK, '40702810', '00000000001');
+var PRIMERY = [
+['ИНН', PRIMER_INN],
+['Название', 'магнит'],
+['Не та раскладка', 'vfuybn'],
+['Кусок счёта', 'Поставщик ИНН ' + PRIMER_INN + ' р/с ' + PRIMER_SCHET + ' БИК ' + PRIMER_BIK],
+['ИНН с опечаткой', '2309085639'],
+['Вопрос', 'банк запросил документы']
+];
+function htmlPusto(nedavnie) {
+var h = '';
+var nd = (nedavnie || []).filter(function (x) { return x && /^\d{10}$/.test(String(x.inn || '')); }).slice(0, 3);
+if (nd.length) {
+h += '<li class="ps-gh" role="presentation">Недавние на этом устройстве</li>';
+nd.forEach(function (x, i) { h += '<li role="option" id="ps' + i + '" data-i="' + i + '" class="ps-row" aria-selected="false"><b>' + esc(x.name || 'ИНН ' + x.inn) + '</b><span>ИНН ' + esc(x.inn) + '</span></li>'; });
+}
+h += '<li class="ps-gh" role="presentation">Нажмите пример' + NB + '— увидите, как строка его понимает</li><li class="ps-ex" role="presentation">';
+PRIMERY.forEach(function (p) { h += '<button type="button" data-q="' + esc(p[1]) + '">' + esc(p[0]) + '</button>'; });
+return h + '</li>';
+}
+function vstavka(s) { return String(s == null ? '' : s).replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 300); }
+return { PRIMER_INN: PRIMER_INN, PRIMERY: PRIMERY, cif: cif, innOk: innOk, ogrnOk: ogrnOk, kluchOk: kluchOk, vRus: vRus, norm: norm,
+ischiRazdely: ischiRazdely, razobrat: razobrat, stroki: stroki, gorod: gorod, html: html, htmlPusto: htmlPusto,
+deystvie: deystvie, pervoe: pervoe, sobrat: sobrat, vstavka: vstavka, sdelatSchet: sdelatSchet };
+});
+;
+/* --- /js/poisk-okno.js --- */
+(function () {
+'use strict';
+var P = window.DlkPoisk;
+if (!P || window.DlkPoiskOkno) return;
+var API = /(^|\.)deloskop\.ru$/.test(location.hostname) ? 'https://api.deloskop.ru' : '';
+var CSS = '' +
+'dialog.pso{position:fixed;inset:0;margin:min(12vh,112px) auto auto;width:min(640px,calc(100vw - 32px));max-height:calc(100dvh - min(12vh,112px) - 24px);padding:0;border:0;border-radius:28px;background:var(--card,#fff);color:var(--ink,#1D1D1F);font-family:var(--font,system-ui,sans-serif);box-shadow:0 24px 80px rgba(0,0,0,.22);overflow:hidden;display:flex;flex-direction:column}' +
+'dialog.pso:not([open]){display:none}' +
+'dialog.pso::backdrop{background:rgba(17,17,19,.32);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}' +
+'.pso__f{display:flex;align-items:center;gap:12px;padding:14px 14px 14px 20px;border-bottom:1px solid var(--line,#E6E6E1);margin:0}' +
+'.pso__f svg{flex:none;color:var(--ink-2,#55555A)}' +
+'.pso__i{flex:1;min-width:0;border:0;outline:0;background:none;color:inherit;font:500 20px/1.3 var(--font,system-ui);padding:8px 0}' +
+'.pso__i::placeholder{color:var(--muted,#86868B)}' +
+'.pso__x{flex:none;border:1px solid var(--line,#E6E6E1);background:none;color:var(--ink-2,#55555A);border-radius:8px;padding:4px 8px;font:500 12px/1 var(--font,system-ui);cursor:pointer;min-height:28px}' +
+'.pso__x:hover{color:var(--ink,#1D1D1F);border-color:var(--ink-2,#55555A)}' +
+'.pso__x:focus-visible,.pso .ps-ex button:focus-visible{outline:3px solid var(--accent,#0B63E5);outline-offset:2px}' +
+'.pso .sugg{position:static;box-shadow:none;border-radius:0;margin:0;padding:6px;list-style:none;overflow:auto;flex:1 1 auto;max-height:none;background:none}' +
+'.pso .sugg li{padding:10px 12px;border-radius:10px;cursor:pointer;display:flex;flex-direction:column;gap:2px}' +
+'.pso .sugg li[aria-selected="true"],.pso .sugg li.ps-row:hover{background:var(--bg,#F5F5F2)}' +
+'.pso .sugg b{font-weight:600;font-size:17px;color:var(--ink,#1D1D1F)}.pso .sugg span{font-size:13px;color:var(--ink-2,#55555A)}' +
+'.pso .sugg li.ps-row{position:relative;padding-right:84px}.pso .sugg li.ps-row--info{cursor:default}.pso .sugg li.ps-row--info b{font-weight:500}' +
+'.pso .sugg li.ps-seen{flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 8px;cursor:default;padding:8px 12px 6px;font-size:13px;color:var(--ink-2,#55555A)}' +
+'.pso .ps-chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-weight:600;font-size:13px;background:var(--accent-soft,#EAF1FD);color:var(--accent,#0B63E5)}' +
+'.pso .ps-chip i{width:7px;height:7px;border-radius:50%;background:currentColor}' +
+'.pso .ps-seen--err .ps-chip{background:var(--warn-bg,#FFF4E0);color:var(--warn,#9A5B00)}' +
+'.pso .sugg li.ps-gh{cursor:default;padding:10px 12px 2px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#66666B)}' +
+'.pso .ps-tag{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-style:normal;font-size:12px;color:var(--muted,#66666B);border:1px solid var(--line,#E6E6E1);border-radius:999px;padding:2px 8px;white-space:nowrap}' +
+'.pso .ps-tag--ent{color:var(--ink,#1D1D1F);border-color:var(--accent,#0B63E5)}' +
+'.pso .sugg li.ps-ex{flex-direction:row;flex-wrap:wrap;gap:8px;cursor:default;padding:6px 12px 10px}' +
+'.pso .ps-ex button{border:1px solid var(--line,#E6E6E1);background:transparent;color:var(--ink-2,#55555A);border-radius:999px;padding:7px 13px;font:inherit;font-size:13px;cursor:pointer;min-height:36px}' +
+'.pso .ps-ex button:hover{color:var(--ink,#1D1D1F);border-color:var(--accent,#0B63E5)}' +
+'.pso__n{margin:0;padding:10px 20px 12px;border-top:1px solid var(--line,#E6E6E1);font-size:12px;color:var(--muted,#66666B)}' +
+'.pso__n kbd{font:inherit;border:1px solid var(--line,#E6E6E1);border-radius:6px;padding:1px 6px;margin-right:4px}' +
+'@media (max-width:640px){dialog.pso{margin:0;width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;border-radius:0}.pso__f{padding:10px 12px 10px 16px;padding-top:calc(10px + env(safe-area-inset-top))}.pso__n{display:none}' +
+'.pso .sugg li.ps-row{padding-right:12px}.pso .ps-tag--ent{display:none}.pso .ps-tag{position:static;transform:none;align-self:flex-start;margin-top:4px}}' +
+'@media (prefers-reduced-motion:no-preference){dialog.pso[open]{animation:pso-v .18s cubic-bezier(.2,.7,.2,1)}@keyframes pso-v{from{opacity:0;transform:translateY(-8px) scale(.985)}}}';
+var dlg, form, input, list, rows = [], items = [], sel = -1, PR = null, razdely = null, pustoe = false, tmr = 0, lastQ = '', tipByl = '', kto = null;
+function goal(c, p) { if (window.dlkGoal) try { window.dlkGoal(c, p); } catch (e) {} }
+function nedavnie() { try { return window.Nedavnie ? window.Nedavnie.list() : JSON.parse(localStorage.getItem('dlk_nedavnie') || '[]'); } catch (e) { return []; } }
+function razd() {
+if (razdely) return;
+razdely = [];
+fetch('/data/poisk-razdely.json').then(function (r) { return r.ok ? r.json() : {}; })
+.then(function (j) { razdely = j.razdely || []; if (input.value.trim()) risovat(); }).catch(function () {});
+}
+function otmetit() {
+[].forEach.call(list.querySelectorAll('[role=option]'), function (li) {
+var on = +li.dataset.i === sel;
+li.setAttribute('aria-selected', on);
+var t = li.querySelector('.ps-tag--ent');
+if (t && !on) t.remove();
+if (on) {
+input.setAttribute('aria-activedescendant', li.id);
+if (li.scrollIntoView) li.scrollIntoView({ block: 'nearest' });
+if (!pustoe && !li.querySelector('.ps-tag') && P.deystvie(rows[sel])) { var e = document.createElement('em'); e.className = 'ps-tag ps-tag--ent'; e.textContent = 'Enter ↵'; li.appendChild(e); }
+}
+});
+if (sel < 0) input.removeAttribute('aria-activedescendant');
+}
+function risovat() {
+var q = input.value;
+if (!q.trim()) {
+PR = null; pustoe = true;
+var nd = nedavnie().filter(function (x) { return x && /^\d{10}$/.test(x.inn); }).slice(0, 3);
+rows = nd.map(function (x) { return { inn: x.inn, imya: x.name || x.inn, t: x.name, s: '' }; });
+items = rows; sel = -1; list.innerHTML = P.htmlPusto(nd); otmetit(); return;
+}
+pustoe = false;
+PR = P.razobrat(q, razdely || []);
+rows = P.sobrat(PR, items); sel = P.pervoe(rows);
+list.innerHTML = P.html(PR, rows, sel); otmetit();
+if (PR.vid && PR.vid !== tipByl && PR.exact) { tipByl = PR.vid; goal('poisk_tip', { vid: PR.vid, mesto: 'okno' }); }
+}
+function kuda(r) {
+if (!r) return '';
+if (r.inn) return '/?inn=' + encodeURIComponent(r.inn);
+if (r.q) return '/?inn=' + encodeURIComponent(r.q) + '#poisk';
+if (r.href && /^\/(?!\/)/.test(r.href)) return r.href;
+return '';
+}
+function vidVybora(r) { return r.inn ? (r.imya ? 'kompaniya' : 'inn') : r.q ? 'nazvanie' : r.razdel ? 'razdel' : 'instrument'; }
+function vybrat(i, sposob) {
+var r = rows[i], u = kuda(r);
+if (!u) return false;
+goal('poisk_vybor', { vid: pustoe ? 'nedavnie' : vidVybora(r), mesto: 'okno', sposob: sposob, nomer: i });
+zakryt(true);
+location.href = u;
+return true;
+}
+function podskazki() {
+clearTimeout(tmr);
+var q = input.value.trim();
+items = [];
+if (!API || !PR || !PR.nazvanie || q.length < 3 || /^\d+$/.test(q)) return;
+tmr = setTimeout(function () {
+lastQ = q;
+fetch(API + '/api/suggest?q=' + encodeURIComponent(PR.nazvanie)).then(function (r) { return r.ok ? r.json() : { items: [] }; })
+.then(function (j) {
+if (lastQ !== input.value.trim() || !dlg.open) return;
+items = P.stroki(j.items, window.DlkImya ? window.DlkImya.kavychki : null);
+rows = P.sobrat(PR, items); sel = P.pervoe(rows); list.innerHTML = P.html(PR, rows, sel); otmetit();
+}).catch(function () {});
+}, 250);
+}
+function stroit() {
+var st = document.createElement('style');
+st.textContent = CSS;
+document.head.appendChild(st);
+dlg = document.createElement('dialog');
+dlg.className = 'pso';
+dlg.setAttribute('aria-label', 'Поиск по Делоскопу');
+dlg.innerHTML =
+'<form class="pso__f" role="search" method="dialog">' +
+'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>' +
+'<input class="pso__i" type="text" name="q" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" maxlength="300"' +
+' placeholder="ИНН, название, счёт или вопрос" aria-label="ИНН, название, счёт или вопрос" role="combobox" aria-controls="pso-l" aria-autocomplete="list" aria-expanded="true">' +
+'<button class="pso__x" type="button" aria-label="Закрыть поиск">Esc</button></form>' +
+'<ul class="sugg" id="pso-l" role="listbox" aria-label="Что нашлось"></ul>' +
+'<p class="pso__n"><kbd>Enter</kbd>первое действие · <kbd>↑</kbd><kbd>↓</kbd>выбрать · <kbd>Esc</kbd>закрыть</p>';
+document.body.appendChild(dlg);
+form = dlg.querySelector('form'); input = dlg.querySelector('input'); list = dlg.querySelector('ul');
+dlg.querySelector('.pso__x').addEventListener('click', function () { zakryt(); });
+dlg.addEventListener('close', function () { clearTimeout(tmr); if (kto && kto.focus) try { kto.focus(); } catch (e) {} });
+dlg.addEventListener('mousedown', function (e) { if (e.target === dlg) zakryt(); });
+form.addEventListener('submit', function (e) { e.preventDefault(); if (sel >= 0) vybrat(sel, 'enter'); });
+list.addEventListener('mousedown', function (e) {
+var b = e.target.closest('button[data-q]');
+if (b) { e.preventDefault(); input.value = b.getAttribute('data-q'); input.dispatchEvent(new Event('input')); input.focus(); return; }
+var li = e.target.closest('[role=option]');
+if (li) { e.preventDefault(); vybrat(+li.dataset.i, 'klik'); }
+});
+input.addEventListener('paste', function (e) {
+var cd = e.clipboardData, s = cd && cd.getData('text');
+if (!s || !/[\r\n\t]/.test(s)) return;
+e.preventDefault(); input.value = P.vstavka(input.value + ' ' + s); input.dispatchEvent(new Event('input'));
+});
+input.addEventListener('input', function () { razd(); items = []; risovat(); podskazki(); });
+input.addEventListener('keydown', function (e) {
+if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+if (!rows.length) return;
+e.preventDefault();
+var n = rows.length, k = 0;
+do { sel = (sel + (e.key === 'ArrowDown' ? 1 : -1) + n) % n; k++; } while (k < n && !pustoe && !P.deystvie(rows[sel]));
+otmetit();
+} else if (e.key === 'Enter') {
+e.preventDefault();
+if (sel >= 0) vybrat(sel, 'enter');
+}
+});
+}
+function otkryt(otkuda) {
+if (!dlg) stroit();
+kto = otkuda || document.activeElement;
+if (dlg.open) { input.focus(); input.select(); return; }
+input.value = ''; items = []; tipByl = '';
+risovat();
+try { dlg.showModal(); } catch (e) { dlg.setAttribute('open', ''); }
+input.focus();
+razd();
+goal('poisk_okno');
+}
+function zakryt(uhod) { if (!dlg || !dlg.open) return; if (uhod) kto = null; try { dlg.close(); } catch (e) { dlg.removeAttribute('open'); } }
+window.DlkPoiskOkno = { otkryt: otkryt, zakryt: zakryt, kuda: kuda, vidVybora: vidVybora };
+var zhdet = window.__dlkPoiskZhdet;
+window.__dlkPoiskZhdet = null;
+if (typeof zhdet === 'function') zhdet();
+})();
+;

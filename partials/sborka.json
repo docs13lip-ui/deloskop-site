@@ -78,6 +78,10 @@
     "nebo": [
       "js/nebo.js"
     ],
+    "poisk-okno": [
+      "js/poisk.js",
+      "js/poisk-okno.js"
+    ],
     "sravnit": [
       "js/istochniki.js",
       "js/imya.js",

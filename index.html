@@ -423,7 +423,7 @@ footer a{color:var(--ink2)}
 .lp[data-sost=opechatka] .lp__k::after{border-color:var(--warn)}
 .lp--gl .lp__k{visibility:hidden}
 .rezhim-otcheta .lp{display:none}
-@media (max-width:520px){.lp{position:absolute;top:-10px;right:-4px;height:36px;aspect-ratio:auto;width:56px;margin:0}.lp__gl{inset:-30% -18%;width:136%;height:160%}.lp__k::before,.lp__k::after{border-width:2.5px}.hero h1.hero-h1 .h1-kicker{padding-right:64px}}
+@media (max-width:520px){.lp{position:absolute;top:-18px;right:-8px;height:54px;aspect-ratio:auto;width:86px;margin:0}.lp__gl{inset:-30% -18%;width:136%;height:160%}.lp__k::before,.lp__k::after{border-width:2.5px}.hero h1.hero-h1 .h1-kicker{padding-right:88px}}
 @media (prefers-reduced-motion:reduce){.lp__k::before,.lp__k::after,.lp__gl{transition:none}}
 @media print{.lp{display:none!important}}
 </style>
@@ -491,12 +491,12 @@ footer a{color:var(--ink2)}
   <section class="hero" data-set data-set-pole="inn">
     <div class="wrap">
       <div class="hero-text">
-        <div class="lp" data-sost="zhdet" data-lp-src="/js/b/linza-poisk.1b1aad882b.js" aria-hidden="true"><span class="lp__k"></span><canvas class="lp__gl"></canvas></div><script>/* poisk-v2-c: пакет линзы — только когда блок виден и браузер свободен; без WebGL и при «уменьшить движение» CSS-кадр остаётся */!function(d,w){var e=d.currentScript.previousElementSibling,s;if(!e||!("IntersectionObserver"in w))return;var o=new IntersectionObserver(function(z){if(!z[0].isIntersecting||s)return;o.disconnect();(w.requestIdleCallback||function(f){setTimeout(f,300)})(function(){s=d.createElement("script");s.src=e.getAttribute("data-lp-src");s.async=!0;d.head.appendChild(s)},{timeout:2500})});o.observe(e)}(document,window)</script>
+        <div class="lp" data-sost="zhdet" data-lp-src="/js/b/linza-poisk.95adb1d2ce.js" aria-hidden="true"><span class="lp__k"></span><canvas class="lp__gl"></canvas></div><script>/* poisk-v2-c: пакет линзы — только когда блок виден и браузер свободен; без WebGL и при «уменьшить движение» CSS-кадр остаётся */!function(d,w){var e=d.currentScript.previousElementSibling,s;if(!e||!("IntersectionObserver"in w))return;var o=new IntersectionObserver(function(z){if(!z[0].isIntersecting||s)return;o.disconnect();(w.requestIdleCallback||function(f){setTimeout(f,300)})(function(){s=d.createElement("script");s.src=e.getAttribute("data-lp-src");s.async=!0;d.head.appendChild(s)},{timeout:2500})});o.observe(e)}(document,window)</script>
         <h1 class="hero-h1"><span class="h1-kicker">Проверка контрагента по&nbsp;ИНН</span> <span class="glavnaya-display">Проверьте контрагента. Поймите, что сделать до&nbsp;оплаты.</span></h1>
         <p class="lead">Открытые госреестры&nbsp;— простыми словами: что известно о&nbsp;компании, насколько полна проверка и&nbsp;что запросить до&nbsp;оплаты.</p>
         <form class="check" id="check" novalidate>
           <label for="inn" class="sr-only">ИНН, название или реквизиты из&nbsp;счёта</label>
-          <input id="inn" name="inn" type="text" inputmode="search" enterkeyhint="search" autocomplete="off" spellcheck="false" placeholder="ИНН, название или реквизиты из счёта">
+          <input id="inn" name="inn" type="text" inputmode="search" enterkeyhint="search" autocomplete="off" spellcheck="false" placeholder="ИНН, название или реквизиты">
           <button type="submit">Проверить</button>
         </form>
         <p class="note" id="note" role="status" aria-live="polite">10&nbsp;проверок в&nbsp;день&nbsp;— бесплатно, без&nbsp;регистрации.</p><script>/* zagruzka-v1: открыто адресом отчёта (/?inn=…) — проверка начнётся сразу, поэтому строка под полем с первого кадра «Проверяем по реестрам…». Иначе на телефоне в первый кадр попадала двухстрочная «10 проверок в день…», а через 100–200 мс — однострочная, и всё ниже прыгало на 22 px (CLS). Прежний текст — в data-def: его возвращает «Назад». */(function(n){if(n&&document.documentElement.classList.contains('rezhim-otcheta')){n.setAttribute('data-def',n.textContent);n.textContent='Проверяем по реестрам…'}})(document.getElementById('note'))</script>

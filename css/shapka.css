@@ -26,8 +26,8 @@ a.skip:focus{top:var(--s-2);color:var(--on-accent)}
 .shapka .shapka__logo,.mnav .shapka__logo{display:inline-flex;align-items:center;gap:var(--s-2);min-height:44px;flex:none;color:var(--ink);text-decoration:none}
 .shapka .shapka__logo:hover,.mnav .shapka__logo:hover{color:var(--ink)}
 .shapka__logo svg{display:block;flex:none}
-.shapka__logo circle{stroke:var(--ink)}
-.shapka__word{font:600 24px/1 var(--font);letter-spacing:-.03em}
+.shapka__logo .shapka__obod{stroke:var(--ink)}
+.shapka__word{font:700 20px/1 "Unbounded",var(--font);letter-spacing:-.015em}
 
 .shapka .shapka__nav{flex:1;min-width:0;display:flex;justify-content:center}
 .shapka .shapka__list{display:flex;gap:var(--s-1)}
@@ -55,9 +55,9 @@ a.skip:focus{top:var(--s-2);color:var(--on-accent)}
  .shapka .shapka__burger{display:inline-grid}
  .shapka .shapka__right{margin-left:auto}
 }
-@media (max-width:640px){.shapka__word{font-size:20px}}
+@media (max-width:640px){.shapka__word{font-size:15px}}
 /* uzkij-360-v1: 360–399 px (частые Android) — шапка влезает без сдвига вбок (было +24 px на 360) */
-@media (max-width:399px){.shapka .shapka__btn{margin-left:4px;padding:0 13px}.shapka .shapka__right{gap:0}.shapka__word{font-size:17px}}
+@media (max-width:480px){.shapka .shapka__btn{margin-left:4px;padding:0 13px}.shapka .shapka__right{gap:0}.shapka__word{font-size:13px}.shapka__logo svg{width:28px;height:28px}}
 @media (max-width:359px){.shapka .shapka__btn{display:none}}
 @media print{.shapka,.mnav,.skip,.wn-bar{display:none!important}}
 

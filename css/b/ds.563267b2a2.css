@@ -9,6 +9,7 @@
 @font-face{font-family:Onest;font-style:normal;font-weight:600;font-display:swap;src:url(/fonts/onest-cyrillic-600.woff2) format("woff2");unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
 @font-face{font-family:Onest;font-style:normal;font-weight:600;font-display:swap;src:url(/fonts/onest-latin-ext-600.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 @font-face{font-family:Onest;font-style:normal;font-weight:600;font-display:swap;src:url(/fonts/onest-latin-600.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Unbounded";font-style:normal;font-weight:700;font-display:swap;src:url(/fonts/unbounded-logo-700.woff2) format("woff2");unicode-range:U+0414,U+0435,U+043A-043B,U+043E-043F,U+0441}
 @font-face{font-family:"Onest Zapas";font-style:normal;font-weight:400;src:local("Arial"),local("ArialMT"),local("Liberation Sans"),local("LiberationSans"),local("Arimo");size-adjust:102.63%;ascent-override:94.51%;descent-override:29.72%;line-gap-override:0%}
 @font-face{font-family:"Onest Zapas";font-style:normal;font-weight:500;src:local("Arial"),local("ArialMT"),local("Liberation Sans"),local("LiberationSans"),local("Arimo");size-adjust:103.87%;ascent-override:93.39%;descent-override:29.36%;line-gap-override:0%}
 @font-face{font-family:"Onest Zapas";font-style:normal;font-weight:600;src:local("Arial Bold"),local("Arial-BoldMT"),local("Liberation Sans Bold"),local("LiberationSans-Bold"),local("Arimo Bold");size-adjust:98.40%;ascent-override:98.58%;descent-override:31.00%;line-gap-override:0%}
@@ -77,8 +78,8 @@ a.skip:focus{top:var(--s-2);color:var(--on-accent)}
 .shapka .shapka__logo,.mnav .shapka__logo{display:inline-flex;align-items:center;gap:var(--s-2);min-height:44px;flex:none;color:var(--ink);text-decoration:none}
 .shapka .shapka__logo:hover,.mnav .shapka__logo:hover{color:var(--ink)}
 .shapka__logo svg{display:block;flex:none}
-.shapka__logo circle{stroke:var(--ink)}
-.shapka__word{font:600 24px/1 var(--font);letter-spacing:-.03em}
+.shapka__logo .shapka__obod{stroke:var(--ink)}
+.shapka__word{font:700 20px/1 "Unbounded",var(--font);letter-spacing:-.015em}
 .shapka .shapka__nav{flex:1;min-width:0;display:flex;justify-content:center}
 .shapka .shapka__list{display:flex;gap:var(--s-1)}
 .shapka .shapka__link{position:relative;display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 10px;border:0;border-radius:var(--r-pill);background:none;color:var(--ink-2);font:500 15px/1 var(--font);text-decoration:none;white-space:nowrap;cursor:pointer;transition:color var(--fast) var(--ease),background var(--fast) var(--ease)}
@@ -101,8 +102,8 @@ a.skip:focus{top:var(--s-2);color:var(--on-accent)}
 .shapka .shapka__burger{display:inline-grid}
 .shapka .shapka__right{margin-left:auto}
 }
-@media (max-width:640px){.shapka__word{font-size:20px}}
-@media (max-width:399px){.shapka .shapka__btn{margin-left:4px;padding:0 13px}.shapka .shapka__right{gap:0}.shapka__word{font-size:17px}}
+@media (max-width:640px){.shapka__word{font-size:15px}}
+@media (max-width:480px){.shapka .shapka__btn{margin-left:4px;padding:0 13px}.shapka .shapka__right{gap:0}.shapka__word{font-size:13px}.shapka__logo svg{width:28px;height:28px}}
 @media (max-width:359px){.shapka .shapka__btn{display:none}}
 @media print{.shapka,.mnav,.skip,.wn-bar{display:none!important}}
 html.is-locked{overflow:hidden}

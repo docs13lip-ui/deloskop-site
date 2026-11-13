@@ -9,7 +9,7 @@ const { execSync } = require('child_process');
 
 const KOREN = path.join(__dirname, '..');
 const chitat = f => fs.readFileSync(path.join(KOREN, f), 'utf8');
-const LOGO = '<svg width="36" height="32" viewBox="0 0 72 64" fill="none" aria-hidden="true"><path d="M36 18.1A16 16 0 0 1 36 45.9A16 16 0 0 1 36 18.1Z" fill="#0B63E5"/><circle cx="28" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/><circle cx="44" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/></svg>';
+const LOGO = '<svg width="32" height="32" viewBox="0 0 120 120" fill="none" aria-hidden="true"><circle class="shapka__obod" cx="60" cy="60" r="51" stroke="#1D1D1F" stroke-width="10"/><circle cx="60" cy="60" r="38" fill="#0B63E5"/><path d="M41.5 60.5L53.5 72.5L79 46" stroke="#FFFFFF" stroke-width="9.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 function stranicy() {
   const vse = execSync('git ls-files "*.html"', { cwd: KOREN, encoding: 'utf8' }).split('\n').filter(Boolean);
@@ -33,10 +33,10 @@ test('шапка есть на всех страницах, ровно одна 
   }
 });
 
-test('логотип — фирменная линза, дважды (шапка и мобильное меню), без favicon', () => {
+test('логотип — знак-печать с галочкой (logo-v2), дважды (шапка и мобильное меню), без favicon', () => {
   const p = chitat('partials/shapka.html');
   assert.strictEqual(p.split(LOGO).length - 1, 2);
-  assert.strictEqual((p.match(/viewBox="0 0 72 64"/g) || []).length, 2);
+  assert.strictEqual((p.match(/viewBox="0 0 120 120"/g) || []).length, 2);
   assert.ok(!p.includes('favicon'));
 });
 
@@ -58,7 +58,7 @@ test('5 мест в шапке без выпадающих меню (fokus-shapk
   const verh = [...nav.matchAll(/href="([^"]+)"/g)].map(m => m[1]);
   assert.deepStrictEqual(mob, verh);
   assert.ok(!/aria-current|is-active|style=/.test(p));
-  const hex = (p.match(/#[0-9A-Fa-f]{3,6}\b/g) || []).filter(x => !['#0B63E5', '#1D1D1F'].includes(x));
+  const hex = (p.match(/#[0-9A-Fa-f]{3,6}\b/g) || []).filter(x => !['#0B63E5', '#1D1D1F', '#FFFFFF'].includes(x));
   assert.deepStrictEqual(hex, []);
 });
 

@@ -523,7 +523,7 @@ td b{font-weight:600}
 <link rel="preload" href="/fonts/onest-cyrillic-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/onest-latin-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/onest-cyrillic-600.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/css/b/ds.1c07b2ecef.css">
+<link rel="stylesheet" href="/css/b/ds.563267b2a2.css">
 <script src="/js/shapka.js" defer></script>
 <script src="/js/metrika.js" defer></script>
 <script src="/js/otzyv.js" defer></script>
@@ -547,7 +547,7 @@ td b{font-weight:600}
 <a class="skip" href="#main">Перейти к&nbsp;содержанию</a>
 <header class="shapka" data-shapka>
  <div class="shapka__in">
-  <a class="shapka__logo" href="/" aria-label="Делоскоп — на главную"><svg width="36" height="32" viewBox="0 0 72 64" fill="none" aria-hidden="true"><path d="M36 18.1A16 16 0 0 1 36 45.9A16 16 0 0 1 36 18.1Z" fill="#0B63E5"/><circle cx="28" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/><circle cx="44" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/></svg><span class="shapka__word">делоскоп</span></a>
+  <a class="shapka__logo" href="/" aria-label="Делоскоп — на главную"><svg width="32" height="32" viewBox="0 0 120 120" fill="none" aria-hidden="true"><circle class="shapka__obod" cx="60" cy="60" r="51" stroke="#1D1D1F" stroke-width="10"/><circle cx="60" cy="60" r="38" fill="#0B63E5"/><path d="M41.5 60.5L53.5 72.5L79 46" stroke="#FFFFFF" stroke-width="9.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="shapka__word">Делоскоп</span></a>
   <nav class="shapka__nav" aria-label="Основное меню">
    <ul class="shapka__list">
     <li><a class="shapka__link" href="/proverit-schet/" data-match="^/proverit-schet/">Проверь счёт</a></li>
@@ -567,7 +567,7 @@ td b{font-weight:600}
 </header>
 <dialog class="mnav" id="mnav" aria-label="Меню">
  <div class="mnav__top">
-  <a class="shapka__logo" href="/" aria-label="Делоскоп — на главную"><svg width="36" height="32" viewBox="0 0 72 64" fill="none" aria-hidden="true"><path d="M36 18.1A16 16 0 0 1 36 45.9A16 16 0 0 1 36 18.1Z" fill="#0B63E5"/><circle cx="28" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/><circle cx="44" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/></svg><span class="shapka__word">делоскоп</span></a>
+  <a class="shapka__logo" href="/" aria-label="Делоскоп — на главную"><svg width="32" height="32" viewBox="0 0 120 120" fill="none" aria-hidden="true"><circle class="shapka__obod" cx="60" cy="60" r="51" stroke="#1D1D1F" stroke-width="10"/><circle cx="60" cy="60" r="38" fill="#0B63E5"/><path d="M41.5 60.5L53.5 72.5L79 46" stroke="#FFFFFF" stroke-width="9.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="shapka__word">Делоскоп</span></a>
   <button class="shapka__burger" type="button" data-close aria-label="Закрыть меню"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
  </div>
  <nav class="mnav__body" aria-label="Основное меню">
@@ -628,7 +628,7 @@ td b{font-weight:600}
   var P=window.PasportKontragenta, U=window.Usloviya;
   function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
   function nbsp(t){return esc(t).replace(/(\d) (?=\d{3}\b)/g,'$1&nbsp;').replace(/(\d) (₽|%|млн|млрд|тыс)/g,'$1&nbsp;$2')}
-  var LOGO='<svg width="26" height="23" viewBox="0 0 72 64" fill="none" aria-hidden="true"><path d="M36 18.1A16 16 0 0 1 36 45.9A16 16 0 0 1 36 18.1Z" fill="#0B63E5"/><circle cx="28" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/><circle cx="44" cy="32" r="16" stroke="#1D1D1F" stroke-width="4.5"/></svg>';
+  var LOGO='<svg width="24" height="24" viewBox="0 0 120 120" fill="none" aria-hidden="true"><circle cx="60" cy="60" r="51" stroke="#1D1D1F" stroke-width="10"/><circle cx="60" cy="60" r="38" fill="#0B63E5"/><path d="M41.5 60.5L53.5 72.5L79 46" stroke="#FFFFFF" stroke-width="9.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var MARK={istochnik:['m-ist','●','подтверждено источником'],raschet:['m-ras','◆','рассчитано Делоскопом'],net:['m-net','○','не проверяли'],sl:['m-sl','·','справка о документе']};
   function mark(x){var k=x.status==='not_checked'||x.status==='locked'?'net':x.vid==='sluzhebnyj'?'sl':(x.vid==='raschet'?'raschet':'istochnik');var m=MARK[k];return '<span class="m '+m[0]+'" role="img" aria-label="'+m[2]+'"></span>';}
   function znachok(x){
@@ -885,7 +885,7 @@ td b{font-weight:600}
     // Ссылка «для коллеги» — по ИНН, не по номеру досье: получатель соберёт Паспорт заново, на день открытия,
     // а номер досье (ключ к сведениям этой проверки) из рук не уходит (команда 29.09 19:07, Прорыв «Я-2»).
     var link=m.demo||!/^\d{10}$/.test(String(m.inn||''))?location.href.replace(/[?&](summa|print|rezhim)=[^&]*/g,''):SAJT+'/pasport/kontragent/?inn='+m.inn;
-    if(p.ip){pk.innerHTML='<div class="kol"><div class="brand">'+LOGO+'делоскоп</div></div><h1>'+esc(m.nazvanie)+'</h1><p>'+esc(p.tekst)+'</p>';msg.hidden=true;pk.hidden=false;return;}
+    if(p.ip){pk.innerHTML='<div class="kol"><div class="brand">'+LOGO+'Делоскоп</div></div><h1>'+esc(m.nazvanie)+'</h1><p>'+esc(p.tekst)+'</p>';msg.hidden=true;pk.hidden=false;return;}
     var osh=P.proverit(p);
     if(osh.length&&window.console)console.warn('Паспорт: правила солидности',osh);
     P.vypustit(p).then(function(hash){
@@ -895,7 +895,7 @@ td b{font-weight:600}
           s2=gl.length?gl.join('; '):'В полученных сведениях серьёзных отметок нет. Что не проверяли — в разделе 16.',
           s3=it.na_konu?(it.na_konu.rub==null?'При претензии налоговой по сделке на '+U.money(it.na_konu.summa)+' — зависит от вашего статуса по НДС: уточните '+(REZH[opts.rezhim||'osn']||REZH.osn):'При претензии налоговой по сделке на '+U.money(it.na_konu.summa)+' — до '+U.money(it.na_konu.rub)+' '+(REZH[opts.rezhim||'osn']||REZH.osn)):'Введите сумму сделки — посчитаем, сколько на кону при претензии налоговой.';
       var pol=m.provereno.chto==='istochnikov'?'Проверено по '+m.provereno.n+' из '+m.provereno.m+' источников':'Сведения получены по '+m.provereno.n+' из '+m.provereno.m+' разделов';
-      var h='<div class="kol"><div class="brand">'+LOGO+'делоскоп</div><div class="pr"><b>Паспорт контрагента</b>№ '+esc(m.nomer)+'<br>Сведения на '+esc(vremya(m.sformirovan))+'</div></div>'+
+      var h='<div class="kol"><div class="brand">'+LOGO+'Делоскоп</div><div class="pr"><b>Паспорт контрагента</b>№ '+esc(m.nomer)+'<br>Сведения на '+esc(vremya(m.sformirovan))+'</div></div>'+
         (m.demo?'<span class="obrazec">Образец: компания вымышленная, данные для примера</span>':'')+
         '<h1>'+esc(m.nazvanie)+'</h1>'+rekvizity22(p,m)+
         '<div class="itog"><h2>Итог в трёх строках</h2><ol>'+

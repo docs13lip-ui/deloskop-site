@@ -286,9 +286,43 @@ detail: 'Не сверены: в' + NB + razryady(nov.kratno) + NB + razSkl(nov.
 pains: [], source: 'ФНС, открытые данные: доходы и расходы организации', as_of: '31.12.' + nov.god, sverka_dohodov: true };
 var i = -1;
 S.forEach(function (s, j) { if (i < 0 && s && (s.id === 'tax_burden' || /^Низкая налоговая нагрузка/i.test(String(s.title || '')))) i = j; });
+var doS = S.slice();
 if (i >= 0) S.splice(i, 1, stroka); else S.push(stroka);
+if (!(i >= 0 && pereschitatItog(r, doS, S))) {
 if (typeof r.verdict === 'string') r.verdict = r.verdict.replace(/,\s*низкая налоговая нагрузка|низкая налоговая нагрузка,\s*/i, '');
+}
+if (r.sverka_itoga) r.sverka_dohodov_tekst = tekst + ' Итог проверки считаем без строки о' + NB + 'налоговой нагрузке — она стояла на' + NB + 'этом числе.';
 return r;
+}
+var ITOG = {
+low: { t: 'Низкий риск', v: function (p) { return !p.length ? 'Работать можно. Серьёзных признаков риска не найдено.' : p.length === 1 ? 'Работать можно. Есть один момент: ' + p[0] + '. Уточните его перед крупной оплатой.' : null; } },
+medium: { t: 'Средний риск', v: function (p) { return 'Работать можно с осторожностью: обратите внимание — ' + p.join(', ') + '. Перед крупной оплатой запросите документы и сохраните их в деле.'; } },
+high: { t: 'Высокий риск', v: function (p) { return 'Работать не рекомендуем: ' + p.join(', ') + '. Платёж такой компании может вызвать вопросы банка по 115-ФЗ, а сделка — у налоговой.'; } }
+};
+var STUPEN = { low: 0, medium: 1, high: 2 };
+function itogPoStrokam(S) {
+var bad = [], warn = [];
+S.forEach(function (s) {
+if (!s || typeof s !== 'object') return;
+var t = String(s.title || ''); t = t.charAt(0).toLowerCase() + t.slice(1);
+if (s.status === 'bad') bad.push(t); else if (s.status === 'warn') warn.push(t);
+});
+var lvl = bad.length || warn.length >= 3 ? 'high' : warn.length === 2 ? 'medium' : 'low';
+var p = bad.length ? bad : warn, v = ITOG[lvl].v(p);
+return v ? { lvl: lvl, verdict: v } : null;
+}
+function pereschitatItog(r, doS, S) {
+var bylo = itogPoStrokam(doS), stalo = itogPoStrokam(S);
+if (!bylo || !stalo || r.risk_level !== bylo.lvl || r.verdict !== bylo.verdict) return false;
+if (r.risk_title != null && r.risk_title !== ITOG[bylo.lvl].t) return false;
+if (STUPEN[stalo.lvl] > STUPEN[bylo.lvl]) return false;
+r.verdict = stalo.verdict;
+if (stalo.lvl !== bylo.lvl) {
+r.sverka_itoga = { bylo: bylo.lvl, stalo: stalo.lvl };
+r.risk_level = stalo.lvl;
+if (r.risk_title != null) r.risk_title = ITOG[stalo.lvl].t;
+}
+return true;
 }
 function dopolnit(r) {
 if (!r || typeof r !== 'object' || !r.company) return r;

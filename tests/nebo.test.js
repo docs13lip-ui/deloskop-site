@@ -58,20 +58,25 @@ test('созвездия — герои Делоскопа, рёбра внут�
   const m = /var FIGURY = (\[[\s\S]*?\n  \]);/.exec(js);
   const F = eval(m[1]); // eslint-disable-line no-eval
   assert.ok(F.length >= 6 && F.length <= 10, 'фигур ' + F.length);
-  assert.deepStrictEqual(F.map((f) => f.t).slice(0, 6), ['kolco', 'dokument', 'pechat', 'shchit', 'set', 'lupa']);
+  // nebo-latun-v1: первое созвездие — знак № 27 «лупа-галочка» (прежнее «кольцо» — старый знак)
+  assert.deepStrictEqual(F.map((f) => f.t).slice(0, 6), ['znak', 'dokument', 'pechat', 'shchit', 'set', 'lupa']);
   F.forEach((f) => f.r.forEach(([a, b]) => assert.ok(f.p[a] && f.p[b], f.t)));
 });
 
-test('контраст: второстепенный текст тёмной темы над самым светлым местом неба ≥ 4,5 : 1', () => {
+test('контраст: приглушённый текст тёмной темы (#9CA8C2) над самым светлым местом неба ≥ 4,5 : 1', () => {
   const lum = (c) => { c = c.map((v) => v / 255).map((v) => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4))); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
   const smes = (c, k, a) => c.map((v, i) => v + (k[i] - v) * a);
-  // самое светлое место фона: верх градиента #18223A + синяя туманность 0,10 + ядро галактики 0,06 (тёплое)
-  assert.match(js, /#18223A/);
+  // самое светлое место фона (с запасом — все слои в одной точке): верх градиента #102248 (поверхность палитры) + синяя туманность 0,10
+  // + глубокая 0,12 + ядро галактики 0,06 (латунь)
+  assert.match(js, /#102248 0%,#0D1D3F 42%,#0A1733 70%/);
+  assert.match(js, /SINIJ = '90,120,180', GLUB = '46,74,130', TEPLO = '235,203,124'/);
   assert.match(js, /\[0\.28, 0\.3, 0\.42, SINIJ, 0\.10\]/);
+  assert.match(js, /\[0\.74, 0\.62, 0\.36, GLUB, 0\.12\]/);
   assert.match(js, /TEPLO \+ ',\.06\)'/);
-  let c = smes([0x18, 0x22, 0x3A], [91, 155, 255], 0.10);
-  c = smes(c, [255, 217, 160], 0.06);
-  const k = (lum([0xA1, 0xA1, 0xA6]) + 0.05) / (lum(c) + 0.05);
+  let c = smes([0x10, 0x22, 0x48], [90, 120, 180], 0.10);
+  c = smes(c, [46, 74, 130], 0.12);
+  c = smes(c, [235, 203, 124], 0.06);
+  const k = (lum([0x9C, 0xA8, 0xC2]) + 0.05) / (lum(c) + 0.05);
   assert.ok(k >= 4.5, 'контраст ' + k.toFixed(2));
   // звёзды — точки: ореол ближней звезды не ярче 0,14 и не шире 6 радиусов (1–2 px) — пятно меньше буквы
   assert.match(js, /cx\.globalAlpha = 0\.14 \* s\.g \* mig \* s\.m;/);
@@ -139,12 +144,13 @@ test('nebo-v2: стекло карточек над небом — текст �
   assert.match(js, /prefers-reduced-transparency:reduce\)\{html\[data-nebo\] \.card\{background-color:#102248/);
   const lum = (c) => { c = c.map((v) => v / 255).map((v) => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4))); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
   const smes = (c, k, a) => c.map((v, i) => v + (k[i] - v) * a);
-  let nebo = smes([0x18, 0x22, 0x3A], [91, 155, 255], 0.10);
-  nebo = smes(nebo, [255, 217, 160], 0.06);
+  let nebo = smes([0x10, 0x22, 0x48], [90, 120, 180], 0.10);
+  nebo = smes(nebo, [46, 74, 130], 0.12);
+  nebo = smes(nebo, [235, 203, 124], 0.06);
   // звёзды — точки 1–2 px: размытие 12 px растирает их; с запасом — +5 % белого по всей площади (≈ 8 звёзд на каждые 12 × 12 px)
-  nebo = smes(nebo, [245, 245, 242], 0.05);
-  const fon = smes(nebo, [28, 28, 31], 0.74);
-  const k = (lum([0xA1, 0xA1, 0xA6]) + 0.05) / (lum(fon) + 0.05);
+  nebo = smes(nebo, [245, 241, 230], 0.05);
+  const fon = smes(nebo, [16, 34, 72], 0.74); // поверхность #102248 — та же, что в правиле стекла
+  const k = (lum([0x9C, 0xA8, 0xC2]) + 0.05) / (lum(fon) + 0.05);
   assert.ok(k >= 4.5, 'контраст ' + k.toFixed(2));
 });
 
@@ -154,4 +160,28 @@ test('nebo-v2: неподвижный кадр любого размера (OG 3
   const t = chitat('tests/kadr_neba.js');
   assert.match(t, /DlkNebo\.kadr\(/);
   assert.match(t, /3840/);
+});
+
+test('nebo-latun-v1: небо в палитре «тёмно-синий + латунь» — прежних цветов нет, низ глубины #081229, знак по favicon.svg', () => {
+  // прежние: почти чёрный низ, серо-фиолетовая середина, холодный синий акцент, сиреневая туманность
+  ['#0C0C10', '#121320', '#18223A', '91,155,255', '140,110,220', '200,216,255', '255,217,160'].forEach((c) =>
+    assert.ok(!js.includes(c), 'прежний цвет ' + c));
+  assert.match(js, /linear-gradient\(180deg,#0A1733 0%,#081229 100%\)/);
+  // кадр для OG — те же цвета, что фон страницы
+  assert.match(js, /g\.addColorStop\(0, '#0A1733'\); g\.addColorStop\(1, '#081229'\);/);
+  assert.match(js, /g\.addColorStop\(0, '#102248'\); g\.addColorStop\(0\.42, '#0D1D3F'\);/);
+  // линии созвездий — латунь
+  assert.match(js, /strokeStyle = 'rgba\(' \+ LATUN \+ ',' \+ \(\(0\.05 \+ 0\.37 \* z\.v\)/);
+  // созвездие знака: точки оправы лежат на окружности линзы favicon.svg (центр 83,43, r 29; масштаб 1/50 от 61,60) с точностью 1,5 px
+  const m = /var FIGURY = (\[[\s\S]*?\n  \]);/.exec(js);
+  const z = eval(m[1]).find((f) => f.t === 'znak'); // eslint-disable-line no-eval
+  const fav = chitat('favicon.svg');
+  assert.match(fav, /M54 43a29 29 0 1 1 58 0/);
+  z.p.slice(2).forEach(([x, y]) => {
+    const r = Math.hypot(61 + x * 50 - 83, 60 + y * 50 - 43);
+    assert.ok(Math.abs(r - 29) <= 1.5, 'r ' + r.toFixed(2));
+  });
+  // шарнир — в центре круга шарнира (41, 94)
+  assert.ok(Math.hypot(61 + z.p[1][0] * 50 - 41, 60 + z.p[1][1] * 50 - 94) <= 1.5);
+  z.p.forEach(([x, y]) => assert.ok(Math.abs(x) <= 1 && Math.abs(y) <= 1));
 });

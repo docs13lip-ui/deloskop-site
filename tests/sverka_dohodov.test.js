@@ -166,3 +166,61 @@ test('«Динамика» на экране проверки: строка «Г
   assert.ok(!/32,5 млрд/.test(h));
   assert.strictEqual(DIN.sverkaHtml(otvet()), '');
 });
+
+// sverka-dohodov-v2 [Ночные запуски] 14.11 12:20 — живой отчёт 7453199651 после v1 (deloskop.ru/?inn=…, Chromium):
+// «Налог на прибыль 2025 — 266,1 млн ₽ ▲ в 390 раз» в «Динамике» и «Собственный капитал 2,1 млрд ₽» в «На чём держится компания».
+function otvetBalans() {
+  const r = otvet();
+  const D = r.dossier;
+  D.kpi = [
+    { label: 'Выручка за 2025', value: 25186967000, delta: 114930, good_up: true },
+    { label: 'Чистая прибыль за 2025', value: 2040447000, delta: 251187, good_up: true },
+    { label: 'Активы', value: 2058947000, delta: 13447, good_up: true },
+    { label: 'Собственный капитал', value: 2058947000, delta: null, good_up: true },
+    { label: 'Налоги и взносы за год', value: 594781, delta: null, good_up: true },
+    { label: 'Сотрудники', value: null, text: '4 чел.', delta: null, good_up: true }];
+  D.charts = {
+    revenue: [{ year: 2023, value: 31845000 }, { year: 2024, value: 21896000 }, { year: 2025, value: 25186967000 }],
+    profit: [{ year: 2023, value: 1370000 }, { year: 2024, value: 812000 }, { year: 2025, value: 2040447000 }],
+    income_tax: [{ year: 2023, value: 444000 }, { year: 2024, value: 683000 }, { year: 2025, value: 266147000 }],
+    balance: { year: 2025, equity: 2058947000, long_debt: 0, short_debt: 0 }
+  };
+  D.sections[1].rows = [['2024', 'выручка 21,9 млн ₽, прибыль 812 000 ₽'], ['2025', 'выручка 25,2 млрд ₽, прибыль 2,0 млрд ₽'], ['Средний рост выручки в год', '397,3 %'],
+    ['Доля заёмных средств', '0,0 %'], ['Деньги на счетах', '1,6 млрд ₽'], ['Источник', 'ГИР БО ФНС, годовая бухгалтерская отчётность']];
+  D.sections[1].comment = 'Бизнес растёт: выручка в среднем +397 % в год. Оборотных средств хватает, чтобы покрыть текущие долги.';
+  return r;
+}
+
+test('v2: налог на прибыль не сверенного года снят вместе с выручкой', () => {
+  const r = I.dopolnit(otvetBalans());
+  assert.deepStrictEqual(r.dossier.charts.income_tax.map((x) => x.year), [2023, 2024]);
+});
+
+test('v2: баланс того же года с «Активами» ×100+ — не показываем: ряд, показатели, строки и фраза о долгах', () => {
+  const r = I.dopolnit(otvetBalans());
+  assert.ok(!('balance' in r.dossier.charts), 'капитал 2,1 млрд ₽ на 31.12.2025 — того же не сверенного года');
+  assert.deepStrictEqual(r.sverka_balansa, { god: 2025, kratno: 135.47 });
+  const L = r.dossier.kpi.map((x) => x.label);
+  assert.ok(!L.includes('Активы') && !L.includes('Собственный капитал'), L.join(' · '));
+  assert.ok(L.includes('Налоги и взносы за год') && L.includes('Сотрудники'), 'не баланс — не трогаем');
+  const dyn = r.dossier.sections[1];
+  assert.deepStrictEqual(dyn.rows.map((x) => x[0]), ['2024', 'Источник']);
+  assert.ok(!/Оборотных средств/.test(dyn.comment), dyn.comment);
+  assert.match(bezNb(r.sverka_dohodov_tekst), /Баланс на 31\.12\.2025 из того же ответа тоже вырос в 135 раз — его не показываем\.$/);
+});
+
+test('v2: баланс не сверенного года без скачка «Активов» — оставляем (0105053225: капитал 12,9 млн ₽)', () => {
+  const r = I.dopolnit(otvet());
+  assert.deepStrictEqual(r.dossier.charts.balance, { year: 2025, equity: 12947000, long_debt: 0, short_debt: 10000 });
+  assert.ok(!r.sverka_balansa);
+  assert.ok(!/Баланс на/.test(r.sverka_dohodov_tekst));
+  assert.ok(r.dossier.sections[1].rows.some((x) => x[0] === 'Текущая ликвидность'));
+});
+
+test('v2: ровный ряд — ни налог, ни баланс не трогаем', () => {
+  const r = otvetBalans();
+  r.dossier.charts.revenue[2].value = 25186967; r.dossier.kpi[2].delta = 13;
+  I.dopolnit(r);
+  assert.strictEqual(r.dossier.charts.income_tax.length, 3);
+  assert.ok(r.dossier.charts.balance);
+});

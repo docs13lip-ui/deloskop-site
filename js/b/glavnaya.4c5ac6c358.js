@@ -753,6 +753,8 @@ else if (v && typeof v === 'object') obStorony(v, gl + 1);
 return x;
 }
 var SVERKA = { kratno: 100, summa: 1e9 };
+var BALANS_KPI = /^(Активы|Собственный капитал|Фирме должны|Фирма должна|Деньги на счетах|Заёмные средства|Долги)/i;
+var BALANS_STROKI = /^(Доля заёмных средств|Деньги на счетах|Текущая ликвидность|Собственный капитал|Активы)/i;
 function razryady(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, NB); }
 function razSkl(n) { var a = Math.abs(Math.round(n)) % 100, b = a % 10; return a > 10 && a < 20 ? 'раз' : b >= 2 && b <= 4 ? 'раза' : 'раз'; }
 function ryadGod(ryad) {
@@ -777,9 +779,17 @@ if (!ns.length) return r;
 var D = r.dossier, ch = D.charts, goda = {}, nov = ns[ns.length - 1];
 ns.forEach(function (x) { goda[x.god] = true; });
 r.sverka_dohodov = ns;
-['revenue', 'profit'].forEach(function (k) {
+['revenue', 'profit', 'income_tax'].forEach(function (k) {
 if (Array.isArray(ch[k])) ch[k] = ch[k].filter(function (x) { return !(x && goda[+x.year]); });
 });
+var bal = ch.balance && typeof ch.balance === 'object' && !Array.isArray(ch.balance) ? ch.balance : null, balGod = bal ? parseInt(bal.year, 10) : NaN;
+var aktK = (Array.isArray(D.kpi) ? D.kpi : []).filter(function (k) { return k && /^Активы(\s|$)/.test(String(k.label || '')); })[0];
+var balNe = !!(bal && goda[balGod] && aktK && Number(aktK.delta) >= (SVERKA.kratno - 1) * 100);
+if (balNe) {
+r.sverka_balansa = { god: balGod, kratno: 1 + Number(aktK.delta) / 100 };
+delete ch.balance;
+if (ch.debts && typeof ch.debts === 'object' && parseInt(ch.debts.year, 10) === balGod) delete ch.debts;
+}
 var rv = ryadGod(ch.revenue), pf = ryadGod(ch.profit);
 function poslednij(a) { return a.length ? a[a.length - 1] : null; }
 function delta(a, g) {
@@ -789,6 +799,7 @@ return t && p && p.v > 0 ? Math.round((t.v / p.v - 1) * 100) : null;
 if (Array.isArray(D.kpi)) D.kpi = D.kpi.filter(function (k) {
 var L = String((k && k.label) || ''), m = /^(Выручка|Чистая прибыль) за (\d{4})$/.exec(L);
 if (/^Налоговая нагрузка/i.test(L)) return false;
+if (balNe && !/ за \d{4}$/.test(L) && BALANS_KPI.test(L)) return false;
 if (!/ за \d{4}$/.test(L) && Number(k.delta) >= (SVERKA.kratno - 1) * 100) return false;
 if (!m || !goda[+m[2]]) return true;
 var a = m[1] === 'Выручка' ? rv : pf, p = poslednij(a);
@@ -807,7 +818,8 @@ if (r.dengi.doli && typeof r.dengi.doli === 'object') r.dengi.doli = null;
 var tekst = 'Доходы за' + NB + nov.god + NB + 'год в' + NB + 'открытых данных ФНС — ' + razryady(nov.summa) + NB + '₽, в' + NB +
 razryady(nov.kratno) + NB + razSkl(nov.kratno) + ' больше, чем за' + NB + nov.proshlyj.god + NB + 'год (' + razryady(nov.proshlyj.summa) + NB + '₽). ' +
 'Так бывает при ошибке единиц в' + NB + 'наборе. Этот год не' + NB + 'учитываем — ни в' + NB + 'выручке, ни в' + NB + 'налоговой нагрузке, ни в' + NB + 'Индексе; ' +
-'сверьте с' + NB + 'бухотчётностью на' + NB + 'bo.nalog.gov.ru.';
+'сверьте с' + NB + 'бухотчётностью на' + NB + 'bo.nalog.gov.ru.' +
+(balNe ? ' Баланс на' + NB + '31.12.' + balGod + ' из' + NB + 'того' + NB + 'же ответа тоже вырос в' + NB + razryady(r.sverka_balansa.kratno) + NB + razSkl(r.sverka_balansa.kratno) + ' — его не' + NB + 'показываем.' : '');
 r.sverka_dohodov_tekst = tekst;
 (Array.isArray(D.sections) ? D.sections : []).forEach(function (sk) {
 if (!sk || !Array.isArray(sk.rows)) return;
@@ -818,8 +830,9 @@ sk.rows = sk.rows.filter(function (x) { return !(Array.isArray(x) && /^(Дохо
 sk.comment = tekst;
 }
 if (sk.id === 'dynamics') {
-sk.rows = sk.rows.filter(function (x) { return !(Array.isArray(x) && (goda[+String(x[0]).trim()] && /^\d{4}$/.test(String(x[0]).trim()) || /^Средний рост выручки/i.test(String(x[0])))); });
-var ost = (String(sk.comment || '').match(/[^.]+\.?/g) || []).map(function (f) { return f.trim(); }).filter(function (f) { return f && !/выручк|рентабельн|раст[её]т|прибыл|зарабатыва|сокращ/i.test(f); });
+sk.rows = sk.rows.filter(function (x) { return !(Array.isArray(x) && (goda[+String(x[0]).trim()] && /^\d{4}$/.test(String(x[0]).trim()) || /^Средний рост выручки/i.test(String(x[0])) ||
+balNe && BALANS_STROKI.test(String(x[0])))); });
+var ost = (String(sk.comment || '').match(/[^.]+\.?/g) || []).map(function (f) { return f.trim(); }).filter(function (f) { return f && !/выручк|рентабельн|раст[её]т|прибыл|зарабатыва|сокращ/i.test(f) && !(balNe && /оборотн|ликвидн|заём|долг|капитал|на счетах/i.test(f)); });
 sk.comment = ['Год ' + Object.keys(goda).join(', ') + ' не' + NB + 'показываем: доходы в' + NB + 'открытых данных ФНС не' + NB + 'сходятся с' + NB + 'прошлыми годами.'].concat(ost).join(' ');
 }
 });

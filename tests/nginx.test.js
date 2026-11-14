@@ -87,9 +87,11 @@ function zaprosKakBalansirovshchik(port, put, versiya = '1.0') {
     s.on('error', ne);
   });
 }
-function zapros(port, put, metod = 'GET') {
+function zapros(port, put, metod = 'GET', host) {
   return new Promise((ok, ne) => {
-    const r = http.request({ host: '127.0.0.1', port, path: encodeURI(put), method: metod, headers: { 'Accept-Encoding': 'gzip' } }, res => {
+    const headers = { 'Accept-Encoding': 'gzip' };
+    if (host) headers.Host = host;
+    const r = http.request({ host: '127.0.0.1', port, path: encodeURI(put), method: metod, headers }, res => {
       let telo = Buffer.alloc(0);
       res.on('data', c => { telo = Buffer.concat([telo, c]); });
       res.on('end', () => ok({ kod: res.statusCode, h: res.headers, telo }));
@@ -104,7 +106,7 @@ const MIME = BIN && mimeTypes(BIN);
 test('живой nginx: коды ответов и заголовки', { skip: !(BIN && MIME) && 'nginx не найден — проверены только файлы' }, async (t) => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'deloskop-nginx-'));
   const port = 20000 + Math.floor(Math.random() * 20000);
-  const server = CONF.replace('listen 80 default_server;', `listen 127.0.0.1:${port} default_server;`)
+  const server = CONF.replace('listen 80 default_server;', `listen 127.0.0.1:${port} default_server;`).replace(/listen 80;/g, `listen 127.0.0.1:${port};`)
     .replace('root /usr/share/nginx/html;', `root ${KOREN};`);
   fs.writeFileSync(path.join(tmp, 'site.conf'), server);
   fs.writeFileSync(path.join(tmp, 'nginx.conf'), `daemon on; pid ${tmp}/nginx.pid; error_log ${tmp}/error.log;
@@ -187,6 +189,21 @@ http { include ${MIME}; default_type application/octet-stream; access_log off;
   }
   assert.strictEqual((await zapros(port, '/', 'HEAD')).h.server, 'nginx', 'без номера версии');
 
+  // www-301-v1: www — не второе зеркало, а один 301 на основной адрес с тем же путём и параметрами
+  for (const [put, kuda] of [['/', 'https://deloskop.ru/'], ['/nalogi/', 'https://deloskop.ru/nalogi/'], ['/tarify/?ot=www&x=1', 'https://deloskop.ru/tarify/?ot=www&x=1'],
+    ['/company/7707083893-pao-sberbank/', 'https://deloskop.ru/company/7707083893-pao-sberbank/'], ['/net-takoj-stranicy/', 'https://deloskop.ru/net-takoj-stranicy/']]) {
+    for (const host of ['www.deloskop.ru', 'WWW.Deloskop.ru', 'www.deloskop.ru:443']) {
+      const w = await zapros(port, put, 'GET', host);
+      assert.strictEqual(w.kod, 301, `${host}${put} → 301`);
+      assert.strictEqual(w.h.location, kuda, `${host}${put} → ${kuda}`);
+    }
+  }
+  assert.strictEqual((await zapros(port, '/', 'HEAD', 'www.deloskop.ru')).h.server, 'nginx', 'www: без номера версии');
+  // основной адрес и технический домен Timeweb — по-прежнему сайт, а не редирект (иначе петля)
+  for (const host of ['deloskop.ru', 'deloskop-site-nginx.twc1.net', '127.0.0.1']) {
+    assert.strictEqual((await zapros(port, '/nalogi/', 'GET', host)).kod, 200, host);
+  }
+
   // nginx-proverka-v1: тот же набор, которым Штаб и Ночные проверяют живой сайт после переезда
   // (deploy/proverka_zhivogo.js), — на локальном nginx должен быть весь ✓, включая каждый адрес обеих карт сайта.
   const { proverit } = require('../deploy/proverka_zhivogo.js');
@@ -194,6 +211,21 @@ http { include ${MIME}; default_type application/octet-stream; access_log off;
   const plohie = itog.filter(x => !x.ok).map(x => `${x.imya}: ${x.chto}`);
   assert.deepStrictEqual(plohie, [], 'проверка живого на локальном nginx');
   assert.ok(itog.length >= 14, 'все проверки на месте');
+});
+
+test('www-301-v1: www ведёт на основной адрес, основной сервер — по умолчанию', () => {
+  const bloki = CONF.split(/^server \{/m).slice(1);
+  assert.strictEqual(bloki.length, 2, 'два сервера: www и основной');
+  const www = bloki.find(b => /server_name www\.deloskop\.ru;/.test(b));
+  assert.ok(www, 'отдельный сервер для www');
+  assert.match(www, /return 301 https:\/\/deloskop\.ru\$request_uri;/, 'тот же путь и параметры, схема https');
+  assert.doesNotMatch(www, /default_server/, 'www не должен ловить чужие имена');
+  assert.match(www, /server_tokens off;/);
+  const osn = bloki.find(b => b !== www);
+  assert.match(osn, /listen 80 default_server;/);
+  assert.doesNotMatch(osn, /server_name [^;]*www/, 'основной сервер www не обслуживает');
+  // проверка живого знает про www
+  assert.match(fs.readFileSync(path.join(KOREN, 'deploy/proverka_zhivogo.js'), 'utf8'), /https:\/\/www\.deloskop\.ru/);
 });
 
 test('проверка живого: набор совпадает с конфигом (без nginx)', () => {

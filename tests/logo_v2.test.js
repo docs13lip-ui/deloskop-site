@@ -1,6 +1,6 @@
-// logo-v2 (14.11.2026): новый знак Делоскопа — круг-печать с галочкой и слово «Делоскоп» шрифтом Unbounded.
+// logo-v3 (14.11.2026): знак Делоскопа — «лупа-галочка» (раскрытая лупа оценщика складывается в отметку) и слово «Делоскоп» шрифтом Unbounded.
 // Сторожа: знак и слово в шапке одни на всех страницах; шрифт слова — только буквы названия, лёгкий, с лицензией рядом;
-// старого знака (два кольца) в шапке и значках нет; значки — нужных размеров.
+// прежних знаков (два кольца, круг-печать) в шапке и значках нет; знак — одна заливка цветом текста, без идентификаторов; значки — нужных размеров.
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert');
@@ -8,25 +8,27 @@ const fs = require('fs');
 const path = require('path');
 const KOREN = path.join(__dirname, '..');
 const chitat = (p) => fs.readFileSync(path.join(KOREN, p), 'utf8');
-const ZNAK = '<svg width="32" height="32" viewBox="0 0 120 120" fill="none" aria-hidden="true"><circle class="shapka__obod" cx="60" cy="60" r="51" stroke="#1D1D1F" stroke-width="10"/><circle cx="60" cy="60" r="38" fill="#0B63E5"/><path d="M41.5 60.5L53.5 72.5L79 46" stroke="#FFFFFF" stroke-width="9.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const ZNAK = '<svg width="32" height="32" viewBox="0 0 120 120" fill="currentColor" aria-hidden="true"><path d="M49.86 85.91A12 12 0 0 1 32.14 102.09L11.14 79.09A12 12 0 0 1 28.86 62.91ZM46.79 98.77A7.5 7.5 0 0 1 35.21 89.23L60.36 58.69A7.5 7.5 0 0 1 71.94 68.22ZM29 94a12 12 0 1 1 24 0a12 12 0 1 1 -24 0ZM54 43a29 29 0 1 1 58 0a29 29 0 1 1 -58 0ZM64 43a19 19 0 1 0 38 0a19 19 0 1 0 -38 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0Z"/></svg>';
+const PUT = ZNAK.match(/ d="([^"]+)"/)[1];
 const png = (f) => { const b = fs.readFileSync(path.join(KOREN, f)); return b.readUInt32BE(16) + 'x' + b.readUInt32BE(20); };
 
-test('шапка: знак-печать и слово «Делоскоп» — в заготовке и на страницах', () => {
+test('шапка: знак «лупа-галочка» и слово «Делоскоп» — в заготовке и на страницах', () => {
   const sh = chitat('partials/shapka.html');
   assert.strictEqual(sh.split(ZNAK + '<span class="shapka__word">Делоскоп</span>').length - 1, 2, 'знак и слово — в шапке и в меню телефона');
-  assert.ok(!sh.includes('M36 18.1A16 16') && !sh.includes('>делоскоп<'), 'старого знака и строчного слова нет');
+  assert.ok(!sh.includes('M36 18.1A16 16') && !sh.includes('M41.5 60.5L53.5 72.5L79 46') && !sh.includes('>делоскоп<'), 'прежних знаков и строчного слова нет');
+  assert.ok(!/<svg[^>]*>(?:(?!<\/svg>).)*\bid=/.test(sh.split('shapka__logo')[1]), 'в знаке нет идентификаторов: он стоит на странице дважды');
   for (const f of ['index.html', 'tarify/index.html', 'o-proekte/index.html', '404.html']) {
     const t = chitat(f);
     assert.ok(t.includes(ZNAK + '<span class="shapka__word">Делоскоп</span>'), f + ': новый знак');
-    assert.ok(!t.includes('M36 18.1A16 16'), f + ': старого знака нет');
+    assert.ok(!t.includes('M36 18.1A16 16') && !t.includes('M41.5 60.5L53.5 72.5L79 46'), f + ': прежних знаков нет');
   }
 });
 
-test('стили: обод знака берёт цвет текста темы; слово — Unbounded с запасом на шрифт сайта', () => {
+test('стили: знак берёт цвет текста темы; слово — Unbounded с запасом на шрифт сайта', () => {
   for (const f of ['partials/shapka.css', 'css/shapka.css']) {
     const c = chitat(f);
-    assert.ok(c.includes('.shapka__logo .shapka__obod{stroke:var(--ink)}'), f + ': обод');
-    assert.ok(!c.includes('.shapka__logo circle{'), f + ': синий круг знака не обводится цветом текста');
+    assert.ok(/\.shapka \.shapka__logo,\.mnav \.shapka__logo\{[^}]*color:var\(--ink\)/.test(c), f + ': цвет знака — цвет текста');
+    assert.ok(!c.includes('shapka__obod'), f + ': правила прежнего знака убраны');
     assert.ok(c.includes('.shapka__word{font:700 20px/1 "Unbounded",var(--font);letter-spacing:-.015em}'), f + ': слово');
   }
 });
@@ -41,10 +43,10 @@ test('шрифт слова: только буквы названия, до 3 К
   assert.deepStrictEqual([...bukvy].map((x) => x.codePointAt(0)).sort((a, b2) => a - b2), diap, 'диапазон — ровно буквы слова');
 });
 
-test('значки: новый знак, прежние размеры; старых колец нет', () => {
+test('значки: новый знак, прежние размеры; прежних знаков нет', () => {
   const s = chitat('favicon.svg');
-  assert.ok(s.includes('<rect width="72" height="72" rx="14" fill="#0B63E5"/>') && s.includes('M41.5 60.5L53.5 72.5L79 46') && !s.includes('M36 18.1') && !/metadata/.test(s));
-  assert.ok(s.length < 700, 'favicon.svg лёгкий: ' + s.length);
+  assert.ok(s.includes('<rect width="120" height="120" rx="24" fill="#0D2247"/>') && s.includes(PUT) && s.includes('fill="#D9B45A"') && !s.includes('M41.5 60.5') && !s.includes('M36 18.1') && !/metadata/.test(s));
+  assert.ok(s.length < 800, 'favicon.svg лёгкий: ' + s.length);
   assert.strictEqual(png('favicon-120.png'), '120x120');
   assert.strictEqual(png('apple-touch-icon.png'), '180x180');
   assert.strictEqual(png('ikonka-512.png'), '512x512');

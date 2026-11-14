@@ -26,7 +26,6 @@ a.skip:focus{top:var(--s-2);color:var(--on-accent)}
 .shapka .shapka__logo,.mnav .shapka__logo{display:inline-flex;align-items:center;gap:var(--s-2);min-height:44px;flex:none;color:var(--ink);text-decoration:none}
 .shapka .shapka__logo:hover,.mnav .shapka__logo:hover{color:var(--ink)}
 .shapka__logo svg{display:block;flex:none}
-.shapka__logo .shapka__obod{stroke:var(--ink)}
 .shapka__word{font:700 20px/1 "Unbounded",var(--font);letter-spacing:-.015em}
 
 .shapka .shapka__nav{flex:1;min-width:0;display:flex;justify-content:center}

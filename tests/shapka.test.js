@@ -9,7 +9,7 @@ const { execSync } = require('child_process');
 
 const KOREN = path.join(__dirname, '..');
 const chitat = f => fs.readFileSync(path.join(KOREN, f), 'utf8');
-const LOGO = '<svg width="32" height="32" viewBox="0 0 120 120" fill="none" aria-hidden="true"><circle class="shapka__obod" cx="60" cy="60" r="51" stroke="#1D1D1F" stroke-width="10"/><circle cx="60" cy="60" r="38" fill="#0B63E5"/><path d="M41.5 60.5L53.5 72.5L79 46" stroke="#FFFFFF" stroke-width="9.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const LOGO = '<svg width="32" height="32" viewBox="0 0 120 120" fill="currentColor" aria-hidden="true"><path d="M49.86 85.91A12 12 0 0 1 32.14 102.09L11.14 79.09A12 12 0 0 1 28.86 62.91ZM46.79 98.77A7.5 7.5 0 0 1 35.21 89.23L60.36 58.69A7.5 7.5 0 0 1 71.94 68.22ZM29 94a12 12 0 1 1 24 0a12 12 0 1 1 -24 0ZM54 43a29 29 0 1 1 58 0a29 29 0 1 1 -58 0ZM64 43a19 19 0 1 0 38 0a19 19 0 1 0 -38 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0Z"/></svg>';
 
 function stranicy() {
   const vse = execSync('git ls-files "*.html"', { cwd: KOREN, encoding: 'utf8' }).split('\n').filter(Boolean);

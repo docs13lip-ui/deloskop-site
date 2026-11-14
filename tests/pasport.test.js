@@ -127,7 +127,7 @@ t('QR: размеры, служебные узоры, отказ на слишк
   assert.ok(m.dark[m.size - 8][8], 'тёмный модуль на месте');
   assert.throws(() => Q.matrix('x'.repeat(300), 'H'));
   const svg = Q.svg('https://deloskop.ru/pasport/?inn=4826147043&d=20260925&f=7KQM2D');
-  assert.ok(svg.startsWith('<svg') && svg.includes('fill="#0B63E5"'));
+  assert.ok(svg.startsWith('<svg') && svg.includes('fill="#12305F"'));
 });
 
 console.log('\nВсе тесты пройдены: ' + n);

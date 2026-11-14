@@ -49,6 +49,6 @@ test('ни одна страница не берёт без запасного �
 
 test('/vse-vozmozhnosti/: плашка «Сколько стоит ошибка» тёмная в обеих темах, рамку кнопки тема не перекрашивает', () => {
   const s = chitat('vse-vozmozhnosti/index.html');
-  assert.match(s, /\.oshibka__in\{[^}]*background:var\(--dark,#111113\)/);
+  assert.match(s, /\.oshibka__in\{[^}]*background:var\(--dark,#0A1733\)/);
   assert.doesNotMatch(s, /\[data-theme=dark\] \.oshibka__go/);
 });

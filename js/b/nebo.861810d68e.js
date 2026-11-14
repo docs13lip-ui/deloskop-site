@@ -15,7 +15,7 @@ var FIGURY = [
 { t: 'rost', p: [[-1, 0.8], [-0.4, 0.2], [0, 0.5], [0.8, -0.6], [0.45, -0.65], [0.85, -0.25]], r: [[0, 1], [1, 2], [2, 3], [3, 4], [3, 5]] }
 ];
 var BELYJ = '245,245,242', HOLOD = '200,216,255', SINIJ = '91,155,255', TEPLO = '255,217,160';
-var FON = 'radial-gradient(120% 90% at 50% -12%,#18223A 0%,#121320 42%,#111113 70%),linear-gradient(180deg,#111113 0%,#0C0C10 100%)';
+var FON = 'radial-gradient(120% 90% at 50% -12%,#18223A 0%,#121320 42%,#0A1733 70%),linear-gradient(180deg,#0A1733 0%,#0C0C10 100%)';
 var cv = null, cx = null, stil = null, idet = 0, zhivo = false, staticno = false, gasnu = 0;
 var w = 0, h = 0, dpr = 1, uzko = false, mysh = false;
 var MS = null, sloj = { daljnie: null, tumannost: null, galaktika: null, maska: null, fon: null }, MER = [], BLIZ = [], SOZ = [], meteory = [], komety = [], vspyshki = [];
@@ -300,8 +300,8 @@ stil.textContent = 'html[data-nebo]{background:' + FON + ';background-attachment
 'html[data-nebo] body{background:transparent!important}' +
 '.nebo{position:fixed;inset:0;width:100%;height:100%;z-index:-3;pointer-events:none;display:block;opacity:0;transition:opacity .9s ease}' +
 '@media print{.nebo{display:none}html[data-nebo]{background:none}}' +
-'html[data-nebo] .card{background-color:rgba(28,28,31,.74);-webkit-backdrop-filter:blur(12px) saturate(1.15);backdrop-filter:blur(12px) saturate(1.15)}' +
-'@media (prefers-reduced-transparency:reduce){html[data-nebo] .card{background-color:#1C1C1F;-webkit-backdrop-filter:none;backdrop-filter:none}}';
+'html[data-nebo] .card{background-color:rgba(16,34,72,.74);-webkit-backdrop-filter:blur(12px) saturate(1.15);backdrop-filter:blur(12px) saturate(1.15)}' +
+'@media (prefers-reduced-transparency:reduce){html[data-nebo] .card{background-color:#102248;-webkit-backdrop-filter:none;backdrop-filter:none}}';
 d.head.appendChild(stil);
 cv = d.createElement('canvas'); cv.className = 'nebo'; cv.setAttribute('aria-hidden', 'true');
 cx = cv.getContext('2d');
@@ -332,9 +332,9 @@ function kadrNa(ww, hh) {
 var sv = [w, h, dpr, cx, sloj, MER, BLIZ, SOZ, cpx, cpy, prokr, sMaskoj, uzko, MS];
 var c = holst(ww, hh), k = c.getContext('2d');
 w = ww; h = hh; dpr = 1; cx = k; sMaskoj = false; sloj = { daljnie: null, tumannost: null, galaktika: null, maska: null, fon: null };
-var g = k.createLinearGradient(0, 0, 0, hh); g.addColorStop(0, '#111113'); g.addColorStop(1, '#0C0C10'); k.fillStyle = g; k.fillRect(0, 0, ww, hh);
+var g = k.createLinearGradient(0, 0, 0, hh); g.addColorStop(0, '#0A1733'); g.addColorStop(1, '#0C0C10'); k.fillStyle = g; k.fillRect(0, 0, ww, hh);
 k.save(); k.translate(ww / 2, -0.12 * hh); k.scale(1.2 * ww, 0.9 * hh);
-g = k.createRadialGradient(0, 0, 0, 0, 0, 1); g.addColorStop(0, '#18223A'); g.addColorStop(0.42, '#121320'); g.addColorStop(0.7, 'rgba(17,17,19,0)');
+g = k.createRadialGradient(0, 0, 0, 0, 0, 1); g.addColorStop(0, '#18223A'); g.addColorStop(0.42, '#121320'); g.addColorStop(0.7, 'rgba(10,23,51,0)');
 k.fillStyle = g; k.fillRect(-1, 0, 2, 1.4); k.restore();
 var sk = cv; cv = c;
 postroit(); cpx = cpy = 0; prokr = 0;

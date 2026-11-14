@@ -232,18 +232,18 @@
   }
   function cel(w, imya, p) { try { if (w && w.dlkGoal) w.dlkGoal(imya, p); } catch (e) { /* Метрика не мешает */ } }
 
-  var CSS = '.limit{margin-top:12px;background:var(--surface,#F5F5F2);border:1px solid var(--line,#E6E6E1);border-radius:16px;padding:16px 18px;font-size:15px;line-height:1.5;color:var(--ink,#1D1D1F);text-align:left;max-width:100%;box-sizing:border-box}' +
+  var CSS = '.limit{margin-top:12px;background:var(--surface,#F5F1E6);border:1px solid var(--line,#E3DDCD);border-radius:16px;padding:16px 18px;font-size:15px;line-height:1.5;color:var(--ink,#0D2247);text-align:left;max-width:100%;box-sizing:border-box}' +
     '.limit__zag{font-size:17px;font-weight:600;line-height:1.35;margin:0 0 4px}' +
     '.limit p{margin:0 0 6px;font-size:15px;line-height:1.5;color:var(--ink2,#3A3A3C)}' +
-    '.limit__sohr{color:var(--ink,#1D1D1F)}' +
+    '.limit__sohr{color:var(--ink,#0D2247)}' +
     '.limit__ss{display:flex;flex-wrap:wrap;gap:4px 18px;margin:2px 0 0;padding:0;list-style:none}' +
-    '.limit__ss a{color:var(--accent,#0B63E5);text-decoration:none}.limit__ss a:hover{text-decoration:underline}' +
+    '.limit__ss a{color:var(--accent,#12305F);text-decoration:none}.limit__ss a:hover{text-decoration:underline}' +
     '.limit__kn{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}' +
     '.limit__kn a{display:inline-flex;align-items:center;min-height:44px;padding:10px 18px;border-radius:999px;font-weight:600;font-size:15px;text-decoration:none;box-sizing:border-box;max-width:100%}' +
-    '.limit__kn .gh{border-radius:16px}.limit__kn .pr{background:var(--accent,#0B63E5);color:#fff}.limit__kn .gh{border:1px solid var(--line,#E6E6E1);color:var(--accent,#0B63E5);background:#fff}' +
+    '.limit__kn .gh{border-radius:16px}.limit__kn .pr{background:var(--accent,#12305F);color:#fff}.limit__kn .gh{border:1px solid var(--line,#E3DDCD);color:var(--accent,#12305F);background:#fff}' +
     '.limit p.limit__chestno{margin:10px 0 0;font-size:15px;color:var(--ink3,#6E6E73)}' +
     '.limit-vchera{margin-top:8px;font-size:15px;color:var(--ink2,#3A3A3C)}.limit-vchera button{font:inherit;border:0;background:none;padding:0;cursor:pointer}' +
-    '.limit-vchera .go{color:var(--accent,#0B63E5)}.limit-vchera .x{color:var(--ink3,#8A8A8E);margin-left:12px;font-size:15px}';
+    '.limit-vchera .go{color:var(--accent,#12305F)}.limit-vchera .x{color:var(--ink3,#8A8A8E);margin-left:12px;font-size:15px}';
   function stil(doc) {
     if (!doc || doc.getElementById('dlk-limit-css')) return;
     var s = doc.createElement('style'); s.id = 'dlk-limit-css'; s.textContent = CSS;

@@ -439,7 +439,7 @@
     ['vznosy', 'Страховые взносы', /страхов|пенсионн|медицинск|социальн|травматизм/i], ['ndfl', 'НДФЛ', /доходы физических лиц/i],
     ['imushchestvo', 'Налог на имущество', /имущество организаций/i], ['transport', 'Транспортный налог', /транспортн/i],
     ['zemlya', 'Земельный налог', /земельн/i], ['peni', 'Пени и штрафы', /(^|\s)пен(и|ей|я)(\s|$)|штраф/i], ['poshlina', 'Госпошлина', /пошлин/i]];
-  var NALOG_CVET = { nds: '#0B63E5', pribyl: '#16723F', usn: '#7A4FD6', envd: '#7A4FD6', eshn: '#7A4FD6', patent: '#7A4FD6', vznosy: '#2FA3B5', ndfl: '#C27A00', imushchestvo: '#8A6D3B', transport: '#8A6D3B', zemlya: '#8A6D3B', peni: '#B3261E', poshlina: '#8E8E93', drugoe: '#B5B5AE' };
+  var NALOG_CVET = { nds: '#12305F', pribyl: '#16723F', usn: '#7A4FD6', envd: '#7A4FD6', eshn: '#7A4FD6', patent: '#7A4FD6', vznosy: '#2FA3B5', ndfl: '#C27A00', imushchestvo: '#8A6D3B', transport: '#8A6D3B', zemlya: '#8A6D3B', peni: '#B3261E', poshlina: '#8A97B5', drugoe: '#B5B5AE' };
   function rubIz(t) { // «39,1 млн ₽» → 39100000; «4 125 161 ₽» → 4125161
     var m = /(-|−|\+)?\s*([\d\s ]+(?:[.,]\d+)?)\s*(трлн|млрд|млн|тыс)?/i.exec(str(t)); if (!m) return null;
     var v = parseFloat(m[2].replace(/[\s ]/g, '').replace(',', '.')); if (!isFinite(v)) return null;
@@ -515,8 +515,8 @@
     var est_minus = S.some(function (s) { return s.pribyl != null && s.pribyl < 0; });
     var z2 = est_minus ? T2 + h2 * 0.62 : T2 + h2, kv = (est_minus ? h2 * 0.62 : h2) / b2;
     var o = '<svg class="sdf-svg" viewBox="0 0 ' + W0 + ' ' + H0 + '" width="' + W0 + '" height="' + H0 + '" role="img" aria-label="График: выручка и расходы по годам, заливка между ними — прибыль или убыток; ниже — прибыль и налоги">' +
-      '<defs><linearGradient id="sdfV" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0B63E5" stop-opacity=".16"/><stop offset="1" stop-color="#0B63E5" stop-opacity="0"/></linearGradient>' +
-      '<filter id="sdfTen" x="-10%" y="-30%" width="120%" height="160%"><feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#0B63E5" flood-opacity=".28"/></filter></defs>';
+      '<defs><linearGradient id="sdfV" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#12305F" stop-opacity=".16"/><stop offset="1" stop-color="#12305F" stop-opacity="0"/></linearGradient>' +
+      '<filter id="sdfTen" x="-10%" y="-30%" width="120%" height="160%"><feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#12305F" flood-opacity=".28"/></filter></defs>';
     for (var t = sk.lo; t <= sk.hi + 1e-9; t += sk.shag) o += '<line class="sdf-set" x1="' + L + '" x2="' + (W0 - R) + '" y1="' + y(t).toFixed(1) + '" y2="' + y(t).toFixed(1) + '"/><text class="sdf-ox" x="' + (L - 8) + '" y="' + (y(t) + 4).toFixed(1) + '" text-anchor="end">' + esc(os(t)) + '</text>';
     o += '<text class="sdf-pod" x="' + (W0 - R) + '" y="' + (T2 - 18) + '" text-anchor="end">Прибыль и налоги года</text><line class="sdf-nol" x1="' + L + '" x2="' + (W0 - R) + '" y1="' + z2.toFixed(1) + '" y2="' + z2.toFixed(1) + '"/>' +
       '<text class="sdf-ox" x="' + (L - 8) + '" y="' + (z2 + 4).toFixed(1) + '" text-anchor="end">0</text><text class="sdf-ox" x="' + (L - 8) + '" y="' + (z2 - b2 * kv + 4).toFixed(1) + '" text-anchor="end">' + esc(os(b2)) + '</text>';

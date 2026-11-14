@@ -88,8 +88,8 @@
   function cveta(el) {
     var cs = W.getComputedStyle(el);
     function v(n, z) { return (cs.getPropertyValue(n) || '').trim() || z; }
-    return { ink: v('--ink', '#1D1D1F'), muted: v('--muted', '#66666B'), accent: v('--accent', '#0B63E5'),
-      soft: v('--accent-soft', '#EAF1FD'), line: v('--line', '#E6E6E1'), surface: v('--surface', '#FFFFFF'),
+    return { ink: v('--ink', '#0D2247'), muted: v('--muted', '#5B6783'), accent: v('--accent', '#12305F'),
+      soft: v('--accent-soft', '#ECEFF6'), line: v('--line', '#E3DDCD'), surface: v('--surface', '#FFFFFF'),
       ok: v('--ok', '#16723F'), warn: v('--warn', '#9A5B00'), bad: v('--bad', '#B3261E'), font: cs.fontFamily || 'sans-serif' };
   }
   // строки подписи не шире w (не больше 2; длинное — с «…», полный текст — в списке)

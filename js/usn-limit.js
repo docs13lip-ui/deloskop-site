@@ -70,10 +70,10 @@
         "Проверьте, что договор говорит о цене «в том числе НДС» или «плюс НДС»." };
   }
 
-  var CSS = ".ulo{display:grid;gap:6px;padding:16px 18px;border-radius:16px;border:1px solid var(--line,#E6E6E1);border-left-width:3px;border-left-color:#8A8A90;margin-top:12px}" +
+  var CSS = ".ulo{display:grid;gap:6px;padding:16px 18px;border-radius:16px;border:1px solid var(--line,#E3DDCD);border-left-width:3px;border-left-color:#8A8A90;margin-top:12px}" +
     ".ulo__h{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 10px}.ulo__h b{font-size:15px;font-weight:600}" +
-    ".ulo__h span{font-size:13px;color:var(--muted,#66666B)}.ulo p{margin:0}.ulo__t{font-size:15px;line-height:1.5}" +
-    ".ulo__m{font-size:12px;color:var(--muted,#66666B)}@media (max-width:520px){.ulo{padding:14px}}@media print{.ulo{break-inside:avoid}}";
+    ".ulo__h span{font-size:13px;color:var(--muted,#5B6783)}.ulo p{margin:0}.ulo__t{font-size:15px;line-height:1.5}" +
+    ".ulo__m{font-size:12px;color:var(--muted,#5B6783)}@media (max-width:520px){.ulo{padding:14px}}@media print{.ulo{break-inside:avoid}}";
 
   // Реквизиты дефлятора года лимита — дословно по налоговому юристу 05.11.2026.
   // Года нет — хвоста нет (2026: дефлятор 1,090 без отдельной строки).

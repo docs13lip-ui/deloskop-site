@@ -35,10 +35,10 @@ test('обёртки только «не переносят»: ни одно п�
   assert.deepStrictEqual(plohie, []);
 });
 
-// Всегда тёмные блоки в светлой теме: акцент #0B63E5 на #111113 — 3,5:1. Берём акцент тёмной темы #5B9BFF — 6,8:1.
+// Всегда тёмные блоки в светлой теме: акцент #12305F на #0A1733 — 3,5:1. Берём акцент тёмной темы #D9B45A — 6,8:1.
 test('тёмная карточка «Скорой» на /115-fz/ и ссылки в .formula на /indeks/ — акцент тёмной темы', () => {
   const fz = fs.readFileSync(path.join(kor, '115-fz/index.html'), 'utf8');
-  assert.match(fz, /href="\/skoraya-115-fz\/" style="background:#111113;color:#fff"><small style="color:#5B9BFF">/);
+  assert.match(fz, /href="\/skoraya-115-fz\/" style="background:#0A1733;color:#fff"><small style="color:#D9B45A">/);
   const ix = fs.readFileSync(path.join(kor, 'indeks/index.html'), 'utf8');
-  assert.match(ix, /\.formula a\{color:#5B9BFF\}/);
+  assert.match(ix, /\.formula a\{color:#D9B45A\}/);
 });

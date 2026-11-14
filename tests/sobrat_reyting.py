@@ -276,7 +276,7 @@ def stranica(D):
 <meta property="og:description" content="%(d)s">
 <meta property="og:url" content="%(u)s">
 <meta property="og:image" content="https://deloskop.ru/ikonka-512.png">
-<meta name="theme-color" content="#F5F5F2">
+<meta name="theme-color" content="#F5F1E6">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">

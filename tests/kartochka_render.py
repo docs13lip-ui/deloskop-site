@@ -2005,7 +2005,7 @@ def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None):
 <meta property="og:image:alt" content="Делоскоп: перед оплатой — проверить, если банк спросил — ответить">
 <meta property="og:site_name" content="Делоскоп">
 <meta property="og:locale" content="ru_RU">
-<meta name="theme-color" content="#F5F5F2">
+<meta name="theme-color" content="#F5F1E6">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -2348,7 +2348,7 @@ def html_haba(kart, index, n=1, vsego=1, vse=None, kg=None, statyi=frozenset(), 
 <title>{t}</title>
 {robots}<meta name="description" content="{d}">
 <link rel="canonical" href="{sajt}{kanon}">
-<meta name="theme-color" content="#F5F5F2">
+<meta name="theme-color" content="#F5F1E6">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/css/ds.css">
@@ -2515,7 +2515,7 @@ def html_gruppy(g, kart, index, n=1, vsego=1):
 <title>{t}</title>
 {robots}<meta name="description" content="{d}">
 <link rel="canonical" href="{sajt}{kanon}">
-<meta name="theme-color" content="#F5F5F2">
+<meta name="theme-color" content="#F5F1E6">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/css/ds.css">

@@ -201,15 +201,15 @@
       '</section>';
   }
 
-  var CSS = '.ngo{display:grid;gap:6px;padding:16px 18px;border-radius:16px;border:1px solid var(--line,#E6E6E1);border-left-width:3px}' +
-    '.ngo--warn{border-left-color:#E0A100}.ngo--ok{border-left-color:#2FA36B}.ngo--ro{border-left-color:var(--line,#E6E6E1)}' +
+  var CSS = '.ngo{display:grid;gap:6px;padding:16px 18px;border-radius:16px;border:1px solid var(--line,#E3DDCD);border-left-width:3px}' +
+    '.ngo--warn{border-left-color:#E0A100}.ngo--ok{border-left-color:#2FA36B}.ngo--ro{border-left-color:var(--line,#E3DDCD)}' +
     '.ngo__h{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 10px}.ngo__h b{font-size:15px;font-weight:600}' +
-    '.ngo__h span{font-size:13px;color:var(--muted,#66666B)}' +
+    '.ngo__h span{font-size:13px;color:var(--muted,#5B6783)}' +
     '.ngo p{margin:0}.ngo__v{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px}.ngo__v b{font-size:24px;font-weight:600;letter-spacing:-.01em}' +
-    '.ngo__v span{font-size:13px;color:var(--muted,#66666B)}.ngo .n{font-variant-numeric:tabular-nums}' +
-    '.ngo__s{font-size:15px;color:var(--ink2,#48484C)}.ngo__s b{font-weight:600}.ngo__z{font-size:15px}' +
-    '.ngo__p{font-size:13px;line-height:1.5;color:var(--ink2,#48484C)}' +
-    '.ngo__k summary{cursor:pointer;font-size:13px;color:var(--muted,#66666B)}.ngo__k p{margin-top:6px;font-size:13px;line-height:1.5;color:var(--ink2,#48484C)}' +
+    '.ngo__v span{font-size:13px;color:var(--muted,#5B6783)}.ngo .n{font-variant-numeric:tabular-nums}' +
+    '.ngo__s{font-size:15px;color:var(--ink2,#3A4868)}.ngo__s b{font-weight:600}.ngo__z{font-size:15px}' +
+    '.ngo__p{font-size:13px;line-height:1.5;color:var(--ink2,#3A4868)}' +
+    '.ngo__k summary{cursor:pointer;font-size:13px;color:var(--muted,#5B6783)}.ngo__k p{margin-top:6px;font-size:13px;line-height:1.5;color:var(--ink2,#3A4868)}' +
     '.ngo__k a{color:inherit;text-decoration:underline;text-underline-offset:2px}' +
     '.ngo+section,.ngo+div{margin-top:12px}' +
     '#doc .ngo{margin-top:14px}.doc .ngo{margin:18px 0 0}' +

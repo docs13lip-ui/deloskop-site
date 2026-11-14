@@ -1,12 +1,12 @@
 """Тёмная тема: белый текст на фоне var(--ink) не пропадает (temnye-na-inke-v1, 07.11.2026).
 Запуск из корня: python3 tests/test_temnye_na_inke.py
 
-Фон var(--ink) в тёмной теме светлеет (#F5F5F2), и белый текст на нём сливался с фоном: номера шагов
+Фон var(--ink) в тёмной теме светлеет (#F5F1E6), и белый текст на нём сливался с фоном: номера шагов
 «Что сделать завтра утром» в «Разборах», «Шаги» на /pasport/, нажатые кнопки на /indeks/ и /tarify/,
-тост на главной. Авто-слой (tests/tema_temnaya.py) переводит такой текст в #0B0B0C — как белый на синем.
+тост на главной. Авто-слой (tests/tema_temnaya.py) переводит такой текст в #081229 — как белый на синем.
 
 Проверяем:
-  • правило: var(--ink) + белый → #0B0B0C; var(--ink-2) и var(--dark) не трогаем; полупрозрачный белый — та же
+  • правило: var(--ink) + белый → #081229; var(--ink-2) и var(--dark) не трогаем; полупрозрачный белый — та же
     прозрачность;
   • весь сайт: каждый селектор, где в исходных стилях фон var(--ink) и белый текст, получил тёмный цвет текста
     в слое темы (css/tema.css или <style data-tema> своей страницы).
@@ -32,12 +32,12 @@ def ok(name, cond, extra=""):
 
 
 p = TT.pravila(".a::before{background:var(--ink);color:#fff}")
-ok("белый на var(--ink) → #0B0B0C", "[data-theme=dark] .a::before{color:#0B0B0C}" in p, p)
+ok("белый на var(--ink) → #081229", "[data-theme=dark] .a::before{color:#081229}" in p, p)
 p = TT.pravila(".a{color:rgba(255,255,255,.7);background:var(--ink)}")
-ok("полупрозрачный белый — та же прозрачность", "rgba(11,11,12,0.7)" in p, p)
+ok("полупрозрачный белый — та же прозрачность", "rgba(8,18,41,0.7)" in p, p)
 ok("var(--ink-2) не трогаем", TT.pravila(".a{background:var(--ink-2);color:#fff}") == "")
 ok("var(--dark) не трогаем (в тёмной теме он чёрный)", TT.pravila(".a{background:var(--dark);color:#fff}") == "")
-ok("белый на синем — как было", "#0B0B0C" in TT.pravila(".a{background:#0B63E5;color:#fff}"))
+ok("белый на синем — как было", "#081229" in TT.pravila(".a{background:#12305F;color:#fff}"))
 
 BELYJ = re.compile(r"(?:^|;)\s*color\s*:\s*(?:#fff\b|#ffffff\b|white\b|rgba?\(\s*255\s*,\s*255\s*,\s*255)", re.I)
 INK = re.compile(r"background(?:-color)?\s*:[^;]*var\(--ink\)")
@@ -56,7 +56,7 @@ def iskhodnye(css):
 def proverit(sel, sloj, gde):
     pervyj = TT._razdelit_selektory(sel)[0]
     x = TT._selektor(pervyj)
-    ok("%s: %s" % (gde, pervyj), x and re.search(re.escape(x) + r"\{[^}]*color:(?:#0B0B0C|rgba\(11,11,12)", sloj),
+    ok("%s: %s" % (gde, pervyj), x and re.search(re.escape(x) + r"\{[^}]*color:(?:#081229|rgba\(8,18,41)", sloj),
        "в слое темы нет тёмного текста")
 
 

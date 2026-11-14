@@ -8,8 +8,8 @@ const fs = require('fs');
 const path = require('path');
 const KOREN = path.join(__dirname, '..');
 const chitat = (p) => fs.readFileSync(path.join(KOREN, p), 'utf8');
-const ZNAK = '<svg width="32" height="32" viewBox="0 0 120 120" fill="currentColor" aria-hidden="true"><path d="M49.86 85.91A12 12 0 0 1 32.14 102.09L11.14 79.09A12 12 0 0 1 28.86 62.91ZM46.79 98.77A7.5 7.5 0 0 1 35.21 89.23L60.36 58.69A7.5 7.5 0 0 1 71.94 68.22ZM29 94a12 12 0 1 1 24 0a12 12 0 1 1 -24 0ZM54 43a29 29 0 1 1 58 0a29 29 0 1 1 -58 0ZM64 43a19 19 0 1 0 38 0a19 19 0 1 0 -38 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0Z"/></svg>';
-const PUT = ZNAK.match(/ d="([^"]+)"/)[1];
+const ZNAK = '<svg width="32" height="32" viewBox="0 0 120 120" fill="currentColor" aria-hidden="true"><path d="M49.86 85.91A12 12 0 0 1 32.14 102.09L11.14 79.09A12 12 0 0 1 28.86 62.91ZM29 94a12 12 0 1 1 24 0a12 12 0 1 1 -24 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0Z"/><path class="zn-l" d="M46.79 98.77A7.5 7.5 0 0 1 35.21 89.23L60.36 58.69A7.5 7.5 0 0 1 71.94 68.22ZM54 43a29 29 0 1 1 58 0a29 29 0 1 1 -58 0ZM64 43a19 19 0 1 0 38 0a19 19 0 1 0 -38 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0Z"/></svg>';
+const PUT = 'M49.86 85.91A12 12 0 0 1 32.14 102.09L11.14 79.09A12 12 0 0 1 28.86 62.91ZM46.79 98.77A7.5 7.5 0 0 1 35.21 89.23L60.36 58.69A7.5 7.5 0 0 1 71.94 68.22ZM29 94a12 12 0 1 1 24 0a12 12 0 1 1 -24 0ZM54 43a29 29 0 1 1 58 0a29 29 0 1 1 -58 0ZM64 43a19 19 0 1 0 38 0a19 19 0 1 0 -38 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0Z';
 const png = (f) => { const b = fs.readFileSync(path.join(KOREN, f)); return b.readUInt32BE(16) + 'x' + b.readUInt32BE(20); };
 
 test('шапка: знак «лупа-галочка» и слово «Делоскоп» — в заготовке и на страницах', () => {
@@ -55,4 +55,18 @@ test('значки: новый знак, прежние размеры; преж
   assert.strictEqual(png('ikonki/maskable-512.png'), '512x512');
   const ico = fs.readFileSync(path.join(KOREN, 'favicon.ico'));
   assert.ok(ico.readUInt16LE(2) === 1 && ico.readUInt16LE(4) >= 1 && ico.length < 20000, 'favicon.ico — значок');
+});
+
+test('движение знака: линза — отдельная часть, раскрывается один раз за посещение и на готовый ответ; без движения — по просьбе системы', () => {
+  assert.strictEqual(ZNAK.split('<path').length - 1, 2, 'две части: футляр и линза');
+  assert.ok(ZNAK.includes('<path class="zn-l" d="'), 'линза помечена');
+  for (const f of ['partials/shapka.css', 'css/shapka.css']) {
+    const c = chitat(f);
+    assert.ok(c.includes('.shapka__logo .zn-l{transform-origin:41px 94px}'), f + ': ось — шарнир');
+    assert.ok(c.includes('.shapka__logo.zn-zhiv .zn-l{animation:zn-otkr .9s'), f + ': движение');
+    assert.ok(c.includes('@media (prefers-reduced-motion:reduce){.shapka__logo.zn-zhiv .zn-l{animation:none}}'), f + ': меньше движения');
+  }
+  const j = chitat('js/shapka.js');
+  assert.ok(j.includes('sessionStorage.getItem("dlk_zn")') && j.includes('window.addEventListener("deloskop:otvet", igrat)'), 'один раз за посещение и на ответ');
+  assert.ok(chitat('index.html').includes("window.dispatchEvent(new CustomEvent('deloskop:otvet'))"), 'главная сообщает о готовом ответе');
 });

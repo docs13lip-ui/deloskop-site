@@ -27,7 +27,7 @@ test('peremennye-v1: на /vse-vozmozhnosti/ задан --sect — как на �
 
 test('peremennye-v1: калькулятор «технического» поставщика — свои --r-lg, --r-md, --ok, --ok-bg', () => {
   const h = chitat('nalogi/kalkulyator-tehnicheskij-postavshchik/index.html');
-  const root = h.match(/:root\{--bg:#F5F5F2;[^}]*\}/);
+  const root = h.match(/:root\{--bg:#F5F1E6;[^}]*\}/);
   assert.ok(root, ':root страницы');
   for (const v of ['--r-lg:28px', '--r-md:16px', '--ok:#16723F', '--ok-bg:#E8F5EE']) assert.ok(root[0].includes(v), v);
 });

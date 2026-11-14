@@ -58,7 +58,7 @@ test('Д5: шапка при прокрутке — 94 % фона темы (не
   const g = chit('css/glubina.css');
   assert.ok(g.includes('.shapka.is-scrolled{background:color-mix(in srgb,var(--bg) 94%,transparent);'));
   assert.ok(!/\.shapka\.is-scrolled\{background:rgba\(/.test(g));
-  assert.ok(!/\.shapka\.is-scrolled\{background:rgba\(17,17,19,0\.72\)/.test(chit('css/tema.css')));
+  assert.ok(!/\.shapka\.is-scrolled\{background:rgba\(10,23,51,0\.72\)/.test(chit('css/tema.css')));
   assert.ok(chit('partials/shapka.css').includes(' .shapka{background:color-mix(in srgb,var(--bg) 94%,transparent);'));
 });
 

@@ -335,7 +335,7 @@ def golova(title, description, url, jsonld, noindex):
 <meta property="og:description" content="%(d)s">
 <meta property="og:url" content="%(u)s">
 <meta property="og:image" content="https://deloskop.ru/ikonka-512.png">
-<meta name="theme-color" content="#F5F5F2">
+<meta name="theme-color" content="#F5F1E6">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -482,7 +482,7 @@ def gotovo(txt, r_, podval, shapka):
 
 
 # ---------- письмо ----------
-C = {"bg": "#F5F5F2", "card": "#FFFFFF", "ink": "#1D1D1F", "ink2": "#48484C", "muted": "#66666B", "line": "#E6E6E1", "accent": "#0B63E5"}
+C = {"bg": "#F5F1E6", "card": "#FFFFFF", "ink": "#0D2247", "ink2": "#3A4868", "muted": "#5B6783", "line": "#E3DDCD", "accent": "#12305F"}
 SHRIFT = "Onest,-apple-system,'Segoe UI',Roboto,Arial,sans-serif"
 
 
@@ -623,7 +623,7 @@ def pdf(html_put, pdf_put, V):
                 pg.emulate_media(media="print")
                 pg.pdf(path=pdf_put, format="A4", print_background=True, prefer_css_page_size=True,
                        display_header_footer=True, header_template="<span></span>",
-                       footer_template=('<div style="width:100%%;font:9px Arial,sans-serif;color:#66666B;padding:0 16mm;display:flex;justify-content:space-between">'
+                       footer_template=('<div style="width:100%%;font:9px Arial,sans-serif;color:#5B6783;padding:0 16mm;display:flex;justify-content:space-between">'
                                         '<span>%s · %s</span><span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>') % (
                            e(nazv_nomera(V)), e(data_ru(V["data"]))),
                        margin={"top": "18mm", "bottom": "18mm", "left": "16mm", "right": "16mm"})

@@ -83,5 +83,5 @@ test('тёмный слой: классы на <html> находятся и на
     if (tema.slice(0, m.index).lastIndexOf('/*<avto>*/') < 0) continue; // ручная часть до авто-слоя
     assert.ok(tema.includes('[data-theme=dark].' + m[1] + m[2]), 'нет пары для ' + m[0]);
   }
-  assert.ok(tema.includes('[data-theme=dark].rezhim-otcheta .hero-text{background:rgba(17,17,19,0.92)}'));
+  assert.ok(tema.includes('[data-theme=dark].rezhim-otcheta .hero-text{background:rgba(10,23,51,0.92)}'));
 });

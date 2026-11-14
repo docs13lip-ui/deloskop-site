@@ -104,7 +104,7 @@ TEMA_LINK = '<link rel="stylesheet" href="/css/tema.css">'
 DETALI_LINK = '<link rel="stylesheet" href="/css/detali.css">'  # detali-v1: переносы и поля касания — последним в пакете «ds»
 TEMA_JS = ('<script>!function(d,t){try{t=localStorage.tema}catch(e){}t=t=="auto"?'
            '(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light"):t=="light"?t:"dark";d.dataset.theme=t;'
-           'if(t=="dark"&&(t=document.querySelector("meta[name=theme-color]")))t.content="#111113"}'
+           'if(t=="dark"&&(t=document.querySelector("meta[name=theme-color]")))t.content="#0A1733"}'
            '(document.documentElement)</script>')
 STARAYA_TEMA_JS = re.compile(r'<script>!function\(d,t\)\{try\{t=localStorage\.tema\}[^<]*</script>\n?')
 TEMA_PODVAL = ('<div class="tema" data-tema hidden><span class="tema__h" id="tema-h">Тема</span>'

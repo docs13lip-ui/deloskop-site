@@ -9,7 +9,7 @@ const { execSync } = require('child_process');
 
 const KOREN = path.join(__dirname, '..');
 const chitat = f => fs.readFileSync(path.join(KOREN, f), 'utf8');
-const LOGO = '<svg width="32" height="32" viewBox="0 0 120 120" fill="currentColor" aria-hidden="true"><path d="M49.86 85.91A12 12 0 0 1 32.14 102.09L11.14 79.09A12 12 0 0 1 28.86 62.91ZM46.79 98.77A7.5 7.5 0 0 1 35.21 89.23L60.36 58.69A7.5 7.5 0 0 1 71.94 68.22ZM29 94a12 12 0 1 1 24 0a12 12 0 1 1 -24 0ZM54 43a29 29 0 1 1 58 0a29 29 0 1 1 -58 0ZM64 43a19 19 0 1 0 38 0a19 19 0 1 0 -38 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0Z"/></svg>';
+const LOGO = '<svg width="32" height="32" viewBox="0 0 120 120" fill="currentColor" aria-hidden="true"><path d="M49.86 85.91A12 12 0 0 1 32.14 102.09L11.14 79.09A12 12 0 0 1 28.86 62.91ZM29 94a12 12 0 1 1 24 0a12 12 0 1 1 -24 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0Z"/><path class="zn-l" d="M46.79 98.77A7.5 7.5 0 0 1 35.21 89.23L60.36 58.69A7.5 7.5 0 0 1 71.94 68.22ZM54 43a29 29 0 1 1 58 0a29 29 0 1 1 -58 0ZM64 43a19 19 0 1 0 38 0a19 19 0 1 0 -38 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0Z"/></svg>';
 
 function stranicy() {
   const vse = execSync('git ls-files "*.html"', { cwd: KOREN, encoding: 'utf8' }).split('\n').filter(Boolean);
@@ -58,7 +58,7 @@ test('5 мест в шапке без выпадающих меню (fokus-shapk
   const verh = [...nav.matchAll(/href="([^"]+)"/g)].map(m => m[1]);
   assert.deepStrictEqual(mob, verh);
   assert.ok(!/aria-current|is-active|style=/.test(p));
-  const hex = (p.match(/#[0-9A-Fa-f]{3,6}\b/g) || []).filter(x => !['#0B63E5', '#1D1D1F', '#FFFFFF'].includes(x));
+  const hex = (p.match(/#[0-9A-Fa-f]{3,6}\b/g) || []).filter(x => !['#12305F', '#0D2247', '#FFFFFF'].includes(x));
   assert.deepStrictEqual(hex, []);
 });
 
@@ -88,7 +88,7 @@ test('css/shapka.css собран и на токенах: своих цвето�
   assert.deepStrictEqual(hex, [], 'в partials/shapka.css свои hex-цвета: ' + hex.join(', '));
   assert.ok(!/font:(?!inherit[;}])[^;}]*\binherit\b/.test(src), 'font:… inherit браузер выбрасывает целиком');
   const css = chitat('css/shapka.css');
-  assert.ok(css.includes('--accent:#0B63E5'), 'токены ds.css не попали в css/shapka.css');
+  assert.ok(css.includes('--accent:#12305F'), 'токены ds.css не попали в css/shapka.css');
   assert.ok(css.endsWith(src), 'css/shapka.css устарел — запустите tests/sobrat_shapku.py');
 });
 

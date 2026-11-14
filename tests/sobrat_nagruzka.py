@@ -25,7 +25,7 @@ METKI = re.compile(r"<!--normy-->.*?<!--/normy-->", re.S)
 # nagruzka-yakorya-v1: открытая по ссылке строка (#n-35-1) — подсвечена и не уезжает под липкую шапку
 CSS_POSLE = "table.normy td b{color:var(--ink)}\n"
 CSS_YAKOR = ("table.normy tr{scroll-margin-top:calc(var(--header-h,64px) + 24px)}"
-             "table.normy tr:target td{background:var(--accent-soft,#EAF1FD)}"
+             "table.normy tr:target td{background:var(--accent-soft,#ECEFF6)}"
              "table.normy tr:target td:first-child{box-shadow:inset 2px 0 0 var(--accent)}\n")
 # normy-kompanii-v1: строки «Компаний этих отраслей» — плотнее вопросов FAQ (22 строки на 390 px не должны занимать 4 экрана)
 CSS_KOMP = (".faq.normy-komp details{padding:10px 16px;margin:0 0 6px;border-radius:16px}"

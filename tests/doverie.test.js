@@ -112,7 +112,7 @@ test('(1) интерфейс: «данных мало» — нейтральна
   const src = chitat('js/usloviya.js');
   assert.match(src, /\(v\.nedostatochno( \|\| neVse)? \? ' ned' : ''\)/); // chestnyj-nol-v1/v2: и «Проверили не всё»
   assert.match(src, /var neVse = v\.tone === 'go' && !!neOtvetiliSudyFssp\(v\.predvaritelno\);/);
-  assert.match(src, /\.usl\.ned \.usl-mark\{background:#8E8E93/);
+  assert.match(src, /\.usl\.ned \.usl-mark\{background:#8A97B5/);
 });
 
 // (4) досье сделки: пункты о фактах, закрытые отметкой заказчика, не дают положительной доли предоплаты

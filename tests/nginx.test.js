@@ -14,6 +14,9 @@ const { spawnSync } = require('child_process');
 const KOREN = path.join(__dirname, '..');
 const CONF = fs.readFileSync(path.join(KOREN, 'deploy/nginx.conf'), 'utf8');
 const DOCKERFILE = fs.readFileSync(path.join(KOREN, 'Dockerfile'), 'utf8');
+const ZAGOLOVKI = fs.readFileSync(path.join(KOREN, 'deploy/zagolovki.conf'), 'utf8');
+const ZAGOLOVKI_V_OBRAZE = '/etc/nginx/deloskop/zagolovki.conf';
+const HSTS = 'max-age=31536000';
 const IGNORE = fs.readFileSync(path.join(KOREN, '.dockerignore'), 'utf8').split('\n').map(s => s.trim()).filter(s => s && !s.startsWith('#'));
 
 test('конфиг: настоящая 404 и никакого «все адреса → главная»', () => {
@@ -107,7 +110,8 @@ test('живой nginx: коды ответов и заголовки', { skip: 
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'deloskop-nginx-'));
   const port = 20000 + Math.floor(Math.random() * 20000);
   const server = CONF.replace('listen 80 default_server;', `listen 127.0.0.1:${port} default_server;`).replace(/listen 80;/g, `listen 127.0.0.1:${port};`)
-    .replace('root /usr/share/nginx/html;', `root ${KOREN};`);
+    .replace('root /usr/share/nginx/html;', `root ${KOREN};`)
+    .split(ZAGOLOVKI_V_OBRAZE).join(path.join(KOREN, 'deploy/zagolovki.conf'));
   fs.writeFileSync(path.join(tmp, 'site.conf'), server);
   fs.writeFileSync(path.join(tmp, 'nginx.conf'), `daemon on; pid ${tmp}/nginx.pid; error_log ${tmp}/error.log;
 events { worker_connections 64; }
@@ -204,6 +208,22 @@ http { include ${MIME}; default_type application/octet-stream; access_log off;
     assert.strictEqual((await zapros(port, '/nalogi/', 'GET', host)).kod, 200, host);
   }
 
+  // hsts-v1: HSTS (и nosniff) — на каждом виде ответа: страница, пакет с отпечатком, картинка, манифест, отчёт, 404,
+  // 301 без слеша, короткий адрес, 302 карточки, закрытое служебное, 301 с www
+  const vidy = [['/', 200], [paket, 200], ['/favicon.svg', 200], ['/manifest.webmanifest', 200], ['/404.html', 200],
+    ['/otchet/7707083893/', 200], ['/company/7707083893-pao-sberbank/', 302], ['/net-takoj-stranicy-xyz/', 404],
+    ['/js/b/yadro.0000000000.js', 404], ['/nalogi', 301], ['/cabinet', 301], ['/tests/nginx.test.js', 404], ['/.git/config', 404]];
+  for (const [put, kod] of vidy) {
+    const r = await zapros(port, put);
+    assert.strictEqual(r.kod, kod, put);
+    assert.strictEqual(r.h['strict-transport-security'], HSTS, `${put} (${kod}): HSTS`);
+    assert.strictEqual(r.h['x-content-type-options'], 'nosniff', `${put} (${kod}): nosniff`);
+    assert.strictEqual(r.h['referrer-policy'], 'strict-origin-when-cross-origin', `${put} (${kod}): Referrer-Policy`);
+  }
+  const wwwH = await zapros(port, '/nalogi/', 'GET', 'www.deloskop.ru');
+  assert.strictEqual(wwwH.kod, 301);
+  assert.strictEqual(wwwH.h['strict-transport-security'], HSTS, 'www → 301 тоже с HSTS');
+
   // nginx-proverka-v1: тот же набор, которым Штаб и Ночные проверяют живой сайт после переезда
   // (deploy/proverka_zhivogo.js), — на локальном nginx должен быть весь ✓, включая каждый адрес обеих карт сайта.
   const { proverit } = require('../deploy/proverka_zhivogo.js');
@@ -244,4 +264,32 @@ test('проверка живого: набор совпадает с конфи
   // запускается из CI без сети: только чтение, без записи и без внешних модулей
   assert.doesNotMatch(src, /require\('(?!node:)[a-z]/i, 'без сторонних модулей');
   assert.doesNotMatch(src, /method: ?'(POST|PUT|DELETE)'/);
+});
+
+test('hsts-v1: общие заголовки из одного файла — в каждом location со своими add_header', () => {
+  // HSTS ровно такой, как решил Штаб 14.11: год, без includeSubDomains и preload (поддомены не сверены)
+  assert.match(ZAGOLOVKI, /^add_header Strict-Transport-Security "max-age=31536000" always;$/m);
+  assert.doesNotMatch(ZAGOLOVKI.replace(/#.*$/gm, ''), /includeSubDomains|preload/i);
+  assert.match(ZAGOLOVKI, /^add_header X-Content-Type-Options "nosniff" always;$/m);
+  assert.match(ZAGOLOVKI, /^add_header Referrer-Policy "strict-origin-when-cross-origin" always;$/m);
+  // в самом конфиге эти заголовки не пишутся — только include (иначе разойдутся)
+  assert.doesNotMatch(CONF, /add_header (?:Strict-Transport-Security|X-Content-Type-Options|Referrer-Policy)/);
+  // каждый блок, где есть свой add_header, подключает файл: add_header из server в такой блок не наследуется
+  const inc = `include ${ZAGOLOVKI_V_OBRAZE};`;
+  const bloki = [];
+  const stek = [];
+  CONF.split('\n').forEach((ln, i) => {
+    const t = ln.replace(/#.*$/, '').trim();
+    if (/\{\s*$/.test(t)) stek.push({ shapka: t, stroki: [] });
+    if (stek.length) stek[stek.length - 1].stroki.push(t);
+    if (/\}\s*$/.test(t) && !/\{/.test(t)) bloki.push(stek.pop());
+  });
+  const sAdd = bloki.filter(b => b.stroki.some(t => t.startsWith('add_header ')));
+  assert.ok(sAdd.length >= 7, 'блоки со своими заголовками найдены');
+  for (const b of sAdd) assert.ok(b.stroki.includes(inc), `${b.shapka} — нет ${inc}`);
+  // оба сервера подключают файл на своём уровне (ответы return 301/302/404 без своих add_header)
+  for (const b of bloki.filter(b => b.shapka === 'server {')) assert.ok(b.stroki.includes(inc), 'server: нет include');
+  assert.match(DOCKERFILE, /^COPY deploy\/zagolovki\.conf \/etc\/nginx\/deloskop\/zagolovki\.conf$/m, 'файл кладётся в образ до nginx -t');
+  assert.ok(DOCKERFILE.indexOf('zagolovki.conf') < DOCKERFILE.indexOf('nginx -t'));
+  assert.match(fs.readFileSync(path.join(KOREN, 'deploy/proverka_zhivogo.js'), 'utf8'), /strict-transport-security/, 'проверка живого знает про HSTS');
 });

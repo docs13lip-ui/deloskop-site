@@ -354,21 +354,33 @@ footer a{color:var(--ink2)}
 .ceny .usl a{display:inline;margin:0;white-space:nowrap}
 .ceny .kanaly-glav{margin-top:18px}
 .ceny .kanaly-glav a{display:inline;margin:0}
-/* poisk-v2-c: линза поиска (js/linza-poisk.js, пакет грузится, когда блок виден) — два кольца сходятся по мере ввода; холст только в своём блоке; CSS-кадр — запасной */
+/* znak-glavnaya-v1 (14.11): знак № 27 «лупа-галочка» над заголовком (вместо двух колец poisk-v2-c). Футляр — --ink, линза — латунь
+   (тёмная тема — --accent #D9B45A; светлая — латунь знака #B58A32: на бумаге латунь только в знаке; записана запасным
+   значением var(), чтобы tests/tema_temnaya.py не переводил её в бледную пару — в тёмной теме линза берёт --accent, как кнопка). Открытие страницы — линза
+   выходит из футляра; печатают — «водит»; распознано — встаёт ровно, блик в стекле; опечатка — --warn; Enter — волна (js/linza-poisk.js) */
 .hero-text{position:relative}
-.lp{position:relative;align-self:flex-start;height:clamp(84px,8.6vw,116px);aspect-ratio:1.6;margin:-30px 0 -8px -6px;pointer-events:none;contain:layout style}
-.lp__gl{position:absolute;inset:-22% -16%;width:132%;height:144%;display:block;opacity:0;transition:opacity .4s var(--ease,ease)}
-.lp--gl .lp__gl{opacity:1}
-.lp__k{position:absolute;inset:0;display:block}
-.lp__k::before,.lp__k::after{content:"";position:absolute;top:50%;left:50%;height:61%;aspect-ratio:1;border-radius:50%;border:max(3px,.09em) solid var(--ink);transform:translate(-86%,-50%);transition:transform .5s var(--ease,ease),border-color .3s;font-size:clamp(36px,4vw,56px)}
-.lp__k::after{border-color:var(--accent);transform:translate(-14%,-50%)}
-.lp[data-sost=vvod] .lp__k::before{transform:translate(-74%,-50%)}.lp[data-sost=vvod] .lp__k::after{transform:translate(-26%,-50%)}
-.lp[data-sost=raspoznano] .lp__k::before{transform:translate(-64%,-50%)}.lp[data-sost=raspoznano] .lp__k::after{transform:translate(-36%,-50%)}
-.lp[data-sost=opechatka] .lp__k::after{border-color:var(--warn)}
-.lp--gl .lp__k{visibility:hidden}
+.lp{--lp-latun:var(--latun-znak,#B58A32);--lp-blik:var(--surface,#fff);position:relative;align-self:flex-start;height:clamp(76px,7.4vw,100px);aspect-ratio:1.115;margin:-22px 0 -6px -8px;pointer-events:none;contain:layout style;color:var(--ink)}
+[data-theme=dark] .lp{--lp-latun:var(--accent);--lp-blik:var(--ink)}
+.lp__z{display:block;width:100%;height:100%;overflow:visible}
+.lp__f{fill:currentColor}
+.lp__l{transform-box:view-box;transform-origin:41px 94px;transition:transform .5s cubic-bezier(.2,.8,.2,1);animation:lp-otkr 1.1s cubic-bezier(.2,.8,.2,1) .15s both}
+.lp__lz{fill:var(--lp-latun);transition:fill .3s}
+.lp__st{fill:var(--lp-latun);opacity:.1;transition:opacity .4s,fill .3s}
+.lp__bl{fill:none;stroke:var(--lp-blik);stroke-width:3;stroke-linecap:round;opacity:.3}
+.lp__v{fill:none;stroke:var(--lp-latun);stroke-width:2;opacity:0;transform-box:view-box;transform-origin:83px 43px}
+.lp[data-sost=vvod][data-pechat] .lp__l{animation:lp-vodit 1.6s ease-in-out infinite}
+.lp[data-sost=raspoznano] .lp__st{opacity:.22}
+.lp[data-sost=raspoznano] .lp__bl{animation:lp-blik .9s ease-out .1s 1}
+.lp[data-sost=opechatka] .lp__l{transform:rotate(-12deg)}
+.lp[data-sost=opechatka] .lp__lz,.lp[data-sost=opechatka] .lp__st{fill:var(--warn)}
+.lp--puls .lp__v{animation:lp-volna .9s ease-out 1}
+@keyframes lp-otkr{from{transform:rotate(-46deg)}to{transform:rotate(0)}}
+@keyframes lp-vodit{0%,100%{transform:rotate(0)}30%{transform:rotate(-4deg)}70%{transform:rotate(2.5deg)}}
+@keyframes lp-blik{0%{opacity:.3}35%{opacity:1;stroke-width:4.5}100%{opacity:.3}}
+@keyframes lp-volna{from{opacity:.7;transform:scale(1)}to{opacity:0;transform:scale(1.7)}}
 .rezhim-otcheta .lp{display:none}
-@media (max-width:520px){.lp{position:absolute;top:-18px;right:-8px;height:54px;aspect-ratio:auto;width:86px;margin:0}.lp__gl{inset:-30% -18%;width:136%;height:160%}.lp__k::before,.lp__k::after{border-width:2.5px}.hero h1.hero-h1 .h1-kicker{padding-right:88px}}
-@media (prefers-reduced-motion:reduce){.lp__k::before,.lp__k::after,.lp__gl{transition:none}}
+@media (max-width:520px){.lp{position:absolute;top:-14px;right:-4px;height:52px;margin:0}.hero h1.hero-h1 .h1-kicker{padding-right:64px}}
+@media (prefers-reduced-motion:reduce){.lp__l,.lp__lz,.lp__st{transition:none;animation:none!important}.lp__bl,.lp__v{animation:none!important}}
 @media print{.lp{display:none!important}}
 </style>
 <!-- vizual-v3.0a: стили и скрипты главной — пятью файлами вместо 17 (partials/sborka.json, tests/sobrat_js.py) -->
@@ -435,7 +447,7 @@ footer a{color:var(--ink2)}
   <section class="hero" data-set data-set-pole="inn">
     <div class="wrap">
       <div class="hero-text">
-        <div class="lp" data-sost="zhdet" data-lp-src="/js/b/linza-poisk.95adb1d2ce.js" aria-hidden="true"><span class="lp__k"></span><canvas class="lp__gl"></canvas></div><script>/* poisk-v2-c: пакет линзы — только когда блок виден и браузер свободен; без WebGL и при «уменьшить движение» CSS-кадр остаётся */!function(d,w){var e=d.currentScript.previousElementSibling,s;if(!e||!("IntersectionObserver"in w))return;var o=new IntersectionObserver(function(z){if(!z[0].isIntersecting||s)return;o.disconnect();(w.requestIdleCallback||function(f){setTimeout(f,300)})(function(){s=d.createElement("script");s.src=e.getAttribute("data-lp-src");s.async=!0;d.head.appendChild(s)},{timeout:2500})});o.observe(e)}(document,window)</script>
+        <div class="lp" data-sost="zhdet" data-lp-src="/js/b/linza-poisk.01e9d944e9.js" aria-hidden="true"><svg class="lp__z" viewBox="4 10 116 104" focusable="false"><g class="lp__l"><circle class="lp__st" cx="83" cy="43" r="19"/><path class="lp__lz" d="M46.79 98.77A7.5 7.5 0 0 1 35.21 89.23L60.36 58.69A7.5 7.5 0 0 1 71.94 68.22ZM54 43a29 29 0 1 1 58 0a29 29 0 1 1 -58 0ZM64 43a19 19 0 1 0 38 0a19 19 0 1 0 -38 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0Z"/><path class="lp__bl" d="M70.8 38.6A13 13 0 0 1 78.6 30.8"/><circle class="lp__v" cx="83" cy="43" r="29"/></g><path class="lp__f" d="M49.86 85.91A12 12 0 0 1 32.14 102.09L11.14 79.09A12 12 0 0 1 28.86 62.91ZM29 94a12 12 0 1 1 24 0a12 12 0 1 1 -24 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0Z"/></svg></div><script>/* znak-glavnaya-v1: скрипт знака — только когда блок виден и браузер свободен; рисунок и раскрытие линзы — в разметке и стилях, без скрипта */!function(d,w){var e=d.currentScript.previousElementSibling,s;if(!e||!("IntersectionObserver"in w))return;var o=new IntersectionObserver(function(z){if(!z[0].isIntersecting||s)return;o.disconnect();(w.requestIdleCallback||function(f){setTimeout(f,300)})(function(){s=d.createElement("script");s.src=e.getAttribute("data-lp-src");s.async=!0;d.head.appendChild(s)},{timeout:2500})});o.observe(e)}(document,window)</script>
         <h1 class="hero-h1"><span class="h1-kicker">Проверка контрагента по&nbsp;ИНН</span> <span class="glavnaya-display">Проверьте контрагента. Поймите, что сделать до&nbsp;оплаты.</span></h1>
         <p class="lead">Открытые госреестры&nbsp;— простыми словами: что известно о&nbsp;компании, насколько полна проверка и&nbsp;что запросить до&nbsp;оплаты.</p>
         <form class="check" id="check" novalidate>

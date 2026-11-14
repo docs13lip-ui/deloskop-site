@@ -71,3 +71,40 @@ test('карточка из API (kartochka_render) — с той же облож
   assert.strictEqual(blok.length, 6);
   assert.ok(kr.includes(blok.join('\n')), 'kartochka_render.py: блок og:image не совпадает с OG_OBLOZHKA');
 });
+
+// oblozhka-znak-v1 (14.11.2026): обложка и значок ярлыков — знак № 27 «лупа-галочка» и палитра бренда (решение владельца 14.11).
+// Сторожа: в заготовке обложки — путь знака из favicon.svg и слово Unbounded, прежних колец нет; в палитре PNG — тёмно-синий
+// и латунь, прежнего синего (#0B63E5, #5B9BFF) нет; ярлык — 96×96, знак из того же favicon.svg.
+const PUT27 = /<path transform="[^"]+" d="([^"]+)" fill="#D9B45A"\/>/.exec(fs.readFileSync(path.join(K, 'favicon.svg'), 'utf8'))[1];
+function palitra(f) {
+  const b = fs.readFileSync(path.join(K, f)), cv = [];
+  for (let i = 8; i < b.length;) {
+    const n = b.readUInt32BE(i), t = b.toString('latin1', i + 4, i + 8);
+    if (t === 'PLTE') for (let j = 0; j < n; j += 3) cv.push([b[i + 8 + j], b[i + 9 + j], b[i + 10 + j]]);
+    i += 12 + n;
+  }
+  return cv;
+}
+const blizko = (cv, [r, g, bl], d) => cv.some((c) => Math.abs(c[0] - r) <= d && Math.abs(c[1] - g) <= d && Math.abs(c[2] - bl) <= d);
+
+test('oblozhka-znak-v1: заготовка обложки — знак «лупа-галочка», слово Unbounded, палитра бренда; прежних колец нет', () => {
+  const h = fs.readFileSync(path.join(K, 'tests/oblozhka/oblozhka.html'), 'utf8');
+  assert.strictEqual(h.split('d="' + PUT27 + '"').length - 1, 2, 'знак — в строке имени и крупно справа, путь из favicon.svg');
+  assert.ok(h.includes('font:700 32px/1 "Unbounded"') && h.includes('>Делоскоп</div>'), 'слово — Unbounded 700, как в шапке');
+  assert.ok(h.includes('background:#0D2247') && h.includes('fill="#D9B45A"'), 'тёмно-синий и латунь');
+  assert.ok(!h.includes('M36 18.1') && !/circle cx="(150|310)"/.test(h) && !h.includes('#12305F"/><g'), 'прежнего знака-колец нет');
+});
+
+test('oblozhka-znak-v1: в картинках — тёмно-синий и латунь, прежнего синего нет; ярлык 96×96', () => {
+  for (const f of ['oblozhka.png', 'ikonki/yarlyk-96.png']) {
+    const cv = palitra(f);
+    assert.ok(cv.length > 0 && cv.length <= 64, f + ': палитра ' + cv.length);
+    assert.ok(blizko(cv, [13, 34, 71], 2), f + ': тёмно-синий #0D2247');
+    assert.ok(blizko(cv, [217, 180, 90], 3), f + ': латунь #D9B45A');
+    assert.ok(!blizko(cv, [11, 99, 229], 12) && !blizko(cv, [91, 155, 255], 12), f + ': прежний синий');
+  }
+  const y = fs.readFileSync(path.join(K, 'ikonki/yarlyk-96.png'));
+  assert.ok(y.readUInt32BE(16) === 96 && y.readUInt32BE(20) === 96 && y.length <= 4096, 'ярлык 96×96, лёгкий: ' + y.length);
+  const s = fs.readFileSync(path.join(K, 'tests/oblozhka/sdelat.js'), 'utf8');
+  assert.ok(s.includes("'favicon.svg'") && s.includes("'ikonki/yarlyk-96.png'"), 'ярлык рисуется из favicon.svg тем же снимком');
+});

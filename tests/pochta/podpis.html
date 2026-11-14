@@ -1,0 +1,114 @@
+<!doctype html>
+<!-- pochta-znak-v1 (14.11.2026, [Ночные запуски]): графика фирменной подписи писем — /pochta/*.png|jpg.
+     Имена и размеры файлов прежние: подпись в почтовых программах ссылается на эти адреса — замена картинки обновляет все подписи сразу.
+     Знак № 27 «лупа-галочка» (контуры — как favicon.svg и шапка сайта), слово «Делоскоп» — Unbounded 700,
+     палитра бренда: тёмно-синий #0D2247, латунь #D9B45A (на бумаге и белом — #B58A32), тёплый белый #F5F1E6, синий кнопок #12305F.
+     Снимок — node tests/pochta/sdelat.js (Chromium, шрифты сайта). -->
+<html lang="ru"><head><meta charset="utf-8">
+<link rel="stylesheet" href="/css/fonts.css">
+<style>
+html,body{margin:0;background:transparent}
+body{font-family:Onest,sans-serif;-webkit-font-smoothing:antialiased;font-feature-settings:"kern";padding:20px;display:flex;flex-direction:column;align-items:flex-start;gap:20px}
+.k{position:relative;overflow:hidden;box-sizing:border-box}
+.sl{font:700 1em/1 "Unbounded",Onest,sans-serif;letter-spacing:-.015em;white-space:nowrap}
+.zn{display:block;flex:none}
+
+/* Логотип для подписи: белый фон письма */
+#logo{width:496px;height:111px;background:#fff;display:flex;align-items:center;gap:22px;padding-left:14px;color:#0D2247}
+#logo .zn{width:96px;height:96px}
+#logo .sl{font-size:52px}
+
+/* Баннер v2: тёмный, с кнопкой на «Знакомство» */
+#banner2{width:1202px;height:300px;border-radius:0;background:#0D2247;color:#F5F1E6}
+#banner2::before{content:"";position:absolute;right:-120px;top:-180px;width:720px;height:720px;border-radius:50%;background:radial-gradient(closest-side,rgba(217,180,90,.16),rgba(217,180,90,0))}
+#banner2 .ln{position:absolute;left:0;top:0;right:0;height:6px;background:#D9B45A}
+#banner2 .ey{position:absolute;left:58px;top:56px;font-size:20px;font-weight:500;letter-spacing:.14em;color:#D9B45A;text-transform:uppercase}
+#banner2 h2{position:absolute;left:56px;top:92px;margin:0;font-size:48px;line-height:1.1;font-weight:600;letter-spacing:-.02em}
+#banner2 .bt{position:absolute;left:58px;top:212px;height:56px;padding:0 28px;border-radius:999px;background:#D9B45A;color:#0D2247;font-size:20px;font-weight:600;display:flex;align-items:center;gap:12px}
+#banner2 .zn{position:absolute;right:86px;top:34px;width:232px;height:232px}
+
+/* Баннер v1: светлый, бумага */
+#banner1{width:1200px;height:280px;background:#F5F1E6;color:#0D2247;border-top:6px solid #B58A32}
+#banner1 .ey{position:absolute;left:64px;top:46px;font-size:20px;font-weight:600;letter-spacing:.06em;color:#8A6A22;text-transform:uppercase}
+#banner1 h2{position:absolute;left:62px;top:86px;margin:0;font-size:50px;line-height:1.1;font-weight:600;letter-spacing:-.02em}
+#banner1 p{position:absolute;left:64px;top:156px;margin:0;font-size:24px;line-height:1.35;color:#3A4868}
+#banner1 .ad{position:absolute;left:64px;top:222px;font-size:24px;font-weight:600;color:#12305F}
+#banner1 .zn{position:absolute;right:96px;top:36px;width:196px;height:196px}
+
+/* Полоса продуктов */
+#eko{width:1200px;height:116px;display:flex;gap:16px;background:transparent;padding:2px}
+#eko .c{flex:1 1 0;min-width:0;border-radius:28px;background:#F5F1E6;border:1.5px solid #E3DDCD;display:flex;align-items:center;gap:14px;padding:0 16px;color:#0D2247}
+#eko .c:last-child{flex-grow:1.25}
+#eko .i svg.z{width:36px;height:36px}
+#eko .i{width:52px;height:52px;border-radius:16px;background:#0D2247;display:flex;align-items:center;justify-content:center;flex:none}
+#eko .i svg{width:30px;height:30px}
+#eko b{display:block;white-space:nowrap;font-size:24px;font-weight:600;letter-spacing:-.01em}
+#eko span{display:block;font-size:17px;line-height:1.3;color:#5B6783}
+
+/* Визитка-картинка для письма */
+#vizitka{width:1050px;height:600px;background:#0D2247;color:#F5F1E6}
+#vizitka .ln{position:absolute;left:0;top:0;right:0;height:10px;background:#D9B45A}
+#vizitka .zn{position:absolute;left:70px;top:118px;width:224px;height:224px}
+#vizitka .sl{position:absolute;left:318px;top:170px;font-size:88px}
+#vizitka .pd{position:absolute;left:322px;top:286px;font-size:32px;color:#A7B2CB}
+#vizitka hr{position:absolute;left:72px;right:72px;top:418px;margin:0;border:0;height:1.5px;background:rgba(217,180,90,.45)}
+#vizitka .kto{position:absolute;left:72px;top:450px;font-size:32px;font-weight:600}
+#vizitka .kt{position:absolute;left:72px;top:506px;font-size:24px;color:#D9B45A;display:flex;gap:22px}
+#vizitka .kt i{font-style:normal;color:rgba(245,241,230,.45)}
+
+/* Значки контактов: тёмно-синяя плитка, рисунок — тёплый белый */
+.ic{display:flex;align-items:center;justify-content:center;background:transparent}
+.ic div{width:44px;height:44px;border-radius:10px;background:#0D2247;display:flex;align-items:center;justify-content:center}
+.ic svg{width:26px;height:26px}
+.ic .vk{font:700 15px/1 Onest,sans-serif;color:#F5F1E6;letter-spacing:.02em}
+#ic-pdf,#ic-sajt,#ic-vizitka,#ic-vk{width:50px;height:48px}
+#ic-pochta{width:48px;height:48px}
+</style></head><body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<!-- футляр (короткое плечо отметки) -->
+<path id="zA" d="M49.86 85.91A12 12 0 0 1 32.14 102.09L11.14 79.09A12 12 0 0 1 28.86 62.91ZM29 94a12 12 0 1 1 24 0a12 12 0 1 1 -24 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0Z"/>
+<!-- линза на рычаге (длинное плечо) -->
+<path id="zB" d="M46.79 98.77A7.5 7.5 0 0 1 35.21 89.23L60.36 58.69A7.5 7.5 0 0 1 71.94 68.22ZM54 43a29 29 0 1 1 58 0a29 29 0 1 1 -58 0ZM64 43a19 19 0 1 0 38 0a19 19 0 1 0 -38 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0Z"/>
+</defs></svg>
+
+<div class="k" id="logo"><svg class="zn" viewBox="0 0 120 120"><use href="#zA" fill="#0D2247"/><use href="#zB" fill="#B58A32"/></svg><span class="sl">Делоскоп</span></div>
+
+<div class="k" id="banner2"><i class="ln"></i>
+<div class="ey">Делоскоп.рф · компания глазами банка и налоговой</div>
+<h2>Знайте, с&nbsp;кем работаете.<br>До&nbsp;оплаты.</h2>
+<div class="bt">Знакомство с&nbsp;Делоскопом <span>→</span></div>
+<svg class="zn" viewBox="0 0 120 120"><use href="#zA" fill="#D9B45A"/><use href="#zB" fill="#D9B45A"/></svg>
+</div>
+
+<div class="k" id="banner1">
+<div class="ey">Компания глазами банка и налоговой</div>
+<h2>Проверьте контрагента по&nbsp;ИНН</h2>
+<p>Статус, долги, отчётность и&nbsp;Индекс 1–99&nbsp;—<br>с&nbsp;источником и&nbsp;датой у&nbsp;каждого факта</p>
+<div class="ad">deloskop.ru</div>
+<svg class="zn" viewBox="0 0 120 120"><use href="#zA" fill="#0D2247"/><use href="#zB" fill="#B58A32"/></svg>
+</div>
+
+<div class="k" id="eko">
+<div class="c"><div class="i"><svg class="z" viewBox="0 0 120 120"><use href="#zA" fill="#D9B45A"/><use href="#zB" fill="#D9B45A"/></svg></div><div><b>Делоскоп</b><span>проверка<br>и&nbsp;Индекс</span></div></div>
+<div class="c"><div class="i"><svg viewBox="0 0 24 24" fill="none" stroke="#F5F1E6" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/><path d="M12 20h8"/></svg></div><div><b>Делопись</b><span>договоры<br>и&nbsp;знания</span></div></div>
+<div class="c"><div class="i"><svg viewBox="0 0 24 24" fill="none" stroke="#F5F1E6" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7.5h7M8.5 12h1.5M12 12h1.5M8.5 15.5h1.5M12 15.5h1.5"/><path d="M15.5 12v3.5"/></svg></div><div><b>Делобух</b><span>бухгалтерия</span></div></div>
+<div class="c"><div class="i"><svg viewBox="0 0 24 24" fill="none" stroke="#F5F1E6" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5C10 5 7 4.5 3.5 5v13.5C7 18 10 18.5 12 20c2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5z"/><path d="M12 6.5V20"/></svg></div><div><b>Делоскоп · Неделя</b><span>журнал недели</span></div></div>
+</div>
+
+<div class="k" id="vizitka"><i class="ln"></i>
+<svg class="zn" viewBox="0 0 120 120"><use href="#zA" fill="#D9B45A"/><use href="#zB" fill="#D9B45A"/></svg>
+<span class="sl">Делоскоп</span>
+<div class="pd">Компания глазами банка и&nbsp;налоговой</div>
+<hr>
+<div class="kto">Команда Делоскопа</div>
+<div class="kt">help@deloskop.ru <i>·</i> deloskop.ru <i>·</i> vk.com/deloskop_ru</div>
+</div>
+
+<div class="k ic" id="ic-pdf"><div><svg viewBox="0 0 24 24" fill="none" stroke="#F5F1E6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg></div></div>
+<div class="k ic" id="ic-pochta"><div><svg viewBox="0 0 24 24" fill="none" stroke="#F5F1E6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M4 7.5l8 5.5 8-5.5"/></svg></div></div>
+<div class="k ic" id="ic-sajt"><div><svg viewBox="0 0 24 24" fill="none" stroke="#F5F1E6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5c2.6 2.4 3.8 5.2 3.8 8.5s-1.2 6.1-3.8 8.5c-2.6-2.4-3.8-5.2-3.8-8.5s1.2-6.1 3.8-8.5z"/></svg></div></div>
+<div class="k ic" id="ic-vizitka"><div><svg viewBox="0 0 24 24" fill="none" stroke="#F5F1E6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><circle cx="8.5" cy="11" r="2"/><path d="M5.8 15.5c.6-1.4 1.6-2 2.7-2s2.1.6 2.7 2"/><path d="M14 10h4M14 13.5h3"/></svg></div></div>
+<div class="k ic" id="ic-vk"><div><span class="vk">ВК</span></div></div>
+
+</body></html>

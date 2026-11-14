@@ -226,6 +226,42 @@ def zagruzit_normy(put=NORMY_FNS):
         return []
 
 
+# kartochki-balans-sverka-v1 ([Ночные-2] 14.11): те же ворота «выручка к балансу того же года» — по напечатанной странице
+# (у опубликованных карточек сведений нет, а анонимный /api/check у «Кералит» финансов не отдаёт — освежить нечем).
+_SUMMA = re.compile(r'<td class="num">(−|-)?([0-9]+(?:,[0-9]+)?)(?:&nbsp;|\u00a0| )(трлн|млрд|млн|тыс\.)?(?:&nbsp;|\u00a0| )?₽</td>')
+_BAL_SEK = re.compile(r'<section class="co-sec" aria-labelledby="bal">(.*?)</section>', re.S)
+_BAL_TAB = re.compile(r'<h3 class="co-h3">([^<]*(?:<[^>]+>[^<]*)*?)</h3><div class="table-wrap"><table class="table">(.*?)</table>', re.S)
+
+
+def _summy(t):
+    return [float(m.group(2).replace(",", ".")) * _MNOZH.get(m.group(3) or "", 1) for m in _SUMMA.finditer(t)]
+
+
+def vyruchka_k_balansu_html(t):
+    """→ (год, выручка, во сколько раз больше меры баланса того же года) или None — по странице карточки."""
+    t = bez_tipografa(t)
+    g, z = _GOD_TAB.search(t), _DOHOD_TAB.search(t)
+    if not g or not z:
+        return None
+    god, vyr = g.group(1), float(z.group(1).replace(",", ".")) * _MNOZH[z.group(2)]
+    if vyr < BALANS_MIN_VYR:
+        return None
+    sek = _BAL_SEK.search(t)
+    chb, chr_ = [], []
+    for zag, tab in _BAL_TAB.findall(sek.group(1) if sek else ""):
+        if ("31.12." + god) not in html.unescape(re.sub(r"<[^>]+>", "", zag)).replace("\u00a0", " "):
+            continue
+        (chb if "баланс" in zag else chr_).extend(_summy(tab))
+    m = mera_balansa(chb, chr_)
+    return (int(god), vyr, vyr / m) if m > 0 else None
+
+
+def balans_nesveren(t):
+    """kartochki-balans-sverka-v1: True — страница не проходит ворота «выручка к балансу» (снять до сверки)."""
+    x = vyruchka_k_balansu_html(t)
+    return bool(x and x[2] >= BALANS_POROG)
+
+
 def kartochki_na_diske(koren=KOREN):
     """→ {ИНН: заглушка} опубликованных карточек: только то, что уже напечатано на странице."""
     papka = os.path.join(koren, PAPKA)
@@ -516,6 +552,17 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         nepolnye = nepolnye_otvety(otchet, na_diske)  # kartochki-svezhest-v1: неполный ответ карточку не снимает
         otchet["nepolnye"] = len(nepolnye)
         svezhie = {inn for inn, _, _ in otchet.get("po_inn", [])} - nepolnye
+        # kartochki-balans-sverka-v1: опубликованная карточка, чья страница не проходит ворота «выручка к балансу», уходит
+        # так же, как ИНН, не прошедший ворота в свежем ответе (адрес → «мягкая 404» → живая проверка)
+        nesv = set()
+        for inn, x in na_diske.items():
+            if inn in svezhie:
+                continue
+            with open(os.path.join(papka, x["_papka"], "index.html"), encoding="utf-8") as fh:
+                if balans_nesveren(fh.read()):
+                    nesv.add(inn)
+        otchet["snyato_balans"] = sorted(nesv)
+        svezhie |= nesv
         starye = [x for inn, x in sorted(na_diske.items()) if inn not in svezhie]
         nuzhnye |= {x["_papka"] for x in starye}
     vse = kart + starye
@@ -1011,6 +1058,8 @@ def main(argv):
     pechat_otcheta(o)
     if o.get("s_diska"):
         print("Добор (--dobavit): опубликованных карточек оставлено как есть: %d." % o["s_diska"])
+        if o.get("snyato_balans"):  # kartochki-balans-sverka-v1
+            print("Снято до сверки единиц ГИР БО (выручка ×%d+ к балансу того же года): %s." % (BALANS_POROG, ", ".join(o["snyato_balans"])))
     if o.get("nepolnye"):
         print("Из них по неполному ответу (реестр без финансов — анонимный доступ?): %d — не сняты, сведения прежние." % o["nepolnye"])
     if "sitemap_vsego" in o:

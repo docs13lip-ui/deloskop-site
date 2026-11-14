@@ -1258,6 +1258,37 @@ def skachok_vyruchki(k):
     return b["dohod"] / a["dohod"]
 
 
+# kartochki-balans-sverka-v1 ([Ночные-2] 14.11): выручка года несоразмерна балансу того же года. Ворота «скачка» видят
+# ошибку единиц только при прошлом годе; у компании с одним годом отчётности сравнить не с чем — и на живом стоят
+# «Кералит» (9726049490: выручка 2025 — 17,7 млрд ₽ = чистая прибыль, капитал 16 тыс. ₽, штат 0) и «Сибирь»
+# (7203559982: 63,2 млрд ₽ при капитале 500 тыс. ₽ и долге поставщикам 3,9 млн ₽, штат 3). Это та же ошибка единиц
+# года 2025 из ✎ «Сервер» (14.11). Мерило — самая крупная сумма баланса и расчётов того же года (части пассива по
+# модулю, дебиторка, кредиторка, займы): оборот в 1 000 раз больше всего баланса за год не бывает. На 255 опубликованных
+# порог ×1 000 задевает ровно эти две; ниже — 0273945361 (×377) и 6163140887 (×170) — ✎ [Данные], остальные ≤ ×14. Выручка меньше 1 млрд ₽ — не трогаем.
+BALANS_POROG = 1000
+BALANS_MIN_VYR = 1e9
+
+
+def mera_balansa(chasti_balansa, chasti_raschetov):
+    """Самая крупная мера баланса года: сумма частей пассива по модулю или крупнейшая строка расчётов; 0 — нечего мерить."""
+    b = sum(abs(x) for x in chasti_balansa if x is not None)
+    r = max([abs(x) for x in chasti_raschetov if x is not None] or [0])
+    return max(b, r)
+
+
+def vyruchka_k_balansu(k):
+    """Во сколько раз выручка последнего года ряда больше меры баланса того же года (≥ 1 млрд ₽); иначе None."""
+    fin = k.get("finansy") or []
+    if not fin or not fin[-1].get("dohod") or fin[-1]["dohod"] < BALANS_MIN_VYR:
+        return None
+    god = fin[-1]["god"]
+    b, r = k.get("balans") or {}, k.get("raschety") or {}
+    chb = [b.get(x) for x in ("kap", "dol", "kor")] if b.get("god") == god else []
+    chr_ = [r.get(x) for x in ("rec", "pay", "loan")] if r.get("god") == god else []
+    m = mera_balansa(chb, chr_)
+    return fin[-1]["dohod"] / m if m > 0 else None
+
+
 def vorota(k, V=None):
     """(годится, причина). Годится = карточка создаётся и идёт в sitemap."""
     V = vyvody(k) if V is None else V
@@ -1283,6 +1314,9 @@ def vorota(k, V=None):
     sk = skachok_vyruchki(k)
     if sk is not None and sk >= SKACHOK_POROG:
         return False, "скачок выручки за год ×%d — сверить ряд ГИР БО" % round(sk)
+    vb = vyruchka_k_balansu(k)  # kartochki-balans-sverka-v1
+    if vb is not None and vb >= BALANS_POROG:
+        return False, "выручка ×%d к балансу того же года — сверить единицы ГИР БО" % round(vb)
     if len(V) < 3:
         return False, "выводов %d из 3" % len(V)
     if sum(1 for x in V if x["s_chislom"]) < 2:

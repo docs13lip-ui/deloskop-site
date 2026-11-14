@@ -60,6 +60,12 @@ function proverki(baza) {
     return r.kod === 301 && r.h.location === '/nalogi/' ? '' : `/nalogi → ${kak(r)}`;
   });
 
+  // www-301-v1 (14.11): только для боевого адреса — у технического домена своего www нет
+  if (baza === BOEVOJ) p('www → 301 на deloskop.ru', 'www.deloskop.ru отдаёт сайт сам — для Яндекса это второе зеркало с дублями всех страниц', async () => {
+    const r = await zapros('https://www.deloskop.ru', '/nalogi/?ot=proverka', { telo: false });
+    return r.kod === 301 && r.h.location === 'https://deloskop.ru/nalogi/?ot=proverka' ? '' : `www…/nalogi/?ot=proverka → ${kak(r)}`;
+  });
+
   p('Короткие адреса → 301', '/cabinet и /report/ должны вести на страницы, а не на главную', async () => {
     for (const [ot, kuda] of [['/cabinet?x=1', '/cabinet.html?x=1'], ['/report/', '/report.html']]) {
       const r = await zapros(baza, ot);

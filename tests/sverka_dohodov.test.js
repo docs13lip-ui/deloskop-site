@@ -79,7 +79,8 @@ test('год ×1033 к прошлому и от 1 млрд ₽ — не свер
   assert.strictEqual(s[0].status, 'not_checked', 'нейтральная строка, не минус');
   assert.strictEqual(bezNb(s[0].title), 'Доходы за 2025 год');
   assert.strictEqual(bezNb(s[0].detail), 'Не сверены: в 1 033 раза больше, чем за 2024 год — в оценку не взяли');
-  assert.strictEqual(r.verdict, 'Работать можно с осторожностью: обратите внимание — задолженность по налогам. Перед крупной оплатой запросите документы и сохраните их в деле.');
+  assert.strictEqual(r.verdict, 'Работать можно. Есть один момент: задолженность по налогам. Уточните его перед крупной оплатой.');
+  assert.strictEqual(r.risk_level, 'low'); assert.deepStrictEqual(r.sverka_itoga, { bylo: 'medium', stalo: 'low' });
 });
 
 test('повторный вызов ничего не меняет (Паспорт и отчёт зовут ispravitOtvet ещё раз)', () => {
@@ -206,7 +207,7 @@ test('v2: баланс того же года с «Активами» ×100+ —
   const dyn = r.dossier.sections[1];
   assert.deepStrictEqual(dyn.rows.map((x) => x[0]), ['2024', 'Источник']);
   assert.ok(!/Оборотных средств/.test(dyn.comment), dyn.comment);
-  assert.match(bezNb(r.sverka_dohodov_tekst), /Баланс на 31\.12\.2025 из того же ответа тоже вырос в 135 раз — его не показываем\.$/);
+  assert.match(bezNb(r.sverka_dohodov_tekst), /Баланс на 31\.12\.2025 из того же ответа тоже вырос в 135 раз — его не показываем\.( Итог проверки|$)/);
 });
 
 test('v2: баланс не сверенного года без скачка «Активов» — оставляем (0105053225: капитал 12,9 млн ₽)', () => {
@@ -223,4 +224,38 @@ test('v2: ровный ряд — ни налог, ни баланс не тро
   I.dopolnit(r);
   assert.strictEqual(r.dossier.charts.income_tax.length, 3);
   assert.ok(r.dossier.charts.balance);
+});
+
+// sverka-itoga-v1 [Ночные запуски] 14.11 14:10: сервер считает итог по строкам светофора (живые /api/check 14.11, 10 компаний):
+// bad → high; warn ≥ 3 → high; 2 → medium; 0–1 → low. Ложная строка нагрузки поднимала итог на ступень.
+const VYS = 'Работать не рекомендуем: задолженность по налогам, сотрудники, низкая налоговая нагрузка. Платёж такой компании может вызвать вопросы банка по 115-ФЗ, а сделка — у налоговой.';
+function triWarn(over) {
+  const r = otvet(Object.assign({ risk_level: 'high', risk_title: 'Высокий риск', verdict: VYS }, over || {}));
+  r.signals.splice(2, 0, { id: 'employees', title: 'Сотрудники', status: 'warn', detail: 'Среднесписочная численность: 0', source: 'ФНС, открытые данные', as_of: '31.12.2025' });
+  return r;
+}
+test('итог: «Высокий» из-за ложной нагрузки → «Средний» (2469004299, 0602079520)', () => {
+  const r = I.dopolnit(triWarn());
+  assert.strictEqual(r.risk_level, 'medium'); assert.strictEqual(r.risk_title, 'Средний риск');
+  assert.strictEqual(r.verdict, 'Работать можно с осторожностью: обратите внимание — задолженность по налогам, сотрудники. Перед крупной оплатой запросите документы и сохраните их в деле.');
+  assert.match(bezNb(r.sverka_dohodov_tekst), /Итог проверки считаем без строки о налоговой нагрузке — она стояла на этом числе\.$/);
+  const r2 = I.dopolnit(r); assert.strictEqual(r2.risk_level, 'medium');
+});
+test('итог: вывод сервера не по правилу (ЗСК, своя причина) — уровень не трогаем, только снимаем слова о нагрузке', () => {
+  const r = I.dopolnit(triWarn({ verdict: VYS.replace('у налоговой.', 'у налоговой. Компания в списке ЗСК.') }));
+  assert.strictEqual(r.risk_level, 'high'); assert.ok(!r.sverka_itoga); assert.ok(!/низкая налоговая нагрузка/.test(r.verdict));
+  assert.ok(!/Итог проверки/.test(r.sverka_dohodov_tekst));
+});
+test('итог: есть «bad» — остаётся «Высокий», вывод называет только «bad»', () => {
+  const r = otvet({ risk_level: 'high', verdict: 'Работать не рекомендуем: задолженность по налогам. Платёж такой компании может вызвать вопросы банка по 115-ФЗ, а сделка — у налоговой.' });
+  r.signals[1].status = 'bad';
+  I.dopolnit(r);
+  assert.strictEqual(r.risk_level, 'high'); assert.ok(!r.sverka_itoga);
+  assert.strictEqual(r.verdict, 'Работать не рекомендуем: задолженность по налогам. Платёж такой компании может вызвать вопросы банка по 115-ФЗ, а сделка — у налоговой.');
+});
+test('итог: строка нагрузки «ok» при не сверенном годе — итог не меняется', () => {
+  const r = otvet({ verdict: 'Работать можно. Есть один момент: задолженность по налогам. Уточните его перед крупной оплатой.', risk_level: 'low' });
+  r.signals[2].status = 'ok';
+  I.dopolnit(r);
+  assert.strictEqual(r.risk_level, 'low'); assert.ok(!r.sverka_itoga);
 });

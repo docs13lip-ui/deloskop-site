@@ -64,6 +64,26 @@ class TestVorota(unittest.TestCase):
             k = K.iz_check(r)
             self.assertEqual(K.vorota(k)[1], pr)
 
+    def test_skachok_vyruchki_ne_publikuem(self):
+        # kartochki-skachok-v1: выручка за год ×100 и больше — ряд ГИР БО сверить, карточки нет; ×99 — как было.
+        k = K.iz_check(O.zapis(3))
+        k["finansy"] = [{"god": 2024, "dohod": 2.5e6}, {"god": 2025, "dohod": 2.6e9}]
+        ok, pr = K.vorota(k)
+        self.assertFalse(ok)
+        self.assertEqual(pr, "скачок выручки за год ×1040 — сверить ряд ГИР БО")
+        k["finansy"] = [{"god": 2024, "dohod": 2.7e7}, {"god": 2025, "dohod": 2.6e9}]
+        self.assertEqual(K.skachok_vyruchki(k), 2.6e9 / 2.7e7)
+        self.assertNotIn("скачок", K.vorota(k)[1])
+        k["finansy"] = [{"god": 2023, "dohod": 1e6}, {"god": 2025, "dohod": 2.6e9}]
+        self.assertIsNone(K.skachok_vyruchki(k), "годы не соседние — не сравниваем")
+        # kartochki-skachok-v2: прошлый год 0 ₽ — сравниваем с последним годом, где выручка была; не было вовсе — None
+        k["finansy"] = [{"god": 2022, "dohod": 1.22e7}, {"god": 2023, "dohod": 0}, {"god": 2024, "dohod": 0},
+                        {"god": 2025, "dohod": 2.35e10}]
+        self.assertEqual(K.skachok_vyruchki(k), 2.35e10 / 1.22e7)
+        self.assertIn("скачок выручки за год ×1926", K.vorota(k)[1])
+        k["finansy"] = [{"god": 2024, "dohod": 0}, {"god": 2025, "dohod": 2.6e9}]
+        self.assertIsNone(K.skachok_vyruchki(k), "раньше выручки не было — не сравниваем")
+
     def test_bez_daty_svedenij_ne_proverka(self):
         r = O.zapis(6)
         for s in r["signals"]:
@@ -1788,6 +1808,7 @@ class TestKartochkiOpf(unittest.TestCase):
         self.assertEqual(K.imya("БАНК ГПБ (АО)"), "Банк ГПБ (АО)")
         self.assertEqual(K.imya('АКБ "ПЕРЕСВЕТ" (АО)'), "АКБ «Пересвет» (АО)")
         self.assertEqual(K.imya('АО "ДИКСИ ЮГ"'), "АО «Дикси Юг»")  # kartochki-1210-n2b
+        self.assertEqual(K.imya('"МЕРСЕДЕС-БЕНЦ РУС" (ООО)'), "ООО «Мерседес-Бенц РУС»")  # kartochki-opf-v2
         self.assertEqual(K.imya('ООО "МУЛТОН ПАРТНЕРС"'), "ООО «Мултон Партнерс»")  # kartochki-1210-n2b
         self.assertEqual(K.imya('ООО "ДЖОНСОН & ДЖОНСОН"'), "ООО «Джонсон & Джонсон»")  # kartochki-1210-n2b
         self.assertEqual(K.imya('АО "РУССКИЙ ЧАЙ"'), "АО «Русский чай»")  # kartochki-1210-n2b

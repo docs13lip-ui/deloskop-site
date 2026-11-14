@@ -78,9 +78,40 @@ test('окно поиска: сцена — после открытия, по с
   assert.match(o, /sost: function \(\) \{ return SOST; \}/);
   assert.match(o, /SOST\.exact = !!PR\.exact; SOST\.err = !!PR\.err; SOST\.focus = PR\.exact \? 1 : \.6;/);
   assert.match(o, /netGL: function \(\) \{ dlg\.classList\.remove\('pso--gl'\); \}/, 'нет WebGL — CSS-кадр');
-  assert.match(o, /\.pso--gl \.pso__zn::before,\.pso--gl \.pso__zn::after\{visibility:hidden\}/, 'CSS-кольца — запасной кадр знака');
+  assert.match(o, /\.pso--gl \.pso__zs\{visibility:hidden\}/, 'CSS-знак — запасной кадр знака');
+  const sh = chitat('partials/shapka.html').match(/<path d="([^"]+)"\/><path class="zn-l" d="([^"]+)"/);
+  assert.ok(sh, 'знак в шапке — футляр и линза');
+  assert.ok(o.includes('class="pso__zs-f" d="' + sh[1] + '"'), 'запасной знак окна — тот же футляр, что в шапке');
+  assert.ok(o.includes('class="pso__zs-l" d="' + sh[2] + '"'), 'запасной знак окна — та же линза, что в шапке');
+  assert.doesNotMatch(o, /pso__zn::before|pso__zn::after/, 'двух колец прежнего знака нет');
   assert.match(o, /<canvas class="pso__gl" aria-hidden="true"><\/canvas>/);
   assert.match(o, /<p class="pso__h" id="pso-h">Что проверяем\?<\/p>/);
   assert.match(o, /e\.target === dlg \|\| e\.target === sc/, 'нажатие мимо строки и списка закрывает окно');
   assert.doesNotMatch(o, /DlkScena\(\{[^}]*input\.value/, 'текст запроса в сцену не передаётся');
+});
+
+test('js/scena.js: знак сцены — «лупа-галочка» по пути знака в шапке (шарнир, плечо, ручка, кольцо)', () => {
+  const js = chitat('js/scena.js');
+  const m = js.match(/var FS_MARK=OBJ\+`([\s\S]*?)`\+OBJ_MAIN;/);
+  assert.ok(m, 'программа знака есть');
+  const k = 1 / 52, v = (x, y) => [((x - 61) * k).toFixed(3), (-(y - 60) * k).toFixed(3)].map((s) => s.replace(/^(-?)0\./, '$1.')).join(',');
+  for (const [n, x, y] of [['ZH', 41, 94], ['ZA', 20, 71], ['ZB', 66.15, 63.45], ['ZC', 83, 43]]) assert.ok(m[1].includes(n + '=vec2(' + v(x, y) + ')'), n + ' — из пути знака');
+  assert.match(m[1], /seg\(p\.xy,ZH,ZA\)-\.231/, 'плечо — радиус 12 из 120');
+  assert.match(m[1], /seg\(l,ZH,ZB\)-\.144/, 'ручка — радиус 7,5');
+  assert.match(m[1], /band\(vec3\(l-ZC,zl\),\.4615,vec2\(\.096/, 'кольцо — R 29/19');
+  assert.match(m[1], /\.085-length\(p\.xy-ZH\)/, 'в шарнире — отверстие, как в шапке');
+  assert.match(m[1], /-1\.43\*z\*z/, 'окно открылось — линза раскрывается из футляра (как в шапке, −82°)');
+  assert.match(m[1], /\*uF\*\(1\.-uE\)/, 'точный ответ — линза замирает');
+  assert.doesNotMatch(m[1], /d0=mix\(\.40,\.33,uF\)/, 'двух колец прежнего знака нет');
+});
+
+test('scena-znak-v1: светлый фон сцены — из токена --bg (тёплая бумага), без холодных серо-голубых констант', () => {
+  const js = chitat('js/scena.js');
+  assert.match(js, /var FS_BG=LIB\+`uniform vec3 uB;/, 'фон получает цвет страницы');
+  assert.match(js, /bgc=b;dark=/, 'цвет фона берётся из --bg в tema()');
+  assert.match(js, /gl\.uniform3f\(L\(o,'uB'\),bgc\[0\],bgc\[1\],bgc\[2\]\)/, 'фон получает uB при каждой отрисовке');
+  assert.match(js, /vec3 sky=mix\(mix\(uB,vec3\(1\.\),\.30\),uB,/, 'светлое небо — от цвета страницы');
+  assert.match(js, /vec3 fl=mix\(uB\*\.955,uB,/, 'светлый пол — от цвета страницы');
+  assert.ok(js.includes('vec3(.85,.70,.35)'), 'латунный шарик палитры');
+  for (const x of ['.62,.45,1.', '.35,.85,.80', '.945,.955,.975', '.915,.922,.942', '.84,.80,1.', '.34,.35,.40']) assert.ok(!js.includes(x), 'холодная константа ' + x + ' убрана');
 });

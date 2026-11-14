@@ -124,6 +124,21 @@ function proverki(baza) {
     return r.h['referrer-policy'] ? '' : 'нет Referrer-Policy';
   });
 
+  // hsts-v1 (14.11): HSTS на всех видах ответа — страница, файл с отпечатком, картинка, 404, 301 (в т. ч. с www)
+  p('HSTS — только https на год', 'браузер может открыть сайт по http — первый запрос уязвим для подмены; заголовок задан в deploy/zagolovki.conf', async () => {
+    const paket = ((await zapros(baza, '/')).text.match(PAKET) || [])[0] || '/js/shapka.js';
+    const puti = ['/', paket, '/favicon.svg', `/proverka-${sluchajno()}/`, '/nalogi'];
+    for (const put of puti) {
+      const r = await zapros(baza, put, { telo: false });
+      if ((r.h['strict-transport-security'] || '') !== 'max-age=31536000') return `${put} → ${r.kod}, HSTS: ${r.h['strict-transport-security'] || 'нет'}`;
+    }
+    if (baza === BOEVOJ) {
+      const w = await zapros('https://www.deloskop.ru', '/', { telo: false });
+      if ((w.h['strict-transport-security'] || '') !== 'max-age=31536000') return `www → ${w.kod}, HSTS: ${w.h['strict-transport-security'] || 'нет'}`;
+    }
+    return '';
+  });
+
   p('Файлы для поисковиков на месте', 'Яндекс не найдёт карту сайта, подтверждение прав или ключ IndexNow', async () => {
     const rob = await zapros(baza, '/robots.txt');
     if (rob.kod !== 200 || !/^text\/plain/.test(rob.h['content-type'] || '') || !/Sitemap:/i.test(rob.text)) return `robots.txt → ${rob.kod} ${rob.h['content-type'] || ''}`;

@@ -5,6 +5,8 @@
 # Пока приложение в Timeweb — тип «HTML/CSS/JS», этот файл ни на что не влияет. Переезд — deploy/PEREEZD.md.
 FROM nginx:1.27-alpine
 COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
+# hsts-v1: общие защитные заголовки (HSTS, nosniff, Referrer-Policy) — подключаются из nginx.conf через include
+COPY deploy/zagolovki.conf /etc/nginx/deloskop/zagolovki.conf
 COPY . /usr/share/nginx/html
 RUN rm -rf /usr/share/nginx/html/deploy /usr/share/nginx/html/Dockerfile /usr/share/nginx/html/50x.html \
  && find /usr/share/nginx/html -type f -size +512c \( -name '*.html' -o -name '*.css' -o -name '*.js' -o -name '*.json' \

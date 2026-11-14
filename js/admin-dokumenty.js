@@ -73,12 +73,16 @@
   }
 
   // ---------- общие части листа: шапка, подписи, низ — одни на все документы ----------
+  // dokumenty-znak-v1 (14.11): знак № 27 «лупа-галочка» — вектором, как в шапке сайта (чёткий в PDF при любом масштабе);
+  // футляр — тёмно-синий текста, линза — латунь для светлого (#B58A32: латунь на бумаге — только в знаке).
+  var ZNAK = '<svg class="zn" viewBox="0 0 120 120" aria-hidden="true"><path fill="#0D2247" d="M49.86 85.91A12 12 0 0 1 32.14 102.09L11.14 79.09A12 12 0 0 1 28.86 62.91ZM29 94a12 12 0 1 1 24 0a12 12 0 1 1 -24 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0Z"/>' +
+    '<path fill="#B58A32" d="M46.79 98.77A7.5 7.5 0 0 1 35.21 89.23L60.36 58.69A7.5 7.5 0 0 1 71.94 68.22ZM54 43a29 29 0 1 1 58 0a29 29 0 1 1 -58 0ZM64 43a19 19 0 1 0 38 0a19 19 0 1 0 -38 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0Z"/></svg>';
   function shapka(p, yur) {
     var prav = yur
       ? "<b>Индивидуальный предприниматель " + v(p.fio, "______________") + "</b><span>ИНН" + NB + v(p.inn, "____________") + " · ОГРНИП" + NB + v(p.ogrnip, "_______________") + "</span><span>help@deloskop.ru · deloskop.ru</span>"
       : "<b>Команда Делоскопа</b><span>Проверка контрагента по" + NB + "ИНН</span><span>help@deloskop.ru · deloskop.ru</span>";
-    return '<div class="st" aria-hidden="true"><img src="/img/dok/studiya.jpg" alt=""><i></i></div>' +
-      '<div class="sh"><div class="lg"><img src="/img/dok/znak.webp" alt=""><b>делоскоп</b></div><div class="rk">' + prav + "</div></div>";
+    return '<div class="st" aria-hidden="true"></div>' +
+      '<div class="sh"><div class="lg">' + ZNAK + "<b>Делоскоп</b></div><div class=\"rk\">" + prav + "</div></div>";
   }
   function niz(p, yur, snoska) {
     var lev = yur ? "ИП " + esc(fioKorotko(p.fio)) + " · ИНН" + NB + v(p.inn, "____________") + " · ОГРНИП" + NB + v(p.ogrnip, "_______________") + " · help@deloskop.ru · deloskop.ru" : "Команда Делоскопа · help@deloskop.ru · deloskop.ru";
@@ -206,8 +210,8 @@
   var CSS = "/* лист: бумага */@page{size:A4;margin:0}*{box-sizing:border-box}html,body{margin:0;background:#fff}" +
     "body{font-family:Onest,Arial,sans-serif;color:#0D2247;font-size:10pt;line-height:1.5;-webkit-print-color-adjust:exact;print-color-adjust:exact}" +
     ".l{position:relative;width:210mm;height:297mm;overflow:hidden;background:#fff}p{margin:0 0 3mm}b{font-weight:600}em{font-style:normal}.s{color:#55555A}.r{text-align:right}.n{font-variant-numeric:tabular-nums}" +
-    ".st{position:absolute;left:0;top:0;width:210mm;height:40mm;overflow:hidden}.st img{position:absolute;left:0;top:0;width:210mm;height:40mm;object-fit:cover}.st i{position:absolute;left:0;bottom:0;width:210mm;height:18mm;background:linear-gradient(180deg,rgba(255,255,255,0),#fff)}" +
-    ".sh{position:relative;display:flex;align-items:center;justify-content:space-between;gap:6mm;padding:9.5mm 15mm 0}.lg{display:flex;align-items:center;gap:3mm}.lg img{width:20.6mm;height:14.8mm;object-fit:contain}.lg b{font-size:21pt;letter-spacing:-.03em;line-height:1}" +
+    ".st{position:absolute;left:0;top:0;width:210mm;height:40mm;background:linear-gradient(180deg,#F5F1E6 0,#F5F1E6 42%,#fff 100%)}.st::after{content:\"\";position:absolute;left:15mm;top:0;width:24mm;height:.9mm;background:#B58A32}" +
+    ".sh{position:relative;display:flex;align-items:center;justify-content:space-between;gap:6mm;padding:9.5mm 15mm 0}.lg{display:flex;align-items:center;gap:3mm}.lg .zn{display:block;width:13mm;height:13mm}.lg b{font:700 17pt/1 Unbounded,Onest,Arial,sans-serif;letter-spacing:-.015em}" +
     ".rk{display:flex;flex-direction:column;gap:.2mm;text-align:right;font-size:8.25pt;line-height:1.45;color:#55555A}.rk b{color:#0D2247}" +
     ".bl{position:relative;padding:17mm 15mm 0}.mt{display:grid;grid-template-columns:minmax(0,1fr) 77mm;gap:0 8mm;font-size:9.5pt}.mt>div{display:flex;flex-direction:column;gap:1mm}" +
     "h1{margin:0 0 3.5mm;font-size:19pt;font-weight:600;letter-spacing:-.02em;line-height:1.15}.tl{padding-top:11.5mm}.tl p.m{margin-top:1.5mm;font-size:9.5pt}" +

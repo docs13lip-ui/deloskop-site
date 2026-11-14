@@ -28,14 +28,15 @@ test('семь документов; шапка, визитка и QR — одн
   for (const [vid] of D.VIDY) {
     for (const d of [{}, { predmet: 'usl' }]) {
       const h = list(vid, d, P, propis);
-      assert.ok(h.includes('<img src="/img/dok/znak.webp" alt=""><b>делоскоп</b>'), vid + ': знак и слово вверху');
-      assert.ok(h.includes('/img/dok/studiya.jpg') && h.includes('/img/dok/vizitka-lico.jpg') && h.includes('/img/dok/vizitka-oborot.jpg'), vid + ': студия и визитка');
+      assert.ok(h.includes('<svg class="zn" viewBox="0 0 120 120" aria-hidden="true">') && h.includes('</svg><b>Делоскоп</b>'), vid + ': знак № 27 вектором и слово вверху');
+      assert.ok(!/znak\.webp|studiya\.jpg/.test(h), vid + ': прежних колец и «студии» нет');
+      assert.ok(h.includes('/img/dok/vizitka-lico.jpg') && h.includes('/img/dok/vizitka-oborot.jpg'), vid + ': визитка');
       assert.ok(h.includes('<img src="/img/dok/qr.svg" alt="QR-код: deloskop.ru">'), vid + ': QR-код сайта');
       assert.doesNotMatch(h, /undefined|NaN|\[object/, vid + ': пустые поля — прочерки, а не мусор');
       assert.strictEqual((h.match(/data-nasha/g) || []).length, vid === 'pismo' ? 0 : 1, vid + ': своя строка подписи — одна');
     }
   }
-  for (const f of ['znak.webp', 'studiya.jpg', 'vizitka-lico.jpg', 'vizitka-oborot.jpg', 'qr.svg']) {
+  for (const f of ['vizitka-lico.jpg', 'vizitka-oborot.jpg', 'qr.svg']) {
     const b = fs.statSync(path.join(KOREN, 'img/dok', f)).size;
     assert.ok(b > 500 && b <= 40 * 1024, 'img/dok/' + f + ': ' + b + ' Б (не больше 40 КБ)');
   }
@@ -145,4 +146,21 @@ test('админка: раздел, скрипт и запуск после вх
   assert.ok(h.includes('<script src="/js/admin-dokumenty.js"></script>'));
   assert.ok(h.includes('if(window.DlkDokumenty)try{DlkDokumenty.start(call,function(){return isAdmin})}catch(_){}'));
   assert.ok(h.indexOf('id="rekSek"') < h.indexOf('id="dokSek"') && h.indexOf('id="dokSek"') < h.indexOf('id="bzSek"'), 'раздел — после реквизитов');
+});
+
+// dokumenty-znak-v1 (14.11.2026): знак в листах — тот же, что в шапке сайта; палитра бренда; визитка перерисована.
+test('знак листа = знак шапки; цвета — тёмно-синий и латунь; прежнего синего и колец нет', () => {
+  const sh = chitat('admin.html').match(/<svg width="28"[^>]*>([\s\S]*?)<\/svg>/)[1];
+  const putiShapki = [...sh.matchAll(/ d="([^"]+)"/g)].map((m) => m[1]);
+  const h = list('schet', {}, P, propis);
+  const zn = h.match(/<svg class="zn"[\s\S]*?<\/svg>/)[0];
+  assert.deepStrictEqual([...zn.matchAll(/ d="([^"]+)"/g)].map((m) => m[1]), putiShapki, 'контуры знака — из шапки');
+  assert.deepStrictEqual([...zn.matchAll(/fill="([^"]+)"/g)].map((m) => m[1]), ['#0D2247', '#B58A32'], 'футляр — синий, линза — латунь');
+  const dok = D.dokument('schet', {}, P, propis);
+  assert.ok(dok.includes('Unbounded'), 'слово — Unbounded, как в шапке');
+  assert.doesNotMatch(dok + chitat('tests/dok/vizitka.html'), /#(2F80ED|0A84FF|3B82F6|1E6FFF|5AA0FF)\b/i, 'прежнего синего нет');
+  const viz = chitat('tests/dok/vizitka.html');
+  for (const c of ['#0D2247', '#D9B45A', '#B58A32', '#F5F1E6']) assert.ok(viz.includes(c), 'визитка: ' + c);
+  for (const p of putiShapki) assert.ok(viz.includes(p), 'визитка: знак из шапки');
+  assert.ok(viz.includes(chitat('img/dok/qr.svg').match(/<path d="([^"]+)"/)[1]), 'визитка: тот же QR, что в углу листа');
 });

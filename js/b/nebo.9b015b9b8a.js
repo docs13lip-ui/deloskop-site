@@ -6,7 +6,7 @@ if (W.DlkNebo) return;
 var mm = function (q) { return !!W.matchMedia && W.matchMedia(q).matches; };
 function sluch(s) { return function () { s |= 0; s = s + 0x6D2B79F5 | 0; var t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 var FIGURY = [
-{ t: 'kolco', p: [[0, -1], [0.7, -0.7], [1, 0], [0.7, 0.7], [0, 1], [-0.7, 0.7], [-1, 0], [-0.7, -0.7]], r: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7]] },
+{ t: 'znak', p: [[-0.82, 0.22], [-0.4, 0.68], [0.07, 0.1], [-0.13, -0.44], [0.24, -0.89], [0.81, -0.78], [1, -0.24], [0.64, 0.2]], r: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 2]] },
 { t: 'dokument', p: [[-0.7, -1], [0.35, -1], [0.7, -0.6], [0.7, 1], [-0.7, 1], [-0.35, -0.25], [0.35, -0.25], [-0.35, 0.3], [0.35, 0.3]], r: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 0], [5, 6], [7, 8]] },
 { t: 'pechat', p: [[0, -1], [0.87, -0.5], [0.87, 0.5], [0, 1], [-0.87, 0.5], [-0.87, -0.5], [0, 0]], r: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 0], [6, 0], [6, 2], [6, 4]] },
 { t: 'shchit', p: [[-0.8, -0.9], [0, -1], [0.8, -0.9], [0.75, 0.15], [0, 1], [-0.75, 0.15]], r: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 0]] },
@@ -14,8 +14,8 @@ var FIGURY = [
 { t: 'lupa', p: [[-0.2, -1], [0.45, -0.75], [0.6, -0.15], [0.25, 0.35], [-0.4, 0.4], [-0.75, -0.25], [0.6, 0.65], [1, 1]], r: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 0], [3, 6], [6, 7]] },
 { t: 'rost', p: [[-1, 0.8], [-0.4, 0.2], [0, 0.5], [0.8, -0.6], [0.45, -0.65], [0.85, -0.25]], r: [[0, 1], [1, 2], [2, 3], [3, 4], [3, 5]] }
 ];
-var BELYJ = '245,245,242', HOLOD = '200,216,255', SINIJ = '91,155,255', TEPLO = '255,217,160';
-var FON = 'radial-gradient(120% 90% at 50% -12%,#18223A 0%,#121320 42%,#0A1733 70%),linear-gradient(180deg,#0A1733 0%,#0C0C10 100%)';
+var BELYJ = '245,241,230', HOLOD = '201,207,221', SINIJ = '90,120,180', GLUB = '46,74,130', TEPLO = '235,203,124', LATUN = '217,180,90';
+var FON = 'radial-gradient(120% 90% at 50% -12%,#102248 0%,#0D1D3F 42%,#0A1733 70%),linear-gradient(180deg,#0A1733 0%,#081229 100%)';
 var cv = null, cx = null, stil = null, idet = 0, zhivo = false, staticno = false, gasnu = 0;
 var w = 0, h = 0, dpr = 1, uzko = false, mysh = false;
 var MS = null, sloj = { daljnie: null, tumannost: null, galaktika: null, maska: null, fon: null }, MER = [], BLIZ = [], SOZ = [], meteory = [], komety = [], vspyshki = [];
@@ -61,7 +61,7 @@ dc.fillRect(x, y, r, r);
 }
 sloj.daljnie = D;
 var S = Math.ceil(Math.hypot(w, h) / 4), T = holst(S, S), tc = T.getContext('2d');
-var tum = [[0.28, 0.3, 0.42, SINIJ, 0.10], [0.74, 0.62, 0.36, '140,110,220', 0.07], [0.55, 0.85, 0.3, TEPLO, 0.035]];
+var tum = [[0.28, 0.3, 0.42, SINIJ, 0.10], [0.74, 0.62, 0.36, GLUB, 0.12], [0.55, 0.85, 0.3, TEPLO, 0.035]];
 tum.forEach(function (q) {
 g = tc.createRadialGradient(q[0] * S, q[1] * S, 0, q[0] * S, q[1] * S, q[2] * S);
 g.addColorStop(0, 'rgba(' + q[3] + ',' + q[4] + ')'); g.addColorStop(1, 'rgba(' + q[3] + ',0)');
@@ -180,7 +180,7 @@ z.sx = z.c[0] + ox; z.sy = z.c[1] + oy;
 if (z.do && t > z.do) { z.do = 0; z.cel = 0; }
 if (ukaz) z.cel = Math.hypot(ukaz[0] - z.sx, ukaz[1] - z.sy) < z.raz * 2.2 ? 1 : (z.do ? z.cel : 0);
 z.v = staticno ? z.cel : Math.max(0, Math.min(1, z.v + (z.cel ? 1 : -1) * dt / 400));
-cx.strokeStyle = 'rgba(' + SINIJ + ',' + ((0.05 + 0.37 * z.v) * dy * z.m).toFixed(3) + ')';
+cx.strokeStyle = 'rgba(' + LATUN + ',' + ((0.05 + 0.37 * z.v) * dy * z.m).toFixed(3) + ')';
 cx.beginPath();
 for (var j = 0; j < z.r.length; j++) { var A = z.p[z.r[j][0]], B = z.p[z.r[j][1]]; cx.moveTo(A[0] + ox, A[1] + oy); cx.lineTo(B[0] + ox, B[1] + oy); }
 cx.stroke();
@@ -332,9 +332,9 @@ function kadrNa(ww, hh) {
 var sv = [w, h, dpr, cx, sloj, MER, BLIZ, SOZ, cpx, cpy, prokr, sMaskoj, uzko, MS];
 var c = holst(ww, hh), k = c.getContext('2d');
 w = ww; h = hh; dpr = 1; cx = k; sMaskoj = false; sloj = { daljnie: null, tumannost: null, galaktika: null, maska: null, fon: null };
-var g = k.createLinearGradient(0, 0, 0, hh); g.addColorStop(0, '#0A1733'); g.addColorStop(1, '#0C0C10'); k.fillStyle = g; k.fillRect(0, 0, ww, hh);
+var g = k.createLinearGradient(0, 0, 0, hh); g.addColorStop(0, '#0A1733'); g.addColorStop(1, '#081229'); k.fillStyle = g; k.fillRect(0, 0, ww, hh);
 k.save(); k.translate(ww / 2, -0.12 * hh); k.scale(1.2 * ww, 0.9 * hh);
-g = k.createRadialGradient(0, 0, 0, 0, 0, 1); g.addColorStop(0, '#18223A'); g.addColorStop(0.42, '#121320'); g.addColorStop(0.7, 'rgba(10,23,51,0)');
+g = k.createRadialGradient(0, 0, 0, 0, 0, 1); g.addColorStop(0, '#102248'); g.addColorStop(0.42, '#0D1D3F'); g.addColorStop(0.7, 'rgba(10,23,51,0)');
 k.fillStyle = g; k.fillRect(-1, 0, 2, 1.4); k.restore();
 var sk = cv; cv = c;
 postroit(); cpx = cpy = 0; prokr = 0;

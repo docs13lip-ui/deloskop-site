@@ -2,6 +2,8 @@
 <!-- og-v1 (21.10.2026, [Ночные запуски]): обложка ссылок deloskop.ru 1200×630 (og:image) — ВК, Telegram, Яндекс, Дзен.
      oblozhka-znak-v1 (14.11.2026): знак № 27 «лупа-галочка» и палитра бренда — тёмно-синий #0D2247, латунь #D9B45A, тёплый белый #F5F1E6;
      слово «Делоскоп» — Unbounded 700, как в шапке. Справа — знак крупно, латунью; в линзе — блик стекла.
+     oblozhka-3d-v1 (15.11.2026): справа — объёмный знак из ikonka-512.png (1 : 1, без растяжки); края картинки растворены
+     круглой маской 172 → 244 px в фон обложки, поэтому плитки значка не видно. В строке имени знак остаётся плоским (50 px).
      Снимок — node tests/oblozhka/sdelat.js (Chromium, шрифты сайта). Значимое — в средней полосе 1200×536 (превью ВК 2,24 : 1). -->
 <html lang="ru"><head><meta charset="utf-8">
 <link rel="stylesheet" href="/css/fonts.css">
@@ -14,14 +16,10 @@ h1{position:absolute;left:88px;top:178px;margin:0;font-size:56px;line-height:1.1
 h1 span{color:#A7B2CB}
 .p{position:absolute;left:88px;bottom:88px;font-size:24px;font-weight:400;color:#A7B2CB}
 .p b{color:#F5F1E6;font-weight:500}
-.k{position:absolute;right:84px;top:95px;width:440px;height:440px}
+.k{position:absolute;left:684px;top:59px;width:512px;height:512px;-webkit-mask-image:radial-gradient(circle at 50% 50%,#000 172px,transparent 244px);mask-image:radial-gradient(circle at 50% 50%,#000 172px,transparent 244px)}
 </style></head><body>
 <div class="v"><svg viewBox="0 0 120 120" aria-hidden="true"><path fill="#D9B45A" d="M49.86 85.91A12 12 0 0 1 32.14 102.09L11.14 79.09A12 12 0 0 1 28.86 62.91ZM46.79 98.77A7.5 7.5 0 0 1 35.21 89.23L60.36 58.69A7.5 7.5 0 0 1 71.94 68.22ZM29 94a12 12 0 1 1 24 0a12 12 0 1 1 -24 0ZM54 43a29 29 0 1 1 58 0a29 29 0 1 1 -58 0ZM64 43a19 19 0 1 0 38 0a19 19 0 1 0 -38 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0Z"/></svg>Делоскоп</div>
 <h1>Перед оплатой&nbsp;—<br>проверить.<br><span>Если банк спросил&nbsp;—<br>ответить.</span></h1>
 <div class="p"><b>Проверка контрагента по&nbsp;ИНН</b> · deloskop.ru</div>
-<svg class="k" viewBox="0 0 120 120" aria-hidden="true">
- <circle cx="83" cy="43" r="20" fill="#16396E"/>
- <path d="M70.5 37.5A14 14 0 0 1 82 29" fill="none" stroke="#F5F1E6" stroke-opacity=".55" stroke-width="2.6" stroke-linecap="round"/>
- <path fill="#D9B45A" d="M49.86 85.91A12 12 0 0 1 32.14 102.09L11.14 79.09A12 12 0 0 1 28.86 62.91ZM46.79 98.77A7.5 7.5 0 0 1 35.21 89.23L60.36 58.69A7.5 7.5 0 0 1 71.94 68.22ZM29 94a12 12 0 1 1 24 0a12 12 0 1 1 -24 0ZM54 43a29 29 0 1 1 58 0a29 29 0 1 1 -58 0ZM64 43a19 19 0 1 0 38 0a19 19 0 1 0 -38 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0Z"/>
-</svg>
+<img class="k" src="/ikonka-512.png" alt="">
 </body></html>

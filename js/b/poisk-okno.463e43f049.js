@@ -262,9 +262,9 @@ var CSS = '' +
 '.pso--gl .pso__gl{opacity:1}' +
 '.pso__sc{position:relative;z-index:1;height:100%;overflow:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;align-items:center;padding:clamp(16px,5vh,56px) 16px 24px;box-sizing:border-box}' +
 '.pso__zn{flex:none;position:relative;display:flex;align-items:center;justify-content:space-between;width:min(560px,100%);height:clamp(120px,24vh,240px);pointer-events:none}' +
-'.pso__zn::before,.pso__zn::after{content:"";position:absolute;top:50%;left:50%;height:46%;aspect-ratio:1;border-radius:50%;border:max(4px,.5vh) solid var(--ink,#0D2247);transform:translate(-80%,-50%)}' +
-'.pso__zn::after{border-color:var(--accent,#12305F);transform:translate(-20%,-50%)}' +
-'.pso--gl .pso__zn::before,.pso--gl .pso__zn::after{visibility:hidden}' +
+'.pso__zs{position:absolute;top:50%;left:50%;height:66%;width:auto;aspect-ratio:1;transform:translate(-50%,-50%);overflow:visible}' +
+'.pso__zs-f{fill:var(--ink,#0D2247)}.pso__zs-l{fill:var(--accent,#12305F)}' +
+'.pso--gl .pso__zs{visibility:hidden}' +
 '.pso__m{flex:none;width:clamp(72px,20vw,120px);aspect-ratio:1}' +
 '.pso__h{flex:none;margin:4px 0 20px;font:700 clamp(28px,4.2vw,46px)/1.08 var(--font-display,var(--font,system-ui));letter-spacing:-.02em;text-align:center;text-wrap:balance}' +
 '.pso__ryad{flex:none;position:relative;width:min(760px,100%)}' +
@@ -387,7 +387,10 @@ dlg.setAttribute('aria-label', 'Поиск по Делоскопу');
 dlg.innerHTML =
 '<canvas class="pso__gl" aria-hidden="true"></canvas>' +
 '<div class="pso__sc">' +
-'<div class="pso__zn" aria-hidden="true"><i class="pso__m pso__m--lu"></i><i class="pso__m pso__m--sh"></i></div>' +
+'<div class="pso__zn" aria-hidden="true"><i class="pso__m pso__m--lu"></i>' +
+'<svg class="pso__zs" viewBox="0 0 120 120" focusable="false"><path class="pso__zs-f" d="M49.86 85.91A12 12 0 0 1 32.14 102.09L11.14 79.09A12 12 0 0 1 28.86 62.91ZM29 94a12 12 0 1 1 24 0a12 12 0 1 1 -24 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0Z"/>' +
+'<path class="pso__zs-l" d="M46.79 98.77A7.5 7.5 0 0 1 35.21 89.23L60.36 58.69A7.5 7.5 0 0 1 71.94 68.22ZM54 43a29 29 0 1 1 58 0a29 29 0 1 1 -58 0ZM64 43a19 19 0 1 0 38 0a19 19 0 1 0 -38 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0Z"/></svg>' +
+'<i class="pso__m pso__m--sh"></i></div>' +
 '<p class="pso__h" id="pso-h">Что проверяем?</p>' +
 '<div class="pso__ryad"><i class="pso__b pso__b--lu" aria-hidden="true"></i>' +
 '<form class="pso__f" role="search" method="dialog">' +

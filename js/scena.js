@@ -1,7 +1,7 @@
 /* Делоскоп — сцена поиска (scena-poiska-v1, 13.11.2026: «поиск в 3D, строка по центру»).
  *
  * WebGL без библиотек. Три прохода: фон с глубиной → в текстуру; текстура → на холст; поверх — три стеклянных предмета
- * (знак из двух колец, лупа, щит), каждый своей программой и только в своём прямоугольнике. Стекло преломляет настоящий фон.
+ * (знак «лупа-галочка», лупа, щит), каждый своей программой и только в своём прямоугольнике. Стекло преломляет настоящий фон.
  *
  * Правила (те же, что у линзы js/linza-poisk.js):
  *  • цвета — токены дизайн-системы (--bg, --ink, --accent, --warn, --ok), тема — по data-theme;
@@ -23,12 +23,17 @@ window.DlkScena = function (O) {
 'use strict';
 var cv=O.cv,obj=O.mark,box=O.box,q=O.pole,CW=1,CH=1,CL=0,CT=0,vkl=true,vidno=true,raf=0,gl=null,PR={},fb=null,tx=null,W=0,H=0,WB=0,HB=0,kq=1,kb=1,deln=performance.now(),chet=0,t0=performance.now(),last=0,gryaz=true,
     redu=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches,zamok=/[#&]hq/.test(location.hash),
-    dark=true,accent=[.357,.608,1],warn=[.95,.70,.36],ink=[.96,.96,.95],okc=[.36,.76,.54],cur=[.357,.608,1],curG=[.36,.76,.54],
+    dark=true,bgc=[.961,.945,.902],accent=[.357,.608,1],warn=[.95,.70,.36],ink=[.96,.96,.95],okc=[.36,.76,.54],cur=[.357,.608,1],curG=[.36,.76,.54],
     F=0,E=0,X=0,FO=0,TK=0,P=0,pStart=0,mx=0,my=0,tmx=0,tmy=0,fok=false,ema=.016,kadrov=0;
 function ramka(){var b=cv.getBoundingClientRect();CW=Math.max(1,b.width);CH=Math.max(1,b.height);CL=b.left;CT=b.top}
 function puls(){pStart=performance.now();gryaz=true}
-function cvet(name,def){var v=getComputedStyle(document.documentElement).getPropertyValue(name).trim(),m=v.match(/^#([0-9a-f]{6})$/i);if(!m)return def;var n=parseInt(m[1],16);return[(n>>16&255)/255,(n>>8&255)/255,(n&255)/255]}
-function tema(){var b=cvet('--bg',[.07,.07,.07]);dark=(b[0]*.3+b[1]*.59+b[2]*.11)<.5;accent=cvet('--accent',accent);warn=cvet('--warn',warn);ink=cvet('--ink',ink);okc=cvet('--ok',okc);gryaz=true;fonGr=true}
+/* токены — с холста (окно может задать свои), иначе с корня. На страницах, где дизайн-система подключена только к шапке и подвалу
+   (Разборы, отчёт, кабинет…), у корня в светлой теме токенов нет. Светлый фон сцены — от --bg (тёплая бумага), шарики — латунь и синий палитры 14.11 — окно поиска рисуется запасными цветами светлой темы (--bg #F5F1E6,
+   --ink #0D2247, --accent #12305F), и сцена берёт те же: раньше тут стояла тёмная по умолчанию — тёмный фон под тёмно-синим заголовком */
+function tok(name){var v=getComputedStyle(cv).getPropertyValue(name).trim();return v||getComputedStyle(document.documentElement).getPropertyValue(name).trim()}
+function cvet(name,def){var m=tok(name).match(/^#([0-9a-f]{6})$/i);if(!m)return def;var n=parseInt(m[1],16);return[(n>>16&255)/255,(n>>8&255)/255,(n&255)/255]}
+function tema(){var est=!!cvet('--bg',null),b=cvet('--bg',[.961,.945,.902]);bgc=b;dark=(b[0]*.3+b[1]*.59+b[2]*.11)<.5;
+  accent=cvet('--accent',est?accent:[.071,.188,.373]);warn=cvet('--warn',warn);ink=cvet('--ink',est?ink:[.051,.133,.278]);okc=cvet('--ok',okc);gryaz=true;fonGr=true}
 
 var VS='attribute vec2 a;void main(){gl_Position=vec4(a,0.,1.);}';
 /* общее: шум, поворот, радуга тонкой плёнки, студийный свет для отражений (софтбокс сверху, тёплая полоса слева, холодная справа) */
@@ -51,13 +56,13 @@ float und=pow(max(dot(r,normalize(vec3(.05,-.8,.6))),0.),4.);vec3 c;
 if(uD>.5){c=mix(vec3(.022,.028,.050),vec3(.105,.135,.230),smoothstep(-.7,.9,r.y));
 c+=top*vec3(2.3,2.35,2.5)+lft*vec3(1.5,1.0,.62)+rgt*vec3(.55,.85,1.6)+uC*und*.8;
 c+=vec3(.5,.3,1.)*pow(max(dot(r,normalize(vec3(-.55,-.55,.6))),0.),6.)*.3;}
-else{c=mix(vec3(.34,.35,.40),vec3(.97,.975,.99),smoothstep(-.55,.55,r.y));
+else{c=mix(vec3(.36,.34,.31),vec3(.99,.975,.945),smoothstep(-.55,.55,r.y));
 c*=1.-.62*sbox(r,normalize(vec3(.70,.25,.66)),vec2(.10,.9));
 c+=top*vec3(1.9)+lft*vec3(1.0,.78,.58)*.9+rgt*vec3(.6,.8,1.)*.8+uC*und*.45;}
 return c;}`;
 /* фон: линия горизонта проходит за строкой поиска — выше «небо» (туманность, звёзды, лучи), ниже «пол» (точки уходят в перспективу);
    боке и стеклянные шарики на разной глубине; свет от знака падает на строку */
-var FS_BG=LIB+`uniform vec2 uO,uBx,uBs;uniform float uF,uP,uS,uFo,uQ,uE;
+var FS_BG=LIB+`uniform vec3 uB;uniform vec2 uO,uBx,uBs;uniform float uF,uP,uS,uFo,uQ,uE;
 float HZ;
 float ns(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h21(i),h21(i+vec2(1.,0.)),f.x),mix(h21(i+vec2(0.,1.)),h21(i+vec2(1.,1.)),f.x),f.y);}
 float fbm(vec2 p){float a=.5,s=0.;for(int i=0;i<4;i++){s+=a*ns(p);p=p*2.03+7.1;a*=.5;}return s;}
@@ -75,13 +80,13 @@ fl+=hc*.14*exp(y*9.)*exp(-ax*ax*1.2);
 c=mix(fl,sky,smoothstep(-.004,.004,y));
 c+=vec3(.55,.70,1.)*.11*exp(-abs(y)*170.)*exp(-ax*ax*.7);
 }else{
-vec3 sky=mix(vec3(.945,.955,.975),vec3(.986,.985,.977),smoothstep(0.,.7,y));
+vec3 sky=mix(mix(uB,vec3(1.),.30),uB,smoothstep(0.,.7,y));
 vec2 w=p*1.05+vec2(uT*.008,0.)+uM*.015;float n=fbm(w+fbm(w*1.7+3.1)*.5);
 sky=mix(sky,mix(vec3(1.),uC,.62),.36*smoothstep(.42,.84,n));
 sky=mix(sky,vec3(1.,.84,.72),.34*smoothstep(.50,.90,fbm(w*.9-7.)));
-sky=mix(sky,vec3(.84,.80,1.),.32*smoothstep(.50,.90,fbm(w*1.15+17.)));
-sky=mix(sky,vec3(.80,.95,.90),.22*smoothstep(.55,.92,fbm(w*.8+31.)));
-vec3 fl=mix(vec3(.915,.922,.942),vec3(.970,.969,.962),smoothstep(0.,.45,-y));
+sky=mix(sky,vec3(.93,.85,.66),.26*smoothstep(.50,.90,fbm(w*1.15+17.)));
+sky=mix(sky,vec3(.86,.89,.94),.18*smoothstep(.55,.92,fbm(w*.8+31.)));
+vec3 fl=mix(uB*.955,uB,smoothstep(0.,.45,-y));
 fl=mix(fl,mix(vec3(1.),uC,.5),.10*exp(y*6.)*exp(-ax*ax));
 c=mix(fl,sky,smoothstep(-.004,.004,y));
 c+=vec3(.045)*exp(-abs(y)*150.)*exp(-ax*ax*.6);
@@ -91,7 +96,7 @@ return c;}
 void marb(inout vec3 col,vec2 p,vec2 c,float r,vec3 tint,float blur,float ph){
 c.y+=.012*sin(uT*.45+ph);c+=uM*(.02+.03*blur);vec2 dl=p-c;float d=length(dl);
 if(uD>.5){col+=tint*.05*exp(-d*d/(r*r)*.55);}
-else{vec2 sd=(dl-vec2(.35,-.95)*r)*vec2(1.,1.9);col=mix(col,vec3(.16,.17,.24),.20*exp(-dot(sd,sd)/(r*r)*1.1));
+else{vec2 sd=(dl-vec2(.35,-.95)*r)*vec2(1.,1.9);col=mix(col,vec3(.22,.19,.14),.20*exp(-dot(sd,sd)/(r*r)*1.1));
 vec2 cs=(dl-vec2(.22,-.80)*r)*vec2(1.,2.2);col+=mix(tint,vec3(1.),.4)*.20*exp(-dot(cs,cs)/(r*r)*9.);}
 float e=mix(.035,.30,blur)*r+1.5/uR.y;float a=smoothstep(r,r-e,d);if(a<=0.)return;
 vec2 qn=dl/r;float z=sqrt(max(1.-dot(qn,qn),0.));vec3 n=vec3(qn,z);vec3 rd=vec3(0.,0.,-1.);
@@ -127,8 +132,8 @@ if(uD>.5)col+=gc*glow;else{vec2 sq=(q-vec2(.10,-.24))*vec2(1.,1.25);col=mix(col,
 if(uP>.001&&uP<1.){float w=smoothstep(.10,0.,abs(dq-uP*2.4))*(1.-uP);vec3 wc=irid(uP*.8+dq*.3)*.5+uC*.6;if(uD>.5)col+=wc*w*.55;else col=mix(col,uC,w*.4);}}
 if(uQ>.5){vec2 A=vec2(asp*.5,1.);
 marb(col,p,vec2(-.90,.33)*A,.058,uC,0.,1.);
-marb(col,p,vec2(.86,.30)*A,.040,vec3(.62,.45,1.),0.,2.3);
-marb(col,p,vec2(-.57,-.37)*A,.034,vec3(.35,.85,.80),0.,4.1);
+marb(col,p,vec2(.86,.30)*A,.040,vec3(.85,.70,.35),0.,2.3);
+marb(col,p,vec2(-.57,-.37)*A,.034,vec3(.30,.45,.80),0.,4.1);
 marb(col,p,vec2(.94,-.24)*A,.090,vec3(.92,.96,1.),1.,5.2);
 marb(col,p,vec2(-.97,-.27)*A,.075,vec3(1.,.72,.50),1.,.4);
 marb(col,p,vec2(.60,-.41)*A,.028,uC,0.,3.3);}
@@ -163,23 +168,32 @@ float al=hit>.5?1.:smoothstep(1.7/uS,0.,md);
 if(al>.004){if(hit<.5)t=tm;vec3 p=ro+rd*t;vec2 mm=map(p);vec3 n=nrm(p);vec3 c=clamp(surf(p,rd,n,mm.y,px),0.,4.);c=c/(1.+max(c-1.,0.)*.6);
 o=o*(1.-al)+vec4(c*al,al);}}
 vec4 ov=over(q);o.rgb+=ov.rgb;gl_FragColor=vec4(clamp(o.rgb,0.,1.),clamp(o.a,0.,1.))*uAl;}`;
-/* знак: кольцо --ink (хром в тёмной теме, графитовая керамика в светлой), кольцо --accent (сапфировое стекло), между ними — линза с просветлением */
+/* знак «лупа-галочка» (logo-v3, выбор владельца 14.11): футляр — короткое плечо с шарниром, --ink (хром в тёмной теме, керамика
+   в светлой); линза — длинное плечо и кольцо, --accent (латунь в тёмной, эмаль в светлой), в кольце — стекло с просветлением.
+   Окно открылось — линза раскрывается из футляра вокруг шарнира (как знак в шапке); ищем — линза чуть «водит»; точный ответ —
+   замирает, в стекле вспыхивает свет. Координаты — из пути знака в шапке (viewBox 120): шарнир (41,94), плечо до (20,71),
+   ручка до (66,63), кольцо (83,43) R 29/19; масштаб 1/52, центр (61,60). */
 var FS_MARK=OBJ+`void cam(inout vec3 ro,inout vec3 rd){float tx=uM.x*.42+.18*sin(uT*.23),ty=.14+uM.y*.16+.04*cos(uT*.27);ro.yz*=rot(ty);rd.yz*=rot(ty);ro.xz*=rot(tx);rd.xz*=rot(tx);}
-vec2 map(vec3 p){float d0=mix(.40,.33,uF);float tl=mix(.52,0.,uF)+.05*sin(uT*.7);
-vec3 a=p-vec3(-d0,0.,0.);a.xz*=rot(tl);vec3 b=p-vec3(d0,0.,0.);b.xz*=rot(-tl);
-float da=band(a,.60,vec2(.078,.088),.046),db=band(b,.60,vec2(.078,.088),.046);
-float ia=length(p.xy-vec2(-d0,0.))-.530,ib=length(p.xy-vec2(d0,0.))-.530;float e=smx(ia,ib,.10);
-float th=(.014+.135*smoothstep(0.,.30,-e))*(.30+.70*uF)*(1.+.25*uK2);float dl=max(e,abs(p.z)-th)*.6;
-vec2 m=da<db?vec2(da,1.):vec2(db,3.);return m.x<dl?m:vec2(dl,2.);}
+const vec2 ZH=vec2(-.385,-.654),ZA=vec2(-.788,-.212),ZB=vec2(.099,-.066),ZC=vec2(.423,.327);
+float ugol(){float z=1.-uAl;return -1.43*z*z+(.055*sin(uT*1.1)+.025*sin(uT*2.3))*uF*(1.-uE);}
+vec2 lin(vec2 p){return ZH+rot(ugol())*(p-ZH);}
+float smn(float a,float b,float k){return -smx(-a,-b,k);}
+vec2 map(vec3 p){float dir=.085-length(p.xy-ZH);
+float f=max(min(seg(p.xy,ZH,ZA)-.231,length(p.xy-ZH)-.231),dir);float df=ext(f+.035,p.z+.072,.068-.035)-.035;
+vec2 l=lin(p.xy);float zl=p.z-.072;float r=length(l-ZC);
+float ar=max(seg(l,ZH,ZB)-.144,.085-length(l-ZH));float da=ext(ar+.03,zl,.062-.03)-.03;
+float dr=band(vec3(l-ZC,zl),.4615,vec2(.096,.082),.045);float dl=smn(da,dr,.05);
+float th=(.012+.105*smoothstep(0.,.30,.372-r))*(.30+.70*uF)*(1.+.25*uK2);float dg=max(r-.372,abs(zl)-th)*.6;
+vec2 m=df<dl?vec2(df,1.):vec2(dl,3.);return m.x<dg?m:vec2(dg,2.);}
 vec4 under(vec2 q){return vec4(0.);}
-vec4 over(vec2 q){float f=(exp(-abs(q.x)*34.)*exp(-abs(q.y)*4.5)+exp(-abs(q.y)*34.)*exp(-abs(q.x)*4.5))*.45+exp(-dot(q,q)*55.)*.5;
+vec4 over(vec2 q){vec2 c=lin(ZC)/1.21;vec2 d=q-c;float f=(exp(-abs(d.x)*34.)*exp(-abs(d.y)*4.5)+exp(-abs(d.y)*34.)*exp(-abs(d.x)*4.5))*.45+exp(-dot(d,d)*55.)*.5;
 return vec4(mix(uC,vec3(1.),.65)*f*uE*(.80+.20*sin(uT*2.1))*(uD>.5?.9:.55),0.);}
 vec3 surf(vec3 p,vec3 rd,vec3 n,float id,vec2 px){
-float nv=max(dot(n,-rd),0.),fr=pow(1.-nv,5.);vec3 rv=reflect(rd,n),rf=envl(rv);float oc=aoc(p,n),sh=shd(p+n*.004,LK),th;vec3 c;
+float nv=max(dot(n,-rd),0.),fr=pow(1.-nv,5.);vec3 rv=reflect(rd,n),rf=envl(rv);float oc=aoc(p,n),sh=shd(p+n*.004,LK),th,df=max(dot(n,LK),0.);vec3 c;
 float sp=pow(max(dot(rv,LK),0.),140.)*2.4;
 if(id<1.5){
-if(uD>.5)c=(mix(rf,vec3(dot(rf,vec3(.33))),.55)*vec3(.90,.90,.92)*(.74+.26*fr)+vec3(.26,.26,.29)*(.35+.65*max(dot(n,LK),0.)))*mix(.55,1.,sh)+irid(nv*1.1+.05)*.04*(1.-nv)+vec3(.50,.52,.58)*pow(1.-nv,2.6)*.45+sp;
-else c=uK*(.30+.70*max(dot(n,LK),0.)*sh)+rf*(.045+.955*fr)*mix(.65,1.,sh)+sp*.8;}
+if(uD>.5)c=uK*(.30+.55*df*mix(.45,1.,sh))+rf*mix(uK,vec3(1.),fr)*(.10+.80*fr)+uK*pow(1.-nv,2.6)*.22+irid(nv*1.1+.05)*.03*(1.-nv)+sp*.9;
+else c=uK*(.30+.70*df*sh)+rf*(.045+.955*fr)*mix(.65,1.,sh)+sp*.8;}
 else if(id<2.5){
 vec3 g=glass(p,rd,n,px,mix(vec3(1.),uC,.10+.26*uF),1.4,1.50,.55+.55*uF,th);
 vec3 body=uD>.5?g*(1.25+.95*uF)+uC*(.05+.20*uF):mix(g,uC,.06+.20*uF)+mix(uC,vec3(1.),.7)*pow(nv,5.)*(.08+.12*uF);
@@ -187,11 +201,8 @@ body*=.88+.24*max(dot(n,normalize(vec3(-.45,.6,.65))),0.);
 vec3 coat=rf*mix(vec3(1.),irid(nv*.9+.58),.55);
 c=mix(body,coat,.035+.965*fr)+irid(fr*2.+.15)*pow(1.-nv,3.)*.30+sp*.5+uC*uK2*.10;}
 else{
-vec3 g=glass(p,rd,n,px,mix(uC,vec3(1.),.10),5.5,1.52,.34,th);
-float d0=mix(.40,.33,uF);vec2 bl=normalize(p.xy-vec2(d0,0.)+1e-4);float kau=pow(max(dot(bl,vec2(.50,-.86)),0.),3.)+.5*pow(max(dot(bl,vec2(-.80,.60)),0.),6.);
-vec3 body=g*(uD>.5?1.15:.95)+uC*(uD>.5?.17+.24*nv:.20+.30*nv)+uC*pow(1.-nv,2.)*(uD>.5?.55:.10);
-body+=mix(uC,vec3(1.),.55)*kau*(uD>.5?.50:.30);body+=mix(uC,vec3(1.),.6)*pow(nv,8.)*.26;body+=irid(fr*1.6+nv*.35+uT*.02)*pow(1.-nv,2.5)*(uD>.5?.50:.36);
-c=mix(body,rf,.05+.95*fr)*mix(.72,1.,sh)+sp;}
+if(uD>.5){vec3 mt=mix(uC,vec3(1.),.18+.55*fr);c=(rf*mt*(.80+.20*fr)+uC*(.10+.22*df))*mix(.55,1.,sh)+uC*pow(1.-nv,2.6)*.30+sp*mix(uC,vec3(1.),.6);}
+else c=uC*(.34+.66*df*sh)+rf*(.05+.95*fr)*mix(.65,1.,sh)+mix(uC,vec3(1.),.5)*pow(1.-nv,3.)*.10+sp*.8;}
 return c*mix(.58,1.,oc);}`+OBJ_MAIN;
 /* лупа: хромовый обод с чёрной прокладкой, двояковыпуклое стекло (две сферы), рифлёная муфта, ручка цвета --accent с хромовым торцом */
 var FS_LUPA=OBJ+`void cam(inout vec3 ro,inout vec3 rd){}
@@ -298,7 +309,7 @@ function tekstura(t,f){gl.bindTexture(gl.TEXTURE_2D,t);gl.texImage2D(gl.TEXTURE_
   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
   gl.bindFramebuffer(gl.FRAMEBUFFER,f);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0)}
-function fonRis(z){var o=PR.bg;gl.useProgram(o.p);gl.uniform2f(L(o,'uR'),WB,HB);gl.uniform2f(L(o,'uM'),z.mx,z.my);gl.uniform1f(L(o,'uT'),z.T);gl.uniform1f(L(o,'uD'),dark?1:0);
+function fonRis(z){var o=PR.bg;gl.useProgram(o.p);gl.uniform2f(L(o,'uR'),WB,HB);gl.uniform2f(L(o,'uM'),z.mx,z.my);gl.uniform1f(L(o,'uT'),z.T);gl.uniform1f(L(o,'uD'),dark?1:0);gl.uniform3f(L(o,'uB'),bgc[0],bgc[1],bgc[2]);
   gl.uniform3f(L(o,'uC'),z.c[0],z.c[1],z.c[2]);gl.uniform3f(L(o,'uK'),ink[0],ink[1],ink[2]);gl.uniform3f(L(o,'uG'),z.g[0],z.g[1],z.g[2]);
   gl.uniform1f(L(o,'uF'),z.F);gl.uniform1f(L(o,'uE'),z.E);gl.uniform1f(L(o,'uP'),z.P);gl.uniform1f(L(o,'uK2'),z.TK);gl.uniform1i(L(o,'uB'),0);
   gl.uniform2f(L(o,'uO'),z.ox,z.oy);gl.uniform1f(L(o,'uS'),z.os);gl.uniform2f(L(o,'uBx'),z.bx,z.by);gl.uniform2f(L(o,'uBs'),z.bw,z.bh);gl.uniform1f(L(o,'uFo'),z.FO);gl.uniform1f(L(o,'uQ'),z.q);

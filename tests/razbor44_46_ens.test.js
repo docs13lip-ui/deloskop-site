@@ -16,8 +16,8 @@ const S44 = 'obespechitelnye-mery-ens-chto-vernut';
 
 test('Разборы № 44 и № 46: данные — акты, итоги, копия, кнопки, перелинковка, входящие ссылки', () => {
   const D = JSON.parse(chitat('praktika/dela.json'));
-  assert.deepStrictEqual(D.razbory.slice(3, 5).map((x) => x.slug), [S46, S44], 'новые разборы — первыми'); // razbor47-49 (13.11): № 47–49 встали первыми
-  const r46 = D.razbory[3], r44 = D.razbory[4]; // razbor47-49 (13.11): +3
+  assert.deepStrictEqual(D.razbory.slice(4, 6).map((x) => x.slug), [S46, S44], 'новые разборы — первыми'); // razbor47-49 (13.11): № 47–49 встали первыми
+  const r46 = D.razbory[4], r44 = D.razbory[5]; // razbor47-49 (13.11): +3; № 45 (14.11): +1
   assert.deepStrictEqual(r46.dela.map((d) => d.nomer + ' ' + d.data + ' ' + d.itog + ' ' + d.sverka_vid), ['№ 5-НАД26 2026-06-17 В пользу налоговой kopiya']);
   assert.deepStrictEqual(r44.dela.map((d) => d.nomer + ' ' + d.data + ' ' + d.itog + ' ' + d.sverka_vid),
     ['№ АКПИ26-138 2026-04-23 В пользу налоговой kopiya', '№ Ф01-5346/2025 2026-02-09 В пользу компании kopiya']);

@@ -1,3 +1,5 @@
+// razbor47-49 + № 45 ([Ночные запуски] 14.11 00:06: № 45 — ВС 305-ЭС26-8406, текст [Право] 13.11 claude/Право_блоки_13.11.md,
+// сверено по garant.ru doc 415140705; в «Договоры» — пара к № 47 о дивидендах).
 // razbor47-49 ([Ночные запуски] 13.11 23:06): Разборы № 47, 48, 49 — рубрика «Договоры» (тексты [Право] 13.11:
 // claude/Право_Разбор_47_ст12_152_ст46_НК_13.11.md разд. 4, …_Разбор_48_13.11.md разд. 4, …_Разбор_49_13.11.md разд. 6).
 // Суммы, даты инстанций и цитаты сверены Ночными 13.11 по полным текстам на garant.ru (doc 415073301, 415156051, 415140717)
@@ -13,11 +15,12 @@ const un = (s) => s.replace(/&nbsp;|\u00a0/g, ' ').replace(/&#8209;|‑/g, '-');
 const S47 = 'moratorij-dividendy-neustojka-vs-2026';
 const S48 = 'shtraf-za-prosrochku-zadatka-vs-2026';
 const S49 = 'vykup-uchastka-pod-domom-izhs-vs-2026';
+const S45 = 'dividendy-chistye-aktivy-nizhe-ustavnogo-vs-2026';
 
 test('Разборы № 47–49: данные — акты, итоги, копия, кнопки, перелинковка, входящие', () => {
   const D = JSON.parse(chitat('praktika/dela.json'));
-  assert.deepStrictEqual(D.razbory.slice(0, 3).map((x) => x.slug), [S47, S48, S49], 'новые — первыми');
-  const [r47, r48, r49] = D.razbory;
+  assert.deepStrictEqual(D.razbory.slice(0, 4).map((x) => x.slug), [S45, S47, S48, S49], 'новые — первыми (№ 45 вышел позже)');
+  const [, r47, r48, r49] = D.razbory;
   const st = (r) => r.dela.map((d) => d.nomer + ' ' + d.data + ' ' + d.itog + ' ' + d.itog_nov + ' ' + d.sverka_vid);
   assert.deepStrictEqual(st(r47), ['№ 307-ЭС26-4178 2026-10-26 На новое рассмотрение true kopiya']);
   assert.deepStrictEqual(st(r48), ['№ 307-ЭС26-6651 2026-11-09 На новое рассмотрение true kopiya']);
@@ -74,7 +77,7 @@ test('Разбор № 49: площади, даты, цитата; ВС сам �
 
 test('Разборы № 47–49: страницы собраны — h1, FAQPage 3, «Сверено» по копии, хаб «Договоры», без обещаний', () => {
   const hab = un(chitat('praktika/dogovory/index.html'));
-  for (const s of [S47, S48, S49]) {
+  for (const s of [S45, S47, S48, S49]) {
     const h = un(chitat('praktika/dogovory/' + s + '/index.html'));
     assert.strictEqual((h.match(/<h1[ >]/g) || []).length, 1, s);
     assert.strictEqual((h.match(/"@type": ?"Question"/g) || []).length, 3, s + ': FAQ');
@@ -84,4 +87,27 @@ test('Разборы № 47–49: страницы собраны — h1, FAQPag
     assert.ok(!/вернём деньги|(?<!не )гарантируем|₽ в месяц|тариф|нейросет/i.test(t), s + ': исход не обещаем, цен нет');
     assert.strictEqual((t.match(/<blockquote/g) || []).length, 1, s + ': цитата одна');
   }
+});
+
+test('Разбор № 45: суммы, даты, цитата — по определению; без названий сторон; перелинковка с № 47 и № 48', () => {
+  const D = JSON.parse(chitat('praktika/dela.json'));
+  const r = D.razbory[0];
+  assert.strictEqual(r.slug, S45);
+  assert.strictEqual(r.razdel, 'dogovory');
+  assert.strictEqual(r.knopka.cel, 'razbor45_check');
+  assert.deepStrictEqual(r.dela.map((d) => d.nomer + ' ' + d.data + ' ' + d.itog + ' ' + d.sverka_vid), ['№ 305-ЭС26-8406 2026-11-06 В пользу компании kopiya']);
+  assert.ok(r.dela[0].delo.includes('А41-27237/2025'));
+  assert.ok(r.title.length <= 70 && r.description.length <= 160);
+  assert.ok(Object.values(D.ssylki_s_sajta).filter((v) => Array.isArray(v) && v.includes(S45)).length >= 2, '≥ 2 входящие');
+  assert.ok(r.pohozhie.includes(S47) && r.pohozhie.includes(S48));
+  assert.ok(D.razbory.find((x) => x.slug === S47).pohozhie.includes(S45) && D.razbory.find((x) => x.slug === S48).pohozhie.includes(S45));
+  const t = un(chitat('tests/praktika/' + S45 + '.html'));
+  for (const s of ['1 929 747,32 ₽', '871 374,17 ₽', '165 млн ₽', '196 млн ₽', '2,8 млн ₽', 'абз. 5 п. 1 ст. 43', 'п. 9 ст. 42',
+    '«…принятое же вопреки упомянутому ограничению решение не влечет за собой возникновение на стороне акционера обязательственного требования о выплате дивидендов»'])
+    assert.ok(t.includes(s), s);
+  assert.strictEqual(Math.round((192974732 + 87137417) / 1e7) / 10, 2.8, '2,8 млн ₽ на кону');
+  for (const d of ['2020-07-10', '2025-04-02', '2025-10-24', '2026-02-09', '2026-06-16', '2026-11-06'])
+    assert.ok(t.includes('datetime="' + d + '"'), 'дата ' + d);
+  assert.ok(!/Ремвооружение|Центральный завод|41 ЦЗ/.test(JSON.stringify(r) + t), 'без названий сторон');
+  assert.ok(t.includes('/praktika/dogovory/' + S47 + '/'));
 });

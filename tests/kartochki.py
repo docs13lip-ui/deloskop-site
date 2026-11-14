@@ -544,6 +544,10 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         txt = ss.sobrat_stranicu(bez_tipografa(html_kartochki(k, k["_V"], sos_, kom, normy, cena)), r, podval, shapka)  # kartochki-chisla-v1: NB_T — при записи
         txt = ssylki_kroshek(txt, kg)
         txt = pochinit_vozrast(txt, den)
+        # kartochki-indeks-v2 ([Ночные-2] 14.11): ворота индексации — по готовой странице, как у опубликованных (t2 ниже).
+        # В шаблоне они считались до svodka_zel: «комментарий команды» ещё был <div class="kom …>, потом зелёные
+        # комментарии становились строками сводки — и 4 из 88 карточек n13 (нет изменения год к году) шли в индекс.
+        txt = primenit_vorota_indeksa(txt)
         k["_noindex"] = noindex_html(txt)
         izm += zapisat_k(os.path.join(koren, adres_str(k).strip("/"), "index.html"), txt)
     # v3.8b: у опубликованных — свежие «Похожие компании», остальное байт в байт

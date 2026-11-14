@@ -1,0 +1,337 @@
+<!doctype html>
+<!-- znakomstvo-v3 (14.11.2026, [Ночные запуски]): исходник PDF «Знакомство с Делоскопом» — /znakomstvo.pdf (ссылка из баннера подписи писем).
+     Было (v2, 12.10): два кольца и синий, прайс-лист с ценами «с 14 октября», дорожная карта октября, «Тариф основателя».
+     Стало: знак № 27 «лупа-галочка», палитра тёмно-синий #0D2247 + латунь #D9B45A / #B58A32, бумага #F5F1E6, слово — Unbounded 700;
+     цен нет (решение 16.10: в публичных текстах без цен; оплаты на паузе — бесплатно), цели — без дат, как на /o-proekte/.
+     Каждая цифра — с первоисточником и датой. Снимок — node tests/znakomstvo/sdelat.js (Chromium, A4, шрифты сайта). -->
+<html lang="ru"><head><meta charset="utf-8">
+<title>Знакомство с Делоскопом</title>
+<link rel="stylesheet" href="/css/fonts.css">
+<style>
+@page{size:210mm 297mm;margin:0}
+:root{--navy:#0D2247;--navy2:#12305F;--brass:#D9B45A;--brass-d:#B58A32;--brass-t:#8A6A22;--paper:#F5F1E6;--line:#E3DDCD;--ink:#0D2247;--ink2:#3A4868;--ink3:#5B6783;--mute:#A7B2CB}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:Onest,sans-serif;-webkit-font-smoothing:antialiased;font-feature-settings:"kern","lnum";color:var(--ink);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.p{width:210mm;height:297mm;position:relative;overflow:hidden;page-break-after:always;break-after:page;background:#fff;padding:22mm 20mm 20mm}
+.p:last-child{page-break-after:auto;break-after:auto}
+.p.paper{background:var(--paper)}
+.p.dark{background:var(--navy);color:var(--paper)}
+.zn{display:block;flex:none}
+.sl{font:700 1em/1 "Unbounded",Onest,sans-serif;letter-spacing:-.015em;white-space:nowrap}
+.ey{font-size:9pt;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--brass-t)}
+.dark .ey{color:var(--brass)}
+h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.02em}
+h2{font-size:25pt;line-height:1.12;margin-top:5mm;max-width:155mm}
+.lead{font-size:12.5pt;line-height:1.45;color:var(--ink2);margin:5mm 0 0;max-width:150mm}
+.dark .lead{color:var(--mute)}
+p{margin:0}
+.ft{position:absolute;left:20mm;right:20mm;bottom:11mm;display:flex;justify-content:space-between;align-items:center;font-size:8pt;color:var(--ink3)}
+.ft .b{display:flex;align-items:center;gap:2mm}
+.ft svg{width:5mm;height:5mm}
+.dark .ft{color:var(--mute)}
+.rule{height:1.6mm;background:var(--brass);position:absolute;left:0;right:0;top:0}
+.paper .rule,.p:not(.dark) .rule{background:var(--brass-d);height:1.2mm}
+.grid{display:grid;gap:5mm}
+.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr 1fr}
+.card{border:1px solid var(--line);border-radius:4mm;padding:5.5mm 6mm;background:#fff}
+.paper .card{background:#fff}
+.card h3{font-size:13pt;line-height:1.2}
+.card p{font-size:10pt;line-height:1.45;color:var(--ink2);margin-top:2.2mm}
+.card .k{font-size:8.5pt;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--brass-t);margin-bottom:2mm}
+.src{font-size:7.5pt;line-height:1.4;color:var(--ink3);margin-top:3mm}
+.num{font-size:34pt;font-weight:600;letter-spacing:-.03em;line-height:1;color:var(--navy)}
+.num small{font-size:16pt;font-weight:500}
+.tag{display:inline-block;font-size:8pt;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:1.2mm 2.6mm;border-radius:999px;background:var(--navy);color:var(--brass)}
+.quote{border-left:1.2mm solid var(--brass-d);padding:1mm 0 1mm 6mm;font-size:14pt;line-height:1.35;font-weight:500;max-width:150mm}
+.dark .card{background:rgba(245,241,230,.05);border-color:rgba(217,180,90,.28)}
+.dark .card p{color:var(--mute)}
+.dark .card h3{color:var(--paper)}
+ul.d{list-style:none;margin:0;padding:0}
+ul.d li{position:relative;padding-left:5mm;font-size:10pt;line-height:1.45;color:var(--ink2);margin-top:1.6mm}
+ul.d li::before{content:"";position:absolute;left:0;top:2.1mm;width:2mm;height:2mm;border-radius:50%;background:var(--brass-d)}
+.row{display:flex;gap:6mm;align-items:baseline;padding:3.4mm 0;border-top:1px solid var(--line)}
+.row:last-child{border-bottom:1px solid var(--line)}
+.row b{flex:0 0 48mm;font-size:10.5pt}
+.row span{font-size:10pt;line-height:1.45;color:var(--ink2)}
+
+/* обложка */
+#c1 .glow{position:absolute;right:-60mm;top:-70mm;width:240mm;height:240mm;border-radius:50%;background:rgba(217,180,90,.05);box-shadow:0 0 0 22mm rgba(217,180,90,.03),0 0 0 44mm rgba(217,180,90,.02)}
+#c1 .logo{display:flex;align-items:center;gap:4.5mm;font-size:17pt;color:var(--paper)}
+#c1 .logo svg{width:15mm;height:15mm}
+#c1 .big{position:absolute;right:12mm;top:30mm;width:104mm;height:104mm}
+#c1 h1{position:absolute;left:20mm;top:150mm;font-size:44pt;line-height:1.04;letter-spacing:-.035em;max-width:150mm}
+#c1 h1 em{font-style:normal;color:var(--brass)}
+#c1 .lead{position:absolute;left:20mm;top:222mm;font-size:13.5pt;max-width:130mm;color:#C9D1E3}
+#c1 .ey{position:absolute;left:20mm;top:138mm}
+#c1 .ft{bottom:14mm;font-size:9.5pt;color:var(--brass)}
+
+/* шкала Индекса */
+.scale{display:flex;height:11mm;border-radius:999px;overflow:hidden;margin-top:8mm}
+.scale i{display:block;height:100%}
+.scale-l{display:flex;justify-content:space-between;font-size:8.5pt;color:var(--ink3);margin-top:2mm}
+.lvl{display:grid;grid-template-columns:18mm 1fr;gap:2mm 5mm;margin-top:7mm;font-size:10.5pt;line-height:1.4}
+.lvl b{font-variant-numeric:tabular-nums}
+.dot{display:inline-block;width:3mm;height:3mm;border-radius:50%;margin-right:2mm;vertical-align:-.2mm}
+
+/* пример отчёта */
+.rep{border-radius:4mm;background:var(--navy);color:var(--paper);padding:6mm}
+.rep .h{display:flex;justify-content:space-between;align-items:flex-start}
+.rep .n{font-size:30pt;font-weight:600;color:var(--brass);line-height:1}
+.rep .t{font-size:8pt;letter-spacing:.1em;text-transform:uppercase;color:var(--brass)}
+.rep .co{font-size:13pt;font-weight:600;margin-top:1.5mm}
+.rep .in{font-size:9pt;color:var(--mute);margin-top:1mm}
+.rep .f{display:flex;justify-content:space-between;gap:4mm;border-top:1px solid rgba(217,180,90,.25);padding:2.6mm 0;font-size:9.5pt}
+.rep .f span:last-child{color:var(--mute);text-align:right}
+.rep .v{margin-top:3mm;background:rgba(217,180,90,.12);border-radius:3mm;padding:3.5mm 4mm;font-size:10pt;line-height:1.4}
+.steps{display:grid;grid-template-columns:1fr;gap:8mm}
+.st{display:grid;grid-template-columns:9mm 1fr;gap:3mm}
+.st .c{width:8mm;height:8mm;border-radius:50%;background:var(--navy);color:var(--brass);display:flex;align-items:center;justify-content:center;font-size:10pt;font-weight:600}
+.st h3{font-size:13pt}
+.st p{font-size:10.5pt;line-height:1.45;color:var(--ink2);margin-top:1.5mm}
+
+/* горизонты */
+.hz{border-top:1.2mm solid var(--brass-d);padding-top:4mm}
+.hz .k{font-size:8.5pt;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--brass-t)}
+.hz h3{font-size:14pt;margin-top:2mm}
+.hz p{font-size:10pt;line-height:1.45;color:var(--ink2);margin-top:2mm}
+
+.pulse{display:grid;grid-template-columns:repeat(4,1fr);gap:4mm;margin-top:7mm}
+.pulse div{background:#fff;border:1px solid var(--line);border-radius:4mm;padding:5mm}
+.pulse b{display:block;font-size:24pt;font-weight:600;letter-spacing:-.02em;color:var(--navy)}
+.pulse span{display:block;font-size:9pt;line-height:1.35;color:var(--ink3);margin-top:1.5mm}
+
+.contact .row b{flex-basis:32mm}
+.legal{position:absolute;left:20mm;right:20mm;bottom:22mm;font-size:7.8pt;line-height:1.45;color:var(--mute)}
+</style></head><body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<path id="zA" d="M49.86 85.91A12 12 0 0 1 32.14 102.09L11.14 79.09A12 12 0 0 1 28.86 62.91ZM29 94a12 12 0 1 1 24 0a12 12 0 1 1 -24 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0Z"/>
+<path id="zB" d="M46.79 98.77A7.5 7.5 0 0 1 35.21 89.23L60.36 58.69A7.5 7.5 0 0 1 71.94 68.22ZM54 43a29 29 0 1 1 58 0a29 29 0 1 1 -58 0ZM64 43a19 19 0 1 0 38 0a19 19 0 1 0 -38 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0Z"/>
+<symbol id="zn-c" viewBox="0 0 120 120"><use href="#zA" fill="#0D2247"/><use href="#zB" fill="#B58A32"/></symbol>
+<symbol id="zn-d" viewBox="0 0 120 120"><use href="#zA" fill="#D9B45A"/><use href="#zB" fill="#D9B45A"/></symbol>
+</defs></svg>
+
+<!-- 1. Обложка -->
+<section class="p dark" id="c1">
+  <div class="glow"></div><div class="rule"></div>
+  <div class="logo"><svg class="zn" viewBox="0 0 120 120"><use href="#zA" fill="#D9B45A"/><use href="#zB" fill="#D9B45A"/></svg><span class="sl">Делоскоп</span></div>
+  <svg class="zn big" viewBox="0 0 120 120"><use href="#zA" fill="#12305F"/><use href="#zB" fill="#D9B45A"/></svg>
+  <div class="ey">Знакомство с проектом · ноябрь 2026</div>
+  <h1>Компания глазами банка <em>и налоговой</em></h1>
+  <p class="lead">За минуту — что видят о вашей компании и о каждом контрагенте банк и ФНС. И что сделать завтра утром.</p>
+  <div class="ft"><span>deloskop.ru</span><span>help@deloskop.ru</span></div>
+</section>
+
+<!-- 2. Идея -->
+<section class="p">
+  <div class="rule"></div>
+  <div class="ey">01 · Идея</div>
+  <h2>Две вещи, которые стоят бизнесу дороже всего</h2>
+  <p class="lead">Решения о вашем счёте и ваших вычетах принимают по данным, которых вы не видите. Делоскоп переводит эти данные на понятный язык и показывает их до решения.</p>
+  <div class="grid g2" style="margin-top:10mm">
+    <div class="card"><div class="k">Банк</div><h3>Ограничит счёт</h3><p>115-ФЗ, платформа «Знай своего клиента», наличные. Запрос документов, отказ в платеже, отключённый интернет-банк — а зарплата, налоги и поставщики ждут.</p></div>
+    <div class="card"><div class="k">Налоговая</div><h3>Снимет вычеты</h3><p>Статья 54.1 НК РФ. Поставщик оказался «технической» компанией — вычет НДС снимут, расходы пересчитают, добавят штраф и пени.</p></div>
+  </div>
+  <div style="margin-top:14mm" class="quote">Миссия — сделать бизнес в России прозрачным и спокойным. Честно, простым языком, с доказательствами.</div>
+  <div class="grid g2" style="margin-top:12mm">
+    <div><div class="ey">Большая цель</div><p class="lead" style="font-size:11pt;margin-top:2.5mm">Стать источником, которому одинаково доверяют предприниматели, бухгалтеры и банки.</p></div>
+    <div><div class="ey">Первый продукт</div><p class="lead" style="font-size:11pt;margin-top:2.5mm">Делоскоп — ядро будущей экосистемы цифровых сервисов для офиса: проверка, договоры, деньги и сроки компании в одном окне.</p></div>
+  </div>
+  <div class="ft"><span class="b"><svg viewBox="0 0 120 120"><use href="#zn-c"/></svg>Делоскоп · знакомство</span><span>2</span></div>
+</section>
+
+<!-- 3. Почему сейчас -->
+<section class="p paper">
+  <div class="rule"></div>
+  <div class="ey">02 · Почему сейчас</div>
+  <h2>Ошибка в контрагенте стала дороже</h2>
+  <p class="lead">Банки строже смотрят на операции, контрагенты дольше платят, а пени и налоги считаются от высоких ставок. Проверка перед оплатой из формальности превратилась в защиту денег.</p>
+  <div class="grid g3" style="margin-top:10mm">
+    <div class="card"><div class="num">+32,7 <small>%</small></div><p>рост жалоб в Банк России на отказы в операциях и ограничения счетов за первое полугодие 2026 года</p><div class="src">Банк России, пресс-релиз от 31.07.2026</div></div>
+    <div class="card"><div class="num">1 <small>из 4</small></div><p>около четверти счетов у малого бизнеса оплачивают с опозданием; во втором квартале 2026 года просрочек стало больше</p><div class="src">СПАРК-Интерфакс, публикация «Интерфакса» от 08.09.2026; «около четверти» — пересчёт Делоскопа</div></div>
+    <div class="card"><div class="num">22 <small>%</small></div><p>НДС с 2026 года — на столько больше теряет покупатель, если вычет по «технической» компании снимут</p><div class="src">НК РФ, ст. 164</div></div>
+  </div>
+  <p class="src" style="margin-top:4mm;font-size:8.5pt">Пени и проценты считаются от ключевой ставки Банка России — 14 % годовых (сохранена решением от 23.10.2026).</p>
+  <div class="ey" style="margin-top:12mm">Что меняется для предпринимателя</div>
+  <div class="grid g3" style="margin-top:4mm">
+    <div class="card"><h3>Данные открыты, но разбросаны</h3><p>ЕГРЮЛ, ФНС, бухотчётность, суды, приставы — семь разных сайтов, и ни на одном нет ответа «платить или нет».</p></div>
+    <div class="card"><h3>Осмотрительность нужно доказать</h3><p>Через два года налоговая спросит, как вы проверяли поставщика. Досье с датой проверки — часть ответа.</p></div>
+    <div class="card"><h3>Банк смотрит и на вас</h3><p>Щит показывает вашу компанию так, как её видят банк и налоговая, — до того, как придёт запрос.</p></div>
+  </div>
+  <div class="ft"><span class="b"><svg viewBox="0 0 120 120"><use href="#zn-c"/></svg>Делоскоп · знакомство</span><span>3</span></div>
+</section>
+
+<!-- 4. Как это работает -->
+<section class="p">
+  <div class="rule"></div>
+  <div class="ey">03 · Как это работает</div>
+  <h2>Не справочник, а советник</h2>
+  <p class="lead">Каждая проверка заканчивается ответом: можно работать или нет, и на каких условиях.</p>
+  <div style="display:grid;grid-template-columns:1fr 78mm;gap:9mm;margin-top:10mm">
+    <div class="steps">
+      <div class="st"><div class="c">1</div><div><h3>Данные</h3><p>Открытые государственные реестры: ЕГРЮЛ, открытые данные ФНС, бухгалтерская отчётность (ГИР БО), сведения Банка России. Новые источники подключаем по мере готовности — список с датами есть в методике.</p></div></div>
+      <div class="st"><div class="c">2</div><div><h3>Оценка</h3><p>Индекс Делоскопа от 1 до 99 по открытым правилам. Если данных меньше 60 %, число не показываем — честно пишем, сколько собрано.</p></div></div>
+      <div class="st"><div class="c">3</div><div><h3>Вывод</h3><p>Платить, только по факту или воздержаться. Какой аванс разумен и сколько денег на кону.</p></div></div>
+      <div class="st"><div class="c">4</div><div><h3>Слежение</h3><p>Следим за изменениями, пока вы работаете с контрагентом, и храним досье с датой проверки.</p></div></div>
+    </div>
+    <div>
+      <div class="rep">
+        <div class="h"><div><div class="t">Пример отчёта<br>Компания вымышленная</div><div class="co">ООО «Пример»</div><div class="in">ИНН 0000000000 · действующая</div></div><div class="n">78</div></div>
+        <div style="font-size:9pt;color:var(--brass);margin:2mm 0 3mm">Без серьёзных сигналов</div>
+        <div class="f"><span>Руководитель</span><span>сменился 4 мес. назад<br>ЕГРЮЛ · на дату проверки</span></div>
+        <div class="f"><span>Недостоверность</span><span>отметок нет<br>ЕГРЮЛ · на дату проверки</span></div>
+        <div class="f"><span>Долги по налогам</span><span>нет в списке ФНС<br>ФНС, открытые данные</span></div>
+        <div class="v">Можно работать, предоплата — до 1 500 000 ₽. Перед оплатой запросите решение о назначении руководителя.</div>
+      </div>
+    </div>
+  </div>
+  <div class="ft"><span class="b"><svg viewBox="0 0 120 120"><use href="#zn-c"/></svg>Делоскоп · знакомство</span><span>4</span></div>
+</section>
+
+<!-- 5. Что умеет -->
+<section class="p paper">
+  <div class="rule"></div>
+  <div class="ey">04 · Что умеет Делоскоп</div>
+  <h2>Под каждую ситуацию — свой инструмент</h2>
+  <div class="grid g2" style="margin-top:9mm;gap:4.5mm">
+    <div class="card"><div class="k">Перед оплатой</div><h3>Проверка по ИНН</h3><p>Светофор рисков и главные факты за секунды: статус, возраст, долги по налогам, отметки ФНС. У каждого факта — источник и дата.</p></div>
+    <div class="card"><div class="k">Перед сделкой</div><h3>Паспорт контрагента</h3><p>Развёрнутая проверка на дату сделки: Индекс с причинами, разумный аванс, список документов под вашу сумму, PDF с датой.</p></div>
+    <div class="card"><div class="k">Взгляд на себя</div><h3>Щит</h3><p>Ваша компания глазами банка и налоговой: на какие признаки они смотрят и что сделать до запроса по 115-ФЗ или требования инспекции.</p></div>
+    <div class="card"><div class="k">Если банк спросил</div><h3>Скорая 115-ФЗ</h3><p>Банк запросил документы или ограничил счёт — план по рабочим дням, список документов и черновик заявления.</p></div>
+    <div class="card"><div class="k">Выписка</div><h3>Кому вы платите</h3><p>Выписка из 1С — и все поставщики разом: у кого какие признаки риска и сколько денег на кону. Выписка не уходит с вашего компьютера.</p></div>
+    <div class="card"><div class="k">Наличные</div><h3>Наличные глазами банка</h3><p>Как банк видит ваши снятия и инкассацию — до того, как появятся вопросы.</p></div>
+    <div class="card"><div class="k">Счёт</div><h3>Проверь счёт</h3><p>Загрузите PDF счёта или вставьте реквизиты — за минуту скажем, можно ли платить. Файл не уходит с вашего компьютера.</p></div>
+    <div class="card"><div class="k">Для банка и партнёров</div><h3>Паспорт своей компании</h3><p>Страница о вашей компании: ссылка и QR — любой может сверить, что документ настоящий и какой он даты.</p></div>
+  </div>
+  <p class="lead" style="font-size:10.5pt;margin-top:7mm;max-width:none">Знания — открыто: разборы 115-ФЗ и налогов простыми словами, «Разборы дел» — решения судов с номером дела и датой, карточки компаний с понятным выводом, «Журнал Делоскопа».</p>
+  <div class="ft"><span class="b"><svg viewBox="0 0 120 120"><use href="#zn-c"/></svg>Делоскоп · знакомство</span><span>5</span></div>
+</section>
+
+<!-- 6. Индекс -->
+<section class="p">
+  <div class="rule"></div>
+  <div class="ey">05 · Индекс Делоскопа</div>
+  <h2>Одно число вместо сорока страниц выписки</h2>
+  <p class="lead">Индекс от 1 до 99 показывает, сколько признаков риска видно у компании в открытых данных и насколько они серьёзны. Методика открыта — каждый может проверить расчёт.</p>
+  <div class="scale"><i style="flex:29;background:#7A2E2E"></i><i style="flex:20;background:#B8743A"></i><i style="flex:20;background:#D9B45A"></i><i style="flex:30;background:#0D2247"></i></div>
+  <div class="scale-l"><span>1</span><span>30</span><span>50</span><span>70</span><span>99</span></div>
+  <div class="lvl">
+    <b><span class="dot" style="background:#0D2247"></span>70–99</b><span>Без серьёзных сигналов — работать можно на обычных условиях</span>
+    <b><span class="dot" style="background:#D9B45A"></span>50–69</b><span>Есть вопросы — запросите документы до оплаты</span>
+    <b><span class="dot" style="background:#B8743A"></span>30–49</b><span>Серьёзные сигналы — лучше оплата по факту</span>
+    <b><span class="dot" style="background:#7A2E2E"></span>1–29</b><span>Много признаков риска — подумайте, стоит ли работать</span>
+  </div>
+  <div class="grid g2" style="margin-top:10mm">
+    <div class="card"><h3>Нельзя купить</h3><p>Подписка не влияет на оценку ни одной компании, включая вашу. Индекс меняют только факты из госреестров.</p></div>
+    <div class="card"><h3>«Не проверяли» — не «не нашли»</h3><p>Источник не ответил или ещё не подключён — так и пишем. Пустое место не выдаём за чистоту.</p></div>
+  </div>
+  <div class="card" style="margin-top:5mm;border-color:var(--brass-d)"><div class="k">Проверяем себя</div><h3>Правила проверки точности опубликованы до результатов</h3><p>Сохраняем оценку на каждую дату и сверяем с тем, что стало с компанией. Слова о вероятности — только если качество разделения (AUC) не ниже 0,75 и в выборке не меньше 200 событий. Первый публичный отчёт — с удачами и промахами: deloskop.ru/tochnost/.</p></div>
+  <div class="ft"><span class="b"><svg viewBox="0 0 120 120"><use href="#zn-c"/></svg>Делоскоп · знакомство</span><span>6</span></div>
+</section>
+
+<!-- 7. Для кого -->
+<section class="p paper">
+  <div class="rule"></div>
+  <div class="ey">06 · Для кого</div>
+  <h2>Один инструмент — четыре сценария</h2>
+  <div style="margin-top:10mm">
+    <div class="row"><b>Предприниматели и малый бизнес</b><span>Проверить поставщика перед авансом, посмотреть на себя глазами банка, быстро ответить на запрос по 115-ФЗ.</span></div>
+    <div class="row"><b>Бухгалтеры и бухгалтерские фирмы</b><span>Проверка всех контрагентов клиента по выписке из 1С, досье для налоговой, слежение за ключевыми партнёрами. Условия для партнёров — deloskop.ru/partneram/.</span></div>
+    <div class="row"><b>Отделы закупок и продаж</b><span>Паспорт на дату каждой сделки, разумный аванс по выручке контрагента, слежение за списком компаний.</span></div>
+    <div class="row"><b>Банки, сервисы и площадки</b><span>В планах — Индекс и Паспорт по API: для небольших банков без своего скоринга, онлайн-бухгалтерий, факторинга и площадок, которые проверяют продавцов.</span></div>
+  </div>
+  <div class="quote" style="margin-top:14mm">Мы продаём не доступ к реестрам, а спокойствие, подтверждённое расчётом.</div>
+  <div class="card" style="margin-top:12mm;display:flex;gap:6mm;align-items:center">
+    <span class="tag">Сейчас</span>
+    <p style="margin:0;font-size:11pt;color:var(--ink)">Все проверки бесплатны. Тарифы и справочные цены — на deloskop.ru/tarify/; сами мы ничего не списываем.</p>
+  </div>
+  <div class="ft"><span class="b"><svg viewBox="0 0 120 120"><use href="#zn-c"/></svg>Делоскоп · знакомство</span><span>7</span></div>
+</section>
+
+<!-- 8. Куда мы идём -->
+<section class="p">
+  <div class="rule"></div>
+  <div class="ey">07 · Куда мы идём</div>
+  <h2>От сайта проверки — к инфраструктуре доверия</h2>
+  <p class="lead">Это цели, а не обещания: идём к ним открыто и отчитываемся в ленте «Что нового». Рейтинг становится весомым не от названия, а от проверяемой точности, истории во времени и открытой методики.</p>
+  <div class="grid g3" style="margin-top:10mm">
+    <div class="hz"><div class="k">Горизонт 1</div><h3>Лучшая проверка</h3><p>Карточка с понятным выводом для каждой действующей компании с открытыми сведениями. Паспорт на дату сделки как стандарт должной осмотрительности.</p></div>
+    <div class="hz"><div class="k">Горизонт 2</div><h3>Рабочее место</h3><p>Слежение, сроки, договоры, деньги и выписка в одном окне — для предпринимателя и его бухгалтера.</p></div>
+    <div class="hz"><div class="k">Горизонт 3</div><h3>Инфраструктура</h3><p>Индекс по API в банках, 1С и на площадках. Рейтинг, на который ссылаются, когда решают, кому доверять.</p></div>
+  </div>
+  <div class="ey" style="margin-top:13mm">Пульс проекта · на 14 ноября 2026</div>
+  <div class="pulse">
+    <div><b>595</b><span>обновлений в открытой ленте с 25 сентября 2026</span></div>
+    <div><b>253</b><span>карточки компаний — у каждой свой вывод</span></div>
+    <div><b>42</b><span>разбора судебных и налоговых дел</span></div>
+    <div><b>27</b><span>статей о 115-ФЗ и налогах простыми словами</span></div>
+  </div>
+  <p class="src">Источник — deloskop.ru/o-proekte/ и лента deloskop.ru/obnovleniya/.</p>
+  <div class="ft"><span class="b"><svg viewBox="0 0 120 120"><use href="#zn-c"/></svg>Делоскоп · знакомство</span><span>8</span></div>
+</section>
+
+<!-- 9. Как мы работаем -->
+<section class="p paper">
+  <div class="rule"></div>
+  <div class="ey">08 · Как мы работаем</div>
+  <h2>Шесть правил команды</h2>
+  <div class="grid g3" style="margin-top:9mm;gap:4.5mm">
+    <div class="card"><div class="k">01</div><h3>По-человечески</h3><p>Вывод за пять секунд. Термины переводим.</p></div>
+    <div class="card"><div class="k">02</div><h3>Честно</h3><p>У вывода — источник и дата. Исход не обещаем.</p></div>
+    <div class="card"><div class="k">03</div><h3>В рублях</h3><p>Сколько стоит риск и какой аванс разумен.</p></div>
+    <div class="card"><div class="k">04</div><h3>Законно</h3><p>Только открытые данные. Хранение в России, по 152-ФЗ.</p></div>
+    <div class="card"><div class="k">05</div><h3>Своим путём</h3><p>Свои тексты, расчёты и разборы.</p></div>
+    <div class="card"><div class="k">06</div><h3>Растём вместе</h3><p>Продукт умнеет с каждой проверкой.</p></div>
+  </div>
+  <div class="ey" style="margin-top:12mm">Команда Делоскопа</div>
+  <p class="lead" style="font-size:10.5pt;margin-top:2mm">Имена на витрину не выносим: за проект отвечает команда целиком, каждый разбор и методика подписаны ролью.</p>
+  <div style="margin-top:4mm">
+    <div class="row"><b>Данные и Индекс</b><span>реестры, свежесть сведений, методика и точность</span></div>
+    <div class="row"><b>Юрист по 115-ФЗ</b><span>банки, ограничения счетов, ЗСК, наличные</span></div>
+    <div class="row"><b>Налоговый юрист</b><span>ст. 54.1 НК РФ, НДС, судебная практика</span></div>
+    <div class="row"><b>Дизайн и интерфейс</b><span>понятность каждого экрана на телефоне и компьютере</span></div>
+    <div class="row"><b>Редакция</b><span>статьи, разборы дел, журнал, лента обновлений</span></div>
+  </div>
+  <div class="ft"><span class="b"><svg viewBox="0 0 120 120"><use href="#zn-c"/></svg>Делоскоп · знакомство</span><span>9</span></div>
+</section>
+
+<!-- 10. Начните -->
+<section class="p dark">
+  <div class="rule"></div>
+  <div class="ey">09 · Контакты</div>
+  <h2 style="color:var(--paper)">Начните с бесплатной проверки</h2>
+  <div class="grid g3" style="margin-top:10mm">
+    <div class="card"><div class="k" style="color:var(--brass)">1</div><h3>Проверьте поставщика</h3><p>Введите ИНН на deloskop.ru — без регистрации.</p></div>
+    <div class="card"><div class="k" style="color:var(--brass)">2</div><h3>Посмотрите на себя</h3><p>Свой ИНН в «Щите» — как вас видят банк и ФНС.</p></div>
+    <div class="card"><div class="k" style="color:var(--brass)">3</div><h3>Поставьте на слежение</h3><p>Главных партнёров — в кабинет; изменения придут письмом.</p></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:6mm;margin-top:16mm">
+    <svg class="zn" style="width:30mm;height:30mm" viewBox="0 0 120 120"><use href="#zA" fill="#D9B45A"/><use href="#zB" fill="#D9B45A"/></svg>
+    <span class="sl" style="font-size:30pt;color:var(--paper)">Делоскоп</span>
+  </div>
+  <div style="margin-top:9mm;display:grid;grid-template-columns:32mm 1fr;gap:3mm 6mm;font-size:11pt;line-height:1.4">
+    <span style="color:var(--brass)">Сайт</span><span>deloskop.ru · Делоскоп.рф</span>
+    <span style="color:var(--brass)">Почта</span><span>help@deloskop.ru — вопросы, сотрудничество, отзывы</span>
+    <span style="color:var(--brass)">ВКонтакте</span><span>vk.com/deloskop_ru</span>
+    <span style="color:var(--brass)">Документы</span><span>оферта, политика ПДн и реквизиты — в подвале сайта</span>
+  </div>
+  <p class="legal">Материалы носят информационный характер и не заменяют консультацию юриста. Индекс Делоскопа — оценка по открытым данным, а не решение банка или налогового органа и не кредитный рейтинг. Цели — ориентиры команды на 14 ноября 2026 года. Цифры — с источником и датой на страницах, где они приведены.</p>
+  <div class="ft"><span>© 2026 Делоскоп</span><span>10</span></div>
+</section>
+
+<script>
+// Типограф: неразрывный пробел после коротких слов и перед тире, между числом и единицей.
+(function(){
+  var short=/(?<=^|[\s(«])([А-Яа-яЁё]{1,2}|[0-9]{1,3}|ст\.|п\.|№) +/g;
+  var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,null);
+  var n;while((n=w.nextNode())){
+    if(n.parentNode&&/^(SCRIPT|STYLE)$/.test(n.parentNode.nodeName))continue;
+    var t=n.nodeValue;
+    t=t.replace(short,'$1\u00A0');
+    t=t.replace(/\s+—/g,' —').replace(/(\d)\s+(%|₽|млн|млрд|мес\.)/g,'$1 $2');
+    n.nodeValue=t;
+  }
+})();
+</script>
+</body></html>

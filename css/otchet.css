@@ -1,6 +1,6 @@
 /* Делоскоп — лист «Отчёт о проверке» на всю ширину (js/otchet.js; макет документ команды, разд. 2.1–2.3).
    Токены v1.1 — дополнение к ds.css; названия совпадают с макетом. */
-:root{--r-doc:16px;--line-2:#D9D9D4;--ok-dot:#16723F;--warn-dot:#B86E00;--bad-dot:#B3261E;--na:#A1A1A6}
+:root{--r-doc:16px;--line-2:#D8D1BE;--ok-dot:#16723F;--warn-dot:#B86E00;--bad-dot:#B3261E;--na:#9CA8C2}
 .n{font-variant-numeric:tabular-nums}
 
 /* режим отчёта: герой схлопывается в строку с полем, отчёт — лист 1 200 px */
@@ -11,44 +11,44 @@
 .rezhim-otcheta .hero-text .check{flex:1 1 360px;max-width:560px;padding:6px}
 .rezhim-otcheta .hero-text .check input,.rezhim-otcheta .hero-text .check button{min-height:44px;font-size:17px}
 .rezhim-otcheta .hero-text .note{flex:1 1 200px;min-height:0;font-size:15px}
-@media (min-width:901px){.rezhim-otcheta .hero-text{position:sticky;top:68px;z-index:9;padding:10px 0;background:rgba(245,245,242,.92);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}}
+@media (min-width:901px){.rezhim-otcheta .hero-text{position:sticky;top:68px;z-index:9;padding:10px 0;background:rgba(245,241,230,.92);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}}
 
 /* лист */
-.report.ot{display:block;padding:0;gap:0;border-radius:var(--r-doc);background:var(--card,#fff);box-shadow:0 1px 2px rgba(29,29,31,.04),0 12px 32px rgba(29,29,31,.06)}
+.report.ot{display:block;padding:0;gap:0;border-radius:var(--r-doc);background:var(--card,#fff);box-shadow:0 1px 2px rgba(13,34,71,.04),0 12px 32px rgba(13,34,71,.06)}
 .ot-hd,.ot-vd,.ot-body{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:24px;padding:32px 40px 24px}
-.ot-hd{border-bottom:1px solid var(--line,#E6E6E1)}
+.ot-hd{border-bottom:1px solid var(--line,#E3DDCD)}
 .ot-who{grid-column:1/8;min-width:0}.ot-rq{grid-column:8/13;min-width:0}
 .ot-who .tag{font-size:13px}
 .ot-who .company{font-size:32px;line-height:1.15;letter-spacing:-.02em;margin-top:6px}
-.ot-who .sub{font-size:15px;color:var(--ink2,#48484C);font-variant-numeric:tabular-nums}
+.ot-who .sub{font-size:15px;color:var(--ink2,#3A4868);font-variant-numeric:tabular-nums}
 .ot-rq .rkv{margin:0}
 
 /* B — полоса вывода */
 .ot-vd{padding:28px 40px;background:var(--warn-bg,#FFF4E0);-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .ot-vd--ok{background:var(--ok-bg,#E8F5EE)}.ot-vd--bad{background:var(--bad-bg,#FDECEA)}
 .ot-ix{grid-column:1/4;border-right:1px solid rgba(0,0,0,.08);padding-right:24px;display:flex;flex-direction:column;gap:8px;min-width:0}
-.ot-ix__lab{font-size:13px;color:var(--ink2,#48484C)}
+.ot-ix__lab{font-size:13px;color:var(--ink2,#3A4868)}
 .ot-ix__big{font-size:64px;line-height:1;font-weight:600;letter-spacing:-.03em}
-.ot-ix__big small{font-size:20px;color:var(--muted,#66666B);font-weight:500}
+.ot-ix__big small{font-size:20px;color:var(--muted,#5B6783);font-weight:500}
 .ot-ix__sh{position:relative;height:6px;border-radius:3px;margin:4px 0;background:linear-gradient(90deg,var(--bad-dot) 0 29%,var(--warn-dot) 29% 49%,#C9A227 49% 69%,var(--ok-dot) 69%)}
-.ot-ix__sh i{position:absolute;top:-5px;width:2px;height:16px;margin-left:-1px;background:var(--ink,#1D1D1F)}
+.ot-ix__sh i{position:absolute;top:-5px;width:2px;height:16px;margin-left:-1px;background:var(--ink,#0D2247)}
 .ot-ix__ne{font-size:24px;line-height:1.2;font-weight:600;letter-spacing:-.01em}
-.ot-ix__pl{font-size:15px;color:var(--ink2,#48484C)}
+.ot-ix__pl{font-size:15px;color:var(--ink2,#3A4868)}
 .ot-ix__lv{font-size:15px;font-weight:600}
-.ot-ix__pod{font-size:13px;line-height:1.45;color:var(--muted,#66666B);margin-top:4px;font-variant-numeric:tabular-nums}
+.ot-ix__pod{font-size:13px;line-height:1.45;color:var(--muted,#5B6783);margin-top:4px;font-variant-numeric:tabular-nums}
 /* indeks-v-otchete-v1: число по открытой методике в браузере, раскладка «Почему N» */
 .ot-ix__lv--ok{color:var(--ok,#16723F)}.ot-ix__lv--warn{color:var(--warn,#9A5B00)}.ot-ix__lv--bad{color:var(--bad,#B3261E)}
-.ot-ix__po{font-size:13px;line-height:1.4;color:var(--muted,#66666B)}
+.ot-ix__po{font-size:13px;line-height:1.4;color:var(--muted,#5B6783)}
 .ot-ix__pch{font-size:13px;line-height:1.4}
-.ot-ix__pch summary{cursor:pointer;color:var(--accent,#0B63E5);font-weight:500;list-style:none}
+.ot-ix__pch summary{cursor:pointer;color:var(--accent,#12305F);font-weight:500;list-style:none}
 .ot-ix__pch summary::-webkit-details-marker{display:none}
 .ot-ix__pch summary::after{content:" ›";display:inline-block;transition:transform var(--fast,160ms)}
 .ot-ix__pch[open] summary::after{transform:rotate(90deg)}
 .ot-ix__rs{list-style:none;margin:8px 0 0;padding:0}
 .ot-ix__rs li{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-bottom:1px solid rgba(0,0,0,.06)}
 .ot-ix__rs b{font-weight:600;white-space:nowrap}.ot-ix__rs .m b{color:var(--bad,#B3261E)}.ot-ix__rs .p b{color:var(--ok,#16723F)}
-.ot-ix__rs .n span{color:var(--muted,#66666B)}.ot-ix__rs .i{border-bottom:0;font-weight:600}
-.ot-ix__ne-uch{margin:8px 0 0;color:var(--muted,#66666B);font-size:13px}
+.ot-ix__rs .n span{color:var(--muted,#5B6783)}.ot-ix__rs .i{border-bottom:0;font-weight:600}
+.ot-ix__ne-uch{margin:8px 0 0;color:var(--muted,#5B6783);font-size:13px}
 .ot-main>.din{background:transparent;border-radius:0;padding:24px 0}
 .ot-ix .pill{align-self:flex-start;background:rgba(255,255,255,.7)}
 /* «Без серьёзных сигналов» / «Есть серьёзные сигналы» длиннее прежних слов — в узкой колонке переносим, а не вылезаем за край (malo-pilyulya-v1) */
@@ -62,48 +62,48 @@
 .ot-vt .usl-kak{display:none}
 .ot-vt .usl-sum,.ot-vt .usl details{border-top-color:rgba(0,0,0,.08)}
 .ot-vt__h{font-size:32px;line-height:1.2;letter-spacing:-.01em;margin:0}
-.ot-vt__p{margin:0;color:var(--ink2,#48484C);font-size:17px}
+.ot-vt__p{margin:0;color:var(--ink2,#3A4868);font-size:17px}
 .ot-vt__kak{font-size:15px;align-self:flex-start}
 .ot-act{grid-column:10/13;display:flex;flex-direction:column;gap:8px;justify-content:center}
 .ot-btn{display:inline-flex;justify-content:center;align-items:center;text-align:center;font-weight:600;font-size:15px;padding:12px 16px;border-radius:10px;text-decoration:none;min-height:44px}
-.ot-btn.p{background:var(--accent,#0B63E5);color:#fff}.ot-btn.p:hover{background:var(--accent-hover,#084BB0);color:#fff}
-.ot-btn.s{background:rgba(255,255,255,.6);box-shadow:inset 0 0 0 1px var(--line-2);color:var(--ink,#1D1D1F)}.ot-btn.s:hover{box-shadow:inset 0 0 0 1px var(--accent,#0B63E5);color:var(--accent,#0B63E5)}
-.ot-lnk{display:flex;justify-content:center;align-items:center;min-height:44px;font-size:15px;color:var(--accent,#0B63E5);text-decoration:none}.ot-lnk:hover{color:var(--accent-hover,#084BB0);text-decoration:underline}/* sravnit-v1 */
+.ot-btn.p{background:var(--accent,#12305F);color:#fff}.ot-btn.p:hover{background:var(--accent-hover,#0A1F45);color:#fff}
+.ot-btn.s{background:rgba(255,255,255,.6);box-shadow:inset 0 0 0 1px var(--line-2);color:var(--ink,#0D2247)}.ot-btn.s:hover{box-shadow:inset 0 0 0 1px var(--accent,#12305F);color:var(--accent,#12305F)}
+.ot-lnk{display:flex;justify-content:center;align-items:center;min-height:44px;font-size:15px;color:var(--accent,#12305F);text-decoration:none}.ot-lnk:hover{color:var(--accent-hover,#0A1F45);text-decoration:underline}/* sravnit-v1 */
 /* sledit-v1 (13.11): форма «Следить за компанией» под главной кнопкой — почта, согласие, статус (js/sledit.js, за флагом SLEDIT) */
-.sl-f{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:10px;background:var(--surface,#fff);box-shadow:inset 0 0 0 1px var(--line,#E6E6E1);text-align:left}
-.sl-l{font-size:13px;font-weight:600;color:var(--ink-2,#48484C)}
-.sl-i{font:inherit;font-size:17px;min-height:44px;padding:10px 12px;border-radius:10px;border:1px solid var(--line,#E6E6E1);background:var(--bg,#F5F5F2);color:var(--ink,#1D1D1F);width:100%;box-sizing:border-box}
-.sl-i:focus{outline:none;border-color:var(--accent,#0B63E5);box-shadow:0 0 0 3px var(--accent-soft,#EAF1FD)}
-.sl-s{display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.4;color:var(--ink-2,#48484C);min-height:44px;cursor:pointer}
-.sl-s input{width:20px;height:20px;margin:0;flex:none;accent-color:var(--accent,#0B63E5)}
+.sl-f{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:10px;background:var(--surface,#fff);box-shadow:inset 0 0 0 1px var(--line,#E3DDCD);text-align:left}
+.sl-l{font-size:13px;font-weight:600;color:var(--ink-2,#3A4868)}
+.sl-i{font:inherit;font-size:17px;min-height:44px;padding:10px 12px;border-radius:10px;border:1px solid var(--line,#E3DDCD);background:var(--bg,#F5F1E6);color:var(--ink,#0D2247);width:100%;box-sizing:border-box}
+.sl-i:focus{outline:none;border-color:var(--accent,#12305F);box-shadow:0 0 0 3px var(--accent-soft,#ECEFF6)}
+.sl-s{display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.4;color:var(--ink-2,#3A4868);min-height:44px;cursor:pointer}
+.sl-s input{width:20px;height:20px;margin:0;flex:none;accent-color:var(--accent,#12305F)}
 .sl-b{border:0;cursor:pointer;font:inherit;font-weight:600}.sl-b:disabled{opacity:.6;cursor:default}
-.sl-p{margin:0;font-size:13px;line-height:1.4;color:var(--muted,#66666B)}
+.sl-p{margin:0;font-size:13px;line-height:1.4;color:var(--muted,#5B6783)}
 .sl-o{margin:0;font-size:15px;line-height:1.4}.sl-o:empty{display:none}.sl-o--err{color:var(--bad,#B3261E)}.sl-o--ok{color:var(--ok,#16723F)}
 /* «Паспорт в один шаг» (js/pasport-cta.js): строка под кнопкой — 13 px серым (ТЗ [команда] 02.10, разд. 1.1) */
-.pcta{margin:-2px 0 0;font-size:13px;line-height:1.4;color:var(--ink2,#48484C);text-align:center}.pcta a{color:var(--accent,#0B63E5);white-space:nowrap}
+.pcta{margin:-2px 0 0;font-size:13px;line-height:1.4;color:var(--ink2,#3A4868);text-align:center}.pcta a{color:var(--accent,#12305F);white-space:nowrap}
 /* lestnica-390-v1: подсказка «Старта» длиннее колонки действий (3 из 12) — своей строкой и с переносом */
 .pcta a[data-ssylka="start"]{display:block;white-space:normal;margin-top:2px}
 
 /* тело: основное 8 + справка 4 */
 .ot-body{gap:0 40px;padding:8px 40px 32px}
 .ot-main{grid-column:1/9;min-width:0;display:flex;flex-direction:column}
-.ot-main>*{padding:24px 0;margin:0;border-bottom:1px solid var(--line,#E6E6E1)}
+.ot-main>*{padding:24px 0;margin:0;border-bottom:1px solid var(--line,#E3DDCD)}
 .ot-main>:last-child{border-bottom:0}
 .ot-main>.izm{padding:12px 14px;margin:16px 0 0;border-bottom:0}
 .ot-side{grid-column:9/13;min-width:0;padding-top:24px}
-.ot-sc{padding:0 0 20px;border-bottom:1px solid var(--line,#E6E6E1);margin-bottom:20px}
+.ot-sc{padding:0 0 20px;border-bottom:1px solid var(--line,#E3DDCD);margin-bottom:20px}
 .ot-sc h3{font-size:15px;font-weight:600;margin:0 0 10px;letter-spacing:0}
-.ot-sc p{margin:0 0 8px;font-size:15px;color:var(--ink2,#48484C);overflow-wrap:anywhere}
+.ot-sc p{margin:0 0 8px;font-size:15px;color:var(--ink2,#3A4868);overflow-wrap:anywhere}
 .ot-sc .ot-ne{color:#8A5A00;background:#FFF6E0;border-radius:10px;padding:8px 10px}
-.ot-sc .ot-cap{font-size:13px;color:var(--muted,#66666B)}
+.ot-sc .ot-cap{font-size:13px;color:var(--muted,#5B6783)}
 .ot-side .otk{margin:0;border-top:0}
 .report.ot .shch-k{display:none}
 #ot-kak,#indeks{scroll-margin-top:140px}
 
 /* J — подвал и оговорка */
-.ot-foot{padding:16px 40px 20px;border-top:1px solid var(--line,#E6E6E1)}
+.ot-foot{padding:16px 40px 20px;border-top:1px solid var(--line,#E3DDCD)}
 .ot-foot .report-actions{gap:8px}
-.ot-disc{margin:0;padding:0 40px 28px;font-size:13px;color:var(--muted,#66666B)}
+.ot-disc{margin:0;padding:0 40px 28px;font-size:13px;color:var(--muted,#5B6783)}
 
 /* 390: одна колонка; порядок — факты → изменения → динамика → как посчитали → откуда → все данные */
 @media (max-width:860px){
@@ -117,21 +117,21 @@
  .ot-vt .usl-t,.ot-vt__h{font-size:24px}
  .ot-body{display:flex;flex-direction:column;padding-top:0}
  .ot-main,.ot-side{display:contents}
- .ot-main>*{order:1}.ot-side>.ot-sc{order:2;padding-top:20px;margin-bottom:0}.ot-side>.otk{order:3;padding-top:12px}.ot-main>.ot-gl{order:4;border-top:1px solid var(--line,#E6E6E1)}
+ .ot-main>*{order:1}.ot-side>.ot-sc{order:2;padding-top:20px;margin-bottom:0}.ot-side>.otk{order:3;padding-top:12px}.ot-main>.ot-gl{order:4;border-top:1px solid var(--line,#E3DDCD)}
 }
 
 /* главная до проверки — карточка-пример тем же листом (ТЗ [команда] 02.10, разд. 2.5 п. 8):
    шапка-документ → полоса вывода (B) в уменьшенном виде → 3 существенных факта с источником и датой */
 .report.ex{padding:0;gap:0;overflow:hidden;border-radius:var(--r-doc)}
-.ex-hd{padding:24px 28px 18px;border-bottom:1px solid var(--line,#E6E6E1)}
+.ex-hd{padding:24px 28px 18px;border-bottom:1px solid var(--line,#E3DDCD)}
 .ex-hd .company{font-size:24px;margin-top:4px}
 .ex-hd .sub{font-size:15px}
 .ex-vd{display:grid;grid-template-columns:minmax(0,9fr) minmax(0,16fr);gap:18px;padding:20px 28px;background:var(--warn-bg,#FFF4E0)}
 .ex-vd--ok{background:var(--ok-bg,#E8F5EE)}
 .ex-ix{display:flex;flex-direction:column;gap:6px;min-width:0;border-right:1px solid rgba(0,0,0,.08);padding-right:16px}
-.ex-ix__lab{font-size:13px;color:var(--ink2,#48484C)}
+.ex-ix__lab{font-size:13px;color:var(--ink2,#3A4868)}
 .ex-ix .pill{align-self:flex-start;background:rgba(255,255,255,.7);font-size:13px;padding:6px 10px;gap:6px}
-.ex-ix__pod{font-size:12px;color:var(--ink2,#48484C)}
+.ex-ix__pod{font-size:12px;color:var(--ink2,#3A4868)}
 .ex-vt{min-width:0}
 .ex-vt .usl{background:transparent;padding:0;gap:8px}
 .ex-vt .usl-t{font-size:20px;line-height:1.25}
@@ -141,10 +141,10 @@
 .ex-vt .verdict{background:transparent;padding:0}
 .ex-f{padding:16px 28px 4px}
 .ex-f__h{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px;padding-bottom:8px}
-.ex-f__h b{font-size:15px;font-weight:600}.ex-f__h span{font-size:13px;color:var(--muted,#66666B)}
+.ex-f__h b{font-size:15px;font-weight:600}.ex-f__h span{font-size:13px;color:var(--muted,#5B6783)}
 .ex-r{padding:12px 0;font-size:15px}
-.ex-r>span{display:block}.ex-r small{display:block;margin-top:2px;font-size:12px;color:var(--muted,#66666B);font-weight:400}
-.ex-pod{margin:0;padding:12px 28px 22px;font-size:13px;color:var(--muted,#66666B)}
+.ex-r>span{display:block}.ex-r small{display:block;margin-top:2px;font-size:12px;color:var(--muted,#5B6783);font-weight:400}
+.ex-pod{margin:0;padding:12px 28px 22px;font-size:13px;color:var(--muted,#5B6783)}
 @media (max-width:520px){
  .ex-hd,.ex-vd,.ex-f{padding-left:20px;padding-right:20px}.ex-pod{padding:12px 20px 20px}
  .ex-vd{grid-template-columns:minmax(0,1fr);gap:12px}
@@ -155,41 +155,41 @@
 
 /* «Ваши контрагенты» — прошлые проверки из этого браузера на месте примера (ТЗ [команда] 02.10 19:37, разд. 1; js/portfel.js) */
 .hero.pf-on .report.ex{display:none}
-.pf{background:var(--card,#fff);border-radius:var(--r-doc,16px);box-shadow:0 1px 2px rgba(29,29,31,.04),0 12px 32px rgba(29,29,31,.06);padding:24px 28px 18px;min-width:0}
+.pf{background:var(--card,#fff);border-radius:var(--r-doc,16px);box-shadow:0 1px 2px rgba(13,34,71,.04),0 12px 32px rgba(13,34,71,.06);padding:24px 28px 18px;min-width:0}
 .pf[hidden]{display:none}
 .pf__h{margin:0;font-size:24px;line-height:1.2;letter-spacing:-.01em}
-.pf__pod{margin:6px 0 0;font-size:15px;color:var(--ink2,#48484C)}
+.pf__pod{margin:6px 0 0;font-size:15px;color:var(--ink2,#3A4868)}
 .pf__sv{margin:14px 0 0;font-size:15px;line-height:1.5}
 .pf__s{white-space:nowrap}.pf__s b{font-weight:600}.pf__s--mnogo b{color:#B3261E}.pf__s--ser b{color:#C2410C}.pf__s--vopr b{color:#9A5B00}.pf__s--bez b{color:#16723F}
-.pf__nb{margin:2px 0 0;font-size:13px;color:var(--muted,#66666B)}
+.pf__nb{margin:2px 0 0;font-size:13px;color:var(--muted,#5B6783)}
 .pf__list{list-style:none;margin:14px 0 0;padding:0}
-.pf__r{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"a c" "b c";gap:2px 12px;align-items:center;padding:12px 0;border-top:1px solid var(--line,#E6E6E1);font-size:15px}
+.pf__r{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"a c" "b c";gap:2px 12px;align-items:center;padding:12px 0;border-top:1px solid var(--line,#E3DDCD);font-size:15px}
 .pf__a{grid-area:a;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;min-width:0}
 .pf__nm{font-weight:600;font-size:15px;overflow-wrap:anywhere}
-.pf__b{grid-area:b;display:flex;flex-wrap:wrap;gap:2px 12px;font-size:13px;color:var(--muted,#66666B)}
+.pf__b{grid-area:b;display:flex;flex-wrap:wrap;gap:2px 12px;font-size:13px;color:var(--muted,#5B6783)}
 .pf__inn{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}
 .pf__d--star{color:#9A5B00}
 .pf__isk{flex-basis:100%;font-size:13px;line-height:1.4;font-weight:600;color:#B3261E}
 .pf__c{grid-area:c;display:flex;align-items:center;gap:2px}
-.pf__pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:13px;font-weight:600;white-space:nowrap;background:#F0F0EC;color:var(--ink2,#48484C)}
+.pf__pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:13px;font-weight:600;white-space:nowrap;background:#F0F0EC;color:var(--ink2,#3A4868)}
 .pf__pill--bez{background:#E8F5EE;color:#16723F}.pf__pill--vopr{background:#FFF4E0;color:#9A5B00}.pf__pill--ser{background:#FDEEE4;color:#C2410C}.pf__pill--mnogo{background:#FDECEA;color:#B3261E}
-.pf button{font:inherit;cursor:pointer;border:0;background:none;color:var(--accent,#0B63E5)}
+.pf button{font:inherit;cursor:pointer;border:0;background:none;color:var(--accent,#12305F)}
 .pf__go{min-height:44px;padding:0 10px;font-size:15px;font-weight:600;border-radius:10px}
 .pf__go:hover{background:#EEF4FD}
-.pf__x{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;color:var(--muted,#66666B)!important}
-.pf__x:hover{background:#F0F0EC;color:var(--ink,#1D1D1F)!important}
-.pf button:focus-visible{outline:2px solid var(--accent,#0B63E5);outline-offset:2px}
-.pf__vse{display:block;width:100%;min-height:44px;margin-top:2px;border-top:1px solid var(--line,#E6E6E1)!important;font-size:15px;font-weight:600}
-.pf__niz{border-top:1px solid var(--line,#E6E6E1);padding-top:6px;margin-top:2px;font-size:13px}
-.pf__clr{min-height:32px;padding:0;font-size:13px!important;color:var(--muted,#66666B)!important;text-decoration:underline;text-underline-offset:2px}
-.pf__conf{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:8px 0;font-size:13px;color:var(--ink,#1D1D1F)}
+.pf__x{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;color:var(--muted,#5B6783)!important}
+.pf__x:hover{background:#F0F0EC;color:var(--ink,#0D2247)!important}
+.pf button:focus-visible{outline:2px solid var(--accent,#12305F);outline-offset:2px}
+.pf__vse{display:block;width:100%;min-height:44px;margin-top:2px;border-top:1px solid var(--line,#E3DDCD)!important;font-size:15px;font-weight:600}
+.pf__niz{border-top:1px solid var(--line,#E3DDCD);padding-top:6px;margin-top:2px;font-size:13px}
+.pf__clr{min-height:32px;padding:0;font-size:13px!important;color:var(--muted,#5B6783)!important;text-decoration:underline;text-underline-offset:2px}
+.pf__conf{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:8px 0;font-size:13px;color:var(--ink,#0D2247)}
 .pf__conf[hidden]{display:none}
 .pf__da{min-height:36px;padding:0 12px;border-radius:10px;background:#FDECEA!important;color:#B3261E!important;font-weight:600}
 .pf__net{min-height:36px;padding:0 12px;border-radius:10px;font-weight:600}
 @media (max-width:520px){
  .pf{padding:20px 20px 14px}.pf__h{font-size:24px}
  .pf__r{grid-template-areas:"a a" "i c" "d d";row-gap:0}
- .pf__b{display:contents}.pf__inn{grid-area:i;color:var(--muted,#66666B)}.pf__d{grid-area:d;font-size:13px;color:var(--muted,#66666B)}.pf__d--star{color:#9A5B00}
+ .pf__b{display:contents}.pf__inn{grid-area:i;color:var(--muted,#5B6783)}.pf__d{grid-area:d;font-size:13px;color:var(--muted,#5B6783)}.pf__d--star{color:#9A5B00}
  .pf__go{padding:0 8px}
 }
 
@@ -206,28 +206,28 @@
 
 /* «Паспорт 490 ₽ в один шаг» — лист оплаты (js/pasport-oplata.js; ТЗ [команда] 02.10, разд. 1.2):
    справа поверх отчёта, на телефоне — снизу; цена крупно, одна главная кнопка */
-dialog.po{position:fixed;inset:0 0 0 auto;width:min(440px,100vw);max-width:none;height:100dvh;max-height:none;margin:0;padding:28px 28px calc(24px + env(safe-area-inset-bottom));border:0;border-radius:var(--r-doc,16px) 0 0 var(--r-doc,16px);background:var(--surface,#fff);color:var(--ink,#1D1D1F);font:400 15px/1.5 var(--font,Onest,"Onest Zapas","Onest Zapas R",-apple-system,"Segoe UI",Roboto,Arial,sans-serif);box-shadow:var(--shadow);overflow-y:auto;overscroll-behavior:contain}
-dialog.po::backdrop{background:rgba(17,17,19,.4)}
-.po-x{position:absolute;top:12px;right:12px;width:40px;height:40px;border:0;border-radius:999px;background:transparent;font-size:24px;line-height:1;color:var(--ink2,#48484C);cursor:pointer}
-.po-x:hover{background:var(--surface-2,#EEEEEA)}
-.po-hd{padding-right:40px;border-bottom:1px solid var(--line,#E6E6E1);padding-bottom:16px}
+dialog.po{position:fixed;inset:0 0 0 auto;width:min(440px,100vw);max-width:none;height:100dvh;max-height:none;margin:0;padding:28px 28px calc(24px + env(safe-area-inset-bottom));border:0;border-radius:var(--r-doc,16px) 0 0 var(--r-doc,16px);background:var(--surface,#fff);color:var(--ink,#0D2247);font:400 15px/1.5 var(--font,Onest,"Onest Zapas","Onest Zapas R",-apple-system,"Segoe UI",Roboto,Arial,sans-serif);box-shadow:var(--shadow);overflow-y:auto;overscroll-behavior:contain}
+dialog.po::backdrop{background:rgba(10,23,51,.4)}
+.po-x{position:absolute;top:12px;right:12px;width:40px;height:40px;border:0;border-radius:999px;background:transparent;font-size:24px;line-height:1;color:var(--ink2,#3A4868);cursor:pointer}
+.po-x:hover{background:var(--surface-2,#EDE8DA)}
+.po-hd{padding-right:40px;border-bottom:1px solid var(--line,#E3DDCD);padding-bottom:16px}
 .po-zag{margin:0;font-size:24px;line-height:1.25;font-weight:600;outline:none}
-.po-naz{margin:6px 0 0;font-size:15px;color:var(--ink2,#48484C)}
+.po-naz{margin:6px 0 0;font-size:15px;color:var(--ink2,#3A4868)}
 .po-vn{list-style:none;margin:16px 0 0;padding:0}
 .po-vn li{position:relative;padding:6px 0 6px 20px;font-size:15px}
 .po-vn li::before{content:"";position:absolute;left:2px;top:14px;width:8px;height:8px;border-radius:50%;background:var(--ok,#16723F)}
-.po-cena{display:flex;align-items:baseline;gap:10px;margin:20px 0 16px;padding-top:16px;border-top:1px solid var(--line,#E6E6E1)}
+.po-cena{display:flex;align-items:baseline;gap:10px;margin:20px 0 16px;padding-top:16px;border-top:1px solid var(--line,#E3DDCD)}
 .po-cena b{font-size:32px;line-height:1;font-weight:600;letter-spacing:-.01em}
-.po-cena span{font-size:13px;color:var(--muted,#66666B)}
+.po-cena span{font-size:13px;color:var(--muted,#5B6783)}
 .po-sp{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
 .po-sp .btn{justify-content:center;width:100%}
-.po-schet{display:block;width:100%;padding:12px 16px;border:1px solid var(--line-2,#D9D9D4);border-radius:var(--r-pill,999px);background:transparent;color:var(--accent,#0B63E5);font-family:inherit;font-weight:600;font-size:15px;line-height:1.3;cursor:pointer}
-.po-schet--gl{background:var(--accent,#0B63E5);border-color:var(--accent,#0B63E5);color:var(--on-accent,#fff)}
+.po-schet{display:block;width:100%;padding:12px 16px;border:1px solid var(--line-2,#D8D1BE);border-radius:var(--r-pill,999px);background:transparent;color:var(--accent,#12305F);font-family:inherit;font-weight:600;font-size:15px;line-height:1.3;cursor:pointer}
+.po-schet--gl{background:var(--accent,#12305F);border-color:var(--accent,#12305F);color:var(--on-accent,#fff)}
 .po-schet:hover{filter:brightness(.95)}
 .po-forma{margin-top:4px}
 .po--schet .po-cena,.po-forma .sf>h3{display:none}
-.po--schet .po-forma{margin-top:20px;padding-top:4px;border-top:1px solid var(--line,#E6E6E1)}
-.po-og{margin:16px 0 0;font-size:13px;line-height:1.45;color:var(--muted,#66666B)}
+.po--schet .po-forma{margin-top:20px;padding-top:4px;border-top:1px solid var(--line,#E3DDCD)}
+.po-og{margin:16px 0 0;font-size:13px;line-height:1.45;color:var(--muted,#5B6783)}
 @media (max-width:520px){
  dialog.po{inset:auto 0 0 0;width:100vw;height:auto;max-height:92dvh;padding:24px 20px calc(20px + env(safe-area-inset-bottom));border-radius:var(--r-doc,16px) var(--r-doc,16px) 0 0}
  .po-cena b{font-size:32px}
@@ -251,14 +251,14 @@ dialog.po::backdrop{background:rgba(17,17,19,.4)}
    поднимало всё ниже на ~29 px в кадре, где появился отчёт: CLS проверки на 390 px 0,034, по ссылке /?inn= — 0,024.
    opacity:0 — место строки остаётся (после прокрутки к отчёту оно над краем экрана), роль status по-прежнему озвучивает готовность. */
 @media (max-width:979px){.rezhim-otcheta .hero-text .note.ok{opacity:0}}
-.ot-nom{margin:10px 0 0;font-size:12px;color:var(--muted,#66666B)}
+.ot-nom{margin:10px 0 0;font-size:12px;color:var(--muted,#5B6783)}
 .ot-nom .rkv__nom{font-size:inherit}
-.ot-dr{margin:0;padding:16px 40px 20px;border-top:1px solid var(--line,#E6E6E1)}
-.ot-dr__h{margin:0 0 8px;font-size:13px;font-weight:600;color:var(--ink2,#48484C)}
+.ot-dr{margin:0;padding:16px 40px 20px;border-top:1px solid var(--line,#E3DDCD)}
+.ot-dr__h{margin:0 0 8px;font-size:13px;font-weight:600;color:var(--ink2,#3A4868)}
 .ot-dr ul{display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0;list-style:none}
-.ot-dr a{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border:1px solid var(--line-2,#D9D9D4);border-radius:var(--r-pill,999px);font-size:15px;color:var(--ink,#1D1D1F);text-decoration:none}
-.ot-dr a:hover{border-color:var(--accent,#0B63E5);color:var(--accent,#0B63E5)}
-.ot-dr a:focus-visible{outline:2px solid var(--accent,#0B63E5);outline-offset:2px}
+.ot-dr a{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border:1px solid var(--line-2,#D8D1BE);border-radius:var(--r-pill,999px);font-size:15px;color:var(--ink,#0D2247);text-decoration:none}
+.ot-dr a:hover{border-color:var(--accent,#12305F);color:var(--accent,#12305F)}
+.ot-dr a:focus-visible{outline:2px solid var(--accent,#12305F);outline-offset:2px}
 @media (max-width:860px){.ot-dr{padding-left:20px;padding-right:20px}}
 @media (max-width:640px),(pointer:coarse){.ot-dr ul{flex-wrap:nowrap;overflow-x:auto;scroll-snap-type:x proximity;scroll-padding-inline:20px;scrollbar-width:none;margin:0 -20px;padding:0 20px 4px}.ot-dr ul::-webkit-scrollbar{display:none}.ot-dr li{flex:0 0 auto;scroll-snap-align:start}.ot-dr a{white-space:nowrap}}
 @media (min-width:641px) and (pointer:fine){
@@ -290,11 +290,11 @@ dialog.po::backdrop{background:rgba(17,17,19,.4)}
 @media (prefers-reduced-motion:reduce){.zh-ist__i::after,.report.loading::after{animation:none;opacity:0}.ot-vd--pojav .ot-vt>*,.ot-vd--pojav .ot-act>*,.report.ot details[open]>:not(summary){animation:none}}
 /* pomoglo-v1 (13.11): «Ответ помог?» под выводом — тихая строка, две равные кнопки контуром: ни одна не подсказывает ответ (js/pomoglo.js) */
 .pmg{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin-top:8px;padding-top:12px;border-top:1px solid rgba(0,0,0,.08)}
-.pmg__q,.pmg__s{margin:0;font-size:15px;line-height:1.4;color:var(--ink2,#48484C)}
+.pmg__q,.pmg__s{margin:0;font-size:15px;line-height:1.4;color:var(--ink2,#3A4868)}
 .pmg__r{display:flex;gap:8px}
-.pmg__b{min-width:72px;min-height:44px;padding:0 18px;border:0;border-radius:999px;background:transparent;box-shadow:inset 0 0 0 1px var(--line-2,#D9D9D4);color:var(--ink,#1D1D1F);font:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:box-shadow .16s,color .16s}
-.pmg__b:hover{box-shadow:inset 0 0 0 1px var(--accent,#0B63E5);color:var(--accent,#0B63E5)}
-.pmg__b:focus-visible{outline:3px solid var(--accent,#0B63E5);outline-offset:2px}
+.pmg__b{min-width:72px;min-height:44px;padding:0 18px;border:0;border-radius:999px;background:transparent;box-shadow:inset 0 0 0 1px var(--line-2,#D8D1BE);color:var(--ink,#0D2247);font:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:box-shadow .16s,color .16s}
+.pmg__b:hover{box-shadow:inset 0 0 0 1px var(--accent,#12305F);color:var(--accent,#12305F)}
+.pmg__b:focus-visible{outline:3px solid var(--accent,#12305F);outline-offset:2px}
 .pmg--ok .pmg__s{min-height:44px;display:flex;align-items:center;outline:0}
 [data-theme=dark] .pmg{border-top-color:rgba(255,255,255,.132)}
 @media print{.pmg{display:none}}

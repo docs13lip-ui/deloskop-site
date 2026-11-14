@@ -127,14 +127,14 @@
       '<small>' + esc(POCHEMU) + '</small></p>' + KNOPKA + '</div>';
   }
 
-  var CSS = '.pp{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;padding:12px 0;border-bottom:1px solid var(--line,#E6E6E1)}' +
-    '.pp__t{margin:0;font-size:var(--t-15,15px);color:var(--ink,#1D1D1F);min-width:0}' +
+  var CSS = '.pp{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;padding:12px 0;border-bottom:1px solid var(--line,#E3DDCD)}' +
+    '.pp__t{margin:0;font-size:var(--t-15,15px);color:var(--ink,#0D2247);min-width:0}' +
     '.pp__t b{font-weight:600;font-variant-numeric:tabular-nums}' +
-    '.pp__t small{display:block;font-size:var(--t-13,13px);color:var(--muted,#66666B);margin-top:2px}' +
-    '.pp__b{min-height:44px;border:1px solid var(--line,#D9D9D4);background:transparent;font:inherit;font-size:var(--t-15,15px);font-weight:600;' +
-    'border-radius:var(--r-small,10px);padding:10px 16px;cursor:pointer;color:var(--ink,#1D1D1F)}' +
-    '.pp__b:hover,.pp__b:focus-visible{border-color:var(--accent,#0B63E5);color:var(--accent,#0B63E5)}' +
-    '.rkv__pp .pp__b{display:block;margin-top:2px;min-height:44px;padding:0;border:0;font-size:var(--t-13,13px);color:var(--accent,#0B63E5);text-align:left;text-decoration:underline;text-underline-offset:3px}' +
+    '.pp__t small{display:block;font-size:var(--t-13,13px);color:var(--muted,#5B6783);margin-top:2px}' +
+    '.pp__b{min-height:44px;border:1px solid var(--line,#D8D1BE);background:transparent;font:inherit;font-size:var(--t-15,15px);font-weight:600;' +
+    'border-radius:var(--r-small,10px);padding:10px 16px;cursor:pointer;color:var(--ink,#0D2247)}' +
+    '.pp__b:hover,.pp__b:focus-visible{border-color:var(--accent,#12305F);color:var(--accent,#12305F)}' +
+    '.rkv__pp .pp__b{display:block;margin-top:2px;min-height:44px;padding:0;border:0;font-size:var(--t-13,13px);color:var(--accent,#12305F);text-align:left;text-decoration:underline;text-underline-offset:3px}' +
     '.rkv__pp .pp__b:hover,.rkv__pp .pp__b:focus-visible{text-decoration-thickness:2px}' +
     '@media (max-width:600px){.pp .pp__b{width:100%}}' +
     '@media print{.pp__b{display:none!important}}';

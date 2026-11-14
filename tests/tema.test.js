@@ -33,20 +33,20 @@ test('строка темы: в <head> каждой страницы с шапк
 test('строка темы: выбор из localStorage, иначе тёмная (с 18.10); «auto» — по системе; ставит data-theme до отрисовки', () => {
   const kod = chitat('index.html').match(STROKA)[0].replace(/^<script>|<\/script>$/g, '');
   const progon = (ls, sistemaTemnaya) => {
-    const el = { dataset: {} }, meta = { content: '#F5F5F2' };
+    const el = { dataset: {} }, meta = { content: '#F5F1E6' };
     const ctx = { localStorage: ls, matchMedia: () => ({ matches: sistemaTemnaya }), document: { documentElement: el, querySelector: () => meta } };
     new Function('localStorage', 'matchMedia', 'document', kod)(ctx.localStorage, ctx.matchMedia, ctx.document);
     return [el.dataset.theme, meta.content];
   };
-  assert.deepStrictEqual(progon({}, false), ['dark', '#111113'], 'ничего не выбрано, система светлая — всё равно тёмная');
-  assert.deepStrictEqual(progon({}, true), ['dark', '#111113']);
-  assert.deepStrictEqual(progon({ tema: 'light' }, true), ['light', '#F5F5F2']);
-  assert.deepStrictEqual(progon({ tema: 'dark' }, false), ['dark', '#111113']);
-  assert.deepStrictEqual(progon({ tema: 'auto' }, false), ['light', '#F5F5F2'], '«как в системе» — светлая система');
-  assert.deepStrictEqual(progon({ tema: 'auto' }, true), ['dark', '#111113'], '«как в системе» — тёмная система');
-  assert.deepStrictEqual(progon({ tema: 'мусор' }, false), ['dark', '#111113']);
+  assert.deepStrictEqual(progon({}, false), ['dark', '#0A1733'], 'ничего не выбрано, система светлая — всё равно тёмная');
+  assert.deepStrictEqual(progon({}, true), ['dark', '#0A1733']);
+  assert.deepStrictEqual(progon({ tema: 'light' }, true), ['light', '#F5F1E6']);
+  assert.deepStrictEqual(progon({ tema: 'dark' }, false), ['dark', '#0A1733']);
+  assert.deepStrictEqual(progon({ tema: 'auto' }, false), ['light', '#F5F1E6'], '«как в системе» — светлая система');
+  assert.deepStrictEqual(progon({ tema: 'auto' }, true), ['dark', '#0A1733'], '«как в системе» — тёмная система');
+  assert.deepStrictEqual(progon({ tema: 'мусор' }, false), ['dark', '#0A1733']);
   const brosaet = {}; Object.defineProperty(brosaet, 'tema', { get() { throw new Error('запрещено'); } });
-  assert.deepStrictEqual(progon(brosaet, false), ['dark', '#111113'], 'localStorage недоступен — тёмная');
+  assert.deepStrictEqual(progon(brosaet, false), ['dark', '#0A1733'], 'localStorage недоступен — тёмная');
 });
 
 test('слой css/tema.css: на каждой странице с шапкой (тегом или в пакете) и в оболочке', () => {
@@ -88,12 +88,12 @@ test('контраст токенов тёмной темы', () => {
 
 test('авто-слой: цвета числом получают тёмную пару, токены и печать не трогаем', () => {
   const py = (css) => execSync('python3 -c "import sys;sys.path.insert(0,\'tests\');import tema_temnaya as T;print(T.pravila(sys.stdin.read()),end=\'\')"', { cwd: K, input: css, encoding: 'utf8' });
-  assert.strictEqual(py('.a{background:#fff;color:#1D1D1F;padding:4px}'), '[data-theme=dark] .a{background:#1C1C1F;color:#F5F5F2}');
-  assert.strictEqual(py('.b{background:#EAF1FD;color:#0B63E5}'), '[data-theme=dark] .b{background:#16243D;color:#5B9BFF}');
-  assert.strictEqual(py('.c{background:var(--accent,#0B63E5);color:#fff}'), '[data-theme=dark] .c{color:#0B0B0C}', 'белый на фирменном → --on-accent');
-  assert.strictEqual(py('.d{background:var(--surface,#fff);color:var(--ink,#1D1D1F)}'), '', 'токен с запасным — решает токен');
-  assert.strictEqual(py('@media print{.e{background:#fff}}:root{--bg:#F5F5F2}'), '', 'печать и токены ДС — не трогаем');
-  assert.strictEqual(py('.f{border:1px solid rgba(29,29,31,.08)}'), '[data-theme=dark] .f{border:1px solid rgba(255,255,255,0.132)}');
+  assert.strictEqual(py('.a{background:#fff;color:#0D2247;padding:4px}'), '[data-theme=dark] .a{background:#102248;color:#F5F1E6}');
+  assert.strictEqual(py('.b{background:#ECEFF6;color:#12305F}'), '[data-theme=dark] .b{background:#2A2F47;color:#D9B45A}');
+  assert.strictEqual(py('.c{background:var(--accent,#12305F);color:#fff}'), '[data-theme=dark] .c{color:#081229}', 'белый на фирменном → --on-accent');
+  assert.strictEqual(py('.d{background:var(--surface,#fff);color:var(--ink,#0D2247)}'), '', 'токен с запасным — решает токен');
+  assert.strictEqual(py('@media print{.e{background:#fff}}:root{--bg:#F5F1E6}'), '', 'печать и токены ДС — не трогаем');
+  assert.strictEqual(py('.f{border:1px solid rgba(13,34,71,.08)}'), '[data-theme=dark] .f{border:1px solid rgba(255,255,255,0.132)}');
   assert.strictEqual(py(':root{--t:#16723F;--f:#E8F5EE}'), ':root[data-theme=dark]{--t:#4CC38A;--f:#0F2A1C}');
 });
 

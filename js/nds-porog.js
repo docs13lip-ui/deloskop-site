@@ -12,10 +12,10 @@
 
   function esc(t) { return String(t == null ? "" : t).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 
-  var CSS = ".ndp{display:grid;gap:6px;padding:16px 18px;border-radius:16px;border:1px solid var(--line,#E6E6E1);border-left-width:3px;border-left-color:#8A8A90;margin-top:12px}" +
+  var CSS = ".ndp{display:grid;gap:6px;padding:16px 18px;border-radius:16px;border:1px solid var(--line,#E3DDCD);border-left-width:3px;border-left-color:#8A8A90;margin-top:12px}" +
     ".ndp__h{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 10px}.ndp__h b{font-size:15px;font-weight:600}" +
-    ".ndp__h span{font-size:13px;color:var(--muted,#66666B)}.ndp p{margin:0}.ndp__t{font-size:15px;line-height:1.5}" +
-    ".ndp__t a{color:inherit;text-decoration:underline;text-underline-offset:2px}.ndp__m{font-size:12px;color:var(--muted,#66666B)}" +
+    ".ndp__h span{font-size:13px;color:var(--muted,#5B6783)}.ndp p{margin:0}.ndp__t{font-size:15px;line-height:1.5}" +
+    ".ndp__t a{color:inherit;text-decoration:underline;text-underline-offset:2px}.ndp__m{font-size:12px;color:var(--muted,#5B6783)}" +
     "@media (max-width:520px){.ndp{padding:14px}}@media print{.ndp{break-inside:avoid}}";
 
   // o — результат DlkBezNds.prognoz(); molchat: osvobozhdena на экране не показываем (только факт на карточке).

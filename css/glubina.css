@@ -4,8 +4,8 @@
    Фон двигаем только transform (без filter:blur на весь экран — мягкость дают сами радиальные пятна,
    телефон не греется); зерно — простой слой с прозрачностью, без mix-blend-mode. */
 :root{
- --shadow:0 1px 1px rgba(29,29,31,.03),0 8px 24px rgba(29,29,31,.06),0 32px 64px -24px rgba(29,29,31,.10);
- --shadow-hover:0 1px 1px rgba(29,29,31,.04),0 10px 30px rgba(29,29,31,.075),0 40px 80px -24px rgba(29,29,31,.125)
+ --shadow:0 1px 1px rgba(13,34,71,.03),0 8px 24px rgba(13,34,71,.06),0 32px 64px -24px rgba(13,34,71,.10);
+ --shadow-hover:0 1px 1px rgba(13,34,71,.04),0 10px 30px rgba(13,34,71,.075),0 40px 80px -24px rgba(13,34,71,.125)
 }
 body::before{content:"";position:fixed;z-index:-2;inset:-12%;pointer-events:none;
  background:radial-gradient(42% 38% at 22% 18%,rgba(234,241,253,.95),rgba(234,241,253,0) 70%),
@@ -23,14 +23,14 @@ body::after{content:"";position:fixed;z-index:-1;inset:0;pointer-events:none;opa
 @media (hover:hover){
  .card:hover,.report.ex:hover,.vhod:hover,.pr-gl a:hover{box-shadow:var(--shadow-hover);transform:translateY(-2px)}
  .search:hover,.check:hover{box-shadow:var(--shadow-hover)}
- .search:focus-within,.check:focus-within{box-shadow:var(--shadow-hover),0 0 0 3px var(--accent,#0B63E5)}
+ .search:focus-within,.check:focus-within{box-shadow:var(--shadow-hover),0 0 0 3px var(--accent,#12305F)}
 }
 
 /* shapka-plotnee-v1: при 72 % текст полосы и страницы читался сквозь шапку (просвет 14–17 из 255). 94 % фона темы с размытием —
    просвет не больше 3; 94 % без размытия — 14, поэтому размытие оставлено. */
 /* стекло: шапка после 8 px прокрутки (класс ставит shapka.js) и пример отчёта на главной */
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
- .shapka.is-scrolled{background:color-mix(in srgb,var(--bg) 94%,transparent);-webkit-backdrop-filter:saturate(160%) blur(14px);backdrop-filter:saturate(160%) blur(14px);border-bottom-color:rgba(29,29,31,.06)}
+ .shapka.is-scrolled{background:color-mix(in srgb,var(--bg) 94%,transparent);-webkit-backdrop-filter:saturate(160%) blur(14px);backdrop-filter:saturate(160%) blur(14px);border-bottom-color:rgba(13,34,71,.06)}
  .report.ex{background:rgba(255,255,255,.78);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:var(--shadow),inset 0 0 0 1px rgba(255,255,255,.6)}
  @media (hover:hover){.report.ex:hover{box-shadow:var(--shadow-hover),inset 0 0 0 1px rgba(255,255,255,.6)}}
  /* vizual-v3.1b: пока ждём ответ (и при заходе по адресу отчёта) стекло снимаем — Chromium считает границы блока с backdrop-filter
@@ -52,9 +52,9 @@ body::after{content:"";position:fixed;z-index:-1;inset:0;pointer-events:none;opa
 .zhi__duga{background:conic-gradient(from 225deg,var(--zona-cvet) calc(var(--p)*.7576%),transparent 0)}
 .zhi__svet{position:absolute;inset:8%;border-radius:50%;box-shadow:0 0 40px -10px var(--zona-cvet);opacity:.35;transform:translateZ(-1px)}
 .zhi__strelka{position:absolute;left:50%;top:50%;width:2px;height:50%;margin-left:-1px;transform-origin:50% 0;transform:rotate(calc(45deg + var(--p)*2.7273deg));pointer-events:none}
-.zhi__strelka::after{content:"";position:absolute;left:-3px;bottom:-1px;width:8px;height:8px;border-radius:50%;background:var(--ink,#1D1D1F);box-shadow:0 0 0 3px #fff}
-.zhi__chislo{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:inherit;font-size:calc(var(--d)*.34);font-weight:600;line-height:1;letter-spacing:-.03em;color:var(--ink,#1D1D1F);font-variant-numeric:tabular-nums;transform:translateZ(24px)}
-.zhi__chislo small{font-size:.32em;font-weight:500;color:var(--muted,#66666B);margin-left:2px}
+.zhi__strelka::after{content:"";position:absolute;left:-3px;bottom:-1px;width:8px;height:8px;border-radius:50%;background:var(--ink,#0D2247);box-shadow:0 0 0 3px #fff}
+.zhi__chislo{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:inherit;font-size:calc(var(--d)*.34);font-weight:600;line-height:1;letter-spacing:-.03em;color:var(--ink,#0D2247);font-variant-numeric:tabular-nums;transform:translateZ(24px)}
+.zhi__chislo small{font-size:.32em;font-weight:500;color:var(--muted,#5B6783);margin-left:2px}
 .zhi__pod::before{content:"Индекс Делоскопа · 1–99"}
 /* пример (компания вымышленная): вместо числа — знак зоны цветом зоны */
 .ex-ix .zhi__chislo::before{content:"";width:30%;height:30%;background:var(--zona-cvet);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-6.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-6.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}
@@ -64,7 +64,7 @@ body::after{content:"";position:fixed;z-index:-1;inset:0;pointer-events:none;opa
 .zhi.linza--gl .zhi__gl{display:block}
 .zhi.linza--gl .zhi__fon,.zhi.linza--gl .zhi__duga,.zhi.linza--gl .zhi__strelka,.zhi.linza--gl .zhi__svet{display:none}
 @media print{.zhi .zhi__gl{display:none!important}.zhi.linza--gl .zhi__fon,.zhi.linza--gl .zhi__duga,.zhi.linza--gl .zhi__strelka{display:block}}
-.zhi__pod{font-size:12px;color:var(--ink-2,#48484C);white-space:nowrap}
+.zhi__pod{font-size:12px;color:var(--ink-2,#3A4868);white-space:nowrap}
 .zhi.is-idet{transition:--p 1.2s var(--ease,cubic-bezier(.2,.7,.2,1))}
 /* пример на главной: кольцо сверху колонки; на 390 — слева от «Уровень риска» */
 .ex-ix .zhi{align-self:flex-start;--d:120px}

@@ -245,7 +245,7 @@
       var v = vybor(), t = v === "auto" ? (mq && mq.matches ? "dark" : "light") : v;
       root.dataset.theme = t;
       var m = document.querySelector('meta[name="theme-color"]');
-      if (m) m.content = t === "dark" ? "#111113" : "#F5F5F2";
+      if (m) m.content = t === "dark" ? "#0A1733" : "#F5F1E6";
       document.querySelectorAll("[data-tema-v]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-tema-v") === v)); });
       document.querySelectorAll("[data-tema-knopka]").forEach(function (b) { b.setAttribute("aria-label", t === "dark" ? "Включить светлую тему" : "Включить тёмную тему"); });
       nebo(t);
@@ -602,4 +602,15 @@
     e.preventDefault();
     otkryt(null, v);
   });
+  // Знак в шапке раскрывается: один раз за посещение и на готовый ответ проверки (событие deloskop:otvet).
+  // Движение — в /partials/shapka.css (.zn-zhiv); у тех, кто просил меньше движения, его нет.
+  (function () {
+    var z = document.querySelector(".shapka .shapka__logo");
+    if (!z) return;
+    function igrat() { z.classList.remove("zn-zhiv"); void z.offsetWidth; z.classList.add("zn-zhiv"); }
+    var bylo = false;
+    try { bylo = sessionStorage.getItem("dlk_zn") === "1"; sessionStorage.setItem("dlk_zn", "1"); } catch (e) {}
+    if (!bylo) igrat();
+    window.addEventListener("deloskop:otvet", igrat);
+  })();
 })();

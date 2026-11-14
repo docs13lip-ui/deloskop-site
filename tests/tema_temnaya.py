@@ -3,19 +3,19 @@
 
 Зачем: цвета на сайте живут в трёх местах — токены (--bg, --ink, …), стили в /css/*.css и стили в <style>
 самих страниц (их больше 80, у каждой страницы свои). Токены тёмной темы — вручную в /css/tema.css.
-Всё, где цвет записан числом (#fff, rgba(255,255,255,.7), #EAF1FD…), этот модуль переводит в тёмную пару
+Всё, где цвет записан числом (#fff, rgba(255,255,255,.7), #ECEFF6…), этот модуль переводит в тёмную пару
 по одному правилу и пишет отдельным слоем: для /css/*.css — в /css/tema.css между метками
 /*<avto>*/…/*</avto>*/, для <style> страницы — в её же <head>, блок <style data-tema>…</style>
 (правила страницы действуют только на ней — переносить их в общий файл нельзя: у разных страниц один класс
 значит разное). Светлая тема не меняется ни на байт видимого: все правила — под [data-theme=dark].
 
 Правило перевода (одно на весь сайт, без ручных исключений):
-  фон и рамки: светлый нейтральный → поверхность #1C1C1F / #19191C / #26262A, фон страницы #F5F5F2 → #111113;
-               светлый с оттенком → плашка того же смысла (синий → #16243D, зелёный → #0F2A1C,
+  фон и рамки: светлый нейтральный → поверхность #102248 / #0D1D3F / #183060, фон страницы #F5F1E6 → #0A1733;
+               светлый с оттенком → плашка того же смысла (синий → #2A2F47, зелёный → #0F2A1C,
                жёлтый → #2E220C, оранжевый → #35190D, красный → #3A1513); тёмный полупрозрачный
-               (рамки rgba(29,29,31,.06)) → светлый полупрозрачный; фирменный синий → #5B9BFF;
-  текст:       тёмный нейтральный → #F5F5F2 / #C7C7CC / #A1A1A6 по яркости; фирменный и цвета риска →
-               светлые пары из css/tema.css; белый текст на фирменном синем и на var(--ink) → #0B0B0C (ДС v1 §2.5 --on-accent);
+               (рамки rgba(13,34,71,.06)) → светлый полупрозрачный; фирменный синий → #D9B45A;
+  текст:       тёмный нейтральный → #F5F1E6 / #C9CFDD / #9CA8C2 по яркости; фирменный и цвета риска →
+               светлые пары из css/tema.css; белый текст на фирменном синем и на var(--ink) → #081229 (ДС v1 §2.5 --on-accent);
   тени:        светлые блики (inset белым) → почти прозрачные.
 Прозрачность сохраняется. Пользуется tests/sobrat_shapku.py (каждая страница при сборке) — отдельного шага нет.
 
@@ -45,12 +45,15 @@ CVET = re.compile(r"#[0-9a-fA-F]{8}\b|#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3,4}\b|rgba
 
 # точные пары фирменных цветов и цветов риска (те же, что в css/tema.css)
 TEKST = {
-    "0b63e5": "#5B9BFF", "084bb0": "#8AB8FF", "0952c2": "#8AB8FF", "0a58cc": "#8AB8FF",
+    "12305f": "#D9B45A", "0a1f45": "#EBCB7C", "0b63e5": "#D9B45A", "084bb0": "#EBCB7C", "0952c2": "#EBCB7C", "0a58cc": "#EBCB7C",
+    "0d2247": "#F5F1E6", "3a4868": "#C9CFDD", "5b6783": "#9CA8C2",
     "16723f": "#4CC38A", "137a3e": "#4CC38A", "1a7f45": "#4CC38A",
     "9a5b00": "#E8A23A", "8a5a00": "#E8A23A", "b86e00": "#E8A23A", "a15c00": "#E8A23A",
     "c2410c": "#FF8F57", "b3261e": "#FF7B72", "b42318": "#FF7B72",
 }
-FON_TOCHNO = {"f5f5f2": (17, 17, 19), "0b63e5": (91, 155, 255), "084bb0": (138, 184, 255)}
+FON_TOCHNO = {"f5f1e6": (10, 23, 51), "12305f": (217, 180, 90), "0a1f45": (235, 203, 124), "eceff6": (42, 47, 71)}
+# тёплые светлые фоны и линии палитры — нейтральные, а не «жёлтая плашка»
+NEJTRALNYE = {"f5f1e6", "e3ddcd", "ede8da", "fbf9f3", "d8d1be", "efeadc"}
 
 
 def razobrat(s):
@@ -96,10 +99,10 @@ def ottenok(c):
 
 def plashka(c):
     ton, chrom = ottenok(c)
-    if chrom < 0.04:
+    if chrom < 0.04 or hexkey(c) in NEJTRALNYE:
         return None
     if 190 <= ton < 260:
-        return (22, 36, 61)       # синий → --accent-soft
+        return (42, 47, 71)       # синий → --accent-soft
     if 90 <= ton < 190:
         return (15, 42, 28)       # зелёный → --ok-bg
     if 36 <= ton < 90:
@@ -128,9 +131,9 @@ def perevesti(c, rol, na_akcente=False):
         if k in TEKST:
             return zapis(razobrat(TEKST[k])[:3], a)
         if L > 0.8:  # светлый текст: остаётся, кроме белого на фирменном синем
-            return zapis((11, 11, 12), a) if na_akcente else None
+            return zapis((8, 18, 41), a) if na_akcente else None
         if chrom < 0.08 and L < 0.35:
-            return zapis((245, 245, 242) if L < 0.03 else (199, 199, 204) if L < 0.1 else (161, 161, 166), a)
+            return zapis((245, 241, 230) if L < 0.03 else (201, 207, 221) if L < 0.1 else (156, 168, 194), a)
         if chrom >= 0.08 and L < 0.35:  # тёмный цветной текст → светлый того же тона
             h, l, s = colorsys.rgb_to_hls(*(x / 255 for x in c[:3]))
             r, g, b = colorsys.hls_to_rgb(h, 0.72, min(1, s))
@@ -148,13 +151,13 @@ def perevesti(c, rol, na_akcente=False):
         if p:
             return zapis(p if rol == "fon" else tuple(min(255, x + 22) for x in p), a)
         if rol == "ramka":
-            return zapis((46, 46, 51) if L > 0.6 else (72, 72, 78), a)
+            return zapis((34, 58, 107) if L > 0.6 else (46, 74, 130), a)
         if L >= 0.97:
-            return zapis((28, 28, 31), a)
+            return zapis((16, 34, 72), a)
         if L >= 0.88:
-            return zapis((17, 17, 19) if k == "f5f5f2" else (25, 25, 28), a)
-        return zapis((38, 38, 42), a)
-    if chrom < 0.08 and L < 0.03 and a < 0.4:  # тёмные полупрозрачные рамки и подложки → светлые
+            return zapis((10, 23, 51) if k == "f5f1e6" else (13, 29, 63), a)
+        return zapis((24, 48, 96), a)
+    if (chrom < 0.08 or k == "0d2247") and L < 0.03 and a < 0.4:  # тёмные полупрозрачные рамки и подложки → светлые
         return zapis((255, 255, 255), min(1, a * 1.4 + 0.02))
     if k in FON_TOCHNO:
         return zapis(FON_TOCHNO[k], a)
@@ -302,9 +305,9 @@ def _perevedennye(css, nabor):
             continue
         dekl = _deklaracii(telo)
         fon = " ".join(zn for sv, zn in dekl if sv.startswith("background")).lower()
-        na_akcente = bool(re.search(r"#0b63e5|#084bb0|#0952c2|var\(--[\w-]*acc", fon))
-        # temnye-na-inke-v1 (07.11): фон var(--ink) в тёмной теме светлеет (#F5F5F2) — белый текст на нём пропадал
-        # (номера шагов «Что сделать завтра утром», кнопки-переключатели, тост). Тот же перевод, что на синем: → #0B0B0C
+        na_akcente = bool(re.search(r"#12305f|#0a1f45|#0952c2|var\(--[\w-]*acc", fon))
+        # temnye-na-inke-v1 (07.11): фон var(--ink) в тёмной теме светлеет (#F5F1E6) — белый текст на нём пропадал
+        # (номера шагов «Что сделать завтра утром», кнопки-переключатели, тост). Тот же перевод, что на синем: → #081229
         na_akcente = na_akcente or bool(re.search(r"var\(--ink\)", fon))
         for sv, zn in dekl:
             if SVOJSTVA.match(sv) and sv not in TOKENY_RUKAMI and not sv.startswith("--"):
@@ -339,9 +342,9 @@ def pravila(css, _nabor=None):
             continue  # @keyframes, @font-face, @page
         dekl = _deklaracii(telo)
         fon = " ".join(zn for sv, zn in dekl if sv.startswith("background")).lower()
-        na_akcente = bool(re.search(r"#0b63e5|#084bb0|#0952c2|var\(--[\w-]*acc", fon))
-        # temnye-na-inke-v1 (07.11): фон var(--ink) в тёмной теме светлеет (#F5F5F2) — белый текст на нём пропадал
-        # (номера шагов «Что сделать завтра утром», кнопки-переключатели, тост). Тот же перевод, что на синем: → #0B0B0C
+        na_akcente = bool(re.search(r"#12305f|#0a1f45|#0952c2|var\(--[\w-]*acc", fon))
+        # temnye-na-inke-v1 (07.11): фон var(--ink) в тёмной теме светлеет (#F5F1E6) — белый текст на нём пропадал
+        # (номера шагов «Что сделать завтра утром», кнопки-переключатели, тост). Тот же перевод, что на синем: → #081229
         na_akcente = na_akcente or bool(re.search(r"var\(--ink\)", fon))
         nov, povtor = [], {}
         sels = _razdelit_selektory(zag)
@@ -384,7 +387,7 @@ def atributy(html_tela):
         bylo.add(zn)
         dekl = _deklaracii(zn)
         fon = " ".join(z for s, z in dekl if s.startswith("background")).lower()
-        na_akcente = bool(re.search(r"#0b63e5|#084bb0|var\(--[\w-]*acc", fon))
+        na_akcente = bool(re.search(r"#12305f|#0a1f45|var\(--[\w-]*acc", fon))
         nov = []
         for sv, z in dekl:
             if SVOJSTVA.match(sv):

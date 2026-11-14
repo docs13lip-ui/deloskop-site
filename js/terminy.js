@@ -17,12 +17,12 @@
   var CSS =
     '.termin{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:help;text-align:inherit;' +
     'text-decoration:underline dotted;text-decoration-thickness:1px;text-underline-offset:.22em;text-decoration-color:currentColor}' +
-    '.termin:hover,.termin[aria-expanded=true]{color:#0B63E5}' +
-    '#termin-pop{position:absolute;z-index:70;box-sizing:border-box;max-width:320px;background:#fff;color:#1D1D1F;border:1px solid #E6E6E1;' +
+    '.termin:hover,.termin[aria-expanded=true]{color:#12305F}' +
+    '#termin-pop{position:absolute;z-index:70;box-sizing:border-box;max-width:320px;background:#fff;color:#0D2247;border:1px solid #E3DDCD;' +
     'border-radius:16px;padding:12px 14px;font:400 13px/1.5 Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;' +
     'box-shadow:0 12px 36px rgba(0,0,0,.16);text-align:left}' +
     '#termin-pop b{display:block;font-weight:600;margin-bottom:4px}#termin-pop p{margin:0}' +
-    '#termin-pop a{display:inline-block;margin-top:8px;color:#0B63E5}' +
+    '#termin-pop a{display:inline-block;margin-top:8px;color:#12305F}' +
     '@media print{#termin-pop{display:none!important}.termin{text-decoration:none}}';
 
   function esc(t) {

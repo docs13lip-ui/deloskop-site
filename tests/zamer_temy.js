@@ -60,6 +60,7 @@ function izmerit() {
     for (const el of document.body.querySelectorAll('*')) {
       const c = parse(getComputedStyle(el).backgroundColor);
       if (!c || c[3] < 0.6 || lum(c) < 0.45) continue;
+      if ((c[0] === 217 && c[1] === 180 && c[2] === 90) || (c[0] === 235 && c[1] === 203 && c[2] === 124)) continue; // латунь — главная кнопка тёмной темы, не «остров»
       const r = el.getBoundingClientRect(); if (r.width * r.height < 2000 || !vidim(el)) continue;
       ostrova.push(put(el) + ' ' + getComputedStyle(el).backgroundColor);
     }

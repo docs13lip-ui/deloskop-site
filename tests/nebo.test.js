@@ -135,8 +135,8 @@ test('nebo-v2: созвездия проявляются рядом с курс�
 });
 
 test('nebo-v2: стекло карточек над небом — текст ≥ 4,5 : 1 над самым светлым местом неба', () => {
-  assert.match(js, /html\[data-nebo\] \.card\{background-color:rgba\(28,28,31,\.74\);-webkit-backdrop-filter:blur\(12px\)/);
-  assert.match(js, /prefers-reduced-transparency:reduce\)\{html\[data-nebo\] \.card\{background-color:#1C1C1F/);
+  assert.match(js, /html\[data-nebo\] \.card\{background-color:rgba\(16,34,72,\.74\);-webkit-backdrop-filter:blur\(12px\)/);
+  assert.match(js, /prefers-reduced-transparency:reduce\)\{html\[data-nebo\] \.card\{background-color:#102248/);
   const lum = (c) => { c = c.map((v) => v / 255).map((v) => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4))); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
   const smes = (c, k, a) => c.map((v, i) => v + (k[i] - v) * a);
   let nebo = smes([0x18, 0x22, 0x3A], [91, 155, 255], 0.10);

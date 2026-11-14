@@ -89,7 +89,7 @@ def cena_i_knopki(t, nb=NB):
     return price, cta
 
 
-CHECK = '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#0B63E5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+CHECK = '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5L8 14L15.5 6.5" stroke="#12305F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 
 
 def li(txt):
@@ -182,7 +182,7 @@ main{max-width:1120px}
 @media (max-width:360px){.osn-band__r{flex-wrap:wrap;gap:12px 16px}.osn-band .cta{flex:1 1 100%}}
 .startovaya{margin:-4px 0 0;font-size:13px;line-height:1.45;color:var(--muted)}.startovaya a{color:inherit}
 .plan{background:var(--card);border-radius:var(--r);padding:24px 22px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
-.plan.pro{box-shadow:0 0 0 2px var(--accent),0 16px 40px rgba(11,99,229,.12)}
+.plan.pro{box-shadow:0 0 0 2px var(--accent),0 16px 40px rgba(18,48,95,.12)}
 .plan-name{font-size:20px;font-weight:600;letter-spacing:-.01em;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .badge{font-size:12px;font-weight:600;color:#fff;background:var(--accent);border-radius:999px;padding:3px 10px}
 .plan-for{font-size:15px;color:var(--muted);margin-top:2px}
@@ -205,7 +205,7 @@ main{max-width:1120px}
 .raz__t{margin:0;font-size:15px;line-height:1.45;color:var(--ink2);flex:1}
 .skoro-spisok{margin:6px 0 0;padding-left:20px;font-size:15px;line-height:1.5;color:var(--ink2)}.skoro-spisok li{margin:4px 0}
 .knopki--beta{gap:6px}.knopki__pod{display:block;text-align:center;font-size:15px;color:var(--muted)}
-.beta-note{margin:14px 0 0;padding:14px 18px;border-radius:16px;background:#EAF1FD;color:var(--ink2);font-size:17px;line-height:1.5}.beta-note b{color:var(--ink);font-weight:600}
+.beta-note{margin:14px 0 0;padding:14px 18px;border-radius:16px;background:#ECEFF6;color:var(--ink2);font-size:17px;line-height:1.5}.beta-note b{color:var(--ink);font-weight:600}
 h2.big{font-size:clamp(32px,4vw,48px);letter-spacing:-.03em;line-height:1.1;margin:72px 0 10px;font-weight:600}
 .lid{font-size:20px;color:var(--ink2);margin:0 0 20px;max-width:720px}
 .kalk{background:var(--card);border-radius:var(--r);box-shadow:0 1px 2px rgba(0,0,0,.04),0 16px 40px rgba(0,0,0,.05);display:grid;grid-template-columns:1fr 420px;overflow:clip}
@@ -214,14 +214,14 @@ h2.big{font-size:clamp(32px,4vw,48px);letter-spacing:-.03em;line-height:1.1;marg
 .pol legend{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
 .f{display:grid;grid-template-columns:1fr 150px;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid #F0F0EC;font-size:17px;line-height:1.35}
 .f small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
-.f input[type=text],.f select{width:100%;min-height:46px;border:1px solid var(--line);border-radius:10px;padding:0 12px;font:inherit;font-size:17px;font-variant-numeric:tabular-nums;background:#FAFAF8;color:var(--ink)}
+.f input[type=text],.f select{width:100%;min-height:46px;border:1px solid var(--line);border-radius:10px;padding:0 12px;font:inherit;font-size:17px;font-variant-numeric:tabular-nums;background:#FBF9F3;color:var(--ink)}
 .f input[type=text]{text-align:right}
 .f input:focus,.f select:focus{outline:2px solid var(--accent);outline-offset:1px;background:#fff}
 .g{display:grid;grid-template-columns:22px 1fr;gap:8px;align-items:start;padding:10px 0;border-bottom:1px solid #F0F0EC;font-size:17px;cursor:pointer}
 .g[hidden]{display:none}
 .g input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--accent)}
-.itog{background:#111113;color:#F5F5F2;padding:26px 26px 28px;display:flex;flex-direction:column;gap:6px}
-.itog .e{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#8E8E93}
+.itog{background:#0A1733;color:#F5F1E6;padding:26px 26px 28px;display:flex;flex-direction:column;gap:6px}
+.itog .e{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#8A97B5}
 .itog .nm{font-size:32px;font-weight:600;letter-spacing:-.03em;line-height:1.1}
 .itog[data-ton=pro] .nm{color:#6EA8FF}
 .itog .cn{font-size:24px;font-weight:600;font-variant-numeric:tabular-nums}
@@ -232,12 +232,12 @@ h2.big{font-size:clamp(32px,4vw,48px);letter-spacing:-.03em;line-height:1.1;marg
 .itog hr{border:0;border-top:1px solid #2C2C30;margin:14px 0 8px;width:100%}
 .itog .rw{display:flex;justify-content:space-between;gap:12px;align-items:baseline;font-size:15px;color:#D6D6DA}
 .itog .rw b{font-size:20px;color:#fff;font-variant-numeric:tabular-nums;white-space:nowrap}
-.itog .sost{font-size:13px;color:#8E8E93;margin:-2px 0 6px}
+.itog .sost{font-size:13px;color:#8A97B5;margin:-2px 0 6px}
 .itog .vv{font-size:17px;line-height:1.45;color:#fff;background:#1E1E22;border-radius:16px;padding:14px 16px;margin-top:10px}
 .itog .nal{font-size:15px;color:#FFD08A;margin-top:8px}
 .tabl{width:100%;border-collapse:collapse;font-size:17px;background:var(--card);border-radius:16px;overflow:hidden}
 .tabl th,.tabl td{text-align:left;padding:13px 16px;border-bottom:1px solid var(--line)}
-.tabl thead th{font-size:15px;color:var(--muted);font-weight:600;background:#FAFAF8}
+.tabl thead th{font-size:15px;color:var(--muted);font-weight:600;background:#FBF9F3}
 .tabl td.n{font-variant-numeric:tabular-nums;white-space:nowrap}.tabl td.ok{color:var(--ok);font-weight:600}
 .tabl tr:last-child td{border-bottom:0}
 .pravila{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
@@ -406,7 +406,7 @@ page = f'''<!doctype html>
 <meta property="og:description" content="{opis}">
 <meta property="og:url" content="https://deloskop.ru/tarify/">
 <meta property="og:image" content="https://deloskop.ru/ikonka-512.png">
-<meta name="theme-color" content="#F5F5F2">
+<meta name="theme-color" content="#F5F1E6">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">

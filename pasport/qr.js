@@ -259,7 +259,7 @@
   // --- SVG в стиле Делоскопа ---
   function svg(text, opt) {
     opt = opt || {};
-    var ink = opt.ink || '#1D1D1F', accent = opt.accent || '#0B63E5', bg = opt.bg || '#FFFFFF';
+    var ink = opt.ink || '#0D2247', accent = opt.accent || '#12305F', bg = opt.bg || '#FFFFFF';
     var q = matrix(text, opt.ecl || 'Q'), s = q.size, quiet = 4, full = s + quiet * 2;
     // Линза в центре — только если под ней нет выравнивающего узора (версии до 6) и запас коррекции Q/H.
     var logo = opt.logo !== false && q.version <= 6 && (q.ecl === 'Q' || q.ecl === 'H');

@@ -1,7 +1,7 @@
 /* Делоскоп — дизайн-система v1 (документ команды §2.5). Шрифт Onest — /css/fonts.css (подключать рядом, со своего сервера). */
 :root{
- --bg:#F5F5F2;--surface:#FFFFFF;--surface-2:#EEEEEA;--ink:#1D1D1F;--ink-2:#48484C;--muted:#66666B;--line:#E6E6E1;
- --accent:#0B63E5;--accent-hover:#084BB0;--accent-soft:#EAF1FD;--on-accent:#FFFFFF;
+ --bg:#F5F1E6;--surface:#FFFFFF;--surface-2:#EDE8DA;--ink:#0D2247;--ink-2:#3A4868;--muted:#5B6783;--line:#E3DDCD;
+ --accent:#12305F;--accent-hover:#0A1F45;--accent-soft:#ECEFF6;--on-accent:#FFFFFF;
  --ok:#16723F;--ok-bg:#E8F5EE;--warn:#9A5B00;--warn-bg:#FFF4E0;--high:#C2410C;--high-bg:#FFEDE3;--bad:#B3261E;--bad-bg:#FDECEA;
  --font:Onest,"Onest Zapas","Onest Zapas R",-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
  --t-display:clamp(48px,6.4vw,72px);--t-h1:clamp(32px,4.6vw,56px);--t-h2:clamp(32px,3.2vw,48px);--t-h3:24px;
@@ -9,12 +9,12 @@
  --s-1:4px;--s-2:8px;--s-3:12px;--s-4:16px;--s-5:24px;--s-6:32px;--s-7:48px;--s-8:64px;--s-9:96px;--s-10:128px;
  --wide:1200px;--text:760px;--gutter:clamp(16px,5vw,48px);--section:clamp(64px,9vw,120px);
  --r-s:10px;--r-m:16px;--r-l:28px;--r-xl:28px;--r-pill:999px;
- --shadow:0 1px 2px rgba(29,29,31,.04),0 12px 32px rgba(29,29,31,.06);
+ --shadow:0 1px 2px rgba(13,34,71,.04),0 12px 32px rgba(13,34,71,.06);
  --ease:cubic-bezier(.2,.7,.2,1);--fast:160ms;--slow:240ms;
  --header-h:64px;
 }
 @media (max-width:640px){:root{--t-lead:17px;--t-body:17px;--header-h:56px}}
-/* тёмная тема — включим в P2: [data-theme=dark]{--bg:#111113;--surface:#1C1C1F;--surface-2:#26262A;--ink:#F5F5F2;--ink-2:#C7C7CC;--muted:#9A9AA0;--line:#2E2E33;--accent:#5B9BFF;--accent-hover:#7FB0FF;--accent-soft:#16243D;--on-accent:#0B0B0C} */
+/* тёмная тема — включим в P2: [data-theme=dark]{--bg:#0A1733;--surface:#102248;--surface-2:#183060;--ink:#F5F1E6;--ink-2:#C9CFDD;--muted:#9A9AA0;--line:#223A6B;--accent:#D9B45A;--accent-hover:#7FB0FF;--accent-soft:#2A2F47;--on-accent:#081229} */
 *,*::before,*::after{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%;scroll-padding-top:calc(var(--header-h) + 16px)}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 var(--t-body)/1.55 var(--font);-webkit-font-smoothing:antialiased}
@@ -73,7 +73,7 @@ a:hover{color:var(--accent-hover)}
 @media (max-width:640px){.seg--fit button{padding:0 10px;font-size:15px}}
 
 /* ——— дополнения site-v3 (26.09): временная шапка документов и шаблон документа на ширине 760 ——— */
-.hdr{position:sticky;top:0;z-index:20;height:var(--header-h);background:rgba(245,245,242,.88);-webkit-backdrop-filter:saturate(180%) blur(12px);backdrop-filter:saturate(180%) blur(12px);border-bottom:1px solid var(--line)}
+.hdr{position:sticky;top:0;z-index:20;height:var(--header-h);background:rgba(245,241,230,.88);-webkit-backdrop-filter:saturate(180%) blur(12px);backdrop-filter:saturate(180%) blur(12px);border-bottom:1px solid var(--line)}
 .hdr .wrap{height:100%;display:flex;align-items:center;gap:var(--s-5)}
 .hdr__logo{display:flex;align-items:center;gap:8px;color:var(--ink);text-decoration:none;font-size:20px;font-weight:600;letter-spacing:-.02em;margin-right:auto}
 .hdr__logo:hover{color:var(--ink)}

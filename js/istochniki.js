@@ -253,6 +253,102 @@
     return x;
   }
 
+  // sverka-dohodov-v1 ([команда] 14.11; находка команда 14.11 02:45 и 09:10, ✎ «Сервер»): у части компаний
+  // доходы за год из набора ФНС «доходы и расходы» приходят в 1 000 раз больше (единицы: тысячи вместо рублей) —
+  // 0105053225: 2024 — 31 438 000 ₽, 2025 — 32 461 319 000 ₽. На этом числе сервер строил строку «Низкая налоговая нагрузка»
+  // (warn), «Оборот около 32,5 млрд ₽», рост +733 % в год, а Индекс считал «крупную недоимку» и «крупный долг у приставов»
+  // от завышенной выручки — риск занижался. Здесь, до всех модулей отчёта: год, где доходы ≥ 1 млрд ₽ и в 100+ раз больше
+  // последнего года с выручкой, НЕ учитываем — ни в рядах, ни в показателях, ни в «Деньгах на кону», ни в Индексе.
+  // Число не «чиним» делением: что верно — решает сверка с бухотчётностью, а не мы. Строку светофора про нагрузку
+  // заменяем честной «Доходы за ГГГГ год — не сверены» (нейтральная, не минус). Порог настоящего роста ×100 при сумме
+  // от 1 млрд ₽ за год почти не встречается; если встретится — человек увидит «не сверены» и ссылку на ГИР БО, а не ложь.
+  var SVERKA = { kratno: 100, summa: 1e9 };
+  function razryady(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, NB); }
+  function razSkl(n) { var a = Math.abs(Math.round(n)) % 100, b = a % 10; return a > 10 && a < 20 ? 'раз' : b >= 2 && b <= 4 ? 'раза' : 'раз'; }
+  function ryadGod(ryad) {
+    var po = {};
+    (Array.isArray(ryad) ? ryad : []).forEach(function (x) {
+      if (x && isFinite(+x.year) && x.value !== null && x.value !== '' && typeof x.value !== 'boolean' && isFinite(Number(x.value))) po[+x.year] = Number(x.value);
+    });
+    return Object.keys(po).map(Number).sort(function (a, b) { return a - b; }).map(function (g) { return { g: g, v: po[g] }; });
+  }
+  // r → [{god, summa, proshlyj: {god, summa}, kratno}] — годы, которые не сходятся с прошлыми
+  function neSverennye(r) {
+    var ch = r && r.dossier && r.dossier.charts, a = ryadGod(ch && ch.revenue), out = [], pr = null;
+    a.forEach(function (x) {
+      if (pr && x.v >= SVERKA.summa && x.v >= SVERKA.kratno * pr.v) out.push({ god: x.g, summa: x.v, proshlyj: { god: pr.g, summa: pr.v }, kratno: x.v / pr.v });
+      else if (x.v > 0) pr = x; // сравниваем с последним годом, где выручка была и сошлась
+    });
+    return out;
+  }
+  function sverkaDohodov(r) {
+    if (!r || typeof r !== 'object' || r.sverka_dohodov) return r;
+    var ns = neSverennye(r);
+    if (!ns.length) return r;
+    var D = r.dossier, ch = D.charts, goda = {}, nov = ns[ns.length - 1];
+    ns.forEach(function (x) { goda[x.god] = true; });
+    r.sverka_dohodov = ns;
+    ['revenue', 'profit'].forEach(function (k) {
+      if (Array.isArray(ch[k])) ch[k] = ch[k].filter(function (x) { return !(x && goda[+x.year]); });
+    });
+    var rv = ryadGod(ch.revenue), pf = ryadGod(ch.profit);
+    function poslednij(a) { return a.length ? a[a.length - 1] : null; }
+    function delta(a, g) { // как у сервера: процент к прошлому году, целым; прошлого года нет или ≤ 0 — без процента
+      var t = a.filter(function (x) { return x.g === g; })[0], p = a.filter(function (x) { return x.g === g - 1; })[0];
+      return t && p && p.v > 0 ? Math.round((t.v / p.v - 1) * 100) : null;
+    }
+    // показатели: выручка и прибыль — за последний сверенный год; нагрузка «без взносов» считалась от не сверенного — убираем
+    if (Array.isArray(D.kpi)) D.kpi = D.kpi.filter(function (k) {
+      var L = String((k && k.label) || ''), m = /^(Выручка|Чистая прибыль) за (\d{4})$/.exec(L);
+      if (/^Налоговая нагрузка/i.test(L)) return false;
+      if (!/ за \d{4}$/.test(L) && Number(k.delta) >= (SVERKA.kratno - 1) * 100) return false; // «Активы» ×100+ к прошлому году в том же наборе — тоже не сверены
+      if (!m || !goda[+m[2]]) return true;
+      var a = m[1] === 'Выручка' ? rv : pf, p = poslednij(a);
+      if (!p) return false;
+      k.label = m[1] + ' за ' + p.g; k.value = p.v; k.delta = delta(a, p.g);
+      return true;
+    });
+    // «Деньги на кону»: сумма — против выручки последнего сверенного года по ГИР БО (процент считает js/dengi-na-konu.js)
+    var dv = r.dengi && r.dengi.vyruchka;
+    if (dv && goda[+dv.god]) {
+      var pv = poslednij(rv);
+      r.dengi.vyruchka = pv && pv.v > 0 ? { summa: pv.v, god: pv.g, istochnik: 'ГИР БО ФНС, годовая бухгалтерская отчётность', zamena_za: +dv.god }
+        : { summa: null, god: null, istochnik: dv.istochnik, zamena_za: +dv.god };
+      if ('dolya' in r.dengi) r.dengi.dolya = null;
+      if (r.dengi.doli && typeof r.dengi.doli === 'object') r.dengi.doli = null;
+    }
+    var tekst = 'Доходы за' + NB + nov.god + NB + 'год в' + NB + 'открытых данных ФНС — ' + razryady(nov.summa) + NB + '₽, в' + NB +
+      razryady(nov.kratno) + NB + razSkl(nov.kratno) + ' больше, чем за' + NB + nov.proshlyj.god + NB + 'год (' + razryady(nov.proshlyj.summa) + NB + '₽). ' +
+      'Так бывает при ошибке единиц в' + NB + 'наборе. Этот год не' + NB + 'учитываем — ни в' + NB + 'выручке, ни в' + NB + 'налоговой нагрузке, ни в' + NB + 'Индексе; ' +
+      'сверьте с' + NB + 'бухотчётностью на' + NB + 'bo.nalog.gov.ru.';
+    r.sverka_dohodov_tekst = tekst;
+    // разделы досье: «Финансы» — строки, посчитанные от не сверенных доходов, снимаем; «Динамика» — без не сверенного года
+    (Array.isArray(D.sections) ? D.sections : []).forEach(function (sk) {
+      if (!sk || !Array.isArray(sk.rows)) return;
+      if (sk.id === 'finance') {
+        var na = sk.rows.filter(function (x) { return Array.isArray(x) && x[0] === 'Данные на'; })[0], g = na && /(\d{4})\s*$/.exec(String(na[1]));
+        if (g && !goda[+g[1]]) return;
+        sk.rows = sk.rows.filter(function (x) { return !(Array.isArray(x) && /^(Доходы за год|Расходы за год|Финансовый результат|Рентабельность|Налоговая нагрузка|Доход на одного сотрудника)/i.test(String(x[0]))); });
+        sk.comment = tekst;
+      }
+      if (sk.id === 'dynamics') {
+        sk.rows = sk.rows.filter(function (x) { return !(Array.isArray(x) && (goda[+String(x[0]).trim()] && /^\d{4}$/.test(String(x[0]).trim()) || /^Средний рост выручки/i.test(String(x[0])))); });
+        var ost = (String(sk.comment || '').match(/[^.]+\.?/g) || []).map(function (f) { return f.trim(); }).filter(function (f) { return f && !/выручк|рентабельн|раст[её]т|прибыл|зарабатыва|сокращ/i.test(f); });
+        sk.comment = ['Год ' + Object.keys(goda).join(', ') + ' не' + NB + 'показываем: доходы в' + NB + 'открытых данных ФНС не' + NB + 'сходятся с' + NB + 'прошлыми годами.'].concat(ost).join(' ');
+      }
+    });
+    // светофор: строка нагрузки стояла на не сверенном числе → честная нейтральная строка; нет такой — добавляем
+    var S = Array.isArray(r.signals) ? r.signals : (r.signals = []), stroka = {
+      id: 'sverka_dohodov', title: 'Доходы за' + NB + nov.god + NB + 'год', status: 'not_checked',
+      detail: 'Не сверены: в' + NB + razryady(nov.kratno) + NB + razSkl(nov.kratno) + ' больше, чем за' + NB + nov.proshlyj.god + NB + 'год — в' + NB + 'оценку не' + NB + 'взяли',
+      pains: [], source: 'ФНС, открытые данные: доходы и расходы организации', as_of: '31.12.' + nov.god, sverka_dohodov: true };
+    var i = -1;
+    S.forEach(function (s, j) { if (i < 0 && s && (s.id === 'tax_burden' || /^Низкая налоговая нагрузка/i.test(String(s.title || '')))) i = j; });
+    if (i >= 0) S.splice(i, 1, stroka); else S.push(stroka);
+    if (typeof r.verdict === 'string') r.verdict = r.verdict.replace(/,\s*низкая налоговая нагрузка|низкая налоговая нагрузка,\s*/i, '');
+    return r;
+  }
+
   function dopolnit(r) {
     if (!r || typeof r !== 'object' || !r.company) return r;
     var dm = r.damia && typeof r.damia === 'object' ? r.damia : null;
@@ -277,6 +373,7 @@
     if (f && typeof f === 'object' && OTVETIL[f.status] && f.sostoyanie !== f.status) f.sostoyanie = f.status;
     // единый статус у каждого блока — для отчёта, Паспорта, досье и экспорта
     if (dm) Object.keys(dm).forEach(function (k) { var b = dm[k]; if (b && typeof b === 'object' && k !== 'polnota') { b.status_edinyj = statusIstochnika(b); b.status_edinyj_tekst = statusTekst(b); } });
+    sverkaDohodov(r); // sverka-dohodov-v1: доходы года, не сходящиеся с прошлыми, — до всех модулей отчёта
     return r;
   }
 
@@ -286,5 +383,5 @@
     return b.status === 'provereno' || b.status === 'found' || b.status === 'not_found';
   }
 
-  return { dopolnit: dopolnit, ustarevanie: ustarevanie, statusIstochnika: statusIstochnika, statusTekst: statusTekst, STATUSY: STATUSY, REESTR: REESTR, bankrotstvoIzEgryul: bankrotstvoIzEgryul, uchten: uchten, privestiSlovar: privestiSlovar, maskaStoron: maskaStoron, storona: storona, sudyItog: sudyItog, sudyNol: sudyNol, samiTekst: samiTekst, OGOVORKA_EFRSB: OGOVORKA_EFRSB };
+  return { dopolnit: dopolnit, ustarevanie: ustarevanie, statusIstochnika: statusIstochnika, statusTekst: statusTekst, STATUSY: STATUSY, REESTR: REESTR, bankrotstvoIzEgryul: bankrotstvoIzEgryul, uchten: uchten, privestiSlovar: privestiSlovar, maskaStoron: maskaStoron, storona: storona, sudyItog: sudyItog, sudyNol: sudyNol, samiTekst: samiTekst, OGOVORKA_EFRSB: OGOVORKA_EFRSB, sverkaDohodov: sverkaDohodov, neSverennye: neSverennye, SVERKA: SVERKA };
 });

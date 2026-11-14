@@ -1192,6 +1192,10 @@ return { god: g, tekst: 'Последняя открытая отчётност�
 }
 function starayaHtml(r) { var s = staraya(r); return s ? '<p class="din__star" data-blok="staraya">' + esc(s.tekst) + '</p>' : ''; }
 var STRELKA = { vverh: '▲', vniz: '▼', ro: '' };
+function sverkaHtml(r) {
+var t = r && r.sverka_dohodov_tekst;
+return t ? '<p class="din__skachok din__skachok--warn" data-blok="sverka-dohodov"><b>Год не' + NB + 'сверен.</b> ' + esc(t) + '</p>' : '';
+}
 function htmlDinamika(r, opt) {
 var rs = ryady(r);
 if (!rs.length) return '';
@@ -1216,7 +1220,7 @@ starayaHtml(r) +
 '<th scope="col" class="din__v din__p n">' + gp + '</th><th scope="col" class="din__v n">' + g1 + '</th><th scope="col" class="din__v">Изм.</th></tr></thead>' +
 '<tbody>' + rows + '</tbody></table></div>' +
 (tr.length ? '<p class="din__tr">' + tr.map(esc).join(' ') + '</p>' : '') +
-skachokHtml(r) +
+skachokHtml(r) + sverkaHtml(r) +
 (opt && opt.balans === false ? '' : htmlBalans(r)) +
 '<p class="din__src">Источник: ГИР БО ФНС, годовая бухгалтерская отчётность; последний год — ' + g1 + ' (на' + NB + '31.12.' + g1 + ').' +
 (fns ? ' Численность и уплаченные налоги — открытые наборы ФНС за год.' : '') + '</p>' +
@@ -1906,7 +1910,7 @@ var din = '';
 try { din = htmlDinamika(r, opt); if (!din && opt.balans !== false) din = htmlBalansOtdelno(r); } catch (e) { din = ''; }
 return izm + din;
 }
-return { skachok: skachok, skachokHtml: skachokHtml, ryad: ryad, ryady: ryady, nalogBezZnaka: nalogBezZnaka, stroka: stroka, izmenenie: izmenenie, trendy: trendy, dengi: dengi, htmlDinamika: htmlDinamika, poslGodOtchetnosti: poslGodOtchetnosti, staraya: staraya, balans: balans, htmlBalans: htmlBalans,
+return { skachok: skachok, skachokHtml: skachokHtml, sverkaHtml: sverkaHtml, ryad: ryad, ryady: ryady, nalogBezZnaka: nalogBezZnaka, stroka: stroka, izmenenie: izmenenie, trendy: trendy, dengi: dengi, htmlDinamika: htmlDinamika, poslGodOtchetnosti: poslGodOtchetnosti, staraya: staraya, balans: balans, htmlBalans: htmlBalans,
 snimok: snimok, sravnit: sravnit, likvidnost: likvidnost, okved: okved, ustKapital: ustKapital, rubliTochno: rubliTochno, vRaz: vRaz, zapomnit: zapomnit, htmlIzmeneniya: htmlIzmeneniya, html: html, KEY: KEY, CSS: CSS,
 iskl: iskl, isklyuchena: isklyuchena, ixChislo: ixChislo, plusMes: plusMes, kodSost: kodSost, predydushchaya: predydushchaya, nuzhenKabinet: nuzhenKabinet, dogruzit: dogruzit, dobavit: dobavit, sDop: sDop, ozhidatIndeks: ozhidatIndeks, dopisatIndeks: dopisatIndeks,
 sravnitSnimki: sravnitSnimki, obrazecIzm: obrazecIzm, htmlPasport: htmlPasport, stil: stil };

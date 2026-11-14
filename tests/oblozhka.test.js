@@ -17,12 +17,14 @@ function stranicy() {
 }
 const golova = (f) => { const t = fs.readFileSync(path.join(K, f), 'utf8'); return t.slice(0, t.indexOf('</head>')); };
 
-test('oblozhka.png — PNG 1200×630, не тяжелее 40 КБ', () => {
+// oblozhka-3d-v1 (15.11.2026): объёмный знак со свечением весит больше плоского — порог 40 → 60 КБ
+// (без полос в свечении меньше не выходит: 48 цветов — 45 КБ, но ступени на латуни). Превью площадки берут картинку один раз и кэшируют.
+test('oblozhka.png — PNG 1200×630, не тяжелее 60 КБ', () => {
   const b = fs.readFileSync(path.join(K, 'oblozhka.png'));
   assert.strictEqual(b.toString('latin1', 1, 4), 'PNG');
   assert.strictEqual(b.readUInt32BE(16), 1200);
   assert.strictEqual(b.readUInt32BE(20), 630);
-  assert.ok(b.length <= 40 * 1024, 'обложка ' + b.length + ' байт — превью ВК и Telegram грузят её на каждую ссылку');
+  assert.ok(b.length <= 60 * 1024, 'обложка ' + b.length + ' байт — превью ВК и Telegram грузят её на каждую ссылку');
 });
 
 test('значка 512×512 в og:image нет ни на одной странице; у обложки — размеры, подпись, имя сайта', () => {
@@ -89,7 +91,10 @@ const blizko = (cv, [r, g, bl], d) => cv.some((c) => Math.abs(c[0] - r) <= d && 
 
 test('oblozhka-znak-v1: заготовка обложки — знак «лупа-галочка», слово Unbounded, палитра бренда; прежних колец нет', () => {
   const h = fs.readFileSync(path.join(K, 'tests/oblozhka/oblozhka.html'), 'utf8');
-  assert.strictEqual(h.split('d="' + PUT27 + '"').length - 1, 2, 'знак — в строке имени и крупно справа, путь из favicon.svg');
+  assert.strictEqual(h.split('d="' + PUT27 + '"').length - 1, 1, 'плоский знак — в строке имени, путь из favicon.svg');
+  // oblozhka-3d-v1: крупно справа — объёмный знак из значка приложения, 1 : 1 (512 px), края растворены маской
+  assert.ok(h.includes('<img class="k" src="/ikonka-512.png" alt="">') && /\.k\{[^}]*width:512px;height:512px;[^}]*mask-image:radial-gradient/.test(h),
+    'объёмный знак — ikonka-512.png без растяжки, с круглой маской');
   assert.ok(h.includes('font:700 32px/1 "Unbounded"') && h.includes('>Делоскоп</div>'), 'слово — Unbounded 700, как в шапке');
   assert.ok(h.includes('background:#0D2247') && h.includes('fill="#D9B45A"'), 'тёмно-синий и латунь');
   assert.ok(!h.includes('M36 18.1') && !/circle cx="(150|310)"/.test(h) && !h.includes('#12305F"/><g'), 'прежнего знака-колец нет');

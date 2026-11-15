@@ -248,6 +248,8 @@ var b = e.target.closest("[data-tema-v]"); if (!b) return;
 smena(b, b.getAttribute("data-tema-v"));
 });
 });
+window.addEventListener("beforeprint", function () { if (root.dataset.theme === "dark") { root.dataset.pechat = "1"; root.dataset.theme = "light"; } });
+window.addEventListener("afterprint", function () { if (root.dataset.pechat) { delete root.dataset.pechat; primenit(); } });
 if (mq) { var sl = function () { if (vybor() === "auto") primenit(); }; if (mq.addEventListener) mq.addEventListener("change", sl); else if (mq.addListener) mq.addListener(sl); }
 window.addEventListener("storage", function (e) { if (e.key === "tema") primenit(); });
 primenit();

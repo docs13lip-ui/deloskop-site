@@ -302,6 +302,11 @@
         smena(b, b.getAttribute("data-tema-v"));
       });
     });
+    // bumaga-pechat-v1: печать и PDF — всегда бумага. В тёмной теме (её видят по умолчанию) отчёт уходил на печать
+    // светлым текстом: без «фоновой графики» (так печатает браузер по умолчанию) — бледные буквы на белом.
+    // На время печати — светлая тема, после — та, что выбрана.
+    window.addEventListener("beforeprint", function () { if (root.dataset.theme === "dark") { root.dataset.pechat = "1"; root.dataset.theme = "light"; } });
+    window.addEventListener("afterprint", function () { if (root.dataset.pechat) { delete root.dataset.pechat; primenit(); } });
     if (mq) { var sl = function () { if (vybor() === "auto") primenit(); }; if (mq.addEventListener) mq.addEventListener("change", sl); else if (mq.addListener) mq.addListener(sl); }
     window.addEventListener("storage", function (e) { if (e.key === "tema") primenit(); });
     primenit();

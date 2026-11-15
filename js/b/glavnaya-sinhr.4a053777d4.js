@@ -194,9 +194,9 @@ var CSS = '.limit{margin-top:12px;background:var(--surface,#F5F1E6);border:1px s
 '.limit__kn{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}' +
 '.limit__kn a{display:inline-flex;align-items:center;min-height:44px;padding:10px 18px;border-radius:999px;font-weight:600;font-size:15px;text-decoration:none;box-sizing:border-box;max-width:100%}' +
 '.limit__kn .gh{border-radius:16px}.limit__kn .pr{background:var(--accent,#12305F);color:#fff}.limit__kn .gh{border:1px solid var(--line,#E3DDCD);color:var(--accent,#12305F);background:#fff}' +
-'.limit p.limit__chestno{margin:10px 0 0;font-size:15px;color:var(--ink3,#6E6E73)}' +
+'.limit p.limit__chestno{margin:10px 0 0;font-size:15px;color:var(--muted,#5B6783)}' +
 '.limit-vchera{margin-top:8px;font-size:15px;color:var(--ink2,#3A3A3C)}.limit-vchera button{font:inherit;border:0;background:none;padding:0;cursor:pointer}' +
-'.limit-vchera .go{color:var(--accent,#12305F)}.limit-vchera .x{color:var(--ink3,#8A8A8E);margin-left:12px;font-size:15px}';
+'.limit-vchera .go{color:var(--accent,#12305F)}.limit-vchera .x{color:var(--muted,#5B6783);margin-left:12px;font-size:15px}';
 function stil(doc) {
 if (!doc || doc.getElementById('dlk-limit-css')) return;
 var s = doc.createElement('style'); s.id = 'dlk-limit-css'; s.textContent = CSS;

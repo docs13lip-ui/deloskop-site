@@ -89,7 +89,7 @@ test('контраст токенов тёмной темы', () => {
 test('авто-слой: цвета числом получают тёмную пару, токены и печать не трогаем', () => {
   const py = (css) => execSync('python3 -c "import sys;sys.path.insert(0,\'tests\');import tema_temnaya as T;print(T.pravila(sys.stdin.read()),end=\'\')"', { cwd: K, input: css, encoding: 'utf8' });
   assert.strictEqual(py('.a{background:#fff;color:#0D2247;padding:4px}'), '[data-theme=dark] .a{background:#102248;color:#F5F1E6}');
-  assert.strictEqual(py('.b{background:#ECEFF6;color:#12305F}'), '[data-theme=dark] .b{background:#2A2F47;color:#D9B45A}');
+  assert.strictEqual(py('.b{background:#ECEFF6;color:#12305F}'), '[data-theme=dark] .b{background:#16357A;color:#D9B45A}');
   assert.strictEqual(py('.c{background:var(--accent,#12305F);color:#fff}'), '[data-theme=dark] .c{color:#081229}', 'белый на фирменном → --on-accent');
   assert.strictEqual(py('.d{background:var(--surface,#fff);color:var(--ink,#0D2247)}'), '', 'токен с запасным — решает токен');
   assert.strictEqual(py('@media print{.e{background:#fff}}:root{--bg:#F5F1E6}'), '', 'печать и токены ДС — не трогаем');
@@ -109,4 +109,27 @@ test('слой страницы: <style data-tema> — только в <head>, �
     }
   }
   assert.ok(n >= 10, 'страниц со своим тёмным слоем ' + n);
+});
+
+// akcent-sapfir-v1 (15.11.2026): выделенная плашка тёмной темы — из палитры «тёмно-синий + латунь», не серо-сиреневая
+test('тёмная тема: --accent-soft — сапфир, прежнего #2A2F47 нет нигде, подписи и латунь на плашке ≥ 4,5 : 1', () => {
+  const tema = chitat('css/tema.css');
+  const m = tema.match(/--accent-soft:(#[0-9A-Fa-f]{6});/);
+  assert.ok(m, 'нет --accent-soft в css/tema.css');
+  const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const L = (h) => { const [r, g, b] = rgb(h).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+  const k = (a, b) => { const x = L(a), y = L(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  const [r, g, b] = rgb(m[1]);
+  assert.ok(b > r + 60 && b > g + 40, m[1] + ': плашка должна быть синей (сапфир), а не серой');
+  for (const [imya, t] of [['--muted', '#9CA8C2'], ['--accent', '#D9B45A'], ['--ink', '#F5F1E6']]) {
+    assert.ok(k(t, m[1]) >= 4.5, imya + ' на ' + m[1] + ': ' + k(t, m[1]).toFixed(2));
+  }
+  let f = [];
+  try { f = execSync('git -c core.quotepath=off ls-files "*.html" "*.css" "*.js" "tests/*.py"', { cwd: K, encoding: 'utf8' }).split('\n').filter(Boolean); } catch (e) { f = ['css/tema.css']; }
+  for (const x of f) {
+    if (x.startsWith('tests/') && x.endsWith('.test.js')) continue;
+    const s = chitat(x);
+    assert.ok(!/#2A2F47|rgba\(42,47,71|#40455D|\(42, 47, 71\)|\(36, 27, 58\)/i.test(s), x + ': серо-сиреневый цвет прежней палитры');
+  }
+  assert.ok(!/var\(--ink3/.test(chitat('js/limit.js')), 'js/limit.js: --ink3 нигде не задан — подпись падает в запасной серый');
 });

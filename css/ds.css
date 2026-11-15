@@ -14,7 +14,7 @@
  --header-h:64px;
 }
 @media (max-width:640px){:root{--t-lead:17px;--t-body:17px;--header-h:56px}}
-/* тёмная тема — включим в P2: [data-theme=dark]{--bg:#0A1733;--surface:#102248;--surface-2:#183060;--ink:#F5F1E6;--ink-2:#C9CFDD;--muted:#9A9AA0;--line:#223A6B;--accent:#D9B45A;--accent-hover:#7FB0FF;--accent-soft:#2A2F47;--on-accent:#081229} */
+/* тёмная тема — токены в /css/tema.css (палитра «тёмно-синий + латунь»; выделенная плашка --accent-soft — сапфир #16357A) */
 *,*::before,*::after{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%;scroll-padding-top:calc(var(--header-h) + 16px)}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 var(--t-body)/1.55 var(--font);-webkit-font-smoothing:antialiased}

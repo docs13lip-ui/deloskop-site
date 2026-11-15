@@ -400,6 +400,42 @@ footer a{color:var(--ink2)}
   html:not(.rezhim-otcheta) .hero .check input{min-height:60px;font-size:20px;padding:0 18px}
   html:not(.rezhim-otcheta) .hero .check button{min-height:60px;padding:0 34px}
 }
+/* geroj-3d-v1 (15.11): объёмный знак над заголовком и строка проверки как главный предмет экрана.
+   Знак — картинка в разметке (место задано заранее, сдвигов нет); живым его делает js/znak3d.js: поворот вслед за мышью,
+   «водит», пока печатают. Плоский знак .lp остаётся в разметке невидимым: с него читается состояние строки.
+   Вне режима отчёта; на телефоне первый экран — тоже по центру. */
+.z3{display:none}
+html:not(.rezhim-otcheta) .z3{display:block;position:relative;align-self:center;flex:none;width:clamp(150px,15vw,208px);aspect-ratio:1;margin:-30px 0 -22px;pointer-events:none;contain:layout style}
+.z3::after{content:"";position:absolute;left:24%;right:24%;bottom:9%;height:9%;border-radius:50%;background:radial-gradient(closest-side,rgba(3,8,22,.42),rgba(3,8,22,0))}
+.z3__k,.z3__s{position:absolute;inset:0;width:100%;height:100%;display:block}
+.z3__k{animation:z3-vhod .9s cubic-bezier(.2,.8,.2,1) .1s both}
+.z3__s{background-repeat:no-repeat;background-size:600% 400%;opacity:0}
+.z3--zhiv .z3__s{opacity:1}
+.z3--zhiv .z3__k{opacity:0;animation:none}
+.z3[data-sost=opechatka] .z3__s{filter:saturate(.45)}
+.z3::before{content:"";position:absolute;left:50%;top:50%;width:54%;height:54%;margin:-27% 0 0 -27%;border-radius:50%;border:2px solid var(--accent);opacity:0}
+.z3--puls::before{animation:z3-volna .9s ease-out 1}
+@keyframes z3-vhod{from{opacity:0;transform:translateY(12px) scale(.9) rotate(-10deg)}to{opacity:1;transform:none}}
+@keyframes z3-volna{from{opacity:.7;transform:scale(.8)}to{opacity:0;transform:scale(1.7)}}
+html:not(.rezhim-otcheta) .lp{position:absolute;top:0;right:auto;left:0;width:1px;height:1px;margin:0;opacity:0;overflow:hidden}
+html:not(.rezhim-otcheta) .hero .check{position:relative;box-shadow:0 0 0 1px var(--line),0 18px 48px rgba(3,8,22,.22)}
+html:not(.rezhim-otcheta) .hero .check:focus-within{box-shadow:0 0 0 2px var(--accent),0 24px 64px rgba(3,8,22,.3)}
+html:not(.rezhim-otcheta) .hero .check button{transition:transform .15s}
+html:not(.rezhim-otcheta) .hero .check button:active{transform:scale(.98)}
+@supports (background:color-mix(in srgb,red 50%,transparent)){
+  html:not(.rezhim-otcheta) .hero .check{background:color-mix(in srgb,var(--card) 84%,transparent);-webkit-backdrop-filter:blur(14px) saturate(1.25);backdrop-filter:blur(14px) saturate(1.25);box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 40%,transparent),0 18px 48px rgba(3,8,22,.22)}
+  html:not(.rezhim-otcheta) .hero .check:focus-within{box-shadow:0 0 0 2px var(--accent),0 0 0 9px color-mix(in srgb,var(--accent) 20%,transparent),0 24px 64px rgba(3,8,22,.3)}
+}
+html:not(.rezhim-otcheta) .hero .check::after{content:"";position:absolute;left:14%;right:14%;top:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.55;pointer-events:none}
+@media (max-width:600px){
+  html:not(.rezhim-otcheta) .hero-text{align-items:center;text-align:center}
+  html:not(.rezhim-otcheta) .hero .check{width:100%;text-align:left}
+  html:not(.rezhim-otcheta) .hero h1.hero-h1 .h1-kicker{padding-right:0}
+  html:not(.rezhim-otcheta) .z3{margin:-26px 0 -20px}
+}
+@media (min-width:981px){html:not(.rezhim-otcheta) .z3{width:clamp(208px,17vw,248px);margin:-40px 0 -30px}}
+@media (prefers-reduced-motion:reduce){.z3__k,.z3--puls::before{animation:none!important}html:not(.rezhim-otcheta) .hero .check button{transition:none}}
+@media print{.z3{display:none!important}}
 </style>
 <!-- vizual-v3.0a: стили и скрипты главной — пятью файлами вместо 17 (partials/sborka.json, tests/sobrat_js.py) -->
 <link rel="stylesheet" href="/css/b/ds.5d12679305.css">
@@ -412,7 +448,7 @@ footer a{color:var(--ink2)}
 <meta name="apple-mobile-web-app-title" content="Делоскоп">
 <script>!function(d,t){try{t=localStorage.tema}catch(e){}t=t=="auto"?(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light"):t=="light"?t:"dark";d.dataset.theme=t;if(t=="dark"&&(t=document.querySelector("meta[name=theme-color]")))t.content="#0A1733"}(document.documentElement)</script>
 <meta name="deloskop-rezhim" content="beta">
-<style data-tema>[data-theme=dark] .top{background:rgba(10,23,51,0.86)}[data-theme=dark] .btn{color:#081229}[data-theme=dark] .btn:hover{color:#081229}[data-theme=dark] .check button{color:#081229}[data-theme=dark] .note.err{color:#FF7B72}[data-theme=dark] .row{border-top:1px solid #223A6B}[data-theme=dark] .row .bad{color:#FF7B72}[data-theme=dark] .pill.medium{background:#2E220C}[data-theme=dark] .pill.high{background:#3A1513;color:#FF7B72}[data-theme=dark] .report-actions button{border:1px solid #223A6B}[data-theme=dark] .report-actions .btn-doc{color:#081229}[data-theme=dark] .report-actions .btn-doc:hover{color:#081229}[data-theme=dark] .tagnew{background:#16357A}[data-theme=dark] .plan.pro{background:#102248}[data-theme=dark] .badge{color:#081229}[data-theme=dark] .period button.on{background:#102248}[data-theme=dark] .cta2:hover{background:rgba(217,180,90,0.06)}[data-theme=dark] .cta.primary{color:#081229}[data-theme=dark] .cta.primary:hover{color:#081229}[data-theme=dark] .cta.ghost{border:1px solid #223A6B}[data-theme=dark] .faq details{border-top:1px solid #223A6B}[data-theme=dark] .faq details:last-child{border-bottom:1px solid #223A6B}[data-theme=dark] .fb-btn{background:#102248}[data-theme=dark] .fb-panel{background:#102248}[data-theme=dark] .fb-kinds button,[data-theme=dark] .fb-stars button{background:#102248}[data-theme=dark] .fb-kinds button[aria-pressed="true"]{background:#16357A}[data-theme=dark] .fb-stars button[aria-pressed="true"]{color:#081229}[data-theme=dark] .fb-send{color:#081229}[data-theme=dark] .fb-toast{color:#081229}[data-theme=dark] .fb-toast button{background:#102248}[data-theme=dark] :focus-visible{outline:3px solid rgba(217,180,90,0.45)}[data-theme=dark] .vhod:hover{border-color:#223A6B}</style>
+<style data-tema>[data-theme=dark] .top{background:rgba(10,23,51,0.86)}[data-theme=dark] .btn{color:#081229}[data-theme=dark] .btn:hover{color:#081229}[data-theme=dark] .check button{color:#081229}[data-theme=dark] .note.err{color:#FF7B72}[data-theme=dark] .row{border-top:1px solid #223A6B}[data-theme=dark] .row .bad{color:#FF7B72}[data-theme=dark] .pill.medium{background:#2E220C}[data-theme=dark] .pill.high{background:#3A1513;color:#FF7B72}[data-theme=dark] .report-actions button{border:1px solid #223A6B}[data-theme=dark] .report-actions .btn-doc{color:#081229}[data-theme=dark] .report-actions .btn-doc:hover{color:#081229}[data-theme=dark] .tagnew{background:#16357A}[data-theme=dark] .plan.pro{background:#102248}[data-theme=dark] .badge{color:#081229}[data-theme=dark] .period button.on{background:#102248}[data-theme=dark] .cta2:hover{background:rgba(217,180,90,0.06)}[data-theme=dark] .cta.primary{color:#081229}[data-theme=dark] .cta.primary:hover{color:#081229}[data-theme=dark] .cta.ghost{border:1px solid #223A6B}[data-theme=dark] .faq details{border-top:1px solid #223A6B}[data-theme=dark] .faq details:last-child{border-bottom:1px solid #223A6B}[data-theme=dark] .fb-btn{background:#102248}[data-theme=dark] .fb-panel{background:#102248}[data-theme=dark] .fb-kinds button,[data-theme=dark] .fb-stars button{background:#102248}[data-theme=dark] .fb-kinds button[aria-pressed="true"]{background:#16357A}[data-theme=dark] .fb-stars button[aria-pressed="true"]{color:#081229}[data-theme=dark] .fb-send{color:#081229}[data-theme=dark] .fb-toast{color:#081229}[data-theme=dark] .fb-toast button{background:#102248}[data-theme=dark] :focus-visible{outline:3px solid rgba(217,180,90,0.45)}[data-theme=dark] .vhod:hover{border-color:#223A6B}[data-theme=dark] .z3::after{background:radial-gradient(closest-side,rgba(3,8,22,.42),rgba(255,255,255,0.02))}</style>
 </head>
 <body>
 
@@ -466,6 +502,7 @@ footer a{color:var(--ink2)}
     <div class="wrap">
       <div class="hero-text">
         <div class="lp" data-sost="zhdet" data-lp-src="/js/b/linza-poisk.01e9d944e9.js" aria-hidden="true"><svg class="lp__z" viewBox="4 10 116 104" focusable="false"><g class="lp__l"><circle class="lp__st" cx="83" cy="43" r="19"/><path class="lp__lz" d="M46.79 98.77A7.5 7.5 0 0 1 35.21 89.23L60.36 58.69A7.5 7.5 0 0 1 71.94 68.22ZM54 43a29 29 0 1 1 58 0a29 29 0 1 1 -58 0ZM64 43a19 19 0 1 0 38 0a19 19 0 1 0 -38 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0Z"/><path class="lp__bl" d="M70.8 38.6A13 13 0 0 1 78.6 30.8"/><circle class="lp__v" cx="83" cy="43" r="29"/></g><path class="lp__f" d="M49.86 85.91A12 12 0 0 1 32.14 102.09L11.14 79.09A12 12 0 0 1 28.86 62.91ZM29 94a12 12 0 1 1 24 0a12 12 0 1 1 -24 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0Z"/></svg></div><script>/* znak-glavnaya-v1: скрипт знака — только когда блок виден и браузер свободен; рисунок и раскрытие линзы — в разметке и стилях, без скрипта */!function(d,w){var e=d.currentScript.previousElementSibling,s;if(!e||!("IntersectionObserver"in w))return;var o=new IntersectionObserver(function(z){if(!z[0].isIntersecting||s)return;o.disconnect();(w.requestIdleCallback||function(f){setTimeout(f,300)})(function(){s=d.createElement("script");s.src=e.getAttribute("data-lp-src");s.async=!0;d.head.appendChild(s)},{timeout:2500})});o.observe(e)}(document,window)</script>
+        <div class="z3" aria-hidden="true" data-z3-src="/js/b/znak3d.b8bb3d50bf.js" data-z3-kadry="/img/znak3d-kadry.webp"><img class="z3__k" src="/img/znak3d.webp" width="168" height="168" alt="" decoding="async"></div><script>/* geroj-3d-v1: модуль живого знака — только когда блок виден и браузер свободен; сама картинка знака — в разметке, без скрипта */!function(d,w){var e=d.currentScript.previousElementSibling,s;if(!e||!("IntersectionObserver"in w))return;var o=new IntersectionObserver(function(z){if(!z[0].isIntersecting||s)return;o.disconnect();(w.requestIdleCallback||function(f){setTimeout(f,300)})(function(){s=d.createElement("script");s.src=e.getAttribute("data-z3-src");s.async=!0;d.head.appendChild(s)},{timeout:3000})});o.observe(e)}(document,window)</script>
         <h1 class="hero-h1"><span class="h1-kicker">Проверка контрагента по&nbsp;ИНН</span> <span class="glavnaya-display">Проверьте контрагента. Поймите, что сделать до&nbsp;оплаты.</span></h1>
         <p class="lead">Открытые госреестры&nbsp;— простыми словами: что известно о&nbsp;компании, насколько полна проверка и&nbsp;что запросить до&nbsp;оплаты.</p>
         <form class="check" id="check" novalidate>

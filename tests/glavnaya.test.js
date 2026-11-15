@@ -135,7 +135,7 @@ test('калькулятор: ключевая ставка в формуле и
 
 // poisk-centr-v1 (15.11.2026): поиск посередине — первый экран главной в одну колонку по центру.
 test('poisk-centr-v1: строка проверки — по центру первого экрана, вне режима отчёта', () => {
-  const blok = /\/\* poisk-centr-v1[\s\S]*?<\/style>/.exec(G);
+  const blok = /\/\* poisk-centr-v1[\s\S]*?(?=\/\* geroj-3d-v1|<\/style>)/.exec(G); // geroj-3d-v1: следом идёт свой блок — в этот не входит
   assert.ok(blok, 'блок poisk-centr-v1 есть в стилях главной');
   const css = blok[0];
   assert.match(css, /@media \(min-width:601px\)\{\s*html:not\(\.rezhim-otcheta\) \.hero \.wrap\{grid-template-columns:minmax\(0,1fr\);justify-items:center\}/, 'одна колонка по центру от 601 px');

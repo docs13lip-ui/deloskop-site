@@ -4,7 +4,9 @@
  * (знак «лупа-галочка», лупа, щит), каждый своей программой и только в своём прямоугольнике. Стекло преломляет настоящий фон.
  *
  * Правила (те же, что у линзы js/linza-poisk.js):
- *  • цвета — токены дизайн-системы (--bg, --ink, --accent, --warn, --ok), тема — по data-theme;
+ *  • цвета — токены дизайн-системы (--bg, --ink, --accent, --warn, --line-2), тема — по data-theme; палитра «тёмно-синий + латунь»
+ *    (scena-palitra-v1, 15.11): небо тёмной темы — та же глубина, что «Живое небо» страниц; сиреневого и бирюзового нет;
+ *    щит — сапфировое стекло в латунной раме, эмалевая галочка цвета бумаги; точный ответ — галочка загорается латунью;
  *  • холст только в своём блоке; вне экрана и в закрытом окне — 0 кадров (IntersectionObserver + vkl(false));
  *  • «уменьшить движение» — один статичный кадр, перерисовка только по вводу;
  *  • нет WebGL или программа не собралась — O.netGL(): остаётся CSS-кадр страницы;
@@ -23,7 +25,7 @@ window.DlkScena = function (O) {
 'use strict';
 var cv=O.cv,obj=O.mark,box=O.box,q=O.pole,CW=1,CH=1,CL=0,CT=0,vkl=true,vidno=true,raf=0,gl=null,PR={},fb=null,tx=null,W=0,H=0,WB=0,HB=0,kq=1,kb=1,deln=performance.now(),chet=0,t0=performance.now(),last=0,gryaz=true,
     redu=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches,zamok=/[#&]hq/.test(location.hash),
-    dark=true,bgc=[.961,.945,.902],accent=[.357,.608,1],warn=[.95,.70,.36],ink=[.96,.96,.95],okc=[.36,.76,.54],cur=[.357,.608,1],curG=[.36,.76,.54],
+    dark=true,bgc=[.961,.945,.902],accent=[.357,.608,1],warn=[.95,.70,.36],ink=[.96,.96,.95],saf=[.180,.290,.510],lat=[.851,.706,.353],cur=[.357,.608,1],curG=[.180,.290,.510],
     F=0,E=0,X=0,FO=0,TK=0,P=0,pStart=0,mx=0,my=0,tmx=0,tmy=0,fok=false,ema=.016,kadrov=0;
 function ramka(){var b=cv.getBoundingClientRect();CW=Math.max(1,b.width);CH=Math.max(1,b.height);CL=b.left;CT=b.top}
 function puls(){pStart=performance.now();gryaz=true}
@@ -33,7 +35,9 @@ function puls(){pStart=performance.now();gryaz=true}
 function tok(name){var v=getComputedStyle(cv).getPropertyValue(name).trim();return v||getComputedStyle(document.documentElement).getPropertyValue(name).trim()}
 function cvet(name,def){var m=tok(name).match(/^#([0-9a-f]{6})$/i);if(!m)return def;var n=parseInt(m[1],16);return[(n>>16&255)/255,(n>>8&255)/255,(n&255)/255]}
 function tema(){var est=!!cvet('--bg',null),b=cvet('--bg',[.961,.945,.902]);bgc=b;dark=(b[0]*.3+b[1]*.59+b[2]*.11)<.5;
-  accent=cvet('--accent',est?accent:[.071,.188,.373]);warn=cvet('--warn',warn);ink=cvet('--ink',est?ink:[.051,.133,.278]);okc=cvet('--ok',okc);gryaz=true;fonGr=true}
+  accent=cvet('--accent',est?accent:[.071,.188,.373]);warn=cvet('--warn',warn);ink=cvet('--ink',est?ink:[.051,.133,.278]);
+  /* щит: сапфир — в тёмной светлее глубины (--line-2), в светлой — тёмно-синий --accent; латунь — --accent тёмной, на бумаге — B58A32 */
+  saf=dark?cvet('--line-2',[.180,.290,.510]):accent;lat=dark?accent:[.710,.541,.196];gryaz=true;fonGr=true}
 
 var VS='attribute vec2 a;void main(){gl_Position=vec4(a,0.,1.);}';
 /* общее: шум, поворот, радуга тонкой плёнки, студийный свет для отражений (софтбокс сверху, тёплая полоса слева, холодная справа) */
@@ -53,9 +57,9 @@ float top=sbox(r,normalize(vec3(.20,.80,.56)),vec2(.62,.26));
 float lft=sbox(r,normalize(vec3(-.86,.12,.50)),vec2(.13,.85));
 float rgt=sbox(r,normalize(vec3(.90,.0,.44)),vec2(.09,.70));
 float und=pow(max(dot(r,normalize(vec3(.05,-.8,.6))),0.),4.);vec3 c;
-if(uD>.5){c=mix(vec3(.022,.028,.050),vec3(.105,.135,.230),smoothstep(-.7,.9,r.y));
+if(uD>.5){c=mix(vec3(.020,.040,.090),vec3(.110,.150,.260),smoothstep(-.7,.9,r.y));
 c+=top*vec3(2.3,2.35,2.5)+lft*vec3(1.5,1.0,.62)+rgt*vec3(.55,.85,1.6)+uC*und*.8;
-c+=vec3(.5,.3,1.)*pow(max(dot(r,normalize(vec3(-.55,-.55,.6))),0.),6.)*.3;}
+c+=vec3(.85,.70,.35)*pow(max(dot(r,normalize(vec3(-.55,-.55,.6))),0.),6.)*.25;}
 else{c=mix(vec3(.36,.34,.31),vec3(.99,.975,.945),smoothstep(-.55,.55,r.y));
 c*=1.-.62*sbox(r,normalize(vec3(.70,.25,.66)),vec2(.10,.9));
 c+=top*vec3(1.9)+lft*vec3(1.0,.78,.58)*.9+rgt*vec3(.6,.8,1.)*.8+uC*und*.45;}
@@ -68,17 +72,17 @@ float ns(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h21(i
 float fbm(vec2 p){float a=.5,s=0.;for(int i=0;i<4;i++){s+=a*ns(p);p=p*2.03+7.1;a*=.5;}return s;}
 vec3 base(vec2 p){float y=p.y-HZ;float ax=abs(p.x);vec3 c;
 if(uD>.5){
-vec3 sky=mix(vec3(.060,.075,.130),vec3(.016,.018,.032),smoothstep(0.,.75,y));
-vec3 hc=mix(uC,vec3(.45,.55,1.),.4);
+vec3 sky=mix(vec3(.063,.133,.282),vec3(.031,.071,.161),smoothstep(0.,.75,y));
+vec3 hc=mix(uC,vec3(.45,.58,.90),.4);
 sky+=hc*.22*exp(-max(y,0.)*7.)*exp(-ax*ax*.9);
 vec2 w=p*1.25+vec2(uT*.010,0.)+uM*.015;float n=fbm(w+fbm(w*1.9+3.1)*.55);
 sky+=uC*.17*smoothstep(.42,.86,n)*smoothstep(-.25,.25,y);
-sky+=vec3(.50,.28,.95)*.090*smoothstep(.50,.92,fbm(w*.8+11.+n*.4));
-sky+=vec3(.10,.62,.70)*.060*smoothstep(.52,.95,fbm(w*.7-5.3));
-vec3 fl=mix(vec3(.030,.036,.062),vec3(.012,.013,.022),smoothstep(0.,.5,-y));
+sky+=vec3(.85,.70,.35)*.050*smoothstep(.50,.92,fbm(w*.8+11.+n*.4));
+sky+=vec3(.20,.35,.65)*.070*smoothstep(.52,.95,fbm(w*.7-5.3));
+vec3 fl=mix(vec3(.043,.090,.192),vec3(.024,.055,.125),smoothstep(0.,.5,-y));
 fl+=hc*.14*exp(y*9.)*exp(-ax*ax*1.2);
 c=mix(fl,sky,smoothstep(-.004,.004,y));
-c+=vec3(.55,.70,1.)*.11*exp(-abs(y)*170.)*exp(-ax*ax*.7);
+c+=vec3(.60,.70,.90)*.11*exp(-abs(y)*170.)*exp(-ax*ax*.7);
 }else{
 vec3 sky=mix(mix(uB,vec3(1.),.30),uB,smoothstep(0.,.7,y));
 vec2 w=p*1.05+vec2(uT*.008,0.)+uM*.015;float n=fbm(w+fbm(w*1.7+3.1)*.5);
@@ -120,14 +124,14 @@ if(uD>.5)col+=mix(uC,vec3(.6,.75,1.),.5)*dt*.17;else col-=vec3(.11,.10,.08)*dt*.
 for(int i=0;i<9;i++){float fi=float(i);vec2 s=vec2(h21(vec2(fi,1.7)),h21(vec2(fi,9.3)));float dz=.35+.65*h21(vec2(fi,4.4));
 vec2 c=(s-.5)*vec2(asp*1.1,1.1);c.y=mod(c.y+uT*.008*dz+.55,1.1)-.55;c+=uM*.035*dz;float r=.018+.055*h21(vec2(fi,6.1))*dz;
 float d=length(p-c);float disc=smoothstep(r,r*.78,d);float rim=smoothstep(r*.55,r*.95,d)*disc;
-vec3 tc=mix(uC,mix(vec3(.6,.4,1.),vec3(1.,.75,.55),h21(vec2(fi,2.2))),.5);
+vec3 tc=mix(uC,mix(vec3(.55,.65,.95),vec3(.85,.70,.40),h21(vec2(fi,2.2))),.5);
 if(uD>.5)col+=tc*(disc*.035+rim*.045)*dz;else col=mix(col,vec3(1.),disc*.28*dz)+tc*rim*.03;}
 {vec2 bq=(px-uBx)/uBs;float pool=exp(-bq.x*bq.x*.55-bq.y*bq.y*.05);
 if(uD>.5)col+=mix(uC,vec3(.6,.7,1.),.3)*pool*(.05+.07*uFo+.06*uF);else col=mix(col,vec3(1.),pool*(.25+.15*uFo));
 float ty=clamp((uO.y-px.y)/max(uO.y-uBx.y,1.),0.,1.);float hw=mix(uS*.22,uBs.x*.80,ty);
 float cone=smoothstep(hw,hw*.30,abs(px.x-uO.x))*smoothstep(0.,.14,ty)*smoothstep(1.04,.72,ty);
 if(uD>.5)col+=uC*cone*(.014+.05*uF);else col=mix(col,mix(vec3(1.),uC,.25),cone*(.03+.07*uF));}
-{vec2 q=(px-uO)/uS;float dq=length(q);float glow=exp(-dq*dq*1.2)*(.10+.24*uF);vec3 gc=mix(uC,vec3(.55,.40,1.),.30*smoothstep(-.6,.8,q.x-q.y));
+{vec2 q=(px-uO)/uS;float dq=length(q);float glow=exp(-dq*dq*1.2)*(.10+.24*uF);vec3 gc=mix(uC,vec3(.55,.65,.95),.30*smoothstep(-.6,.8,q.x-q.y));
 if(uD>.5)col+=gc*glow;else{vec2 sq=(q-vec2(.10,-.24))*vec2(1.,1.25);col=mix(col,vec3(.20,.22,.32),.10*exp(-dot(sq,sq)*1.6));col=mix(col,mix(vec3(1.),gc,.5),glow*.5);}
 if(uP>.001&&uP<1.){float w=smoothstep(.10,0.,abs(dq-uP*2.4))*(1.-uP);vec3 wc=irid(uP*.8+dq*.3)*.5+uC*.6;if(uD>.5)col+=wc*w*.55;else col=mix(col,uC,w*.4);}}
 if(uQ>.5){vec2 A=vec2(asp*.5,1.);
@@ -142,7 +146,7 @@ if(uD>.5)col*=1.-(.42+.18*uFo)*smoothstep(.35,1.25,v);else col-=vec3(.05,.05,.04
 col+=(h21(px+fract(uT))-.5)/255.;gl_FragColor=vec4(clamp(col,0.,1.),1.);}`;
 var FS_BLIT=LIB+`uniform sampler2D uB;void main(){vec3 c=texture2D(uB,gl_FragCoord.xy/uR).rgb;c+=(h21(gl_FragCoord.xy+fract(uT))-.5)*(uD>.5?.020:.012);gl_FragColor=vec4(c,1.);}`;
 /* предметы: общий трассировщик. Стекло — два преломления (вход и выход), поглощение по толщине, разложение цвета на краях. */
-var OBJ=LIB+`uniform sampler2D uB;uniform vec2 uO;uniform float uS,uF,uE,uP,uK2,uAl;uniform vec3 uK,uG,uA;
+var OBJ=LIB+`uniform sampler2D uB;uniform vec2 uO;uniform float uS,uF,uE,uP,uK2,uAl;uniform vec3 uK,uG,uA,uL;
 const vec3 LK=vec3(.371,.743,.557);
 vec3 kontr(float nv){return uD>.5?pow(1.-nv,2.6)*(vec3(.30,.40,.75)*.55+uC*.35):vec3(0.);}
 vec2 map(vec3 p);
@@ -238,7 +242,7 @@ c=mix(body,coat,.04+.96*fr)+sp*.7;}
 else if(id<6.5){vec3 hc=uD>.5?uC*.95:uC*.92;c=hc*(.30+.70*max(dot(n,LK),0.)*sh)+hc*.14+rf*(.05+.95*fr)*mix(.6,1.,sh)+kontr(nv)+sp;}
 else c=vec3(.035,.037,.045)*(.5+.5*max(dot(n,LK),0.))+rf*.035;
 return c*mix(.58,1.,oc);}`+OBJ_MAIN;
-/* щит: изумрудное стекло в хромовой раме, выпуклая линза корпуса, белая эмалевая галочка */
+/* щит: сапфировое стекло в латунной раме, выпуклая линза корпуса, эмалевая галочка цвета бумаги; точный ответ — галочка загорается латунью */
 var FS_SHIT=OBJ+`void cam(inout vec3 ro,inout vec3 rd){}
 float shp(vec2 p){vec2 q=vec2(abs(p.x),p.y);return max(length(q-vec2(-.75,.45))-1.25,q.y-.60-.035*q.x*q.x);}
 vec2 map(vec3 p){p.y-=uA.z;p.xz*=rot(uA.x);p.yz*=rot(uA.y);p.y-=.02;
@@ -249,7 +253,7 @@ float k2=min(seg(p.xy,vec2(-.25,.05),vec2(-.07,-.15)),seg(p.xy,vec2(-.07,-.15),v
 float ck=ext(k2+.016,p.z-(.062+dome*.85),.020)-.016;
 vec2 m=vec2(body,7.);if(fr<m.x)m=vec2(fr,9.);if(ck<m.x)m=vec2(ck,8.);return m;}
 vec4 under(vec2 q){float bob=uA.z*.83;
-if(uD>.5){vec2 d=q-vec2(0.,bob);float g=exp(-dot(d,d)*1.5)*(.07+.22*uE);return vec4(uG*g,0.);}
+if(uD>.5){vec2 d=q-vec2(0.,bob);float g=exp(-dot(d,d)*1.5);return vec4(uG*g*.07+uL*g*.20*uE,0.);}
 vec2 s=(q-vec2(.06,-.98+bob*.4))*vec2(1.,3.2);float a=exp(-dot(s,s)*2.2)*(.15+.06*uE);
 return vec4(mix(vec3(.13,.14,.20),uG*.5,.25)*a,a);}
 vec4 over(vec2 q){return vec4(0.);}
@@ -257,12 +261,12 @@ vec3 surf(vec3 p,vec3 rd,vec3 n,float id,vec2 px){
 float nv=max(dot(n,-rd),0.),fr=pow(1.-nv,5.);vec3 rv=reflect(rd,n),rf=envl(rv);float oc=aoc(p,n),sh=shd(p+n*.004,LK),th;vec3 c;
 float sp=pow(max(dot(rv,LK),0.),140.)*2.4;
 if(id<7.5){
-vec3 g=glass(p,rd,n,px,mix(uG,vec3(1.),.06),4.2,1.50,.45,th);
-vec3 body=g*(uD>.5?1.1:.92)+uG*(uD>.5?.26+.30*nv+.30*uE:.16+.22*nv+.08*uE)+uG*pow(1.-nv,2.)*(uD>.5?.60:.10);
+vec3 g=glass(p,rd,n,px,mix(uG,vec3(1.),.06),uD>.5?4.2:12.,1.50,.45,th);
+vec3 body=g*(uD>.5?1.1:.92)+uG*(uD>.5?.20+.22*nv+.16*uE:.16+.22*nv+.08*uE)+uG*pow(1.-nv,2.)*(uD>.5?.60:.10);
 body+=mix(uG,vec3(1.),.6)*pow(nv,8.)*.24;body+=irid(fr*1.8+.6)*pow(1.-nv,2.5)*.32;
 c=mix(body,rf,.05+.95*fr)*mix(.74,1.,sh)+sp;}
-else if(id<8.5)c=vec3(.97,.97,.96)*(.50+.50*max(dot(n,LK),0.)*mix(.6,1.,sh))+rf*(.05+.95*fr)*.55+sp*.7;
-else c=(rf*vec3(.88,.90,.92)*(.72+.28*fr)+(uD>.5?vec3(.16,.19,.21)*(.35+.65*max(dot(n,LK),0.)):vec3(0.)))*mix(.55,1.,sh)+irid(nv*.9+.3)*.035+kontr(nv)+sp;
+else if(id<8.5)c=mix(vec3(.961,.945,.902),uL*1.15,.55*uE)*(.50+.50*max(dot(n,LK),0.)*mix(.6,1.,sh))+rf*(.05+.95*fr)*.55+uL*uE*.18+sp*.7;
+else{vec3 mt=mix(uL,vec3(1.),.15+.50*fr);c=(rf*mt*(.70+.30*fr)+uL*(uD>.5?.20+.30*max(dot(n,LK),0.):.10+.22*max(dot(n,LK),0.)))*mix(.55,1.,sh)+uL*pow(1.-nv,2.6)*.22+sp*mix(uL,vec3(1.),.6);}
 return c*mix(.58,1.,oc);}`+OBJ_MAIN;
 
 var parl=null,zhdut=[];
@@ -324,7 +328,7 @@ function razmer(){
 function mesto(els,dol){var b=null,i;for(i=0;els&&i<els.length;i++){b=els[i]?els[i].getBoundingClientRect():null;if(b&&b.width)break;b=null}
   if(!b)return null;var k=W/CW;return {x:(b.left-CL+b.width/2)*k,y:(CH-(b.top-CT+b.height/2))*k,s:b.width*dol*k}}
 function obshee(o,T){gl.useProgram(o.p);gl.uniform2f(L(o,'uR'),W,H);gl.uniform2f(L(o,'uM'),redu?0:mx,redu?0:my);gl.uniform1f(L(o,'uT'),T);gl.uniform1f(L(o,'uD'),dark?1:0);
-  gl.uniform3f(L(o,'uC'),cur[0],cur[1],cur[2]);gl.uniform3f(L(o,'uK'),ink[0],ink[1],ink[2]);gl.uniform3f(L(o,'uG'),curG[0],curG[1],curG[2]);
+  gl.uniform3f(L(o,'uC'),cur[0],cur[1],cur[2]);gl.uniform3f(L(o,'uK'),ink[0],ink[1],ink[2]);gl.uniform3f(L(o,'uG'),curG[0],curG[1],curG[2]);gl.uniform3f(L(o,'uL'),lat[0],lat[1],lat[2]);
   gl.uniform1f(L(o,'uF'),F);gl.uniform1f(L(o,'uE'),E);gl.uniform1f(L(o,'uP'),P);gl.uniform1f(L(o,'uK2'),TK);gl.uniform1i(L(o,'uB'),0)}
 function predmet(o,m,T,a0,a1,a2,rad,dt){if(!o||!m)return;if(o.al<1){o.al=Math.min(1,o.al+dt*((redu||stat)?99:1.6));gryaz=true}var z=1-o.al;z=1-z*z*z;m={x:m.x,y:m.y,s:m.s*(.86+.14*z)};var r=m.s*rad;if(m.x+r<0||m.x-r>W||m.y+r<0||m.y-r>H)return;
   obshee(o,T);gl.uniform2f(L(o,'uO'),m.x,m.y);gl.uniform1f(L(o,'uS'),m.s);gl.uniform3f(L(o,'uA'),a0,a1,a2);gl.uniform1f(L(o,'uAl'),z);
@@ -338,7 +342,7 @@ function kadr(now){raf=requestAnimationFrame(kadr);if(!gl||document.hidden)retur
   var tf=sost.exact?1:sost.focus,ok=sost.exact&&!sost.err?1:0;
   F+=(tf-F)*k;E+=(ok-E)*k2;X+=((sost.err?1:0)-X)*k;FO+=((fok||q.value?1:0)-FO)*k2;TK*=Math.exp(-dt*6);if(TK<.002)TK=0;
   mx+=(tmx-mx)*k2;my+=(tmy-my)*k2;
-  var tc=sost.err?warn:accent,tg=sost.err?[okc[0]*.35+.25,okc[1]*.35+.25,okc[2]*.35+.25]:okc;
+  var tc=sost.err?warn:accent,tg=sost.err?[saf[0]*.5+warn[0]*.5,saf[1]*.5+warn[1]*.5,saf[2]*.5+warn[2]*.5]:saf;
   for(i=0;i<3;i++){cur[i]+=(tc[i]-cur[i])*k;curG[i]+=(tg[i]-curG[i])*k}
   P=pStart?Math.min(1,(now-pStart)/900):0;if(P>=1)pStart=0;
   var T=tih?12:(now-t0)/1000,kk=W/CW,shir=CW>=1180;

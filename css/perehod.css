@@ -13,6 +13,9 @@
 .check--yakor .sugg[popover]{position:fixed;position-anchor:--dlk-forma;inset:auto;top:anchor(bottom);left:anchor(left);
   width:anchor-size(width);margin:6px 0 0;border:0;color:inherit;position-try-fallbacks:flip-block}
 .check--yakor .sugg[popover]:not(:popover-open){display:none}
+/* proba-podskazki (15.11.2026): список помещается под строкой (считает index.html, mesto()) — переворот вверх выключен:
+   иначе браузер держится за последнее удачное положение «над строкой» и закрывает заголовок, хотя место снизу уже есть */
+.check--yakor .sugg--vniz[popover]{position-try-fallbacks:none}
 
 /* vizual-v3.1b (в) — липкая строка «Что делать завтра утром» на телефоне (js/lipkaya.js): вывод ушёл за верх — строка снизу, по нажатию — окно */
 .lip{position:fixed;left:0;right:0;bottom:var(--lip-niz,0px);z-index:28;padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));

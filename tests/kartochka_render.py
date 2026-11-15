@@ -5148,3 +5148,197 @@ _html_kartochki_bez_linzy = html_kartochki
 def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811
     """linza-indeksa-v1: та же карточка, плашка Индекса — «Линзой»."""
     return linza_kartochki(_html_kartochki_bez_linzy(k, V, sosedi, kom, normy, cena, segodnya))
+
+
+# ---------------------------------------------------------------- kartochki-plyusy-v1 ([Ночные-2] 16.11)
+# Решение владельца 16.11 п. 1 (claude/Решения_владельца_16.11_фокус_ночных_на_людей_обновления_в_соцсети_запускать_всё.md)
+# и ТЗ 15.11 («плюсы / минусы» в досье): на карточке компании — «Плюсы и минусы» за 10 секунд, те же строки и слова, что
+# в отчёте по ИНН (js/plyusy-minusy.js, комплект plyusy-minusy-v1). Сведений у опубликованных карточек нет — строки
+# собираются из уже напечатанного: строки «Проверка … по реестрам» (.fact: подпись, значение, источник и дата), статус
+# и год регистрации под H1. Только факты с источником и датой, без оценки компании; строка — ссылка на раздел реестров.
+# Чего в реестрах карточки нет (арбитраж, приставы, банкротство) — полосой «Не проверено». Блок пересобирается каждый
+# раз из страницы (прежний снимается) — повторный вызов даёт те же байты. Последним шагом у новых и у опубликованных.
+PM_SEK = re.compile(r'<section class="co-sec co-pm"[^>]*>.*?</section>\n?', re.S)
+_PM_FACT = re.compile(r'<div class="fact"><span>(.*?)</span><span class="fact__v">(.*?)</span>'
+                      r'<span class="fact__src co-src">(.*?)</span></div>', re.S)
+_PM_SUB = re.compile(r'<p class="co-sub">(.*?)</p>', re.S)
+_PM_OKVED = re.compile(r'<p class="caption co-okved">.*?(ЕГРЮЛ) · сведения на(?:&#160;|&nbsp;| | )(\d{2}\.\d{2}\.\d{4})</p>', re.S)
+_PM_REESTRY = re.compile(r'<section class="co-sec" aria-labelledby="reestry"><h2 id="reestry">Проверка (.*?) по(?:&#160;|&nbsp;| | )реестрам</h2>(.*?)</section>', re.S)
+_PM_KUDA = '<section class="co-sec" aria-labelledby="korotko">'
+PM_MAKS_PLYUS = 6
+PM_PORYADOK_P = ["status", "tax_debt", "sudy", "fssp", "bankrotstvo", "address", "otchetnost", "age", "employees"]
+PM_PORYADOK_M = ["status", "bankrotstvo", "address", "sudy", "fssp", "tax_debt", "pravonarusheniya", "otchetnost"]
+
+
+def _pm_txt(s):
+    return " ".join(html.unescape(re.sub(r"<[^>]+>", "", s or "")).replace(NB, " ").split())
+
+
+def _pm_nb(s):
+    """Число и единица — неразрывно: «1 незавершённое» → «1&nbsp;незавершённое», «6,2 млн ₽» — целиком."""
+    s = re.sub(r"(\d) (?=[а-яёА-ЯЁ₽])", "\\1" + NB, s)
+    s = re.sub(r"(млн|млрд|трлн|тыс\.) ₽", "\\1" + NB + "₽", s)
+    return re.sub(r"(\d) (?=\d{3}\b)", "\\1" + NB, s)
+
+
+def _pm_ist(src):
+    """«ФНС, открытые данные · сведения на 01.10.2026 · ● подтверждено источником» → («ФНС, открытые данные», «01.10.2026»)."""
+    t = _pm_txt(src)
+    m = re.search(r"сведения на (\d{2}\.\d{2}\.\d{4})", t)
+    return t.split(" · ")[0].strip(), (m.group(1) if m else "")
+
+
+def plyusy_minusy_stroki(t):
+    """Страница карточки → {plyusy: [...], minusy: [...], ne: [...]}; строка — (ключ, текст, источник, дата). Нет раздела реестров — None."""
+    mr = _PM_REESTRY.search(t or "")
+    if not mr:
+        return None
+    P, M, N = [], [], []
+    fakty = {}
+    for f in _PM_FACT.finditer(mr.group(2)):
+        fakty.setdefault(_pm_txt(f.group(1)), (_pm_txt(f.group(2)), _pm_ist(f.group(3))))
+    sub = _pm_txt(_PM_SUB.search(t).group(1)) if _PM_SUB.search(t) else ""
+    mo = _PM_OKVED.search(t)
+    eg_d = mo.group(2) if mo else ""
+    # реестр: статус и год регистрации — из строки под H1 (карточки только у действующих — ворота волны)
+    if sub.startswith("Действующая"):
+        P.append(("status", "Действующая компания", "ЕГРЮЛ", eg_d))
+    elif sub:
+        st = sub.split(" · ")[0]
+        M.append(("status", "Статус: " + st[:1].lower() + st[1:], "ЕГРЮЛ", eg_d))
+    mg = re.search(r"с (\d{4}) года", sub)
+    if mg:
+        P.append(("age", "На рынке с" + NB + mg.group(1) + NB + "года", "ЕГРЮЛ", eg_d))
+    # налоги
+    v = fakty.get("Задолженность по налогам")
+    if v:
+        zn, (ist, d) = v
+        if zn == "Нет":
+            P.append(("tax_debt", "Нет долгов по налогам", ist, d))
+        else:
+            sm = re.match(r"[\d ,]+(?:тыс\.|млн|млрд|трлн)? ?₽", zn)
+            M.append(("tax_debt", "Долг по налогам" + (" " + sm.group(0).strip() if sm else ""), ist, d))
+    v = fakty.get("Налоговые правонарушения")
+    if v:
+        zn, (ist, d) = v
+        M.append(("pravonarusheniya", "Налоговые правонарушения: " + zn[:1].lower() + zn[1:], ist, d))
+    v = fakty.get("Отметки о недостоверности")
+    if v:
+        zn, (ist, d) = v
+        if re.search(r"(?i)отметок о недостоверности нет", zn):
+            P.append(("address", "Нет отметок о недостоверности", ist, d))
+        else:
+            M.append(("address", "Отметка о недостоверности", ist, d))
+    v = fakty.get("Сотрудники")
+    if v:
+        zn, (ist, d) = v
+        n = re.match(r"([\d ]+) (человек|человека)\b", zn)
+        if n and int(n.group(1).replace(" ", "")) > 0:
+            P.append(("employees", "В штате " + n.group(1).strip() + " " + n.group(2), ist, d))
+    # бухотчётность ГИР БО: последний год строки «Выручка за ГГГГ»
+    gody = [(int(k[-4:]), v_) for k, v_ in fakty.items() if re.fullmatch(r"Выручка за \d{4}", k)]
+    if gody:
+        g, (_, (ist, d)) = max(gody, key=lambda x: x[0])
+        tek = int(eg_d[-4:]) if eg_d else g
+        if g >= tek - 2:
+            P.append(("otchetnost", "Отчётность за %d%sгод в%sГИР%sБО" % (g, NB, NB, NB), ist, d))
+        else:
+            M.append(("otchetnost", "Последняя отчётность — за %d%sгод" % (g, NB), ist, d))
+    # внешние реестры
+    v = fakty.get("Арбитражные дела, где компания — ответчик")
+    if v:
+        zn, (ist, d) = v
+        n = re.match(r"(\d[\d ]*) незавершённ\S+ (дел\S*)(?: на (.+))?$", zn)
+        if re.search(r"не нашли", zn):
+            P.append(("sudy", "Нет идущих дел против компании", ist, d))
+        elif n:
+            k = int(n.group(1).replace(" ", ""))
+            odno = k % 10 == 1 and k % 100 != 11
+            M.append(("sudy", "Ответчик в %s %s%s" % (n.group(1).strip(), "идущем деле" if odno else "идущих делах",
+                                                      (" на " + n.group(3)) if n.group(3) else ""), ist, d))
+        else:
+            M.append(("sudy", "Есть арбитражные дела", ist, d))
+    else:
+        N.append("арбитражные суды")
+    v = fakty.get("Исполнительные производства")
+    if v:
+        zn, (ist, d) = v
+        n = re.match(r"(\d[\d ]*) производств\S*(?:, остаток долга — (.+))?$", zn)
+        if re.search(r"не нашли", zn):
+            P.append(("fssp", "Нет долгов у приставов", ist, d))
+        else:
+            M.append(("fssp", "Производства у приставов" + (": " + n.group(1).strip() if n else "") +
+                      (", долг " + n.group(2) if n and n.group(2) else ""), ist, d))
+    else:
+        N.append("приставы")
+    v = fakty.get("Сообщения о банкротстве компании")
+    if v:
+        zn, (ist, d) = v
+        if re.search(r"не нашли", zn):
+            P.append(("bankrotstvo", "Нет сообщений о банкротстве", ist, d))
+        else:
+            M.append(("bankrotstvo", "Сообщения о банкротстве в" + NB + "ЕФРСБ", ist, d))
+    else:
+        N.append("банкротство")
+
+    def por(sp):
+        return lambda x: sp.index(x[0]) if x[0] in sp else 99
+    P = sorted(P, key=por(PM_PORYADOK_P))
+    M = sorted(M, key=por(PM_PORYADOK_M))
+    P = [(k, _pm_nb(tx), i, d) for k, tx, i, d in P]
+    M = [(k, _pm_nb(tx), i, d) for k, tx, i, d in M]
+    return {"plyusy": P, "minusy": M, "ne": N, "imya": mr.group(1)}
+
+
+def _pm_li(x):
+    k, tx, ist, d = x
+    meta = " · ".join(y for y in (ist, ("на" + NB + d) if d else "") if y)
+    # источник и дата — подсказкой у строки и полностью в строке раздела реестров, куда ведёт ссылка: одинаковые на сотне
+    # карточек подписи «ФНС, открытые данные · на 01.10.2026» видимым текстом подняли бы совпадение с соседями выше цели 60 %
+    return ('<li data-pm="%s"><a class="pm__a" href="#reestry"%s>%s</a></li>'
+            % (k, (' title="%s"' % html.escape(meta)) if meta else "", html.escape(tx, quote=False)))
+
+
+def _pm_kolonka(zag, pod, sp, mod, pusto):
+    kap = mod == "plus"
+    vid, esh = (sp[:PM_MAKS_PLYUS], sp[PM_MAKS_PLYUS:]) if kap else (sp, [])
+    return ('<div class="pm__k pm__k--%s"><h3>%s <span>%d</span></h3>' % (mod, zag, len(sp))
+            + ('<ul>%s</ul>' % "".join(_pm_li(x) for x in vid) if sp else '<p class="pm__pusto">%s</p>' % pusto)
+            + ('<details class="pm__e"><summary>Ещё %d</summary><ul>%s</ul></details>' % (len(esh), "".join(_pm_li(x) for x in esh)) if esh else "")
+            + "</div>")
+
+
+def plyusy_minusy_html(S):
+    if not S or (not S["plyusy"] and not S["minusy"]):
+        return ""
+    ne = ""
+    if S["ne"]:
+        ne = ('<p class="pm__ne"><b>Не проверено:</b> %s%s— не%sпроверяли ≠ не%sнашли</p>'
+              % (", ".join(S["ne"]), NB, NB, NB))
+    return ('<section class="co-sec co-pm" aria-labelledby="pm" data-plyusy="%d" data-minusy="%d">'
+            '<h2 id="pm">Плюсы и%sминусы %s</h2><div class="pm__kk">%s%s</div>%s'
+            '<p class="caption pm__ist">Источник и%sдата каждой строки%s— в%sразделе <a href="#reestry">«Проверка %s по%sреестрам»</a>.</p></section>\n'
+            % (len(S["plyusy"]), len(S["minusy"]), NB, S["imya"],
+               _pm_kolonka("Плюсы", "что у" + NB + "компании есть", S["plyusy"], "plus", "Подтверждённых плюсов в" + NB + "реестрах нет"),
+               _pm_kolonka("Минусы", "чего нет или что настораживает", S["minusy"], "minus", "По проверенным реестрам замечаний нет"),
+               ne, NB, NB, NB, S["imya"], NB))
+
+
+def plyusy_minusy_kartochki(t):
+    """Карточка → та же карточка с блоком «Плюсы и минусы» над «Коротко о компании». Идемпотентна."""
+    if not t or _PM_KUDA not in t:
+        return t
+    bez = PM_SEK.sub("", t)
+    blok = plyusy_minusy_html(plyusy_minusy_stroki(bez))
+    if not blok:
+        return bez
+    i = bez.index(_PM_KUDA)
+    return bez[:i] + blok + bez[i:]
+
+
+_html_kartochki_bez_pm = html_kartochki
+
+
+def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811
+    """kartochki-plyusy-v1: та же карточка, с «Плюсами и минусами»."""
+    return plyusy_minusy_kartochki(_html_kartochki_bez_pm(k, V, sosedi, kom, normy, cena, segodnya))

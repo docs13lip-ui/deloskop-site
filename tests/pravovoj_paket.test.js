@@ -39,7 +39,7 @@ test('в подвале — все документы и строка help@ 24/7
   for (const u of ['/oferta/', '/politika/', '/soglasie/', '/rassylki/', '/cookies/', '/vozvrat/', '/partneram/usloviya/', '/rekvizity/']) {
     assert.ok(p.includes(`href="${u}"`), 'в подвале нет ' + u);
   }
-  assert.ok(bezTegov(p).includes('Сотрудничество, отзывы и предложения — help@deloskop.ru. Принимаем 24/7'));
+  assert.match(bezTegov(p), /Вопросы и\s+отзывы — help@deloskop\.ru\. Сотрудничество — partner@deloskop\.ru\. Принимаем 24\/7/);
   for (const d of DOKI.concat(['.'])) {
     const s = bezTegov(chitat((d === '.' ? '' : d + '/') + 'index.html'));
     for (const r of [/поддержка 24\/7/i, /круглосуточн[а-я]* поддержк/i, /мониторим 24/i, /ответим за \d/i])

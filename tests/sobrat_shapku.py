@@ -250,7 +250,7 @@ def podval_html(r):
             '<nav class="podval__doki" aria-label="Документы"><ul>' +
             "".join('<li><a href="%s">%s</a></li>' % (e(h), e(t)) for t, h in DOKUMENTY) + '</ul></nav>'
             '<div class="podval__niz"><p>' + stroka + '</p>' + TEMA_PODVAL +
-            '<p>Сотрудничество, отзывы и предложения — <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>. Принимаем 24/7</p>'
+            '<p>Вопросы и отзывы — <a href="mailto:help@deloskop.ru">help@deloskop.ru</a>. Сотрудничество — <a href="mailto:partner@deloskop.ru">partner@deloskop.ru</a>. Принимаем 24/7</p>'
             '<p>Материалы носят информационный характер и не заменяют консультацию юриста</p></div>'
             '</div></div>') + '<!--/podval-->')
 

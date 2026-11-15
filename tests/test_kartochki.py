@@ -180,7 +180,7 @@ class TestStranica(unittest.TestCase):
     def test_net_telefonov_i_pochty_kompanii(self):
         for t in self.html.values():
             self.assertNotRegex(t, r"\+7[\s(]?\d{3}")
-            self.assertEqual(set(re.findall(r"mailto:([^\"?]+)", t)), {"help@deloskop.ru"})
+            self.assertEqual(set(re.findall(r"mailto:([^\"?]+)", t)), {"help@deloskop.ru", "partner@deloskop.ru"})  # только наши адреса (подвал)
 
     def test_indeks_tolko_za_vorotami(self):
         for t in self.html.values():

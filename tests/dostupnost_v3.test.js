@@ -19,7 +19,7 @@ function stranicy(d = '') {
     if (e.name.startsWith('.') || MIMO.has(e.name)) continue;
     const rel = d ? d + '/' + e.name : e.name;
     if (e.isDirectory()) out.push(...stranicy(rel));
-    else if (e.name.endsWith('.html') && !/^yandex_/.test(e.name)) out.push(rel);
+    else if (e.name.endsWith('.html') && !/^(yandex_|google[0-9a-f]+\.html$)/.test(e.name)) out.push(rel);
   }
   return out;
 }

@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import seo_haby as SH  # noqa: E402
 
 KOREN = SH.KOREN
-PROPUSK = {"yandex_d591aeadaadcae21.html"}  # файл подтверждения Вебмастера — не трогаем
+PROPUSK = {"yandex_d591aeadaadcae21.html", "googleade4a7eb57121e43.html"}  # файлы подтверждения Вебмастера и Search Console — не трогаем
 
 
 def stranicy():

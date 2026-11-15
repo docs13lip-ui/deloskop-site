@@ -47,6 +47,13 @@ test('подтверждение Вебмастера на месте и не т
   assert.ok(!t.includes('<!--podval-->') && !t.includes('<script'), 'файл подтверждения изменён сборкой');
 });
 
+// Файл подтверждения Google Search Console (15.11.2026) — лежит в корне, одна строка, сборщик его не трогает.
+test('подтверждение Search Console на месте и не тронуто сборщиком', () => {
+  const f = path.join(KOREN, 'googleade4a7eb57121e43.html');
+  assert.ok(fs.existsSync(f), 'нет googleade4a7eb57121e43.html — Search Console потеряет подтверждение');
+  assert.strictEqual(fs.readFileSync(f, 'utf8').trim(), 'google-site-verification: googleade4a7eb57121e43.html', 'файл подтверждения изменён');
+});
+
 // Дата и время выкладки в ленте (владелец, 26.09: «для абсолютной точности»).
 test('лента: время выкладки ЧЧ:ММ у выложенных записей, отрисовка «…, ЧЧ:ММ МСК»', () => {
   const list = JSON.parse(chitat('obnovleniya.json')).obnovleniya;

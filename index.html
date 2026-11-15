@@ -893,6 +893,8 @@ html:not(.rezhim-otcheta) .vhody{padding-top:clamp(36px,4.5vw,56px)}
     if(!svoj&&window.DlkPomoglo&&!primer){try{DlkPomoglo.mount(report,r,{svoj:svoj})}catch(e){}}
     // dengi-na-konu-v1: «Деньги на кону» — иски, приставы и недоимка против годовой выручки (поле dengi; слова юриста 12.11 п. 3); только организации, не «своя компания»; js/dengi-na-konu.js
     if(!svoj&&window.DengiNaKonu){try{DengiNaKonu.mount(report,r)}catch(e){}}
+    // plyusy-minusy-v1 (план отчёта 15.11, п. 1.2): «Плюсы и минусы» — первым в основной колонке, над «Деньгами на кону»; строки — ссылки на свои разделы; только чужая компания (js/plyusy-minusy.js)
+    if(!svoj&&window.PlyusyMinusy){try{PlyusyMinusy.mount(report,r)}catch(e){}}
     // krug-v1: «Кто рядом» — организации с тем же руководителем, участником или учредителем-организацией по ИНН из ЕГРЮЛ (/api/krug; слова [команда] ✎ 9, ✎ 11 от 13.11); перед «Все данные из реестров»; только организации, не «своя компания»; js/krug.js
     if(!svoj&&window.DlkKrug){try{DlkKrug.mount(report,r,{api:CAPI}).catch(function(){})}catch(e){}}
     // «Что изменилось» с прошлой проверки из кабинета — на любом устройстве (вошедшим; js/dinamika.js)
@@ -919,7 +921,7 @@ html:not(.rezhim-otcheta) .vhody{padding-top:clamp(36px,4.5vw,56px)}
   // primer-legkij-v1 (25.10): пример «Условий сделки» просит только пакет «primer» (usloviya + sushchestvennoe + status-kod, ~130 КБ), а не весь отчёт (~535 КБ):
   // сервер пока отдаёт без сжатия, и каждый заход на главную без проверки скачивал полмегабайта. Весь отчёт — при проверке и намерении проверить.
   // Оба тега — async=false: исполняются в порядке вставки (как defer), «primer» всегда раньше «otchet».
-  var PRIMER_JS='/js/b/primer.9b60134e57.js', OTCHET_JS='/js/b/otchet.73124f8faf.js', primerP=null, moduliP=null;
+  var PRIMER_JS='/js/b/primer.9b60134e57.js', OTCHET_JS='/js/b/otchet.590d49891a.js', primerP=null, moduliP=null;
   function teg(src){return new Promise(function(ok){var s=document.createElement('script');s.src=src;s.async=false;s.onload=s.onerror=function(){ok()};document.head.appendChild(s);});}
   function gruzitPrimer(){if(!primerP)primerP=teg(PRIMER_JS);return primerP;}
   function gruzitModuli(){if(moduliP)return moduliP;var p=gruzitPrimer();moduliP=Promise.all([p,teg(OTCHET_JS)]);return moduliP;}

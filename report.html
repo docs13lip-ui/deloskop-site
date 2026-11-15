@@ -186,6 +186,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
 <script src="/js/nagruzka.js"></script>
 <script src="/js/rentabelnost.js"></script>
 <script src="/js/dengi-na-konu.js"></script>
+<script src="/js/plyusy-minusy.js"></script>
 <script src="/js/terminy.js"></script>
 <link rel="icon" type="image/png" sizes="120x120" href="/favicon-120.png">
 <link rel="alternate" type="application/rss+xml" title="Разборы дел — Делоскоп" href="/praktika/rss.xml">
@@ -475,7 +476,10 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
   function dossierHtml(D){
     var lst=function(a){return '<ul>'+a.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>'};
     var h=indeksHtml(R);
-    if(D.strengths.length||D.concerns.length)
+    // plyusy-minusy-v1: «Плюсы и минусы» из всего ответа (реестры, суды, приставы, «Не проверено») — js/plyusy-minusy.js; нет модуля — прежние списки сервера
+    var pmH=window.PlyusyMinusy?PlyusyMinusy.html(PlyusyMinusy.sobrat(R),{vse:true}):'';
+    if(pmH){try{PlyusyMinusy.stil(document)}catch(e){}h+=pmH;}
+    else if(D.strengths.length||D.concerns.length)
       h+='<div class="two">'+(D.strengths.length?'<div class="box plus"><h3>Сильные стороны</h3>'+lst(D.strengths)+'</div>':'')+
          (D.concerns.length?'<div class="box minus"><h3>На что обратить внимание</h3>'+lst(D.concerns)+'</div>':'<div class="box minus"><h3>На что обратить внимание</h3><ul><li>Существенных замечаний нет</li></ul></div>')+'</div>';
     if(ZSK)h+=zskHtml(ZSK);

@@ -32,7 +32,7 @@ test('пакет сцены: один файл, ≤ 14 КБ gzip, адрес —
 test('js/scena.js: токены ДС, reduce-motion, 0 кадров вне экрана, потолок точек, без сети и хранилища', () => {
   const js = chitat('js/scena.js');
   const kod = js.replace(/\/\*[\s\S]*?\*\//g, '');
-  for (const t of ["'--bg'", "'--accent'", "'--warn'", "'--ink'", "'--ok'"]) assert.ok(js.includes(t), 'цвет из токена ' + t);
+  for (const t of ["'--bg'", "'--accent'", "'--warn'", "'--ink'", "'--line-2'"]) assert.ok(js.includes(t), 'цвет из токена ' + t);
   assert.doesNotMatch(kod, /#[0-9a-f]{6}\b/i, 'шестнадцатеричных цветов нет');
   assert.match(js, /attributeFilter:\['data-theme'\]/, 'тема — по data-theme');
   assert.match(js, /prefers-reduced-motion: reduce/);
@@ -114,4 +114,20 @@ test('scena-znak-v1: светлый фон сцены — из токена --bg
   assert.match(js, /vec3 fl=mix\(uB\*\.955,uB,/, 'светлый пол — от цвета страницы');
   assert.ok(js.includes('vec3(.85,.70,.35)'), 'латунный шарик палитры');
   for (const x of ['.62,.45,1.', '.35,.85,.80', '.945,.955,.975', '.915,.922,.942', '.84,.80,1.', '.34,.35,.40']) assert.ok(!js.includes(x), 'холодная константа ' + x + ' убрана');
+});
+
+// scena-palitra-v1 (15.11.2026): сцена — в палитре «тёмно-синий + латунь», как «Живое небо» страниц и знак № 27
+test('js/scena.js: палитра — щит сапфир и латунь, без мятного, сиреневого и бирюзового; небо тёмной — глубина страниц', () => {
+  const js = chitat('js/scena.js');
+  assert.doesNotMatch(js, /okc|'--ok'/, 'щит больше не берёт цвет «хорошо» (мятный)');
+  assert.match(js, /saf=dark\?cvet\('--line-2',\[\.180,\.290,\.510\]\):accent;lat=dark\?accent:\[\.710,\.541,\.196\]/, 'сапфир и латунь — от токенов темы');
+  assert.match(js, /uniform vec3 uK,uG,uA,uL;/, 'латунь передаётся в предметы');
+  assert.match(js, /gl\.uniform3f\(L\(o,'uL'\),lat\[0\],lat\[1\],lat\[2\]\)/);
+  assert.match(js, /tg=sost\.err\?\[saf\[0\]\*\.5\+warn\[0\]\*\.5/, 'ошибка — сапфир пополам с «осторожно»');
+  const shit = js.slice(js.indexOf('var FS_SHIT'), js.indexOf('var parl'));
+  assert.match(shit, /mix\(vec3\(\.961,\.945,\.902\),uL\*1\.15,\.55\*uE\)/, 'галочка — бумага, точный ответ — латунь');
+  assert.doesNotMatch(shit, /vec3\(\.88,\.90,\.92\)|vec3\(\.97,\.97,\.96\)/, 'рамка не хромовая, галочка не белая');
+  for (const st of ['vec3(.50,.28,.95)', 'vec3(.10,.62,.70)', 'vec3(.5,.3,1.)', 'vec3(.55,.40,1.)', 'vec3(.6,.4,1.)', 'vec3(.016,.018,.032)'])
+    assert.ok(!js.includes(st), 'прежний цвет вне палитры: ' + st);
+  assert.match(js, /vec3 sky=mix\(vec3\(\.063,\.133,\.282\),vec3\(\.031,\.071,\.161\)/, 'небо тёмной: #102248 → #081229, как у страниц');
 });

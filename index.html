@@ -436,6 +436,17 @@ html:not(.rezhim-otcheta) .hero .check::after{content:"";position:absolute;left:
 @media (min-width:981px){html:not(.rezhim-otcheta) .z3{width:clamp(208px,17vw,248px);margin:-40px 0 -30px}}
 @media (prefers-reduced-motion:reduce){.z3__k,.z3--puls::before{animation:none!important}html:not(.rezhim-otcheta) .hero .check button{transition:none}}
 @media print{.z3{display:none!important}}
+/* telefon-ekran-v1: на телефоне строка проверки стоит сразу под заголовком и видна на первом экране;
+   пояснение уходит под неё. Порядок в разметке прежний — меняется только порядок показа. */
+@media (max-width:600px){
+  html:not(.rezhim-otcheta) .z3{width:104px;margin:-18px 0 -14px}
+  html:not(.rezhim-otcheta) .hero-text>.lp,
+  html:not(.rezhim-otcheta) .hero-text>.z3,
+  html:not(.rezhim-otcheta) .hero-text>h1,
+  html:not(.rezhim-otcheta) .hero-text>.check,
+  html:not(.rezhim-otcheta) .hero-text>.note{order:-1}
+}
+@media (max-width:360px){html:not(.rezhim-otcheta) .hero .glavnaya-display{font-size:24px}}
 </style>
 <!-- vizual-v3.0a: стили и скрипты главной — пятью файлами вместо 17 (partials/sborka.json, tests/sobrat_js.py) -->
 <link rel="stylesheet" href="/css/b/ds.5d12679305.css">

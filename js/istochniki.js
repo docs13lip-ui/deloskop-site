@@ -284,10 +284,51 @@
     });
     return out;
   }
+  // ne-svereno-v1 [команда] 15.11: «Сервер» теперь сам не берёт год, расходящийся с прошлыми в сотни раз (живой /api/check
+  // 15.11 23:10, 0105053225 и 7453199651: ряды до 2024, dengi.vyruchka за 2024, risk_level low) и сообщает о нём полем
+  // ne_svereno [{god: 2025, pokazateli: ['vyruchka', 'nalog'], tekst}] — в корне ответа и в dengi.vyruchka. Сайт поле не читал:
+  // пропавший 2025 выглядел как «отчётности нет». Показываем то же, что при своей сверке: строка «Год не сверен» в «Динамике»
+  // и нейтральная строка светофора; если год всё же пришёл в рядах — снимаем его оттуда.
+  var POKAZATELI = { vyruchka: 'выручка', pribyl: 'прибыль', nalog: 'налог на прибыль', balans: 'баланс' };
+  function sverkaServera(r) {
+    var dv = r.dengi && r.dengi.vyruchka, src = Array.isArray(r.ne_svereno) ? r.ne_svereno : dv && Array.isArray(dv.ne_svereno) ? dv.ne_svereno : [];
+    var goda = {}, pk = [];
+    src.forEach(function (x) {
+      var g = x && parseInt(x.god, 10);
+      if (!(g >= 2000 && g <= 2100)) return;
+      goda[g] = true;
+      (Array.isArray(x.pokazateli) ? x.pokazateli : []).forEach(function (k) { var t = POKAZATELI[k]; if (t && pk.indexOf(t) < 0) pk.push(t); });
+    });
+    var spisok = Object.keys(goda).map(Number).sort(function (a, b) { return a - b; });
+    if (!spisok.length) return r;
+    var D = r.dossier && typeof r.dossier === 'object' ? r.dossier : null, ch = D && D.charts;
+    if (ch && typeof ch === 'object') ['revenue', 'profit', 'income_tax'].forEach(function (k) {
+      if (Array.isArray(ch[k])) ch[k] = ch[k].filter(function (x) { return !(x && goda[+x.year]); });
+    });
+    (D && Array.isArray(D.sections) ? D.sections : []).forEach(function (sk) {
+      if (sk && sk.id === 'dynamics' && Array.isArray(sk.rows)) sk.rows = sk.rows.filter(function (x) { return !(Array.isArray(x) && /^\d{4}$/.test(String(x[0]).trim()) && goda[+String(x[0]).trim()]); });
+    });
+    var odin = spisok.length === 1, gt = odin ? spisok[0] + NB + 'год' : spisok.slice(0, -1).join(', ') + ' и' + NB + spisok[spisok.length - 1] + NB + 'годы';
+    if (!pk.length) pk = ['доходы'];
+    var chto = pk.length > 1 ? pk.slice(0, -1).join(', ') + ' и' + NB + pk[pk.length - 1] : pk[0];
+    var odnoChislo = pk.length === 1 && pk[0] !== 'доходы';
+    r.sverka_servera = spisok;
+    r.sverka_dohodov_tekst = chto.charAt(0).toUpperCase() + chto.slice(1) + ' за' + NB + gt + ' в' + NB + 'открытых данных ФНС ' +
+      (odnoChislo ? 'расходится' : 'расходятся') + ' с' + NB + 'прошлыми годами в' + NB + 'сотни раз — так бывает при ошибке единиц в' + NB + 'наборе. ' +
+      (odin ? 'Этот год' : 'Эти годы') + ' не' + NB + 'учитываем — ни в' + NB + 'выручке, ни в' + NB + 'налоговой нагрузке, ни в' + NB + 'Индексе' +
+      (dv && +dv.god > 0 && +dv.god < spisok[0] ? '; выручка в' + NB + 'отчёте — за' + NB + dv.god + NB + 'год по бухотчётности' : '') +
+      '. Сверьте с' + NB + 'бухотчётностью на' + NB + 'bo.nalog.gov.ru.';
+    var S = Array.isArray(r.signals) ? r.signals : (r.signals = []), nov = spisok[spisok.length - 1];
+    if (!S.some(function (s) { return s && s.id === 'sverka_dohodov'; })) S.push({
+      id: 'sverka_dohodov', title: 'Доходы за' + NB + nov + NB + 'год', status: 'not_checked',
+      detail: 'Не сверены: расходятся с' + NB + 'прошлыми годами в' + NB + 'сотни раз — в' + NB + 'оценку не' + NB + 'взяли',
+      pains: [], source: 'ФНС, открытые данные: доходы и расходы организации', as_of: '31.12.' + nov, sverka_dohodov: true });
+    return r;
+  }
   function sverkaDohodov(r) {
-    if (!r || typeof r !== 'object' || r.sverka_dohodov) return r;
+    if (!r || typeof r !== 'object' || r.sverka_dohodov || r.sverka_servera) return r;
     var ns = neSverennye(r);
-    if (!ns.length) return r;
+    if (!ns.length) return sverkaServera(r);
     var D = r.dossier, ch = D.charts, goda = {}, nov = ns[ns.length - 1];
     ns.forEach(function (x) { goda[x.god] = true; });
     r.sverka_dohodov = ns;

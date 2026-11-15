@@ -74,6 +74,15 @@ ul.list .nm span{color:var(--muted);font-size:13px}
 .cherez__pro{margin:10px 0 0;font-size:13px;line-height:1.45;color:var(--muted)}
 .retry{margin-left:8px}
 #nedWrap .ned{margin-top:8px;max-width:none}
+/* kabinet-papki-v1: шаг 3 решения 15.11 «кожа, красное дерево, латунь» — «Слежение» и «Папка проверок» как папки с латунными уголками (линия 1 px, 18 px; на телефоне 12 px — не задевают заголовок); пустые состояния — со знаком, тиснённым латунью. Цвета — только var(--mat-*,#…): правило тёмной темы их не перекрашивает. */
+.papka-k{position:relative;--ugol:18px}
+.papka-k::before{content:"";position:absolute;inset:12px;pointer-events:none;background:linear-gradient(var(--mat-latun,#B58A32),var(--mat-latun,#B58A32)) 0 0 / var(--ugol) 1px,linear-gradient(var(--mat-latun,#B58A32),var(--mat-latun,#B58A32)) 0 0 / 1px var(--ugol),linear-gradient(var(--mat-latun,#B58A32),var(--mat-latun,#B58A32)) 100% 0 / var(--ugol) 1px,linear-gradient(var(--mat-latun,#B58A32),var(--mat-latun,#B58A32)) 100% 0 / 1px var(--ugol),linear-gradient(var(--mat-latun,#B58A32),var(--mat-latun,#B58A32)) 0 100% / var(--ugol) 1px,linear-gradient(var(--mat-latun,#B58A32),var(--mat-latun,#B58A32)) 0 100% / 1px var(--ugol),linear-gradient(var(--mat-latun,#B58A32),var(--mat-latun,#B58A32)) 100% 100% / var(--ugol) 1px,linear-gradient(var(--mat-latun,#B58A32),var(--mat-latun,#B58A32)) 100% 100% / 1px var(--ugol);background-repeat:no-repeat}
+.pust{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding:28px 8px 14px}
+.pust__znak{width:44px;height:44px;flex:none;color:var(--mat-latun-bumaga,#7A5C14);filter:drop-shadow(0 1px 0 var(--mat-svet,#FFFFFF29)) drop-shadow(0 -1px 0 var(--mat-ten,#00000057))}
+[data-theme=dark] .pust__znak{color:var(--mat-latun-svet,#D9B45A)}
+.pust__t{max-width:420px}
+@media (max-width:560px){.papka-k{--ugol:12px}.papka-k::before{inset:8px}}
+@media print{.papka-k::before{display:none}}
 @media (max-width:560px){ul.list li{flex-wrap:wrap}.acts{width:100%;padding-left:0}}
 </style>
 <link rel="stylesheet" href="/css/fonts.css">
@@ -189,11 +198,11 @@ ul.list .nm span{color:var(--muted);font-size:13px}
       <p class="note" id="cnote" role="status" aria-live="polite"></p>
     </section>
 
-    <section class="card">
+    <section class="card papka-k">
       <h2>Слежение за контрагентами</h2>
       <p class="sub" style="margin:0">Компании, которые вы проверяете перед каждой оплатой. Статус — в списке; обновить — «Проверить».</p>
       <ul class="list" id="watch"></ul>
-      <p class="empty" id="watchEmpty" hidden>Пока никого. Добавьте ИНН ключевого поставщика или покупателя.</p>
+      <p class="empty pust" id="watchEmpty" hidden><svg class="pust__znak" width="44" height="44" viewBox="0 0 120 120" fill="currentColor" aria-hidden="true"><path d="M49.86 85.91A12 12 0 0 1 32.14 102.09L11.14 79.09A12 12 0 0 1 28.86 62.91ZM29 94a12 12 0 1 1 24 0a12 12 0 1 1 -24 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0Z"/><path class="zn-l" d="M46.79 98.77A7.5 7.5 0 0 1 35.21 89.23L60.36 58.69A7.5 7.5 0 0 1 71.94 68.22ZM54 43a29 29 0 1 1 58 0a29 29 0 1 1 -58 0ZM64 43a19 19 0 1 0 38 0a19 19 0 1 0 -38 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0Z"/></svg><span class="pust__t">Пока никого. Добавьте ИНН ключевого поставщика или&nbsp;покупателя&nbsp;— статус будет здесь перед каждой оплатой.</span></p>
       <form id="fWatch" class="field watchadd" novalidate>
         <input id="winn" type="text" inputmode="numeric" maxlength="12" placeholder="ИНН компании">
         <input id="wnote" type="text" maxlength="200" placeholder="Заметка — например, «поставщик металла»">
@@ -202,12 +211,12 @@ ul.list .nm span{color:var(--muted);font-size:13px}
       <p class="note" id="wnote2" role="status" aria-live="polite"></p>
     </section>
 
-    <section class="card">
+    <section class="card papka-k">
       <h2>Папка проверок</h2>
       <p class="sub" style="margin:0">Все ваши проверки по компаниям: когда проверяли, какой был итог и досье на ту дату.</p>
       <div id="papka"></div>
       <ul class="list" id="checks"></ul>
-      <p class="empty" id="checksEmpty" hidden>Проверок пока нет. <a href="/">Проверить первую компанию →</a></p>
+      <p class="empty pust" id="checksEmpty" hidden><svg class="pust__znak" width="44" height="44" viewBox="0 0 120 120" fill="currentColor" aria-hidden="true"><path d="M49.86 85.91A12 12 0 0 1 32.14 102.09L11.14 79.09A12 12 0 0 1 28.86 62.91ZM29 94a12 12 0 1 1 24 0a12 12 0 1 1 -24 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0Z"/><path class="zn-l" d="M46.79 98.77A7.5 7.5 0 0 1 35.21 89.23L60.36 58.69A7.5 7.5 0 0 1 71.94 68.22ZM54 43a29 29 0 1 1 58 0a29 29 0 1 1 -58 0ZM64 43a19 19 0 1 0 38 0a19 19 0 1 0 -38 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0Z"/></svg><span class="pust__t">Проверок пока нет. Каждая проверка ляжет сюда с&nbsp;датой и&nbsp;итогом. <a href="/">Проверить первую компанию&nbsp;→</a></span></p>
     </section>
 
     <!-- golos-klienta-v1: «Чего не хватает в Делоскопе?» — карточку рисует js/golos.js после входа -->

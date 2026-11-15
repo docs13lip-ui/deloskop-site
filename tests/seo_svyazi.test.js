@@ -62,6 +62,27 @@ test('подвал: «Мы во ВКонтакте» на всех страни�
   assert.ok(chit('partials/obolochka.json').includes(VK + '?utm_source=site'), 'карточки из API — та же оболочка');
 });
 
+// kanaly-podval-v1 (15.11.2026): канал в Telegram и группа в Одноклассниках — в подвале всех страниц, рядом с ВКонтакте.
+test('подвал: «Мы в Telegram» и «Мы в Одноклассниках» на всех страницах с подвалом; кнопки «Написать в Telegram» нет', () => {
+  const src = chit('tests/sobrat_shapku.py');
+  assert.match(src, /\("Мы в Telegram", TG\), \("Мы в Одноклассниках", OK \+ "\?utm_source=site"\)/);
+  const TG = 'https://t.me/deloskop';
+  const OK = 'https://ok.ru/group/70000060184759';
+  const bez = [];
+  for (const p of VSE) {
+    const s = fs.readFileSync(p, 'utf8');
+    const m = s.match(/<!--podval-->[\s\S]*?<!--\/podval-->/);
+    if (!m) continue;
+    if (!m[0].includes('<a href="' + TG + '" rel="me noopener">Мы&nbsp;в&nbsp;Telegram</a>')
+      || !m[0].includes('<a href="' + OK + '?utm_source=site" rel="me noopener">Мы&nbsp;в&nbsp;Одноклассниках</a>')) bez.push(path.relative(ROOT, p));
+    // переписку в Telegram не ведём: ссылок вида «написать» (t.me/…bot, tg://) в подвале нет
+    assert.ok(!/tg:\/\/|t\.me\/[A-Za-z0-9_]*bot\b/i.test(m[0]), path.relative(ROOT, p));
+  }
+  assert.deepStrictEqual(bez, []);
+  const ob = chit('partials/obolochka.json');
+  assert.ok(ob.includes(TG) && ob.includes(OK + '?utm_source=site'), 'карточки из API — та же оболочка');
+});
+
 test('lastmod: реестр совпадает с текстом страниц (python3 tests/sitemap_lastmod.py --check)', () => {
   const out = execFileSync('python3', ['tests/sitemap_lastmod.py', '--check'], { cwd: ROOT, encoding: 'utf8' });
   assert.match(out, /без изменений/);

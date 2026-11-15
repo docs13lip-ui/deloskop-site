@@ -133,3 +133,20 @@ test('тёмная тема: --accent-soft — сапфир, прежнего #2
   }
   assert.ok(!/var\(--ink3/.test(chitat('js/limit.js')), 'js/limit.js: --ink3 нигде не задан — подпись падает в запасной серый');
 });
+
+// signal-yarkij-v1 (15.11.2026): яркие сигнальные цвета (лампа светофора, точка «средний риск», латунь) — не бледные
+// подложки: тёмная тема не гасит их в плашку #2E220C
+test('тёмная тема: яркие сигналы не гаснут — светофор и шкала отчёта, латунное свечение окна поиска', () => {
+  const py = 'import sys; sys.path.insert(0,"tests"); import tema_temnaya as T; r=T.razobrat;' +
+    'print("|".join(str(T.perevesti(r(c),"fon")) for c in ("#F5A623","#F5B82E","#D9B45A","rgba(217,180,90,.2)","#FFF4E0")))';
+  const out = execSync('python3 -c ' + JSON.stringify(py), { cwd: K, encoding: 'utf8' }).trim().split('|');
+  assert.deepStrictEqual(out.slice(0, 4), ['None', 'None', 'None', 'None'], 'яркий цвет переведён в плашку: ' + out.join(' | '));
+  assert.strictEqual(out[4], '#2E220C', 'бледная жёлтая подложка по-прежнему → плашка --warn-bg');
+  const rep = chitat('report.html');
+  const tema = (rep.match(/<style data-tema>([\s\S]*?)<\/style>/) || ['', ''])[1];
+  for (const sel of ['.lights .y.on', '.dot.warn', '.meter']) {
+    const m = tema.match(new RegExp('\\[data-theme=dark\\] ' + sel.replace(/\./g, '\\.') + '\\{([^}]*)\\}'));
+    assert.ok(!m || !/#2E220C/i.test(m[1]), 'report.html ' + sel + ' в тёмной теме гаснет в #2E220C');
+  }
+  assert.ok(!/dialog\.pso\{[^}]*rgba\(46,34,12/.test(chitat('css/tema.css')), 'окно поиска: латунное свечение погашено в тёмной');
+});

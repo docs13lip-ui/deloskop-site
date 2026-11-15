@@ -100,7 +100,7 @@ p{margin:0}
 .row{display:flex;justify-content:space-between;gap:16px;padding:14px 0;border-top:1px solid #EFEADC;font-size:17px}
 .row b{font-weight:600;white-space:nowrap}
 .row .ok{color:var(--ok)} .row .warn{color:var(--warn)} .row .neutral{color:var(--ink2)}
-.verdict{background:var(--bg);border-radius:16px;padding:16px 18px;font-size:15px;color:#3A3A3C}
+.verdict{background:var(--bg);border-radius:16px;padding:16px 18px;font-size:15px;color:var(--ink-2,#3A4868)}
 .row .bad{color:#B3261E} .row b.d{white-space:normal;text-align:right;max-width:58%}
 .pill.medium{background:#FFF4E0;color:var(--warn)} .pill.high{background:#FDECEA;color:#B3261E}
 .report.loading{opacity:.55;transition:opacity .2s}
@@ -384,7 +384,7 @@ footer a{color:var(--ink2)}
 @media print{.lp{display:none!important}}
 </style>
 <!-- vizual-v3.0a: стили и скрипты главной — пятью файлами вместо 17 (partials/sborka.json, tests/sobrat_js.py) -->
-<link rel="stylesheet" href="/css/b/ds.53de4306f5.css">
+<link rel="stylesheet" href="/css/b/ds.5d12679305.css">
 <link rel="stylesheet" href="/css/b/glavnaya-stil.7305070019.css">
 <script src="/js/b/yadro.919a81fd02.js" defer></script>
 <script src="/js/b/glavnaya.e77e115f2e.js" defer></script>
@@ -394,7 +394,7 @@ footer a{color:var(--ink2)}
 <meta name="apple-mobile-web-app-title" content="Делоскоп">
 <script>!function(d,t){try{t=localStorage.tema}catch(e){}t=t=="auto"?(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light"):t=="light"?t:"dark";d.dataset.theme=t;if(t=="dark"&&(t=document.querySelector("meta[name=theme-color]")))t.content="#0A1733"}(document.documentElement)</script>
 <meta name="deloskop-rezhim" content="beta">
-<style data-tema>[data-theme=dark] .top{background:rgba(10,23,51,0.86)}[data-theme=dark] .btn{color:#081229}[data-theme=dark] .btn:hover{color:#081229}[data-theme=dark] .check button{color:#081229}[data-theme=dark] .note.err{color:#FF7B72}[data-theme=dark] .row{border-top:1px solid #223A6B}[data-theme=dark] .verdict{color:#C9CFDD}[data-theme=dark] .row .bad{color:#FF7B72}[data-theme=dark] .pill.medium{background:#2E220C}[data-theme=dark] .pill.high{background:#3A1513;color:#FF7B72}[data-theme=dark] .report-actions button{border:1px solid #223A6B}[data-theme=dark] .report-actions .btn-doc{color:#081229}[data-theme=dark] .report-actions .btn-doc:hover{color:#081229}[data-theme=dark] .tagnew{background:#16357A}[data-theme=dark] .plan.pro{background:#102248}[data-theme=dark] .badge{color:#081229}[data-theme=dark] .period button.on{background:#102248}[data-theme=dark] .cta2:hover{background:rgba(217,180,90,0.06)}[data-theme=dark] .cta.primary{color:#081229}[data-theme=dark] .cta.primary:hover{color:#081229}[data-theme=dark] .cta.ghost{border:1px solid #223A6B}[data-theme=dark] .faq details{border-top:1px solid #223A6B}[data-theme=dark] .faq details:last-child{border-bottom:1px solid #223A6B}[data-theme=dark] .fb-btn{background:#102248}[data-theme=dark] .fb-panel{background:#102248}[data-theme=dark] .fb-kinds button,[data-theme=dark] .fb-stars button{background:#102248}[data-theme=dark] .fb-kinds button[aria-pressed="true"]{background:#16357A}[data-theme=dark] .fb-stars button[aria-pressed="true"]{color:#081229}[data-theme=dark] .fb-send{color:#081229}[data-theme=dark] .fb-toast{color:#081229}[data-theme=dark] .fb-toast button{background:#102248}[data-theme=dark] :focus-visible{outline:3px solid rgba(217,180,90,0.45)}[data-theme=dark] .vhod:hover{border-color:#223A6B}</style>
+<style data-tema>[data-theme=dark] .top{background:rgba(10,23,51,0.86)}[data-theme=dark] .btn{color:#081229}[data-theme=dark] .btn:hover{color:#081229}[data-theme=dark] .check button{color:#081229}[data-theme=dark] .note.err{color:#FF7B72}[data-theme=dark] .row{border-top:1px solid #223A6B}[data-theme=dark] .row .bad{color:#FF7B72}[data-theme=dark] .pill.medium{background:#2E220C}[data-theme=dark] .pill.high{background:#3A1513;color:#FF7B72}[data-theme=dark] .report-actions button{border:1px solid #223A6B}[data-theme=dark] .report-actions .btn-doc{color:#081229}[data-theme=dark] .report-actions .btn-doc:hover{color:#081229}[data-theme=dark] .tagnew{background:#16357A}[data-theme=dark] .plan.pro{background:#102248}[data-theme=dark] .badge{color:#081229}[data-theme=dark] .period button.on{background:#102248}[data-theme=dark] .cta2:hover{background:rgba(217,180,90,0.06)}[data-theme=dark] .cta.primary{color:#081229}[data-theme=dark] .cta.primary:hover{color:#081229}[data-theme=dark] .cta.ghost{border:1px solid #223A6B}[data-theme=dark] .faq details{border-top:1px solid #223A6B}[data-theme=dark] .faq details:last-child{border-bottom:1px solid #223A6B}[data-theme=dark] .fb-btn{background:#102248}[data-theme=dark] .fb-panel{background:#102248}[data-theme=dark] .fb-kinds button,[data-theme=dark] .fb-stars button{background:#102248}[data-theme=dark] .fb-kinds button[aria-pressed="true"]{background:#16357A}[data-theme=dark] .fb-stars button[aria-pressed="true"]{color:#081229}[data-theme=dark] .fb-send{color:#081229}[data-theme=dark] .fb-toast{color:#081229}[data-theme=dark] .fb-toast button{background:#102248}[data-theme=dark] :focus-visible{outline:3px solid rgba(217,180,90,0.45)}[data-theme=dark] .vhod:hover{border-color:#223A6B}</style>
 </head>
 <body>
 

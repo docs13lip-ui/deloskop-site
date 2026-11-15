@@ -447,6 +447,20 @@ html:not(.rezhim-otcheta) .hero .check::after{content:"";position:absolute;left:
   html:not(.rezhim-otcheta) .hero-text>.note{order:-1}
 }
 @media (max-width:360px){html:not(.rezhim-otcheta) .hero .glavnaya-display{font-size:24px}}
+/* kabinet-v1: материалы первого экрана. Кожа — мелкое тиснение поверх фона; под экраном — рейка красного дерева
+   с латунной кромкой и прострочкой. Только оформление: порядок, размеры и поведение элементов прежние. */
+html:not(.rezhim-otcheta) .hero{position:relative}
+html:not(.rezhim-otcheta) .hero>.wrap{position:relative}
+html:not(.rezhim-otcheta) .hero::before{content:"";position:absolute;inset:0;background:url(/img/faktura-kozha.webp) 0 0/160px 160px;pointer-events:none}
+html:not(.rezhim-otcheta) .hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:27px;pointer-events:none;
+  background:
+    repeating-linear-gradient(90deg,#B58A32 0 7px,transparent 7px 13px) 0 0/100% 1px no-repeat,
+    linear-gradient(#E3C778,#B58A32) 0 12px/100% 1px no-repeat,
+    linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,0) 34%,rgba(0,0,0,.34)) 0 13px/100% 14px no-repeat,
+    url(/img/faktura-derevo.webp) 0 13px/320px 14px repeat-x}
+[data-theme="light"] .hero::before{opacity:.55}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .hero::before{opacity:.55}}
+@media print{.hero::before,.hero::after{display:none!important}}
 </style>
 <!-- vizual-v3.0a: стили и скрипты главной — пятью файлами вместо 17 (partials/sborka.json, tests/sobrat_js.py) -->
 <link rel="stylesheet" href="/css/b/ds.5d12679305.css">
@@ -459,7 +473,10 @@ html:not(.rezhim-otcheta) .hero .check::after{content:"";position:absolute;left:
 <meta name="apple-mobile-web-app-title" content="Делоскоп">
 <script>!function(d,t){try{t=localStorage.tema}catch(e){}t=t=="auto"?(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light"):t=="light"?t:"dark";d.dataset.theme=t;if(t=="dark"&&(t=document.querySelector("meta[name=theme-color]")))t.content="#0A1733"}(document.documentElement)</script>
 <meta name="deloskop-rezhim" content="beta">
-<style data-tema>[data-theme=dark] .top{background:rgba(10,23,51,0.86)}[data-theme=dark] .btn{color:#081229}[data-theme=dark] .btn:hover{color:#081229}[data-theme=dark] .check button{color:#081229}[data-theme=dark] .note.err{color:#FF7B72}[data-theme=dark] .row{border-top:1px solid #223A6B}[data-theme=dark] .row .bad{color:#FF7B72}[data-theme=dark] .pill.medium{background:#2E220C}[data-theme=dark] .pill.high{background:#3A1513;color:#FF7B72}[data-theme=dark] .report-actions button{border:1px solid #223A6B}[data-theme=dark] .report-actions .btn-doc{color:#081229}[data-theme=dark] .report-actions .btn-doc:hover{color:#081229}[data-theme=dark] .tagnew{background:#16357A}[data-theme=dark] .plan.pro{background:#102248}[data-theme=dark] .badge{color:#081229}[data-theme=dark] .period button.on{background:#102248}[data-theme=dark] .cta2:hover{background:rgba(217,180,90,0.06)}[data-theme=dark] .cta.primary{color:#081229}[data-theme=dark] .cta.primary:hover{color:#081229}[data-theme=dark] .cta.ghost{border:1px solid #223A6B}[data-theme=dark] .faq details{border-top:1px solid #223A6B}[data-theme=dark] .faq details:last-child{border-bottom:1px solid #223A6B}[data-theme=dark] .fb-btn{background:#102248}[data-theme=dark] .fb-panel{background:#102248}[data-theme=dark] .fb-kinds button,[data-theme=dark] .fb-stars button{background:#102248}[data-theme=dark] .fb-kinds button[aria-pressed="true"]{background:#16357A}[data-theme=dark] .fb-stars button[aria-pressed="true"]{color:#081229}[data-theme=dark] .fb-send{color:#081229}[data-theme=dark] .fb-toast{color:#081229}[data-theme=dark] .fb-toast button{background:#102248}[data-theme=dark] :focus-visible{outline:3px solid rgba(217,180,90,0.45)}[data-theme=dark] .vhod:hover{border-color:#223A6B}[data-theme=dark] .z3::after{background:radial-gradient(closest-side,rgba(3,8,22,.42),rgba(255,255,255,0.02))}</style>
+<style data-tema>[data-theme=dark] .top{background:rgba(10,23,51,0.86)}[data-theme=dark] .btn{color:#081229}[data-theme=dark] .btn:hover{color:#081229}[data-theme=dark] .check button{color:#081229}[data-theme=dark] .note.err{color:#FF7B72}[data-theme=dark] .row{border-top:1px solid #223A6B}[data-theme=dark] .row .bad{color:#FF7B72}[data-theme=dark] .pill.medium{background:#2E220C}[data-theme=dark] .pill.high{background:#3A1513;color:#FF7B72}[data-theme=dark] .report-actions button{border:1px solid #223A6B}[data-theme=dark] .report-actions .btn-doc{color:#081229}[data-theme=dark] .report-actions .btn-doc:hover{color:#081229}[data-theme=dark] .tagnew{background:#16357A}[data-theme=dark] .plan.pro{background:#102248}[data-theme=dark] .badge{color:#081229}[data-theme=dark] .period button.on{background:#102248}[data-theme=dark] .cta2:hover{background:rgba(217,180,90,0.06)}[data-theme=dark] .cta.primary{color:#081229}[data-theme=dark] .cta.primary:hover{color:#081229}[data-theme=dark] .cta.ghost{border:1px solid #223A6B}[data-theme=dark] .faq details{border-top:1px solid #223A6B}[data-theme=dark] .faq details:last-child{border-bottom:1px solid #223A6B}[data-theme=dark] .fb-btn{background:#102248}[data-theme=dark] .fb-panel{background:#102248}[data-theme=dark] .fb-kinds button,[data-theme=dark] .fb-stars button{background:#102248}[data-theme=dark] .fb-kinds button[aria-pressed="true"]{background:#16357A}[data-theme=dark] .fb-stars button[aria-pressed="true"]{color:#081229}[data-theme=dark] .fb-send{color:#081229}[data-theme=dark] .fb-toast{color:#081229}[data-theme=dark] .fb-toast button{background:#102248}[data-theme=dark] :focus-visible{outline:3px solid rgba(217,180,90,0.45)}[data-theme=dark] .vhod:hover{border-color:#223A6B}[data-theme=dark] .z3::after{background:radial-gradient(closest-side,rgba(3,8,22,.42),rgba(255,255,255,0.02))}html[data-theme=dark]:not(.rezhim-otcheta) .hero::after{background:repeating-linear-gradient(90deg,#B58A32 0 7px,transparent 7px 13px) 0 0/100% 1px no-repeat,
+    linear-gradient(#2E220C,#B58A32) 0 12px/100% 1px no-repeat,
+    linear-gradient(180deg,rgba(16,34,72,0.16),rgba(16,34,72,0) 34%,rgba(255,255,255,0.496)) 0 13px/100% 14px no-repeat,
+    url(/img/faktura-derevo.webp) 0 13px/320px 14px repeat-x}</style>
 </head>
 <body>
 

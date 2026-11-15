@@ -91,3 +91,16 @@ test('телефон: строка проверки сразу под загол
   const tekst = h.slice(h.indexOf('<div class="hero-text">'));
   assert.ok(tekst.indexOf('class="lead"') < tekst.indexOf('class="check'), 'в разметке пояснение по-прежнему перед формой');
 });
+
+test('материалы первого экрана: тиснение кожи и рейка красного дерева — лёгкие, не в режиме отчёта и не в печати', () => {
+  const h = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const n = h.indexOf('/* kabinet-v1');
+  assert.ok(n > 0, 'блок kabinet-v1 на месте');
+  const b = h.slice(n, h.indexOf('</style>', n));
+  assert.match(b, /html:not\(\.rezhim-otcheta\) \.hero::before\{[^}]*faktura-kozha\.webp[^}]*pointer-events:none/);
+  assert.match(b, /html:not\(\.rezhim-otcheta\) \.hero::after\{[^}]*faktura-derevo\.webp/);
+  assert.match(b, /@media print\{\.hero::before,\.hero::after\{display:none!important\}\}/);
+  const ves = (f) => fs.statSync(path.join(__dirname, '..', f)).size;
+  assert.ok(ves('img/faktura-kozha.webp') < 16000, 'тиснение легче 16 КБ');
+  assert.ok(ves('img/faktura-derevo.webp') < 4000, 'рейка легче 4 КБ');
+});

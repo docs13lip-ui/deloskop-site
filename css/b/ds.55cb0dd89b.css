@@ -248,6 +248,7 @@ color-scheme:dark;
 }
 :root[data-theme=light]{color-scheme:light}
 [data-theme=dark] body{background:var(--bg);color:var(--ink)}
+[data-theme=dark] body::after{background:url(/img/faktura-kozha.webp) 0 0/160px 160px;opacity:.85}
 [data-theme=dark] img:not([src$=".svg"]){filter:brightness(.92)}
 .tema{display:inline-flex;align-items:center;gap:var(--s-2,8px);margin:0}
 .tema__h{color:var(--muted);font-size:var(--t-caption,13px)}

@@ -91,7 +91,8 @@ test('пример на главной: дуга до базы методики 
   assert.ok(gl.includes('<script src="/js/zhivoj-indeks.js" defer></script>'));
   // vitrina-v1: у экспонатов витрины своя «сборка» (сторож — tests/vitrina.test.js); здесь — остальная главная
   // bez-otkuda-v1 (13.11): таблицы источников с data-sobir на главной больше нет — остались входы и «Щит»
-  assert.strictEqual((gl.replace(/<!--vitrina-->[\s\S]*?<!--\/vitrina-->/, '').match(/ data-sobir>/g) || []).length, 2);
+  // glavnaya-uslugi-v1 (15.11): третья «сборка» — плитки «Что умеет Делоскоп»
+  assert.strictEqual((gl.replace(/<!--vitrina-->[\s\S]*?<!--\/vitrina-->/, '').match(/ data-sobir>/g) || []).length, 3);
 });
 
 test('отчёт: зона кольца — из класса уровня (ok|warn|bad), неизвестный класс — по порогам, а не «зелёный»', () => {

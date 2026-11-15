@@ -88,6 +88,9 @@
     "linza-poisk": [
       "js/linza-poisk.js"
     ],
+    "znak3d": [
+      "js/znak3d.js"
+    ],
     "sravnit": [
       "js/istochniki.js",
       "js/imya.js",
@@ -103,7 +106,8 @@
       "glavnaya-sinhr",
       "primer",
       "otchet",
-      "linza-poisk"
+      "linza-poisk",
+      "znak3d"
     ],
     "sravnit/index.html": [
       "glavnaya-sinhr",

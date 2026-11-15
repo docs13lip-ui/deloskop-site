@@ -137,7 +137,7 @@
 [data-theme=dark] .otz__n{background:#102248}
 [data-theme=dark] .otz__n .otz__s{color:#9CA8C2}
 [data-theme=dark] .pp__q{border:1px solid #223A6B;background:#102248}
-[data-theme=dark] dialog.pso{background:radial-gradient(60% 46% at 50% 18%,rgba(46,34,12,0.2),transparent 70%),radial-gradient(40% 34% at 14% 78%,rgba(46,34,12,0.1),transparent 70%),radial-gradient(38% 32% at 88% 70%,rgba(22,114,63,.08),transparent 70%),var(--bg,#0A1733)}
+[data-theme=dark] dialog.pso{background:radial-gradient(60% 46% at 50% 18%,rgba(217,180,90,.20),transparent 70%),radial-gradient(40% 34% at 14% 78%,rgba(217,180,90,.10),transparent 70%),radial-gradient(38% 32% at 88% 70%,rgba(22,114,63,.08),transparent 70%),var(--bg,#0A1733)}
 [data-theme=dark] .pso__f{box-shadow:0 18px 60px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,0.035)}
 [data-theme=dark] .pso__f:focus-within{box-shadow:0 18px 60px rgba(0,0,0,.16),0 0 0 4px rgba(217,180,90,.22),inset 0 1px 0 rgba(255,255,255,0.035)}
 [data-theme=dark] .pwa__da{color:#081229}

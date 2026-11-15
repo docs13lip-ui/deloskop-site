@@ -132,3 +132,19 @@ test('калькулятор: ключевая ставка в формуле и
   const pct = String(Math.round(R.klyuchevaya_stavka * 10000) / 100).replace('.', ',');
   assert.ok(K.includes('по нынешней ключевой ставке ' + pct + '%'), 'подпись к пеням: ' + pct + '%');
 });
+
+// poisk-centr-v1 (15.11.2026): поиск посередине — первый экран главной в одну колонку по центру.
+test('poisk-centr-v1: строка проверки — по центру первого экрана, вне режима отчёта', () => {
+  const blok = /\/\* poisk-centr-v1[\s\S]*?<\/style>/.exec(G);
+  assert.ok(blok, 'блок poisk-centr-v1 есть в стилях главной');
+  const css = blok[0];
+  assert.match(css, /@media \(min-width:601px\)\{\s*html:not\(\.rezhim-otcheta\) \.hero \.wrap\{grid-template-columns:minmax\(0,1fr\);justify-items:center\}/, 'одна колонка по центру от 601 px');
+  assert.match(css, /html:not\(\.rezhim-otcheta\) \.hero-text\{align-items:center;text-align:center;/, 'текст первого экрана по центру');
+  assert.match(css, /html:not\(\.rezhim-otcheta\) \.hero \.check\{width:100%;max-width:720px;text-align:left\}/, 'строка шире, внутри неё и в подсказках — выравнивание влево');
+  const pravila = css.split('\n').filter((s) => /^\s*html/.test(s));
+  assert.ok(pravila.length >= 10, 'правил блока: ' + pravila.length);
+  pravila.forEach((s) => assert.ok(/^\s*html:not\(\.rezhim-otcheta\) /.test(s), 'правило не трогает режим отчёта: ' + s.trim()));
+  assert.ok(!/#[0-9A-Fa-f]{3,8}\b|rgba?\(/.test(css), 'в блоке нет цветов — пары тёмной темы не нужны');
+  // порядок в разметке прежний: текст и строка — раньше примера отчёта
+  assert.ok(MAIN.indexOf('id="check"') < MAIN.indexOf('class="report ex"'), 'строка проверки выше примера отчёта');
+});

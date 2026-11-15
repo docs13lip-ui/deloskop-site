@@ -40,7 +40,7 @@ test('ставки и цифры тарифов подставлены из tari
 test('ровно одна главная кнопка, цели Метрики, «Стать партнёром» ведёт на почту (кабинета партнёра нет)', () => {
   assert.strictEqual((main.match(/btn--primary/g) || []).length, 1);
   assert.ok(/href="\/\?utm_source=partneram" data-goal="partner_proverka">Проверить контрагента клиента</.test(main));
-  assert.ok(/href="mailto:help@deloskop\.ru\?subject=[^"]+" data-goal="partner_start">Стать партнёром/.test(main));
+  assert.ok(/href="mailto:partner@deloskop\.ru\?subject=[^"]+" data-goal="partner_start">Стать партнёром/.test(main));
   assert.ok(!/partner.*cabinet|cabinet\.html#partn/i.test(main));
 });
 

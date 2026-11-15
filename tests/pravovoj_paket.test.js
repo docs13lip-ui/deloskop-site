@@ -39,7 +39,7 @@ test('в подвале — все документы и строка help@ 24/7
   for (const u of ['/oferta/', '/politika/', '/soglasie/', '/rassylki/', '/cookies/', '/vozvrat/', '/partneram/usloviya/', '/rekvizity/']) {
     assert.ok(p.includes(`href="${u}"`), 'в подвале нет ' + u);
   }
-  assert.ok(bezTegov(p).includes('Сотрудничество, отзывы и предложения — help@deloskop.ru. Принимаем 24/7'));
+  assert.match(bezTegov(p), /Вопросы и\s+отзывы — help@deloskop\.ru\. Сотрудничество — partner@deloskop\.ru\. Принимаем 24\/7/);
   for (const d of DOKI.concat(['.'])) {
     const s = bezTegov(chitat((d === '.' ? '' : d + '/') + 'index.html'));
     for (const r of [/поддержка 24\/7/i, /круглосуточн[а-я]* поддержк/i, /мониторим 24/i, /ответим за \d/i])
@@ -81,10 +81,10 @@ test('«Скорая под ключ»: «Условия оферты» в ка�
   assert.ok(/<p class="pkg__cap">[^\n]*href="\/oferta\/#skoraya"/.test(t));
 });
 
-test('политика: 8 целей (7 — «Голос клиента», 8 — свой счёт просмотров, noch-2010-schetchik), цель 6 — партнёры всех типов, хранение в России, 24/72 часа', () => {
+test('политика: 9 целей (7 — «Голос клиента», 8 — свой счёт просмотров, noch-2010-schetchik; 9 — страницы в соцсетях, sameas-kanaly-v1), цель 6 — партнёры всех типов, хранение в России, 24/72 часа', () => {
   const t = chitat('politika/index.html');
   const s = bezTegov(t);
-  assert.strictEqual((t.match(/<h3 id="cel\d">\d\. /g) || []).length, 8, 'целей не 8');
+  assert.strictEqual((t.match(/<h3 id="cel\d">\d\. /g) || []).length, 9, 'целей не 9');
   for (const f of ['п. 11 ч. 1 ст. 6 152-ФЗ', 'ч. 3 ст. 6 152-ФЗ', 'Трансграничной передачи нет',
     'в течение 24 часов', 'в течение 72 часов', 'без Вебвизора', 'Физлиц из выписок во внешние сервисы не передаём',
     'только перед первой выплатой', 'Социальному фонду России', 'срок договора + 6 лет'])

@@ -81,3 +81,13 @@ test('стили: место под знак задано заранее, вне
   assert.match(h, /@media print\{\.z3\{display:none!important\}\}/);
   assert.match(css, /\.check:focus-within\{box-shadow:0 0 0 2px var\(--accent\)/, 'фокус строки — кант цвета темы');
 });
+
+test('телефон: строка проверки сразу под заголовком — пояснение уходит под неё, разметка не переставлена', () => {
+  const h = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const b = h.slice(h.indexOf('/* telefon-ekran-v1'), h.indexOf('</style>', h.indexOf('/* telefon-ekran-v1')));
+  assert.match(b, /@media \(max-width:600px\)\{[\s\S]*\.hero-text>\.check,[\s\S]*\.hero-text>\.note\{order:-1\}/);
+  assert.doesNotMatch(b, /\.lead\{[^}]*order/);
+  assert.match(b, /\.z3\{width:104px/);
+  const tekst = h.slice(h.indexOf('<div class="hero-text">'));
+  assert.ok(tekst.indexOf('class="lead"') < tekst.indexOf('class="check'), 'в разметке пояснение по-прежнему перед формой');
+});

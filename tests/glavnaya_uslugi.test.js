@@ -60,3 +60,18 @@ test('один фон: в тёмной теме — тиснёная кожа н
   assert.ok(est('img/faktura-kozha.webp') && fs.statSync(path.join(KOREN, 'img/faktura-kozha.webp')).size < 16000);
   assert.match(G, /\[data-theme="dark"\] \.hero::before\{display:none\}/);
 });
+
+test('uslugi-vopros-v1: под плитками — строка «Чего здесь не хватает?»; ответ идёт путём «Отзыва», без почты и без лишних полей', () => {
+  const s = sekciya('uslugi');
+  assert.match(s, /<form class="uv" id="uvForm" novalidate>/);
+  assert.match(s, /<label class="uv__q" for="uvText">Чего здесь не&nbsp;хватает\?<\/label>/);
+  assert.strictEqual((s.match(/<input\b/g) || []).length, 1, 'одно поле');
+  assert.ok(!/type="email"|type="tel"|name="(email|phone|inn|fio)"/.test(s), 'почту, телефон, ИНН и имя не спрашиваем');
+  assert.match(s, /Сообщение увидит только команда Делоскопа\. Почту и&nbsp;телефон писать не&nbsp;нужно\./);
+  const js = G.slice(G.indexOf('// uslugi-vopros-v1'), G.indexOf('// мини-опрос'));
+  assert.match(js, /fetch\(API\+'\/api\/feedback'/);
+  assert.match(js, /kind:'idea',rating:null,message:text,email:null,page:'\/#uslugi'/);
+  assert.match(js, /token:st\.token,website:null,interactions:st\.acts/, 'та же защита от роботов, что у «Отзыва»');
+  assert.match(js, /uvT\.addEventListener\('focus',getToken\)/);
+  assert.match(js, /mailto:help@deloskop\.ru/, 'сервер не ответил — предлагаем письмо');
+});

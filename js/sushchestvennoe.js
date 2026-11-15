@@ -162,6 +162,8 @@
       if (m && k.value != null && isFinite(k.value) && Number(k.value) !== 0) vzyat(m[1]);
     });
     if (g === null) return null;
+    // sverka-odin-god-v1: доходы этого года есть, но не сверены (js/istochniki.js) — это не «отчёт без выручки»
+    if (r && r.sverka_odin_god && +r.sverka_odin_god.god === g) return null;
     var p = null;
     (Array.isArray(ch.profit) ? ch.profit : []).forEach(function (x) { if (x && +x.year === g && x.value != null && isFinite(Number(x.value))) p = Number(x.value); });
     if (p === null) (Array.isArray(D.kpi) ? D.kpi : []).forEach(function (k) {
@@ -304,6 +306,10 @@
         // Текст — [команда] 04.10 11:30 разд. 1.4 дословно.
         add({ k: 'otchetnost', nazv: 'Бухотчётность', znach: BANK_GIRBO, ton: 'neutral',
           ist: reestr + ', ОКВЭД ' + c.okved, data: dataPr, ssylka: CBR_BANK + (/^\d{13}$/.test(String(c.ogrn || '')) ? '?ogrn=' + c.ogrn : '') });
+      } else if (r && r.sverka_odin_god) {
+        // sverka-odin-god-v1: доходы за год есть только в наборе ФНС и не сходятся с балансом или лимитом УСН — сумму не показываем
+        add({ k: 'otchetnost', nazv: 'Выручка за ' + r.sverka_odin_god.god, znach: 'Не' + NB + 'сверена — сумму в' + NB + 'расчёт не' + NB + 'берём', ton: 'neutral',
+          ist: 'ФНС, открытые данные', data: '31.12.' + r.sverka_odin_god.god });
       } else if (godBezVyruchki(r)) {
         // Отчёт за год сдан, а выручки в нём нет (0 или строка 2110 не заполнена) — пишем это, а не «нет в ответе ГИР БО».
         var bv = godBezVyruchki(r);

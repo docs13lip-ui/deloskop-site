@@ -325,10 +325,85 @@
       pains: [], source: 'ФНС, открытые данные: доходы и расходы организации', as_of: '31.12.' + nov, sverka_dohodov: true });
     return r;
   }
+  // sverka-odin-god-v1 [команда] 16.11: сверка «к прошлым годам» (своя и сервера) молчит, когда год в рядах один —
+  // компании, открытые в 2023 г., у которых в наборе ФНС есть только 2025. Живой /api/check 16.11 00:10: 9726049490 (47.41,
+  // 0 сотрудников) — доходы 2025 — 17 661 737 000 ₽ при активах 16 000 ₽ и расходах 0 ₽; 7203559982 (47.11, УСН, 3 чел.) —
+  // 63 220 602 000 ₽ при активах 4,9 млн ₽ и уплаченном УСН 65 995 ₽. Та же ошибка единиц (×1 000), но сравнить не с чем.
+  // Сверяем с тем, что есть в том же ответе: (а) доходы от 1 млрд ₽ в 10 000+ раз больше активов на 31.12 того же года;
+  // (б) доходы от 1 млрд ₽ у компании на УСН — больше двух лимитов упрощёнки (450 млн ₽ на 2025 г., п. 4 ст. 346.13 НК
+  // в ред. 176-ФЗ от 12.07.2024), на УСН так не остаются. Сумму не показываем нигде (показатели, «Финансы», «Деньги на кону»).
+  // В отличие от сверки к прошлым годам, итог и статусы строк НЕ меняем: правильного числа мы не знаем, а у таких компаний
+  // минус о налоговой нагрузке остаётся и при сумме в 1 000 раз меньше — снижать риск по догадке нельзя. Меняем только текст строки.
+  var ODIN_GOD = { summa: 1e9, kAktivam: 1e4 };
+  function naUsn(D) {
+    var est = false;
+    (Array.isArray(D.sections) ? D.sections : []).forEach(function (sk) {
+      (sk && Array.isArray(sk.rows) ? sk.rows : []).forEach(function (x) {
+        if (!Array.isArray(x)) return;
+        if (/^Налоговый режим/i.test(String(x[0])) && /(^|[^А-ЯЁа-яё])(А?УСН)([^А-ЯЁа-яё]|$)|упрощ/i.test(String(x[1]))) est = true;
+        if (/^Уплачено:.*упрощенн/i.test(String(x[0]))) est = true;
+      });
+    });
+    return est;
+  }
+  function sverkaOdinGod(r) {
+    var D = r.dossier, ch = D && D.charts;
+    if (!ch || typeof ch !== 'object') return r;
+    var a = ryadGod(ch.revenue).filter(function (x) { return x.v > 0; });
+    if (a.length !== 1 || a[0].v < ODIN_GOD.summa) return r;
+    var god = a[0].g, summa = a[0].v, bal = ch.balance && typeof ch.balance === 'object' && !Array.isArray(ch.balance) ? ch.balance : null;
+    var aktK = (Array.isArray(D.kpi) ? D.kpi : []).filter(function (k) { return k && /^Активы$/.test(String(k.label || '').trim()) && isFinite(Number(k.value)) && k.value !== null; })[0];
+    var aktivy = bal && parseInt(bal.year, 10) === god && aktK ? Math.max(Number(aktK.value), 0) : null;
+    var poAktivam = aktivy !== null && summa >= ODIN_GOD.kAktivam * Math.max(aktivy, 1), usn = naUsn(D);
+    if (!poAktivam && !usn) return r;
+    r.sverka_odin_god = { god: god, summa: summa, aktivy: aktivy, usn: usn };
+    ['revenue', 'profit', 'income_tax'].forEach(function (k) {
+      if (Array.isArray(ch[k])) ch[k] = ch[k].filter(function (x) { return !(x && +x.year === god); });
+    });
+    if (Array.isArray(D.kpi)) D.kpi = D.kpi.filter(function (k) {
+      var L = String((k && k.label) || '');
+      return !(new RegExp('^(Выручка|Чистая прибыль) за ' + god + '$').test(L) || /^Налоговая нагрузка/i.test(L));
+    });
+    var dv = r.dengi && r.dengi.vyruchka;
+    if (dv && +dv.god === god) {
+      r.dengi.vyruchka = { summa: null, god: null, istochnik: dv.istochnik, zamena_za: god };
+      if ('dolya' in r.dengi) r.dengi.dolya = null;
+      if (r.dengi.doli && typeof r.dengi.doli === 'object') r.dengi.doli = null;
+    }
+    var pochemu = poAktivam
+      ? 'в' + NB + razryady(summa / Math.max(aktivy, 1)) + NB + razSkl(summa / Math.max(aktivy, 1)) + ' больше активов на' + NB + '31.12.' + god + ' (' + razryady(aktivy) + NB + '₽)' +
+        (usn ? ', а' + NB + 'компания на' + NB + 'УСН, где лимит доходов — 450' + NB + 'млн' + NB + '₽ в' + NB + 'год' : '')
+      : 'а' + NB + 'компания на' + NB + 'УСН, где лимит доходов — 450' + NB + 'млн' + NB + '₽ в' + NB + 'год';
+    var tekst = 'Доходы за' + NB + god + NB + 'год в' + NB + 'открытых данных ФНС — ' + razryady(summa) + NB + '₽, ' + pochemu + '. ' +
+      'Прошлых лет для сверки в' + NB + 'наборе нет; так бывает при ошибке единиц. В' + NB + 'показатели и' + NB + '«Деньги на' + NB + 'кону» эту сумму не' + NB + 'берём; ' +
+      'итог проверки — как у' + NB + 'сервера. Сверьте с' + NB + 'бухотчётностью на' + NB + 'bo.nalog.gov.ru.';
+    r.sverka_dohodov_tekst = tekst;
+    (Array.isArray(D.sections) ? D.sections : []).forEach(function (sk) {
+      if (!sk || !Array.isArray(sk.rows)) return;
+      if (sk.id === 'finance') {
+        var na = sk.rows.filter(function (x) { return Array.isArray(x) && x[0] === 'Данные на'; })[0], g = na && /(\d{4})\s*$/.exec(String(na[1]));
+        if (g && +g[1] !== god) return;
+        sk.rows = sk.rows.filter(function (x) { return !(Array.isArray(x) && /^(Доходы за год|Расходы за год|Финансовый результат|Рентабельность|Налоговая нагрузка|Доход на одного сотрудника)/i.test(String(x[0]))); });
+        sk.comment = tekst;
+      }
+      if (sk.id === 'dynamics') {
+        sk.rows = sk.rows.filter(function (x) { return !(Array.isArray(x) && /^\d{4}$/.test(String(x[0]).trim()) && +String(x[0]).trim() === god && /выручк/i.test(String(x[1]))); });
+        sk.comment = 'Год ' + god + ' не' + NB + 'показываем: доходы в' + NB + 'открытых данных ФНС не' + NB + 'сходятся с' + NB + 'балансом того' + NB + 'же года.';
+      }
+    });
+    // светофор: статус строки о нагрузке оставляем, из текста убираем не сверенную сумму
+    (Array.isArray(r.signals) ? r.signals : []).forEach(function (s) {
+      if (!s || !(s.id === 'tax_burden' || /^Низкая налоговая нагрузка/i.test(String(s.title || '')))) return;
+      var m = /уплачено налогов\s+([\d\s\u00a0]+)\s*₽/i.exec(String(s.detail || ''));
+      s.detail = (m ? 'Уплачено налогов ' + m[1].trim() + NB + '₽; д' : 'Д') + 'оходы за' + NB + god + NB + 'год в' + NB + 'наборе ФНС не' + NB + 'сверены — сумму не' + NB + 'показываем';
+      s.sverka_odin_god = true;
+    });
+    return r;
+  }
   function sverkaDohodov(r) {
-    if (!r || typeof r !== 'object' || r.sverka_dohodov || r.sverka_servera) return r;
+    if (!r || typeof r !== 'object' || r.sverka_dohodov || r.sverka_servera || r.sverka_odin_god) return r;
     var ns = neSverennye(r);
-    if (!ns.length) return sverkaServera(r);
+    if (!ns.length) { sverkaServera(r); return r.sverka_servera ? r : sverkaOdinGod(r); }
     var D = r.dossier, ch = D.charts, goda = {}, nov = ns[ns.length - 1];
     ns.forEach(function (x) { goda[x.god] = true; });
     r.sverka_dohodov = ns;
@@ -482,5 +557,5 @@
     return b.status === 'provereno' || b.status === 'found' || b.status === 'not_found';
   }
 
-  return { dopolnit: dopolnit, ustarevanie: ustarevanie, statusIstochnika: statusIstochnika, statusTekst: statusTekst, STATUSY: STATUSY, REESTR: REESTR, bankrotstvoIzEgryul: bankrotstvoIzEgryul, uchten: uchten, privestiSlovar: privestiSlovar, maskaStoron: maskaStoron, storona: storona, sudyItog: sudyItog, sudyNol: sudyNol, samiTekst: samiTekst, OGOVORKA_EFRSB: OGOVORKA_EFRSB, sverkaDohodov: sverkaDohodov, neSverennye: neSverennye, SVERKA: SVERKA };
+  return { dopolnit: dopolnit, ustarevanie: ustarevanie, statusIstochnika: statusIstochnika, statusTekst: statusTekst, STATUSY: STATUSY, REESTR: REESTR, bankrotstvoIzEgryul: bankrotstvoIzEgryul, uchten: uchten, privestiSlovar: privestiSlovar, maskaStoron: maskaStoron, storona: storona, sudyItog: sudyItog, sudyNol: sudyNol, samiTekst: samiTekst, OGOVORKA_EFRSB: OGOVORKA_EFRSB, sverkaDohodov: sverkaDohodov, neSverennye: neSverennye, SVERKA: SVERKA, ODIN_GOD: ODIN_GOD };
 });

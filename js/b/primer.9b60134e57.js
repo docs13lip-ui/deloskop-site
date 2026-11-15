@@ -129,6 +129,7 @@ var m = /^Чистая прибыль за (\d{4})$/.exec((k && k.label) || '');
 if (m && k.value != null && isFinite(k.value) && Number(k.value) !== 0) vzyat(m[1]);
 });
 if (g === null) return null;
+if (r && r.sverka_odin_god && +r.sverka_odin_god.god === g) return null;
 var p = null;
 (Array.isArray(ch.profit) ? ch.profit : []).forEach(function (x) { if (x && +x.year === g && x.value != null && isFinite(Number(x.value))) p = Number(x.value); });
 if (p === null) (Array.isArray(D.kpi) ? D.kpi : []).forEach(function (k) {
@@ -238,6 +239,9 @@ add(starayaFakt({ k: 'otchetnost', nazv: 'Выручка за ' + o.god, znach: 
 } else if (bank(c)) {
 add({ k: 'otchetnost', nazv: 'Бухотчётность', znach: BANK_GIRBO, ton: 'neutral',
 ist: reestr + ', ОКВЭД ' + c.okved, data: dataPr, ssylka: CBR_BANK + (/^\d{13}$/.test(String(c.ogrn || '')) ? '?ogrn=' + c.ogrn : '') });
+} else if (r && r.sverka_odin_god) {
+add({ k: 'otchetnost', nazv: 'Выручка за ' + r.sverka_odin_god.god, znach: 'Не' + NB + 'сверена — сумму в' + NB + 'расчёт не' + NB + 'берём', ton: 'neutral',
+ist: 'ФНС, открытые данные', data: '31.12.' + r.sverka_odin_god.god });
 } else if (godBezVyruchki(r)) {
 var bv = godBezVyruchki(r);
 var pv = bv.pribyl == null || bv.pribyl === 0 ? '' : bv.pribyl < 0 ? ' · убыток ' + dengi(-bv.pribyl) : ' · прибыль ' + dengi(bv.pribyl);

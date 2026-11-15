@@ -524,9 +524,9 @@ html:not(.rezhim-otcheta) .vhody{padding-top:clamp(36px,4.5vw,56px)}
 </style>
 <!-- vizual-v3.0a: стили и скрипты главной — пятью файлами вместо 17 (partials/sborka.json, tests/sobrat_js.py) -->
 <link rel="stylesheet" href="/css/b/ds.3a1ebb91ca.css">
-<link rel="stylesheet" href="/css/b/glavnaya-stil.1bb6d8b85d.css">
+<link rel="stylesheet" href="/css/b/glavnaya-stil.31f658da26.css">
 <script src="/js/b/yadro.021453b267.js" defer></script>
-<script src="/js/b/glavnaya.e77e115f2e.js" defer></script>
+<script src="/js/b/glavnaya.b788ef72dd.js" defer></script>
 <link rel="icon" type="image/png" sizes="120x120" href="/favicon-120.png">
 <link rel="alternate" type="application/rss+xml" title="Разборы дел — Делоскоп" href="/praktika/rss.xml">
 <link rel="manifest" href="/manifest.webmanifest">
@@ -996,7 +996,20 @@ html:not(.rezhim-otcheta) .vhody{padding-top:clamp(36px,4.5vw,56px)}
   if(POP){list.setAttribute('popover','manual');list.hidden=false;form.classList.add('check--yakor');}
   var tmr,items=[],sel=-1,lastQ='',PR=null,rows=[],razdely=null,pustoe=false,tipByl='';
   function hide(){if(POP){try{if(list.matches(':popover-open'))list.hidePopover()}catch(e){}}else list.hidden=true;sel=-1;input.removeAttribute('aria-activedescendant');input.setAttribute('aria-expanded','false')}
-  function otkryt(){if(POP){try{if(!list.matches(':popover-open'))list.showPopover()}catch(e){}}else list.hidden=false;input.setAttribute('aria-expanded','true')}
+  // proba-podskazki (15.11.2026): список открывается вниз. Строка стоит в нижней части первого экрана — под ней списку не хватало места,
+  // запасной вариант якоря (position-try-fallbacks:flip-block, css/perehod.css) ставил его над строкой, на заголовок, и держал там
+  // даже после прокрутки. Теперь при каждом показе: не хватает места — страница сдвигается ровно на недостающее (строка остаётся
+  // под шапкой), и список встаёт под строку. Помещается под строкой — переворот выключен (класс sugg--vniz); вверх — только когда сдвигать некуда.
+  var ZAZOR=18; // 6 px от строки до списка + 12 px до края экрана
+  function sdvig(h,niz,verh){return h>0?Math.max(0,Math.ceil(Math.min(h-niz,verh))):0}
+  function podStrokoj(){var vv=window.visualViewport;return (vv?vv.offsetTop+vv.height:innerHeight)-form.getBoundingClientRect().bottom-ZAZOR}
+  function mesto(dvigat){try{var h=list.offsetHeight,
+      verh=form.getBoundingClientRect().top-(parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop)||80),
+      d=dvigat?sdvig(h,podStrokoj(),verh):0;
+    if(d>0)window.scrollBy({top:d,behavior:'instant'});
+    list.classList.toggle('sugg--vniz',h>0&&h<=podStrokoj())}catch(e){}}
+  function otkryt(){if(POP){try{if(!list.matches(':popover-open'))list.showPopover()}catch(e){}}else list.hidden=false;input.setAttribute('aria-expanded','true');mesto(true)}
+  window.addEventListener('scroll',function(){if(otkryto())mesto(false)},{passive:true});
   function otkryto(){return POP?list.matches(':popover-open'):!list.hidden}
   function pickItem(i){var it=items[i];if(!it)return;input.value=it.imya||it.name;hide();runCheck(it.inn);}
   // разделы сайта для вопросов словами — один раз, при первом вводе (data/poisk-razdely.json собирает tests/sobrat_poisk.py)

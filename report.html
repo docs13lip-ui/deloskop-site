@@ -136,12 +136,31 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
 @media (max-width:560px){.charts{grid-template-columns:1fr}}
 @media print{.chart{border-color:#ddd}#tip{display:none}.kpi,.chart svg{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 
+/* kabinet-otchet-v1 (15.11): шапка отчёта «как обложка дела» — только на экране. Тёмно-синяя кожа с тихим тиснением,
+   знак и слово — латунным тиснением, латунный кант и прострочка по нижнему краю. Цвета материалов — var(--mat-*,#…):
+   в обеих темах одинаковы. Печать и PDF — бумага (прежняя линия) и корешок красного дерева слева. */
+@media screen{
+.doc{--dpad:clamp(22px,5vw,48px);overflow:hidden}
+.dhead{position:relative;margin:calc(var(--dpad)*-1) calc(var(--dpad)*-1) 0;padding:clamp(20px,4vw,30px) var(--dpad) clamp(26px,4.5vw,34px);border:0;
+  background:repeating-linear-gradient(90deg,var(--mat-latun,#B58A32) 0 7px,transparent 7px 13px) 0 calc(100% - 9px) / 100% 1px no-repeat,
+    linear-gradient(var(--mat-blik,#E3C778),var(--mat-latun,#B58A32)) 0 100% / 100% 2px no-repeat,
+    linear-gradient(var(--mat-kozha-vual,#0D2247B0),var(--mat-kozha-vual,#0D2247B0)),
+    url(/img/faktura-kozha.webp) 0 0/160px 160px,
+    radial-gradient(120% 140% at 18% 0,var(--mat-kozha2,#122A56),var(--mat-kozha,#0D2247) 55%,var(--mat-kozha0,#0A1733));
+  color:var(--mat-bumaga,#F5F1E6)}
+.dhead .brand{color:var(--mat-latun-svet,#D9B45A);text-shadow:0 -1px 0 var(--mat-ten,#00000073),0 1px 0 var(--mat-svet,#FFFFFF1F)}
+.dhead .brand svg{width:28px;height:28px;filter:drop-shadow(0 -1px 0 var(--mat-ten,#00000073)) drop-shadow(0 1px 0 var(--mat-svet,#FFFFFF1F))}
+.dhead .dtitle{color:var(--mat-bumaga-tih,#F5F1E6B8)}
+.dhead .dtitle b{color:var(--mat-bumaga,#F5F1E6)}
+.dhead+h1{margin-top:28px}
+}
 @media (max-width:560px){th,.sig td:first-child{width:auto;display:block;padding-bottom:0;border:0}td,th{display:block}tr{display:block;border-top:1px solid var(--line);padding:6px 0}td{border:0;padding-top:2px}.sign{grid-template-columns:1fr}.dhead{flex-direction:column}.dtitle{text-align:left}}
 @media print{
   @page{size:A4;margin:14mm 14mm 16mm}
   body{background:#fff;font-size:11pt}
   .bar,.noprint{display:none!important}
-  .doc{box-shadow:none;margin:0;padding:0;border-radius:0;max-width:none}
+  .doc{box-shadow:none;margin:0;padding:0 0 0 7mm;border-radius:0;max-width:none;position:relative}
+  .doc::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2.6mm;background:linear-gradient(90deg,var(--mat-derevo0,#2A0E0A),var(--mat-derevo2,#86382C) 45%,var(--mat-derevo1,#561F16));-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .risk,.meter,.box,.dot,.note{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .box,.note,.eyes{break-inside:avoid}
   tr{break-inside:avoid}

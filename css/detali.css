@@ -75,3 +75,9 @@ body{overflow-wrap:break-word}
   div.seg button,section.nk .rezh label,label.ls-g,article p>a.btn{min-height:44px}
   label.ls-g{align-items:center}label.ls-g input{margin-top:0}
 }
+/* sostoyaniya-latun-v1 (15.11.2026): фокус — латунью, «Кабинет», шаг 5. Одна рамка фокуса на весь сайт, цвет — материал, не тема:
+   светлая — латунь #A07A28: ≥ 3,2 : 1 и на бумаге (#FFFFFF, #FFFDF6, #F5F1E6, #EDE8DA), и на синих блоках (#0D2247, #12305F) —
+   прежний синий на синих блоках светлой темы почти не был виден (1,0–1,4 : 1); тёмная — латунь #D9B45A (≥ 6,5 : 1 на всех фонах тёмной).
+   Меняется только цвет: толщина, отступ и outline:none там, где фокус нарисован иначе, — как были. Сторож — tests/sostoyaniya_latun.test.js. */
+:root:not([data-theme=dark]) :focus-visible{outline-color:var(--mat-fokus,#A07A28)!important}
+[data-theme=dark] :focus-visible{outline-color:var(--mat-fokus-t,#D9B45A)!important}

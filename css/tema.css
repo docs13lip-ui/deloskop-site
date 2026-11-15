@@ -92,7 +92,6 @@
 [data-theme=dark] .pf__da{background:#3A1513!important;color:#FF7B72!important}
 @media (max-width:520px){[data-theme=dark] .pf__d--star{color:#E8A23A}
 }
-[data-theme=dark] .report.loading{--zh-pereliv:rgba(16,34,72,0.55)}
 [data-theme=dark] .pmg{border-top:1px solid rgba(255,255,255,0.132)}
 [data-theme=dark] .co .kom{background:#0D1D3F}
 [data-theme=dark] body{background:#0A1733}

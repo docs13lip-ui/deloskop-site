@@ -46,7 +46,7 @@ test('css: только opacity/transform, «Уменьшить движение
   assert.match(CSS, /\.zh-ist__i::after\{content:attr\(data-t\);position:absolute[^}]*opacity:0;animation:zh-ist/);
   assert.ok(!/\.zh-ist__i\{[^}]*opacity/.test(CSS), 'основное слово не прозрачное — контраст строки');
   assert.match(CSS, /\.report\.loading::after\{[^}]*pointer-events:none[^}]*animation:zh-pereliv[^;}]* \.25s infinite/);
-  assert.match(CSS, /\[data-theme=dark\] \.report\.loading::after\{--zh-pereliv:rgba\(255,255,255,\.07\)\}/, 'в тёмной — светлый перелив на самом ::after');
+  assert.match(CSS, /\[data-theme=dark\] \.report\.loading::after\{--zh-pereliv:var\(--mat-pereliv-t,#D9B45A1F\)\}/, 'в тёмной — латунный перелив на самом ::after (sostoyaniya-latun-v1)');
   // вывод — fill backwards: после проявления transform не держится (у кнопок свой scale/магнит)
   assert.match(CSS, /animation:zh-pojav [^;}]*backwards/);
 });

@@ -56,7 +56,13 @@ test('шрифт — со своего сервера, без fonts.googleapis.c
 });
 
 test('podval.css собран из токенов ds.css — своих цветов нет', () => {
-  const css = fs.readFileSync(path.join(KOREN, 'css/podval.css'), 'utf8');
+  // kabinet-podval-v1 (15.11.2026): исключение одно — материалы «кабинета» (рейка красного дерева, латунь),
+  // только запасными значениями var(--mat-*,#…) и только из таблицы материалов (решение владельца 15.11, разд. 2).
+  const MATERIALY = new Set(['#B58A32', '#E3C778', '#D9B45A', '#7A5C14', '#FFFFFF29', '#FFFFFF00', '#00000057']);
+  const sMat = fs.readFileSync(path.join(KOREN, 'css/podval.css'), 'utf8');
+  for (const m of sMat.matchAll(/var\(--mat-[\w-]+,(#[0-9A-Fa-f]{3,8})\)/g)) assert.ok(MATERIALY.has(m[1]), 'материала нет в таблице: ' + m[1]);
+  const css = sMat.replace(/var\(--mat-[\w-]+,#[0-9A-Fa-f]{3,8}\)/g, 'var(--mat)');
+  assert.ok(!/rgba?\(/.test(css.split('\n').slice(2).join('\n').replace(/\/\*[\s\S]*?\*\//g, '')), 'rgba() в правилах подвала');
   const ds = fs.readFileSync(path.join(KOREN, 'css/ds.css'), 'utf8');
   const cveta = new Set((ds.match(/:root\{[\s\S]*?\n\}/)[0].match(/#[0-9A-Fa-f]{3,6}\b/g)));
   for (const c of css.match(/#[0-9A-Fa-f]{3,6}\b/g) || []) assert.ok(cveta.has(c), 'чужой цвет ' + c);

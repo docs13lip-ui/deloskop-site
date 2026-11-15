@@ -112,3 +112,36 @@ test('lastmod: отпечаток не видит шапку, подвал, по
     'print(L.otpechatok(a) == L.otpechatok(b), L.otpechatok(a) == L.otpechatok(c))';
   assert.strictEqual(execFileSync('python3', ['-c', kod], { cwd: ROOT, encoding: 'utf8' }).trim(), 'True False');
 });
+
+// sameas-kanaly-v1 (15.11.2026): sameAs — ВКонтакте, Telegram и Одноклассники во всех Organization «Делоскоп»
+// (список заменяется целиком, а не только дописывается там, где его не было); /politika/ — цель 9 по тексту
+// [Право] 15.11 (разд. 2): «идентификатор», «30 дней», «В Telegram мы переписку не ведём»; кнопки «Написать
+// в Telegram» на сайте нет, пока не подано уведомление по ст. 12 152-ФЗ.
+test('sameAs: ВКонтакте, Telegram и Одноклассники — одним и тем же списком на всех страницах', () => {
+  const NADO = JSON.stringify([VK, 'https://t.me/deloskop', 'https://ok.ru/group/70000060184759']);
+  const raznye = new Set();
+  let n = 0;
+  for (const p of VSE) {
+    for (const m of fs.readFileSync(p, 'utf8').matchAll(/"@type": "Organization", "name": "Делоскоп", "sameAs": (\[[^\]]*\])/g)) {
+      n++; raznye.add(JSON.stringify(JSON.parse(m[1])));
+    }
+  }
+  assert.ok(n >= 200, 'sameAs найдено ' + n);
+  assert.deepStrictEqual([...raznye], [NADO]);
+  // сборщик идемпотентен: повторная вставка не удваивает список
+  const kod = 'import sys; sys.path.insert(0, "tests"); import sobrat_shapku as S; ' +
+    'a = \'{"@type": "Organization", "name": "Делоскоп", "sameAs": ["https://vk.com/deloskop_ru"], "url": "x"}\'; ' +
+    'b = S.SAMEAS.sub(lambda m: m.group(1) + S.SAMEAS_VSTAVKA, a); c = S.SAMEAS.sub(lambda m: m.group(1) + S.SAMEAS_VSTAVKA, b); ' +
+    'print(b == c, b.count("sameAs"), "t.me/deloskop" in b)';
+  assert.strictEqual(execFileSync('python3', ['-c', kod], { cwd: ROOT, encoding: 'utf8' }).trim(), 'True 1 True');
+});
+
+test('/politika/: цель 9 — страницы в соцсетях; кнопки «Написать в Telegram» на сайте нет', () => {
+  const t = chit('politika/index.html');
+  const s = t.replace(/<[^>]+>/g, '').replace(/&nbsp;| /g, ' ').replace(/&#8209;|‑/g, '-');
+  assert.match(t, /<h3 id="cel9">9\. Наши страницы в(?:&nbsp;| )соцсетях и(?:&nbsp;| )мессенджерах<\/h3>/);
+  for (const f of ['получаем имя и идентификатор вашего профиля и текст сообщения', 'не дольше 30 дней после ответа',
+    'Сами площадки обрабатывают ваши данные по своим правилам', 'В Telegram мы переписку не ведём'])
+    assert.ok(s.includes(f), 'в политике нет: ' + f);
+  for (const p of VSE) assert.ok(!/Написать в(?:&nbsp;| )Telegram/i.test(fs.readFileSync(p, 'utf8')), path.relative(ROOT, p));
+});

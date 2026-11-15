@@ -179,7 +179,9 @@ VK = "https://vk.com/deloskop_ru"  # сообщество club242169479, вер�
 # kanaly-podval-v1 (15.11.2026): канал в Telegram и группа в Одноклассниках — только посты, без переписки и ботов.
 TG = "https://t.me/deloskop"
 OK = "https://ok.ru/group/70000060184759"
-SOOBSHCHESTVA = [VK]  # sameAs: Telegram и Одноклассники добавить отдельным комплектом (нужна замена уже вставленного списка)
+# sameas-kanaly-v1 (15.11.2026): sameAs — все открытые страницы с постами. Дзен — после первой публикации,
+# MAX — когда канал станет публичным. Список заменяется целиком на всех страницах (SAMEAS, шаг 6в).
+SOOBSHCHESTVA = [VK, TG, OK]
 # fokus-shapka-v1 (12.11.2026, решение владельца 11.11 ~21:42, claude/Стратег_что_убрать_12.11.md): в шапке — 5 мест
 # (Проверить · Проверь счёт · Кому вы платите · Разборы дел · Войти), всё прежнее меню — здесь, в 4 колонках по задачам
 # человека: «Перед оплатой» → «Если банк спросил» → «Знания» → «Компания». Документы — строкой внизу (DOKUMENTY).
@@ -595,7 +597,7 @@ def sobrat_stranicu(txt, r, podval, shapka=None):
     # 6б) og-v1: обложка ссылок 1200×630 и Open Graph на разделах без него
     txt = og_oblozhka(txt)
     # 6в) seo-svyazi-v1: sameAs — в каждом Organization «Делоскоп» (главная, издатель статей и карточек)
-    txt = SAMEAS.sub(lambda m: m.group(0) + SAMEAS_VSTAVKA, txt)
+    txt = SAMEAS.sub(lambda m: m.group(1) + SAMEAS_VSTAVKA, txt)
     # 6г) podelitsya-v1: «Поделиться» под текстом статей и разборов (ВК, Telegram, ОК, ссылка) — без чужих скриптов
     txt = podelitsya(txt)
     # 6д) seo-haby-v1: BreadcrumbList хабов и продуктовых страниц, ItemList статей хаба (tests/seo_haby.py)
@@ -678,7 +680,8 @@ def obraz_statej(txt):
     return OBRAZ_ST.sub(lambda m: m.group(1) + vstavka, txt)
 
 
-SAMEAS = re.compile(r'"@type": "Organization", "name": "Делоскоп"(?!, "sameAs")')
+# sameas-kanaly-v1: уже вставленный список заменяется на текущий SOOBSHCHESTVA (раньше дописывался только там, где его не было)
+SAMEAS = re.compile(r'("@type": "Organization", "name": "Делоскоп")(?:, "sameAs": \[[^\]]*\])?')
 SAMEAS_VSTAVKA = ', "sameAs": ' + json.dumps(SOOBSHCHESTVA)
 
 

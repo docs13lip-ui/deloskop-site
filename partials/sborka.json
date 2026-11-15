@@ -75,9 +75,6 @@
       "js/status-kod.js",
       "js/usloviya.js"
     ],
-    "nebo": [
-      "js/nebo.js"
-    ],
     "poisk-okno": [
       "js/poisk.js",
       "js/poisk-okno.js"

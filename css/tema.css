@@ -20,6 +20,10 @@
 }
 :root[data-theme=light]{color-scheme:light}
 [data-theme=dark] body{background:var(--bg);color:var(--ink)}
+/* kozha-bez-kosmosa-v1 (15.11.2026): один фон на весь сайт — кожа цвета знака и латунь, без звёздного неба:
+   вместо «живого неба» — одно полотно на весь сайт: тиснёная кожа цвета знака поверх фона темы. Слой body::after (css/glubina.css) в тёмной теме
+   несёт не зерно, а тиснение img/faktura-kozha.webp (160 px, 10 КБ, альфа до 8 %); неподвижен, указатель не ловит, печать его не видит. */
+[data-theme=dark] body::after{background:url(/img/faktura-kozha.webp) 0 0/160px 160px;opacity:.85}
 /* картинки с белым фоном (иконки, схемы) — чуть приглушаем, чтобы не слепили */
 [data-theme=dark] img:not([src$=".svg"]){filter:brightness(.92)}
 

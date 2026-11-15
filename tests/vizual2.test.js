@@ -130,8 +130,10 @@ test('сеть: canvas aria-hidden, 24 точки на узком экране, 
   assert.match(js, /\* 12; \/\/ ±6 px/);
   assert.match(js, /for \(var i = 0; i < 12; i\+\+\)/); // 12 точек к полю
   assert.match(js, /\/ 400\)/); // 400 мс
-  assert.ok(gl.includes('<section class="hero" data-set data-set-pole="inn">'));
-  assert.ok(pa.includes('<section id="landing" data-set data-set-pole="innTop">'));
+  // kozha-bez-kosmosa-v1 (15.11): точки и нити на первом экране читались как звёздное небо — на главной и в Паспорте сеть снята,
+  // фон один — кожа; сам механизм в js/vizual2.js остаётся (включается атрибутом data-set)
+  assert.ok(gl.includes('<section class="hero">') && !/data-set\b/.test(gl));
+  assert.ok(pa.includes('<section id="landing">') && !/data-set\b/.test(pa));
   assert.match(css, /\.set\{[^}]*z-index:-1;pointer-events:none/);
 });
 

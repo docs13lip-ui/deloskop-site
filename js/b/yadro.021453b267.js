@@ -201,17 +201,6 @@ var m = document.querySelector('meta[name="theme-color"]');
 if (m) m.content = t === "dark" ? "#0A1733" : "#F5F1E6";
 document.querySelectorAll("[data-tema-v]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-tema-v") === v)); });
 document.querySelectorAll("[data-tema-knopka]").forEach(function (b) { b.setAttribute("aria-label", t === "dark" ? "Включить светлую тему" : "Включить тёмную тему"); });
-nebo(t);
-};
-var neboZhdu = false;
-var nebo = function (t) {
-if (window.DlkNebo) { if (t === "dark") window.DlkNebo.vkl(); else window.DlkNebo.vykl(); return; }
-if (t !== "dark" || neboZhdu) return;
-var kn = document.querySelector("[data-nebo-src]"), src = kn && kn.getAttribute("data-nebo-src");
-if (!src) return;
-neboZhdu = true;
-var gruzit = function () { var s = document.createElement("script"); s.src = src; s.async = true; document.head.appendChild(s); };
-if (document.readyState === "complete") setTimeout(gruzit, 0); else window.addEventListener("load", function () { setTimeout(gruzit, 0); }, { once: true });
 };
 var tishe = function () { return !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches); };
 var ikonka = 0;

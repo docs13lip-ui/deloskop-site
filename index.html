@@ -499,9 +499,13 @@ html:not(.rezhim-otcheta) .vhody{padding-top:clamp(36px,4.5vw,56px)}
 @media (max-width:700px){.uv{grid-template-columns:1fr;gap:10px}.uv__n{grid-column:1}.uv__q{white-space:normal}}
 @media (prefers-reduced-motion:reduce){.uv__r button{transition:none}}
 @media print{.uv{display:none}}
-.ceny .usl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;max-width:none}
+.ceny .usl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;max-width:none;background:none;border-radius:0}
 .ceny .usl li{position:relative;padding:clamp(20px,2vw,26px);background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);line-height:1.5}
 .ceny .usl li::before{content:"";position:absolute;left:clamp(20px,2vw,26px);right:40%;top:-1px;height:1px;background:linear-gradient(90deg,var(--mat-blik,#E3C778),var(--mat-latun,#B58A32) 55%,var(--mat-svet0,#FFFFFF00))}
+/* proba-svetlaya-tema (15.11.2026): в светлой теме кромка плиток и карточек — тёмная латунь 2 px: светлая (#E3C778 → #B58A32) на белом и на бумаге
+   давала 1,5–3,2 : 1 и терялась. Цвет — запасным значением var(--mat-*,#…), тёмная тема его не перекрашивает.
+   Подложку под карточками «Условий» (общий .usl из js/usloviya.js) снимает background:none выше. Сторож — tests/svetlaya_tema_glavnaya.test.js */
+:root:not([data-theme="dark"]) .umeet a::before,:root:not([data-theme="dark"]) .ceny .usl li::before{height:2px;background:linear-gradient(90deg,var(--mat-latun-sv,#A07A28) 55%,var(--mat-svet0,#FFFFFF00))}
 .ceny__go{margin:32px 0 0}
 .ceny .ceny__go a{display:inline-flex;margin:0}
 @media (max-width:960px){.umeet{grid-template-columns:repeat(2,minmax(0,1fr))}.ceny .usl{grid-template-columns:1fr;gap:12px}}

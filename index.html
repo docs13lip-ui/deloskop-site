@@ -382,6 +382,24 @@ footer a{color:var(--ink2)}
 @media (max-width:520px){.lp{position:absolute;top:-14px;right:-4px;height:52px;margin:0}.hero h1.hero-h1 .h1-kicker{padding-right:64px}}
 @media (prefers-reduced-motion:reduce){.lp__l,.lp__lz,.lp__st{transition:none;animation:none!important}.lp__bl,.lp__v{animation:none!important}}
 @media print{.lp{display:none!important}}
+/* poisk-centr-v1 (15.11): поиск посередине. Первый экран — одна колонка по центру: знак, заголовок, строка
+   проверки — главное действие в середине экрана; пример отчёта — ниже, тоже по центру. Только вне режима отчёта (там своя
+   компактная шапка, css/otchet.css) и шире 600 px: на телефоне строка и так во всю ширину. Цветов здесь нет — пары тем не нужны. */
+@media (min-width:601px){
+  html:not(.rezhim-otcheta) .hero .wrap{grid-template-columns:minmax(0,1fr);justify-items:center}
+  html:not(.rezhim-otcheta) .hero-text{align-items:center;text-align:center;width:100%;max-width:880px}
+  html:not(.rezhim-otcheta) .lp{align-self:center;margin:-14px 0 -6px}
+  html:not(.rezhim-otcheta) .hero .lead{max-width:720px;text-wrap:balance}
+  html:not(.rezhim-otcheta) .hero .check{width:100%;max-width:720px;text-align:left}
+  html:not(.rezhim-otcheta) .hero .report.ex,html:not(.rezhim-otcheta) .hero .pf{width:100%;max-width:880px}
+}
+@media (min-width:981px){
+  html:not(.rezhim-otcheta) .hero .wrap{gap:56px}
+  html:not(.rezhim-otcheta) .lp{height:clamp(96px,8vw,120px)}
+  html:not(.rezhim-otcheta) .hero .check{padding:10px}
+  html:not(.rezhim-otcheta) .hero .check input{min-height:60px;font-size:20px;padding:0 18px}
+  html:not(.rezhim-otcheta) .hero .check button{min-height:60px;padding:0 34px}
+}
 </style>
 <!-- vizual-v3.0a: стили и скрипты главной — пятью файлами вместо 17 (partials/sborka.json, tests/sobrat_js.py) -->
 <link rel="stylesheet" href="/css/b/ds.5d12679305.css">

@@ -36,4 +36,7 @@
 .podval .podval__niz a{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.2em}.podval .podval__niz a:hover{text-decoration-color:currentColor}
 @media (max-width:900px){.podval__cols{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:640px){.podval{padding:var(--s-7) 0 var(--s-6)}.podval__cols{gap:var(--s-5) var(--s-4)}.podval li{margin-bottom:var(--s-3)}}
+.podval{position:relative;border-top:0}
+html:not(.rezhim-otcheta) .podval::before{content:"";position:absolute;left:0;right:0;top:0;height:22px;pointer-events:none;background:linear-gradient(180deg,var(--mat-svet,#FFFFFF29),var(--mat-svet0,#FFFFFF00) 34%,var(--mat-ten,#00000057)) 0 0/100% 12px no-repeat,url(/img/faktura-derevo.webp) 0 0/320px 12px repeat-x,linear-gradient(var(--mat-latun,#B58A32),var(--mat-blik,#E3C778)) 0 12px/100% 1px no-repeat,repeating-linear-gradient(90deg,var(--mat-latun,#B58A32) 0 7px,transparent 7px 13px) 0 21px/100% 1px no-repeat}
+html.rezhim-otcheta .podval{border-top:1px solid var(--line)}
 @media print{.podval{display:none}}

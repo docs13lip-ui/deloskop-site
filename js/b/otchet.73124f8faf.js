@@ -1907,7 +1907,7 @@ izm = htmlIzmeneniya(rez, { dokument: !!opt.dokument });
 ozhidatIndeks(r, ls, opt.doc);
 } catch (e) { izm = ''; }
 var din = '';
-try { din = htmlDinamika(r, opt); if (!din && opt.balans !== false) din = htmlBalansOtdelno(r); } catch (e) { din = ''; }
+try { din = htmlDinamika(r, opt); if (!din) din = sverkaHtml(r) + (opt.balans !== false ? htmlBalansOtdelno(r) : ''); } catch (e) { din = ''; }
 return izm + din;
 }
 return { skachok: skachok, skachokHtml: skachokHtml, sverkaHtml: sverkaHtml, ryad: ryad, ryady: ryady, nalogBezZnaka: nalogBezZnaka, stroka: stroka, izmenenie: izmenenie, trendy: trendy, dengi: dengi, htmlDinamika: htmlDinamika, poslGodOtchetnosti: poslGodOtchetnosti, staraya: staraya, balans: balans, htmlBalans: htmlBalans,

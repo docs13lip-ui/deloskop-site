@@ -1149,7 +1149,8 @@
       ozhidatIndeks(r, ls, opt.doc);
     } catch (e) { izm = ''; }
     var din = '';
-    try { din = htmlDinamika(r, opt); if (!din && opt.balans !== false) din = htmlBalansOtdelno(r); } catch (e) { din = ''; }
+    // sverka-odin-god-v1: таблицы нет (год в рядах один и он снят сверкой) — строка «Год не сверен» всё равно видна над балансом
+    try { din = htmlDinamika(r, opt); if (!din) din = sverkaHtml(r) + (opt.balans !== false ? htmlBalansOtdelno(r) : ''); } catch (e) { din = ''; }
     return izm + din;
   }
 

@@ -20,19 +20,35 @@ test('виды событий — ровно два, и счёт их прини
   assert.strictEqual(S.teloSobytiya('otvet_pomog_da', Object.assign({}, okr, { dnt: '1' })), null);
 });
 
-test('тексты — по решению владельца: вопрос, «Да», «Нет», «Спасибо»', () => {
-  assert.deepStrictEqual(P.T, { vopros: 'Ответ помог?', da: 'Да', net: 'Нет', spasibo: 'Спасибо' });
+test('тексты — по решению владельца: вопрос, «Да», «Нет», «Спасибо»; после «Нет» — «Чего не хватило?»', () => {
+  assert.deepStrictEqual([P.T.vopros, P.T.da, P.T.net, P.T.spasibo, P.T.chego], ['Ответ помог?', 'Да', 'Нет', 'Спасибо', 'Чего не хватило?']);
   const h = P.html();
   assert.match(h, /Ответ помог\?/);
   assert.strictEqual((h.match(/<button type="button"/g) || []).length, 2);
   assert.ok(!/textarea|<input/.test(h), 'без поля для текста');
 });
 
-test('без хранилища, cookie, Метрики и своего запроса в сеть', () => {
+test('без хранилища, cookie и Метрики; в сеть — только счёт событий и строка «Чего не хватило?» в /api/otzyv', () => {
   const kod = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
   assert.ok(!/localStorage|sessionStorage|document\.cookie|indexedDB/.test(kod));
-  assert.ok(!/fetch\(|XMLHttpRequest|sendBeacon|dlkGoal|ym\(/.test(kod));
+  assert.ok(!/XMLHttpRequest|sendBeacon|dlkGoal|ym\(/.test(kod));
+  assert.strictEqual((kod.match(/fetch\(/g) || []).length, 1, 'один запрос');
+  assert.match(kod, /w\.fetch\(A \+ "\/api\/otzyv"/);
   assert.ok(/dlkSobytie/.test(kod));
+});
+
+test('pomoglo-v2: строка после «Нет» — одна, без почты, телефонов, ИНН и адреса страницы', () => {
+  const h = P.htmlNet();
+  assert.match(h, /Чего не хватило\?/);
+  assert.strictEqual((h.match(/<input /g) || []).length, 1); assert.ok(!/textarea/.test(h));
+  assert.match(h, /maxlength="300"/); assert.match(h, /анонимный/);
+  const t = P.teloOtzyva(' нет выручки, звоните 8 (912) 345-67-89 или a@b.ru; ИНН 7707083893 ', '0123456789abcdef');
+  assert.deepStrictEqual(Object.keys(t).sort(), ['id', 'ocenka', 'rezhim', 'stranica', 'tekst', 'vid'], 'та же форма, что у «Полезно?»');
+  assert.strictEqual(t.id, '0123456789abcdef'); assert.strictEqual(t.stranica, '/'); assert.strictEqual(t.vid, 'otchet'); assert.strictEqual(t.ocenka, 'neponyal');
+  assert.ok(!/912|a@b|7707083893/.test(t.tekst), t.tekst);
+  assert.strictEqual(P.teloOtzyva('   '), null, 'пусто — ничего не шлём');
+  assert.strictEqual(P.teloOtzyva('x'.repeat(900)).tekst.length, 300);
+  assert.match(P.teloOtzyva('a').id, /^[0-9a-f]{16}$/);
 });
 
 // маленький DOM: хватает для mount (querySelector по классу/атрибуту, вставка, клики)
@@ -45,7 +61,8 @@ function uzel(tag, cls) {
     addEventListener(t, f) { u.slush[t] = f; },
     get nextSibling() { const p = u.parentNode; if (!p) return null; return p.deti[p.deti.indexOf(u) + 1] || null; },
     get firstChild() { return u.deti[0] || { focus() {} }; },
-    set innerHTML(h) { u._html = h; u.deti = []; (h.match(/data-pmg="(da|net)"/g) || []).forEach((m) => { const b = uzel('button', 'pmg__b'); b.atr['data-pmg'] = m.slice(10, -1); u.appendChild(b); }); },
+    set innerHTML(h) { u._html = h; u.deti = []; (h.match(/data-pmg="(da|net)"/g) || []).forEach((m) => { const b = uzel('button', 'pmg__b'); b.atr['data-pmg'] = m.slice(10, -1); u.appendChild(b); });
+      if (/data-pmg-f/.test(h)) { const f = u.appendChild(uzel('form', 'pmg__f')); f.atr['data-pmg-f'] = ''; const i = f.appendChild(uzel('input', 'pmg__i')); i.value = ''; i.focus = () => {}; } },
     get innerHTML() { return u._html || ''; },
     matches(sel) {
       if (sel[0] === '.') return (' ' + u.className + ' ').includes(' ' + sel.slice(1) + ' ');
@@ -87,11 +104,61 @@ test('ставится под вывод, один ответ — одно со�
   assert.strictEqual(P.mount(rep, R, {}, w), null, 'второй раз в тот же отчёт не ставится');
 });
 
-test('«Нет» — своё событие', () => {
+test('«Нет» — своё событие, затем строка «Чего не хватило?»; отправка — один запрос в /api/otzyv', async () => {
   const { w, ushlo } = okno();
+  const zaprosy = [];
+  w.fetch = (url, o) => { zaprosy.push([url, JSON.parse(o.body)]); return Promise.resolve({ ok: true }); };
+  w.location = { hostname: 'deloskop.ru', protocol: 'https:' };
   const b = P.mount(otchet().rep, R, {}, w);
   b.querySelectorAll('[data-pmg]')[1].slush.click();
   assert.deepStrictEqual(ushlo, ['otvet_pomog_net']);
+  assert.match(b.innerHTML, /Чего не хватило/);
+  const f = b.querySelector('[data-pmg-f]'), i = b.querySelector('.pmg__i');
+  i.value = 'Нет выручки за 2025, ИНН 7707083893';
+  f.slush.submit({ preventDefault() {} }); f.slush.submit({ preventDefault() {} });
+  await new Promise((z) => setTimeout(z, 0));
+  assert.strictEqual(zaprosy.length, 1, 'один раз');
+  assert.strictEqual(zaprosy[0][0], 'https://api.deloskop.ru/api/otzyv');
+  assert.ok(!/7707083893/.test(JSON.stringify(zaprosy[0][1])), 'ИНН не уходит');
+  assert.match(b.innerHTML, /Спасибо/);
+});
+
+test('«Нет» и пустая строка — ничего не шлём, «Спасибо»; сервер не принял — «напишите на help@»', async () => {
+  const { w } = okno(); let n = 0;
+  w.fetch = () => { n++; return Promise.resolve({ ok: false }); };
+  w.location = { hostname: 'deloskop.ru', protocol: 'https:' };
+  const b = P.mount(otchet().rep, R, {}, w);
+  b.querySelectorAll('[data-pmg]')[1].slush.click();
+  b.querySelector('[data-pmg-f]').slush.submit({ preventDefault() {} });
+  assert.strictEqual(n, 0); assert.match(b.innerHTML, /Спасибо/); assert.ok(!/help@/.test(b.innerHTML));
+  const b2 = P.mount(otchet().rep, R, {}, w);
+  b2.querySelectorAll('[data-pmg]')[1].slush.click();
+  b2.querySelector('.pmg__i').value = 'мало про суды';
+  b2.querySelector('[data-pmg-f]').slush.submit({ preventDefault() {} });
+  await new Promise((z) => setTimeout(z, 0));
+  assert.strictEqual(n, 1); assert.match(b2.innerHTML, /help@deloskop\.ru/);
+});
+
+test('pomoglo-v2: на телефоне — сразу под строкой «Ответ» (первый экран), на компьютере — под выводом', () => {
+  const mk = () => {
+    const rep = uzel('section', 'report ot'); rep.ownerDocument = null;
+    const who = rep.appendChild(uzel('div', 'ot-who'));
+    const lo = who.appendChild(uzel('a', 'lip-o'));
+    const vd = rep.appendChild(uzel('section', 'ot-vd'));
+    const vt = vd.appendChild(uzel('div', 'ot-vt')); vt.appendChild(uzel('div', 'usl'));
+    return { rep, who, lo, vt };
+  };
+  const tel = okno(); tel.w.matchMedia = (q) => ({ matches: q === P.UZKO });
+  const a = mk(); const b = P.mount(a.rep, R, {}, tel.w);
+  assert.strictEqual(b.parentNode, a.who); assert.strictEqual(a.who.deti[1], b, 'сразу после «Ответ»');
+  assert.match(b.className, /pmg--verh/);
+  const k = okno(); k.w.matchMedia = () => ({ matches: false });
+  const c = mk(); const b2 = P.mount(c.rep, R, {}, k.w);
+  assert.strictEqual(b2.parentNode, c.vt); assert.ok(!/pmg--verh/.test(b2.className));
+  // строка «Ответ» скрыта (вывода нет) — под вывод, как на компьютере
+  const d = mk(); d.lo.hidden = true;
+  assert.strictEqual(P.mount(d.rep, R, {}, tel.w).parentNode, d.vt);
+  assert.strictEqual(P.UZKO, '(max-width: 600px)', 'та же граница, что у строки «Ответ» (js/lipkaya.js, css/perehod.css)');
 });
 
 test('не спрашиваем: своя компания, пример, нет ИНН, счёт выключен (DNT/GPC/робот)', () => {
@@ -120,4 +187,6 @@ test('подключение: пакет «otchet», главная зовёт �
   const css = fs.readFileSync(path.join(kor, 'css/otchet.css'), 'utf8');
   assert.match(css, /@media print\{\.pmg\{display:none\}\}/);
   assert.match(css, /\.pmg__b\{[^}]*min-height:44px/);
+  assert.match(css, /\.pmg__i\{[^}]*min-height:44px[^}]*font-size:17px/, 'поле — 44 px и 17 px (без увеличения на iPhone)');
+  assert.match(css, /\.pmg--verh\{[^}]*border-top:0/);
 });

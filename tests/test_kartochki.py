@@ -75,7 +75,14 @@ class TestVorota(unittest.TestCase):
         self.assertEqual(K.skachok_vyruchki(k), 2.6e9 / 2.7e7)
         self.assertNotIn("скачок", K.vorota(k)[1])
         k["finansy"] = [{"god": 2023, "dohod": 1e6}, {"god": 2025, "dohod": 2.6e9}]
-        self.assertIsNone(K.skachok_vyruchki(k), "годы не соседние — не сравниваем")
+        # kartochki-skachok-v3: пропуск года ворота не отключает — сравниваем с последним годом, где выручка > 0
+        self.assertEqual(K.skachok_vyruchki(k), 2.6e9 / 1e6)
+        self.assertIn("скачок выручки за год ×2600", K.vorota(k)[1])
+        k["finansy"] = [{"god": 2020, "dohod": 5.93e5}, {"god": 2021, "dohod": 0}, {"god": 2022, "dohod": 1.41e5},
+                        {"god": 2023, "dohod": 0}, {"god": 2025, "dohod": 1.25e11}]  # «Главхлеб», 7729442810
+        self.assertEqual(round(K.skachok_vyruchki(k)), round(1.25e11 / 1.41e5))
+        k["finansy"] = [{"god": 2022, "dohod": 4e7}, {"god": 2025, "dohod": 6e8}]
+        self.assertNotIn("скачок", K.vorota(k)[1], "×15 за три года — как было")
         # kartochki-skachok-v2: прошлый год 0 ₽ — сравниваем с последним годом, где выручка была; не было вовсе — None
         k["finansy"] = [{"god": 2022, "dohod": 1.22e7}, {"god": 2023, "dohod": 0}, {"god": 2024, "dohod": 0},
                         {"god": 2025, "dohod": 2.35e10}]

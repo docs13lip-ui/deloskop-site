@@ -7,10 +7,14 @@
      шрифты, иконки. Служебные страницы (admin) и ответы не 200 — не кэшируем;
    — страницы, стили и скрипты — сначала сеть (свежая выкладка видна сразу), кэш — только без сети;
    — без сети и без копии страницы — экран /offline.html («Нет сети — последние проверки ниже»).
-   Новая версия: поменять VERSIYA — старые кэши удалятся при активации. */
+   Новая версия: поменять VERSIYA — старые кэши удалятся при активации.
+   sw-svezhie-stranicy-v1 (17.11.2026): страница из сети ВСЕГДА переспрашивается у сервера (cache: 'no-cache',
+   ответ 304 по ETag — копейки). Раньше fetch(запрос) наследовал режим браузера: при возврате «назад» и открытии
+   из истории Chrome берёт страницу из своего запаса без вопроса серверу — вернувшийся посетитель видел /obnovleniya/
+   на пять выпусков старее живой (Штаб, 16.11 23:57). Запас (копия страницы) — по-прежнему только без сети. */
 'use strict';
 
-var VERSIYA = 'pwa-v1';
+var VERSIYA = 'pwa-v2'; // v2 — sw-svezhie-stranicy-v1: старые копии страниц удаляются при активации
 var OBOLOCHKA = 'dlk-obolochka-' + VERSIYA;
 var STRANICY = 'dlk-stranicy-' + VERSIYA;
 var OFFLINE = '/offline.html';
@@ -63,10 +67,15 @@ function obrezat(imya, maks) {
   });
 }
 
-// страница: сеть → копия этой страницы → офлайн-экран
+// запрос страницы с обязательной сверкой у сервера (режим «назад» / «из истории» браузера не наследуем)
+function sverit(zapros) {
+  try { return fetch(new Request(zapros, { cache: 'no-cache' })); } catch (e) { return fetch(zapros); }
+}
+
+// страница: сеть (со сверкой) → копия этой страницы → офлайн-экран
 function stranica(zapros, url) {
   var klyuch = url.origin + url.pathname; // без ?inn=… и #…: в кэше нет ИНН и параметров
-  return fetch(zapros).then(function (otv) {
+  return sverit(zapros).then(function (otv) {
     if (mozhnoKeshirovat(otv) && !NE_KESHIROVAT.test(url.pathname)) {
       var kopiya = otv.clone();
       caches.open(STRANICY).then(function (c) {

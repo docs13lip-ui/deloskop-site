@@ -285,6 +285,27 @@ def nalogi_nesvereny(t):
     return bool(x and x[3] < NALOGI_DOLYA_MIN)
 
 
+# kartochki-skachok-v3 ([Ночные-2] 16.11): ворота «скачка выручки» — по напечатанной странице, как баланс и налоги:
+# у опубликованных карточек сведений нет, а «Главхлеб» (7729442810) с пропуском 2024 года прошёл старые ворота.
+_FIN_TAB = re.compile(r'<thead><tr><th>Год</th><th>Выручка</th>.*?<tbody>(.*?)</tbody>', re.S)
+_FIN_STR = re.compile(r'<tr><td>(\d{4})</td><td class="num">([0-9]+(?:,[0-9]+)?)(?:&nbsp;|\u00a0| )(?:(трлн|млрд|млн|тыс\.)(?:&nbsp;|\u00a0| ))?₽</td>')
+
+
+def ryad_vyruchki_html(t):
+    """→ [{"god", "dohod"}] по возрастанию лет — из таблицы «Год · Выручка» страницы карточки; нет таблицы — []."""
+    m = _FIN_TAB.search(bez_tipografa(t))
+    if not m:
+        return []
+    ryad = {int(g): float(c.replace(",", ".")) * _MNOZH.get(mn or "", 1) for g, c, mn in _FIN_STR.findall(m.group(1))}
+    return [{"god": g, "dohod": ryad[g]} for g in sorted(ryad)]
+
+
+def skachok_nesveren(t):
+    """kartochki-skachok-v3: True — страница не проходит ворота «скачок выручки ×100» (снять до сверки)."""
+    sk = skachok_vyruchki({"finansy": ryad_vyruchki_html(t)})
+    return bool(sk is not None and sk >= SKACHOK_POROG)
+
+
 def kartochki_na_diske(koren=KOREN):
     """→ {ИНН: заглушка} опубликованных карточек: только то, что уже напечатано на странице."""
     papka = os.path.join(koren, PAPKA)
@@ -583,7 +604,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
                 continue
             with open(os.path.join(papka, x["_papka"], "index.html"), encoding="utf-8") as fh:
                 t_ = fh.read()
-                if balans_nesveren(t_) or nalogi_nesvereny(t_):  # kartochki-nalogi-sverka-v1 — так же снимаем до сверки
+                if balans_nesveren(t_) or nalogi_nesvereny(t_) or skachok_nesveren(t_):  # kartochki-nalogi-sverka-v1, -skachok-v3
                     nesv.add(inn)
         otchet["snyato_balans"] = sorted(nesv)
         svezhie |= nesv
@@ -1084,8 +1105,8 @@ def main(argv):
     if o.get("s_diska"):
         print("Добор (--dobavit): опубликованных карточек оставлено как есть: %d." % o["s_diska"])
         if o.get("snyato_balans"):  # kartochki-balans-sverka-v1
-            print("Снято до сверки единиц ГИР БО (выручка ×%d+ к балансу или налоги < %s %% выручки того же года): %s." % (
-                BALANS_POROG, str(NALOGI_DOLYA_MIN * 100).replace(".", ","), ", ".join(o["snyato_balans"])))
+            print("Снято до сверки единиц ГИР БО (выручка ×%d+ к балансу, налоги < %s %% выручки того же года или скачок выручки ×%d+): %s." % (
+                BALANS_POROG, str(NALOGI_DOLYA_MIN * 100).replace(".", ","), SKACHOK_POROG, ", ".join(o["snyato_balans"])))
     if o.get("nepolnye"):
         print("Из них по неполному ответу (реестр без финансов — анонимный доступ?): %d — не сняты, сведения прежние." % o["nepolnye"])
     if "sitemap_vsego" in o:

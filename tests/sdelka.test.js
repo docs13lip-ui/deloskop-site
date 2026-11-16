@@ -173,7 +173,7 @@ test('разметка: дата досье и сведений, источни�
 test('один сценарий: отчёт, PDF-досье и «Проверь счёт» ведут в досье по номеру проверки, сумма — с собой; Делопись подхватывает ИНН и долю', () => {
   const O = require('../js/otchet.js');
   const a = O.dejstviya({ company: { inn: INN }, report_id: 'R0xQzpOGTyjt' });
-  assert.deepStrictEqual(a[1], { t: 'Досье сделки', href: '/pasport/kontragent/?id=R0xQzpOGTyjt#sd', cel: 'otchet_pasport' });
+  assert.deepStrictEqual(a[0], { t: 'Досье сделки', href: '/pasport/kontragent/?id=R0xQzpOGTyjt#sd', cel: 'otchet_pasport', glavnaya: true, dosje: true });
   assert.match(chitat('js/otchet.js'), /summaVSsylku\(pa, report\)/);
   const PC = require('../js/pasport-cta.js');
   const s = PC.sostoyanie({ beta: true, inn: INN, reportId: 'R0xQzpOGTyjt' });

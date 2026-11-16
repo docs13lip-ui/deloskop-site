@@ -21,9 +21,9 @@ test('флаг выключен: модуль ничего не слушает, 
 
 test('кнопка «Следить» в отчёте: ИНН организации в адресе, у ИП и своей компании — без формы', () => {
   const r = (inn) => ({ company: { inn: inn, name: 'ООО «Пример»' }, risk_level: 'low' });
-  const a = O.dejstviya(r('7736050003'));
+  const a = O.dejstviya(r('7736050003')).filter((x) => x.cel === 'otchet_sled');
+  assert.strictEqual(a.length, 1, '«Следить» у организации есть (второй кнопкой — dosje-glavnaya-v1)');
   assert.strictEqual(a[0].href, '/cabinet.html?inn=7736050003#watch');
-  assert.strictEqual(a[0].cel, 'otchet_sled');
   assert.strictEqual(S.innIzSsylki(a[0].href), '7736050003');
   const ip = O.dejstviya(r('770000000012'));
   assert.strictEqual(ip[0].href, '/cabinet.html#watch', 'ИП — ИНН в адрес не ставим');

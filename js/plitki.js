@@ -202,6 +202,9 @@
   var CSS =
     '.pl{margin:0 0 20px}' +
     '.pl__h{margin:0 0 10px;font-size:15px;line-height:1.4;font-weight:600;color:var(--ink-2,#3A4868)}' +
+    '.pl__hh{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 16px;margin:0 0 10px}.pl__hh .pl__h{margin:0}' +
+    '.pl__d{font-size:13px;line-height:1.4;font-weight:600;color:var(--accent,#12305F);text-decoration:none;white-space:nowrap}' +
+    '.pl__d:hover{text-decoration:underline;text-underline-offset:.18em}' +
     '.pl__r{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(136px,1fr));gap:10px}' +
     '.pl__t{margin:0;min-width:0}' +
     '.pl__b{position:relative;display:flex;flex-direction:column;height:100%;box-sizing:border-box;min-height:132px;padding:12px 12px 10px;' +
@@ -240,8 +243,8 @@
   function cel(report, li) {
     var sel = li.getAttribute('data-pl-sel'), nazv = li.getAttribute('data-pl-nazv');
     if (sel) return report.querySelector('.ot-main ' + sel) || report.querySelector(sel);
-    // sudy-pristavy-v1: у «Судов» и «Приставов» есть свой раздел «подробно» (js/sudy-pristavy.js) — туда, он раскрывается
-    var k = li.getAttribute('data-pl'), dl = (k === 'sudy' || k === 'fssp') && report.querySelector('.dl [data-dl="' + k + '"]');
+    // sudy-pristavy-v1: у «Судов», «Приставов» и «Госконтрактов» (goskontrakty-v1) есть свой раздел «подробно» (js/sudy-pristavy.js) — туда, он раскрывается
+    var k = li.getAttribute('data-pl'), dl = (k === 'sudy' || k === 'fssp' || k === 'kontrakty') && report.querySelector('.dl [data-dl="' + k + '"]');
     if (dl) return dl;
     var g = report.querySelector('.sut__g');
     if (!g || !nazv) return null;
@@ -277,6 +280,28 @@
     Array.prototype.forEach.call(sek.querySelectorAll('li[data-pl]'), function (li, i) { try { svyazat(report, li, i + 1); } catch (e) {} });
   }
 
+  // dosje-glavnaya-v1 (план отчёта 15.11, п. 1.4): плитки — оглавление досье. Рядом с заголовком — ссылка «Всё одним документом»
+  // туда же, куда главная кнопка полосы вывода (Досье сделки или Паспорт); нажатие — сама кнопка (сумма из «Условий сделки» и счётчики — её).
+  // Нет кнопки (ИП, своя компания) — ссылки нет.
+  function dosje(report, sek) {
+    var pa = report.querySelector('.ot-act a[data-cel="otchet_pasport"]'), h = sek.querySelector('.pl__h');
+    if (!pa || !h || sek.querySelector('.pl__d')) return null;
+    var doc = report.ownerDocument, box = doc.createElement('div'), a = doc.createElement('a');
+    box.className = 'pl__hh';
+    h.parentNode.insertBefore(box, h); box.appendChild(h);
+    a.className = 'pl__d'; a.href = pa.getAttribute('href') || '#'; a.textContent = 'Всё одним документом' + NB + '→';
+    a.setAttribute('data-pl-dosje', '1');
+    a.setAttribute('aria-label', 'Всё одним документом: ' + (pa.textContent || '').trim());
+    a.onclick = function (e) {
+      if (e.ctrlKey || e.metaKey || e.shiftKey || e.button > 0) { a.href = pa.getAttribute('href') || a.href; return; }
+      e.preventDefault();
+      try { if (self.dlkGoal) self.dlkGoal('plitki_dosje'); } catch (x) {}
+      pa.click();
+    };
+    box.appendChild(a);
+    return a;
+  }
+
   // mount(report, r) — экран проверки: сразу под «Плюсами и минусами» (или первым в .ot-main, если их нет).
   // Разделы ниже (реестры, «Динамика») вставляются тем же проходом отчёта — ссылки ставит отложенный повтор.
   function mount(report, r) {
@@ -295,6 +320,7 @@
       else main.insertBefore(nov, main.firstChild);
     }
     svyazatVse(report, nov);
+    try { dosje(report, nov); } catch (e) {}
     setTimeout(function () { if (nov.parentNode) svyazatVse(report, nov); }, 0);
     try { if (self.dlkGoal) self.dlkGoal('plitki_view', { n: nov.querySelectorAll('.pl__t--vnim').length }); } catch (e) {}
     return nov;
@@ -311,5 +337,5 @@
     return nov;
   }
 
-  return { sobrat: sobrat, html: html, mount: mount, svyazi: svyazi, svyaziPlitka: svyaziPlitka, stil: stil, den: den, CSS: CSS };
+  return { sobrat: sobrat, html: html, mount: mount, dosje: dosje, svyazi: svyazi, svyaziPlitka: svyaziPlitka, stil: stil, den: den, CSS: CSS };
 });

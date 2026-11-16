@@ -40,8 +40,11 @@ test('полоса вывода: цвет по risk_level; одна главна
   assert.strictEqual(O.tonPolosy(r({ risk_level: undefined })), 'warn');
   const a = O.dejstviya(r());
   assert.strictEqual(a.filter((x) => x.glavnaya).length, 1);
-  assert.strictEqual(a[0].t, 'Следить за компанией');
-  assert.strictEqual(a[1].href, '/pasport/kontragent/?inn=7736050003');
+  // dosje-glavnaya-v1: у организации главная — Паспорт / Досье сделки, «Следить» — второй
+  assert.strictEqual(a[0].t, 'Паспорт контрагента');
+  assert.strictEqual(a[0].href, '/pasport/kontragent/?inn=7736050003');
+  assert.strictEqual(a[1].t, 'Следить за компанией');
+  assert.strictEqual(a[1].glavnaya, false);
   assert.strictEqual(O.dejstviya(r({ company: { inn: '770000000012' } })).length, 1, 'ИП — Паспорт не выпускаем');
   const s = O.dejstviya(r(), true);
   assert.deepStrictEqual(s.map((x) => x.t), ['Следить за своей компанией']);

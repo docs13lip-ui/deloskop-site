@@ -142,5 +142,5 @@ test('встроено: пакет otchet после plitki, главная — 
   const ind = fs.readFileSync(path.join(K, 'index.html'), 'utf8');
   assert.match(ind, /DlkPlitki\.mount\(report,r\)\}catch\(e\)\{\}\}\n[^\n]*\n {4}if\(!svoj&&window\.DlkSudyPristavy\)\{try\{DlkSudyPristavy\.mount\(report,r\)\}catch\(e\)\{\}\}/);
   const pl = fs.readFileSync(path.join(K, 'js/plitki.js'), 'utf8');
-  assert.match(pl, /k === 'sudy' \|\| k === 'fssp'\) && report\.querySelector\('\.dl \[data-dl="' \+ k \+ '"\]'\)/);
+  assert.match(pl, /k === 'sudy' \|\| k === 'fssp' \|\| k === 'kontrakty'\) && report\.querySelector\('\.dl \[data-dl="' \+ k \+ '"\]'\)/);
 });

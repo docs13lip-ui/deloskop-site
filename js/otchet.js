@@ -62,20 +62,24 @@
     return l === 'low' ? 'ok' : l === 'high' ? 'bad' : 'warn';
   }
 
-  // Действия полосы: одна главная («Следить»), одна второстепенная («Паспорт» — только юрлицу).
+  // Действия полосы: одна главная, одна второстепенная, тихая ссылка «Сравнить».
+  // dosje-glavnaya-v1 (план отчёта 15.11, п. 1.4: «Досье» — главное действие рядом с выводом): у организации главная —
+  // «Досье сделки» (с номером проверки) или «Паспорт контрагента»; «Следить» — второй кнопкой, форма почты открывается так же (js/sledit.js).
+  // У ИП и своей компании — как было: главная «Следить» (Паспорт ИП не выпускаем), у Щита — первый шаг разбора со ссылкой.
   // sledit-v1 (13.11): у организации в адресе «Следить» — ИНН: кабинет подставляет его в поле (kanaly-v1), js/sledit.js при SLEDIT открывает форму почты.
-  // Щит: главное действие — первый шаг разбора со ссылкой (Shchit.glavnyj), иначе «Следить за своей компанией».
   function dejstviya(r, svoj, g) {
     var inn = String(r && r.company && r.company.inn || '').replace(/\D/g, '');
-    var a = [svoj && g && g.href && !g.sled
+    var org = !svoj && inn.length === 10;
+    var sled = svoj && g && g.href && !g.sled
       ? { t: g.knopka || 'Что сделать', href: g.href, glavnaya: true, cel: 'shchit_shag', ext: !!g.ext }
-      : { t: svoj ? 'Следить за своей компанией' : 'Следить за компанией', href: '/cabinet.html' + (inn.length === 10 ? '?inn=' + inn : '') + '#watch', glavnaya: true, cel: svoj ? 'shchit_sled' : 'otchet_sled' }];
+      : { t: svoj ? 'Следить за своей компанией' : 'Следить за компанией', href: '/cabinet.html' + (inn.length === 10 ? '?inn=' + inn : '') + '#watch', glavnaya: !org, cel: svoj ? 'shchit_sled' : 'otchet_sled' };
+    if (!org) return [sled];
     // dosje-sdelki-v1: с номером проверки — «Досье сделки» на странице Паспорта по этому номеру (без второй проверки)
     var rid = /^[A-Za-z0-9_-]{8,24}$/.test(String(r && r.report_id || '')) ? String(r.report_id) : '';
-    if (!svoj && inn.length === 10) a.push(rid ? { t: 'Досье сделки', href: '/pasport/kontragent/?id=' + rid + '#sd', cel: 'otchet_pasport' } : { t: 'Паспорт контрагента', href: '/pasport/kontragent/?inn=' + inn, cel: 'otchet_pasport' });
+    var dosje = rid ? { t: 'Досье сделки', href: '/pasport/kontragent/?id=' + rid + '#sd', cel: 'otchet_pasport' } : { t: 'Паспорт контрагента', href: '/pasport/kontragent/?inn=' + inn, cel: 'otchet_pasport' };
+    dosje.glavnaya = true; dosje.dosje = true;
     // sravnit-v1 (Ф2, 23.10): «+ Сравнить с другой» — тихой ссылкой под второстепенной кнопкой (не спорит с главной); ИП не сравниваем
-    if (!svoj && inn.length === 10) a.push({ t: '+' + NB + 'Сравнить с другой компанией', href: '/sravnit/?a=' + inn, cel: 'otchet_sravnit', tihaya: true });
-    return a;
+    return [dosje, sled, { t: '+' + NB + 'Сравнить с другой компанией', href: '/sravnit/?a=' + inn, cel: 'otchet_sravnit', tihaya: true }];
   }
 
   // Колонка Индекса (B, слева).
@@ -115,7 +119,7 @@
   function htmlDejstviya(r, svoj, g) {
     return dejstviya(r, svoj, g).map(function (d) {
       if (d.tihaya) return '<a class="ot-lnk" href="' + esc(d.href) + '" data-cel="' + d.cel + '">' + esc(d.t) + '</a>';
-      return '<a class="ot-btn ' + (d.glavnaya ? 'p' : 's') + '" href="' + esc(d.href) + '" data-cel="' + d.cel + '"' + (d.ext ? ' target="_blank" rel="noopener"' : '') + '>' + esc(d.t) + '</a>';
+      return '<a class="ot-btn ' + (d.glavnaya ? 'p' : 's') + (d.dosje ? ' ot-btn--dosje' : '') + '" href="' + esc(d.href) + '" data-cel="' + d.cel + '"' + (d.ext ? ' target="_blank" rel="noopener"' : '') + '>' + esc(d.t) + '</a>';
     }).join('');
   }
 

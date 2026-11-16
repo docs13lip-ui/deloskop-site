@@ -3656,6 +3656,9 @@ return '<section class="pl" aria-labelledby="pl-h">' +
 var CSS =
 '.pl{margin:0 0 20px}' +
 '.pl__h{margin:0 0 10px;font-size:15px;line-height:1.4;font-weight:600;color:var(--ink-2,#3A4868)}' +
+'.pl__hh{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 16px;margin:0 0 10px}.pl__hh .pl__h{margin:0}' +
+'.pl__d{font-size:13px;line-height:1.4;font-weight:600;color:var(--accent,#12305F);text-decoration:none;white-space:nowrap}' +
+'.pl__d:hover{text-decoration:underline;text-underline-offset:.18em}' +
 '.pl__r{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(136px,1fr));gap:10px}' +
 '.pl__t{margin:0;min-width:0}' +
 '.pl__b{position:relative;display:flex;flex-direction:column;height:100%;box-sizing:border-box;min-height:132px;padding:12px 12px 10px;' +
@@ -3725,6 +3728,24 @@ try { if (self.dlkGoal) self.dlkGoal('plitka_perehod', { k: li.getAttribute('dat
 function svyazatVse(report, sek) {
 Array.prototype.forEach.call(sek.querySelectorAll('li[data-pl]'), function (li, i) { try { svyazat(report, li, i + 1); } catch (e) {} });
 }
+function dosje(report, sek) {
+var pa = report.querySelector('.ot-act a[data-cel="otchet_pasport"]'), h = sek.querySelector('.pl__h');
+if (!pa || !h || sek.querySelector('.pl__d')) return null;
+var doc = report.ownerDocument, box = doc.createElement('div'), a = doc.createElement('a');
+box.className = 'pl__hh';
+h.parentNode.insertBefore(box, h); box.appendChild(h);
+a.className = 'pl__d'; a.href = pa.getAttribute('href') || '#'; a.textContent = 'Всё одним документом' + NB + '→';
+a.setAttribute('data-pl-dosje', '1');
+a.setAttribute('aria-label', 'Всё одним документом: ' + (pa.textContent || '').trim());
+a.onclick = function (e) {
+if (e.ctrlKey || e.metaKey || e.shiftKey || e.button > 0) { a.href = pa.getAttribute('href') || a.href; return; }
+e.preventDefault();
+try { if (self.dlkGoal) self.dlkGoal('plitki_dosje'); } catch (x) {}
+pa.click();
+};
+box.appendChild(a);
+return a;
+}
 function mount(report, r) {
 if (!report) return null;
 var star = report.querySelector('.pl'), h = html(sobrat(r));
@@ -3741,6 +3762,7 @@ if (pm && pm.parentNode === main) main.insertBefore(nov, pm.nextSibling);
 else main.insertBefore(nov, main.firstChild);
 }
 svyazatVse(report, nov);
+try { dosje(report, nov); } catch (e) {}
 setTimeout(function () { if (nov.parentNode) svyazatVse(report, nov); }, 0);
 try { if (self.dlkGoal) self.dlkGoal('plitki_view', { n: nov.querySelectorAll('.pl__t--vnim').length }); } catch (e) {}
 return nov;
@@ -3755,7 +3777,7 @@ li.parentNode.replaceChild(nov, li);
 try { svyazat(report, nov, 7); } catch (e) {}
 return nov;
 }
-return { sobrat: sobrat, html: html, mount: mount, svyazi: svyazi, svyaziPlitka: svyaziPlitka, stil: stil, den: den, CSS: CSS };
+return { sobrat: sobrat, html: html, mount: mount, dosje: dosje, svyazi: svyazi, svyaziPlitka: svyaziPlitka, stil: stil, den: den, CSS: CSS };
 });
 ;
 /* --- /js/sudy-pristavy.js --- */
@@ -5107,13 +5129,15 @@ return l === 'low' ? 'ok' : l === 'high' ? 'bad' : 'warn';
 }
 function dejstviya(r, svoj, g) {
 var inn = String(r && r.company && r.company.inn || '').replace(/\D/g, '');
-var a = [svoj && g && g.href && !g.sled
+var org = !svoj && inn.length === 10;
+var sled = svoj && g && g.href && !g.sled
 ? { t: g.knopka || 'Что сделать', href: g.href, glavnaya: true, cel: 'shchit_shag', ext: !!g.ext }
-: { t: svoj ? 'Следить за своей компанией' : 'Следить за компанией', href: '/cabinet.html' + (inn.length === 10 ? '?inn=' + inn : '') + '#watch', glavnaya: true, cel: svoj ? 'shchit_sled' : 'otchet_sled' }];
+: { t: svoj ? 'Следить за своей компанией' : 'Следить за компанией', href: '/cabinet.html' + (inn.length === 10 ? '?inn=' + inn : '') + '#watch', glavnaya: !org, cel: svoj ? 'shchit_sled' : 'otchet_sled' };
+if (!org) return [sled];
 var rid = /^[A-Za-z0-9_-]{8,24}$/.test(String(r && r.report_id || '')) ? String(r.report_id) : '';
-if (!svoj && inn.length === 10) a.push(rid ? { t: 'Досье сделки', href: '/pasport/kontragent/?id=' + rid + '#sd', cel: 'otchet_pasport' } : { t: 'Паспорт контрагента', href: '/pasport/kontragent/?inn=' + inn, cel: 'otchet_pasport' });
-if (!svoj && inn.length === 10) a.push({ t: '+' + NB + 'Сравнить с другой компанией', href: '/sravnit/?a=' + inn, cel: 'otchet_sravnit', tihaya: true });
-return a;
+var dosje = rid ? { t: 'Досье сделки', href: '/pasport/kontragent/?id=' + rid + '#sd', cel: 'otchet_pasport' } : { t: 'Паспорт контрагента', href: '/pasport/kontragent/?inn=' + inn, cel: 'otchet_pasport' };
+dosje.glavnaya = true; dosje.dosje = true;
+return [dosje, sled, { t: '+' + NB + 'Сравнить с другой компанией', href: '/sravnit/?a=' + inn, cel: 'otchet_sravnit', tihaya: true }];
 }
 function htmlIndeks(r) {
 var n = indeks(r), p = polnota(r);
@@ -5148,7 +5172,7 @@ a.setAttribute('href', v > 0 ? h.replace(/(#sd)?$/, '&summa=' + Math.round(v) + 
 function htmlDejstviya(r, svoj, g) {
 return dejstviya(r, svoj, g).map(function (d) {
 if (d.tihaya) return '<a class="ot-lnk" href="' + esc(d.href) + '" data-cel="' + d.cel + '">' + esc(d.t) + '</a>';
-return '<a class="ot-btn ' + (d.glavnaya ? 'p' : 's') + '" href="' + esc(d.href) + '" data-cel="' + d.cel + '"' + (d.ext ? ' target="_blank" rel="noopener"' : '') + '>' + esc(d.t) + '</a>';
+return '<a class="ot-btn ' + (d.glavnaya ? 'p' : 's') + (d.dosje ? ' ot-btn--dosje' : '') + '" href="' + esc(d.href) + '" data-cel="' + d.cel + '"' + (d.ext ? ' target="_blank" rel="noopener"' : '') + '>' + esc(d.t) + '</a>';
 }).join('');
 }
 function htmlKak(kak, statya) {

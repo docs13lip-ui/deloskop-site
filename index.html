@@ -83,6 +83,8 @@ p{margin:0}
 .note{font-size:15px;color:var(--ink2);min-height:22px}
 .note.err{color:#B3261E}
 .note.ok{color:var(--ok)}
+/* skorost-otveta-v1: «Проверить ещё раз» в строке ошибки — ссылкой, цветом строки; зона нажатия 32 px */
+.note-povtor{font:inherit;color:inherit;background:none;border:0;padding:6px 0;margin:-6px 0;cursor:pointer;text-decoration:underline;text-underline-offset:.18em;white-space:nowrap}
 @media (max-width:980px){.hero .wrap{grid-template-columns:1fr;gap:40px}}
 /* vitrina-primer-v1: телефон — поле ИНН на первом экране (было ниже сгиба на 390×844: заголовок 48 px в 5 строк) */
 @media (max-width:520px){.hero{padding-block:24px 48px}.hero-text{gap:18px}.glavnaya-display{font-size:32px;line-height:1.08;letter-spacing:-0.03em}}
@@ -966,6 +968,28 @@ html:not(.rezhim-otcheta) .vhody{padding-top:clamp(36px,4.5vw,56px)}
       note.className='note';note.textContent=def;if(window.Portfel)try{Portfel.obnovit()}catch(e){}kogdaPrimer(primerUslovij);});}
   window.addEventListener('popstate',function(){var inn=innIzAdresa();
     if(inn){input.value=inn;runCheck(inn,{izIstorii:true});}else vernutPrimer();});
+  // skorost-otveta-v1 (16.11.2026, план 15.11 п. 6): запрос /api/check на главной — со сроком, повтором и без «чужого» ответа.
+  // 1) Срок 40 с (AbortController): раньше при зависшем источнике «Проверяем по реестрам…» бежало без конца — человек уходил.
+  // 2) Обрыв сети или 502/503/504 (перезапуск сервера при выкладке) — один тихий повтор через 1,5 с. После срока — без повтора
+  //    (источник и так перегружен): человеку — кнопка «Проверить ещё раз».
+  // 3) Новая проверка отменяет прежний запрос; ответ прежней («Назад», второй ИНН подряд) отчёт уже не перерисует.
+  // 4) Через 12 с ожидания строка честно говорит, что реестры отвечают дольше обычного (одной строкой и на 390 px — без сдвига).
+  // 5) Цель check_oshibka {vid: tajmaut | set | server, kod, n, sost: povtor_pomog} — почему проверку начали, но не довели.
+  var SROK_MS=40000,DOLGO_MS=12000,POVTOR_MS=1500,nomerProverki=0,acProverki=null,dolgoT=0,STALO={stalo:1};
+  function zaprosProverki(u,moj){var popytka=0;
+    function raz(){var c=window.AbortController?new AbortController():null,istek=false;acProverki=c;
+      var t=c?setTimeout(function(){istek=true;try{c.abort()}catch(e){}},SROK_MS):0,opt={credentials:'include'};if(c)opt.signal=c.signal;
+      function snova(){popytka++;return new Promise(function(r){setTimeout(r,POVTOR_MS)}).then(function(){if(moj!==nomerProverki)throw STALO;return raz()})}
+      return fetch(u,opt).then(function(res){clearTimeout(t);if(moj!==nomerProverki)throw STALO;
+          if(/^50[234]$/.test(String(res.status))&&popytka<1)return snova();
+          return res.json().then(function(j){return {ok:res.ok,s:res.status,j:j,n:popytka}},function(){return {ok:false,s:res.status,j:{},n:popytka}})},
+        function(e){clearTimeout(t);if(moj!==nomerProverki)throw STALO;
+          if(istek){var x=new Error('srok');x.tajmaut=true;x.n=popytka;throw x}
+          if(popytka<1)return snova();e=e||{};e.n=popytka;throw e})}
+    return raz().then(function(x){if(moj!==nomerProverki)throw STALO;return x})}
+  function oshibkaProverki(tekst,v,o){note.className='note err';note.textContent=tekst+' ';
+    var b=document.createElement('button');b.type='button';b.className='note-povtor';b.textContent='Проверить ещё раз';
+    b.addEventListener('click',function(){runCheck(v,o)});note.appendChild(b);}
   function runCheck(v,o){
     if(!CAPI){bezOtcheta();note.className='note ok';note.textContent='Проверка работает на deloskop.ru.';return;}
     gruzitModuli();if(window.dlkLimit)dlkLimit.ubrat(note);zakrytPodskazki();clearTimeout(oprosT);
@@ -973,13 +997,17 @@ html:not(.rezhim-otcheta) .vhody{padding-top:clamp(36px,4.5vw,56px)}
     // а ответ API только меняет пример на отчёт на том же месте. Ошибка — шапка возвращается (bezOtcheta).
     document.documentElement.classList.add('rezhim-otcheta');
     note.className='note';note.textContent='Проверяем по реестрам…';if(window.DlkZhivoj)try{DlkZhivoj.zhdu(note,v)}catch(e){}report.classList.add('loading');report.setAttribute('aria-busy','true');if(window.dlkGoal)dlkGoal('check_started');
-    fetch(CAPI+'/api/check?q='+encodeURIComponent(v)+(o&&o.primer?'&primer=1':''),{credentials:'include'})
-      .then(function(res){return res.json().then(function(j){return {ok:res.ok,s:res.status,j:j}},function(){return {ok:false,s:res.status,j:{}}})})
-      .then(function(x){kogdaModuli(function(){report.classList.remove('loading');
+    var moj=++nomerProverki;if(acProverki)try{acProverki.abort()}catch(e){}clearTimeout(dolgoT);
+    dolgoT=setTimeout(function(){if(moj===nomerProverki&&report.classList.contains('loading')){note.className='note';note.textContent='Реестры отвечают дольше обычного…';}},DOLGO_MS);
+    zaprosProverki(CAPI+'/api/check?q='+encodeURIComponent(v)+(o&&o.primer?'&primer=1':''),moj)
+      .then(function(x){kogdaModuli(function(){report.classList.remove('loading');clearTimeout(dolgoT);
+        if(x.n&&x.ok&&window.dlkGoal)dlkGoal('check_oshibka',{vid:'set',sost:'povtor_pomog'});
         // лимит бесплатных проверок — понятный экран вместо текста API (js/limit.js); `detail` не выводим
         if(x.s!==200||!x.ok){report.removeAttribute('aria-busy');bezOtcheta();}
         if(x.s===429){note.className='note';note.textContent='';if(window.dlkLimit)dlkLimit.pokazat(note,{stranica:'glavnaya',inn:v});else note.textContent='На сегодня бесплатные проверки закончились. Завтра — снова 10.';return;}
-        if(!x.ok){note.className='note err';note.textContent=(x.j&&x.j.detail)||'Не получилось проверить. Попробуйте ещё раз.';return;}
+        // skorost-otveta-v1: detail у FastAPI бывает списком (422) — выводим только строку; сбой сервера (5xx) — с кнопкой повтора
+        if(!x.ok){var dt=x.j&&typeof x.j.detail==='string'?x.j.detail:'';if(x.s>=500){if(window.dlkGoal)dlkGoal('check_oshibka',{vid:'server',kod:String(x.s)});oshibkaProverki(dt||'Сервер не смог собрать отчёт.',v,o);return;}
+          note.className='note err';note.textContent=dt||'Не получилось проверить. Попробуйте ещё раз.';return;}
         if(window.dlkLimit&&!(o&&o.primer))dlkLimit.proveren((x.j.company&&x.j.company.inn)||v);
         // kavychki-v1: ПАО "РОССЕТИ ЮГ" → ПАО «РОССЕТИ ЮГ» — до всех модулей отчёта (js/imya.js; буквы — как в ЕГРЮЛ)
         if(window.DlkImya)DlkImya.ispravitOtvet(x.j);
@@ -990,8 +1018,9 @@ html:not(.rezhim-otcheta) .vhody{padding-top:clamp(36px,4.5vw,56px)}
         if(!(o&&(o.primer||o.svoj)))oprosPosle();
         adres((x.j.company&&x.j.company.inn)||v,o);
         if(window.Otchet&&report.classList.contains('ot'))Otchet.prokrutit(report);else if(window.innerWidth<980)report.scrollIntoView({behavior:'smooth',block:'start'});});});})
-      .catch(function(){bezOtcheta();report.classList.remove('loading');report.removeAttribute('aria-busy');note.className='note err';
-        note.textContent='Сервис не ответил. Проверьте интернет и попробуйте ещё раз.';});
+      .catch(function(e){if(e===STALO)return;clearTimeout(dolgoT);bezOtcheta();report.classList.remove('loading');report.removeAttribute('aria-busy');
+        var tj=!!(e&&e.tajmaut);if(window.dlkGoal)dlkGoal('check_oshibka',{vid:tj?'tajmaut':'set',n:String(e&&e.n||0)});
+        oshibkaProverki(tj?'Реестры не ответили за '+Math.round(SROK_MS/1000)+'\u00a0секунд\u00a0— так бывает, когда источник перегружен.':'Сервис не ответил. Проверьте интернет.',v,o);});
   }
 
   // ---- строка, которая понимает (poisk-v2-a, js/poisk.js): что распознано, что будет по Enter; подсказки ЕГРЮЛ — по названию ----

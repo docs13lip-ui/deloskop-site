@@ -97,3 +97,24 @@
 .linza__d{margin:var(--s-3) 0 0}
 @media (max-width:640px){.co-ind.linza{grid-template-columns:96px minmax(0,1fr);gap:var(--s-3) var(--s-4)}.linza__k{width:96px}.linza>div:last-of-type{display:contents}.linza .caption,.linza__d{grid-column:1/-1;margin:0}.linza__d .btn{width:100%}}
 @media print{.linza__gl{display:none!important}.linza--gl .linza__k::before{display:block}}
+/* kartochki-plyusy-v1 ([команда] 16.11): «Плюсы и минусы» на карточке — те же строки и вид, что в отчёте по ИНН (js/plyusy-minusy.js).
+   «+» латунью, «−» цветом текста, без красного; строка — ссылка на раздел реестров. */
+.co-pm .pm__kk{display:grid;grid-template-columns:1fr 1fr;gap:var(--s-3) var(--s-6)}
+.pm__k h3{margin:0;font-size:var(--t-body);line-height:1.4;font-weight:600;display:flex;align-items:baseline;gap:var(--s-2)}
+.pm__k h3 span{font-size:var(--t-small);font-weight:400;color:var(--muted);font-variant-numeric:tabular-nums}
+.pm__pod{margin:0 0 6px;font-size:var(--t-small);color:var(--muted)}
+.pm__k ul{list-style:none;margin:0;padding:0}
+.pm__k li{position:relative;padding:8px 0 8px 22px;border-top:1px solid var(--line)}
+.pm__k li::before{position:absolute;left:2px;top:8px;font-weight:600;line-height:1.4}
+.pm__k--plus li::before{content:"+";color:var(--mat-zhdu,#7A5C14)}
+.pm__k--minus li::before{content:"\2212";color:var(--ink)}
+[data-theme=dark] .pm__k--plus li::before{color:var(--mat-zhdu-t,#D9B45A)}
+.pm__a{display:block;color:inherit;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:.2em}
+.pm__a:hover{text-decoration-color:currentColor}
+.pm__k li small{display:block;margin-top:2px;font-size:var(--t-caption);line-height:1.4;color:var(--muted)}
+.pm__pusto{margin:0;padding:8px 0;border-top:1px solid var(--line);color:var(--muted)}
+.pm__e summary{cursor:pointer;padding:8px 0 0 22px;font-size:var(--t-small);color:var(--muted)}
+.pm__ne{margin:var(--s-4) 0 0;padding-top:var(--s-3);border-top:1px solid var(--line);font-size:var(--t-small);line-height:1.5;color:var(--muted)}
+.pm__ne b{font-weight:600;color:var(--ink-2)}
+@media (max-width:640px){.co-pm .pm__kk{grid-template-columns:1fr}}
+@media print{.co-pm{break-inside:avoid}.pm__e:not([open])>ul{display:block}.pm__e summary{display:none}}

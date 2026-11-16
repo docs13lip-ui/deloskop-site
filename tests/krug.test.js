@@ -155,7 +155,7 @@ test('mount: блок перед «Все данные из реестров», 
 
 test('где стоит: экран проверки (не «своя компания»), после раскладки листа; пакет «otchet»; на карточках, Паспорте и /report.html — нет', () => {
   const ind = fs.readFileSync(path.join(KOREN, 'index.html'), 'utf8');
-  assert.match(ind, /if\(!svoj&&window\.DlkKrug\)\{try\{DlkKrug\.mount\(report,r,\{api:CAPI\}\)\.catch\(function\(\)\{\}\)\}catch\(e\)\{\}\}/);
+  assert.match(ind, /if\(!svoj&&window\.DlkKrug\)\{try\{DlkKrug\.mount\(report,r,\{api:CAPI\}\)(?:\.then\(function\(o\)\{if\(window\.DlkPlitki\)DlkPlitki\.svyazi\(report,o\)\}\))?\.catch\(function\(\)\{[^}]*\}\)\}catch\(e\)\{\}\}/); // plitki-schetchiki-v1: ответ «Кто рядом» — и в плитку «Связи»
   assert.ok(ind.indexOf('Otchet.razlozhit(report') < ind.indexOf('DlkKrug.mount(report'));
   const karta = JSON.parse(fs.readFileSync(path.join(KOREN, 'partials', 'sborka.json'), 'utf8'));
   assert.ok(karta.pakety.otchet.includes('js/krug.js'));

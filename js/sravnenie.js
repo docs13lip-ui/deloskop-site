@@ -251,6 +251,61 @@
     return h;
   }
 
+  // ---------- запрос: срок, повтор, «свежесть» (sravnenie-srok-v1, 16.11.2026) ----------
+  // Как главная (skorost-otveta-v1): срок 40 с; обрыв сети или 502/503/504 (перезапуск сервера при выкладке) — один тихий
+  // повтор через 1,5 с; после срока — без повтора. Новое сравнение отменяет оба прежних запроса, их ответ таблицу не перерисует.
+  // Ошибка не роняет пару: каждый запрос отвечает {ok, s, j, n, tajmaut|set} — человеку говорим, какая компания и почему.
+  var SROK_MS = 40000, DOLGO_MS = 12000, POVTOR_MS = 1500, STALO = { stalo: 1 };
+  function sozdatZapros(w) {
+    var nomer = 0, ac = [];
+    function novaya() { ac.forEach(function (c) { try { c.abort(); } catch (e) {} }); ac = []; return ++nomer; }
+    function svezhaya(moj) { return moj === nomer; }
+    function zapros(u, moj) {
+      var popytka = 0;
+      function snova() {
+        popytka++;
+        return new Promise(function (r) { w.setTimeout(r, POVTOR_MS); }).then(function () { if (moj !== nomer) throw STALO; return raz(); });
+      }
+      function raz() {
+        var c = w.AbortController ? new w.AbortController() : null, istek = false, opt = { credentials: 'include' };
+        if (c) { ac.push(c); opt.signal = c.signal; }
+        var t = c ? w.setTimeout(function () { istek = true; try { c.abort(); } catch (e) {} }, SROK_MS) : 0;
+        return w.fetch(u, opt).then(function (res) {
+          w.clearTimeout(t); if (moj !== nomer) throw STALO;
+          if (/^50[234]$/.test(String(res.status)) && popytka < 1) return snova();
+          return res.json().then(function (j) { return { s: res.status, ok: res.ok, j: j || {}, n: popytka }; },
+            function () { return { s: res.status, ok: false, j: {}, n: popytka }; });
+        }, function (e) {
+          w.clearTimeout(t);
+          if (e === STALO || moj !== nomer) throw STALO;
+          if (istek) return { s: 0, ok: false, j: {}, n: popytka, tajmaut: true };
+          if (popytka < 1) return snova();
+          return { s: 0, ok: false, j: {}, n: popytka, set: true };
+        });
+      }
+      return raz();
+    }
+    return { novaya: novaya, svezhaya: svezhaya, zapros: zapros };
+  }
+  // vid ошибки для цели check_oshibka (как на главной): tajmaut | set | server; 4xx — не ошибка связи, цели нет
+  function vidOshibki(y) { return !y || y.ok ? '' : y.tajmaut ? 'tajmaut' : y.set ? 'set' : y.s >= 500 ? 'server' : ''; }
+  function prichina(y) {
+    var v = vidOshibki(y);
+    if (v === 'tajmaut') return 'реестры не ответили за' + NB + Math.round(SROK_MS / 1000) + NB + 'секунд' + NB + '— так бывает, когда источник перегружен';
+    if (v === 'set') return 'сервис не ответил, проверьте интернет';
+    if (v === 'server') return 'сервер не смог собрать отчёт';
+    var d = y && y.j && typeof y.j.detail === 'string' ? y.j.detail.replace(/[.\s]+$/, '') : '';
+    return d ? d.charAt(0).toLowerCase() + d.slice(1) : 'сервер не принял запрос';
+  }
+  // Одна строка: какая компания не проверилась и почему; кнопка «Сравнить ещё раз» — когда повтор может помочь (срок, сеть, 5xx)
+  function tekstOshibki(xA, xB) {
+    var plA = !xA.ok, plB = !xB.ok, pA = plA ? prichina(xA) : '', pB = plB ? prichina(xB) : '';
+    var t = plA && plB ? (pA === pB ? 'Не получилось проверить обе компании: ' + pA + '.' :
+      'Не получилось проверить обе компании: первую — ' + pA + ', вторую — ' + pB + '.') :
+      'Не получилось проверить ' + (plA ? 'первую' : 'вторую') + ' компанию: ' + (plA ? pA : pB) + '.';
+    return { tekst: t, povtor: !!(vidOshibki(xA) || vidOshibki(xB)) };
+  }
+
   // ---------- страница ----------
   function mount(doc) {
     var w = doc.defaultView, form = doc.getElementById('sv-forma');
@@ -264,9 +319,17 @@
       t.setAttribute('data-vid', v);
       [].forEach.call(out.querySelectorAll('[data-sv-vid]'), function (b) { b.setAttribute('aria-selected', String(b.getAttribute('data-sv-vid') === v)); });
     }
-    function zapros(inn) {
-      return w.fetch(CAPI + '/api/check?q=' + encodeURIComponent(inn), { credentials: 'include' })
-        .then(function (res) { return res.json().then(function (j) { return { s: res.status, ok: res.ok, j: j }; }, function () { return { s: res.status, ok: false, j: {} }; }); });
+    // sravnenie-srok-v1: обе проверки — со сроком, повтором и без «чужого» ответа (как главная, skorost-otveta-v1)
+    var Z = sozdatZapros(w), dolgoT = 0;
+    function povtor(a, b) {
+      var bt = doc.createElement('button'); bt.type = 'button'; bt.className = 'sv-povtor'; bt.textContent = 'Сравнить ещё раз';
+      bt.addEventListener('click', function () { sravnit(a, b, true); });
+      note.appendChild(doc.createTextNode(' ')); note.appendChild(bt);
+    }
+    // таблица другой пары под ошибкой новой — читалась бы как ответ на новую: убираем; та же пара — оставляем
+    function ubratChuzhuyu(a, b) {
+      var sh = [].map.call(out.querySelectorAll('.sv-t thead a'), function (x) { return (x.getAttribute('href') || '').replace(/\D/g, ''); });
+      if (sh.length && (sh[0] !== a || sh[1] !== b)) out.innerHTML = '';
     }
     function sravnit(a, b, izAdresa) {
       var o = proverit(a, b);
@@ -277,15 +340,27 @@
       note.className = 'sv-note'; note.textContent = 'Проверяем обе компании по реестрам…';
       out.setAttribute('aria-busy', 'true'); out.classList.add('sv-zhdu');
       cel('sravnit_start');
-      Promise.all([zapros(a), zapros(b)]).then(function (x) {
+      var moj = Z.novaya(); w.clearTimeout(dolgoT);
+      dolgoT = w.setTimeout(function () { if (Z.svezhaya(moj) && out.classList.contains('sv-zhdu')) { note.className = 'sv-note'; note.textContent = 'Реестры отвечают дольше обычного…'; } }, DOLGO_MS);
+      Promise.all([Z.zapros(CAPI + '/api/check?q=' + encodeURIComponent(a), moj), Z.zapros(CAPI + '/api/check?q=' + encodeURIComponent(b), moj)]).then(function (x) {
+        if (!Z.svezhaya(moj)) return;
+        w.clearTimeout(dolgoT);
         out.removeAttribute('aria-busy'); out.classList.remove('sv-zhdu');
+        x.forEach(function (y) { if (y.ok && y.n) cel('check_oshibka', { stranica: 'sravnit', vid: 'set', sost: 'povtor_pomog' }); });
         if (x[0].s === 429 || x[1].s === 429) {
           note.className = 'sv-note'; note.textContent = '';
           if (w.dlkLimit) w.dlkLimit.pokazat(note, { stranica: 'sravnit', inn: x[0].s === 429 ? a : b });
           else note.textContent = 'На сегодня бесплатные проверки закончились. Завтра — снова 10.';
           return;
         }
-        if (!x[0].ok || !x[1].ok) { note.className = 'sv-note err'; note.textContent = 'Не получилось проверить ' + (!x[0].ok ? 'первую' : 'вторую') + ' компанию. Попробуйте ещё раз.'; return; }
+        if (!x[0].ok || !x[1].ok) {
+          x.forEach(function (y) { var v = vidOshibki(y); if (v) cel('check_oshibka', { stranica: 'sravnit', vid: v, kod: String(y.s || 0), n: String(y.n || 0) }); });
+          ubratChuzhuyu(a, b);
+          var t = tekstOshibki(x[0], x[1]);
+          note.className = 'sv-note err'; note.textContent = t.tekst;
+          if (t.povtor) povtor(a, b);
+          return;
+        }
         var rA = x[0].j, rB = x[1].j, I = w.DlkImya;
         if (I && I.ispravitOtvet) { I.ispravitOtvet(rA); I.ispravitOtvet(rB); }
         if (w.dlkLimit && w.dlkLimit.proveren) { w.dlkLimit.proveren(a); w.dlkLimit.proveren(b); }
@@ -300,9 +375,13 @@
           cel('sravnit_gotovo');
           if (w.innerWidth < 980 && out.scrollIntoView) out.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
-      }).catch(function () {
+      }).catch(function (e) {
+        if (e === STALO || !Z.svezhaya(moj)) return;
+        w.clearTimeout(dolgoT);
         out.removeAttribute('aria-busy'); out.classList.remove('sv-zhdu');
-        note.className = 'sv-note err'; note.textContent = 'Сервис не ответил. Проверьте интернет и попробуйте ещё раз.';
+        ubratChuzhuyu(a, b);
+        note.className = 'sv-note err'; note.textContent = 'Сервис не ответил. Проверьте интернет.';
+        povtor(a, b);
       });
     }
     [iA, iB].forEach(function (i) { i.addEventListener('input', function () { note.className = 'sv-note'; note.textContent = def; }); });
@@ -318,5 +397,5 @@
     else mount(root.document);
   }
 
-  return { proverit: proverit, stroki: stroki, itog: itog, otmetki: otmetki, neproveno: neproveno, html: html, mount: mount, IP_TEKST: IP_TEKST, DVE: DVE };
+  return { sozdatZapros: sozdatZapros, tekstOshibki: tekstOshibki, vidOshibki: vidOshibki, SROK_MS: SROK_MS, proverit: proverit, stroki: stroki, itog: itog, otmetki: otmetki, neproveno: neproveno, html: html, mount: mount, IP_TEKST: IP_TEKST, DVE: DVE };
 });

@@ -123,3 +123,11 @@ test('(6) ответы [Право] 23.10: «не проверено» — ря�
   assert.ok(!/не публикуем/.test(p), 'на /sravnit/ — без «не публикуем» (ответ [Право])');
   assert.ok(p.includes('а не оценка компаний. С кем работать — решаете вы.'));
 });
+
+test('(7) подпись таблицы — без кавычек вокруг названий: в названии свои «», «ПАО «Магнит»» не пишем', () => {
+  const h = S.html(otvet(), otvet({ company: { inn: '7707083893', name_short: 'ООО «Бета»', reg_date: '2026-03-01' } }), { sejchas: SEJCHAS });
+  const cap = /<caption class="sv-cap">([^<]*)<\/caption>/.exec(h)[1];
+  assert.match(cap, /^Сравнение: /);
+  assert.ok(!/««|»»/.test(cap), cap);
+  assert.match(cap, /\u00a0ООО «Бета» на\u00a0/);
+});

@@ -233,7 +233,7 @@
       '<button type="button" role="tab" aria-selected="false" data-sv-vid="a">' + esc(nA) + '</button>' +
       '<button type="button" role="tab" aria-selected="false" data-sv-vid="b">' + esc(nB) + '</button>' +
       '<button type="button" role="tab" aria-selected="false" data-sv-vid="r">Разница' + (raz ? ' · ' + raz : '') + '</button></div>';
-    h += '<div class="sv-tw"><table class="sv-t" data-vid="r"><caption class="sv-cap">Сравнение «' + esc(nA) + '» и «' + esc(nB) + '» на ' + esc(new Date((o && o.sejchas) || Date.now()).toLocaleDateString('ru-RU')) + '</caption>' +
+    h += '<div class="sv-tw"><table class="sv-t" data-vid="r"><caption class="sv-cap">Сравнение: ' + esc(nA) + ' и\u00a0' + esc(nB) + ' на\u00a0' + esc(new Date((o && o.sejchas) || Date.now()).toLocaleDateString('ru-RU')) + '</caption>' +
       '<thead><tr><th scope="col"><span class="sv-vh">Строка</span></th>' +
       '<th scope="col" class="sv-a"><a href="/?inn=' + esc(cA.inn) + '">' + esc(nA) + '</a><span>ИНН ' + esc(cA.inn) + '</span></th>' +
       '<th scope="col" class="sv-b"><a href="/?inn=' + esc(cB.inn) + '">' + esc(nB) + '</a><span>ИНН ' + esc(cB.inn) + '</span></th></tr></thead><tbody>';

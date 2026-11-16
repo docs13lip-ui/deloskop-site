@@ -1289,6 +1289,30 @@ def vyruchka_k_balansu(k):
     return fin[-1]["dohod"] / m if m > 0 else None
 
 
+# kartochki-nalogi-sverka-v1 ([Ночные-2] 16.11): выручка года несоразмерна налогам, уплаченным за тот же год. Ворота
+# «скачка» и «баланса» пропустили четыре опубликованные карточки, где выручка 2025 по виду той же ошибки единиц набора
+# (✎ «Сервер» 14.11): «ТС» 0273945361 (32,7 млрд ₽ при налогах 185 тыс. ₽, штат 1), «Ремедиум» 6163140887 (17 млрд ₽ —
+# 190 тыс. ₽), «ТДРТ» 3604085475 (64 млрд ₽ — 724 тыс. ₽), «МСК-Олми» 2100018421 (39 млрд ₽ — 2 млн ₽). Компания с
+# оборотом от 1 млрд ₽ на общей системе платит один НДС на наценку в десятки раз больше 0,01 % оборота (на УСН такой
+# выручки не бывает). На 101 опубликованной с выручкой ≥ 1 млрд ₽ и налогами того же года порог 0,01 % задевает ровно эти
+# четыре; следующая — 0,0196 % (5029059084), медиана — 1,6 %. Карточку не публикуем, пока ряд не сверен; это не вывод
+# о компании — так и пишем в причине отсева. Налогов того же года нет или они 0 ₽ — ворота не применяются.
+NALOGI_DOLYA_MIN = 1e-4
+
+
+def nalogi_k_vyruchke(k):
+    """Доля уплаченных налогов и взносов в выручке того же года (выручка ≥ 1 млрд ₽, налоги > 0); иначе None."""
+    fin = k.get("finansy") or []
+    d = k.get("fakty", {}).get("dohod") or {}
+    vyr, god = (fin[-1].get("dohod"), fin[-1].get("god")) if fin else (d.get("znachenie"), d.get("god"))
+    if not vyr or vyr < BALANS_MIN_VYR or not god:
+        return None
+    n = k.get("fakty", {}).get("nalogi") or {}
+    if n.get("god") != god or not n.get("znachenie") or n["znachenie"] <= 0:
+        return None
+    return n["znachenie"] / vyr
+
+
 def vorota(k, V=None):
     """(годится, причина). Годится = карточка создаётся и идёт в sitemap."""
     V = vyvody(k) if V is None else V
@@ -1317,6 +1341,9 @@ def vorota(k, V=None):
     vb = vyruchka_k_balansu(k)  # kartochki-balans-sverka-v1
     if vb is not None and vb >= BALANS_POROG:
         return False, "выручка ×%d к балансу того же года — сверить единицы ГИР БО" % round(vb)
+    nv = nalogi_k_vyruchke(k)  # kartochki-nalogi-sverka-v1
+    if nv is not None and nv < NALOGI_DOLYA_MIN:
+        return False, "налоги года — %.4f %% выручки того же года — сверить единицы ГИР БО" % (nv * 100)
     if len(V) < 3:
         return False, "выводов %d из 3" % len(V)
     if sum(1 for x in V if x["s_chislom"]) < 2:

@@ -229,7 +229,7 @@ footer a{color:var(--ink2)}
 .fb-send:disabled{opacity:.6;cursor:default}
 .fb-close{position:absolute;right:14px;top:14px;border:0;background:transparent;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:20px;color:var(--muted)}
 .fb-note{font-size:13px;color:var(--muted)}
-.fb-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:29;background:var(--ink);color:#fff;border-radius:16px;padding:14px 18px;font-size:15px;display:flex;gap:12px;align-items:center;box-shadow:0 12px 32px rgba(0,0,0,.2);max-width:calc(100vw - 40px)}
+.fb-toast{position:fixed;left:16px;right:16px;margin:0 auto;width:fit-content;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:29;background:var(--ink);color:#fff;border-radius:16px;padding:14px 18px;font-size:15px;display:flex;gap:12px;align-items:center;box-shadow:0 12px 32px rgba(0,0,0,.2);max-width:min(600px,calc(100vw - 32px))}
 .fb-toast button{border:0;background:#fff;color:var(--ink);font:inherit;font-weight:600;border-radius:10px;padding:8px 12px;cursor:pointer;white-space:nowrap}
 :focus-visible{outline:3px solid rgba(18,48,95,.45);outline-offset:2px;border-radius:6px}
 
@@ -968,7 +968,7 @@ html:not(.rezhim-otcheta) .vhody{padding-top:clamp(36px,4.5vw,56px)}
     if(inn){input.value=inn;runCheck(inn,{izIstorii:true});}else vernutPrimer();});
   function runCheck(v,o){
     if(!CAPI){bezOtcheta();note.className='note ok';note.textContent='Проверка работает на deloskop.ru.';return;}
-    gruzitModuli();if(window.dlkLimit)dlkLimit.ubrat(note);
+    gruzitModuli();if(window.dlkLimit)dlkLimit.ubrat(note);zakrytPodskazki();clearTimeout(oprosT);
     // vizual-v3.1b: компактная шапка отчёта — сразу по нажатию «Проверить», а не когда придёт ответ: сдвиг вёрстки — в ответ на действие человека (не CLS),
     // а ответ API только меняет пример на отчёт на том же месте. Ошибка — шапка возвращается (bezOtcheta).
     document.documentElement.classList.add('rezhim-otcheta');
@@ -987,6 +987,7 @@ html:not(.rezhim-otcheta) .vhody{padding-top:clamp(36px,4.5vw,56px)}
         if(o&&o.primer)primerBezLyudej(x.j);
         // vizual-v3.1a: пример перетекает в отчёт (js/perehod.js — View Transitions; нет поддержки или «уменьшить движение» — сразу)
         perehod(function(){render(x.j,o);if(window.DlkZhivoj)try{DlkZhivoj.pojav(report)}catch(e){}}).then(function(){report.removeAttribute('aria-busy');note.className='note ok';note.textContent='Готово. Отчёт — рядом.';
+        if(!(o&&(o.primer||o.svoj)))oprosPosle();
         adres((x.j.company&&x.j.company.inn)||v,o);
         if(window.Otchet&&report.classList.contains('ot'))Otchet.prokrutit(report);else if(window.innerWidth<980)report.scrollIntoView({behavior:'smooth',block:'start'});});});})
       .catch(function(){bezOtcheta();report.classList.remove('loading');report.removeAttribute('aria-busy');note.className='note err';
@@ -1002,6 +1003,11 @@ html:not(.rezhim-otcheta) .vhody{padding-top:clamp(36px,4.5vw,56px)}
   if(POP){list.setAttribute('popover','manual');list.hidden=false;form.classList.add('check--yakor');}
   var tmr,items=[],sel=-1,lastQ='',PR=null,rows=[],razdely=null,pustoe=false,tipByl='';
   function hide(){if(POP){try{if(list.matches(':popover-open'))list.hidePopover()}catch(e){}}else list.hidden=true;sel=-1;input.removeAttribute('aria-activedescendant');input.setAttribute('aria-expanded','false')}
+  // put-k-otvetu-v1 (16.11): проверка началась — подсказки закрыты, и поздний ответ /api/suggest (250 мс задержки + сеть) их уже не откроет:
+  // раньше на 390 px после Enter список «ИНН организации · Проверить компанию» висел поверх «Проверяем по реестрам…» всё ожидание.
+  // На телефоне ещё и убираем клавиатуру: иначе она закрывает половину пришедшего ответа.
+  function zakrytPodskazki(){try{clearTimeout(tmr);lastQ='\u0000';hide();
+    if(document.activeElement===input&&window.matchMedia&&matchMedia('(hover:none) and (pointer:coarse)').matches)input.blur()}catch(e){}}
   // proba-podskazki (15.11.2026): список открывается вниз. Строка стоит в нижней части первого экрана — под ней списку не хватало места,
   // запасной вариант якоря (position-try-fallbacks:flip-block, css/perehod.css) ставил его над строкой, на заголовок, и держал там
   // даже после прокрутки. Теперь при каждом показе: не хватает места — страница сдвигается ровно на недостающее (строка остаётся
@@ -1116,17 +1122,22 @@ html:not(.rezhim-otcheta) .vhody{padding-top:clamp(36px,4.5vw,56px)}
         context:{screen:innerWidth+'x'+innerHeight,lang:navigator.language,errors:errs}})})
         .then(function(r){if(!r.ok)throw 0; uvT.value=''; st.token=''; uvB.disabled=false; uvN.textContent='Спасибо. Мы читаем каждый отзыв.'; if(window.dlkGoal)try{dlkGoal('uslugi_vopros')}catch(_){}})
         .catch(fail);});}
-  // мини-опрос: через 8 секунд после первой проверки, не чаще раза в 30 дней
-  function askLater(){ var k='fbAsked', now=Date.now(), last=0;
-    try{last=+localStorage.getItem(k)||0}catch(e){}
-    if(now-last<30*864e5)return;
-    setTimeout(function(){ try{localStorage.setItem(k,now)}catch(e){}
-      var t=document.createElement('div'); t.className='fb-toast'; t.setAttribute('role','status');
-      t.innerHTML='<span>Чего не хватает Делоскопу? Ответ займёт 20 секунд.</span>';
-      var b=document.createElement('button'); b.type='button'; b.textContent='Ответить';
-      b.onclick=function(){t.remove();openFb('idea')}; t.appendChild(b); document.body.appendChild(t);
-      setTimeout(function(){t.remove()},12000); },8000); }
-  form.addEventListener('submit',askLater);
+  // put-k-otvetu-v1 (16.11): мини-опрос «Чего не хватает Делоскопу?» — не через 8 с после нажатия «Проверить», а через 30 с после показанного ответа.
+  // Живой /api/check отвечает за 3–4 с, новой компании — дольше: окно выскакивало над ожиданием, над ошибкой и над только что пришедшим выводом,
+  // да ещё рядом со строкой cookies. Теперь: только после ответа (не пример и не своя компания), не чаще раза в 30 дней; не показываем, если вкладка скрыта,
+  // человек печатает в другом поле (строка проверки на компьютере держит фокус после Enter — она не в счёт), открыта форма отзыва или ещё стоит строка cookies — тогда и «раз в 30 дней» не тратится. Новая проверка откладывает окно заново.
+  var OPROS_MS=30000,OPROS_DNEJ=30,oprosT=0;
+  function oprosMozhno(s){return !!s&&!!s.vidno&&!s.pechataet&&!s.panel&&!s.cookies&&s.seychas-(+s.bylo||0)>=OPROS_DNEJ*864e5}
+  function oprosPosle(){clearTimeout(oprosT);oprosT=setTimeout(function(){var last=0;try{last=+localStorage.getItem('fbAsked')||0}catch(e){}
+    var ae=document.activeElement,ck=document.querySelector('.ck-bar');
+    if(!oprosMozhno({vidno:document.visibilityState!=='hidden',pechataet:!!ae&&ae!==input&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName),panel:!!panel&&!panel.hidden,
+      cookies:!!ck&&!ck.hidden,seychas:Date.now(),bylo:last}))return;
+    try{localStorage.setItem('fbAsked',Date.now())}catch(e){}
+    var t=document.createElement('div'); t.className='fb-toast'; t.setAttribute('role','status');
+    t.innerHTML='<span>Чего не хватает Делоскопу? Ответ займёт 20 секунд.</span>';
+    var b=document.createElement('button'); b.type='button'; b.textContent='Ответить';
+    b.onclick=function(){t.remove();openFb('idea')}; t.appendChild(b); document.body.appendChild(t);
+    setTimeout(function(){t.remove()},12000); },OPROS_MS); }
   // primer-otcheta-v1: ссылка «Посмотреть пример» под полем — при PRIMER_INN открывает отчёт по образцу на месте примера
   function pokazatPrimer(e){if(e)e.preventDefault();if(window.dlkSobytie)try{dlkSobytie('primer_otchet')}catch(_){}
     if(window.dlkGoal)try{dlkGoal('primer_otcheta')}catch(_){}runCheck(PRIMER_INN,{primer:true});}

@@ -62,7 +62,10 @@ test('один фон: в тёмной теме — тиснёная кожа н
 });
 
 test('uslugi-vopros-v1: под плитками — строка «Чего здесь не хватает?»; ответ идёт путём «Отзыва», без почты и без лишних полей', () => {
-  const s = sekciya('uslugi');
+  // kuchnee-glavnaya-v1: форма — сразу после раздела «Что умеет» (на компьютере — под примером ответа)
+  const a = G.indexOf('id="uslugi"'), b = G.indexOf('</section>', a);
+  const s = G.slice(b, G.indexOf('</form>', b) + 7);
+  assert.match(G.slice(b, b + 40), /^<\/section>\s*<form class="uv"/, 'форма идёт сразу за разделом услуг');
   assert.match(s, /<form class="uv" id="uvForm" novalidate>/);
   assert.match(s, /<label class="uv__q" for="uvText">Чего здесь не&nbsp;хватает\?<\/label>/);
   assert.strictEqual((s.match(/<input\b/g) || []).length, 1, 'одно поле');

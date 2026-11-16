@@ -53,8 +53,8 @@ class TestStroki(unittest.TestCase):
         self.assertIn("Нет отметок о недостоверности", P)
         self.assertIn("Отчётность за 2025 год в ГИР БО", P)
         self.assertIn("На рынке с 2004 года", P)
-        self.assertEqual(M, ["Ответчик в 12 идущих делах на 6,2 млн ₽", "Производства у приставов: 3, долг 410 тыс. ₽",
-                             "Долг по налогам 1,2 млн ₽"])
+        self.assertEqual(M, ["12 незавершённых дел, где компания — ответчик; требования к компании — 6,2 млн ₽",
+                             "Производства у приставов: 3, остаток долга — 410 тыс. ₽", "Долг по налогам 1,2 млн ₽"])
         self.assertEqual(S["ne"], [])
         # у строки — источник и дата сведений
         nal = [x for x in S["minusy"] if x[0] == "tax_debt"][0]
@@ -63,12 +63,13 @@ class TestStroki(unittest.TestCase):
     def test_odno_delo_i_net_del(self):
         t = _stranica([_fact("Арбитражные дела, где компания&#160;— ответчик", "1&nbsp;незавершённое дело на 6,2&nbsp;тыс.&nbsp;₽", CH)])
         M = [x[1].replace(NB, " ") for x in K.plyusy_minusy_stroki(t)["minusy"]]
-        self.assertEqual(M, ["Ответчик в 1 идущем деле на 6,2 тыс. ₽"])
+        self.assertEqual(M, ["1 незавершённое дело, где компания — ответчик; требования к компании — 6,2 тыс. ₽"])
         t = _stranica([_fact("Арбитражные дела, где компания&#160;— ответчик", "незавершённых дел не нашли", CH),
                        _fact("Задолженность по налогам", "Нет", SRC)])
         S = K.plyusy_minusy_stroki(t)
-        self.assertIn("Нет идущих дел против компании", [x[1] for x in S["plyusy"]])
-        self.assertIn("Нет долгов по налогам", [x[1] for x in S["plyusy"]])
+        P = [x[1].replace(NB, " ") for x in S["plyusy"]]
+        self.assertIn("Не нашли незавершённых дел, где компания — ответчик, на 13.11.2026", P)
+        self.assertIn("Недоимки по данным ФНС не нашли на 01.10.2026", P)
         self.assertEqual(S["minusy"], [])
 
     def test_ne_provereno(self):
@@ -77,7 +78,7 @@ class TestStroki(unittest.TestCase):
         self.assertEqual(S["ne"], ["арбитражные суды", "приставы", "банкротство"])
         b = K.plyusy_minusy_html(S)
         self.assertIn("Не проверено:", b)
-        self.assertNotIn("Нет идущих дел", b)
+        self.assertNotIn("Не нашли незавершённых дел", b)
 
     def test_staraya_otchetnost(self):
         t = _stranica([_fact("Выручка за 2021", "5&nbsp;млрд&nbsp;₽", "ГИР БО · сведения на 31.12.2021 · ●")])
@@ -99,6 +100,37 @@ class TestStroki(unittest.TestCase):
         k = K.iz_check(O.zapis(3))
         t = K.html_kartochki(k, K.vyvody(k), [], None)
         self.assertEqual(t.count('class="co-sec co-pm"'), 1)
+
+
+class TestSlovaPravo(unittest.TestCase):
+    """kartochki-slova-pravo-v1: слова не шире данных ([Право] 16.11, п. 1) — тот же запрет, что tests/slova_pravo.test.js."""
+    ZAPRET = re.compile(r"за\s+всё\s+время|долг\s+от|нет\s+долгов|(^|[^а-яё])чисто([^а-яё]|$)|иски\s+на|идущ\S*\s+дел\S*\s+против"
+                        r"|долгов\s+у\s+приставов\s+не\s+нашли|незавершённ\S+\s+(?:\S+\s+)?дел\S*\s+на\s+[\d,]", re.I)
+
+    def test_minusy_pristavy_chast(self):
+        t = _stranica([_fact("Исполнительные производства", "449&nbsp;производств, остаток долга по&#160;100 самым свежим&#160;— 22,9&nbsp;млн&nbsp;₽", CH),
+                       _fact("Арбитражные дела, где компания&#160;— ответчик", "не меньше 30&nbsp;незавершённых дел; требования к компании — 1&nbsp;млрд&nbsp;₽", CH)])
+        M = [x[1].replace(NB, " ") for x in K.plyusy_minusy_stroki(t)["minusy"]]
+        self.assertIn("Производства у приставов: 449, остаток долга — не меньше 22,9 млн ₽ (по 100 из 449)", M)
+        self.assertIn("Не меньше 30 незавершённых дел, где компания — ответчик; требования к компании — 1 млрд ₽", M)
+
+    def test_pochinit_opublikovannoj(self):
+        star = ('<span class="fact__v">10&nbsp;незавершённых дел на 2,7&nbsp;млн&nbsp;₽</span>'
+                '<p>Компания — ответчик в 10&nbsp;незавершённых арбитражных делах на 2,7&nbsp;млн&nbsp;₽ (на&nbsp;13&nbsp;ноября&nbsp;2026)</p>'
+                '<p>У приставов есть производства на 750&nbsp;₽ (на&nbsp;13&nbsp;ноября&nbsp;2026)</p><p>Долгов у приставов не нашли (на 1)</p>')
+        t = K.pochinit_slova_pravo(star)
+        self.assertIn('<span class="fact__v">10&nbsp;незавершённых дел; требования к компании — 2,7&nbsp;млн&nbsp;₽</span>', t)
+        self.assertIn("делах; требования к компании — 2,7&nbsp;млн&nbsp;₽ (на", t)
+        self.assertIn("производства, остаток долга — 750&nbsp;₽ (на", t)
+        self.assertIn("Производств у приставов не нашли", t)
+        self.assertEqual(K.pochinit_slova_pravo(t), t)
+        self.assertFalse(self.ZAPRET.search(html.unescape(t).replace(NB, " ")))
+
+    def test_na_vseh_kartochkah(self):
+        for f in sorted(glob.glob(str(KOREN / "company" / "*" / "index.html"))):
+            tx = html.unescape(re.sub(r"<[^>]+>", " ", Path(f).read_text(encoding="utf-8"))).replace(NB, " ")
+            m = self.ZAPRET.search(tx)
+            self.assertFalse(m, "%s: «%s»" % (f, m and tx[max(0, m.start() - 40):m.end() + 40]))
 
 
 class TestOpublikovannye(unittest.TestCase):

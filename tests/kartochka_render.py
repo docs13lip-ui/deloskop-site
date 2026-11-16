@@ -702,7 +702,7 @@ def iz_check(r):
             if n_d:
                 detal = "%s%d%s%s" % ("" if polno else "не меньше ", n_d, NB, plural(n_d, "незавершённое дело", "незавершённых дела", "незавершённых дел"))
                 if summa and summa > 0:
-                    detal += " на " + dengi(summa)
+                    detal += "; требования к компании — " + dengi(summa)  # сумма исков — не долг (Право 16.11, п. 1)
             else:
                 detal = "незавершённых дел не нашли"
             k["fakty"]["sudy"] = {
@@ -1080,14 +1080,14 @@ def vyvody(k):
     fs = F.get("fssp")
     if fs and fs.get("data") and na and (na - fs["data"]).days <= 7:
         if fs.get("ton") == "ok":
-            out.append(_v("V11", "ok", "Долгов у приставов не нашли (на%s%s)" % (NB, data_tekst(fs["data"])), fs["istochnik"], fs["data"], s_chislom=False))
+            out.append(_v("V11", "ok", "Производств у приставов не нашли (на%s%s)" % (NB, data_tekst(fs["data"])), fs["istochnik"], fs["data"], s_chislom=False))
         elif fs.get("znachenie") and fs.get("chast") and fs.get("n"):
             # kartochki-checko-v1: сумма по первым 100 из N — неполная, называем охват
             out.append(_v("V12", "warn", "У приставов %d%s%s; остаток долга по%s%d самым свежим — %s (на%s%s)" % (
                 fs["n"], NB, plural(fs["n"], "исполнительное производство", "исполнительных производства", "исполнительных производств"),
                 NB, fs["chast"][0], dengi(fs["znachenie"]), NB, data_tekst(fs["data"])), fs["istochnik"], fs["data"]))
         elif fs.get("znachenie"):
-            out.append(_v("V12", "warn", "У приставов есть производства на %s (на%s%s)" % (dengi(fs["znachenie"]), NB, data_tekst(fs["data"])), fs["istochnik"], fs["data"]))
+            out.append(_v("V12", "warn", "У приставов есть производства, остаток долга — %s (на%s%s)" % (dengi(fs["znachenie"]), NB, data_tekst(fs["data"])), fs["istochnik"], fs["data"]))
     # kartochki-checko-v1: V26/V27 — арбитраж (ответчик, незавершённые), V28/V29 — ЕФРСБ; свежесть — как у приставов
     sd = F.get("sudy")
     if sd and sd.get("data") and na and (na - sd["data"]).days <= 7:
@@ -1095,7 +1095,7 @@ def vyvody(k):
             out.append(_v("V26", "warn", "Компания — ответчик в %s%d%s%s%s (на%s%s)" % (
                 "" if sd.get("polno") else "не меньше чем ", sd["n"], NB,
                 plural(sd["n"], "незавершённом арбитражном деле", "незавершённых арбитражных делах", "незавершённых арбитражных делах"),
-                (" на " + dengi(sd["znachenie"])) if sd.get("znachenie") else "", NB, data_tekst(sd["data"])), sd["istochnik"], sd["data"]))
+                ("; требования к компании — " + dengi(sd["znachenie"])) if sd.get("znachenie") else "", NB, data_tekst(sd["data"])), sd["istochnik"], sd["data"]))
         else:
             out.append(_v("V27", "ok", "Незавершённых арбитражных дел, где компания — ответчик, не нашли (на%s%s)" % (NB, data_tekst(sd["data"])),
                           sd["istochnik"], sd["data"], s_chislom=False))
@@ -5218,6 +5218,34 @@ def _pm_ist(src):
     return t.split(" · ")[0].strip(), (m.group(1) if m else "")
 
 
+def _pm_na(d):
+    """« на ДД.ММ.ГГГГ» — дата сведений к «не нашли» (как naDatu в js/plyusy-minusy.js)."""
+    return (" на" + NB + d) if re.fullmatch(r"\d{2}\.\d{2}\.\d{4}", d or "") else ""
+
+
+def plural_pm(n, a, b, c):
+    n = abs(n) % 100
+    return c if 11 <= n <= 14 else a if n % 10 == 1 else b if 2 <= n % 10 <= 4 else c
+
+
+_SP_PROB = r"(?:[ \u00a0]|&nbsp;|&#160;)"
+_SP_FACT_SUDY = re.compile(r'(<span class="fact__v">(?:не меньше ' + _SP_PROB + r'?)?\d[\d ]*' + _SP_PROB + r'незавершённ[^<]*?дел\S*?) на ([^<]*?₽)</span>')
+_SP_V26 = re.compile(r"(ответчик в" + _SP_PROB + r"[^<]*?незавершённ[^<]*?арбитражн[^<]*?дел[а-яё]*) на" + _SP_PROB + r"([^<(]*?₽)(" + _SP_PROB + r"\(на)")
+_SP_V12 = re.compile(r"(У" + _SP_PROB + r"приставов есть производства) на" + _SP_PROB + r"([^<(]*?₽)(" + _SP_PROB + r"\(на)")
+
+
+def pochinit_slova_pravo(t):
+    """kartochki-slova-pravo-v1 ([Право] 16.11, п. 1; ✎ slova-pravo-v1): у опубликованных карточек сумма исков — не «дела на X»,
+    а «требования к компании — X» (сумма исков не долг); «Долгов у приставов не нашли» → «Производств … не нашли» (ФССП
+    показывает только идущие производства); остаток у приставов — «остаток долга — X». Повторный вызов ничего не меняет."""
+    if not t:
+        return t
+    t = _SP_FACT_SUDY.sub(lambda m: m.group(1) + "; требования к компании — " + m.group(2) + "</span>", t)
+    t = _SP_V26.sub(lambda m: m.group(1) + "; требования к компании — " + m.group(2) + m.group(3), t)
+    t = _SP_V12.sub(lambda m: m.group(1) + ", остаток долга — " + m.group(2) + m.group(3), t)
+    return t.replace("Долгов у приставов не нашли", "Производств у приставов не нашли")
+
+
 def plyusy_minusy_stroki(t):
     """Страница карточки → {plyusy: [...], minusy: [...], ne: [...]}; строка — (ключ, текст, источник, дата). Нет раздела реестров — None."""
     mr = _PM_REESTRY.search(t or "")
@@ -5244,7 +5272,8 @@ def plyusy_minusy_stroki(t):
     if v:
         zn, (ist, d) = v
         if zn == "Нет":
-            P.append(("tax_debt", "Нет долгов по налогам", ist, d))
+            # slova-pravo (Право 16.11, п. 1): набор ФНС — недоимка на свою дату, «нет долгов» шире данных
+            P.append(("tax_debt", "Недоимки по" + NB + "данным ФНС не" + NB + "нашли" + _pm_na(d), ist, d))
         else:
             sm = re.match(r"[\d ,]+(?:тыс\.|млн|млрд|трлн)? ?₽", zn)
             M.append(("tax_debt", "Долг по налогам" + (" " + sm.group(0).strip() if sm else ""), ist, d))
@@ -5278,14 +5307,14 @@ def plyusy_minusy_stroki(t):
     v = fakty.get("Арбитражные дела, где компания — ответчик")
     if v:
         zn, (ist, d) = v
-        n = re.match(r"(\d[\d ]*) незавершённ\S+ (дел\S*)(?: на (.+))?$", zn)
+        n = re.match(r"(не меньше )?(\d[\d ]*) незавершённ\S+ дел\S*(?:(?: на|; требования к компании —) (.+))?$", zn)
         if re.search(r"не нашли", zn):
-            P.append(("sudy", "Нет идущих дел против компании", ist, d))
+            P.append(("sudy", "Не нашли незавершённых дел, где компания — ответчик" + ("," + _pm_na(d) if d else ""), ist, d))
         elif n:
-            k = int(n.group(1).replace(" ", ""))
-            odno = k % 10 == 1 and k % 100 != 11
-            M.append(("sudy", "Ответчик в %s %s%s" % (n.group(1).strip(), "идущем деле" if odno else "идущих делах",
-                                                      (" на " + n.group(3)) if n.group(3) else ""), ist, d))
+            k = int(n.group(2).replace(" ", ""))
+            M.append(("sudy", "%s%s%s, где компания — ответчик%s" % (
+                "Не меньше " if n.group(1) else "", n.group(2).strip(), NB + plural_pm(k, "незавершённое дело", "незавершённых дела", "незавершённых дел"),
+                ("; требования к" + NB + "компании — " + n.group(3)) if n.group(3) else ""), ist, d))
         else:
             M.append(("sudy", "Есть арбитражные дела", ist, d))
     else:
@@ -5293,12 +5322,16 @@ def plyusy_minusy_stroki(t):
     v = fakty.get("Исполнительные производства")
     if v:
         zn, (ist, d) = v
-        n = re.match(r"(\d[\d ]*) производств\S*(?:, остаток долга — (.+))?$", zn)
+        n = re.match(r"(\d[\d ]*) производств\S*(?:, остаток долга(?: по (\d+) самым свежим)? — (.+))?$", zn)
         if re.search(r"не нашли", zn):
-            P.append(("fssp", "Нет долгов у приставов", ist, d))
+            # ФССП показывает только идущие производства — «не нашли на дату», а не «нет долгов»
+            P.append(("fssp", "Производств у" + NB + "приставов не" + NB + "нашли" + _pm_na(d), ist, d))
         else:
-            M.append(("fssp", "Производства у приставов" + (": " + n.group(1).strip() if n else "") +
-                      (", долг " + n.group(2) if n and n.group(2) else ""), ist, d))
+            ost = ""
+            if n and n.group(3):
+                ost = (", остаток долга — не" + NB + "меньше " + n.group(3) + " (по" + NB + n.group(2) + " из" + NB + n.group(1).strip() + ")"
+                       if n.group(2) else ", остаток долга — " + n.group(3))
+            M.append(("fssp", "Производства у приставов" + (": " + n.group(1).strip() if n else "") + ost, ist, d))
     else:
         N.append("приставы")
     v = fakty.get("Сообщения о банкротстве компании")

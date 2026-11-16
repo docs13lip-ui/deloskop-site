@@ -3694,7 +3694,7 @@ var s = doc.createElement('style'); s.id = 'pl-css'; s.textContent = CSS; (doc.h
 function cel(report, li) {
 var sel = li.getAttribute('data-pl-sel'), nazv = li.getAttribute('data-pl-nazv');
 if (sel) return report.querySelector('.ot-main ' + sel) || report.querySelector(sel);
-var k = li.getAttribute('data-pl'), dl = (k === 'sudy' || k === 'fssp') && report.querySelector('.dl [data-dl="' + k + '"]');
+var k = li.getAttribute('data-pl'), dl = (k === 'sudy' || k === 'fssp' || k === 'kontrakty') && report.querySelector('.dl [data-dl="' + k + '"]');
 if (dl) return dl;
 var g = report.querySelector('.sut__g');
 if (!g || !nazv) return null;
@@ -3837,7 +3837,7 @@ var s = a.map(function (x) { return storona(typeof x === 'string' ? x : x && (x.
 if (!s.length) return '';
 return s.length > 2 ? s.slice(0, 2).join(', ') + ' и' + NB + 'ещё ' + (s.length - 2) : s.join(', ');
 }
-function ssylka(u) { u = String(u || ''); return /^https:\/\/(kad\.arbitr\.ru|fssp\.gov\.ru)\//.test(u) ? u : ''; }
+function ssylka(u) { u = String(u || ''); return /^https:\/\/(kad\.arbitr\.ru|fssp\.gov\.ru|zakupki\.gov\.ru)\//.test(u) ? u : ''; }
 var TIP = { 'Г': 'исковое', 'Б': 'о' + NB + 'банкротстве', 'А': 'административное' };
 function ist(b) {
 var s = String((b && b.istochnik) || '').replace(/\s*\(через [^)]*\)\s*$/, ''), d = dmy(b && b.data_svedeniy);
@@ -3914,12 +3914,57 @@ var vsego = n !== null ? n : pr.length;
 o.pro = pr.length ? (pr.length < vsego ? 'Группы и список — по ' + chislo(pr.length) + ' ' + skl(pr.length, 'последнему', 'последним', 'последним') + ' из' + NB + chislo(vsego) + ' производств' : '') + (!tochno && os > 0 ? (pr.length < vsego ? '; остаток' : 'Остаток') + ' посчитан не по всем производствам' : '') : 'Список производств здесь не показан — откройте банк данных.';
 return o;
 }
+var ZAKON = { '44': 'По 44-ФЗ (госзаказчики)', '223': 'По 223-ФЗ (госкомпании)' };
+function kontrakty(b, rnp, inn) {
+var st = sost(b), rs = sost(rnp), rd = rnp && dmy(rnp.data_svedeniy);
+var o = { k: 'kontrakty', zag: 'Госконтракты', ist: ist(b || rnp),
+sami: /^\d{10}(\d{2})?$/.test(String(inn || '')) ? 'https://zakupki.gov.ru/epz/contract/search/results.html?searchString=' + inn : 'https://zakupki.gov.ru/epz/contract/search/results.html' };
+var rnpN = null;
+if (rs === 'found') { var rdd = rnp.dannye || {}; rnpN = num(rdd.vsego); if (!(rnpN > 0)) rnpN = Array.isArray(rdd.deystvuyushie) && rdd.deystvuyushie.length ? rdd.deystvuyushie.length : null; }
+var rnpFakt = rs === 'found' ? { t: 'Реестр недобросовестных поставщиков', z: (rnpN > 0 ? chislo(rnpN) + NB + skl(rnpN, 'действующая запись', 'действующие записи', 'действующих записей') : 'есть запись') + (rd ? ' на' + NB + rd : ''), vnim: true }
+: rs === 'not_found' ? { t: 'Реестр недобросовестных поставщиков', z: 'нет действующих записей' + (rd ? ' на' + NB + rd : '') }
+: rs === 'stale' ? { t: 'Реестр недобросовестных поставщиков', z: rnp.status_do === 'not_found' ? (rd ? 'на' + NB + rd + ' записей не было' : 'записей не было') + ' — сведения устарели' : 'сведения' + (rd ? ' на' + NB + rd : '') + ' устарели' }
+: { t: 'Реестр недобросовестных поставщиков', z: 'не проверено' + (rnp && typeof rnp.prichina === 'string' && rnp.prichina ? ': ' + rnp.prichina : '') };
+if (st !== 'found' && rs !== 'found') {
+if (!b) { o.vid = 'ne'; o.tekst = 'Не проверили: реестр контрактов ЕИС не ответил.'; return o; }
+if (st === 'not_found') { o.vid = 'pusto'; o.tekst = 'Не нашли контрактов, где компания — поставщик' + (dmy(b.data_svedeniy) ? ', на' + NB + dmy(b.data_svedeniy) : '') + (rs === 'not_found' ? '; в РНП записей нет' : '') + '.'; return o; }
+o.vid = 'ne'; o.tekst = st === 'stale' ? 'Сведения устарели' + (dmy(b.data_svedeniy) ? ' (на' + NB + dmy(b.data_svedeniy) + ')' : '') + ' — откройте ЕИС сами.' : 'Не проверили: реестр контрактов ЕИС сегодня не ответил.'; return o;
+}
+var d = (st === 'found' && b.dannye) || {}, vs = st === 'found' ? num(d.vsego) : st === 'not_found' ? 0 : null, pz = d.po_zakonam || {};
+var sp = (Array.isArray(d.poslednie) ? d.poslednie : []).filter(function (x) { return x && (x.nomer || x.data); }).map(function (x) {
+var s = num(x.summa), fz = String(x.fz || '');
+return { nomer: String(x.nomer || 'без номера'), href: ssylka(x.ssylka), data: dmy(x.data), kd: klyuchDaty(x.data),
+zakazchik: storona(x.zakazchik || ''), summa: s > 0 ? den(s) : 'без суммы', fz: fz === '44' || fz === '223' ? fz + '-ФЗ' : '' };
+});
+sp.sort(function (a, b2) { return a.kd < b2.kd ? 1 : a.kd > b2.kd ? -1 : 0; });
+o.vid = 'est';
+o.kratko = (vs !== null ? chislo(vs) + NB + skl(vs, 'контракт или договор', 'контракта и договора', 'контрактов и договоров') + ' как поставщик' : 'контракты есть')
++ (rs === 'found' ? ' · есть запись в' + NB + 'РНП' : '');
+o.fakty = [];
+['44', '223'].forEach(function (z) { var n = pz[z] && num(pz[z].vsego); if (n !== null && n !== undefined) o.fakty.push({ t: ZAKON[z], z: chislo(n) }); });
+if (!o.fakty.length && vs !== null) o.fakty.push({ t: 'Контрактов и договоров', z: chislo(vs) });
+if (num(d.summa) > 0 && d.summa_ohvat === 'vse') o.fakty.push({ t: 'Сумма всех', z: den(num(d.summa)) });
+if (sp.length && sp[0].data) o.fakty.push({ t: 'Последний контракт', z: sp[0].data });
+o.fakty.push(rnpFakt);
+var po = {}, por = [];
+sp.forEach(function (x) { var z = x.zakazchik; if (!z) return; if (!po[z]) { po[z] = 0; por.push(z); } po[z]++; });
+o.gruppy = por.some(function (z) { return po[z] > 1; }) ? por.map(function (z, i) { return { k: 'z' + i, t: z, n: po[z], s: '' }; }).sort(function (a, b2) { return b2.n - a.n; }).slice(0, 3) : [];
+o.gruppyZag = 'Заказчики — по' + NB + chislo(sp.length) + ' ' + skl(sp.length, 'последнему', 'последним', 'последним');
+o.spisok = sp;
+var vsego = vs !== null ? vs : sp.length;
+o.pro = sp.length ? (sp.length < vsego ? 'Загружены ' + chislo(sp.length) + ' ' + skl(sp.length, 'последний', 'последних', 'последних') + ' из' + NB + chislo(vsego) + ' — остальные в' + NB + 'ЕИС' : '')
+: (vsego > 0 ? 'Список контрактов здесь не показан — откройте ЕИС' : '');
+o.ne = 'Не проверяли: закупки, где компания — заказчик, и как исполнены контракты (расторжения, неустойки) — не проверяли не значит «нет».';
+return o;
+}
 function sobrat(r) {
 if (!r || !r.company) return null;
 var dm = r.damia || {}, blk = function (k) { var b = dm[k]; return b && typeof b === 'object' && b.nazvanie ? b : null; };
-var S = blk('sudy'), F = blk('fssp');
-if (!S && !F) return null;
-return { razdely: [sudy(S), pristavy(F)] };
+var S = blk('sudy'), F = blk('fssp'), K = blk('kontrakty'), R = blk('rnp');
+if (!S && !F && !K && !R) return null;
+var a = [sudy(S), pristavy(F)];
+if (K || R) a.push(kontrakty(K, R, r.company.inn));
+return { razdely: a };
 }
 function strokaDela(x) {
 return '<li class="dl__s">' +
@@ -3933,8 +3978,14 @@ return '<li class="dl__s">' +
 '<div class="dl__s1"><b>' + esc(x.nomer) + '</b>' + (x.data ? '<span class="dl__d">' + esc(x.data) + '</span>' : '') + '<span class="dl__sum">' + esc(x.dolg) + '</span></div>' +
 '<div class="dl__s2">' + esc(x.predmet) + (x.otdel ? ' · ' + esc(x.otdel) : '') + '</div></li>';
 }
+function strokaKontrakta(x) {
+return '<li class="dl__s">' +
+'<div class="dl__s1">' + (x.href ? '<a href="' + esc(x.href) + '" target="_blank" rel="noopener nofollow">' + esc(x.nomer) + '</a>' : '<b>' + esc(x.nomer) + '</b>') +
+(x.data ? '<span class="dl__d">' + esc(x.data) + '</span>' : '') + '<span class="dl__sum">' + esc(x.summa) + '</span></div>' +
+'<div class="dl__s2">' + (x.zakazchik ? 'Заказчик: ' + esc(x.zakazchik) : 'Заказчик не указан') + (x.fz ? ' · ' + esc(x.fz) : '') + '</div></li>';
+}
 function spisok(o) {
-var f = o.k === 'sudy' ? strokaDela : strokaIp, a = o.spisok || [];
+var f = o.k === 'sudy' ? strokaDela : o.k === 'kontrakty' ? strokaKontrakta : strokaIp, a = o.spisok || [];
 if (!a.length) return '';
 var h = '<ol class="dl__l">' + a.slice(0, POKAZ).map(f).join('') + '</ol>';
 if (a.length > POKAZ) h += '<details class="dl__eshche"><summary>Показать все загруженные (' + chislo(a.length) + ')</summary><ol class="dl__l" start="' + (POKAZ + 1) + '">' + a.slice(POKAZ).map(f).join('') + '</ol></details>';
@@ -3947,16 +3998,17 @@ return '<div class="dl__r dl__r--' + o.vid + '" data-dl="' + o.k + '"><div class
 }
 var h = '<details class="dl__r dl__r--est" data-dl="' + o.k + '"><summary class="dl__sm"><span class="dl__z">' + o.zag + '</span><span class="dl__k">' + esc(o.kratko) + '</span></summary><div class="dl__t">';
 if (o.fakty.length) h += '<dl class="dl__f">' + o.fakty.map(function (f) { return '<div' + (f.vnim ? ' class="dl__f--vnim"' : '') + '><dt>' + esc(f.t) + '</dt><dd>' + esc(f.z) + '</dd></div>'; }).join('') + '</dl>';
-if (o.gruppy && o.gruppy.length) h += '<p class="dl__gh">Что взыскивают</p><ul class="dl__g">' + o.gruppy.map(function (g) { return '<li data-gr="' + g.k + '"><span>' + esc(g.t) + '</span><b>' + chislo(g.n) + '</b>' + (g.s ? '<small>' + esc(g.s) + '</small>' : '') + '</li>'; }).join('') + '</ul>';
-if (o.spisok.length) h += '<p class="dl__gh">' + (o.k === 'sudy' ? 'Последние дела' : 'Последние производства') + '</p>' + spisok(o);
+if (o.gruppy && o.gruppy.length) h += '<p class="dl__gh">' + esc(o.gruppyZag || 'Что взыскивают') + '</p><ul class="dl__g">' + o.gruppy.map(function (g) { return '<li data-gr="' + g.k + '"><span>' + esc(g.t) + '</span><b>' + chislo(g.n) + '</b>' + (g.s ? '<small>' + esc(g.s) + '</small>' : '') + '</li>'; }).join('') + '</ul>';
+if (o.spisok.length) h += '<p class="dl__gh">' + (o.k === 'sudy' ? 'Последние дела' : o.k === 'kontrakty' ? 'Последние контракты' : 'Последние производства') + '</p>' + spisok(o);
 if (o.pro) h += '<p class="dl__p">' + esc(o.pro) + '.</p>';
 if (o.ne) h += '<p class="dl__p dl__p--ne">' + esc(o.ne) + '</p>';
-h += '<p class="dl__i">' + esc(o.ist) + ' · <a href="' + esc(o.sami) + '" target="_blank" rel="noopener nofollow">' + (o.k === 'sudy' ? 'открыть картотеку' : 'открыть банк данных ФССП') + '</a></p></div></details>';
+h += '<p class="dl__i">' + esc(o.ist) + ' · <a href="' + esc(o.sami) + '" target="_blank" rel="noopener nofollow">' + (o.k === 'sudy' ? 'открыть картотеку' : o.k === 'kontrakty' ? 'открыть ЕИС' : 'открыть банк данных ФССП') + '</a></p></div></details>';
 return h;
 }
 function html(m) {
 if (!m || !m.razdely || !m.razdely.length) return '';
-return '<section class="dl" aria-labelledby="dl-h"><h3 class="dl__h" id="dl-h">Суды и приставы — подробно</h3>' + m.razdely.map(razdel).join('') + '</section>';
+var zag = m.razdely.some(function (o) { return o.k === 'kontrakty'; }) ? 'Суды, приставы, госконтракты — подробно' : 'Суды и приставы — подробно';
+return '<section class="dl" aria-labelledby="dl-h"><h3 class="dl__h" id="dl-h">' + zag + '</h3>' + m.razdely.map(razdel).join('') + '</section>';
 }
 var CSS =
 '.dl{margin:0 0 20px}' +

@@ -262,6 +262,29 @@ def balans_nesveren(t):
     return bool(x and x[2] >= BALANS_POROG)
 
 
+# kartochki-nalogi-sverka-v1 ([Ночные-2] 16.11): ворота «налоги к выручке того же года» — по напечатанной странице.
+_NALOGI_FACT = re.compile(r'<span>Налоги и взносы за год</span><span class="fact__v">([0-9]+(?:,[0-9]+)?)(?:&nbsp;|\u00a0| )'
+                          r'(трлн|млрд|млн|тыс\.)?(?:&nbsp;|\u00a0| )?₽ за(?:&nbsp;|\u00a0| |&#160;)(\d{4})</span>')
+
+
+def nalogi_k_vyruchke_html(t):
+    """→ (год, выручка, налоги, доля) или None — по странице карточки (выручка ≥ 1 млрд ₽, налоги того же года > 0)."""
+    t = bez_tipografa(t)
+    g, z, n = _GOD_TAB.search(t), _DOHOD_TAB.search(t), _NALOGI_FACT.search(t)
+    if not g or not z or not n or n.group(3) != g.group(1):
+        return None
+    vyr = float(z.group(1).replace(",", ".")) * _MNOZH[z.group(2)]
+    nal = float(n.group(1).replace(",", ".")) * _MNOZH.get(n.group(2) or "", 1)
+    if vyr < BALANS_MIN_VYR or nal <= 0:
+        return None
+    return int(g.group(1)), vyr, nal, nal / vyr
+
+
+def nalogi_nesvereny(t):
+    x = nalogi_k_vyruchke_html(t)
+    return bool(x and x[3] < NALOGI_DOLYA_MIN)
+
+
 def kartochki_na_diske(koren=KOREN):
     """→ {ИНН: заглушка} опубликованных карточек: только то, что уже напечатано на странице."""
     papka = os.path.join(koren, PAPKA)
@@ -559,7 +582,8 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
             if inn in svezhie:
                 continue
             with open(os.path.join(papka, x["_papka"], "index.html"), encoding="utf-8") as fh:
-                if balans_nesveren(fh.read()):
+                t_ = fh.read()
+                if balans_nesveren(t_) or nalogi_nesvereny(t_):  # kartochki-nalogi-sverka-v1 — так же снимаем до сверки
                     nesv.add(inn)
         otchet["snyato_balans"] = sorted(nesv)
         svezhie |= nesv
@@ -1060,7 +1084,8 @@ def main(argv):
     if o.get("s_diska"):
         print("Добор (--dobavit): опубликованных карточек оставлено как есть: %d." % o["s_diska"])
         if o.get("snyato_balans"):  # kartochki-balans-sverka-v1
-            print("Снято до сверки единиц ГИР БО (выручка ×%d+ к балансу того же года): %s." % (BALANS_POROG, ", ".join(o["snyato_balans"])))
+            print("Снято до сверки единиц ГИР БО (выручка ×%d+ к балансу или налоги < %s %% выручки того же года): %s." % (
+                BALANS_POROG, str(NALOGI_DOLYA_MIN * 100).replace(".", ","), ", ".join(o["snyato_balans"])))
     if o.get("nepolnye"):
         print("Из них по неполному ответу (реестр без финансов — анонимный доступ?): %d — не сняты, сведения прежние." % o["nepolnye"])
     if "sitemap_vsego" in o:

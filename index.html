@@ -1091,6 +1091,13 @@ html:not(.rezhim-otcheta) .vhody{padding-top:clamp(36px,4.5vw,56px)}
         document.getElementById('fbText').value=''; st.token=''; setTimeout(function(){panel.hidden=true;btn.disabled=false;panel.querySelector('h3').textContent='Как вам Делоскоп?'},2500);})
       .catch(fail);
   });
+  // proba-celi: нажатия плиток «Что умеет Делоскоп» и кнопки «Проверить компанию» в «Условиях» — цели Метрики тем же dlkGoal (без согласия не уходят); в параметрах только метка плитки и путь
+  document.addEventListener('click',function(e){var t=e.target;if(!t||!t.closest||!window.dlkGoal)return;
+    try{if(/(^|\D)(\d{12}|\d{15})(?!\d)/.test(location.href))return; // после проверки в адресе может стоять ИНН ИП — с такой страницы цель не шлём
+      var a=t.closest('#uslugi a[data-usluga]');
+      if(a)dlkGoal('uslugi_plitka',{produkt:a.getAttribute('data-usluga'),kuda:a.getAttribute('href'),mesto:'glavnaya'});
+      else if(t.closest('#price a[data-ceny-go]'))dlkGoal('usloviya_proverit',{mesto:'glavnaya'});}catch(_){}},true);
+  // /proba-celi
   // uslugi-vopros-v1: строка «Чего здесь не хватает?» под плитками услуг — тот же адрес и та же защита, что у «Отзыва»; вид «есть идея», без почты
   var uv=document.getElementById('uvForm');
   if(uv){var uvT=document.getElementById('uvText'),uvN=document.getElementById('uvNote'),uvB=uv.querySelector('button');

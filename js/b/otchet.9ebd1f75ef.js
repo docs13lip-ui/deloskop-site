@@ -3247,6 +3247,11 @@ return s;
 }
 function mal(s) { s = String(s || ''); return /^[А-ЯЁA-Z][а-яёa-z]/.test(s) ? s.charAt(0).toLowerCase() + s.slice(1) : s; }
 function num(v) { var n = Number(v); return v !== null && v !== '' && isFinite(n) ? n : null; }
+function naDatu(v) { var d = dmy(v); return d ? ' на' + NB + d : ''; }
+function poChasti(df, ot) {
+var n = Array.isArray(df && df.proizvodstva) ? df.proizvodstva.length : 0;
+return n > 0 && ot > n ? ' (по' + NB + chislo(n) + ' из' + NB + chislo(ot) + ')' : '';
+}
 function godOtchetnosti(r) {
 var D = (r && r.dossier) || {}, ch = D.charts || {}, g = null;
 (Array.isArray(ch.revenue) ? ch.revenue : []).forEach(function (x) {
@@ -3292,7 +3297,7 @@ var mm = /^Руководитель не менялся\s+(\d+\s*(?:год|го�
 if (mm) plus('rukovoditel', 'Руководитель не менялся ' + mm[1].replace(/\s+/, NB), reestr);
 });
 s = signal(r, 'tax_debt');
-if (s && s.status === 'ok') plus('tax_debt', 'Нет долгов по налогам', s.source, s.as_of);
+if (s && s.status === 'ok') plus('tax_debt', 'Недоимки по' + NB + 'данным ФНС не' + NB + 'нашли' + naDatu(s.as_of), s.source, s.as_of);
 else if (s && (s.status === 'warn' || s.status === 'bad')) {
 var sm = /^[\d\s ,]+₽/.exec(String(s.detail || ''));
 minus('tax_debt', 'Долг по налогам' + (sm ? ' ' + sm[0].trim().replace(/\s/g, NB) : ''), s.source, s.as_of);
@@ -3321,18 +3326,18 @@ var b = blok('sudy');
 if (b) {
 var st = sost(b), dn = b.dannye || {}, nz = num(dn.otvetchik_nezaversheno), sz = num(dn.otvetchik_summa_nezaversheno);
 if (st === 'found' && nz > 0) {
-var ne1 = nz % 10 === 1 && nz % 100 !== 11;
-minus('damia_sudy', 'Ответчик в' + NB + chislo(nz) + NB + (ne1 ? 'идущем деле' : 'идущих делах') + (sz > 0 ? ' на' + NB + rub(sz) : ''), b.istochnik, b.data_svedeniy, b.nazvanie);
-} else if (st === 'found' && nz === 0) plus('damia_sudy', 'Нет идущих дел против компании', b.istochnik, b.data_svedeniy, b.nazvanie);
+minus('damia_sudy', chislo(nz) + NB + skl(nz, 'незавершённое дело', 'незавершённых дела', 'незавершённых дел') + ', где компания — ответчик' +
+(sz > 0 ? '; требования к' + NB + 'компании — ' + rub(sz) : ''), b.istochnik, b.data_svedeniy, b.nazvanie);
+} else if (st === 'found' && nz === 0) plus('damia_sudy', 'Не нашли незавершённых дел, где компания — ответчик' + (naDatu(b.data_svedeniy) ? ',' + naDatu(b.data_svedeniy) : ''), b.istochnik, b.data_svedeniy, b.nazvanie);
 else if (st === 'found') minus('damia_sudy', 'Есть арбитражные дела', b.istochnik, b.data_svedeniy, b.nazvanie);
-else if (st === 'not_found') plus('damia_sudy', 'Нет арбитражных дел против компании', b.istochnik, b.data_svedeniy, b.nazvanie);
+else if (st === 'not_found') plus('damia_sudy', 'Не нашли арбитражных дел, где компания — ответчик' + (naDatu(b.data_svedeniy) ? ',' + naDatu(b.data_svedeniy) : ''), b.istochnik, b.data_svedeniy, b.nazvanie);
 }
 b = blok('fssp');
 if (b) {
 var sf = sost(b), df = b.dannye || {}, ot = num(df.otkryto), os = num(df.ostatok);
 if (sf === 'found') minus('damia_fssp', 'Производства у приставов' + (ot > 0 ? ': ' + chislo(ot) : '') +
-(os > 0 ? ', долг ' + (df.ostatok_tochno === false ? 'от' + NB + rub(os, true) : rub(os)) : ''), b.istochnik, b.data_svedeniy, b.nazvanie);
-else if (sf === 'not_found') plus('damia_fssp', 'Нет долгов у приставов', b.istochnik, b.data_svedeniy, b.nazvanie);
+(os > 0 ? ', остаток долга — ' + (df.ostatok_tochno === false ? 'не' + NB + 'меньше ' + rub(os, true) + poChasti(df, ot) : rub(os)) : ''), b.istochnik, b.data_svedeniy, b.nazvanie);
+else if (sf === 'not_found') plus('damia_fssp', 'Производств у' + NB + 'приставов не' + NB + 'нашли' + naDatu(b.data_svedeniy), b.istochnik, b.data_svedeniy, b.nazvanie);
 }
 b = blok('bankrotstvo');
 if (b) {
@@ -3350,13 +3355,13 @@ b = blok('mery');
 if (b && sost(b) === 'found') minus('damia_mery', 'Обеспечительные меры налоговой', b.istochnik, b.data_svedeniy, b.nazvanie);
 b = blok('rnp');
 var bk = blok('kontrakty'), vk = bk && sost(bk) === 'found' ? num((bk.dannye || {}).vsego) : null;
-if (b && sost(b) === 'found') minus('damia_rnp', 'В реестре недобросовестных поставщиков', b.istochnik, b.data_svedeniy, b.nazvanie);
+if (b && sost(b) === 'found') minus('damia_rnp', 'Есть запись в' + NB + 'реестре недобросовестных поставщиков' + naDatu(b.data_svedeniy), b.istochnik, b.data_svedeniy, b.nazvanie);
 if (vk > 0) plus('damia_kontrakty', 'Госконтракты как поставщик: ' + chislo(vk), bk.istochnik, bk.data_svedeniy, bk.nazvanie);
-if (b && sost(b) === 'not_found' && vk > 0) plus('damia_rnp', 'Нет в реестре недобросовестных поставщиков', b.istochnik, b.data_svedeniy, b.nazvanie);
+if (b && sost(b) === 'not_found' && vk > 0) plus('damia_rnp', 'Не нашли в' + NB + 'реестре недобросовестных поставщиков' + naDatu(b.data_svedeniy), b.istochnik, b.data_svedeniy, b.nazvanie);
 var z = r.zsk;
-if (z && (z.level === 'medium' || z.level === 'high') && z.title) minus('zsk', 'Прогноз ЗСК: ' + mal(z.title), 'оценка Делоскопа, не статус Банка России');
+if (z && (z.level === 'medium' || z.level === 'high') && z.title) minus('zsk', 'Наш прогноз по' + NB + 'признакам ЗСК: ' + mal(z.title) + ' — не' + NB + 'оценка Банка России', 'оценка Делоскопа, не статус Банка России');
 var pd = r.podderzhka;
-if (pd && pd.status === 'najdeno' && !fl) plus('podderzhka', 'Получала господдержку МСП', pd.istochnik, pd.data_nabora);
+if (pd && pd.status === 'najdeno' && !fl) plus('podderzhka', 'Есть в' + NB + 'реестре получателей поддержки МСП (ФНС)' + naDatu(pd.data_nabora), pd.istochnik, pd.data_nabora);
 (Array.isArray(D.concerns) ? D.concerns : []).forEach(function (t) {
 t = String(t || '').trim();
 if (t && !UZHE.test(t) && !(fl && /руководител/i.test(t))) minus('dossier', t, 'по ответу проверки');
@@ -3547,6 +3552,7 @@ slovo: 'не проверено', ton: 'ne', ist: kratkoIst(b && b.istochnik), i
 }
 function iz(b) { return { ist: kratkoIst(b.istochnik), ist_polno: b.istochnik || '', data: dmy(b.data_svedeniy), nazv: b.nazvanie || '' }; }
 function plitka(o, b) { var x = iz(b); for (var k in o) x[k] = o[k]; return x; }
+function rnpZapis(b) { var d = dmy(b && b.data_svedeniy); return 'есть запись в' + NB + 'реестре недобросовестных поставщиков' + (d ? ' на' + NB + d : ''); }
 function godProverki(r) {
 var t = Date.parse((r && r.checked_at) || '');
 return new Date((isFinite(t) ? t : Date.now()) + 3 * 3600 * 1000).getUTCFullYear();
@@ -3572,18 +3578,18 @@ var b = blok('sudy'), st = sost(b), d;
 if (b && st === 'found') {
 d = b.dannye || {};
 var nz = num(d.otvetchik_nezaversheno), vs = num(d.vsego), sz = num(d.otvetchik_summa_nezaversheno);
-if (nz !== null) T.push(plitka({ k: 'sudy', zag: 'Суды', c: chislo(nz), e: skl(nz, 'идущее дело', 'идущих дела', 'идущих дел') + ' против',
-pod: nz > 0 && sz > 0 ? 'иски на' + NB + denStr(sz) : (vs > 0 ? 'всего в' + NB + 'картотеке: ' + chislo(vs) : ''),
+if (nz !== null) T.push(plitka({ k: 'sudy', zag: 'Суды', c: chislo(nz), e: skl(nz, 'незавершённое дело', 'незавершённых дела', 'незавершённых дел') + ', где компания — ответчик',
+pod: nz > 0 && sz > 0 ? 'требования к' + NB + 'компании — ' + denStr(sz) : (vs > 0 ? 'всего в' + NB + 'картотеке: ' + chislo(vs) : ''),
 slovo: nz > 0 ? 'есть' : 'не нашли', ton: nz > 0 ? 'vnim' : 'net' }, b));
 else T.push(plitka({ k: 'sudy', zag: 'Суды', c: vs !== null ? chislo(vs) : '—', e: 'дел в' + NB + 'картотеке', slovo: 'есть', ton: 'vnim' }, b));
-} else if (b && st === 'not_found') T.push(plitka({ k: 'sudy', zag: 'Суды', c: '0', e: 'дел против', slovo: 'не нашли', ton: 'net' }, b));
+} else if (b && st === 'not_found') T.push(plitka({ k: 'sudy', zag: 'Суды', c: '0', e: 'дел, где компания — ответчик', slovo: 'не нашли', ton: 'net' }, b));
 else T.push(neProvereno('sudy', 'Суды', b, 'Арбитражные суды'));
 b = blok('fssp'); st = sost(b);
 if (b && st === 'found') {
 d = b.dannye || {};
 var ot = num(d.otkryto), zv = num(d.zapisej_vsego), os = num(d.ostatok), n1 = ot !== null ? ot : zv;
 T.push(plitka({ k: 'fssp', zag: 'Приставы', c: n1 !== null ? chislo(n1) : '—', e: n1 !== null ? skl(n1, 'производство', 'производства', 'производств') : 'производства есть',
-pod: os > 0 ? 'долг ' + (d.ostatok_tochno === false ? 'от' + NB + denStr(os, true) : denStr(os)) : '', slovo: 'есть', ton: 'vnim' }, b));
+pod: os > 0 ? 'остаток долга — ' + (d.ostatok_tochno === false ? 'не' + NB + 'меньше ' + denStr(os, true) : denStr(os)) : '', slovo: 'есть', ton: 'vnim' }, b));
 } else if (b && st === 'not_found') T.push(plitka({ k: 'fssp', zag: 'Приставы', c: '0', e: 'производств', slovo: 'не нашли', ton: 'net' }, b));
 else T.push(neProvereno('fssp', 'Приставы', b, 'Приставы'));
 b = blok('kontrakty'); st = sost(b);
@@ -3592,8 +3598,8 @@ if (b && st === 'found') {
 d = b.dannye || {};
 var vk = num(d.vsego), sm = num(d.summa), polno = !d.summa_ohvat || d.summa_ohvat === 'vse';
 T.push(plitka({ k: 'kontrakty', zag: 'Госконтракты', c: vk !== null ? chislo(vk) : '—', e: vk !== null ? skl(vk, 'контракт', 'контракта', 'контрактов') + ' и' + NB + 'договоров' : 'контракты есть',
-pod: vRnp ? 'есть запись в' + NB + 'РНП' : (sm > 0 && polno ? 'на' + NB + denStr(sm) : ''), slovo: 'есть', ton: vRnp ? 'vnim' : 'est' }, b));
-} else if (b && st === 'not_found') T.push(plitka({ k: 'kontrakty', zag: 'Госконтракты', c: '0', e: 'контрактов', pod: vRnp ? 'есть запись в' + NB + 'РНП' : '',
+pod: vRnp ? rnpZapis(rnp) : (sm > 0 && polno ? 'на' + NB + denStr(sm) : ''), slovo: 'есть', ton: vRnp ? 'vnim' : 'est' }, b));
+} else if (b && st === 'not_found') T.push(plitka({ k: 'kontrakty', zag: 'Госконтракты', c: '0', e: 'контрактов', pod: vRnp ? rnpZapis(rnp) : '',
 slovo: 'не нашли', ton: vRnp ? 'vnim' : 'net' }, b));
 else T.push(neProvereno('kontrakty', 'Госконтракты', b, 'Госконтракты'));
 b = blok('bankrotstvo'); st = sost(b);
@@ -3866,11 +3872,12 @@ var d = b.dannye || {}, vs = num(d.otvetchik), vsAll = num(d.vsego), nz = num(d.
 sz = num(d.otvetchik_summa_nezaversheno), sv = num(d.otvetchik_summa_vsego);
 if (vs === null) vs = vsAll;
 o.vid = 'est';
-o.kratko = nz !== null ? chislo(nz) + NB + skl(nz, 'идущее дело', 'идущих дела', 'идущих дел') + ' против' + (nz > 0 && sz > 0 ? ' · иски на' + NB + den(sz) : '')
+var dd = dmy(b.data_svedeniy), naD = dd ? ' на' + NB + dd : '';
+o.kratko = nz !== null ? chislo(nz) + NB + skl(nz, 'незавершённое дело', 'незавершённых дела', 'незавершённых дел') + ', где компания — ответчик' + (nz > 0 && sz > 0 ? ' · требования к' + NB + 'компании — ' + den(sz) : '')
 : (vs !== null ? chislo(vs) + NB + skl(vs, 'дело', 'дела', 'дел') + ' в' + NB + 'картотеке' : 'дела в картотеке');
 o.fakty = [];
-if (vs !== null) o.fakty.push({ t: 'Ответчик за всё время', z: chislo(vs) + NB + skl(vs, 'дело', 'дела', 'дел') + (sv > 0 ? ' на' + NB + den(sv) : '') });
-if (nz !== null) o.fakty.push({ t: 'Идут сейчас', z: nz > 0 ? chislo(nz) + (sz > 0 ? ' на' + NB + den(sz) : '') : 'нет', vnim: nz > 0 });
+if (vs !== null) o.fakty.push({ t: 'Ответчик — дел в' + NB + 'картотеке' + (dd ? ' (на' + NB + dd + ')' : ''), z: chislo(vs) + (sv > 0 ? '; требования — ' + den(sv) : '') });
+if (nz !== null) o.fakty.push({ t: 'Не завершены' + naD, z: nz > 0 ? chislo(nz) + (sz > 0 ? '; требования — ' + den(sz) : '') : 'не нашли', vnim: nz > 0 });
 var dela = (Array.isArray(d.dela) ? d.dela : []).filter(function (x) { return x && (x.nomer || x.data); }).map(function (x) {
 var s = num(x.summa), pb = String(x.pobeditel || '').trim();
 return {
@@ -3901,7 +3908,7 @@ dolg: ok > 0 ? den(ok) + (s > ok ? ' из' + NB + den(s) : '') : ok === 0 ? 'п�
 });
 pr.sort(function (a, b2) { return a.kd < b2.kd ? 1 : a.kd > b2.kd ? -1 : 0; });
 o.vid = 'est';
-o.kratko = (n !== null ? chislo(n) + NB + skl(n, 'производство', 'производства', 'производств') : 'производства есть') + (os > 0 ? ' · долг ' + (tochno ? den(os) : 'от' + NB + den(os, true)) : '');
+o.kratko = (n !== null ? chislo(n) + NB + skl(n, 'производство', 'производства', 'производств') : 'производства есть') + (os > 0 ? ' · остаток долга — ' + (tochno ? den(os) : 'не' + NB + 'меньше ' + den(os, true)) : '');
 o.fakty = [];
 if (n !== null) o.fakty.push({ t: 'Открыто производств', z: chislo(n), vnim: n > 0 });
 if (os > 0) o.fakty.push({ t: 'Остаток долга', z: tochno ? den(os) : 'не меньше ' + den(os, true), vnim: true });
@@ -3939,7 +3946,7 @@ zakazchik: storona(x.zakazchik || ''), summa: s > 0 ? den(s) : 'без сумм�
 sp.sort(function (a, b2) { return a.kd < b2.kd ? 1 : a.kd > b2.kd ? -1 : 0; });
 o.vid = 'est';
 o.kratko = (vs !== null ? chislo(vs) + NB + skl(vs, 'контракт или договор', 'контракта и договора', 'контрактов и договоров') + ' как поставщик' : 'контракты есть')
-+ (rs === 'found' ? ' · есть запись в' + NB + 'РНП' : '');
++ (rs === 'found' ? ' · есть запись в' + NB + 'реестре недобросовестных поставщиков' + (rd ? ' на' + NB + rd : '') : '');
 o.fakty = [];
 ['44', '223'].forEach(function (z) { var n = pz[z] && num(pz[z].vsego); if (n !== null && n !== undefined) o.fakty.push({ t: ZAKON[z], z: chislo(n) }); });
 if (!o.fakty.length && vs !== null) o.fakty.push({ t: 'Контрактов и договоров', z: chislo(vs) });

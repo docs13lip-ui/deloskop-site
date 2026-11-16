@@ -1,6 +1,6 @@
 /* Делоскоп — «Суды и приставы подробно» в отчёте по ИНН (план отчёта 15.11, п. 5; приоритет 16.11, п. 1).
  * Плитки «Суды» и «Приставы» (js/plitki.js) дают число; здесь — что за ним стоит, без ухода на чужие сайты:
- *   Суды — сколько дел против компании за всё время и сколько идут, суммы требований, 5 последних дел
+ *   Суды — сколько дел, где компания ответчик, в картотеке и сколько не завершены, суммы требований, 5 последних дел
  *          (номер со ссылкой на карточку в КАД, дата, истец, суд, сумма, стадия) и «Показать все загруженные».
  *   Приставы — открытые производства и остаток, предметы взыскания группами (налоги и взносы, зарплата, штрафы,
  *          госпошлины по суду, прочее) по загруженным производствам, 5 последних (номер, дата, предмет, остаток, отдел).
@@ -108,11 +108,13 @@
       sz = num(d.otvetchik_summa_nezaversheno), sv = num(d.otvetchik_summa_vsego);
     if (vs === null) vs = vsAll;
     o.vid = 'est';
-    o.kratko = nz !== null ? chislo(nz) + NB + skl(nz, 'идущее дело', 'идущих дела', 'идущих дел') + ' против' + (nz > 0 && sz > 0 ? ' · иски на' + NB + den(sz) : '')
+    // слова — правовая сверка 16.11, п. 1: «за всё время» и «на X» шире данных (Checko отдаёт часть списка; сумма исков — не долг)
+    var dd = dmy(b.data_svedeniy), naD = dd ? ' на' + NB + dd : '';
+    o.kratko = nz !== null ? chislo(nz) + NB + skl(nz, 'незавершённое дело', 'незавершённых дела', 'незавершённых дел') + ', где компания — ответчик' + (nz > 0 && sz > 0 ? ' · требования к' + NB + 'компании — ' + den(sz) : '')
       : (vs !== null ? chislo(vs) + NB + skl(vs, 'дело', 'дела', 'дел') + ' в' + NB + 'картотеке' : 'дела в картотеке');
     o.fakty = [];
-    if (vs !== null) o.fakty.push({ t: 'Ответчик за всё время', z: chislo(vs) + NB + skl(vs, 'дело', 'дела', 'дел') + (sv > 0 ? ' на' + NB + den(sv) : '') });
-    if (nz !== null) o.fakty.push({ t: 'Идут сейчас', z: nz > 0 ? chislo(nz) + (sz > 0 ? ' на' + NB + den(sz) : '') : 'нет', vnim: nz > 0 });
+    if (vs !== null) o.fakty.push({ t: 'Ответчик — дел в' + NB + 'картотеке' + (dd ? ' (на' + NB + dd + ')' : ''), z: chislo(vs) + (sv > 0 ? '; требования — ' + den(sv) : '') });
+    if (nz !== null) o.fakty.push({ t: 'Не завершены' + naD, z: nz > 0 ? chislo(nz) + (sz > 0 ? '; требования — ' + den(sz) : '') : 'не нашли', vnim: nz > 0 });
     var dela = (Array.isArray(d.dela) ? d.dela : []).filter(function (x) { return x && (x.nomer || x.data); }).map(function (x) {
       var s = num(x.summa), pb = String(x.pobeditel || '').trim();
       return {
@@ -144,7 +146,7 @@
     });
     pr.sort(function (a, b2) { return a.kd < b2.kd ? 1 : a.kd > b2.kd ? -1 : 0; });
     o.vid = 'est';
-    o.kratko = (n !== null ? chislo(n) + NB + skl(n, 'производство', 'производства', 'производств') : 'производства есть') + (os > 0 ? ' · долг ' + (tochno ? den(os) : 'от' + NB + den(os, true)) : '');
+    o.kratko = (n !== null ? chislo(n) + NB + skl(n, 'производство', 'производства', 'производств') : 'производства есть') + (os > 0 ? ' · остаток долга — ' + (tochno ? den(os) : 'не' + NB + 'меньше ' + den(os, true)) : '');
     o.fakty = [];
     if (n !== null) o.fakty.push({ t: 'Открыто производств', z: chislo(n), vnim: n > 0 });
     if (os > 0) o.fakty.push({ t: 'Остаток долга', z: tochno ? den(os) : 'не меньше ' + den(os, true), vnim: true });
@@ -185,7 +187,7 @@
     sp.sort(function (a, b2) { return a.kd < b2.kd ? 1 : a.kd > b2.kd ? -1 : 0; });
     o.vid = 'est';
     o.kratko = (vs !== null ? chislo(vs) + NB + skl(vs, 'контракт или договор', 'контракта и договора', 'контрактов и договоров') + ' как поставщик' : 'контракты есть')
-      + (rs === 'found' ? ' · есть запись в' + NB + 'РНП' : '');
+      + (rs === 'found' ? ' · есть запись в' + NB + 'реестре недобросовестных поставщиков' + (rd ? ' на' + NB + rd : '') : '');
     o.fakty = [];
     ['44', '223'].forEach(function (z) { var n = pz[z] && num(pz[z].vsego); if (n !== null && n !== undefined) o.fakty.push({ t: ZAKON[z], z: chislo(n) }); });
     if (!o.fakty.length && vs !== null) o.fakty.push({ t: 'Контрактов и договоров', z: chislo(vs) });

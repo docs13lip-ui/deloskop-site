@@ -42,16 +42,16 @@ function otvet(o) {
 
 test('суды и приставы, которых нет в concerns сервера, — в минусах, с суммой; «от» — вниз', () => {
   const S = PM.sobrat(otvet());
-  assert.deepStrictEqual(teksty(S.minusy), ['Ответчик в 946 идущих делах на 24,5 млрд ₽', 'Производства у приставов: 353, долг от 22,9 млн ₽']);
+  assert.deepStrictEqual(teksty(S.minusy), ['946 незавершённых дел, где компания — ответчик; требования к компании — 24,5 млрд ₽', 'Производства у приставов: 353, остаток долга — не меньше 22,9 млн ₽']);
   assert.strictEqual(S.minusy[0].nazv, 'Арбитражные суды');
   assert.strictEqual(S.minusy[0].data, '12.11.2026');
 });
 
 test('плюсы — по порядку важности; госконтракты и «не в РНП» — только у поставщика', () => {
   const S = PM.sobrat(otvet());
-  assert.deepStrictEqual(teksty(S.plyusy), ['Действующая компания', 'Нет долгов по налогам', 'Нет сообщений о банкротстве',
+  assert.deepStrictEqual(teksty(S.plyusy), ['Действующая компания', 'Недоимки по данным ФНС не нашли на 01.10.2026', 'Нет сообщений о банкротстве',
     'Нет отметок о недостоверности', 'На рынке 19 лет', 'Госконтракты как поставщик: 34 193', 'Руководитель не менялся 17 лет',
-    'Нет в реестре недобросовестных поставщиков']);
+    'Не нашли в реестре недобросовестных поставщиков']);
   const r = otvet(); r.damia.kontrakty.sostoyanie = 'not_found';
   const t = teksty(PM.sobrat(r).plyusy);
   assert.ok(!t.some((x) => /РНП|недобросовест|Госконтракты/.test(x)), t.join(' | '));
@@ -94,7 +94,7 @@ test('ЗСК — минус только при средней и высокой
   const r = otvet({ zsk: { level: 'medium', title: 'Средняя вероятность', groups: [] }, company: { reg_date: '2026-05-10' },
     signals: [{ id: 'age', title: 'Возраст компании', status: 'warn', detail: 'С 10.05.2026', source: 'ЕГРЮЛ' }] });
   const t = teksty(PM.sobrat(r).minusy);
-  assert.ok(t.includes('Прогноз ЗСК: средняя вероятность'), t.join(' | '));
+  assert.ok(t.includes('Наш прогноз по признакам ЗСК: средняя вероятность — не оценка Банка России'), t.join(' | '));
   assert.ok(t.includes('На рынке 6 месяцев'), t.join(' | '));
 });
 

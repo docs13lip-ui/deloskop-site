@@ -40,8 +40,8 @@ test('семь плиток в порядке плана: Суды · Прист
 test('суды: число — идущие дела против компании, с суммой исков; латунный кант', () => {
   const s = po(P.sobrat(otvet()), 'sudy');
   assert.strictEqual(bezNb(s.c), '1 426');
-  assert.strictEqual(bezNb(s.e), 'идущих дел против');
-  assert.strictEqual(bezNb(s.pod), 'иски на 2,6 млрд ₽');
+  assert.strictEqual(bezNb(s.e), 'незавершённых дел, где компания — ответчик');
+  assert.strictEqual(bezNb(s.pod), 'требования к компании — 2,6 млрд ₽');
   assert.strictEqual(s.slovo, 'есть');
   assert.strictEqual(s.ton, 'vnim');
   assert.strictEqual(s.ist, 'КАД', 'на плитке — коротко, чтобы влезла дата; полностью — в подсказке');
@@ -50,7 +50,7 @@ test('суды: число — идущие дела против компани
   assert.strictEqual(s.nazv, 'Арбитражные суды');
   // одно идущее дело — единственное число
   const r = otvet(); r.damia.sudy.dannye.otvetchik_nezaversheno = 1;
-  assert.strictEqual(bezNb(po(P.sobrat(r), 'sudy').e), 'идущее дело против');
+  assert.strictEqual(bezNb(po(P.sobrat(r), 'sudy').e), 'незавершённое дело, где компания — ответчик');
   // нет идущих — «не нашли», без канта, подпись — сколько дел всего в картотеке
   r.damia.sudy.dannye.otvetchik_nezaversheno = 0;
   const s0 = po(P.sobrat(r), 'sudy');
@@ -63,9 +63,9 @@ test('приставы: остаток посчитан не полностью 
   const f = po(P.sobrat(otvet()), 'fssp');
   assert.strictEqual(bezNb(f.c), '449');
   assert.strictEqual(f.e, 'производств');
-  assert.strictEqual(bezNb(f.pod), 'долг от 8,1 млн ₽');
+  assert.strictEqual(bezNb(f.pod), 'остаток долга — не меньше 8,1 млн ₽');
   const r = otvet(); r.damia.fssp.dannye.ostatok_tochno = true;
-  assert.strictEqual(bezNb(po(P.sobrat(r), 'fssp').pod), 'долг 8,2 млн ₽');
+  assert.strictEqual(bezNb(po(P.sobrat(r), 'fssp').pod), 'остаток долга — 8,2 млн ₽');
 });
 
 test('госконтракты: сумма по части контрактов не выдаётся за полную; РНП найден — подпись и кант', () => {
@@ -75,7 +75,7 @@ test('госконтракты: сумма по части контрактов 
   assert.strictEqual(k.ton, 'est');
   const r = otvet(); delete r.damia.kontrakty.dannye.summa_ohvat; r.damia.rnp.sostoyanie = 'found'; r.damia.rnp.status = 'polucheno';
   const k2 = po(P.sobrat(r), 'kontrakty');
-  assert.strictEqual(bezNb(k2.pod), 'есть запись в РНП');
+  assert.strictEqual(bezNb(k2.pod), 'есть запись в реестре недобросовестных поставщиков');
   assert.strictEqual(k2.ton, 'vnim');
 });
 

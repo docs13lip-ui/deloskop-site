@@ -76,6 +76,13 @@
   // «Ликвидирована» → «ликвидирована», но «ЕГРЮЛ …» и «ИНН …» — как есть
   function mal(s) { s = String(s || ''); return /^[А-ЯЁA-Z][а-яёa-z]/.test(s) ? s.charAt(0).toLowerCase() + s.slice(1) : s; }
   function num(v) { var n = Number(v); return v !== null && v !== '' && isFinite(n) ? n : null; }
+  // « на 12.10.2026» — дата сведений источника; нет даты — пусто
+  function naDatu(v) { var d = dmy(v); return d ? ' на' + NB + d : ''; }
+  // неполный список у приставов: « (по 20 из 449)» — по скольким производствам посчитан остаток
+  function poChasti(df, ot) {
+    var n = Array.isArray(df && df.proizvodstva) ? df.proizvodstva.length : 0;
+    return n > 0 && ot > n ? ' (по' + NB + chislo(n) + ' из' + NB + chislo(ot) + ')' : '';
+  }
 
   // последний год выручки ГИР БО (после сверок js/istochniki.js несверенные годы из рядов уже сняты)
   function godOtchetnosti(r) {
@@ -135,7 +142,8 @@
 
     // ---- налоги и люди ----
     s = signal(r, 'tax_debt');
-    if (s && s.status === 'ok') plus('tax_debt', 'Нет долгов по налогам', s.source, s.as_of);
+    // «нет долгов» — шире данных: набор ФНС — недоимка на свою дату, долг мог появиться позже (правовая сверка 16.11)
+    if (s && s.status === 'ok') plus('tax_debt', 'Недоимки по' + NB + 'данным ФНС не' + NB + 'нашли' + naDatu(s.as_of), s.source, s.as_of);
     else if (s && (s.status === 'warn' || s.status === 'bad')) {
       var sm = /^[\d\s ,]+₽/.exec(String(s.detail || ''));
       minus('tax_debt', 'Долг по налогам' + (sm ? ' ' + sm[0].trim().replace(/\s/g, NB) : ''), s.source, s.as_of);
@@ -166,22 +174,25 @@
 
     // ---- внешние реестры (суды, приставы, банкротство, счета, РНП, госконтракты) ----
     function blok(k) { var b = dm[k]; return b && typeof b === 'object' && b.nazvanie ? b : null; }
+    // слова — по правовая сверка 16.11, п. 1: «незавершённых дел, где компания — ответчик», «требования к компании — X» (сумма исков,
+    // не долг), «остаток долга — не меньше X (по n из N)», «не нашли на дату» вместо «нет долгов»
     var b = blok('sudy');
     if (b) {
       var st = sost(b), dn = b.dannye || {}, nz = num(dn.otvetchik_nezaversheno), sz = num(dn.otvetchik_summa_nezaversheno);
       if (st === 'found' && nz > 0) {
-        var ne1 = nz % 10 === 1 && nz % 100 !== 11;
-        minus('damia_sudy', 'Ответчик в' + NB + chislo(nz) + NB + (ne1 ? 'идущем деле' : 'идущих делах') + (sz > 0 ? ' на' + NB + rub(sz) : ''), b.istochnik, b.data_svedeniy, b.nazvanie);
-      } else if (st === 'found' && nz === 0) plus('damia_sudy', 'Нет идущих дел против компании', b.istochnik, b.data_svedeniy, b.nazvanie);
+        minus('damia_sudy', chislo(nz) + NB + skl(nz, 'незавершённое дело', 'незавершённых дела', 'незавершённых дел') + ', где компания — ответчик' +
+          (sz > 0 ? '; требования к' + NB + 'компании — ' + rub(sz) : ''), b.istochnik, b.data_svedeniy, b.nazvanie);
+      } else if (st === 'found' && nz === 0) plus('damia_sudy', 'Не нашли незавершённых дел, где компания — ответчик' + (naDatu(b.data_svedeniy) ? ',' + naDatu(b.data_svedeniy) : ''), b.istochnik, b.data_svedeniy, b.nazvanie);
       else if (st === 'found') minus('damia_sudy', 'Есть арбитражные дела', b.istochnik, b.data_svedeniy, b.nazvanie);
-      else if (st === 'not_found') plus('damia_sudy', 'Нет арбитражных дел против компании', b.istochnik, b.data_svedeniy, b.nazvanie);
+      else if (st === 'not_found') plus('damia_sudy', 'Не нашли арбитражных дел, где компания — ответчик' + (naDatu(b.data_svedeniy) ? ',' + naDatu(b.data_svedeniy) : ''), b.istochnik, b.data_svedeniy, b.nazvanie);
     }
     b = blok('fssp');
     if (b) {
       var sf = sost(b), df = b.dannye || {}, ot = num(df.otkryto), os = num(df.ostatok);
       if (sf === 'found') minus('damia_fssp', 'Производства у приставов' + (ot > 0 ? ': ' + chislo(ot) : '') +
-        (os > 0 ? ', долг ' + (df.ostatok_tochno === false ? 'от' + NB + rub(os, true) : rub(os)) : ''), b.istochnik, b.data_svedeniy, b.nazvanie);
-      else if (sf === 'not_found') plus('damia_fssp', 'Нет долгов у приставов', b.istochnik, b.data_svedeniy, b.nazvanie);
+        (os > 0 ? ', остаток долга — ' + (df.ostatok_tochno === false ? 'не' + NB + 'меньше ' + rub(os, true) + poChasti(df, ot) : rub(os)) : ''), b.istochnik, b.data_svedeniy, b.nazvanie);
+      // банк данных ФССП показывает только идущие производства, и не каждый долг доходит до приставов — «не нашли на дату»
+      else if (sf === 'not_found') plus('damia_fssp', 'Производств у' + NB + 'приставов не' + NB + 'нашли' + naDatu(b.data_svedeniy), b.istochnik, b.data_svedeniy, b.nazvanie);
     }
     b = blok('bankrotstvo');
     if (b) {
@@ -199,16 +210,16 @@
     if (b && sost(b) === 'found') minus('damia_mery', 'Обеспечительные меры налоговой', b.istochnik, b.data_svedeniy, b.nazvanie);
     b = blok('rnp');
     var bk = blok('kontrakty'), vk = bk && sost(bk) === 'found' ? num((bk.dannye || {}).vsego) : null;
-    if (b && sost(b) === 'found') minus('damia_rnp', 'В реестре недобросовестных поставщиков', b.istochnik, b.data_svedeniy, b.nazvanie);
+    if (b && sost(b) === 'found') minus('damia_rnp', 'Есть запись в' + NB + 'реестре недобросовестных поставщиков' + naDatu(b.data_svedeniy), b.istochnik, b.data_svedeniy, b.nazvanie);
     if (vk > 0) plus('damia_kontrakty', 'Госконтракты как поставщик: ' + chislo(vk), bk.istochnik, bk.data_svedeniy, bk.nazvanie);
     // не в РНП — плюс только у того, кто работает с госзаказом (иначе строка ни о чём)
-    if (b && sost(b) === 'not_found' && vk > 0) plus('damia_rnp', 'Нет в реестре недобросовестных поставщиков', b.istochnik, b.data_svedeniy, b.nazvanie);
+    if (b && sost(b) === 'not_found' && vk > 0) plus('damia_rnp', 'Не нашли в' + NB + 'реестре недобросовестных поставщиков' + naDatu(b.data_svedeniy), b.istochnik, b.data_svedeniy, b.nazvanie);
 
     // ---- прогноз ЗСК (наша оценка) и господдержка ----
     var z = r.zsk;
-    if (z && (z.level === 'medium' || z.level === 'high') && z.title) minus('zsk', 'Прогноз ЗСК: ' + mal(z.title), 'оценка Делоскопа, не статус Банка России');
+    if (z && (z.level === 'medium' || z.level === 'high') && z.title) minus('zsk', 'Наш прогноз по' + NB + 'признакам ЗСК: ' + mal(z.title) + ' — не' + NB + 'оценка Банка России', 'оценка Делоскопа, не статус Банка России');
     var pd = r.podderzhka;
-    if (pd && pd.status === 'najdeno' && !fl) plus('podderzhka', 'Получала господдержку МСП', pd.istochnik, pd.data_nabora);
+    if (pd && pd.status === 'najdeno' && !fl) plus('podderzhka', 'Есть в' + NB + 'реестре получателей поддержки МСП (ФНС)' + naDatu(pd.data_nabora), pd.istochnik, pd.data_nabora);
 
     // ---- замечания сервера, которых колонки не называют (например, недавняя смена руководителя) ----
     (Array.isArray(D.concerns) ? D.concerns : []).forEach(function (t) {

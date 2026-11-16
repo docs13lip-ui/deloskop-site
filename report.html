@@ -528,7 +528,7 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
       (window.Usloviya?'<h2>Условия сделки</h2><div data-usl></div>':(D?'<h2>Что запросить у контрагента до оплаты</h2><ul class="checklist">'+D.documents.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>':''))+
       '<h2>Что проверено</h2>'+(window.ChtoProvereno?ChtoProvereno.html(ChtoProvereno.sobrat(r,{razdely:window.PasportKontragenta&&PasportKontragenta.RAZDELY})):'<div class="sub">Опись проверки не загрузилась — обновите страницу.</div>')+
       '<div class="sign"><div>Проверку провёл (ФИО, должность)</div><div>Подпись, дата</div></div>'+
-      '<div class="foot">Отчёт фиксирует, какие сведения о контрагенте получены и на какую дату, — он может стать частью доказательств должной осмотрительности. Это оценка риска по открытым данным, а не решение банка или налогового органа.<br>Подлинность отчёта: <span class="link">'+esc(link)+'</span></div>';
+      '<div class="foot">Отчёт фиксирует, какие сведения о контрагенте получены и на какую дату, — он может стать частью доказательств должной осмотрительности. Это оценка риска по открытым данным, а не решение банка или налогового органа.<br>Подлинность отчёта: <span class="link">'+esc(link)+'</span><br>Делоскоп · deloskop.ru · делоскоп.рф</div>';
     msg.hidden=true; doc.hidden=false;
     if(window.Nedavnie)Nedavnie.add({inn:c.inn,name:c.name_short||name,level:lvl,id:id});
     var q4=doc.querySelector('[data-q4]');

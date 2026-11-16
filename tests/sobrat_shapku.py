@@ -240,7 +240,9 @@ def podval_html(r):
         # Ссылки остаются в разметке (поиск по странице и роботы их видят; Chrome раскрывает <details> при поиске).
         cols.append('<nav class="podval__col" aria-label="%s"><details class="podval__det" open><summary class="podval__h">%s</summary>'
                     '<ul>%s</ul></details></nav>' % (e(zag), e(zag), li))
-    stroka = "© 2026 Делоскоп"
+    # dva-adresa-v1 (решение владельца 16.11 «везде дублировать адрес делоскоп.рф»): оба адреса текстом, латинский первым;
+    # ссылкой не делаем — посетитель уже на сайте; sameAs, url и canonical — только deloskop.ru (основной адрес для поиска)
+    stroka = "© 2026 Делоскоп · deloskop.ru · делоскоп.рф"
     if r["_est"]:
         # rekv-podval-v2 (владелец 11.10): в подвале — только ОГРНИП; ФИО и ИНН — на /oferta/ и /rekvizity/ (ссылка «Реквизиты»)
         stroka += " · ОГРНИП %s" % e(r["ogrnip"])

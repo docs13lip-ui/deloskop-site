@@ -50,13 +50,13 @@ test('кратко и факты: всего как поставщик, по з�
 
 test('РНП найден — в кратком и фактом «на что смотреть»; склонения записей', () => {
   const g = razdel(D.sobrat(otvet({ rnp: 'found', rnpN: 2 })));
-  assert.strictEqual(bezNb(g.kratko), '34 193 контракта и договора как поставщик · есть запись в РНП');
+  assert.strictEqual(bezNb(g.kratko), '34 193 контракта и договора как поставщик · есть запись в реестре недобросовестных поставщиков на 12.10.2026');
   const f = g.fakty[g.fakty.length - 1];
   assert.strictEqual(bezNb(f.z), '2 действующие записи на 12.10.2026');
   assert.ok(f.vnim);
   const nol = razdel(D.sobrat(otvet({ kSost: 'not_found', sp: [], rnp: 'found', rnpN: 1 })));
   assert.strictEqual(nol.vid, 'est');
-  assert.strictEqual(bezNb(nol.kratko), '0 контрактов и договоров как поставщик · есть запись в РНП');
+  assert.strictEqual(bezNb(nol.kratko), '0 контрактов и договоров как поставщик · есть запись в реестре недобросовестных поставщиков на 12.10.2026');
 });
 
 test('список: свежие сверху, на виду 5, «Показать все загруженные», честно «загружены 7 последних из 34 193»; ссылки — только zakupki.gov.ru', () => {

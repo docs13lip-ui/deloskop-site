@@ -70,6 +70,8 @@
   }
   function iz(b) { return { ist: kratkoIst(b.istochnik), ist_polno: b.istochnik || '', data: dmy(b.data_svedeniy), nazv: b.nazvanie || '' }; }
   function plitka(o, b) { var x = iz(b); for (var k in o) x[k] = o[k]; return x; }
+  // «есть запись в реестре недобросовестных поставщиков на 12.10.2026» — с датой сведений (правовая сверка 16.11)
+  function rnpZapis(b) { var d = dmy(b && b.data_svedeniy); return 'есть запись в' + NB + 'реестре недобросовестных поставщиков' + (d ? ' на' + NB + d : ''); }
 
   function godProverki(r) {
     var t = Date.parse((r && r.checked_at) || '');
@@ -100,20 +102,21 @@
     if (b && st === 'found') {
       d = b.dannye || {};
       var nz = num(d.otvetchik_nezaversheno), vs = num(d.vsego), sz = num(d.otvetchik_summa_nezaversheno);
-      if (nz !== null) T.push(plitka({ k: 'sudy', zag: 'Суды', c: chislo(nz), e: skl(nz, 'идущее дело', 'идущих дела', 'идущих дел') + ' против',
-        pod: nz > 0 && sz > 0 ? 'иски на' + NB + denStr(sz) : (vs > 0 ? 'всего в' + NB + 'картотеке: ' + chislo(vs) : ''),
+      // слова — правовая сверка 16.11, п. 1: «незавершённых дел, где компания — ответчик», сумма исков — «требования», не долг
+      if (nz !== null) T.push(plitka({ k: 'sudy', zag: 'Суды', c: chislo(nz), e: skl(nz, 'незавершённое дело', 'незавершённых дела', 'незавершённых дел') + ', где компания — ответчик',
+        pod: nz > 0 && sz > 0 ? 'требования к' + NB + 'компании — ' + denStr(sz) : (vs > 0 ? 'всего в' + NB + 'картотеке: ' + chislo(vs) : ''),
         slovo: nz > 0 ? 'есть' : 'не нашли', ton: nz > 0 ? 'vnim' : 'net' }, b));
       else T.push(plitka({ k: 'sudy', zag: 'Суды', c: vs !== null ? chislo(vs) : '—', e: 'дел в' + NB + 'картотеке', slovo: 'есть', ton: 'vnim' }, b));
-    } else if (b && st === 'not_found') T.push(plitka({ k: 'sudy', zag: 'Суды', c: '0', e: 'дел против', slovo: 'не нашли', ton: 'net' }, b));
+    } else if (b && st === 'not_found') T.push(plitka({ k: 'sudy', zag: 'Суды', c: '0', e: 'дел, где компания — ответчик', slovo: 'не нашли', ton: 'net' }, b));
     else T.push(neProvereno('sudy', 'Суды', b, 'Арбитражные суды'));
 
-    // ---- Приставы: открытые производства и остаток («от» — когда посчитаны не все) ----
+    // ---- Приставы: открытые производства и остаток («не меньше» — когда посчитаны не все) ----
     b = blok('fssp'); st = sost(b);
     if (b && st === 'found') {
       d = b.dannye || {};
       var ot = num(d.otkryto), zv = num(d.zapisej_vsego), os = num(d.ostatok), n1 = ot !== null ? ot : zv;
       T.push(plitka({ k: 'fssp', zag: 'Приставы', c: n1 !== null ? chislo(n1) : '—', e: n1 !== null ? skl(n1, 'производство', 'производства', 'производств') : 'производства есть',
-        pod: os > 0 ? 'долг ' + (d.ostatok_tochno === false ? 'от' + NB + denStr(os, true) : denStr(os)) : '', slovo: 'есть', ton: 'vnim' }, b));
+        pod: os > 0 ? 'остаток долга — ' + (d.ostatok_tochno === false ? 'не' + NB + 'меньше ' + denStr(os, true) : denStr(os)) : '', slovo: 'есть', ton: 'vnim' }, b));
     } else if (b && st === 'not_found') T.push(plitka({ k: 'fssp', zag: 'Приставы', c: '0', e: 'производств', slovo: 'не нашли', ton: 'net' }, b));
     else T.push(neProvereno('fssp', 'Приставы', b, 'Приставы'));
 
@@ -124,8 +127,8 @@
       d = b.dannye || {};
       var vk = num(d.vsego), sm = num(d.summa), polno = !d.summa_ohvat || d.summa_ohvat === 'vse';
       T.push(plitka({ k: 'kontrakty', zag: 'Госконтракты', c: vk !== null ? chislo(vk) : '—', e: vk !== null ? skl(vk, 'контракт', 'контракта', 'контрактов') + ' и' + NB + 'договоров' : 'контракты есть',
-        pod: vRnp ? 'есть запись в' + NB + 'РНП' : (sm > 0 && polno ? 'на' + NB + denStr(sm) : ''), slovo: 'есть', ton: vRnp ? 'vnim' : 'est' }, b));
-    } else if (b && st === 'not_found') T.push(plitka({ k: 'kontrakty', zag: 'Госконтракты', c: '0', e: 'контрактов', pod: vRnp ? 'есть запись в' + NB + 'РНП' : '',
+        pod: vRnp ? rnpZapis(rnp) : (sm > 0 && polno ? 'на' + NB + denStr(sm) : ''), slovo: 'есть', ton: vRnp ? 'vnim' : 'est' }, b));
+    } else if (b && st === 'not_found') T.push(plitka({ k: 'kontrakty', zag: 'Госконтракты', c: '0', e: 'контрактов', pod: vRnp ? rnpZapis(rnp) : '',
       slovo: 'не нашли', ton: vRnp ? 'vnim' : 'net' }, b));
     else T.push(neProvereno('kontrakty', 'Госконтракты', b, 'Госконтракты'));
 

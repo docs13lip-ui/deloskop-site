@@ -138,6 +138,12 @@ select:disabled,input:disabled{background:var(--bg);color:var(--muted)}
 .sg__hud .sg__t,.sg__hud .sg__pr{color:var(--bad);font-weight:600}
 .sg-odna{grid-column:1/-1}
 .sg-glavnaya{grid-column:1/-1}.sg-glavnaya .pl__n{font-size:clamp(40px,7vw,56px)}
+/* admin-chestno-v1: «Стена ВКонтакте» — состояние словами, точка цвета состояния */
+.vk-slovo{margin:0 0 6px;font-size:17px;display:flex;align-items:center;gap:10px}
+.vk-tochka{width:10px;height:10px;border-radius:50%;background:var(--muted);flex:none}
+.vk-da .vk-tochka{background:var(--ok)} .vk-net .vk-tochka{background:var(--warn)} .vk-net-svyazi .vk-tochka{background:var(--bad)}
+.vk-poyasn{margin:0 0 14px}
+a.btn{display:inline-flex;align-items:center;text-decoration:none}
 .sg-svyaz{margin:10px 0 0;padding:10px 14px;border-radius:10px;background:var(--warn-bg);color:var(--warn);font-size:13px}
 </style>
 </head>
@@ -240,6 +246,10 @@ select:disabled,input:disabled{background:var(--bg);color:var(--muted)}
       <p class="note" id="bzNote" role="status" aria-live="polite"></p>
       <div id="bzGruppy"></div>
     </section>
+    <section class="card" id="vkSek" hidden>
+      <h2>Стена ВКонтакте</h2>
+      <div id="vkBox" aria-live="polite"></div>
+    </section>
     <section class="card">
       <h2>Данные ФНС</h2>
       <p class="sub" style="margin:0 0 14px" id="dSub">Открытые данные налоговой в нашей базе: что загружено и что идёт сейчас.</p>
@@ -307,7 +317,7 @@ select:disabled,input:disabled{background:var(--bg);color:var(--muted)}
     return fetch(API+path,opt).catch(function(){
       throw new Error(navigator.onLine===false?'Нет интернета: подключитесь и повторите.':'Нет связи с сервером Делоскопа. Повторите через минуту.')
     }).then(function(r){return r.json().catch(function(){return {}}).then(function(j){
-      if(!r.ok){var e=new Error(j&&typeof j.detail==='string'?j.detail:'Ошибка '+r.status+'. Повторите через минуту.');e.status=r.status;throw e}
+      if(!r.ok){var e=new Error(j&&typeof j.detail==='string'&&j.detail!=='Not Found'?j.detail:'Ошибка '+r.status+'. Повторите через минуту.');e.status=r.status;throw e}
       return j})})}
   function note(el,t,c){el.className='note'+(c?' '+c:'');el.textContent=t||''}
   function dt(s,withTime){if(!s)return '—';try{var o={day:'numeric',month:'short',year:'numeric',timeZone:'Europe/Moscow'};if(withTime){o.hour='2-digit';o.minute='2-digit'}return new Date(s).toLocaleString('ru-RU',o)}catch(_){return s}}
@@ -392,13 +402,24 @@ select:disabled,input:disabled{background:var(--bg);color:var(--muted)}
     call('/api/admin/data/run',{method:'POST',body:{}}).then(function(j){note($('dNote'),j.message,'ok');setTimeout(function(){loadData()},4000)})
       .catch(function(err){note($('dNote'),err.message,'err');b.disabled=false})};
   if(!API){$('loading').textContent='Админка работает на deloskop.ru.';return}
-  loadSummary().then(function(){
+  // admin-chestno-v1 (16.11): вход решает только /api/admin/summary. Отказ одного блока (как 404 у отзывов 16.11)
+  // пишется в самом блоке, а не в #denyText: остальная админка работает, и это видно.
+  function nesprav(t,err){return t+' сейчас не загрузился'+(err&&err.status?' (ответ сервера '+err.status+')':'')+'. Обновите страницу через минуту.'}
+  function blok(f,ploho){try{return Promise.resolve(f()).catch(ploho)}catch(err){ploho(err);return Promise.resolve()}}
+  function vojti(){
     $('loading').hidden=true;$('adm').hidden=false;
-    if(window.DlkScheta)DlkScheta.start(call,function(){return isAdmin},$('me').textContent);
-    if(window.DlkBazy)DlkBazy.start(call,function(){return isAdmin});
+    var A=function(){return isAdmin},tiho=function(){};
+    if(window.DlkScheta)blok(function(){return DlkScheta.start(call,function(){return isAdmin},$('me').textContent)},tiho);
+    if(window.DlkBazy)blok(function(){return DlkBazy.start(call,function(){return isAdmin})},tiho);
     if(window.DlkDokumenty)try{DlkDokumenty.start(call,function(){return isAdmin})}catch(_){}
-    return Promise.all([loadData(),loadUsers(),loadFeedback(),loadLog()]);
-  }).catch(function(err){
+    if(window.DlkVkStena)blok(function(){return DlkVkStena.start(call,A,API)},tiho);
+    return Promise.all([
+      blok(loadData,function(err){note($('dNote'),nesprav('Список наборов',err),'err')}),
+      blok(loadUsers,function(err){note($('uNote'),nesprav('Список пользователей',err),'err')}),
+      blok(loadFeedback,function(err){$('fb').innerHTML='<p class="empty">'+esc(nesprav('Список отзывов',err))+'</p>'}),
+      blok(loadLog,function(err){$('log').innerHTML='<li class="empty" style="border:0">'+esc(nesprav('Журнал',err))+'</li>'})]);
+  }
+  loadSummary().then(vojti,function(err){
     $('loading').hidden=true;$('deny').hidden=false;
     $('denyText').textContent=err.status===401?'Сначала войдите в кабинет по коду из письма, потом вернитесь сюда.':err.message;
   });
@@ -410,6 +431,7 @@ select:disabled,input:disabled{background:var(--bg);color:var(--muted)}
 <script src="/js/admin-bazy.js"></script>
 <script src="/js/admin-pult.js"></script>
 <script src="/js/admin-segodnya.js"></script>
+<script src="/js/admin-vk-stena.js"></script>
 <script src="/obnovleniya.js" defer></script>
 </body>
 </html>

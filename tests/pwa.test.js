@@ -57,6 +57,23 @@ test('service worker: API и чужие адреса не перехватыва
   }
 });
 
+test('sw-svezhie-stranicy-v1: страница — сначала сеть со сверкой у сервера, запас только при обрыве', () => {
+  const sw = chitat('sw.js');
+  // навигация идёт в stranica(), и та первым делом спрашивает сеть в режиме no-cache
+  assert.match(sw, /if \(z\.mode === 'navigate'\) \{ e\.respondWith\(stranica\(z, url\)\); return; \}/);
+  const f = /function stranica\(zapros, url\) \{([\s\S]*?)\n\}/.exec(sw)[1];
+  assert.match(f, /return sverit\(zapros\)\.then\(/, 'первым — сеть');
+  assert.ok(f.indexOf('caches.match') > f.indexOf('.catch('), 'копия страницы — только в .catch (обрыв сети)');
+  assert.match(sw, /new Request\(zapros, \{ cache: 'no-cache' \}\)/, 'режим браузера («назад», «из истории») не наследуем');
+  assert.doesNotMatch(f, /fetch\(zapros\)/, 'голый fetch страницы без сверки не остался');
+  // версия сменилась — копии страниц прежнего service worker удаляются при активации
+  assert.doesNotMatch(sw, /VERSIYA = 'pwa-v1'/);
+  assert.match(sw, /n\.indexOf\('dlk-'\) === 0 && n !== OBOLOCHKA && n !== STRANICY/);
+  // шрифты и картинки — по-прежнему из запаса, скрипты и стили — сеть → запас
+  assert.match(sw, /if \(NADOLGO\.test\(url\.pathname\)\) \{ e\.respondWith\(izKesha\(z\)\); return; \}/);
+  assert.match(sw, /if \(OBOLOCHKA_RE\.test\(url\.pathname\)\) \{ e\.respondWith\(svezhee\(z\)\); return; \}/);
+});
+
 test('офлайн-экран: самодостаточный, не индексируется, не в sitemap', () => {
   const h = chitat('offline.html');
   assert.match(h, /<h1>Нет сети&nbsp;— последние проверки ниже<\/h1>/);

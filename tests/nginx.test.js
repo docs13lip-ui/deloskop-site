@@ -13,6 +13,8 @@ const { spawnSync } = require('child_process');
 
 const KOREN = path.join(__dirname, '..');
 const CONF = fs.readFileSync(path.join(KOREN, 'deploy/nginx.conf'), 'utf8');
+// domeny-301-v1: делоскоп.рф, дело-скоп.рф (punycode), deloscop.ru, deloscop.online, deloskop.online
+const ZERKALA = ['xn--d1acpdpbhn.xn--p1ai', 'xn----gtbdvdscip.xn--p1ai', 'deloscop.ru', 'deloscop.online', 'deloskop.online'];
 const DOCKERFILE = fs.readFileSync(path.join(KOREN, 'Dockerfile'), 'utf8');
 const ZAGOLOVKI = fs.readFileSync(path.join(KOREN, 'deploy/zagolovki.conf'), 'utf8');
 const ZAGOLOVKI_V_OBRAZE = '/etc/nginx/deloskop/zagolovki.conf';
@@ -203,6 +205,15 @@ http { include ${MIME}; default_type application/octet-stream; access_log off;
     }
   }
   assert.strictEqual((await zapros(port, '/', 'HEAD', 'www.deloskop.ru')).h.server, 'nginx', 'www: без номера версии');
+  // domeny-301-v1: пять дополнительных доменов и их www — тоже один 301 с тем же путём и параметрами
+  for (const host of ZERKALA.concat(ZERKALA.map(h => 'www.' + h), ['XN--D1ACPDPBHN.XN--P1AI', 'deloscop.ru:443'])) {
+    const w = await zapros(port, '/tarify/?ot=pechat&x=1', 'GET', host);
+    assert.strictEqual(w.kod, 301, `${host} → 301`);
+    assert.strictEqual(w.h.location, 'https://deloskop.ru/tarify/?ot=pechat&x=1', `${host} → тот же путь на основном адресе`);
+    assert.strictEqual(w.h['strict-transport-security'], HSTS, `${host} → 301 с HSTS`);
+  }
+  // чужое имя (не наше) по-прежнему ловит основной сервер — правило не сужает default_server
+  assert.strictEqual((await zapros(port, '/nalogi/', 'GET', 'deloskop.online.example')).kod, 200, 'похожее чужое имя — не наш редирект');
   // основной адрес и технический домен Timeweb — по-прежнему сайт, а не редирект (иначе петля)
   for (const host of ['deloskop.ru', 'deloskop-site-nginx.twc1.net', '127.0.0.1']) {
     assert.strictEqual((await zapros(port, '/nalogi/', 'GET', host)).kod, 200, host);
@@ -234,18 +245,36 @@ http { include ${MIME}; default_type application/octet-stream; access_log off;
 });
 
 test('www-301-v1: www ведёт на основной адрес, основной сервер — по умолчанию', () => {
-  const bloki = CONF.split(/^server \{/m).slice(1);
-  assert.strictEqual(bloki.length, 2, 'два сервера: www и основной');
+  const bloki = CONF.split(/^server \{/m).slice(1).map(b => b.split(/^\}/m)[0]); // тело блока без комментариев после него
+  assert.strictEqual(bloki.length, 3, 'три сервера: www, дополнительные домены и основной');
   const www = bloki.find(b => /server_name www\.deloskop\.ru;/.test(b));
   assert.ok(www, 'отдельный сервер для www');
   assert.match(www, /return 301 https:\/\/deloskop\.ru\$request_uri;/, 'тот же путь и параметры, схема https');
   assert.doesNotMatch(www, /default_server/, 'www не должен ловить чужие имена');
   assert.match(www, /server_tokens off;/);
-  const osn = bloki.find(b => b !== www);
+  const osn = bloki.find(b => /default_server/.test(b));
   assert.match(osn, /listen 80 default_server;/);
   assert.doesNotMatch(osn, /server_name [^;]*www/, 'основной сервер www не обслуживает');
   // проверка живого знает про www
   assert.match(fs.readFileSync(path.join(KOREN, 'deploy/proverka_zhivogo.js'), 'utf8'), /https:\/\/www\.deloskop\.ru/);
+});
+
+test('domeny-301-v1: пять дополнительных доменов и их www — 301 на https://deloskop.ru с тем же путём', () => {
+  const bloki = CONF.split(/^server \{/m).slice(1).map(b => b.split(/^\}/m)[0]); // тело блока без комментариев после него
+  const z = bloki.find(b => /xn--d1acpdpbhn\.xn--p1ai/.test(b));
+  assert.ok(z, 'отдельный сервер для дополнительных доменов');
+  const imena = /server_name ([^;]+);/.exec(z)[1].trim().split(/\s+/).sort();
+  assert.deepStrictEqual(imena, ZERKALA.concat(ZERKALA.map(h => 'www.' + h)).sort(), 'ровно пять имён и их www');
+  assert.match(z, /return 301 https:\/\/deloskop\.ru\$request_uri;/);
+  assert.match(z, /include \/etc\/nginx\/deloskop\/zagolovki\.conf;/, 'HSTS и на 301');
+  assert.match(z, /server_tokens off;/);
+  assert.doesNotMatch(z, /default_server|deloskop\.ru[ ;]/, 'основного адреса в списке нет — иначе петля');
+  // punycode = кириллица из решения владельца
+  assert.strictEqual(require('url').domainToASCII('делоскоп.рф'), 'xn--d1acpdpbhn.xn--p1ai');
+  assert.strictEqual(require('url').domainToASCII('дело-скоп.рф'), 'xn----gtbdvdscip.xn--p1ai');
+  // основной сервер остаётся сервером по умолчанию и чужие имена не перечисляет
+  const osn = bloki.find(b => /listen 80 default_server;/.test(b));
+  assert.match(osn, /server_name _;/);
 });
 
 test('проверка живого: набор совпадает с конфигом (без nginx)', () => {

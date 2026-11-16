@@ -20,7 +20,7 @@ function telo(imya) {
 
 test('runCheck в самом начале закрывает подсказки и откладывает опрос', () => {
   const r = telo('runCheck');
-  const z = r.indexOf('zakrytPodskazki()'), f = r.indexOf('fetch(');
+  const z = r.indexOf('zakrytPodskazki()'), f = r.indexOf('zaprosProverki('); // skorost-otveta-v1: запрос /api/check — через zaprosProverki (срок и повтор)
   assert.ok(z > 0 && f > z, 'zakrytPodskazki() должна стоять до запроса /api/check');
   assert.ok(r.indexOf('clearTimeout(oprosT)') > 0 && r.indexOf('clearTimeout(oprosT)') < f, 'новая проверка должна откладывать опрос');
 });

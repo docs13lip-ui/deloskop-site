@@ -13,7 +13,7 @@ const G = chitat('index.html');
 const MAIN = vidimoe(G.slice(G.indexOf('<main'), G.indexOf('</main>')));
 const tekst = (t) => t.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;|\u00a0/g, ' ');
 
-test('порядок блоков: hero → входы → услуги → Щит → разборы → цены → вопросы', () => {
+test('порядок блоков: hero (с услугами внутри) → входы → Щит → разборы → цены → вопросы', () => {
   // bez-otkuda-v1 (13.11): раздела «Откуда данные и чего мы не проверяем» (#doverie, #why) на главной нет
   // vitrina-v1: «Витрина экосистемы» (tests/sobrat_vitrinu.py) — сразу после входов.
   // platyat-pozzhe-v1: «Контрагенты стали платить позже» — между разборами и калькулятором; при устаревшей сверке сборщик его убирает
@@ -22,7 +22,9 @@ test('порядок блоков: hero → входы → услуги → Щи
   // glavnaya-uslugi-v1 (решение владельца 15.11 «главная должна продавать услуги и показать, что может проект»): после входов —
   // «Что умеет Делоскоп», шесть плиток-ссылок (не витрина экосистемы: без экспонатов, без «в разработке»; каталог — /vse-vozmozhnosti/)
   assert.ok(!/id="vitrina"/.test(MAIN), 'витрины на главной нет');
-  const ids = ['class="hero"', 'id="vhody"', 'id="uslugi"', 'id="shield"', 'id="praktika"', 'id="price"', 'id="faq"'];
+  // kuchnee-glavnaya-v1 (16.11, «всё кучнее и информативнее»: строка, пример ответа и «Что умеет» — на первом экране компьютера):
+  // «Что умеет Делоскоп» — внутри первого экрана, после примера ответа; «С чего начнём?» — следом
+  const ids = ['class="hero"', 'id="uslugi"', 'id="vhody"', 'id="shield"', 'id="praktika"', 'id="price"', 'id="faq"'];
   assert.ok(!/id="(doverie|why)"/.test(MAIN), 'раздела об источниках на главной нет');
   assert.ok(!/<section[^>]+id="(rynok|oshibka)"/.test(MAIN), 'секций #rynok и #oshibka на главной больше нет');
   const poz = ids.map((x) => MAIN.indexOf(x));

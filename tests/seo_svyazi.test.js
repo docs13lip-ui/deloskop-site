@@ -74,7 +74,8 @@ test('подвал: «Мы в Telegram» и «Мы в Одноклассника
     const m = s.match(/<!--podval-->[\s\S]*?<!--\/podval-->/);
     if (!m) continue;
     if (!m[0].includes('<a href="' + TG + '" rel="me noopener">Мы&nbsp;в&nbsp;Telegram</a>')
-      || !m[0].includes('<a href="' + OK + '?utm_source=site" rel="me noopener">Мы&nbsp;в&nbsp;Одноклассниках</a>')) bez.push(path.relative(ROOT, p));
+      || !m[0].includes('<a href="' + OK + '?utm_source=site" rel="me noopener">Мы&nbsp;в&nbsp;Одноклассниках</a>')
+      || !m[0].includes('<a href="https://dzen.ru/deloskop?utm_source=site" rel="me noopener">Мы&nbsp;в&nbsp;Дзене</a>')) bez.push(path.relative(ROOT, p));
     // переписку в Telegram не ведём: ссылок вида «написать» (t.me/…bot, tg://) в подвале нет
     assert.ok(!/tg:\/\/|t\.me\/[A-Za-z0-9_]*bot\b/i.test(m[0]), path.relative(ROOT, p));
   }
@@ -118,7 +119,8 @@ test('lastmod: отпечаток не видит шапку, подвал, по
 // [Право] 15.11 (разд. 2): «идентификатор», «30 дней», «В Telegram мы переписку не ведём»; кнопки «Написать
 // в Telegram» на сайте нет, пока не подано уведомление по ст. 12 152-ФЗ.
 test('sameAs: ВКонтакте, Telegram и Одноклассники — одним и тем же списком на всех страницах', () => {
-  const NADO = JSON.stringify([VK, 'https://t.me/deloskop', 'https://ok.ru/group/70000060184759']);
+  // admin-chestno-v1 (16.11): + Дзен — канал открыт 16.11, публикации есть
+  const NADO = JSON.stringify([VK, 'https://t.me/deloskop', 'https://ok.ru/group/70000060184759', 'https://dzen.ru/deloskop']);
   const raznye = new Set();
   let n = 0;
   for (const p of VSE) {

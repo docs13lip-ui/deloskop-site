@@ -235,6 +235,30 @@ if (Array.isArray(ch[k])) ch[k] = ch[k].filter(function (x) { return !(x && goda
 (D && Array.isArray(D.sections) ? D.sections : []).forEach(function (sk) {
 if (sk && sk.id === 'dynamics' && Array.isArray(sk.rows)) sk.rows = sk.rows.filter(function (x) { return !(Array.isArray(x) && /^\d{4}$/.test(String(x[0]).trim()) && goda[+String(x[0]).trim()]); });
 });
+if (D && Array.isArray(D.kpi)) {
+var poGodam = {};
+src.forEach(function (x) { var g = x && parseInt(x.god, 10); if (g >= 2000 && g <= 2100) poGodam[g] = Array.isArray(x.pokazateli) && x.pokazateli.length ? x.pokazateli : ['vyruchka', 'pribyl']; });
+var RYAD = { 'Выручка': ['vyruchka', ch && ch.revenue], 'Чистая прибыль': ['pribyl', ch && ch.profit] }, vyrNe = false;
+Object.keys(poGodam).forEach(function (g) { if (poGodam[g].indexOf('vyruchka') >= 0) vyrNe = true; });
+D.kpi = D.kpi.filter(function (k) {
+var L = String((k && k.label) || ''), m = /^(Выручка|Чистая прибыль) за (\d{4})$/.exec(L);
+if (vyrNe && /^Налоговая нагрузка/i.test(L)) return false;
+if (!m || !poGodam[+m[2]] || poGodam[+m[2]].indexOf(RYAD[m[1]][0]) < 0) return true;
+var a = ryadGod(RYAD[m[1]][1]).filter(function (x) { return !goda[x.g]; }), p = a.length ? a[a.length - 1] : null;
+if (!p) return false;
+var pr = a.filter(function (x) { return x.g === p.g - 1; })[0];
+k.label = m[1] + ' за ' + p.g; k.value = p.v; k.delta = pr && pr.v > 0 ? Math.round((p.v / pr.v - 1) * 100) : null;
+return true;
+});
+}
+if (dv && goda[+dv.god]) {
+var rvS = ryadGod(ch && ch.revenue).filter(function (x) { return !goda[x.g] && x.v > 0; }), pv = rvS.length ? rvS[rvS.length - 1] : null;
+r.dengi.vyruchka = pv ? { summa: pv.v, god: pv.g, istochnik: 'ГИР БО ФНС, годовая бухгалтерская отчётность', zamena_za: +dv.god }
+: { summa: null, god: null, istochnik: dv.istochnik, zamena_za: +dv.god };
+if ('dolya' in r.dengi) r.dengi.dolya = null;
+if (r.dengi.doli && typeof r.dengi.doli === 'object') r.dengi.doli = null;
+dv = r.dengi.vyruchka;
+}
 var odin = spisok.length === 1, gt = odin ? spisok[0] + NB + 'год' : spisok.slice(0, -1).join(', ') + ' и' + NB + spisok[spisok.length - 1] + NB + 'годы';
 if (!pk.length) pk = ['доходы'];
 var chto = pk.length > 1 ? pk.slice(0, -1).join(', ') + ' и' + NB + pk[pk.length - 1] : pk[0];

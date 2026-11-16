@@ -240,6 +240,9 @@
   function cel(report, li) {
     var sel = li.getAttribute('data-pl-sel'), nazv = li.getAttribute('data-pl-nazv');
     if (sel) return report.querySelector('.ot-main ' + sel) || report.querySelector(sel);
+    // sudy-pristavy-v1: у «Судов» и «Приставов» есть свой раздел «подробно» (js/sudy-pristavy.js) — туда, он раскрывается
+    var k = li.getAttribute('data-pl'), dl = (k === 'sudy' || k === 'fssp') && report.querySelector('.dl [data-dl="' + k + '"]');
+    if (dl) return dl;
     var g = report.querySelector('.sut__g');
     if (!g || !nazv) return null;
     var dts = g.querySelectorAll('dt');

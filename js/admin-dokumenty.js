@@ -79,13 +79,13 @@
     '<path fill="#B58A32" d="M46.79 98.77A7.5 7.5 0 0 1 35.21 89.23L60.36 58.69A7.5 7.5 0 0 1 71.94 68.22ZM54 43a29 29 0 1 1 58 0a29 29 0 1 1 -58 0ZM64 43a19 19 0 1 0 38 0a19 19 0 1 0 -38 0ZM36.6 94a4.4 4.4 0 1 0 8.8 0a4.4 4.4 0 1 0 -8.8 0Z"/></svg>';
   function shapka(p, yur) {
     var prav = yur
-      ? "<b>Индивидуальный предприниматель " + v(p.fio, "______________") + "</b><span>ИНН" + NB + v(p.inn, "____________") + " · ОГРНИП" + NB + v(p.ogrnip, "_______________") + "</span><span>help@deloskop.ru · deloskop.ru</span>"
-      : "<b>Команда Делоскопа</b><span>Проверка контрагента по" + NB + "ИНН</span><span>help@deloskop.ru · deloskop.ru</span>";
+      ? "<b>Индивидуальный предприниматель " + v(p.fio, "______________") + "</b><span>ИНН" + NB + v(p.inn, "____________") + " · ОГРНИП" + NB + v(p.ogrnip, "_______________") + "</span><span>help@deloskop.ru · deloskop.ru · делоскоп.рф</span>"
+      : "<b>Команда Делоскопа</b><span>Проверка контрагента по" + NB + "ИНН</span><span>help@deloskop.ru · deloskop.ru · делоскоп.рф</span>";
     return '<div class="st" aria-hidden="true"></div>' +
       '<div class="sh"><div class="lg">' + ZNAK + "<b>Делоскоп</b></div><div class=\"rk\">" + prav + "</div></div>";
   }
   function niz(p, yur, snoska) {
-    var lev = yur ? "ИП " + esc(fioKorotko(p.fio)) + " · ИНН" + NB + v(p.inn, "____________") + " · ОГРНИП" + NB + v(p.ogrnip, "_______________") + " · help@deloskop.ru · deloskop.ru" : "Команда Делоскопа · help@deloskop.ru · deloskop.ru";
+    var lev = yur ? "ИП " + esc(fioKorotko(p.fio)) + " · ИНН" + NB + v(p.inn, "____________") + " · ОГРНИП" + NB + v(p.ogrnip, "_______________") + " · help@deloskop.ru · deloskop.ru · делоскоп.рф" : "Команда Делоскопа · help@deloskop.ru · deloskop.ru · делоскоп.рф";
     return (snoska ? '<div class="fn">' + snoska + "</div>" : "") +
       '<div class="vz"><img src="/img/dok/vizitka-oborot.jpg" alt=""><img src="/img/dok/vizitka-lico.jpg" alt="Визитка Делоскопа"></div>' +
       '<div class="qr"><div><img src="/img/dok/qr.svg" alt="QR-код: deloskop.ru"></div><span>deloskop.ru</span></div>' +
@@ -93,7 +93,7 @@
   }
   function liniya(nasha) { return '<div class="ln"' + (nasha ? " data-nasha" : "") + "><i></i><span>подпись</span></div>"; }
   function podpisA(p) { return '<div class="pa"><span>Индивидуальный предприниматель</span>' + liniya(true) + "<span>" + esc(fioKorotko(p.fio)) + "</span></div>"; }
-  function podpisB() { return '<div class="pb"><div>С' + NB + 'уважением,</div><b>Команда Делоскопа</b><div class="ss">help@deloskop.ru · deloskop.ru</div></div>'; }
+  function podpisB() { return '<div class="pb"><div>С' + NB + 'уважением,</div><b>Команда Делоскопа</b><div class="ss">help@deloskop.ru · deloskop.ru · делоскоп.рф</div></div>'; }
   function podpisA2(p, nash, ih, kto) {
     return '<div class="s2"><div><b>' + nash + "</b><span>ИП " + v(p.fio, "______________") + '</span><div class="pp">' + liniya(true) + "<span>" + esc(fioKorotko(p.fio)) + "</span></div></div>" +
       "<div><b>" + ih + "</b><span>" + v(kto, "______________________________") + '</span><div class="pp">' + liniya(false) + "<span>/ ______________ /</span></div><em>должность, фамилия и" + NB + "инициалы</em></div></div>";

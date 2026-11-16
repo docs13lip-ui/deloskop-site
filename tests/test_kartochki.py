@@ -2314,7 +2314,7 @@ class TestFsspIzDamia(unittest.TestCase):
         self.assertEqual(k["fakty"]["fssp"]["ton"], "ok")
         v = [x for x in K.vyvody(k) if x["kod"] == "V11"]
         self.assertTrue(v)
-        self.assertIn("Долгов у приставов не нашли", v[0]["tekst"])
+        self.assertIn("Производств у приставов не нашли", v[0]["tekst"])
 
     def test_nashli_v12_s_summoj(self):
         k = K.iz_check(self.zap("found", ostatok=250000))

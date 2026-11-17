@@ -16,6 +16,9 @@
  *    lyudi:    { segodnya, vchera_k_chasu, vchera, nedelya, proshlaya_nedelya, zahody_nedelya },
  *    proverki: { segodnya, gosti, voshedshie, limit, porog, vchera, nedelya },
  *    otkuda:   { poisk_yandex: n, vk: n, … }   — заходы извне за 7 дней по виду источника счётчика (vnutri не входит)
+ *    zahody:   { za_7_dnej: { izvne, pryamye }, segodnya: { izvne, pryamye } } — новые поля сервера (16.11, ✎ Штаба п. 8):
+ *              период может прийти и числом (= извне); по видам — в otkuda, если сервер их делит. Плитки «Откуда» и «Люди»
+ *              берут извне отсюда, когда otkuda пуст или нулевой (16.11: otkuda — 0, za_7_dnej.izvne — 12, экран писал «нет»).
  *    voronka:  { prishli, proverka, otchet, vhod, slezhenie } — за 7 дней, null = шаг не считается
  *    chitayut: [{ put: "/nalogi/…/", n }]      — топ-10 страниц за 7 дней
  *    posty:    [{ kampaniya: "rubrika-115", n }] — переходы по utm_campaign за 7 дней; null = сервер метку не хранит
@@ -43,6 +46,18 @@
     }).replace(/(\d) (%|₽)/g, "$1\u00a0$2"); // «56 %» не рвётся на телефоне
   }
   function proc(chast, celoe) { return celoe > 0 ? Math.round(chast * 100 / celoe) : 0; }
+  /* zahody-izvne-v1: новые поля сервера. Период — число (извне) или { izvne, pryamye } (прямые — и pryamoj, pryamyh).
+   * «Нет поля» → null, ноль — цифра. Без выдумок: суммы извне и прямых не складываем — сервер может считать их по-разному. */
+  function period(x) {
+    if (num(x) !== null) return { izvne: +x, pryamye: null };
+    if (!x || typeof x !== "object") return { izvne: null, pryamye: null };
+    var pr = [x.pryamye, x.pryamoj, x.pryamyh].map(num).filter(function (v) { return v !== null; });
+    return { izvne: num(x.izvne), pryamye: pr.length ? pr[0] : null };
+  }
+  function zahodyIz(z) {
+    z = z && typeof z === "object" ? z : {};
+    return { ned: period(z.za_7_dnej), seg: period(z.segodnya) };
+  }
   function seraya(zag, tekst, delat) { return { cvet: "seryj", zag: zag, cifra: "—", podpis: "", smysl: tekst, delat: delat || "", stroki: [] }; }
 
   /* 0. Одна цифра недели (11.11): сколько людей довели проверку до ответа и сколько вернулись в течение 7 дней.
@@ -69,14 +84,14 @@
   }
 
   /* 1. Люди */
-  function plLyudi(d, S) {
-    var T = S.lyudi;
+  function plLyudi(d, S, seichas, svodka) {
+    var T = S.lyudi, zn = zahodyIz(svodka && svodka.zahody).ned.izvne;
     if (!d || num(d.segodnya) === null) return seraya(T.zag, T.net);
     var seg = num(d.segodnya), ned = num(d.nedelya), pr = num(d.proshlaya_nedelya);
     var p = { cvet: "ok", zag: T.zag, cifra: chislo(seg), podpis: fmt(T.podpis, { n: seg }), stroki: [], delat: T.delat_ok };
     if (ned === 0 && seg === 0) { p.cvet = "seryj"; p.smysl = T.pusto; p.delat = T.pusto_delat; return p; }
     p.smysl = fmt(T.smysl, { vchera_k_chasu: num(d.vchera_k_chasu) !== null ? +d.vchera_k_chasu : S.net_dannyh,
-      nedelya: ned || 0, zahody: num(d.zahody_nedelya) || 0 });
+      nedelya: ned || 0, zahody: zn !== null ? zn : num(d.zahody_nedelya) || 0 });
     if (ned !== null && pr !== null && pr > 0) {
       var r = Math.round((ned - pr) * 100 / pr);
       if (r <= -40 && pr >= 50) { p.cvet = "warn"; p.smysl += " " + fmt(T.spad, { proc: -r }); p.delat = T.delat_spad; }
@@ -100,19 +115,31 @@
     return p;
   }
 
-  /* 3. Откуда приходят — заходы извне за 7 дней */
-  function plOtkuda(d, S) {
-    var T = S.otkuda;
-    if (!d || typeof d !== "object") return seraya(T.zag, T.net);
-    var vidy = Object.keys(d).filter(function (k) { return k !== "vnutri" && num(d[k]) !== null; });
+  /* 3. Откуда приходят — заходы извне за 7 дней. По видам — из otkuda; нет видов (или все нули) — из zahody сервера:
+   * извне и прямые за 7 дней строками, «сегодня» — в смысле. Плитка не пишет «заходов нет», если сервер их насчитал. */
+  function plOtkuda(d, S, seichas, svodka) {
+    var T = S.otkuda, z = zahodyIz(svodka && svodka.zahody);
+    var seg = "";
+    if (z.seg.izvne !== null) seg = " " + fmt(z.seg.pryamye !== null ? T.segodnya_s_pryamymi : T.segodnya, { izvne: z.seg.izvne, pryamye: z.seg.pryamye });
+    var vidy = d && typeof d === "object" ? Object.keys(d).filter(function (k) { return k !== "vnutri" && num(d[k]) !== null; }) : [];
     var vsego = vidy.reduce(function (a, k) { return a + (+d[k]); }, 0);
+    if (!vsego && (z.ned.izvne !== null || z.ned.pryamye !== null)) {
+      var n = z.ned.izvne !== null ? z.ned.izvne : 0;
+      var q = { cvet: "ok", zag: T.zag, cifra: chislo(n), podpis: fmt(T.podpis, { n: n }), stroki: [], delat: T.delat_ok, primechanie: T.grubo };
+      if (z.ned.izvne !== null) q.stroki.push({ tekst: T.stroka_izvne, n: z.ned.izvne, proc: null });
+      if (z.ned.pryamye !== null) q.stroki.push({ tekst: T.vidy.pryamoj, n: z.ned.pryamye, proc: null });
+      if (!n && !z.ned.pryamye) { q.cvet = "seryj"; q.smysl = T.pusto + seg; q.delat = ""; return q; }
+      q.smysl = T.bez_vidov + seg;
+      return q;
+    }
+    if (!d || typeof d !== "object") return seg ? Object.assign(seraya(T.zag, T.net), { smysl: T.net + seg }) : seraya(T.zag, T.net);
     var p = { cvet: "ok", zag: T.zag, cifra: chislo(vsego), podpis: fmt(T.podpis, { n: vsego }), stroki: [], delat: T.delat_ok, primechanie: T.grubo };
-    if (!vsego) { p.cvet = "seryj"; p.smysl = T.pusto; p.delat = ""; return p; }
+    if (!vsego) { p.cvet = "seryj"; p.smysl = T.pusto + seg; p.delat = ""; return p; }
     vidy.sort(function (a, b) { return d[b] - d[a] || (a < b ? -1 : 1); });
     p.stroki = vidy.filter(function (k) { return +d[k] > 0; }).map(function (k) {
       return { tekst: T.vidy[k] || k, n: +d[k], proc: proc(+d[k], vsego) };
     });
-    p.smysl = fmt(T.smysl, { glavnyj: T.vidy[vidy[0]] || vidy[0], proc: proc(+d[vidy[0]], vsego) });
+    p.smysl = fmt(T.smysl, { glavnyj: T.vidy[vidy[0]] || vidy[0], proc: proc(+d[vidy[0]], vsego) }) + seg;
     if (!(+d.vk > 0) && vsego >= MALO) { p.cvet = "warn"; p.smysl += " " + T.vk_nol; p.delat = T.vk_nol_delat; }
     return p;
   }
@@ -204,7 +231,7 @@
   // сводка → 8 плиток; сводки нет (сервер старый) — 8 серых с одной причиной
   function plitki(svodka, S, seichas) {
     if (!svodka || !svodka.est) return PLITKI.map(function (x) { return seraya(S[x[0]].zag, S.net_svodki, S.net_svodki_delat); });
-    return PLITKI.map(function (x) { var p = x[1](svodka[x[0]], S, seichas); p.id = x[0]; return p; });
+    return PLITKI.map(function (x) { var p = x[1](svodka[x[0]], S, seichas, svodka); p.id = x[0]; return p; });
   }
   function bezZhargona(p) {
     return !ZAPRET.test([p.cifra, p.podpis, p.smysl, p.delat, p.primechanie || ""].concat((p.stroki || []).map(function (s) { return s.tip || ""; })).join(" "));
@@ -215,7 +242,7 @@
 
   var api = { PERIOD_MS: PERIOD_MS, MALO: MALO, fmt: fmt, sklon: sklon, plitki: plitki, plLyudi: plLyudi, plProverki: plProverki,
     plCifra: plCifra, plOtkuda: plOtkuda, plVoronka: plVoronka, plChitayut: plChitayut, plPosty: plPosty, plPoisk: plPoisk, plGolos: plGolos,
-    tipStranicy: tipStranicy, bezZhargona: bezZhargona, vremyaMsk: vremyaMsk };
+    tipStranicy: tipStranicy, zahodyIz: zahodyIz, bezZhargona: bezZhargona, vremyaMsk: vremyaMsk };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   if (typeof document === "undefined") return;
   root.DlkSegodnya = api;

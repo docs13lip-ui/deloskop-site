@@ -5400,6 +5400,17 @@ def pochinit_slova_pravo(t):
     return t.replace("Долгов у приставов не нашли", "Производств у приставов не нашли")
 
 
+def pm_gody_bez(g, eg_d):
+    """«за 2022–2025 годы» — годы без открытой отчётности по дате сведений карточки (те же, что zo_gody); нет даты — «после 2021 года»."""
+    m = re.fullmatch(r"(\d{2})\.(\d{2})\.(\d{4})", eg_d or "")
+    gg = zo_gody(g, m.groups()) if m else None
+    if not gg:
+        return "после %d%sгода" % (g, NB)
+    if gg[0] == gg[1]:
+        return "за%s%d%sгод" % (NB, gg[0], NB)
+    return "за%s%d\u2060–\u2060%d%sгоды" % (NB, gg[0], gg[1], NB)  # U+2060: диапазон не рвётся на телефоне
+
+
 def plyusy_minusy_stroki(t):
     """Страница карточки → {plyusy: [...], minusy: [...], ne: [...]}; строка — (ключ, текст, источник, дата). Нет раздела реестров — None."""
     mr = _PM_REESTRY.search(t or "")
@@ -5457,7 +5468,8 @@ def plyusy_minusy_stroki(t):
         if g >= tek - 2:
             P.append(("otchetnost", "Отчётность за %d%sгод в%sГИР%sБО" % (g, NB, NB, NB), ist, d))
         else:
-            M.append(("otchetnost", "Последняя отчётность — за %d%sгод" % (g, NB), ist, d))
+            # otchetnost-ne-minus-v1 ([Право] 17.11, п. 1.3): закрытый доступ к ГИР БО — «нет данных», не минус
+            N.append("финансы %s (в%sоткрытых данных их нет)" % (pm_gody_bez(g, eg_d), NB))
     # внешние реестры
     v = fakty.get("Арбитражные дела, где компания — ответчик")
     if v:

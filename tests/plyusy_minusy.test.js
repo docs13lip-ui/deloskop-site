@@ -8,7 +8,7 @@ const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
 const PM = require('../js/plyusy-minusy.js');
-const bezNb = (t) => String(t).replace(/ /g, ' ');
+const bezNb = (t) => String(t).replace(/ /g, ' ').replace(/\u2060/g, '');
 const teksty = (a) => a.map((x) => bezNb(x.t));
 
 function otvet(o) {
@@ -82,11 +82,13 @@ test('минусы: налоговый долг, нет сотрудников, 
   assert.ok(!t.some((x) => /63/.test(x)), 'сумма из длинного значения признака в строку не идёт');
 });
 
-test('отчётность: свежая — плюс, старая — минус; ИП — без руководителя и отчётности', () => {
+test('отчётность: свежая — плюс, старая — «Не проверено» с годами, не минус; ИП — без руководителя и отчётности', () => {
   const r = otvet({ dossier: { charts: { revenue: [{ year: 2023, value: 1 }, { year: 2024, value: 5e6 }] } } });
   assert.ok(teksty(PM.sobrat(r).plyusy).includes('Отчётность за 2024 год в ГИР БО'));
   const st = otvet({ dossier: { charts: { revenue: [{ year: 2021, value: 5e6 }] } } });
-  assert.ok(teksty(PM.sobrat(st).minusy).includes('Последняя отчётность — за 2021 год'));
+  // otchetnost-ne-minus-v1 ([Право] 17.11, п. 1.3): закрытый доступ к ГИР БО — «нет данных», не минус
+  assert.ok(!teksty(PM.sobrat(st).minusy).some((x) => /тч[её]тност/.test(x)), 'старая отчётность — не минус');
+  assert.ok(teksty(PM.sobrat(st).ne).includes('финансы за 2022–2025 годы (в открытых данных их нет)'), teksty(PM.sobrat(st).ne).join(' | '));
   const ip = otvet({ company: { inn: '770000000012', kind: 'INDIVIDUAL' }, dossier: { charts: { revenue: [{ year: 2024, value: 5e6 }] } } });
   const ti = teksty(PM.sobrat(ip).plyusy).join(' | ');
   assert.ok(!/Руководитель|Отчётность/.test(ti), ti);
@@ -136,4 +138,18 @@ test('устаревшие сведения реестра (stale) — не пл
   const S = PM.sobrat(r);
   assert.ok(!teksty(S.plyusy).some((x) => /недобросовест/.test(x)));
   assert.ok(S.ne.map((x) => bezNb(x.t)).includes('РНП (сведения на 12.10.2026)'));
+});
+
+// otchetnost-ne-minus-v1 [Ночные запуски] 17.11
+test('старая отчётность: годы по дате проверки (до июня — на год меньше), одна строка «Не проверено», минусов не прибавляет', () => {
+  const a = otvet({ dossier: { charts: { revenue: [{ year: 2023, value: 5e6 }] } } });
+  a.checked_at = '2026-11-16';
+  assert.deepStrictEqual(teksty(PM.sobrat(a).ne).filter((x) => /финансы/.test(x)), ['финансы за 2024–2025 годы (в открытых данных их нет)']);
+  const b = otvet({ dossier: { charts: { revenue: [{ year: 2024, value: 5e6 }] } } });
+  b.checked_at = '2027-03-10';  // до июня отчётность за 2026 ещё не ждём: нет только 2025
+  assert.deepStrictEqual(teksty(PM.sobrat(b).ne).filter((x) => /финансы/.test(x)), ['финансы за 2025 год (в открытых данных их нет)']);
+  const s = PM.sobrat(a), h = PM.html(s);
+  assert.match(bezNb(h), /Не проверено:<\/b> финансы за 2024–2025 годы \(в открытых данных их нет\)/);
+  assert.match(h, new RegExp('data-minusy="' + s.minusy.length + '"'));
+  assert.ok(!/Последняя отчётность/.test(bezNb(h)));
 });

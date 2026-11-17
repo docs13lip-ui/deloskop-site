@@ -19,8 +19,8 @@ const S45 = 'dividendy-chistye-aktivy-nizhe-ustavnogo-vs-2026';
 
 test('Разборы № 47–49: данные — акты, итоги, копия, кнопки, перелинковка, входящие', () => {
   const D = JSON.parse(chitat('praktika/dela.json'));
-  assert.deepStrictEqual(D.razbory.slice(0, 4).map((x) => x.slug), [S45, S47, S48, S49], 'новые — первыми (№ 45 вышел позже)');
-  const [, r47, r48, r49] = D.razbory;
+  assert.deepStrictEqual(D.razbory.slice(1, 5).map((x) => x.slug), [S45, S47, S48, S49], 'новые — первыми (№ 45 вышел позже)'); // razbor54-dolya (17.11): +1
+  const [, , r47, r48, r49] = D.razbory;
   const st = (r) => r.dela.map((d) => d.nomer + ' ' + d.data + ' ' + d.itog + ' ' + d.itog_nov + ' ' + d.sverka_vid);
   assert.deepStrictEqual(st(r47), ['№ 307-ЭС26-4178 2026-10-26 На новое рассмотрение true kopiya']);
   assert.deepStrictEqual(st(r48), ['№ 307-ЭС26-6651 2026-11-09 На новое рассмотрение true kopiya']);
@@ -91,7 +91,7 @@ test('Разборы № 47–49: страницы собраны — h1, FAQPag
 
 test('Разбор № 45: суммы, даты, цитата — по определению; без названий сторон; перелинковка с № 47 и № 48', () => {
   const D = JSON.parse(chitat('praktika/dela.json'));
-  const r = D.razbory[0];
+  const r = D.razbory[1]; // razbor54-dolya (17.11): +1
   assert.strictEqual(r.slug, S45);
   assert.strictEqual(r.razdel, 'dogovory');
   assert.strictEqual(r.knopka.cel, 'razbor45_check');
@@ -99,7 +99,7 @@ test('Разбор № 45: суммы, даты, цитата — по опре�
   assert.ok(r.dela[0].delo.includes('А41-27237/2025'));
   assert.ok(r.title.length <= 70 && r.description.length <= 160);
   assert.ok(Object.values(D.ssylki_s_sajta).filter((v) => Array.isArray(v) && v.includes(S45)).length >= 2, '≥ 2 входящие');
-  assert.ok(r.pohozhie.includes(S47) && r.pohozhie.includes(S48));
+  assert.ok(r.pohozhie.includes(S47) && r.pohozhie.includes(S48)); // razbor54-dolya: первым в похожих — разбор о доле
   assert.ok(D.razbory.find((x) => x.slug === S47).pohozhie.includes(S45) && D.razbory.find((x) => x.slug === S48).pohozhie.includes(S45));
   const t = un(chitat('tests/praktika/' + S45 + '.html'));
   for (const s of ['1 929 747,32 ₽', '871 374,17 ₽', '165 млн ₽', '196 млн ₽', '2,8 млн ₽', 'абз. 5 п. 1 ст. 43', 'п. 9 ст. 42',

@@ -16,7 +16,7 @@
     "nalogi/nagruzka/index.html": ["utochnenka-i-peni-ens", "podarok-ot-rodstvennika-usn-vs-2026", "podarok-ot-roditelya-ip-ndfl-vs-2026", "droblenie-uplachennaya-usn-zachityvaetsya", "zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/nagruzka-po-otraslyam-2025/index.html": ["zemelnyj-nalog-izhs-koefficienty-ks-52-p"],
     "nalogi/priznaki-tehnicheskoj-kompanii/index.html": ["vokfors-rekonstrukciya", "ks-12-p-svidetel-po-svoej-proverke"],
-    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["dividendy-chistye-aktivy-nizhe-ustavnogo-vs-2026", "moratorij-dividendy-neustojka-vs-2026", "shtraf-za-prosrochku-zadatka-vs-2026", "vykup-uchastka-pod-domom-izhs-vs-2026", "trebovanie-ens-odin-raz-vs-2026", "sravnenie-cen-bez-nds-usn-zakupka", "garantiya-sverh-neustojki-vernut", "ustnyy-kartel-dohod-v-byudzhet-vs-2026", "svyazannye-kompanii-na-torgah-kartel-vs-2026", "kontejnery-na-selhozzemle-vs-2026", "nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026", "garantiya-vyplachena-otkaz-zakazchika-nezakonen", "zaem-inostrannoj-kompanii-schet-s-vs-2026"],
+    "nalogi/proverka-kontragenta-pered-dogovorom/index.html": ["dolya-vyhod-iz-ooo-rynochnaya-stoimost-vs-2026", "dividendy-chistye-aktivy-nizhe-ustavnogo-vs-2026", "moratorij-dividendy-neustojka-vs-2026", "shtraf-za-prosrochku-zadatka-vs-2026", "vykup-uchastka-pod-domom-izhs-vs-2026", "trebovanie-ens-odin-raz-vs-2026", "sravnenie-cen-bez-nds-usn-zakupka", "garantiya-sverh-neustojki-vernut", "ustnyy-kartel-dohod-v-byudzhet-vs-2026", "svyazannye-kompanii-na-torgah-kartel-vs-2026", "kontejnery-na-selhozzemle-vs-2026", "nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "nds-postavshchika-usn-cena-dogovora", "razryv-nds-v-cepochke-krascvetmet", "proverka-kontragenta-na-datu-sdelki", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p", "povtornaya-vyezdnaya-proverka-vs-2026", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026", "garantiya-vyplachena-otkaz-zakazchika-nezakonen", "zaem-inostrannoj-kompanii-schet-s-vs-2026"],
     "nalogi/nedruzhestvennye-gosudarstva-perechen/index.html": ["zaem-inostrannoj-kompanii-schet-s-vs-2026"],
     "pasport/index.html": ["ustnyy-kartel-dohod-v-byudzhet-vs-2026", "svyazannye-kompanii-na-torgah-kartel-vs-2026", "proverka-kontragenta-na-datu-sdelki"],
     "nalogi/svezhest-dannyh-proverki-kontragenta/index.html": ["proverka-kontragenta-na-datu-sdelki"],
@@ -25,10 +25,67 @@
     "nalogi/izmeneniya-egryul-kontragenta/index.html": ["reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p"],
     "nalogi/kody-statusa-egryul/index.html": ["spisali-dolg-subsidiarka", "reorganizaciya-kontragenta-dosrochnyj-vozvrat-ks-17-p"],
     "nalogi/nedostovernyj-adres-egryul/index.html": ["kontejnery-na-selhozzemle-vs-2026", "isklyuchili-iz-egryul-dolg-s-direktora"],
-    "nalogi/skolko-platit-vpered-neznakomoj-kompanii/index.html": ["dividendy-chistye-aktivy-nizhe-ustavnogo-vs-2026", "moratorij-dividendy-neustojka-vs-2026", "shtraf-za-prosrochku-zadatka-vs-2026", "vykup-uchastka-pod-domom-izhs-vs-2026", "trebovanie-ens-odin-raz-vs-2026", "garantiya-sverh-neustojki-vernut", "spisali-dolg-subsidiarka", "nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "isklyuchili-iz-egryul-dolg-s-direktora", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026", "garantiya-vyplachena-otkaz-zakazchika-nezakonen"],
+    "nalogi/skolko-platit-vpered-neznakomoj-kompanii/index.html": ["dolya-vyhod-iz-ooo-rynochnaya-stoimost-vs-2026", "dividendy-chistye-aktivy-nizhe-ustavnogo-vs-2026", "moratorij-dividendy-neustojka-vs-2026", "shtraf-za-prosrochku-zadatka-vs-2026", "vykup-uchastka-pod-domom-izhs-vs-2026", "trebovanie-ens-odin-raz-vs-2026", "garantiya-sverh-neustojki-vernut", "spisali-dolg-subsidiarka", "nalogovyj-arest-zalog-v-bankrotstve-postavshchika", "isklyuchili-iz-egryul-dolg-s-direktora", "kompensaciya-poter-406-1-vs-2026", "peredali-za-zadatok-ubytki-upravlyayushchego-vs-2026", "zalog-odna-veshch-iz-pyati-vs-2026", "garantiya-vyplachena-otkaz-zakazchika-nezakonen"],
     "skoraya-115-fz/index.html": ["hab:115-fz", "krasnaya-zona-zsk-sud", "ostatok-pri-zakrytii-scheta", "blokirovka-lichnogo-scheta-ip"]
   },
   "razbory": [
+    {
+      "razdel": "dogovory",
+      "slug": "dolya-vyhod-iz-ooo-rynochnaya-stoimost-vs-2026",
+      "h1": "Вышли из ООО: долю платят по рынку, а не по балансу",
+      "title": "Выход из ООО: доля по рыночной стоимости — ВС, 305-ЭС26-6383",
+      "description": "Верховный суд: долю вышедшему участнику считают по рыночной стоимости всех активов, включая товарные знаки, даже с бесплатными лицензиями.",
+      "zapros": "выход из ооо действительная стоимость доли рыночная стоимость товарный знак",
+      "data": "2026-11-17",
+      "minut": 4,
+      "lid": "Участник вышел из ООО, общество выплатило ему 10 млн ₽ по своему расчёту, а он потребовал 27,3 млн ₽ и проценты. Верховный суд 23.10.2026 вернул дело на новое рассмотрение: долю считают по рыночной стоимости всех активов, и товарный знак с бесплатными лицензиями тоже чего-то стоит.",
+      "dela": [
+        {
+          "sud": "Верховный суд РФ, Судебная коллегия по экономическим спорам",
+          "sud_kratko": "ВС",
+          "akt": "Определение",
+          "nomer": "№ 305-ЭС26-6383",
+          "data": "2026-10-23",
+          "delo": "Иск вышедшего участника ООО о действительной стоимости доли и процентах: в расчёт не вошли товарные знаки и рыночная стоимость помещения (№ А40-58310/2024)",
+          "na_konu": "27 348 235 ₽ стоимости доли и 3 697 178,17 ₽ процентов; выплачено 10 044 705 ₽",
+          "na_konu_kratko": "≈ 31 млн ₽",
+          "itog": "На новое рассмотрение",
+          "itog_nov": true,
+          "istochnik": "https://kad.arbitr.ru/",
+          "istochnik_podpis": "kad.arbitr.ru — поиск по номеру дела А40-58310/2024",
+          "sverka": "2026-11-17",
+          "sverka_vid": "kopiya"
+        }
+      ],
+      "knopka": {
+        "zagolovok": "Крупный договор с ООО — проверьте общество по ИНН",
+        "tekst": "Проверка по ИНН: участники по ЕГРЮЛ, суды, где компания ответчик, бухгалтерская отчётность — на дату проверки.",
+        "knopka": "Проверить общество по ИНН",
+        "url": "/",
+        "cel": "razbor50_check"
+      },
+      "zakon": [
+        [
+          "п. 2 ст. 14, п. 6.1 ст. 23 Федерального закона от 08.02.1998 № 14-ФЗ «Об обществах с ограниченной ответственностью» — действительная стоимость доли и срок выплаты вышедшему участнику",
+          "ред. от 04.08.2026",
+          "https://www.consultant.ru/document/cons_doc_LAW_17819/888c9d1bba7bafee55eeeba848d56b5c4e27f548/"
+        ],
+        [
+          "п. 6 ст. 1232 Гражданского кодекса РФ — без государственной регистрации переход исключительного права считается несостоявшимся",
+          "",
+          "https://www.consultant.ru/document/cons_doc_LAW_64629/"
+        ],
+        [
+          "Определение СКЭС ВС РФ от 23.10.2026 № 305-ЭС26-6383 — текст",
+          "",
+          "https://www.garant.ru/products/ipo/prime/doc/415073297/"
+        ]
+      ],
+      "pohozhie": [
+        "dividendy-chistye-aktivy-nizhe-ustavnogo-vs-2026",
+        "moratorij-dividendy-neustojka-vs-2026"
+      ]
+    },
     {
       "razdel": "dogovory",
       "slug": "dividendy-chistye-aktivy-nizhe-ustavnogo-vs-2026",
@@ -77,6 +134,7 @@
         ]
       ],
       "pohozhie": [
+        "dolya-vyhod-iz-ooo-rynochnaya-stoimost-vs-2026",
         "moratorij-dividendy-neustojka-vs-2026",
         "shtraf-za-prosrochku-zadatka-vs-2026"
       ]

@@ -945,6 +945,8 @@ html:not(.rezhim-otcheta) .hero .uv{width:100%;margin-top:0}
     if(!svoj&&window.PlyusyMinusy){try{PlyusyMinusy.mount(report,r)}catch(e){}}
     // pervyj-ekran-otcheta-v1 (план 18.11, разд. 3 пп. 1–2): «Главное» — до трёх фактов «Плюсов и минусов» по весу, суммы с долей выручки — в шапке листа, под названием; первый экран телефона и компьютера (js/glavnoe.js)
     if(!svoj&&window.DlkGlavnoe){try{DlkGlavnoe.mount(report,r)}catch(e){}}
+    // rekvizity-otcheta-v1 (план 18.11, разд. 3 п. 4): «Реквизиты компании» — наименование, ИНН, КПП, ОГРН, дата регистрации, статус, адрес, ОКВЭД, капитал из ответа; «Скопировать реквизиты»; первым в правой колонке листа; только организации (js/rekvizity-kompanii.js)
+    if(!svoj&&window.DlkRekvizity){try{DlkRekvizity.mount(report,r)}catch(e){}}
     // plitki-schetchiki-v1 (план отчёта 15.11, п. 1.3): ряд плиток Суды · Приставы · Госконтракты · Банкротство · Приостановки · Финансы · Связи — под «Плюсами и минусами»; нажатие — к своему разделу; «Связи» дописывает ответ «Кто рядом» (js/plitki.js)
     if(!svoj&&window.DlkPlitki){try{DlkPlitki.mount(report,r)}catch(e){}}
     // sudy-pristavy-v1 (план отчёта 15.11, п. 5): «Суды и приставы — подробно» под плитками — 5 последних дел и производств, предметы взыскания группами, «Показать все загруженные»; плитки ведут сюда (js/sudy-pristavy.js)
@@ -975,7 +977,7 @@ html:not(.rezhim-otcheta) .hero .uv{width:100%;margin-top:0}
   // primer-legkij-v1 (25.10): пример «Условий сделки» просит только пакет «primer» (usloviya + sushchestvennoe + status-kod, ~130 КБ), а не весь отчёт (~535 КБ):
   // сервер пока отдаёт без сжатия, и каждый заход на главную без проверки скачивал полмегабайта. Весь отчёт — при проверке и намерении проверить.
   // Оба тега — async=false: исполняются в порядке вставки (как defer), «primer» всегда раньше «otchet».
-  var PRIMER_JS='/js/b/primer.5822e4887b.js', OTCHET_JS='/js/b/otchet.d6319ffc82.js', primerP=null, moduliP=null;
+  var PRIMER_JS='/js/b/primer.5822e4887b.js', OTCHET_JS='/js/b/otchet.3f73127a79.js', primerP=null, moduliP=null;
   function teg(src){return new Promise(function(ok){var s=document.createElement('script');s.src=src;s.async=false;s.onload=s.onerror=function(){ok()};document.head.appendChild(s);});}
   function gruzitPrimer(){if(!primerP)primerP=teg(PRIMER_JS);return primerP;}
   function gruzitModuli(){if(moduliP)return moduliP;var p=gruzitPrimer();moduliP=Promise.all([p,teg(OTCHET_JS)]);return moduliP;}

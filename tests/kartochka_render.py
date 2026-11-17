@@ -5750,3 +5750,159 @@ _html_kartochki_bez_itoga = html_kartochki
 def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811
     """pervyj-ekran-kartochki-v1: та же карточка, первым экраном — итог по фактам."""
     return pervyj_ekran_kartochki(_html_kartochki_bez_itoga(k, V, sosedi, kom, normy, cena, segodnya))
+
+
+# ---------------------------------------------------------------- sushchestvennost-v1 ([Ночные-2] 18.11)
+# Решение владельца 18.11 «сайт лучше справочников», разд. 3 п. 2 и п. 20: мелочь подавалась как главное — у «Магнита»
+# единственный минус и первая строка «Коротко» — «3 дела, требования 35,9 тыс. ₽» без масштаба (выручка 412 млн ₽).
+# Теперь к каждой сумме минуса (иски, остаток у приставов, долг по налогам) — доля от выручки последнего года ГИР БО из таблицы
+# той же страницы, теми же словами, что «Главное» отчёта (js/glavnoe.js): «меньше 0,1 % выручки за 2025 год», «0,6 % …»,
+# «больше выручки за 2025 год». Правило юриста 12.11 п. 3 — как в отчёте: нет выручки, отчётность старше двух лет или банк
+# (ОКВЭД 64.1) — доли нет. Сумма «не меньше …» (часть производств) — доли нет: целиком она может быть больше.
+# Порядок — по весу, а не по порядку источников: статус, банкротство, недостоверность — первыми; суммы от 10 % выручки —
+# тоже; суммы меньше 0,1 % — не в «главном» итога, а одной строкой «Мелкое к выручке: …» (как отчёт), в «Минусах» и
+# «Коротко» — в конце. П. 20 (ошибка 93 211 % у справочника): если чистая прибыль года больше выручки, основной доход
+# компании не от продаж (доходы от участия, проценты) — доля к выручке завышена, поэтому вес «от 10 %» ей не даём; «мелкое»
+# остаётся мелким (к доходам оно ещё меньше). Слова — те же, что согласованы для отчёта; порог 0,1 % — [Право] 18.11 п. 2.
+SS_MELKO = 0.001
+SS_KRUPNO = 0.1
+SS_TYAZHELYE = ("status", "bankrotstvo", "address")
+_SS_SUMMA = re.compile(r"(?:требования к" + _SP_PROB + r"компании|остаток долга|Долг по" + _SP_PROB + r"налогам|"
+                       r"Задолженность перед" + _SP_PROB + r"бюджетом)"
+                       r"" + _SP_PROB + r"?(—" + _SP_PROB + r")?((?:не" + _SP_PROB + r"меньше )?\d(?:[\d ,\u00a0]|&nbsp;|&#160;)*" + _SP_PROB + r"?"
+                       r"(?:тыс\.|млн|млрд|трлн)?" + _SP_PROB + r"?₽)")
+_SS_DOLYA = re.compile(r"выручки за" + _SP_PROB + r"\d{4}" + _SP_PROB + r"год")
+
+
+def ss_baza(t):
+    """Выручка для масштаба: {summa, god, golovnaya} или None (правило юриста 12.11 п. 3)."""
+    if re.search(r'co-okved">[^<]*<span class="num">64\.1', t or ""):
+        return None
+    f = zn_fakty(t)
+    ryad = [x for x in f.get("ryad") or [] if x.get("god") and x.get("dohod") and x["dohod"] > 0 and not x.get("fns")]
+    if not ryad:
+        return None
+    x = max(ryad, key=lambda y: y["god"])
+    mo = _PM_OKVED.search(t)
+    if mo and int(mo.group(2)[-4:]) - x["god"] > 2:
+        return None
+    return {"summa": x["dohod"], "god": x["god"], "golovnaya": bool(x.get("pribyl") and x["pribyl"] > x["dohod"])}
+
+
+def ss_summa(tx):
+    """Сумма минуса из текста строки; «не меньше …» — None (доля была бы нижней границей)."""
+    m = _SS_SUMMA.search(tx or "")
+    if not m or re.match(r"не" + _SP_PROB + r"меньше", m.group(2)):
+        return None
+    return zn_summa(re.sub(r"(?<=\d) (?=\d{3}\b)", "", _zn_txt(m.group(2))))
+
+
+def ss_dolya_tekst(d, god):
+    za = " выручки за" + NB + str(god) + NB + "год"
+    if d < SS_MELKO:
+        return "меньше 0,1" + NB + "%" + za
+    if d >= 1:
+        return "больше" + za
+    p = d * 100
+    return (("%.1f" % p).replace(".", ",") if p < 1 else "%d" % round(p)) + NB + "%" + za
+
+
+def ss_ves(k, tx, B):
+    """(вес, доля-текст): 3 — первым, 2 — обычный, 0 — мелкое."""
+    if k in SS_TYAZHELYE:
+        return 3, ""
+    sm = ss_summa(tx)
+    if not B or not sm or sm <= 0:
+        return 2, ""
+    d = sm / B["summa"]
+    ves = 0 if d < SS_MELKO else 3 if d >= SS_KRUPNO and not B["golovnaya"] else 2
+    return ves, ss_dolya_tekst(d, B["god"])
+
+
+_ss_pm_stroki_bez = plyusy_minusy_stroki
+
+
+def plyusy_minusy_stroki(t):  # noqa: F811 — sushchestvennost-v1: минусы с долей выручки и по весу; мелкое — отдельно
+    S = _ss_pm_stroki_bez(t)
+    if not S or not S["minusy"]:
+        if S is not None:
+            S["melkoe"] = []
+        return S
+    B = ss_baza(t)
+    M = []
+    for i, (k, tx, ist, d) in enumerate(S["minusy"]):
+        ves, dl = ss_ves(k, tx, B)
+        M.append((ves, i, (k, tx + ((" (" + dl + ")") if dl else ""), ist, d)))
+    M.sort(key=lambda x: (-x[0], x[1]))
+    S["minusy"] = [x for _, _, x in M]
+    S["melkoe"] = [x for v, _, x in M if v == 0]
+    return S
+
+
+def itog_html(S, inn, eg_d):  # noqa: F811 — sushchestvennost-v1: мелкое не в главном, а строкой «Мелкое к выручке»
+    if not S or not (S["plyusy"] or S["minusy"]) or not re.fullmatch(r"\d{2}\.\d{2}\.\d{4}", eg_d or ""):
+        return ""
+    mel = S.get("melkoe") or []
+    P = sorted(S["plyusy"], key=lambda x: IT_VES_P.index(x[0]) if x[0] in IT_VES_P else 99)
+    glavnye = [(x, "minus") for x in S["minusy"] if x not in mel][:IT_FAKTOV]
+    glavnye += [(x, "plus") for x in P][:IT_FAKTOV - len(glavnye)]
+    ne = (", не" + NB + "проверено " + str(len(S["ne"]))) if S["ne"] else ""
+    ml = ""
+    if mel:
+        ml = ('<p class="caption co-itog__m"><span>Мелкое к%sвыручке:</span> <a href="#pm">%s</a>%s</p>'
+              % (NB, html.escape(mel[0][1], quote=False), (" и" + NB + "ещё " + str(len(mel) - 1)) if len(mel) > 1 else ""))
+    return ('<section class="co-itog" aria-labelledby="itog"><h2 id="itog" class="co-itog__s">Плюсов %d, минусов %d%s'
+            '<span class="co-itog__d">%s— по%sфактам, собранным %s</span></h2><ul class="co-itog__f">%s</ul>%s'
+            '<p class="caption co-itog__i"><a href="#pm">Все плюсы и%sминусы</a> · <a href="/?inn=%s" data-goal="kartochka_indeks">'
+            'Индекс%s— в%sполном отчёте ›</a> (балл от%s1 до%s99 на%sсегодня)</p></section><!--/co-itog-->'
+            % (len(S["plyusy"]), len(S["minusy"]), ne, NB, NB, eg_d, "".join(_it_li(x, m) for x, m in glavnye), ml,
+               NB, inn, NB, NB, NB, NB, NB))
+
+
+# «Коротко о компании»: строки с суммой — та же доля в конце абзаца; мелкое — в конец списка, от 10 % — в начало
+_SS_KOR = re.compile(r'(<section class="co-sec" aria-labelledby="korotko"><h2 id="korotko">[^<]*</h2><ul class="co-vv">)(.*?)(</ul>)', re.S)
+_SS_LI = re.compile(r'<li class="co-v co-v--(?:ok|warn|info)">.*?</li>', re.S)
+
+
+def korotko_po_vesu(t):
+    """sushchestvennost-v1: «Коротко» — доля выручки у сумм, порядок по весу. Повторный вызов даёт те же байты."""
+    m = _SS_KOR.search(t or "")
+    if not m:
+        return t
+    B = ss_baza(t)
+    if not B:
+        return t
+    li = _SS_LI.findall(m.group(2))
+    if "".join(li) != m.group(2):
+        return t
+    vse = []
+    for i, x in enumerate(li):
+        p = re.search(r"<p>(.*?)</p>", x, re.S)
+        ves, dl = (2, "")
+        if p and 'co-v--warn' in x:
+            ves, dl = ss_ves("", p.group(1), B)
+            sm = _SS_SUMMA.search(p.group(1))
+            if dl and sm and not _SS_DOLYA.search(p.group(1)):
+                a, b = p.group(1)[:sm.end()], p.group(1)[sm.end():]
+                na = re.match(_SP_PROB + r"\(на" + _SP_PROB, b)
+                nd = re.match(_SP_PROB + r"на" + _SP_PROB + r"\d[^<.]*?\d{4}", b)  # «… ₽ на 1 октября 2026. Могла быть…»
+                if na:
+                    b = " (" + dl + "; на" + NB + b[na.end():]
+                elif nd:  # дата — сразу за суммой (её читает «Перед оплатой»), доля — после даты
+                    b = b[:nd.end()] + " (" + dl + ")" + b[nd.end():]
+                else:
+                    b = " (" + dl + ")" + b
+                x = x.replace(p.group(0), "<p>" + a + b + "</p>", 1)
+        vse.append((-1 if ves == 3 else 1 if ves == 0 else 0, i, x))
+    vse.sort(key=lambda y: (y[0], y[1]))
+    return t[:m.start(2)] + "".join(x for _, _, x in vse) + t[m.end(2):]
+
+
+_html_kartochki_bez_vesa = html_kartochki
+
+
+def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811
+    """sushchestvennost-v1: та же карточка, «Коротко» по весу (Плюсы/минусы и итог — через plyusy_minusy_stroki)."""
+    t = _html_kartochki_bez_vesa(k, V, sosedi, kom, normy, cena, segodnya)
+    t2 = korotko_po_vesu(t)
+    return t2 if t2 == t else shablon_v2(t2)  # description — по первому выводу уже по весу, как у опубликованных

@@ -1878,6 +1878,16 @@ def doli_balansa(chasti):
     return [("меньше%s1%s%%" % (NB, NB)) if (p[i] < 1 and chasti[i] > 0) else "%d%s%%" % (p[i], NB) for i in range(3)]
 
 
+def k_vyruchke(v, vy, god):
+    """zajmy-raz-v1: кредиты к выручке того же года — «76 % выручки за 2025», а в 3 раза и больше — «в 33 раза
+    больше выручки за 2025» (как рост «в N раз», god-propusk-v1): «3306 %» с первого взгляда не читается.
+    Во сколько раз — по процентам, округлённым до целого, как фраза «Кредиты и займы … больше выручки» (bv_frazy)."""
+    p = round(v / vy * 100)
+    if p >= 300:
+        return "%s больше выручки за%s%d" % (_bv_razy(p / 100.0), NB, god)
+    return "%d%s%% выручки за%s%d" % (p, NB, NB, god)
+
+
 def balans_html(k):
     """kartochki-finansy-v1: «На чём держится компания» и «Кто кому должен» — те же строки и подписи, что на экране
     проверки (js/dinamika.js balans-ekran-v1), только факты баланса ГИР БО на 31.12 года, без оценок."""
@@ -1906,7 +1916,7 @@ def balans_html(k):
             v = r.get(kl)
             if v is not None and v > 0:
                 vy = vyr.get(r["god"])
-                dop = ("%d%s%% выручки за%s%d" % (round(v / vy * 100), NB, NB, r["god"])) if (kl == "loan" and vy and vy > 0) else ""
+                dop = k_vyruchke(v, vy, r["god"]) if (kl == "loan" and vy and vy > 0) else ""
                 stroki.append("<tr><td>%s</td><td class=\"num\">%s</td><td class=\"num\">%s</td></tr>" % (nazv, dengi(v), dop))
         if stroki:
             h.append('<h3 class="co-h3">Кто кому должен — на%s31.12.%d</h3><div class="table-wrap"><table class="table">'
@@ -4961,7 +4971,10 @@ def bv_frazy(sek, im, vyr=None):
     kr = st.get("Кредиты и займы")
     if kr:
         m = re.match(r"^(\d+) % выручки за (\d{4})$", kr[1])
-        if m and int(m.group(1)) > 0:
+        mr = re.match(r"^(в [\d,]+ раза?) больше выручки за (\d{4})$", kr[1])  # zajmy-raz-v1: ячейка «в 33 раза больше…»
+        if mr:
+            fr.append("Кредиты и%sзаймы %s — %s, %s больше выручки за%s%s%sгод." % (NB, im, _bv_den(kr[0]), mr.group(1).replace(" ", NB), NB, mr.group(2), NB))
+        elif m and int(m.group(1)) > 0:
             pr, g = int(m.group(1)), m.group(2)
             if pr >= 100:
                 fr.append("Кредиты и%sзаймы %s — %s, %s больше выручки за%s%s%sгод." % (NB, im, _bv_den(kr[0]), _bv_razy(pr / 100.0), NB, g, NB))
@@ -5489,6 +5502,12 @@ def _pm_nol(s):
     return s in ("0", "−0")
 
 
+# zajmy-raz-v1: ячейка «Кредиты и займы» опубликованной карточки «3306 % выручки за 2025» → «в 33 раза больше выручки за 2025»
+_ZR_YACHEJKA = re.compile(r'(<tr><td>Кредиты и(?:&nbsp;|&#160;|\s|\u00a0)займы</td><td class="num">[^<]*</td><td class="num">)'
+                          r'(\d+)(?:&nbsp;|&#160;|\s|\u00a0)%(?:&nbsp;|&#160;|\s|\u00a0)выручки(?:&nbsp;|&#160;|\s|\u00a0)за'
+                          r'(?:&nbsp;|&#160;|\s|\u00a0)(\d{4})<')
+
+
 def pochinit_procenty(t):
     """procent-malo-v1: у опубликованной карточки «0 %» / «−0 %» при ненулевой доле — число по таблице страницы
     (две значащие цифры), рост прибыли в 3 раза и больше — «в N раз». Повторный вызов ничего не меняет."""
@@ -5496,6 +5515,7 @@ def pochinit_procenty(t):
         return t
     t = _PM_ROST.sub(lambda m: m.group(1) + ", в" + NB + _raz(100, 100 + int(m.group(2))) + " больше, чем годом раньше"
                      if int(m.group(2)) >= 200 else m.group(0), t)
+    t = _ZR_YACHEJKA.sub(lambda m: m.group(1) + k_vyruchke(int(m.group(2)), 100, int(m.group(3))) + "<" if int(m.group(2)) >= 300 else m.group(0), t)
     if "0&nbsp;%" not in t and "0" + NB + "%" not in t and "0 %" not in t:
         return t
     ryad = {x["god"]: x for x in zn_fakty(t).get("ryad") or [] if x.get("god")}

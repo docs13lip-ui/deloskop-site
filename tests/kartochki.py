@@ -655,6 +655,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         t2 = pochinit_otrasl_yakor(t2, normy)  # nagruzka-yakorya-v1: «Таблица ФНС» — на строку отрасли, как у новых
         t2 = pochinit_daty(t2, cena)  # kartochki-daty-v1: «Даты из реестра» и вход в Паспорт, как у новых
         t2 = pochinit_izmenenie(t2)  # kartochki-daty-v2: «изменение записи» = день сведений — не изменение, снять
+        t2 = pochinit_rost_vyruchki(t2)  # god-propusk-v1: пропуск лет в таблице — «с 2022 по 2025 год», «чем в 2022 году»; рост выручки ×3+ — «в N раз» (до vstavit_znachit: абзацы берут N из «Коротко»)
         t2 = vstavit_znachit(t2)  # kartochki-znachit-v1: «Что это значит для вас» — из фактов страницы, как у новых
         t2 = beta_poloviny(t2, r["_beta"], r.get("_beta_do"))  # половины беты — по флагу, как sobrat_shapku
         t2 = primenit_vorota_indeksa(t2)  # kartochki-indeks-v1: те же ворота индексации, что у новых карточек

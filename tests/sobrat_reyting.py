@@ -70,10 +70,11 @@ def summa_tekstom(s):
 
 def procent(s):
     """«… — на 12 % больше, чем годом раньше» → 12; «меньше» → −12; нет — None."""
-    m = re.search(r"на\s+(\d+(?:,\d+)?)\s*%\s+(больше|меньше)", s)
+    # god-propusk-v1: только «…, чем годом раньше» — «чем в 2022 году» (пропуск лет в отчётности) в «год к году» не идёт
+    m = re.search(r"на\s+(\d+(?:,\d+)?)\s*%\s+(больше|меньше),\s+чем\s+годом\s+раньше", s)
     if not m:
         # procent-malo-v1: рост в 3 раза и больше карточка пишет «в 5,6 раза больше» → +460
-        r = re.search(r"\bв\s+(\d+(?:,\d+)?)\s+раза?\s+больше", s)
+        r = re.search(r"\bв\s+(\d+(?:,\d+)?)\s+раза?\s+больше,\s+чем\s+годом\s+раньше", s)
         return round((float(r.group(1).replace(",", ".")) - 1) * 100) if r else None
     v = float(m.group(1).replace(",", "."))
     return v if m.group(2) == "больше" else -v
@@ -170,6 +171,23 @@ def chislo_ru(v):
     return s
 
 
+def v_raz(izm):
+    """+1800 → «19 раз», +240 → «3,4 раза» (как _raz карточки)."""
+    r = (100 + izm) / 100
+    r_t = ("%.1f" % r).replace(".", ",") if r < 10 and abs(r - round(r)) >= 0.05 else "%d" % round(r)
+    n = round(r)
+    sl = "раза" if r_t.find(",") >= 0 or (n % 10 in (2, 3, 4) and n % 100 not in (12, 13, 14)) else "раз"
+    return r_t + NB + sl
+
+
+def rost_big(izm):
+    """god-propusk-v1: крупная цифра «Быстрее всех росла выручка» — как на карточке: «в 19 раз», а не «+1800 %»
+    (обратный счёт из «в 19 раз» даёт круглые сотни — «+1900 %» выглядело бы точнее, чем есть)."""
+    if izm >= 200:
+        return "в" + NB + v_raz(izm)
+    return "+%s%s%%" % (chislo_ru(izm), NB)
+
+
 def izm_html(izm, god):
     if izm is None:
         return ""
@@ -178,11 +196,7 @@ def izm_html(izm, god):
     znak = "+" if izm > 0 else "−"
     kl = "ry-izm ry-izm--plus" if izm > 0 else "ry-izm ry-izm--minus"
     if izm >= 200:  # procent-malo-v1: как на карточке — «в 5,6 раза к 2024», а не «+460 %»
-        r = (100 + izm) / 100
-        r_t = ("%.1f" % r).replace(".", ",") if r < 10 and abs(r - round(r)) >= 0.05 else "%d" % round(r)
-        n = round(r)
-        sl = "раза" if r_t.find(",") >= 0 or (n % 10 in (2, 3, 4) and n % 100 not in (12, 13, 14)) else "раз"
-        return '<span class="%s">в%s%s%s%s к %d</span>' % (kl, NB, r_t, NB, sl, god - 1)
+        return '<span class="%s">в%s%s к %d</span>' % (kl, NB, v_raz(izm), god - 1)
     return '<span class="%s">%s%s%s%% к %d</span>' % (kl, znak, chislo_ru(izm), NB, god - 1)
 
 
@@ -324,8 +338,8 @@ def stranica(D):
     # 2. Рост
     r = [k for k in D["rost"] if k["vyruchka"]["izm"] > 0][:TOP_MALYJ]
     if r:
-        st = [(k, '<b class="ry-big">+%s%s%%</b><span class="ry-izm">%s за %d</span>' % (
-            chislo_ru(k["vyruchka"]["izm"]), NB, e(k["vyruchka"]["tekst"]), g), None) for k in r]
+        st = [(k, '<b class="ry-big">%s</b><span class="ry-izm">%s за %d</span>' % (
+            rost_big(k["vyruchka"]["izm"]), e(k["vyruchka"]["tekst"]), g), None) for k in r]
         snizh = len([k for k in D["rost"] if k["vyruchka"]["izm"] < 0])
         ch.append('<section class="co-sec" aria-labelledby="ry-rost"><h2 id="ry-rost">Быстрее всех росла выручка</h2>'
                   '<p class="ry-pod">%d год к %d: насколько выросла выручка за год. Выручка снизилась у %d из %d компаний, где карточка сравнивает два года.</p>%s%s</section>'

@@ -141,7 +141,7 @@
   function yZsk(r) {
     var z = r && r.zsk;
     if (!z || !z.level) return { t: 'Не считали', ton: 'neutral', nepr: true };
-    return { t: z.title || '', pod: 'наша оценка, не статус Банка России', ton: z.level === 'high' ? 'bad' : z.level === 'medium' ? 'warn' : 'ok' };
+    return { t: z.title || '', pod: 'наш прогноз по признакам ЗСК — не оценка Банка России', ton: z.level === 'high' ? 'bad' : z.level === 'medium' ? 'warn' : 'ok' };
   }
   function yUsl(r) {
     var U = m('Usloviya');

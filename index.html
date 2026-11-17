@@ -884,7 +884,7 @@ html:not(.rezhim-otcheta) .hero .uv{width:100%;margin-top:0}
       return '<div class="row"><span>'+esc(x.title)+'</span><b class="d '+cls+'">'+esc(x.detail||'')+'</b></div>';
     }).join('');
     if(r.zsk){var zc=r.zsk.level==='high'?'bad':r.zsk.level==='medium'?'warn':'ok';
-      rows+='<div class="row"><span>Прогноз ЗСК · наша оценка, не статус Банка России <a href="'+esc(r.zsk.cbr_url)+'" target="_blank" rel="noopener" style="font-size:13px">проверить в ЦБ</a></span><b class="d '+zc+'">'+esc(r.zsk.title)+'</b></div>';}
+      rows+='<div class="row"><span>Наш прогноз по признакам ЗСК — не оценка Банка России <a href="'+esc(r.zsk.cbr_url)+'" target="_blank" rel="noopener" style="font-size:13px">проверить в ЦБ</a></span><b class="d '+zc+'">'+esc(r.zsk.title)+'</b></div>';}
     var d=new Date(r.checked_at||Date.now());
     // vizual-v3.1a: пример уходит со сцены живым (узлы с обработчиками — в запас), «Назад» возвращает его как был
     if(report.classList.contains('ex')&&!exUzly){exUzly=[].slice.call(report.childNodes);exUzly.forEach(function(n){report.removeChild(n)});exAtr={c:report.className,a:report.getAttribute('aria-label')};}

@@ -69,7 +69,7 @@ class TestStroki(unittest.TestCase):
         S = K.plyusy_minusy_stroki(t)
         P = [x[1].replace(NB, " ") for x in S["plyusy"]]
         self.assertIn("Не нашли незавершённых дел, где компания — ответчик, на 13.11.2026", P)
-        self.assertIn("Недоимки по данным ФНС не нашли на 01.10.2026", P)
+        self.assertIn("Недоимки и долгов по пеням и штрафам в открытых данных ФНС не нашли — сведения на 01.10.2026", P)
         self.assertEqual(S["minusy"], [])
 
     def test_ne_provereno(self):

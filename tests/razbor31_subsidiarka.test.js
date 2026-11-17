@@ -46,5 +46,6 @@ test('sroki.json: 170956 — пересверка [Право] 30.10, proverit_d
   const S = JSON.parse(chitat('sroki.json'));
   const z = S.sroki.find((x) => x.id === 'zakonoproekt_170956_chastichnoe_sovpadenie');
   assert.strictEqual(z.proverit_do, '2026-12-15');
-  assert.ok(z.sverka.startsWith('2026-10-30'));
+  // slova-pravo-v2: новая сверка [Право] 17.11 ставится сверху; 30.10 остаётся в истории
+  assert.ok(/^\d{4}-\d{2}-\d{2}: /.test(z.sverka) && z.sverka.includes('2026-10-30: '));
 });

@@ -78,6 +78,9 @@
   function num(v) { var n = Number(v); return v !== null && v !== '' && isFinite(n) ? n : null; }
   // « на 12.10.2026» — дата сведений источника; нет даты — пусто
   function naDatu(v) { var d = dmy(v); return d ? ' на' + NB + d : ''; }
+  // slova-pravo-v2 (Право 17.11, Разбор № 54 п. 2): недоимка — вместе с пенями и штрафами; дата — дата набора ФНС, «сведения на»
+  var NEDOIMKI_NET = 'Недоимки и' + NB + 'долгов по' + NB + 'пеням и' + NB + 'штрафам в' + NB + 'открытых данных ФНС не' + NB + 'нашли';
+  function svedeniyaNa(v) { var d = dmy(v); return d ? ' —' + NB + 'сведения на' + NB + d : ''; }
   // неполный список у приставов: « (по 20 из 449)» — по скольким производствам посчитан остаток
   function poChasti(df, ot) {
     var n = Array.isArray(df && df.proizvodstva) ? df.proizvodstva.length : 0;
@@ -143,7 +146,7 @@
     // ---- налоги и люди ----
     s = signal(r, 'tax_debt');
     // «нет долгов» — шире данных: набор ФНС — недоимка на свою дату, долг мог появиться позже (правовая сверка 16.11)
-    if (s && s.status === 'ok') plus('tax_debt', 'Недоимки по' + NB + 'данным ФНС не' + NB + 'нашли' + naDatu(s.as_of), s.source, s.as_of);
+    if (s && s.status === 'ok') plus('tax_debt', NEDOIMKI_NET + svedeniyaNa(s.as_of), s.source, s.as_of);
     else if (s && (s.status === 'warn' || s.status === 'bad')) {
       var sm = /^[\d\s ,]+₽/.exec(String(s.detail || ''));
       minus('tax_debt', 'Долг по налогам' + (sm ? ' ' + sm[0].trim().replace(/\s/g, NB) : ''), s.source, s.as_of);
@@ -218,7 +221,7 @@
 
     // ---- прогноз ЗСК (наша оценка) и господдержка ----
     var z = r.zsk;
-    if (z && (z.level === 'medium' || z.level === 'high') && z.title) minus('zsk', 'Наш прогноз по' + NB + 'признакам ЗСК: ' + mal(z.title) + ' — не' + NB + 'оценка Банка России', 'оценка Делоскопа, не статус Банка России');
+    if (z && (z.level === 'medium' || z.level === 'high') && z.title) minus('zsk', 'Наш прогноз по' + NB + 'признакам ЗСК: ' + mal(z.title) + ' — не' + NB + 'оценка Банка России', 'Делоскоп по открытым данным; наш прогноз — не оценка Банка России');
     var pd = r.podderzhka;
     if (pd && pd.status === 'najdeno' && !fl) plus('podderzhka', 'Есть в' + NB + 'реестре получателей поддержки МСП (ФНС)' + naDatu(pd.data_nabora), pd.istochnik, pd.data_nabora);
 

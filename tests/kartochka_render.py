@@ -5299,6 +5299,15 @@ def _pm_na(d):
     return (" на" + NB + d) if re.fullmatch(r"\d{2}\.\d{2}\.\d{4}", d or "") else ""
 
 
+NEDOIMKI_NET = ("Недоимки и" + NB + "долгов по" + NB + "пеням и" + NB + "штрафам в" + NB
+                + "открытых данных ФНС не" + NB + "нашли")
+
+
+def _pm_svedeniya(d):
+    """« — сведения на ДД.ММ.ГГГГ» — дата набора ФНС (как svedeniyaNa в js/plyusy-minusy.js)."""
+    return (" —" + NB + "сведения на" + NB + d) if re.fullmatch(r"\d{2}\.\d{2}\.\d{4}", d or "") else ""
+
+
 def plural_pm(n, a, b, c):
     n = abs(n) % 100
     return c if 11 <= n <= 14 else a if n % 10 == 1 else b if 2 <= n % 10 <= 4 else c
@@ -5348,8 +5357,9 @@ def plyusy_minusy_stroki(t):
     if v:
         zn, (ist, d) = v
         if zn == "Нет":
-            # slova-pravo (Право 16.11, п. 1): набор ФНС — недоимка на свою дату, «нет долгов» шире данных
-            P.append(("tax_debt", "Недоимки по" + NB + "данным ФНС не" + NB + "нашли" + _pm_na(d), ist, d))
+            # slova-pravo (Право 16.11, п. 1): набор ФНС — недоимка на свою дату, «нет долгов» шире данных;
+            # slova-pravo-v2 (Право 17.11): с пенями и штрафами, «— сведения на» дату набора (как js/plyusy-minusy.js)
+            P.append(("tax_debt", NEDOIMKI_NET + _pm_svedeniya(d), ist, d))
         else:
             sm = re.match(r"[\d ,]+(?:тыс\.|млн|млрд|трлн)? ?₽", zn)
             M.append(("tax_debt", "Долг по налогам" + (" " + sm.group(0).strip() if sm else ""), ist, d))

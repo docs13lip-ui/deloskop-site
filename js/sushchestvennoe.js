@@ -354,7 +354,7 @@
     }
     if (r.zsk && r.zsk.title) {
       var zl = r.zsk.level;
-      add({ k: 'zsk', nazv: 'Прогноз ЗСК · наша оценка, не статус Банка России', znach: r.zsk.title,
+      add({ k: 'zsk', nazv: 'Наш прогноз по признакам ЗСК — не оценка Банка России', znach: r.zsk.title,
         ton: zl === 'high' ? 'bad' : zl === 'medium' ? 'warn' : 'ok', ist: 'Делоскоп по открытым данным', data: dataPr, ssylka: r.zsk.cbr_url || '' });
     }
 
@@ -427,7 +427,7 @@
     if (reestry.length) out.push({ zag: 'Внешние реестры', ist: 'источник — у каждой строки', stroki: reestry });
     var z = r && r.zsk;
     if (z && Array.isArray(z.groups) && z.groups.length) {
-      out.push({ zag: 'Из чего сложился прогноз ЗСК', ist: 'Делоскоп по открытым данным; не статус Банка России',
+      out.push({ zag: 'Из чего сложился прогноз ЗСК', ist: 'Делоскоп по открытым данным; наш прогноз — не оценка Банка России',
         stroki: z.groups.filter(function (g) { return g && g.typology; }).map(function (g) {
           return [g.typology, (Array.isArray(g.items) ? g.items : []).join('; ')];
         }) });

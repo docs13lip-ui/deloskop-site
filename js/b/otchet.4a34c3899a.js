@@ -669,7 +669,7 @@ var SVERENO_NA = '02.10.2026';
 var CBR_ZSK = 'https://cbr.ru/counteraction_m_ter/platform_zsk/proverka-po-inn/';
 var T = {
 zsk: {
-b: { t: 'По открытым данным у компании есть признаки, по которым банки относят клиентов к повышенному риску. Это наш прогноз, не статус Банка России.', sver: true },
+b: { t: 'По открытым данным у компании есть признаки, по которым банки относят клиентов к повышенному риску. Это наш прогноз по признакам ЗСК — не оценка Банка России.', sver: true },
 s: { t: 'Проверьте себя в сервисе Банка России — он показывает только «красную» зону. Если она есть, на заявление в МВК — 6 месяцев', norma: '(п. 1 ст. 7.8 115-ФЗ)', sver: true,
 href: CBR_ZSK, knopka: 'Проверить в сервисе Банка России', ext: true, eshche: { href: '/skoraya-115-fz/?s=zsk', t: 'План, если зона красная' } }
 },
@@ -3258,6 +3258,8 @@ return s;
 function mal(s) { s = String(s || ''); return /^[А-ЯЁA-Z][а-яёa-z]/.test(s) ? s.charAt(0).toLowerCase() + s.slice(1) : s; }
 function num(v) { var n = Number(v); return v !== null && v !== '' && isFinite(n) ? n : null; }
 function naDatu(v) { var d = dmy(v); return d ? ' на' + NB + d : ''; }
+var NEDOIMKI_NET = 'Недоимки и' + NB + 'долгов по' + NB + 'пеням и' + NB + 'штрафам в' + NB + 'открытых данных ФНС не' + NB + 'нашли';
+function svedeniyaNa(v) { var d = dmy(v); return d ? ' —' + NB + 'сведения на' + NB + d : ''; }
 function poChasti(df, ot) {
 var n = Array.isArray(df && df.proizvodstva) ? df.proizvodstva.length : 0;
 return n > 0 && ot > n ? ' (по' + NB + chislo(n) + ' из' + NB + chislo(ot) + ')' : '';
@@ -3278,6 +3280,12 @@ function godProverki(r, segodnya) {
 var t = Date.parse((r && r.checked_at) || '');
 var ms = isFinite(t) ? t : (segodnya || new Date()).getTime();
 return new Date(ms + 3 * 3600 * 1000).getUTCFullYear();
+}
+function godyBezOtchetnosti(g, r, segodnya) {
+var t = Date.parse((r && r.checked_at) || ''), d = new Date((isFinite(t) ? t : (segodnya || new Date()).getTime()) + 3 * 3600 * 1000);
+var posl = d.getUTCFullYear() - (d.getUTCMonth() >= 5 ? 1 : 2);
+if (posl <= g) return 'после ' + g + NB + 'года';
+return posl === g + 1 ? 'за' + NB + posl + NB + 'год' : 'за' + NB + (g + 1) + '\u2060–\u2060' + posl + NB + 'годы';
 }
 var UZHE = /налог|штат|сотрудн|недостовер|суд|дел[аео]?\b|пристав|ФССП|исполнит|банкрот|приостанов|РНП|недобросовест|ЗСК|отч[её]тност|ликвид|статус/i;
 function sobrat(r, segodnya) {
@@ -3307,7 +3315,7 @@ var mm = /^Руководитель не менялся\s+(\d+\s*(?:год|го�
 if (mm) plus('rukovoditel', 'Руководитель не менялся ' + mm[1].replace(/\s+/, NB), reestr);
 });
 s = signal(r, 'tax_debt');
-if (s && s.status === 'ok') plus('tax_debt', 'Недоимки по' + NB + 'данным ФНС не' + NB + 'нашли' + naDatu(s.as_of), s.source, s.as_of);
+if (s && s.status === 'ok') plus('tax_debt', NEDOIMKI_NET + svedeniyaNa(s.as_of), s.source, s.as_of);
 else if (s && (s.status === 'warn' || s.status === 'bad')) {
 var sm = /^[\d\s ,]+₽/.exec(String(s.detail || ''));
 minus('tax_debt', 'Долг по налогам' + (sm ? ' ' + sm[0].trim().replace(/\s/g, NB) : ''), s.source, s.as_of);
@@ -3329,7 +3337,7 @@ minus(x.id, x.title + (d && d.length <= 40 ? ': ' + mal(d) : ''), x.source, x.as
 var g = godOtchetnosti(r), gp = godProverki(r, segodnya);
 if (!fl && g !== null) {
 if (g >= gp - 2) plus('otchetnost', 'Отчётность за ' + g + NB + 'год в' + NB + 'ГИР' + NB + 'БО', 'ГИР БО ФНС');
-else minus('otchetnost', 'Последняя отчётность — за ' + g + NB + 'год', 'ГИР БО ФНС');
+else N.push({ k: 'otchetnost', t: 'финансы ' + godyBezOtchetnosti(g, r, segodnya) + ' (в' + NB + 'открытых данных их нет)' });
 }
 function blok(k) { var b = dm[k]; return b && typeof b === 'object' && b.nazvanie ? b : null; }
 var b = blok('sudy');
@@ -3369,7 +3377,7 @@ if (b && sost(b) === 'found') minus('damia_rnp', 'Есть запись в' + NB
 if (vk > 0) plus('damia_kontrakty', 'Госконтракты как поставщик: ' + chislo(vk), bk.istochnik, bk.data_svedeniy, bk.nazvanie);
 if (b && sost(b) === 'not_found' && vk > 0 && naDatu(b.data_svedeniy)) plus('damia_rnp', 'Не нашли в' + NB + 'реестре недобросовестных поставщиков' + naDatu(b.data_svedeniy), b.istochnik, b.data_svedeniy, b.nazvanie);
 var z = r.zsk;
-if (z && (z.level === 'medium' || z.level === 'high') && z.title) minus('zsk', 'Наш прогноз по' + NB + 'признакам ЗСК: ' + mal(z.title) + ' — не' + NB + 'оценка Банка России', 'оценка Делоскопа, не статус Банка России');
+if (z && (z.level === 'medium' || z.level === 'high') && z.title) minus('zsk', 'Наш прогноз по' + NB + 'признакам ЗСК: ' + mal(z.title) + ' — не' + NB + 'оценка Банка России', 'Делоскоп по открытым данным; наш прогноз — не оценка Банка России');
 var pd = r.podderzhka;
 if (pd && pd.status === 'najdeno' && !fl) plus('podderzhka', 'Есть в' + NB + 'реестре получателей поддержки МСП (ФНС)' + naDatu(pd.data_nabora), pd.istochnik, pd.data_nabora);
 (Array.isArray(D.concerns) ? D.concerns : []).forEach(function (t) {

@@ -55,6 +55,8 @@
 @media (max-width:640px){.co-act .btn{width:100%}.co-ind{flex-direction:column;align-items:flex-start;gap:var(--s-3)}}
 @media print{.co-act,.co-aside,.co-pered{display:none}.co-grid{display:block}}
 .co-otr{margin-top:12px}
+/* zakrytaya-otchetnost-v1 (17.11): закон и «Не проверяли» под строкой о закрытой отчётности */
+.co-fin-zakon,.co-fin-np{margin-top:var(--s-2);max-width:72ch}.co-nw{white-space:nowrap}
 /* hab-v2 (03.10): хаб /company/ — строка регионов и «Как читать карточку» (только токены ds.css) */
 .co-reg{margin:calc(-1 * var(--s-3)) 0 var(--s-6);max-width:760px}
 .co-chit__sp{margin:0 0 var(--s-4);padding-left:1.4em;max-width:720px}

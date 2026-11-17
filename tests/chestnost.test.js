@@ -37,10 +37,10 @@ test('Б: «Проверь счёт» — формат реквизитов ≠ 
 
 test('В: прогноз ЗСК помечен как наша оценка, экран в три части', () => {
   const r = chitat('report.html');
-  assert.match(r, /не статус Банка России/);
+  assert.match(r, /не оценка Банка России/);
   for (const s of ['Подтверждено источником', 'Рассчитано Делоскопом', 'Проверить не удалось']) assert.ok(r.includes(s), s);
-  assert.match(chitat('index.html'), /Прогноз ЗСК · наша оценка/);
-  assert.match(chitat('pasport/index.html'), /не статус Банка России/);
+  assert.match(chitat('index.html'), /Наш прогноз по признакам ЗСК — не оценка Банка России/);
+  assert.match(chitat('pasport/index.html'), /не оценка Банка России/);
 });
 
 test('Г: Индекс не обещает вероятностей до отчёта точности', () => {

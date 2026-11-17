@@ -751,7 +751,7 @@ html:not(.rezhim-otcheta) .hero .uv{width:100%;margin-top:0}
         <h2 class="h2" id="praktika-h">Как решают суды: разборы дел</h2>
         <p class="lead">Настоящие дела с&nbsp;номером и&nbsp;датой: о&nbsp;чём спорили, чем кончилось и&nbsp;что из&nbsp;этого следует для&nbsp;вас.</p>
       </div>
-      <!--praktika-glavnaya--><div class="pr-gl"><a href="/praktika/dogovory/dividendy-chistye-aktivy-nizhe-ustavnogo-vs-2026/"><small>Договоры</small><b>Дивиденды, которых не было: чистые активы ниже уставного капитала</b><span>Верховный суд РФ, Судебная коллегия по экономическим спорам · определение № <span class="nw">305-ЭС26-8406</span> · 6 ноября 2026</span></a><a href="/praktika/nalogi/trebovanie-ens-odin-raz-vs-2026/"><small>Налоги</small><b>Долг на ЕНС вырос, а нового требования нет. Налоговая может взыскать?</b><span>Президиум Верховного суда РФ · постановление № 5-НАД26 · 17 июня 2026</span></a><a href="/praktika/115-fz/kriterii-zsk-ne-otmenit-vs/"><small>115&#8209;ФЗ</small><b>Критерии «светофора» ЦБ: почему их не отменить и с чем спорить на самом деле</b><span>Верховный суд РФ · решение № АКПИ25-52 · 11 марта 2025</span></a></div><!--/praktika-glavnaya-->
+      <!--praktika-glavnaya--><div class="pr-gl"><a href="/praktika/dogovory/dolya-vyhod-iz-ooo-rynochnaya-stoimost-vs-2026/"><small>Договоры</small><b>Вышли из ООО: долю платят по рынку, а не по балансу</b><span>Верховный суд РФ, Судебная коллегия по экономическим спорам · определение № <span class="nw">305-ЭС26-6383</span> · 23 октября 2026</span></a><a href="/praktika/nalogi/trebovanie-ens-odin-raz-vs-2026/"><small>Налоги</small><b>Долг на ЕНС вырос, а нового требования нет. Налоговая может взыскать?</b><span>Президиум Верховного суда РФ · постановление № 5-НАД26 · 17 июня 2026</span></a><a href="/praktika/115-fz/kriterii-zsk-ne-otmenit-vs/"><small>115&#8209;ФЗ</small><b>Критерии «светофора» ЦБ: почему их не отменить и с чем спорить на самом деле</b><span>Верховный суд РФ · решение № АКПИ25-52 · 11 марта 2025</span></a></div><!--/praktika-glavnaya-->
       <p class="vse"><a href="/praktika/" data-praktika-gl>Все разборы&nbsp;→</a></p>
     </div>
   </section>
@@ -884,7 +884,7 @@ html:not(.rezhim-otcheta) .hero .uv{width:100%;margin-top:0}
       return '<div class="row"><span>'+esc(x.title)+'</span><b class="d '+cls+'">'+esc(x.detail||'')+'</b></div>';
     }).join('');
     if(r.zsk){var zc=r.zsk.level==='high'?'bad':r.zsk.level==='medium'?'warn':'ok';
-      rows+='<div class="row"><span>Прогноз ЗСК · наша оценка, не статус Банка России <a href="'+esc(r.zsk.cbr_url)+'" target="_blank" rel="noopener" style="font-size:13px">проверить в ЦБ</a></span><b class="d '+zc+'">'+esc(r.zsk.title)+'</b></div>';}
+      rows+='<div class="row"><span>Наш прогноз по признакам ЗСК — не оценка Банка России <a href="'+esc(r.zsk.cbr_url)+'" target="_blank" rel="noopener" style="font-size:13px">проверить в ЦБ</a></span><b class="d '+zc+'">'+esc(r.zsk.title)+'</b></div>';}
     var d=new Date(r.checked_at||Date.now());
     // vizual-v3.1a: пример уходит со сцены живым (узлы с обработчиками — в запас), «Назад» возвращает его как был
     if(report.classList.contains('ex')&&!exUzly){exUzly=[].slice.call(report.childNodes);exUzly.forEach(function(n){report.removeChild(n)});exAtr={c:report.className,a:report.getAttribute('aria-label')};}
@@ -973,7 +973,7 @@ html:not(.rezhim-otcheta) .hero .uv{width:100%;margin-top:0}
   // primer-legkij-v1 (25.10): пример «Условий сделки» просит только пакет «primer» (usloviya + sushchestvennoe + status-kod, ~130 КБ), а не весь отчёт (~535 КБ):
   // сервер пока отдаёт без сжатия, и каждый заход на главную без проверки скачивал полмегабайта. Весь отчёт — при проверке и намерении проверить.
   // Оба тега — async=false: исполняются в порядке вставки (как defer), «primer» всегда раньше «otchet».
-  var PRIMER_JS='/js/b/primer.9b60134e57.js', OTCHET_JS='/js/b/otchet.8fcc9a92e1.js', primerP=null, moduliP=null;
+  var PRIMER_JS='/js/b/primer.5822e4887b.js', OTCHET_JS='/js/b/otchet.4a34c3899a.js', primerP=null, moduliP=null;
   function teg(src){return new Promise(function(ok){var s=document.createElement('script');s.src=src;s.async=false;s.onload=s.onerror=function(){ok()};document.head.appendChild(s);});}
   function gruzitPrimer(){if(!primerP)primerP=teg(PRIMER_JS);return primerP;}
   function gruzitModuli(){if(moduliP)return moduliP;var p=gruzitPrimer();moduliP=Promise.all([p,teg(OTCHET_JS)]);return moduliP;}

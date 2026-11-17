@@ -15,7 +15,7 @@ test('Разбор № 31: данные — ВС № 305-ЭС22-15047 (6,7) от
   const D = JSON.parse(chitat('praktika/dela.json'));
   const r = D.razbory.find((x) => x.slug === SLUG);
   assert.ok(r && r.razdel === 'nalogi');
-  assert.ok(D.razbory.slice(0, 14).some((x) => x.slug === SLUG), "новые разборы — первыми (среди семи свежих)"); // razbor40-v1 (06.11), razbor41-v1 (07.11): +1 свежий, razbor43-v1 (11.11): +1
+  assert.ok(D.razbory.slice(0, 15).some((x) => x.slug === SLUG), "новые разборы — первыми (среди семи свежих)"); // razbor40-v1 (06.11), razbor41-v1 (07.11): +1 свежий, razbor43-v1 (11.11): +1; razbor54-dolya (17.11): +1
   assert.deepStrictEqual(r.dela.map((d) => d.nomer + ' ' + d.data + ' ' + d.itog), ['№ 305-ЭС22-15047 (6,7) 2026-02-19 На новое рассмотрение']);
   assert.strictEqual(r.dela[0].istochnik, 'https://vsrf.ru/lk/practice/stor_pdf_ec/2522724');
   assert.ok(r.dela[0].delo.includes('А41-84436/2020'));
@@ -46,5 +46,6 @@ test('sroki.json: 170956 — пересверка [Право] 30.10, proverit_d
   const S = JSON.parse(chitat('sroki.json'));
   const z = S.sroki.find((x) => x.id === 'zakonoproekt_170956_chastichnoe_sovpadenie');
   assert.strictEqual(z.proverit_do, '2026-12-15');
-  assert.ok(z.sverka.startsWith('2026-10-30'));
+  // slova-pravo-v2: новая сверка [Право] 17.11 ставится сверху; 30.10 остаётся в истории
+  assert.ok(/^\d{4}-\d{2}-\d{2}: /.test(z.sverka) && z.sverka.includes('2026-10-30: '));
 });

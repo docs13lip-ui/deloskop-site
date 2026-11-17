@@ -64,11 +64,11 @@ test("шагов — не больше трёх, последним всегда
   assert.strictEqual(R2.shagi.filter((s) => s.kind === "skoraya").length, 1);
 });
 
-test("ЗСК: всегда «не статус Банка России» и ссылка на сервис ЦБ главной кнопкой", () => {
+test("ЗСК: всегда «не оценка Банка России» и ссылка на сервис ЦБ главной кнопкой", () => {
   for (const level of ["high", "medium"]) {
     const R = S.razbor(otvet([], { zsk: { level } }));
     const z = R.banki.find((x) => x.kind === "zsk");
-    assert.match(z.pochemu, /не статус Банка России/);
+    assert.match(z.pochemu, /наш прогноз по признакам ЗСК — не оценка Банка России/);
     const g = S.glavnyj(R);
     assert.strictEqual(g.href, "https://cbr.ru/counteraction_m_ter/platform_zsk/proverka-po-inn/");
     assert.match(g.t, /6 месяцев \(п\. 1 ст\. 7\.8 115-ФЗ\)\.$/);

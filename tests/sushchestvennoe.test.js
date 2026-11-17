@@ -59,7 +59,7 @@ test('чистая компания: 7 фактов в заданном поря
   assert.strictEqual(po.otchetnost.data, '31.12.2025');
   assert.strictEqual(po.rukovoditel.znach, 'Не менялся 7' + NB + 'лет · с' + NB + '20.05.2019');
   assert.strictEqual(po.age.znach, '11' + NB + 'лет · с' + NB + '10.03.2015');
-  assert.match(po.zsk.nazv, /наша оценка, не статус Банка России/);
+  assert.match(po.zsk.nazv, /^Наш прогноз по признакам ЗСК — не оценка Банка России$/);
 });
 
 test('замечания — первыми; больше 7 — остаток уходит в «Все данные из реестров»', () => {
@@ -138,7 +138,7 @@ test('главная: модуль подключён, вызывается по
   const ind = fs.readFileSync(path.join(KOREN, 'index.html'), 'utf8');
   assert.match(ind, /<script src="\/js\/sushchestvennoe\.js" defer><\/script>/);
   assert.match(ind, /if\(!svoj&&window\.Sushchestvennoe\)\{try\{Sushchestvennoe\.mount\(report\.querySelector\('\.rows'\),r(,\{uzhe:[^}]*\})?\)\}catch\(e\)\{\}\}/);
-  assert.match(ind, /Прогноз ЗСК · наша оценка/, 'запасная строка без модуля осталась');
+  assert.match(ind, /Наш прогноз по признакам ЗСК — не оценка Банка России/, 'запасная строка без модуля осталась');
 });
 
 test('Щит: строки проверки свёрнуты в «Все данные из реестров» — у каждой источник и дата, без повторов', () => {

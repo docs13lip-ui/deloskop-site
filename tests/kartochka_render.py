@@ -2217,15 +2217,56 @@ def noindex_html(t):
     return 'name="robots" content="noindex' in t
 
 
+# zakrytaya-otchetnost-v1: рамка [Право] 17.11 (claude/Право_закрытая_отчётность_20_карточек_ч12_ст18_170956_17.11.md, п. 1).
+# Под заголовком блока выручки у карточки с последней открытой отчётностью старше GOD_INDEKSA_OT — не одна строка
+# «Последняя открытая — за N год», а три: (1) каких лет в открытой части ГИР БО не нашли — годы по этой компании, с датой
+# сведений (первая «ЕГРЮЛ · сведения на» страницы — дата сбора фактов, та же, что в «выводы по фактам, собранным …»);
+# (2) общая строка о законе (ч. 12 ст. 18 402-ФЗ) без причины по компании — со ссылкой на статью; (3) «Не проверяли»:
+# финансы за эти годы и раскрытие эмитента. Ворота индексации НЕ меняются (это «да/нет» владельца) — меняется только текст.
+# Ожидаемый последний год отчётности — год сведений −1, если сведения с июня (отчётность за прошлый год уже в ГИР БО),
+# иначе −2. Нет даты или ожидать нечего — прежняя одна строка. Повторный вызов — те же байты.
+ZO_STATYA = "/nalogi/net-otchetnosti-v-otkrytyh-dannyh/"
+_ZO_BLOK = re.compile(r'<p class="caption co-fin-god">.*?</p>(?:<p class="caption co-fin-(?:zakon|np)">.*?</p>)*', re.S)
+_ZO_DATA = re.compile(r"ЕГРЮЛ · сведения на(?:&nbsp;|&#160;|\s| )*(\d{2})\.(\d{2})\.(\d{4})")
+
+
+def zo_gody(g, dd):
+    """Год последней открытой отчётности g и дата сведений (дд, мм, гггг) → (с какого, по какой год не нашли) или None."""
+    if not dd:
+        return None
+    posl = int(dd[2]) - (1 if int(dd[1]) >= 6 else 2)
+    return (g + 1, posl) if posl > g else None
+
+
+def zo_blok(g, t):
+    """HTML строк о закрытой отчётности под заголовком блока выручки (или прежняя одна строка)."""
+    m = _ZO_DATA.search(t)
+    dd = m.groups() if m else None
+    gg = zo_gody(g, dd)
+    if not gg:
+        return '<p class="caption co-fin-god">%s</p>' % (IND_FIN_PODPIS % g)
+    gody = ("за" + NB + "%d" + NB + "год") % gg[0] if gg[0] == gg[1] else ("за" + NB + '<span class="co-nw">%d–%d</span>' + NB + "годы") % gg
+    return ('<p class="caption co-fin-god">В&nbsp;открытой части ГИР&nbsp;БО отчётности %s не&nbsp;нашли. '
+            'Последняя открытая&nbsp;— за&nbsp;%d&nbsp;год. Сведения на&nbsp;%s.%s.%s.</p>'
+            '<p class="caption co-fin-zakon">Закон позволяет ограничить открытый доступ к&nbsp;отчётности '
+            '(ч.&nbsp;12 ст.&nbsp;18 Закона о&nbsp;бухучёте). Почему так у&nbsp;этой компании, мы не&nbsp;знаем. '
+            '<a href="%s" data-goal="kartochka_zakryta">Почему так бывает&nbsp;›</a></p>'
+            '<p class="caption co-fin-np">Не&nbsp;проверяли: финансы %s&nbsp;— в&nbsp;открытых данных их нет; '
+            'раскрытие отчётности эмитента на&nbsp;сайтах раскрытия информации, если компания выпускала облигации или акции. '
+            '«Не&nbsp;проверяли»&nbsp;— это не&nbsp;«не&nbsp;нашли».</p>') % (gody, g, dd[0], dd[1], dd[2], ZO_STATYA, gody)
+
+
 def primenit_vorota_indeksa(t):
     """Готовая карточка (тело или страница) → та же карточка с решением ворот индексации. Повторный вызов ничего не меняет."""
     g = god_otchetnosti_html(t)
     if g is not None and g < GOD_INDEKSA_OT:
         # старая выручка — не в сниппет (description и og:description)
         t = _IND_DESC.sub(lambda m: m.group(1), t)
-        podpis = IND_FIN_PODPIS % g
-        if "co-fin-god" not in t:
-            t = _IND_FIN.sub(lambda m: m.group(0) + '<p class="caption co-fin-god">%s</p>' % podpis, t, count=1)
+        blok = zo_blok(g, t)
+        if "co-fin-god" in t:
+            t = _ZO_BLOK.sub(lambda m: blok, t, count=1)
+        else:
+            t = _IND_FIN.sub(lambda m: m.group(0) + blok, t, count=1)
     ok, _ = vorota_indeksa_html(t)
     est = noindex_html(t)
     if not ok and not est:
@@ -2915,13 +2956,38 @@ def _zn_dl_tochno(V):
     return out
 
 
+# dl-zagolovok-v1 (17.11.2026, [Ночные]): у 45 карточек без вывода «Выручка за ГГГГ — …» в «Коротко» заголовок раздела
+# говорил «Выручка снизилась на 7 % за год» (посчитано при сборке по ТОЧНЫМ суммам), а «Что это значит» и «Перед оплатой»
+# той же страницы — «на 7,9 % ниже» (по ОКРУГЛЁННЫМ суммам таблицы «6,3 / 5,8 трлн ₽»: «Газпром»; «Уайт бокс медиа» —
+# 6 и 5,3). Десятая доля из округлённой таблицы — ложная точность. Теперь порядок источников: вывод «Коротко» → заголовок
+# раздела (если он про год к году) → суммы таблицы.
+_ZN_DL_H2 = re.compile(r'<h2 id="fin">Выручка (выросла|снизилась) (на|в)[  ]([\d,]+)[  ](%|раза?|раз) за(?:[  ](\d{4}))?[  ]год</h2>')
+
+
+def _zn_dl_h2(fin_html, ryad):
+    """{год: доля} из заголовка раздела «Финансы» — только «за год» / «за ГГГГ год» (не «с … по …») и только если
+    в таблице есть и этот год, и предыдущий."""
+    m = _ZN_DL_H2.search(fin_html.replace("&nbsp;", NB).replace("&#160;", NB))
+    if not m or not ryad:
+        return {}
+    g = int(m.group(5)) if m.group(5) else ryad[-1]["god"]
+    gody = {x["god"] for x in ryad}
+    if g not in gody or g - 1 not in gody or g != ryad[-1]["god"]:
+        return {}
+    c = float(m.group(3).replace(",", "."))
+    v = c - 1 if m.group(2) == "в" else c / 100
+    return {g: v if m.group(1) == "выросла" else -v}
+
+
 def zn_dl(f, p1, p0):
-    """Изменение выручки p0 → p1 (доля): точное из вывода «Коротко», иначе — по суммам таблицы."""
+    """Изменение выручки p0 → p1 (доля): точное из вывода «Коротко», затем — из заголовка раздела, иначе — по суммам таблицы."""
     if not p0 or not p1 or not p0.get("dohod") or not p1.get("dohod"):
         return None
     g = p1.get("god")
     if g and p0.get("god") == g - 1 and g in (f.get("dl_tochno") or {}):
         return f["dl_tochno"][g]
+    if g and p0.get("god") == g - 1 and g in (f.get("dl_h2") or {}):
+        return f["dl_h2"][g]
     return p1["dohod"] / p0["dohod"] - 1
 
 
@@ -2956,6 +3022,7 @@ def zn_fakty(t):
                 ryad = [{"god": int(h.group(1)) if h.group(1) else None, "dohod": zn_summa(h.group(2)), "pribyl": None, "fns": True}]
         f["ryad"] = sorted(ryad, key=lambda x: x["god"] or 0)
         f["dl_tochno"] = _zn_dl_tochno(f["V"])
+        f["dl_h2"] = _zn_dl_h2(fin.group(0), f["ryad"])
         o = _ZN_OTRASL.search(fin.group(0))
         if o:
             f["otrasl"] = (_zn_txt(o.group(1)), int(o.group(2)), o.group(3))
@@ -3725,7 +3792,7 @@ def un_otlichie_zag(im, vid):
     return UN_ZAG.get(vid, "%s среди компаний Делоскопа.") % im
 
 
-def _un_put(ryad):
+def _un_put(ryad, dl_posl=None):
     """kartochki-unik-v7 ([Ночные-2] 19.10): каким путём шла выручка между первым и последним открытым годом —
     по строкам той же таблицы на странице (соседние годы). Возвращает (вид, год, доля): «kazhdyj» — росла каждый год,
     «spad» — самый глубокий годовой спад (≥ 5 %), иначе (None, None, None)."""
@@ -3736,6 +3803,8 @@ def _un_put(ryad):
     spady = [(b["dohod"] / a["dohod"] - 1, b["god"]) for a, b in pary if b["dohod"] < a["dohod"] * 0.95]
     if spady:
         d, g = min(spady)
+        if g == ryad[-1]["god"] and dl_posl is not None and dl_posl < 0:
+            d = dl_posl  # dl-zagolovok-v1: спад последнего года — то же число, что в заголовке и «Перед оплатой»
         return "spad", g, -d
     if all(b["dohod"] > a["dohod"] for a, b in pary):
         return "kazhdyj", None, None
@@ -3771,11 +3840,11 @@ def un_istoriya(im, reestr, ruk, a0, p1, ryad=None):
 # ещё раз «в реестре с 2006 года (20 лет)» первым предложением «Что это значит для вас» (165 из 167). В «Что это
 # значит» возраст теперь только у молодых компаний (до 3 лет — он и есть вывод: «история короткая»); у остальных
 # абзац начинается с того, что из возраста не видно: выручка за годы открытой отчётности и руководитель. Числа — те же.
-def un_istoriya_v8d(im, ruk_god, a0, p1, ryad=None):
+def un_istoriya_v8d(im, ruk_god, a0, p1, ryad=None, dl_posl=None):
     g0, r0, g1, r1 = a0["god"], a0["dohod"], p1["god"], p1["dohod"]
     ruk = ("; руководитель тот же с%s%s года" % (NB, ruk_god)) if ruk_god else ""
     if r1 / r0 >= 1.3:
-        vid, gs, ds = _un_put(ryad or [])
+        vid, gs, ds = _un_put(ryad or [], dl_posl)
         if vid == "kazhdyj":
             return "Выручка %s росла каждый год из%s%d%s%s открытой отчётности — от%s%s в%s%d до%s%s в%s%d%s." % (
                 im, NB, len(ryad), NB, "года" if len(ryad) % 10 == 1 and len(ryad) % 100 != 11 else "лет", NB,
@@ -3867,7 +3936,7 @@ def un_frazy(f):
                        "поставки." % (im, reestr))
         elif glub:
             out.append(un_istoriya_v8d(im, ruk_s.group(1) if ruk_s else None,
-                                       a0, p1, [x for x in ryad if not x.get("fns")]))
+                                       a0, p1, [x for x in ryad if not x.get("fns")], dl))
         else:
             out.append(un_korotkaya_v8d(im, ruk_s.group(1) if ruk_s else None, len(ryad), p1.get("fns")))
 
@@ -5299,6 +5368,15 @@ def _pm_na(d):
     return (" на" + NB + d) if re.fullmatch(r"\d{2}\.\d{2}\.\d{4}", d or "") else ""
 
 
+NEDOIMKI_NET = ("Недоимки и" + NB + "долгов по" + NB + "пеням и" + NB + "штрафам в" + NB
+                + "открытых данных ФНС не" + NB + "нашли")
+
+
+def _pm_svedeniya(d):
+    """« — сведения на ДД.ММ.ГГГГ» — дата набора ФНС (как svedeniyaNa в js/plyusy-minusy.js)."""
+    return (" —" + NB + "сведения на" + NB + d) if re.fullmatch(r"\d{2}\.\d{2}\.\d{4}", d or "") else ""
+
+
 def plural_pm(n, a, b, c):
     n = abs(n) % 100
     return c if 11 <= n <= 14 else a if n % 10 == 1 else b if 2 <= n % 10 <= 4 else c
@@ -5320,6 +5398,17 @@ def pochinit_slova_pravo(t):
     t = _SP_V26.sub(lambda m: m.group(1) + "; требования к компании — " + m.group(2) + m.group(3), t)
     t = _SP_V12.sub(lambda m: m.group(1) + ", остаток долга — " + m.group(2) + m.group(3), t)
     return t.replace("Долгов у приставов не нашли", "Производств у приставов не нашли")
+
+
+def pm_gody_bez(g, eg_d):
+    """«за 2022–2025 годы» — годы без открытой отчётности по дате сведений карточки (те же, что zo_gody); нет даты — «после 2021 года»."""
+    m = re.fullmatch(r"(\d{2})\.(\d{2})\.(\d{4})", eg_d or "")
+    gg = zo_gody(g, m.groups()) if m else None
+    if not gg:
+        return "после %d%sгода" % (g, NB)
+    if gg[0] == gg[1]:
+        return "за%s%d%sгод" % (NB, gg[0], NB)
+    return "за%s%d\u2060–\u2060%d%sгоды" % (NB, gg[0], gg[1], NB)  # U+2060: диапазон не рвётся на телефоне
 
 
 def plyusy_minusy_stroki(t):
@@ -5348,8 +5437,9 @@ def plyusy_minusy_stroki(t):
     if v:
         zn, (ist, d) = v
         if zn == "Нет":
-            # slova-pravo (Право 16.11, п. 1): набор ФНС — недоимка на свою дату, «нет долгов» шире данных
-            P.append(("tax_debt", "Недоимки по" + NB + "данным ФНС не" + NB + "нашли" + _pm_na(d), ist, d))
+            # slova-pravo (Право 16.11, п. 1): набор ФНС — недоимка на свою дату, «нет долгов» шире данных;
+            # slova-pravo-v2 (Право 17.11): с пенями и штрафами, «— сведения на» дату набора (как js/plyusy-minusy.js)
+            P.append(("tax_debt", NEDOIMKI_NET + _pm_svedeniya(d), ist, d))
         else:
             sm = re.match(r"[\d ,]+(?:тыс\.|млн|млрд|трлн)? ?₽", zn)
             M.append(("tax_debt", "Долг по налогам" + (" " + sm.group(0).strip() if sm else ""), ist, d))
@@ -5378,7 +5468,8 @@ def plyusy_minusy_stroki(t):
         if g >= tek - 2:
             P.append(("otchetnost", "Отчётность за %d%sгод в%sГИР%sБО" % (g, NB, NB, NB), ist, d))
         else:
-            M.append(("otchetnost", "Последняя отчётность — за %d%sгод" % (g, NB), ist, d))
+            # otchetnost-ne-minus-v1 ([Право] 17.11, п. 1.3): закрытый доступ к ГИР БО — «нет данных», не минус
+            N.append("финансы %s (в%sоткрытых данных их нет)" % (pm_gody_bez(g, eg_d), NB))
     # внешние реестры
     v = fakty.get("Арбитражные дела, где компания — ответчик")
     if v:

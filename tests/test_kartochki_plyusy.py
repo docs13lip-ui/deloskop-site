@@ -69,7 +69,7 @@ class TestStroki(unittest.TestCase):
         S = K.plyusy_minusy_stroki(t)
         P = [x[1].replace(NB, " ") for x in S["plyusy"]]
         self.assertIn("Не нашли незавершённых дел, где компания — ответчик, на 13.11.2026", P)
-        self.assertIn("Недоимки по данным ФНС не нашли на 01.10.2026", P)
+        self.assertIn("Недоимки и долгов по пеням и штрафам в открытых данных ФНС не нашли — сведения на 01.10.2026", P)
         self.assertEqual(S["minusy"], [])
 
     def test_ne_provereno(self):
@@ -82,8 +82,30 @@ class TestStroki(unittest.TestCase):
 
     def test_staraya_otchetnost(self):
         t = _stranica([_fact("Выручка за 2021", "5&nbsp;млрд&nbsp;₽", "ГИР БО · сведения на 31.12.2021 · ●")])
-        M = [x[1].replace(NB, " ") for x in K.plyusy_minusy_stroki(t)["minusy"]]
-        self.assertIn("Последняя отчётность — за 2021 год", M)
+        S = K.plyusy_minusy_stroki(t)
+        M = [x[1].replace(NB, " ") for x in S["minusy"]]
+        # otchetnost-ne-minus-v1 ([Право] 17.11, п. 1.3): закрытый доступ к ГИР БО — «нет данных», не минус
+        self.assertFalse([x for x in M if "тчётност" in x], M)
+        self.assertIn("финансы за 2022–2025 годы (в открытых данных их нет)", [x.replace(NB, " ").replace("\u2060", "") for x in S["ne"]])
+        self.assertTrue(any("2022\u2060–\u20602025" in x for x in S["ne"]), "диапазон лет не рвётся")
+
+    def test_staraya_otchetnost_gody(self):
+        for g, d, ozh in ((2023, "15.11.2026", "за 2024–2025 годы"), (2023, "15.03.2026", "за 2024 год"),
+                          (2022, "15.03.2026", "за 2023–2024 годы"), (2021, "", "после 2021 года")):
+            self.assertEqual(K.pm_gody_bez(g, d).replace(NB, " ").replace("\u2060", ""), ozh, (g, d))
+
+    def test_opublikovannye_bez_minusa_otchetnosti(self):
+        """Сторож опубликованных: ни одна карточка не пишет закрытую отчётность минусом; у каждой со старой — строка «Не проверено»."""
+        n = 0
+        for f in sorted(glob.glob(str(KOREN / "company" / "*" / "index.html"))):
+            t = Path(f).read_text(encoding="utf-8")
+            self.assertNotIn("Последняя отчётность", t.replace("&#160;", " ").replace(NB, " "), f)
+            if 'class="caption co-fin-god"' in t and "co-pm" in t:
+                n += 1
+                ne = re.search(r'<p class="pm__ne">(.*?)</p>', t, re.S)
+                self.assertTrue(ne and "открытых данных их нет" in html.unescape(ne.group(1)).replace(NB, " ")
+                                and "\u2060–\u2060" in html.unescape(ne.group(1)), f)
+        self.assertGreaterEqual(n, 15)
 
     def test_html_idempotentno_i_mesto(self):
         t = _stranica([_fact("Задолженность по налогам", "Нет", SRC)])

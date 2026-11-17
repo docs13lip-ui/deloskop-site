@@ -213,7 +213,8 @@
     if (b && sost(b) === 'found') minus('damia_rnp', 'Есть запись в' + NB + 'реестре недобросовестных поставщиков' + naDatu(b.data_svedeniy), b.istochnik, b.data_svedeniy, b.nazvanie);
     if (vk > 0) plus('damia_kontrakty', 'Госконтракты как поставщик: ' + chislo(vk), bk.istochnik, bk.data_svedeniy, bk.nazvanie);
     // не в РНП — плюс только у того, кто работает с госзаказом (иначе строка ни о чём)
-    if (b && sost(b) === 'not_found' && vk > 0) plus('damia_rnp', 'Не нашли в' + NB + 'реестре недобросовестных поставщиков' + naDatu(b.data_svedeniy), b.istochnik, b.data_svedeniy, b.nazvanie);
+    // без даты набора «не нашли в РНП» не пишем ([команда] № 53: нет «нет в РНП» без даты)
+    if (b && sost(b) === 'not_found' && vk > 0 && naDatu(b.data_svedeniy)) plus('damia_rnp', 'Не нашли в' + NB + 'реестре недобросовестных поставщиков' + naDatu(b.data_svedeniy), b.istochnik, b.data_svedeniy, b.nazvanie);
 
     // ---- прогноз ЗСК (наша оценка) и господдержка ----
     var z = r.zsk;

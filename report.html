@@ -315,10 +315,13 @@ th{font-weight:400;color:var(--muted);width:38%;padding-right:16px}
     msg.innerHTML='Не получилось загрузить отчёт. Обычно это минута — попробуйте ещё раз.<br><button class="btn primary" type="button" id="again" style="margin-top:16px">Повторить</button>';
     document.getElementById('again').onclick=function(){msg.textContent='Загружаем отчёт…';load();};
   }
+  // zapusk-blokov-v1 (17.11): ответ раннего запроса из <head> приходит раньше, чем исполнены defer-файлы (metrika.js с dlkGoal), —
+  // цель report_opened терялась. Отправляем её, когда dlkGoal уже есть.
+  function celOtkryt(){if(window.dlkGoal)dlkGoal('report_opened');else document.addEventListener('DOMContentLoaded',function(){if(window.dlkGoal)dlkGoal('report_opened')},{once:true})}
   function load(){
     // rannij-zapros-v1: первый запрос — из <head> (window.__dlkRep), повтор по кнопке — заново
     var rano=window.__dlkRep;window.__dlkRep=null;
-    (rano||fetch(API+'/api/report/'+encodeURIComponent(id)).then(function(r){if(!r.ok)throw r.status;return r.json()})).then(function(d){if(window.dlkGoal)dlkGoal('report_opened');if(window.DlkImya)DlkImya.ispravitOtvet(d);return render(d);})
+    (rano||fetch(API+'/api/report/'+encodeURIComponent(id)).then(function(r){if(!r.ok)throw r.status;return r.json()})).then(function(d){celOtkryt();if(window.DlkImya)DlkImya.ispravitOtvet(d);return render(d);})
       .catch(function(s){if(s===404||s===410)pusto('Отчёт по этой ссылке не найден: возможно, в ней опечатка. Проверьте компанию заново — это займёт несколько секунд.');else oshibka();});
   }
   // ссылка вида /report.html?inn=… — сразу запускаем проверку на главной (там поиск, отчёт и «Недавние»)

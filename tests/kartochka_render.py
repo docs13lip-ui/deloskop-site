@@ -5684,3 +5684,69 @@ def pochinit_rost_vyruchki(t):
             return m.group(0)
         return m.group(1) + sl + za2 + "</h2>"
     return _GP_H2.sub(h2, t)
+
+
+# ---------------------------------------------------------------- pervyj-ekran-kartochki-v1 ([Ночные-2] 18.11)
+# Решение владельца 18.11 «сайт лучше справочников» (claude/Решения_владельца_18.11_сайт_лучше_конкурентов_и_справочников.md,
+# разд. 1 п. 1 и разд. 3 п. 1): первый экран карточки не отвечал на вопрос — главным блоком было пустое кольцо «1–99, Индекс —
+# в полном отчёте», на телефоне 390×844 до первого вывода — 920 точек. Теперь под названием и видом деятельности, до кнопок —
+# «Итог по фактам»: одна строка «Плюсов N, минусов M — по фактам, собранным ДД.ММ.ГГГГ» (дата — ЕГРЮЛ под названием), три
+# главных факта (сначала минусы, затем плюсы по весу) и Индекс одной строкой со ссылкой (цель Метрики kartochka_indeks —
+# прежняя). Слова — только те, что уже стоят в «Плюсах и минусах» той же страницы (до ответа [Право] на слова итога: никаких
+# «существенных минусов не нашли»). Кольцо снимается. Последним шагом у новых и у опубликованных; идемпотентна.
+IT_SEK = re.compile(r'<section class="co-itog"[^>]*>.*?</section><!--/co-itog-->', re.S)
+_IT_KOLCO = re.compile(r'<section class="co-ind co-ind--wait[^"]*" aria-label="Индекс Делоскопа">.*?</section>\n?', re.S)
+IT_KUDA = '<div class="co-act">'
+IT_FAKTOV = 3
+# какой плюс главнее для того, кто собирается платить: суды и приставы, налоги, банкротство, достоверность, статус
+IT_VES_P = ["sudy", "fssp", "tax_debt", "bankrotstvo", "address", "status", "otchetnost", "age", "employees"]
+
+
+def _it_li(x, mod):
+    k, tx, ist, d = x
+    meta = " · ".join(y for y in (ist, ("на" + NB + d) if d else "") if y)
+    return ('<li class="co-itog__l co-itog__l--%s" data-pm="%s"><a href="#reestry"%s><span class="vh">%s: </span>%s</a></li>'
+            % (mod, k, (' title="%s"' % html.escape(meta)) if meta else "", "минус" if mod == "minus" else "плюс",
+               html.escape(tx, quote=False)))
+
+
+def itog_html(S, inn, eg_d):
+    """«Итог по фактам» из строк plyusy_minusy_stroki. Нет строк или даты сбора — пусто (карточку не трогаем)."""
+    if not S or not (S["plyusy"] or S["minusy"]) or not re.fullmatch(r"\d{2}\.\d{2}\.\d{4}", eg_d or ""):
+        return ""
+    P = sorted(S["plyusy"], key=lambda x: IT_VES_P.index(x[0]) if x[0] in IT_VES_P else 99)
+    glavnye = [(x, "minus") for x in S["minusy"]][:IT_FAKTOV]
+    glavnye += [(x, "plus") for x in P][:IT_FAKTOV - len(glavnye)]
+    ne = (", не" + NB + "проверено " + str(len(S["ne"]))) if S["ne"] else ""
+    return ('<section class="co-itog" aria-labelledby="itog"><h2 id="itog" class="co-itog__s">Плюсов %d, минусов %d%s'
+            '<span class="co-itog__d">%s— по%sфактам, собранным %s</span></h2><ul class="co-itog__f">%s</ul>'
+            '<p class="caption co-itog__i"><a href="#pm">Все плюсы и%sминусы</a> · <a href="/?inn=%s" data-goal="kartochka_indeks">'
+            'Индекс%s— в%sполном отчёте ›</a> (балл от%s1 до%s99 на%sсегодня)</p></section><!--/co-itog-->'
+            % (len(S["plyusy"]), len(S["minusy"]), ne, NB, NB, eg_d, "".join(_it_li(x, m) for x, m in glavnye),
+               NB, inn, NB, NB, NB, NB, NB))
+
+
+def pervyj_ekran_kartochki(t):
+    """Карточка → «Итог по фактам» над кнопками, без кольца Индекса. Повторный вызов даёт те же байты."""
+    if not t or IT_KUDA not in t:
+        return t
+    m = _KANON_INN.search(t)
+    if not m:
+        return t
+    bez = IT_SEK.sub("", t)
+    S = plyusy_minusy_stroki(bez)
+    mo = _PM_OKVED.search(bez)
+    blok = itog_html(S, m.group(1), mo.group(2) if mo else "")
+    if not blok:
+        return bez
+    bez = _IT_KOLCO.sub("", bez, count=1).replace('<script src="/js/linza.js" defer></script>', "")
+    i = bez.index(IT_KUDA)
+    return bez[:i] + blok + bez[i:]
+
+
+_html_kartochki_bez_itoga = html_kartochki
+
+
+def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811
+    """pervyj-ekran-kartochki-v1: та же карточка, первым экраном — итог по фактам."""
+    return pervyj_ekran_kartochki(_html_kartochki_bez_itoga(k, V, sosedi, kom, normy, cena, segodnya))

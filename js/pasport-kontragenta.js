@@ -214,6 +214,15 @@
   // Капитал меньше нуля — единственная строка с тоном «warn»: раздел тогда не может говорить «настораживающих отметок нет».
   var IST_BALANS = 'ГИР БО, бухгалтерский баланс';
   function chislo(v) { return typeof v === 'number' && isFinite(v) ? v : null; }
+  // zajmy-raz-v1: кредиты в 3 раза больше выручки и выше — «в 33 раза больше выручки за 2025», как на экране и карточке
+  function kVyruchke(p, gd) {
+    var NB_ = '\u00a0';
+    if (p < 300) return p + NB_ + '% выручки за' + NB_ + gd;
+    var k = p / 100, t;
+    if (k >= 9.95) { var n = Math.round(k), a = n % 100, b = n % 10; t = n + NB_ + (a > 10 && a < 20 ? 'раз' : b >= 2 && b <= 4 ? 'раза' : 'раз'); }
+    else { var d = (Math.round(k * 10) / 10).toFixed(1).replace(/\.0$/, ''); t = d.replace('.', ',') + NB_ + (/\./.test(d) ? 'раза' : (+d >= 2 && +d <= 4 ? 'раза' : 'раз')); }
+    return 'в' + NB_ + t + ' больше выручки за' + NB_ + gd;
+  }
   function rub(v, U) {
     var n = Math.round(Math.abs(v));
     var s = U && U.money ? U.money(n) : n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' ₽';
@@ -299,7 +308,7 @@
       var vyr = vy ? chislo(vy.value) : null;
       [['Дебиторская задолженность (должны компании)', d.receivables, false], ['Кредиторская задолженность (должна компания)', d.payables, false], ['Кредиты и займы', d.loans, true]].forEach(function (x) {
         var v = chislo(x[1]); if (v == null || v < 0) return;
-        var hvost = x[2] && v > 0 && vyr != null && vyr > 0 ? ' — ' + Math.round(v / vyr * 100) + '\u00a0% выручки за\u00a0' + gd : '';
+        var hvost = x[2] && v > 0 && vyr != null && vyr > 0 ? ' — ' + kVyruchke(Math.round(v / vyr * 100), gd) : '';
         dobavit(x[0], rub(v, U) + hvost, { ton: 'info', data: gd + '-12-31', istochnik: IST_BALANS });
         n++;
       });

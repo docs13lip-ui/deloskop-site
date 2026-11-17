@@ -362,7 +362,7 @@
   function balans(r) {
     var ch = (r && r.dossier && r.dossier.charts) || {};
     var b = ch.balance && typeof ch.balance === 'object' ? ch.balance : null, d = ch.debts && typeof ch.debts === 'object' ? ch.debts : null;
-    var out = { god: null, chasti: [], polosa: false, kapitalMinus: null, raschety: [], godR: null, zajmyKVyr: null };
+    var out = { god: null, chasti: [], polosa: false, kapitalMinus: null, raschety: [], godR: null, zajmyKVyr: null, zajmyTekst: null };
     if (b) {
       var gb = parseInt(b.year, 10), eq = chisl(b.equity), ld = chisl(b.long_debt), sd = chisl(b.short_debt);
       if (isFinite(gb) && (eq != null || ld != null || sd != null)) {
@@ -385,6 +385,8 @@
         var vy = (Array.isArray(ch.revenue) ? ch.revenue : []).filter(function (x) { return x && parseInt(x.year, 10) === gd; })[0];
         var zl = chisl(d.loans);
         if (zl != null && zl > 0 && vy && chisl(vy.value) != null && vy.value > 0) out.zajmyKVyr = Math.round(zl / vy.value * 100);
+        // zajmy-raz-v1: в 3 раза и больше — «в 33 раза больше выручки», как на карточке компании; «3306 %» не читается
+        if (out.zajmyKVyr != null) out.zajmyTekst = out.zajmyKVyr >= 300 ? vRazTochno(out.zajmyKVyr / 100) + ' больше выручки за' + NB + gd : out.zajmyKVyr + NB + '% выручки за' + NB + gd;
       }
     }
     return out.chasti.length || out.kapitalMinus != null || out.raschety.length ? out : null;
@@ -408,7 +410,7 @@
     if (b.raschety.length) {
       h += '<div class="din__bh"><b>Кто кому должен</b><span>на' + NB + '31.12.' + b.godR + '</span></div><ul class="din__leg din__ras">' + b.raschety.map(function (x) {
         return '<li><span>' + esc(x.nazv) + '</span><b class="n">' + dengi(x.v) + '</b><em class="n">' +
-          (x.k === 'loan' && b.zajmyKVyr != null ? b.zajmyKVyr + NB + '% выручки за' + NB + b.godR : '') + '</em></li>';
+          (x.k === 'loan' && b.zajmyTekst ? b.zajmyTekst : '') + '</em></li>';
       }).join('') + '</ul>';
     }
     return h + '</div>';
@@ -581,6 +583,12 @@
     'Если ваше требование возникло до' + NB + 'первой публикации о' + NB + 'реорганизации, проверьте сроки: 30' + NB + 'дней с' + NB + 'последней публикации ' +
     'в' + NB + '«Вестнике государственной регистрации» (п.' + NB + '2 ст.' + NB + '60 ГК' + NB + 'РФ).';
 
+  // zajmy-raz-v1: «в 3,4 раза», «в 33 раза» — с округлением до десятой, как на карточке компании (_bv_razy)
+  function vRazTochno(k) {
+    if (k >= 9.95) { var n = Math.round(k); return 'в' + NB + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, NB) + NB + skl(n, 'раз', 'раза', 'раз'); }
+    var t = chislo(Math.round(k * 10) / 10, 1).replace(/,0$/, '');
+    return 'в' + NB + t + NB + (/,/.test(t) ? 'раза' : skl(+t, 'раз', 'раза', 'раз'));
+  }
   // Во сколько раз: «в 2 раза», «в 2,4 раза», «в 12 раз» (k ≥ 2)
   function vRaz(k) {
     if (k >= 10) { var n = Math.round(k); return 'в' + NB + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, NB) + NB + skl(n, 'раз', 'раза', 'раз'); }

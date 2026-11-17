@@ -31,7 +31,7 @@ function otvet(o) {
         dannye: { otkryto: 353, ostatok: 22961651.11, ostatok_tochno: false } },
       bankrotstvo: { nazvanie: 'Банкротство', istochnik: 'ЕФРСБ (через Checko)', status: 'polucheno', sostoyanie: 'not_found', data_svedeniy: '2026-11-12T01:01+03:00' },
       priostanovki: { nazvanie: 'Счета: решения ФНС о приостановлении', status: 'ne_provereno', sostoyanie: 'not_checked' },
-      rnp: { nazvanie: 'Недобросовестные поставщики (РНП)', status: 'polucheno', sostoyanie: 'not_found' },
+      rnp: { nazvanie: 'Недобросовестные поставщики (РНП)', status: 'polucheno', sostoyanie: 'not_found', data_svedeniy: '2026-11-12T19:10+03:00' },
       kontrakty: { nazvanie: 'Госконтракты', status: 'polucheno', sostoyanie: 'found', dannye: { vsego: 34193 } },
       polnota: { provereno: 5, iz: 7 }, platnyj: false, versiya: 'damia-v1.4'
     },
@@ -51,7 +51,9 @@ test('плюсы — по порядку важности; госконтрак�
   const S = PM.sobrat(otvet());
   assert.deepStrictEqual(teksty(S.plyusy), ['Действующая компания', 'Недоимки по данным ФНС не нашли на 01.10.2026', 'Нет сообщений о банкротстве',
     'Нет отметок о недостоверности', 'На рынке 19 лет', 'Госконтракты как поставщик: 34 193', 'Руководитель не менялся 17 лет',
-    'Не нашли в реестре недобросовестных поставщиков']);
+    'Не нашли в реестре недобросовестных поставщиков на 12.11.2026']);
+  const bezDaty = otvet(); delete bezDaty.damia.rnp.data_svedeniy;
+  assert.ok(!teksty(PM.sobrat(bezDaty).plyusy).some((x) => /недобросовест/.test(x)), 'без даты набора «не нашли в РНП» не пишем ([Право] № 53)');
   const r = otvet(); r.damia.kontrakty.sostoyanie = 'not_found';
   const t = teksty(PM.sobrat(r).plyusy);
   assert.ok(!t.some((x) => /РНП|недобросовест|Госконтракты/.test(x)), t.join(' | '));

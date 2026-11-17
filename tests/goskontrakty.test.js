@@ -39,10 +39,10 @@ test('третий раздел «Госконтракты» — только к
 
 test('кратко и факты: всего как поставщик, по законам отдельно, последний контракт, РНП с датой; сумму «по первым 200» не показываем', () => {
   const g = razdel(D.sobrat(otvet()));
-  assert.strictEqual(bezNb(g.kratko), '34 193 контракта и договора как поставщик');
+  assert.strictEqual(bezNb(g.kratko), '34 193 контракта и договора, где компания — поставщик (ЕИС, на 12.11.2026)');
   assert.deepStrictEqual(g.fakty.map((f) => bezNb(f.t + ': ' + f.z)), [
-    'По 44-ФЗ (госзаказчики): 29 550', 'По 223-ФЗ (госкомпании): 4 643', 'Последний контракт: 26.10.2026',
-    'Реестр недобросовестных поставщиков: нет действующих записей на 12.10.2026']);
+    'По 44-ФЗ (государственные и муниципальные заказчики): 29 550', 'По 223-ФЗ (госкомпании, монополии и другие заказчики по 223-ФЗ): 4 643', 'Последний контракт: 26.10.2026',
+    'Реестр недобросовестных поставщиков: записей не нашли по данным на 12.10.2026']);
   assert.ok(!g.fakty.some((f) => f.vnim));
   const vse = razdel(D.sobrat(otvet({ ohvat: 'vse' })));
   assert.ok(vse.fakty.some((f) => bezNb(f.t + ': ' + f.z) === 'Сумма всех: 14 млрд ₽'));
@@ -50,13 +50,13 @@ test('кратко и факты: всего как поставщик, по з�
 
 test('РНП найден — в кратком и фактом «на что смотреть»; склонения записей', () => {
   const g = razdel(D.sobrat(otvet({ rnp: 'found', rnpN: 2 })));
-  assert.strictEqual(bezNb(g.kratko), '34 193 контракта и договора как поставщик · есть запись в реестре недобросовестных поставщиков на 12.10.2026');
+  assert.strictEqual(bezNb(g.kratko), '34 193 контракта и договора, где компания — поставщик (ЕИС, на 12.11.2026) · есть запись в реестре недобросовестных поставщиков на 12.10.2026');
   const f = g.fakty[g.fakty.length - 1];
   assert.strictEqual(bezNb(f.z), '2 действующие записи на 12.10.2026');
   assert.ok(f.vnim);
   const nol = razdel(D.sobrat(otvet({ kSost: 'not_found', sp: [], rnp: 'found', rnpN: 1 })));
   assert.strictEqual(nol.vid, 'est');
-  assert.strictEqual(bezNb(nol.kratko), '0 контрактов и договоров как поставщик · есть запись в реестре недобросовестных поставщиков на 12.10.2026');
+  assert.strictEqual(bezNb(nol.kratko), '0 контрактов и договоров, где компания — поставщик (ЕИС, на 12.11.2026) · есть запись в реестре недобросовестных поставщиков на 12.10.2026');
 });
 
 test('список: свежие сверху, на виду 5, «Показать все загруженные», честно «загружены 7 последних из 34 193»; ссылки — только zakupki.gov.ru', () => {
@@ -71,7 +71,8 @@ test('список: свежие сверху, на виду 5, «Показат
   const chuzhaya = D.html(D.sobrat(otvet({ sp: [k(0, { ssylka: 'https://zakupki-gov.example/epz/1' }), k(1, { ssylka: 'https://zakupki.gov.ru.example/x' })] })));
   assert.ok(!/example/.test(chuzhaya), 'ссылки только на zakupki.gov.ru');
   assert.match(blok, /&lt;b&gt;1&lt;\/b&gt;/);
-  assert.match(bezNb(blok), /Заказчик не указан · 223-ФЗ/);
+  assert.ok(!/Заказчик не указан|неизвестен/.test(bezNb(blok)), 'без заказчика — строку пропускаем ([Право] № 53)');
+  assert.match(blok, /<span class="dl__sum">без суммы<\/span><\/div><div class="dl__s2">223-ФЗ<\/div>/);
   assert.match(blok, /href="https:\/\/zakupki\.gov\.ru\/epz\/contract\/contractCard\/common-info\.html\?reestrNumber=2860100962026000010" target="_blank" rel="noopener nofollow"/);
   assert.match(blok, /href="https:\/\/zakupki\.gov\.ru\/epz\/contract\/search\/results\.html\?searchString=7700000001"[^>]*>открыть ЕИС/);
 });
@@ -96,7 +97,8 @@ test('заказчики — по загруженным, с подписью «
 test('РНП устарел или источник не обновляется — так и пишем, без «нет записей»', () => {
   const r = otvet(); r.damia.rnp = Object.assign(r.damia.rnp, { status: 'stale', sostoyanie: 'stale', status_do: 'not_found' });
   const z = (m) => bezNb(razdel(m).fakty.find((f) => /недобросовестных/.test(f.t)).z);
-  assert.strictEqual(z(D.sobrat(r)), 'на 12.10.2026 записей не было — сведения устарели');
+  assert.strictEqual(z(D.sobrat(r)), 'записей не нашли по данным на 12.10.2026. Сведения не обновлялись больше месяца');
+  assert.match(D.html(D.sobrat(r)), /не обновлялись больше месяца — <a href="https:\/\/zakupki\.gov\.ru\/epz\/dishonestsupplier\/search\/results\.html\?searchString=7700000001" target="_blank" rel="noopener nofollow">проверьте в ЕИС →<\/a>/);
   const r2 = otvet(); r2.damia.rnp = { nazvanie: 'Недобросовестные поставщики (РНП)', status: 'not_checked', sostoyanie: 'not_checked', prichina: 'источник сейчас не обновляется' };
   assert.strictEqual(z(D.sobrat(r2)), 'не проверено: источник сейчас не обновляется');
 });
@@ -104,7 +106,7 @@ test('РНП устарел или источник не обновляется 
 test('пусто, сбой, нет блока: факт с датой, «Не проверили», чего не проверяли; слов-оценок нет', () => {
   const p = razdel(D.sobrat(otvet({ kSost: 'not_found', sp: [] })));
   assert.strictEqual(p.vid, 'pusto');
-  assert.strictEqual(bezNb(p.tekst), 'Не нашли контрактов, где компания — поставщик, на 12.11.2026; в РНП записей нет.');
+  assert.strictEqual(bezNb(p.tekst), 'Не нашли контрактов, где компания — поставщик, на 12.11.2026; в РНП записей не нашли по данным на 12.10.2026.');
   const n = razdel(D.sobrat(otvet({ kSost: 'not_checked' })));
   assert.strictEqual(n.vid, 'ne');
   assert.match(n.tekst, /^Не проверили/);
@@ -113,4 +115,14 @@ test('пусто, сбой, нет блока: факт с датой, «Не п
   const g = razdel(D.sobrat(otvet()));
   assert.strictEqual(bezNb(g.ne), 'Не проверяли: закупки, где компания — заказчик, и как исполнены контракты (расторжения, неустойки) — не проверяли не значит «нет».');
   assert.ok(!/чисто|надёжн|ненадёжн|благонад/i.test(D.html(D.sobrat(otvet()))));
+});
+
+test('сторож [Право] № 53: при части списка нет «всего на сумму»; «нет в РНП» без даты набора не пишем; слова «как поставщик» и «записей не было» ушли', () => {
+  const chast = D.html(D.sobrat(otvet()));
+  assert.ok(!/всего на сумму|Сумма всех/i.test(bezNb(chast)), 'часть списка — без суммы «всего»');
+  const r = otvet(); delete r.damia.rnp.data_svedeniy;
+  const f = razdel(D.sobrat(r)).fakty.find((x) => /недобросовестных/.test(x.t));
+  assert.strictEqual(bezNb(f.z), 'записей не нашли');
+  const vse = [D.html(D.sobrat(otvet())), D.html(D.sobrat(otvet({ rnp: 'found', rnpN: 1 }))), D.html(D.sobrat(r))].map(bezNb).join(' ');
+  assert.ok(!/нет в РНП|в РНП записей нет|нет действующих записей|записей не было|как поставщик|госзаказчики\)/.test(vse), vse.slice(0, 200));
 });

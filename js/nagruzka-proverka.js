@@ -38,6 +38,11 @@
   }
   function chislo(v) { return v !== null && v !== '' && typeof v !== 'boolean' && isFinite(Number(v)) ? Number(v) : NaN; }
   function pct(x) {
+    // procent-malo-v1: доля меньше 0,05 % (не ноль) — две значащие цифры, а не «0,0 %» («налогов нет» — неправда)
+    if (x && Math.abs(x) < 0.05) {
+      var a = Math.abs(x), n = Math.min(6, 1 - Math.floor(Math.log10(a)));
+      return (x < 0 ? '−' : '') + a.toFixed(n).replace(/0+$/, '').replace(/\.$/, '').replace('.', ',') + NB + '%';
+    }
     var r = Math.round(x * 10) / 10, s = String(Math.abs(r)).replace('.', ',');
     if (s.indexOf(',') < 0) s += ',0';
     return (r < 0 ? '−' : '') + s + NB + '%';
@@ -262,6 +267,6 @@
     });
   }
 
-  return { dannye: dannye, rezhim: rezhim, godNabora: godNabora, raschet: raschet, html: html, mount: mount, vstavit: vstavit,
+  return { dannye: dannye, rezhim: rezhim, godNabora: godNabora, raschet: raschet, html: html, mount: mount, vstavit: vstavit, pct: pct,
     VYVOD: VYVOD, NDFL: NDFL, PRIZNAK: PRIZNAK, CSS: CSS };
 });

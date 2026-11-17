@@ -3489,6 +3489,10 @@ _UN_RAZDELY = {t for _, _, t in OKVED_RAZDELY}
 _UN_PRIB_V = re.compile(r"^Чистая прибыль за (\d{4}) — (.+?₽)")
 _UN_UB_V = re.compile(r"^Убыток за (\d{4}) — (.+?₽)")
 _UN_SHTAT = re.compile(r"^В штате ([\d  ]+) человек")
+# rent-odna-v1 (17.11.2026, [Ночные запуски]): «Чистая рентабельность за Г — X %» из «Разбора по цифрам» — точное число
+# (посчитано из рядов, а не из округлённых «19,4 млрд ₽» / «2,9 млрд ₽» таблицы).
+_UN_RENT_S = r"(?:&nbsp;|&#160;|[ \u00a0\u202f])"
+_UN_RENT = re.compile(r"Чистая рентабельность за" + _UN_RENT_S + r"(\d{4})" + _UN_RENT_S + r"?—" + _UN_RENT_S + r"(−?[\d,]+)" + _UN_RENT_S + "%")
 _UN_PERED = re.compile(r'(<section class="co-sec co-pered" aria-labelledby="pered"><h2 id="pered">Перед оплатой</h2><ul>)(.*?)(</ul></section>)', re.S)
 PORYADK_ZH = {1: "первая", 2: "вторая", 3: "третья", 4: "четвёртая", 5: "пятая"}
 
@@ -3505,6 +3509,9 @@ def un_fakty(t):
     f = zn_fakty(t)
     if not f.get("imya"):
         return f
+    f["rent"] = {}
+    for g, v in _UN_RENT.findall(t):
+        f["rent"].setdefault(int(g), float(v.replace("−", "-").replace(",", ".")) / 100)
     po_godu = {x["god"]: x for x in f["ryad"] if x.get("god")}
     for ton, x in f["V"]:
         m = _UN_PRIB_V.match(x) or _UN_UB_V.match(x)
@@ -3533,7 +3540,23 @@ def _un_kratko(f):
     p0 = ryad[-2] if len(ryad) >= 2 and ryad[-2]["god"] == p1["god"] - 1 else None
     return {"inn": f.get("inn", ""), "imya": f["imya"], "razdel": f.get("razdel", ""), "region": f.get("region", ""),
             "osnovana": f.get("osnovana"), "g1": p1["god"], "r1": p1["dohod"], "pr1": p1.get("pribyl"),
+            "rent1": _un_rent_tochno(f, p1),
             "pr0": p0.get("pribyl") if p0 else None, "y0": ryad[0]["god"], "r0": ryad[0]["dohod"], "let_ryada": len(ryad)}
+
+
+def _un_rent_tochno(f, p1):
+    """rent-odna-v1: рентабельность года p1 — то же число, что в «Разборе по цифрам» этой страницы (знак — как у прибыли).
+    На 4 карточках абзац «в своём разделе» считал её из округлённой таблицы и писал «669 % выручки» рядом с «−667 %»
+    («Смайнэкс управление активами»), «5099 %» рядом с «5095 %» («НСТТ»), «1311 %» и «1299 %» («Магнит»)."""
+    r, pr = (f.get("rent") or {}).get(p1["god"]), p1.get("pribyl")
+    if r is None or pr is None or (r < 0) != (pr < 0):
+        return None
+    return r
+
+
+def _un_rent(x):
+    """Рентабельность для сравнения: точная со страницы, иначе — из таблицы."""
+    return x["rent1"] if x.get("rent1") is not None else x["pr1"] / x["r1"]
 
 
 def un_kontekst():
@@ -3599,13 +3622,13 @@ def _un_otlichie_vid(k, vse):
                          % (sos(por[m - 2]), sos(por[m]), NB, g1, dengi(k["r1"]), k["razdel"])))
         mr = [x for x in rz if x["pr1"] is not None]
         if k["pr1"] is not None and len(mr) >= UN_GRUPPA_OT:
-            m, n = _un_mesto(k, mr, lambda x: x["pr1"] / x["r1"])
+            m, n = _un_mesto(k, mr, _un_rent)
             if m == 1 and k["pr1"] > 0:
                 kand.append((5, "rent", "самая высокая в разделе чистая рентабельность за%s%d год — %s выручки (у %s раздела с прибылью)"
-                             % (NB, g1, _zn_proc(k["pr1"] / k["r1"]), _un_kompanij(n))))
+                             % (NB, g1, _zn_proc(_un_rent(k)), _un_kompanij(n))))
             elif m == n and k["pr1"] < 0:
                 kand.append((4, "rent", "самый глубокий убыток к выручке в разделе за%s%d год — %s выручки (из %s раздела)"
-                             % (NB, g1, _zn_proc(k["pr1"] / k["r1"]), _un_kompanij(n))))
+                             % (NB, g1, _zn_proc(_un_rent(k)), _un_kompanij(n))))
     rg = [x for x in svoi if k["region"] and x["region"] == k["region"]]
     if len(rg) >= UN_GRUPPA_OT:
         m, n = _un_mesto(k, rg, lambda x: x["r1"])

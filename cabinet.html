@@ -362,7 +362,10 @@ ul.list .nm span{color:var(--muted);font-size:13px}
     location.href='/?inn='+v};
   // ---- вход через Яндекс ID / VK ID (vhody-v2-sait): итог возврата с сервера и кнопки ----
   var vhodItog=window.DlkVhodCherez?DlkVhodCherez.itog():null;
-  if(vhodItog&&vhodItog.novyj&&window.dlkGoal)dlkGoal('registration',{vid:vhodItog.cherez});
+  // zapusk-blokov-v1 (17.11): этот сценарий исполняется до пакета «yadro» (defer), где живёт dlkGoal, — цель регистрации
+  // через Яндекс ID / VK ID терялась всегда. Отправляем её после DOMContentLoaded (к нему defer-пакеты уже исполнены).
+  if(vhodItog&&vhodItog.novyj){var celVhoda=function(){if(window.dlkGoal)dlkGoal('registration',{vid:vhodItog.cherez})};
+    if(window.dlkGoal)celVhoda();else document.addEventListener('DOMContentLoaded',celVhoda,{once:true})}
   function showLogin(){
     try{localStorage.removeItem('dlk_voshel')}catch(e){}$('login').hidden=false;$('cab').hidden=true;$('logout').hidden=true;
     $('goCheck').className='btn';

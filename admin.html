@@ -323,13 +323,21 @@ a.btn{display:inline-flex;align-items:center;text-decoration:none}
   function dt(s,withTime){if(!s)return '—';try{var o={day:'numeric',month:'short',year:'numeric',timeZone:'Europe/Moscow'};if(withTime){o.hour='2-digit';o.minute='2-digit'}return new Date(s).toLocaleString('ru-RU',o)}catch(_){return s}}
   function opts(map,cur){return Object.keys(map).map(function(k){return '<option value="'+k+'"'+(k===cur?' selected':'')+'>'+map[k]+'</option>'}).join('')}
 
+  // zapusk-blokov-v1 (17.11, ✎ Штаба п. 17): блоки «Сейчас» (DlkPult), «Сегодня» (DlkSegodnya), счета, базы, документы и стена
+  // живут во внешних файлах ниже этого сценария. Ответ сводки может прийти раньше, чем браузер их дочитал (после 17.11 страница
+  // и файлы сверяются с сервером) — тогда window.Dlk* ещё нет и блок не стартовал бы никогда. Поэтому запускаем их только после
+  // DOMContentLoaded: к этому событию все обычные <script src> страницы уже исполнены. Сама сводка запрашивается сразу.
+  var gotovStranica=new Promise(function(r){if(document.readyState!=='loading')r();else document.addEventListener('DOMContentLoaded',function(){r()},{once:true})});
+  function zapustitSejchas(s){
+    if(window.DlkPult&&!window.DlkPult._started){window.DlkPult._started=true;try{DlkPult.start(API,s)}catch(_){}}
+    if(window.DlkSegodnya&&!window.DlkSegodnya._started){window.DlkSegodnya._started=true;try{DlkSegodnya.start(API)}catch(_){}}
+  }
   function loadSummary(){return call('/api/admin/summary').then(function(j){
     var s=j.summary;isAdmin=j.me.role==='admin';
     $('me').textContent=j.me.email;$('myrole').textContent=ROLES[j.me.role];$('myrole').className='rolepill '+j.me.role;
     $('sUsers').textContent=s.users;$('sNew').textContent=s.users_7d;$('sActive').textContent=s.active_1d;
     $('sToday').textContent=s.checks_today;$('sWeek').textContent=s.checks_7d;$('sFb').textContent=s.feedback_new;
-    if(window.DlkPult&&!window.DlkPult._started){window.DlkPult._started=true;try{DlkPult.start(API,s)}catch(_){}}
-    if(window.DlkSegodnya&&!window.DlkSegodnya._started){window.DlkSegodnya._started=true;try{DlkSegodnya.start(API)}catch(_){}}
+    gotovStranica.then(function(){zapustitSejchas(s)});
     Array.prototype.forEach.call($('fRole').elements,function(el){el.disabled=!isAdmin});
     if(!isAdmin)note($('rNote'),'Вы тестировщик: можно смотреть, менять роли и тарифы — только администратору.');
   })}
@@ -419,7 +427,7 @@ a.btn{display:inline-flex;align-items:center;text-decoration:none}
       blok(loadFeedback,function(err){$('fb').innerHTML='<p class="empty">'+esc(nesprav('Список отзывов',err))+'</p>'}),
       blok(loadLog,function(err){$('log').innerHTML='<li class="empty" style="border:0">'+esc(nesprav('Журнал',err))+'</li>'})]);
   }
-  loadSummary().then(vojti,function(err){
+  loadSummary().then(function(){return gotovStranica}).then(vojti,function(err){
     $('loading').hidden=true;$('deny').hidden=false;
     $('denyText').textContent=err.status===401?'Сначала войдите в кабинет по коду из письма, потом вернитесь сюда.':err.message;
   });

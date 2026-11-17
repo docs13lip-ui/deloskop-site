@@ -86,3 +86,31 @@ test('без оценок компании и без «ИИ»: запрещён�
   const js = fs.readFileSync(path.join(__dirname, '..', 'js/glavnoe.js'), 'utf8');
   assert.ok(!/надёжн|благонадёжн|рекомендуем|нет долгов|\bИИ\b|нейросет/i.test(js.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')));
 });
+
+// nol-pristavy-v1 [Ночные запуски] 18.11 02:10: живой /api/check ПАО «Газпром» — 2 производства неимущественного характера,
+// ostatok 0, ostatok_tochno true; раньше строка «Производства у приставов: 2» (без суммы) шла в «Главном» как долг неизвестного размера.
+test('точный ноль у приставов: «остаток долга — 0 ₽», вес ниже денег от 0,1 % выручки, в «Мелкое к выручке» не попадает', () => {
+  const r = otvet();
+  r.damia.fssp = { nazvanie: 'Приставы', istochnik: 'ФССП (через Checko)', sostoyanie: 'found', data_svedeniy: '2026-11-12T23:38+03:00',
+    dannye: { otkryto: 2, ostatok: 0, ostatok_ohvat: 'vse', ostatok_tochno: true } };
+  r.damia.sudy.dannye.otvetchik_summa_nezaversheno = 2060310; // 0,5 % — выше нуля у приставов
+  const g = G.sobrat(r, SEG, PM);
+  assert.deepStrictEqual(g.glavnoe.slice(0, 2).map((x) => x.k), ['damia_sudy', 'damia_fssp']);
+  const f = g.glavnoe[1];
+  assert.strictEqual(bez(f.t), 'Производства у приставов: 2, остаток долга — 0 ₽');
+  assert.strictEqual(f.dolya, '');
+  assert.strictEqual(g.melkoe.length, 0);
+});
+
+test('ноль не точный или по части производств — остаток не пишем, вес как у неизвестной суммы', () => {
+  [{ ostatok_tochno: false, ostatok_ohvat: 'vse' }, { ostatok_tochno: true, ostatok_ohvat: 'pervye_20' }, {}].forEach((o) => {
+    const r = otvet();
+    r.damia.fssp = { nazvanie: 'Приставы', istochnik: 'ФССП (через Checko)', sostoyanie: 'found', data_svedeniy: '2026-11-12',
+      dannye: Object.assign({ otkryto: 2, ostatok: 0 }, o) };
+    const g = G.sobrat(r, SEG, PM);
+    const f = g.glavnoe.filter((x) => x.k === 'damia_fssp')[0];
+    assert.ok(f, JSON.stringify(o));
+    assert.strictEqual(bez(f.t), 'Производства у приставов: 2');
+    assert.strictEqual(g.glavnoe[0].k, 'damia_fssp');
+  });
+});

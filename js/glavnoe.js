@@ -59,6 +59,12 @@
     return null;
   }
 
+  function nolTochno(r, k, sm) {
+    if (k !== 'damia_fssp' || sm !== 0) return false;
+    var dn = (((r && r.damia) || {}).fssp || {}).dannye || {};
+    return dn.ostatok_tochno === true && (!dn.ostatok_ohvat || dn.ostatok_ohvat === 'vse');
+  }
+
   function procent(d) {
     var p = d * 100;
     if (p < 1) return (Math.round(p * 10) / 10).toFixed(1).replace('.', ',');
@@ -81,7 +87,9 @@
     var V = vyruchka(r, segodnya);
     var M = S.minusy.map(function (x, i) {
       var sm = summa(r, x.k), d = V && sm > 0 ? sm / V.summa : null;
-      var ves = TYAZHELYE.indexOf(x.k) >= 0 ? 3 : d == null ? 2 : d >= KRUPNO ? 3 : d >= MELKO ? 2 : 0;
+      // nol-pristavy-v1: точный ноль у приставов (неимущественные требования) — не «сумма неизвестна» (вес 2), а ниже любых денег от 0,1 % выручки;
+      // в «Мелкое к выручке» не кладём — к выручке его не соотнести (живой /api/check 18.11 02:10, ПАО «Газпром»)
+      var ves = TYAZHELYE.indexOf(x.k) >= 0 ? 3 : nolTochno(r, x.k, sm) ? 1 : d == null ? 2 : d >= KRUPNO ? 3 : d >= MELKO ? 2 : 0;
       return { znak: 'minus', k: x.k, t: x.t, ist: x.ist, data: x.data, dolya: d != null ? dolyaTekst(d, V.god) : '', ves: ves, i: i };
     }).sort(function (a, b) { return b.ves - a.ves || a.i - b.i; });
     var glavnoe = M.filter(function (x) { return x.ves > 0; }).slice(0, MAKS);

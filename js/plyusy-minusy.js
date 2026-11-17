@@ -204,7 +204,10 @@
     if (b) {
       var sf = sost(b), df = b.dannye || {}, ot = num(df.otkryto), os = num(df.ostatok);
       if (sf === 'found') minus('damia_fssp', 'Производства у приставов' + (ot > 0 ? ': ' + chislo(ot) : '') +
-        (os > 0 ? ', остаток долга — ' + (df.ostatok_tochno === false ? 'не' + NB + 'меньше ' + rub(os, true) + poChasti(df, ot) : rub(os)) : ''), b.istochnik, b.data_svedeniy, b.nazvanie);
+        (os > 0 ? ', остаток долга — ' + (df.ostatok_tochno === false ? 'не' + NB + 'меньше ' + rub(os, true) + poChasti(df, ot) : rub(os)) :
+        // nol-pristavy-v1 (живой /api/check 18.11 02:10, ПАО «Газпром»: 2 производства неимущественного характера, ostatok 0, ostatok_tochno true):
+        // точный ноль по всем производствам — пишем его, иначе «Производства у приставов: 2» читается как долг неизвестного размера
+        os === 0 && ot > 0 && df.ostatok_tochno === true && (!df.ostatok_ohvat || df.ostatok_ohvat === 'vse') ? ', остаток долга — 0' + NB + '₽' : ''), b.istochnik, b.data_svedeniy, b.nazvanie);
       // банк данных ФССП показывает только идущие производства, и не каждый долг доходит до приставов — «не нашли на дату»
       else if (sf === 'not_found') plus('damia_fssp', 'Производств у' + NB + 'приставов не' + NB + 'нашли' + naDatu(b.data_svedeniy), b.istochnik, b.data_svedeniy, b.nazvanie);
     }

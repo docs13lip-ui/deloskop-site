@@ -1001,10 +1001,17 @@ def vyvody(k):
         za = (" за%s%d" % (NB, g)) if g else " за год"
         dl = d.get("delta")
         sl = "Выручка" if str(d.get("istochnik") or "").startswith("ГИР БО") else "Доход"
+        # god-propusk-v1: в ряду страницы нет прошлого года (2022 → 2025) — изменение к последнему году ряда и этот год
+        # в тексте, а не «годом раньше» (у «Смайнэкса» «на 3577 % больше, чем годом раньше» — рост за три года).
+        chem = "чем годом раньше"
+        ryad = {x["god"]: x["dohod"] for x in (k.get("finansy") or []) if x.get("dohod") and x["dohod"] > 0}
+        if g and g in ryad and (g - 1) not in ryad and any(y < g for y in ryad):
+            gp = max(y for y in ryad if y < g)
+            dl, chem = (ryad[g] / ryad[gp] - 1) * 100, "чем в%s%d%sгоду" % (NB, gp, NB)
         if dl is not None and dl >= 10:
-            out.append(_v("V03", "ok", "%s%s — %s, на%s%d%s%% больше, чем годом раньше" % (sl, za, dengi(d["znachenie"]), NB, round(dl), NB), d["istochnik"], d["data"]))
+            out.append(_v("V03", "ok", "%s%s — %s, %s больше, %s" % (sl, za, dengi(d["znachenie"]), _rost_nb(dl / 100), chem), d["istochnik"], d["data"]))
         elif dl is not None and dl <= -30:
-            out.append(_v("V04", "warn", "%s%s — %s, на%s%d%s%% меньше, чем годом раньше" % (sl, za, dengi(d["znachenie"]), NB, round(-dl), NB), d["istochnik"], d["data"]))
+            out.append(_v("V04", "warn", "%s%s — %s, на%s%d%s%% меньше, %s" % (sl, za, dengi(d["znachenie"]), NB, round(-dl), NB, chem), d["istochnik"], d["data"]))
         elif d["znachenie"] > 0:
             out.append(_v("V03a", "info", "%s%s — %s" % (sl, za, dengi(d["znachenie"])), d["istochnik"], d["data"]))
     # pribyl-kapital-v1: V25 — капитал меньше нуля (та же фраза, что на экране проверки, kapital-v1); плюс — строки нет.
@@ -1177,6 +1184,14 @@ def _raz(a, b):
         return ("%.1f" % r).replace(".", ",") + NB + "раза"
     n = int(round(r))
     return "%d%s%s" % (n, NB, plural(n, "раз", "раза", "раз"))
+
+
+def _rost_nb(dl):
+    """god-propusk-v1: рост выручки на долю dl > 0 — «на 37 %», а в 3 раза и больше — «в 37 раз» (как прибыль V24
+    и «Динамика» отчёта); пробелы неразрывные."""
+    if dl >= 2:
+        return "в%s%s" % (NB, _raz(1, 1 + dl))
+    return "на%s%d%s%%" % (NB, round(dl * 100), NB)
 
 
 def razbor_cifry(k):
@@ -2007,7 +2022,9 @@ def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None):
             pg = k.get("proverka")
             za = (" за%s%d%sгод" % (NB, posl["god"], NB)) if (pg and pg.year - posl["god"] > 2) else " за год"
             rod = ("выросла", "снизилась", "почти не изменилась") if vyr else ("вырос", "снизился", "почти не изменился")
-            zag = ("%s %s на %d%s%%%s" % (sl, rod[0], round(izm), NB, za)) if izm >= 5 else \
+            if posl["god"] - fin[-2]["god"] > 1:  # god-propusk-v1: между годами ряда пропуск — период, а не «за год»
+                za = " с%s%d по%s%d%sгод" % (NB, fin[-2]["god"], NB, posl["god"], NB)
+            zag = ("%s %s %s%s" % (sl, rod[0], _rost_nb(izm / 100).replace(NB, " ", 1), za)) if izm >= 5 else \
                   ("%s %s на %d%s%%%s" % (sl, rod[1], round(-izm), NB, za)) if izm <= -5 else "%s %s%s" % (sl, rod[2], za)
         # kartochki-finansy-v1: чистая прибыль (строка 2400) — второй колонкой, если в ряду ГИР БО есть хоть один год таблицы
         pr = k.get("pribyl_ryad") or {}
@@ -2857,6 +2874,14 @@ def _zn_proc(x):
     return t.replace(".", ",") + NB + "%"
 
 
+def _zn_rost(dl):
+    """god-propusk-v1: изменение выручки (доля) для «выросла …» / «… больше»: в 3 раза и больше — «в 37 раз»,
+    иначе «на 37 %» (падение — всегда «на N %»)."""
+    if dl >= 2:
+        return "в " + _raz(1, 1 + dl)
+    return "на " + _zn_proc(dl)
+
+
 def _zn_let(n):
     return "%d%s%s" % (n, NB, plural(n, "год", "года", "лет"))
 
@@ -2865,7 +2890,7 @@ def _zn_let(n):
 # считали по ОКРУГЛЁННЫМ суммам таблицы страницы («1 трлн ₽» / «944 млрд ₽» → 5,9 %), а вывод «Коротко» — по точным
 # (10 %): на одной странице «Перекрёстка» стояли оба числа, у «Газпром нефти» — 77 % и 80 %. Теперь, если вывод
 # «Выручка за ГГГГ — …, на N % больше/меньше, чем годом раньше» есть на странице, все абзацы берут его N. Нет вывода — как было.
-_ZN_DL_V = re.compile(r"^Выручка за[  ](\d{4})[  ]— .*?₽, на[  ]([\d,]+)[  ]% (больше|меньше), чем годом раньше")
+_ZN_DL_V = re.compile(r"^Выручка за[  ](\d{4})[  ]— .*?₽, (на|в)[  ]([\d,]+)[  ](%|раза?) (больше|меньше), чем годом раньше")
 
 
 def _zn_dl_tochno(V):
@@ -2873,8 +2898,10 @@ def _zn_dl_tochno(V):
     for _ton, x in V:
         m = _ZN_DL_V.match(x.replace("&nbsp;", NB))
         if m:
-            v = float(m.group(2).replace(",", ".")) / 100
-            out[int(m.group(1))] = v if m.group(3) == "больше" else -v
+            c = float(m.group(3).replace(",", "."))
+            # god-propusk-v1: «в 37 раз больше» → доля 36 (обратно в абзацах — те же «37 раз»)
+            v = c - 1 if m.group(2) == "в" else c / 100
+            out[int(m.group(1))] = v if m.group(5) == "больше" else -v
     return out
 
 
@@ -2998,7 +3025,7 @@ def zn_frazy(f):
     elif pr1 is not None and p0 and p0.get("pribyl") and p0["pribyl"] > 0 and pr1 <= p0["pribyl"] * 0.7:
         t = "Прибыль %s — %s, на %s меньше, чем годом раньше" % (za, dengi(pr1), _zn_proc(1 - pr1 / p0["pribyl"]))
         if dl is not None and abs(dl) >= 0.05:
-            t += ", при выручке, %s на %s" % ("выросшей" if dl > 0 else "снизившейся", _zn_proc(dl))
+            t += ", при выручке, %s %s" % ("выросшей" if dl > 0 else "снизившейся", _zn_rost(dl))
         t += ": под крупный аванс попросите поэтапную оплату или аккредитив и спросите у %s, с чем связано падение." % im
         out.append(t)
     elif dl is not None and dl <= -0.3:
@@ -3016,7 +3043,7 @@ def zn_frazy(f):
     else:
         t = "Выручка %s — %s" % (za, dengi(r1))
         if dl is not None and abs(dl) >= 0.05:
-            t += ", на %s %s, чем годом раньше" % (_zn_proc(dl), "больше" if dl > 0 else "меньше")
+            t += ", %s %s, чем годом раньше" % (_zn_rost(dl), "больше" if dl > 0 else "меньше")
         t += (". Чистой прибыли в открытой отчётности на этой странице нет — до крупной оплаты попросите у компании отчёт "
               "о финансовых результатах за %d год." % g1 if g1 else
               ". До крупной оплаты попросите у компании отчёт о финансовых результатах за последний год.")
@@ -3755,12 +3782,12 @@ def un_mesyac(im, za, r1, pr1, dl):
     что у un_frazy: между общими словами — имя и числа компании (не больше 4 общих слов подряд). Новых утверждений
     о компании нет — только её числа из таблицы на той же странице."""
     d = {"im": im, "Im": im[:1].upper() + im[1:], "za": za, "mes": dengi(r1 / 12),
-         "dl": _zn_proc(abs(dl)) if dl is not None else "", "ub": dengi(-pr1) if pr1 is not None and pr1 < 0 else ""}
+         "dl": _zn_proc(abs(dl)) if dl is not None else "", "rost": _zn_rost(dl) if dl is not None else "", "ub": dengi(-pr1) if pr1 is not None and pr1 < 0 else ""}
     if pr1 is not None and pr1 < 0:
         return ("При убытке %(ub)s %(za)s заказ от %(mes)s (это средняя выручка %(im)s в месяц) лучше оплачивать "
                 "после приёмки, а не до." % d)
     if dl is not None and dl >= 0.15:
-        return ("Выручка %(im)s %(za)s выросла на %(dl)s, до %(mes)s в месяц; при заказе от %(mes)s спросите, кто будет "
+        return ("Выручка %(im)s %(za)s выросла %(rost)s, до %(mes)s в месяц; при заказе от %(mes)s спросите, кто будет "
                 "его выполнять — сотрудники %(im)s или подрядчики." % d)
     if dl is not None and dl <= -0.05:
         return ("%(mes)s в месяц — средняя выручка %(im)s %(za)s, на %(dl)s ниже прошлогодней; в договоре от %(mes)s "
@@ -3837,7 +3864,7 @@ def un_frazy(f):
     elif pr1 is not None and p0 and p0.get("pribyl") and p0["pribyl"] > 0 and pr1 <= p0["pribyl"] * 0.7:
         t = "Прибыль %s %s — %s, на %s меньше, чем годом раньше" % (im, za, dengi(pr1), _zn_proc(1 - pr1 / p0["pribyl"]))
         if dl is not None and abs(dl) >= 0.05:
-            t += ", при выручке, %s на %s" % ("выросшей" if dl > 0 else "снизившейся", _zn_proc(dl))
+            t += ", при выручке, %s %s" % ("выросшей" if dl > 0 else "снизившейся", _zn_rost(dl))
         t += ": под крупный аванс попросите поэтапную оплату или аккредитив и спросите у %s, с чем связано падение." % im
         out.append(t)
     elif dl is not None and dl <= -0.3:
@@ -3868,7 +3895,7 @@ def un_frazy(f):
     else:
         t = "Выручка %s %s — %s" % (im, za, dengi(r1))
         if dl is not None and abs(dl) >= 0.05:
-            t += ", на %s %s, чем годом раньше" % (_zn_proc(dl), "больше" if dl > 0 else "меньше")
+            t += ", %s %s, чем годом раньше" % (_zn_rost(dl), "больше" if dl > 0 else "меньше")
         t += (". Прибыли в открытых данных на этой странице нет — до крупной оплаты попросите у %s отчёт "
               "о финансовых результатах за %d год." % (im, g1) if g1 else
               ". До крупной оплаты попросите у %s отчёт о финансовых результатах за последний год." % im)
@@ -4315,8 +4342,8 @@ def _un_pered_fakt(f):
             return ("Выручка %s за%s%d год — %s, на %s ниже, чем за %d: в длинном договоре закрепите объёмы и сроки "
                     "поставок по этапам." % (im, NB, g1, dengi(r1), _zn_proc(dl), g1 - 1))
         if dl >= 0.3:
-            return ("За%s%d год выручка %s выросла на %s, до %s: если заказ рассчитан на месяцы вперёд, пропишите "
-                    "сроки этапов и неустойку за их срыв." % (NB, g1, im, _zn_proc(dl), dengi(r1)))
+            return ("За%s%d год выручка %s выросла %s, до %s: если заказ рассчитан на месяцы вперёд, пропишите "
+                    "сроки этапов и неустойку за их срыв." % (NB, g1, im, _zn_rost(dl), dengi(r1)))
     var = []
     bez = _zn_v(f, "ok", "Налоговой задолженности")
     d = re.search(r"\(на (.*?)\)", bez or "")
@@ -5471,3 +5498,55 @@ def pochinit_procenty(t):
         if nl and nl > 0 and x and x.get("dohod") and x["dohod"] > 0:
             t = _PM_NALOGI.sub(lambda m: m.group(1) + _proc(nl / x["dohod"]).replace(NB + "%", "") + m.group(3), t)
     return t
+
+
+# ---------------------------------------------------------------- god-propusk-v1 (17.11.2026, [Ночные запуски])
+# 1) Пропуск в ряду ГИР БО: у «Смайнэкса» в таблице 2020, 2021, 2022, 2025 — а на странице «Выручка выросла на 3577 % за год»
+#    и «на 3577 % больше, чем годом раньше»: это рост за три года (2022 → 2025). Так же «НСТТ» (−65 %) и «Манежная площадь»
+#    («почти не изменилась за год» — 2023 → 2025). Теперь — «с 2022 по 2025 год» и «чем в 2022 году».
+# 2) Рост выручки в 3 раза и больше — «в 37 раз», а не «на 3577 %» (как прибыль, procent-malo-v1): 8 карточек.
+# Опубликованные — этой починкой по таблице самой страницы; таблицы нет — «годом раньше» не трогаем (проверить нечем).
+_GP_V = re.compile(r"((?:Выручка|Доход) за" + _PM_S + r"(\d{4})" + _PM_S + r"?— [^<]*?₽), на" + _PM_S + r"(\d+)" + _PM_S +
+                   r"% (больше|меньше), чем годом раньше")
+_GP_H2 = re.compile(r'(<h2 id="fin">(?:Выручка|Доход) )(выросла|вырос|снизилась|снизился|почти не изменилась|почти не изменился)'
+                    r'(?: на' + _PM_S + r'(\d+)' + _PM_S + r'%)?( за(?:' + _PM_S + r'\d{4})?' + _PM_S + r'год)</h2>')
+
+
+def pochinit_rost_vyruchki(t):
+    """god-propusk-v1: «годом раньше» / «за год» при пропуске лет в таблице страницы — период явно; рост ×3+ — «в N раз».
+    Повторный вызов ничего не меняет."""
+    if not t or ("% больше, чем годом раньше" not in t and "% меньше, чем годом раньше" not in t and 'id="fin"' not in t):
+        return t
+    ryad = {x["god"]: x["dohod"] for x in zn_fakty(t).get("ryad") or [] if x.get("god") and x.get("dohod") and x["dohod"] > 0}
+
+    def v(m):
+        g, n, kuda = int(m.group(2)), int(m.group(3)), m.group(4)
+        dl = (n if kuda == "больше" else -n) / 100
+        chem = "чем годом раньше"
+        if g in ryad and (g - 1) not in ryad and any(y < g for y in ryad):
+            gp = max(y for y in ryad if y < g)
+            dt_ = ryad[g] / ryad[gp] - 1
+            if abs(dt_ - dl) > 0.05 * max(1.0, abs(dl)):
+                dl = dt_  # число страницы не сходится с таблицей — берём таблицу (с чем сравнивал сервер, не знаем)
+            chem = "чем в" + NB + str(gp) + NB + "году"
+        elif dl < 2:
+            return m.group(0)
+        if dl >= 0:
+            return m.group(1) + ", " + _rost_nb(dl) + " больше, " + chem
+        return m.group(1) + ", на" + NB + str(round(-dl * 100)) + NB + "% меньше, " + chem
+    t = _GP_V.sub(v, t)
+
+    def h2(m):
+        roda, n, za = m.group(2), m.group(3), m.group(4)
+        gody = sorted(ryad)
+        za2 = za
+        if len(gody) >= 2 and gody[-1] - gody[-2] > 1:
+            za2 = " с" + NB + str(gody[-2]) + " по" + NB + str(gody[-1]) + NB + "год"
+        sl = roda
+        if n is not None:
+            dl = int(n) / 100
+            sl += " " + (_rost_nb(dl).replace(NB, " ", 1) if roda.startswith("выр") else "на " + n + NB + "%")
+        if za2 == za and sl == roda + ("" if n is None else " на " + n + NB + "%") and not (n and roda.startswith("выр") and int(n) >= 200):
+            return m.group(0)
+        return m.group(1) + sl + za2 + "</h2>"
+    return _GP_H2.sub(h2, t)

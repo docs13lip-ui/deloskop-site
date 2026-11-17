@@ -1025,7 +1025,10 @@ def vyvody(k):
                 t += ", годом раньше — убыток"
             elif p0:
                 dl = (v / p0 - 1) * 100
-                if dl >= 10:
+                if p0 > 0 and v / p0 >= 3:
+                    # procent-malo-v1: рост в 3 раза и больше — «в 66 раз», а не «на 6531 %» (как «Динамика» отчёта, js/dinamika.js)
+                    t += ", в%s%s больше, чем годом раньше" % (NB, _raz(p0, v))
+                elif dl >= 10:
                     t += ", на%s%d%s%% больше, чем годом раньше" % (NB, round(dl), NB)
                 elif dl <= -30:
                     t += ", на%s%d%s%% меньше, чем годом раньше" % (NB, round(-dl), NB)
@@ -1149,10 +1152,20 @@ def vyvody(k):
 # (общие тексты [Право] по типу признака). Здесь — 2–4 фразы только из цифр этой компании (ряд ГИР БО, прибыль,
 # штат, налоги): динамика за весь ряд, рентабельность год к году, выручка на сотрудника, налоги к выручке.
 # Это расчёт Делоскопа (◆), без оценок и советов: ни «хорошо», ни «плохо» — только что видно по отчётности.
+def _malo_proc(v):
+    """procent-malo-v1: доля меньше 0,05 % (но не ноль) — две значащие цифры: 0,0157 → «0,016»; 0,0004 → «0,0004».
+    Раньше округление давало «0 %» (у «РЖД» — прибыль 283 млн ₽ при выручке 1,8 трлн ₽) и «−0 %» — читается как
+    «прибыли нет» или «налогов нет», хотя они есть."""
+    a = abs(v)
+    n = min(6, 1 - int(math.floor(math.log10(a))))
+    t = ("%.*f" % (n, a)).rstrip("0").rstrip(".")
+    return ("-" if v < 0 else "") + t
+
+
 def _proc(x, znak=False):
-    """0.0072 → «0,7 %»; 0.153 → «15 %»; с неразрывным пробелом."""
+    """0.0072 → «0,7 %»; 0.153 → «15 %»; 0.000157 → «0,016 %» (не «0 %»); с неразрывным пробелом."""
     v = x * 100
-    t = ("%.1f" % v) if abs(v) < 10 else ("%d" % round(v))
+    t = _malo_proc(v) if v and abs(v) < 0.05 else ("%.1f" % v) if abs(v) < 10 else ("%d" % round(v))
     t = t.rstrip("0").rstrip(".") if "." in t else t
     return ("+" if znak and v > 0 else "") + t.replace(".", ",").replace("-", "−") + NB + "%"
 
@@ -2840,7 +2853,7 @@ def zn_summa(s):
 
 def _zn_proc(x):
     v = abs(x) * 100
-    t = ("%.1f" % v).rstrip("0").rstrip(".") if v < 10 else "%d" % round(v)
+    t = _malo_proc(v) if v and v < 0.05 else ("%.1f" % v).rstrip("0").rstrip(".") if v < 10 else "%d" % round(v)
     return t.replace(".", ",") + NB + "%"
 
 
@@ -5405,3 +5418,56 @@ _html_kartochki_bez_pm = html_kartochki
 def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811
     """kartochki-plyusy-v1: та же карточка, с «Плюсами и минусами»."""
     return plyusy_minusy_kartochki(_html_kartochki_bez_pm(k, V, sosedi, kom, normy, cena, segodnya))
+
+
+# ---------------------------------------------------------------- procent-malo-v1 (17.11.2026, [Ночные запуски])
+# На 14 опубликованных карточках доля меньше 0,05 % печаталась «0 %» или «−0 %»: «Чистая рентабельность … годом раньше — 0 %»
+# у «РЖД» (прибыль 283 млн ₽ при выручке 1,8 трлн ₽), «Налоги и взносы — 0 % выручки» у компании, уплатившей 10,6 млн ₽, —
+# читается как «прибыли нет» или «налогов нет». На 32 — «Чистая прибыль … на 38486 % больше»: рост в 3 раза и больше
+# пишем «в N раз», как «Динамика» отчёта. Новые карточки — _proc/_zn_proc/V24; опубликованные — этой починкой по числам
+# самой страницы (таблица выручки и прибыли, строка уплаченных налогов). Числа нет на странице — строку не трогаем.
+_PM_S = r"(?:&nbsp;|&#160;| | )"
+_PM_ROST = re.compile(r"(Чистая прибыль за" + _PM_S + r"\d{4}" + _PM_S + r"?— [^<]*?₽), на" + _PM_S + r"(\d+)" + _PM_S +
+                      r"% больше, чем годом раньше")
+_PM_RENT = re.compile(r"(Чистая рентабельность за" + _PM_S + r"(\d{4})" + _PM_S + r"?—" + _PM_S + r")(−?[\d,]+)(" + _PM_S +
+                      r"%)(?:(, годом раньше" + _PM_S + r"?—" + _PM_S + r")(−?[\d,]+)(" + _PM_S + r"%))?")
+_PM_NALOGI_U = re.compile(r"Уплатила налогов и" + _PM_S + r"взносов" + _PM_S + r"?—" + _PM_S + r"([^<]*?₽) за" + _PM_S + r"(\d{4})")
+_PM_NALOGI = re.compile(r"(Налоги и" + _PM_S + r"взносы" + _PM_S + r"?—" + _PM_S + r")(−?0)(" + _PM_S + r"% выручки за)")
+
+
+def _pm_nol(s):
+    return s in ("0", "−0")
+
+
+def pochinit_procenty(t):
+    """procent-malo-v1: у опубликованной карточки «0 %» / «−0 %» при ненулевой доле — число по таблице страницы
+    (две значащие цифры), рост прибыли в 3 раза и больше — «в N раз». Повторный вызов ничего не меняет."""
+    if not t:
+        return t
+    t = _PM_ROST.sub(lambda m: m.group(1) + ", в" + NB + _raz(100, 100 + int(m.group(2))) + " больше, чем годом раньше"
+                     if int(m.group(2)) >= 200 else m.group(0), t)
+    if "0&nbsp;%" not in t and "0" + NB + "%" not in t and "0 %" not in t:
+        return t
+    ryad = {x["god"]: x for x in zn_fakty(t).get("ryad") or [] if x.get("god")}
+
+    def dolya(g):
+        x = ryad.get(g)
+        if not x or not x.get("dohod") or x.get("pribyl") in (None, 0) or x["dohod"] <= 0:
+            return None
+        return x["pribyl"] / x["dohod"]
+
+    def rent(m):
+        g = int(m.group(2))
+        a, b = m.group(3), m.group(6)
+        if _pm_nol(a) and dolya(g) is not None:
+            a = _proc(dolya(g)).replace(NB + "%", "")
+        if b is not None and _pm_nol(b) and dolya(g - 1) is not None:
+            b = _proc(dolya(g - 1)).replace(NB + "%", "")
+        return m.group(1) + a + m.group(4) + ((m.group(5) + b + m.group(7)) if m.group(5) else "")
+    t = _PM_RENT.sub(rent, t)
+    u = _PM_NALOGI_U.search(t)
+    if u:
+        nl, x = zn_summa(u.group(1)), ryad.get(int(u.group(2)))
+        if nl and nl > 0 and x and x.get("dohod") and x["dohod"] > 0:
+            t = _PM_NALOGI.sub(lambda m: m.group(1) + _proc(nl / x["dohod"]).replace(NB + "%", "") + m.group(3), t)
+    return t

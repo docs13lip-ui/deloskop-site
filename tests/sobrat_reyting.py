@@ -72,7 +72,9 @@ def procent(s):
     """«… — на 12 % больше, чем годом раньше» → 12; «меньше» → −12; нет — None."""
     m = re.search(r"на\s+(\d+(?:,\d+)?)\s*%\s+(больше|меньше)", s)
     if not m:
-        return None
+        # procent-malo-v1: рост в 3 раза и больше карточка пишет «в 5,6 раза больше» → +460
+        r = re.search(r"\bв\s+(\d+(?:,\d+)?)\s+раза?\s+больше", s)
+        return round((float(r.group(1).replace(",", ".")) - 1) * 100) if r else None
     v = float(m.group(1).replace(",", "."))
     return v if m.group(2) == "больше" else -v
 
@@ -175,6 +177,12 @@ def izm_html(izm, god):
         return '<span class="ry-izm">как в %d</span>' % (god - 1)
     znak = "+" if izm > 0 else "−"
     kl = "ry-izm ry-izm--plus" if izm > 0 else "ry-izm ry-izm--minus"
+    if izm >= 200:  # procent-malo-v1: как на карточке — «в 5,6 раза к 2024», а не «+460 %»
+        r = (100 + izm) / 100
+        r_t = ("%.1f" % r).replace(".", ",") if r < 10 and abs(r - round(r)) >= 0.05 else "%d" % round(r)
+        n = round(r)
+        sl = "раза" if r_t.find(",") >= 0 or (n % 10 in (2, 3, 4) and n % 100 not in (12, 13, 14)) else "раз"
+        return '<span class="%s">в%s%s%s%s к %d</span>' % (kl, NB, r_t, NB, sl, god - 1)
     return '<span class="%s">%s%s%s%% к %d</span>' % (kl, znak, chislo_ru(izm), NB, god - 1)
 
 

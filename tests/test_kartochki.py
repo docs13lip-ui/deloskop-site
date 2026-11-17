@@ -1254,8 +1254,8 @@ class TestPribylKapitalV1(unittest.TestCase):
         V = K.vyvody(K.iz_check(self._r(profit=[{"year": 2024, "value": 1e6}, {"year": 2025, "value": 3.4e6}])))
         x = [v for v in V if v["kod"] == "V24"]
         self.assertEqual([(v["ton"], v["tekst"], v["istochnik"], v["data"], v["s_chislom"]) for v in x],
-                         # kartochki-finansy-v1: + сравнение с прошлым годом ряда (3,4 к 1 млн — +240 %)
-                         [("ok", "Чистая прибыль за" + NB + "2025 — 3,4" + NB + "млн" + NB + "₽, на" + NB + "240" + NB + "% больше, чем годом раньше",
+                         # kartochki-finansy-v1: + сравнение с прошлым годом ряда (3,4 к 1 млн); procent-malo-v1: ×3+ — «в N раза»
+                         [("ok", "Чистая прибыль за" + NB + "2025 — 3,4" + NB + "млн" + NB + "₽, в" + NB + "3,4" + NB + "раза больше, чем годом раньше",
                            "ГИР БО, бухгалтерская отчётность",
                            K.dt.date(2025, 12, 31), True)])
 
@@ -1862,7 +1862,7 @@ class TestKartochkiFinansyV1(unittest.TestCase):
 
     def test_pribyl_s_izmeneniem(self):
         r = self._r(profit=[{"year": 2024, "value": 21958748000}, {"year": 2025, "value": 123037451000}])
-        self.assertEqual(self._v24(r), [("V24", "Чистая прибыль за" + NB + "2025 — 123" + NB + "млрд" + NB + "₽, на" + NB + "460" + NB + "% больше, чем годом раньше")])
+        self.assertEqual(self._v24(r), [("V24", "Чистая прибыль за" + NB + "2025 — 123" + NB + "млрд" + NB + "₽, в" + NB + "5,6" + NB + "раза больше, чем годом раньше")])  # procent-malo-v1
         r = self._r(profit=[{"year": 2024, "value": 10e6}, {"year": 2025, "value": 6e6}])
         self.assertTrue(self._v24(r)[0][1].endswith("на" + NB + "40" + NB + "% меньше, чем годом раньше"))
         r = self._r(profit=[{"year": 2024, "value": 10e6}, {"year": 2025, "value": 10.5e6}])

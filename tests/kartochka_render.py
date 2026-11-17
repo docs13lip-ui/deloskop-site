@@ -2956,13 +2956,38 @@ def _zn_dl_tochno(V):
     return out
 
 
+# dl-zagolovok-v1 (17.11.2026, [Ночные]): у 45 карточек без вывода «Выручка за ГГГГ — …» в «Коротко» заголовок раздела
+# говорил «Выручка снизилась на 7 % за год» (посчитано при сборке по ТОЧНЫМ суммам), а «Что это значит» и «Перед оплатой»
+# той же страницы — «на 7,9 % ниже» (по ОКРУГЛЁННЫМ суммам таблицы «6,3 / 5,8 трлн ₽»: «Газпром»; «Уайт бокс медиа» —
+# 6 и 5,3). Десятая доля из округлённой таблицы — ложная точность. Теперь порядок источников: вывод «Коротко» → заголовок
+# раздела (если он про год к году) → суммы таблицы.
+_ZN_DL_H2 = re.compile(r'<h2 id="fin">Выручка (выросла|снизилась) (на|в)[  ]([\d,]+)[  ](%|раза?|раз) за(?:[  ](\d{4}))?[  ]год</h2>')
+
+
+def _zn_dl_h2(fin_html, ryad):
+    """{год: доля} из заголовка раздела «Финансы» — только «за год» / «за ГГГГ год» (не «с … по …») и только если
+    в таблице есть и этот год, и предыдущий."""
+    m = _ZN_DL_H2.search(fin_html.replace("&nbsp;", NB).replace("&#160;", NB))
+    if not m or not ryad:
+        return {}
+    g = int(m.group(5)) if m.group(5) else ryad[-1]["god"]
+    gody = {x["god"] for x in ryad}
+    if g not in gody or g - 1 not in gody or g != ryad[-1]["god"]:
+        return {}
+    c = float(m.group(3).replace(",", "."))
+    v = c - 1 if m.group(2) == "в" else c / 100
+    return {g: v if m.group(1) == "выросла" else -v}
+
+
 def zn_dl(f, p1, p0):
-    """Изменение выручки p0 → p1 (доля): точное из вывода «Коротко», иначе — по суммам таблицы."""
+    """Изменение выручки p0 → p1 (доля): точное из вывода «Коротко», затем — из заголовка раздела, иначе — по суммам таблицы."""
     if not p0 or not p1 or not p0.get("dohod") or not p1.get("dohod"):
         return None
     g = p1.get("god")
     if g and p0.get("god") == g - 1 and g in (f.get("dl_tochno") or {}):
         return f["dl_tochno"][g]
+    if g and p0.get("god") == g - 1 and g in (f.get("dl_h2") or {}):
+        return f["dl_h2"][g]
     return p1["dohod"] / p0["dohod"] - 1
 
 
@@ -2997,6 +3022,7 @@ def zn_fakty(t):
                 ryad = [{"god": int(h.group(1)) if h.group(1) else None, "dohod": zn_summa(h.group(2)), "pribyl": None, "fns": True}]
         f["ryad"] = sorted(ryad, key=lambda x: x["god"] or 0)
         f["dl_tochno"] = _zn_dl_tochno(f["V"])
+        f["dl_h2"] = _zn_dl_h2(fin.group(0), f["ryad"])
         o = _ZN_OTRASL.search(fin.group(0))
         if o:
             f["otrasl"] = (_zn_txt(o.group(1)), int(o.group(2)), o.group(3))
@@ -3766,7 +3792,7 @@ def un_otlichie_zag(im, vid):
     return UN_ZAG.get(vid, "%s среди компаний Делоскопа.") % im
 
 
-def _un_put(ryad):
+def _un_put(ryad, dl_posl=None):
     """kartochki-unik-v7 ([Ночные-2] 19.10): каким путём шла выручка между первым и последним открытым годом —
     по строкам той же таблицы на странице (соседние годы). Возвращает (вид, год, доля): «kazhdyj» — росла каждый год,
     «spad» — самый глубокий годовой спад (≥ 5 %), иначе (None, None, None)."""
@@ -3777,6 +3803,8 @@ def _un_put(ryad):
     spady = [(b["dohod"] / a["dohod"] - 1, b["god"]) for a, b in pary if b["dohod"] < a["dohod"] * 0.95]
     if spady:
         d, g = min(spady)
+        if g == ryad[-1]["god"] and dl_posl is not None and dl_posl < 0:
+            d = dl_posl  # dl-zagolovok-v1: спад последнего года — то же число, что в заголовке и «Перед оплатой»
         return "spad", g, -d
     if all(b["dohod"] > a["dohod"] for a, b in pary):
         return "kazhdyj", None, None
@@ -3812,11 +3840,11 @@ def un_istoriya(im, reestr, ruk, a0, p1, ryad=None):
 # ещё раз «в реестре с 2006 года (20 лет)» первым предложением «Что это значит для вас» (165 из 167). В «Что это
 # значит» возраст теперь только у молодых компаний (до 3 лет — он и есть вывод: «история короткая»); у остальных
 # абзац начинается с того, что из возраста не видно: выручка за годы открытой отчётности и руководитель. Числа — те же.
-def un_istoriya_v8d(im, ruk_god, a0, p1, ryad=None):
+def un_istoriya_v8d(im, ruk_god, a0, p1, ryad=None, dl_posl=None):
     g0, r0, g1, r1 = a0["god"], a0["dohod"], p1["god"], p1["dohod"]
     ruk = ("; руководитель тот же с%s%s года" % (NB, ruk_god)) if ruk_god else ""
     if r1 / r0 >= 1.3:
-        vid, gs, ds = _un_put(ryad or [])
+        vid, gs, ds = _un_put(ryad or [], dl_posl)
         if vid == "kazhdyj":
             return "Выручка %s росла каждый год из%s%d%s%s открытой отчётности — от%s%s в%s%d до%s%s в%s%d%s." % (
                 im, NB, len(ryad), NB, "года" if len(ryad) % 10 == 1 and len(ryad) % 100 != 11 else "лет", NB,
@@ -3908,7 +3936,7 @@ def un_frazy(f):
                        "поставки." % (im, reestr))
         elif glub:
             out.append(un_istoriya_v8d(im, ruk_s.group(1) if ruk_s else None,
-                                       a0, p1, [x for x in ryad if not x.get("fns")]))
+                                       a0, p1, [x for x in ryad if not x.get("fns")], dl))
         else:
             out.append(un_korotkaya_v8d(im, ruk_s.group(1) if ruk_s else None, len(ryad), p1.get("fns")))
 

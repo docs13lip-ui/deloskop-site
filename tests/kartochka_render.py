@@ -2217,15 +2217,56 @@ def noindex_html(t):
     return 'name="robots" content="noindex' in t
 
 
+# zakrytaya-otchetnost-v1: рамка [Право] 17.11 (claude/Право_закрытая_отчётность_20_карточек_ч12_ст18_170956_17.11.md, п. 1).
+# Под заголовком блока выручки у карточки с последней открытой отчётностью старше GOD_INDEKSA_OT — не одна строка
+# «Последняя открытая — за N год», а три: (1) каких лет в открытой части ГИР БО не нашли — годы по этой компании, с датой
+# сведений (первая «ЕГРЮЛ · сведения на» страницы — дата сбора фактов, та же, что в «выводы по фактам, собранным …»);
+# (2) общая строка о законе (ч. 12 ст. 18 402-ФЗ) без причины по компании — со ссылкой на статью; (3) «Не проверяли»:
+# финансы за эти годы и раскрытие эмитента. Ворота индексации НЕ меняются (это «да/нет» владельца) — меняется только текст.
+# Ожидаемый последний год отчётности — год сведений −1, если сведения с июня (отчётность за прошлый год уже в ГИР БО),
+# иначе −2. Нет даты или ожидать нечего — прежняя одна строка. Повторный вызов — те же байты.
+ZO_STATYA = "/nalogi/net-otchetnosti-v-otkrytyh-dannyh/"
+_ZO_BLOK = re.compile(r'<p class="caption co-fin-god">.*?</p>(?:<p class="caption co-fin-(?:zakon|np)">.*?</p>)*', re.S)
+_ZO_DATA = re.compile(r"ЕГРЮЛ · сведения на(?:&nbsp;|&#160;|\s| )*(\d{2})\.(\d{2})\.(\d{4})")
+
+
+def zo_gody(g, dd):
+    """Год последней открытой отчётности g и дата сведений (дд, мм, гггг) → (с какого, по какой год не нашли) или None."""
+    if not dd:
+        return None
+    posl = int(dd[2]) - (1 if int(dd[1]) >= 6 else 2)
+    return (g + 1, posl) if posl > g else None
+
+
+def zo_blok(g, t):
+    """HTML строк о закрытой отчётности под заголовком блока выручки (или прежняя одна строка)."""
+    m = _ZO_DATA.search(t)
+    dd = m.groups() if m else None
+    gg = zo_gody(g, dd)
+    if not gg:
+        return '<p class="caption co-fin-god">%s</p>' % (IND_FIN_PODPIS % g)
+    gody = ("за" + NB + "%d" + NB + "год") % gg[0] if gg[0] == gg[1] else ("за" + NB + '<span class="co-nw">%d–%d</span>' + NB + "годы") % gg
+    return ('<p class="caption co-fin-god">В&nbsp;открытой части ГИР&nbsp;БО отчётности %s не&nbsp;нашли. '
+            'Последняя открытая&nbsp;— за&nbsp;%d&nbsp;год. Сведения на&nbsp;%s.%s.%s.</p>'
+            '<p class="caption co-fin-zakon">Закон позволяет ограничить открытый доступ к&nbsp;отчётности '
+            '(ч.&nbsp;12 ст.&nbsp;18 Закона о&nbsp;бухучёте). Почему так у&nbsp;этой компании, мы не&nbsp;знаем. '
+            '<a href="%s" data-goal="kartochka_zakryta">Почему так бывает&nbsp;›</a></p>'
+            '<p class="caption co-fin-np">Не&nbsp;проверяли: финансы %s&nbsp;— в&nbsp;открытых данных их нет; '
+            'раскрытие отчётности эмитента на&nbsp;сайтах раскрытия информации, если компания выпускала облигации или акции. '
+            '«Не&nbsp;проверяли»&nbsp;— это не&nbsp;«не&nbsp;нашли».</p>') % (gody, g, dd[0], dd[1], dd[2], ZO_STATYA, gody)
+
+
 def primenit_vorota_indeksa(t):
     """Готовая карточка (тело или страница) → та же карточка с решением ворот индексации. Повторный вызов ничего не меняет."""
     g = god_otchetnosti_html(t)
     if g is not None and g < GOD_INDEKSA_OT:
         # старая выручка — не в сниппет (description и og:description)
         t = _IND_DESC.sub(lambda m: m.group(1), t)
-        podpis = IND_FIN_PODPIS % g
-        if "co-fin-god" not in t:
-            t = _IND_FIN.sub(lambda m: m.group(0) + '<p class="caption co-fin-god">%s</p>' % podpis, t, count=1)
+        blok = zo_blok(g, t)
+        if "co-fin-god" in t:
+            t = _ZO_BLOK.sub(lambda m: blok, t, count=1)
+        else:
+            t = _IND_FIN.sub(lambda m: m.group(0) + blok, t, count=1)
     ok, _ = vorota_indeksa_html(t)
     est = noindex_html(t)
     if not ok and not est:

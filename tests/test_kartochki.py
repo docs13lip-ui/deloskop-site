@@ -1584,6 +1584,61 @@ class GodOdinRazV310(unittest.TestCase):
 
 
 
+
+class TestZakrytayaOtchetnost(unittest.TestCase):
+    """zakrytaya-otchetnost-v1: рамка [Право] 17.11 п. 1 для карточек с последней открытой отчётностью старше 2024 года."""
+
+    def html_staryj(self):
+        k = K.iz_check(O.zapis(2, finansy=[100e6, 108e6], dohod=108e6))  # последний год — 2022, ЕГРЮЛ на 29.09.2026
+        return K.html_kartochki(k, K.vyvody(k), [], K.kommentarii.zagruzit(), K.zagruzit_normy())
+
+    def test_gody(self):
+        self.assertEqual(K.zo_gody(2021, ("15", "11", "2026")), (2022, 2025))
+        self.assertEqual(K.zo_gody(2023, ("15", "03", "2026")), (2024, 2024), "до июня отчётности за прошлый год ещё нет")
+        self.assertIsNone(K.zo_gody(2024, ("15", "03", "2026")))
+        self.assertIsNone(K.zo_gody(2021, None))
+
+    def test_blok(self):
+        t = self.html_staryj()
+        self.assertIn('<a href="/nalogi/net-otchetnosti-v-otkrytyh-dannyh/" data-goal="kartochka_zakryta">', t)
+        self.assertIn("ч.&nbsp;12 ст.&nbsp;18 Закона о&nbsp;бухучёте", t)
+        self.assertIn("Почему так у&nbsp;этой компании, мы не&nbsp;знаем.", t)
+        self.assertIn("Не&nbsp;проверяли: финансы за" + NB + '<span class="co-nw">2023–2025</span>' + NB + "годы", t)
+        self.assertIn("раскрытие отчётности эмитента", t)
+        self.assertIn('content="noindex, follow"', t, "ворота индексации не меняются — это решение владельца")
+        self.assertEqual(K.primenit_vorota_indeksa(t), t, "повторное применение ничего не меняет")
+
+    def test_odin_god_i_bez_daty(self):
+        self.assertIn("отчётности за" + NB + "2024" + NB + "год не&nbsp;нашли",
+                      K.zo_blok(2023, "ЕГРЮЛ · сведения на 10.04.2026"))
+        self.assertEqual(K.zo_blok(2021, "<p>без даты</p>"),
+                         '<p class="caption co-fin-god">' + (K.IND_FIN_PODPIS % 2021) + "</p>")
+
+    def test_staraya_stroka_zamenyaetsya(self):
+        t = ('<p class="caption co-okved">ЕГРЮЛ · сведения на 15.11.2026</p><section class="co-sec" aria-labelledby="fin">'
+             '<h2 id="fin">Выручка за 2021 год</h2><p class="caption co-fin-god">Последняя открытая отчётность&#160;— за&nbsp;2021&nbsp;год.</p>'
+             '<div class="table-wrap"><table class="table"><tbody><tr><td>2021</td><td>1</td></tr></tbody></table></div></section>')
+        t2 = K.primenit_vorota_indeksa(t)
+        self.assertNotIn("Последняя открытая отчётность", t2)
+        self.assertEqual(t2.count("co-fin-god"), 1)
+        self.assertIn("за" + NB + '<span class="co-nw">2022–2025</span>' + NB + "годы не&nbsp;нашли", t2)
+        self.assertEqual(K.primenit_vorota_indeksa(t2), t2)
+
+    def test_opublikovannye(self):
+        """Сторож [Право]: на карточках с закрытой отчётностью — годы и дата «не нашли», ссылка на статью, без причины."""
+        n = 0
+        for f in sorted((KOREN / "company").glob("*/index.html")):
+            t = f.read_text(encoding="utf-8")
+            if "co-fin-god" not in t:
+                continue
+            n += 1
+            self.assertIn("co-fin-zakon", t, f.parent.name)
+            self.assertRegex(t, r"co-fin-god\">В&nbsp;открытой части ГИР&nbsp;БО отчётности за.{1,60}\d{4}.{1,60}"
+                                r"не&nbsp;нашли\. Последняя открытая&nbsp;— за&nbsp;\d{4}&nbsp;год\. Сведения на&nbsp;\d\d\.\d\d\.\d{4}\.",
+                             f.parent.name)
+            self.assertNotRegex(t.lower(), r"санкц|скрыва|не сда[её]т|не отчитыва", f.parent.name)
+        self.assertGreater(n, 0)
+
 class TestVorotaIndeksa(unittest.TestCase):
     """kartochki-indeks-v1: ворота индексации (ТЗ [Продукт · Данные] 03.10 18:55, разд. 3.2 и ответ на ✎ 16:50)."""
 
@@ -1610,7 +1665,10 @@ class TestVorotaIndeksa(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("2022", pr)
         self.assertIn('content="noindex, follow"', t)
-        self.assertIn("Последняя открытая отчётность — за" + NB + "2022" + NB + "год.", t)
+        # zakrytaya-otchetnost-v1: вместо одной строки — годы «не нашли» с датой сведений, закон без причины, «Не проверяли»
+        self.assertIn("В&nbsp;открытой части ГИР&nbsp;БО отчётности за" + NB + '<span class="co-nw">2023–2025</span>' + NB + "годы не&nbsp;нашли. "
+                      "Последняя открытая&nbsp;— за&nbsp;2022&nbsp;год. Сведения на&nbsp;29.09.2026.", t)
+        self.assertNotIn("Последняя открытая отчётность — за", t)
         for m in re.findall(r'<meta (?:name|property)="(?:og:)?description" content="([^"]*)"', t):
             self.assertNotIn("доход", m)
             self.assertNotIn("млн", m)

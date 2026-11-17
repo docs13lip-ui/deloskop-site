@@ -677,6 +677,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         t2 = ramka_daty(t2)  # kartochki-ramka-daty-v1: дата в «…здесь — выводы…», дата и имя в строке набора ФНС, как у новых
         t2 = linza_kartochki(t2)  # linza-indeksa-v1: плашка Индекса — «Линзой» (кольцо 1–99 и кнопка), как у новых
         t2 = plyusy_minusy_kartochki(t2)  # kartochki-plyusy-v1: «Плюсы и минусы» из реестров страницы, как у новых
+        t2 = pervyj_ekran_kartochki(t2)  # pervyj-ekran-kartochki-v1: «Итог по фактам» над кнопками вместо кольца Индекса, как у новых
         x["_noindex"] = noindex_html(t2)
         if BEZ_OBOLOCHKI in t2:
             # «голое» тело из комплекта — оболочка той же sobrat_stranicu

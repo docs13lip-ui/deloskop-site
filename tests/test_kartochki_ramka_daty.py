@@ -64,7 +64,9 @@ class TestRamkaDaty(unittest.TestCase):
             main = re.search(r"<main.*?</main>", t, re.S).group(0)
             tx = tekst(main)
             self.assertNotIn("на дату карточки", tx, f)
-            m = re.search(r"[Зз]десь — выводы по фактам, собранным (\d{2}\.\d{2}\.\d{4})\.", tx)
+            # pervyj-ekran-kartochki-v1 (18.11): кольца Индекса с «…здесь — выводы по фактам, собранным …» больше нет —
+            # та же дата сбора стоит в итоге первого экрана «Плюсов N, минусов M — по фактам, собранным …»
+            m = re.search(r"(?:[Зз]десь — выводы по фактам|— по фактам), собранным (\d{2}\.\d{2}\.\d{4})", tx)
             e = re.search(r"ЕГРЮЛ · сведения на\s*(\d{2}\.\d{2}\.\d{4})", tx)
             if e:
                 self.assertTrue(m, f)

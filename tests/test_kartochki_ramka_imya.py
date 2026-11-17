@@ -22,7 +22,7 @@ class TestRamkaImya(unittest.TestCase):
             with open(f, encoding="utf-8") as fh:
                 t = fh.read()
             txt = K._bv_t(re.sub(r"<[^>]+>", " ", t))
-            if "Балл от 1 до 99" not in txt:
+            if "Балл от 1 до 99" not in txt and 'class="co-itog"' not in t:  # pervyj-ekran-kartochki-v1: кольцо → итог
                 continue
             n += 1
             self.assertNotIn(". Здесь — выводы по фактам", txt, f)

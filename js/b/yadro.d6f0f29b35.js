@@ -148,6 +148,46 @@ if (href === path || (path === "/index.html" && href === "/")) a.setAttribute("a
 function onScroll() { h.classList.toggle("is-scrolled", window.scrollY > 8); }
 window.addEventListener("scroll", onScroll, { passive: true });
 onScroll();
+var gruppy = [].slice.call(h.querySelectorAll("[data-gr]"));
+var otkrytaya = null, tajmer = 0, navedenie = 0;
+function grZakryt(g, fokus) {
+if (!g) return;
+var b = g.querySelector(".shapka__gk"), p = g.querySelector(".shapka__pan");
+b.setAttribute("aria-expanded", "false"); p.hidden = true;
+if (otkrytaya === g) otkrytaya = null;
+if (fokus) b.focus();
+}
+function grOtkryt(g) {
+if (otkrytaya && otkrytaya !== g) grZakryt(otkrytaya);
+g.querySelector(".shapka__gk").setAttribute("aria-expanded", "true");
+g.querySelector(".shapka__pan").hidden = false;
+otkrytaya = g;
+}
+gruppy.forEach(function (g) {
+var b = g.querySelector(".shapka__gk");
+b.addEventListener("click", function () {
+if (otkrytaya === g && Date.now() - navedenie < 600) return;
+if (otkrytaya === g) grZakryt(g); else grOtkryt(g);
+});
+g.addEventListener("pointerenter", function (e) {
+if (e.pointerType !== "mouse") return;
+clearTimeout(tajmer);
+if (otkrytaya !== g) { navedenie = Date.now(); grOtkryt(g); }
+});
+g.addEventListener("pointerleave", function (e) {
+if (e.pointerType !== "mouse") return;
+clearTimeout(tajmer); tajmer = setTimeout(function () { grZakryt(g); }, 180);
+});
+g.addEventListener("focusout", function (e) { if (!g.contains(e.relatedTarget)) grZakryt(g); });
+g.addEventListener("keydown", function (e) {
+if (e.key === "Escape" && otkrytaya === g) { e.stopPropagation(); grZakryt(g, true); }
+if (e.key === "ArrowDown" && e.target === b) {
+e.preventDefault(); grOtkryt(g);
+var a = g.querySelector(".shapka__pl"); if (a) a.focus();
+}
+});
+});
+document.addEventListener("click", function (e) { if (otkrytaya && !otkrytaya.contains(e.target)) grZakryt(otkrytaya); });
 var burger = h.querySelector(".shapka__burger");
 if (m && burger && m.showModal) {
 var shut = function () { if (m.open) m.close(); };
@@ -159,9 +199,14 @@ burger.setAttribute("aria-expanded", "false"); document.documentElement.classLis
 });
 m.addEventListener("click", function (e) {
 if (e.target === m || e.target.closest("[data-close]") || e.target.closest("a")) shut();
+if (e.target.closest("[data-mnav-poisk]")) {
+shut();
+var lupa = h.querySelector("[data-poisk-knopka]");
+if (lupa) setTimeout(function () { lupa.click(); }, 0);
+}
 });
 if (window.matchMedia) {
-var mq = matchMedia("(min-width:861px)");
+var mq = matchMedia("(min-width:1024px)");
 var f = function (e) { if (e.matches) shut(); };
 if (mq.addEventListener) mq.addEventListener("change", f); else if (mq.addListener) mq.addListener(f);
 }

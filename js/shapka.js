@@ -181,9 +181,52 @@
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
 
-    // 3. fokus-shapka-v1 (12.11): выпадающих меню в шапке нет — три ссылки, «Войти» и «Проверить»; остальное в подвале
+    // 3. navigaciya-shapka-v1 (18.11, план «лучше справочников», разд. 6 Н1): четыре раздела с раскрывающимся списком.
+    //    Нажатие или Enter/пробел — открыть/закрыть; мышью — по наведению (с задержкой на уход);
+    //    Esc — закрыть и вернуть фокус на раздел; щелчок мимо или уход фокуса — закрыть. Открыт один список.
+    var gruppy = [].slice.call(h.querySelectorAll("[data-gr]"));
+    var otkrytaya = null, tajmer = 0, navedenie = 0;
+    function grZakryt(g, fokus) {
+      if (!g) return;
+      var b = g.querySelector(".shapka__gk"), p = g.querySelector(".shapka__pan");
+      b.setAttribute("aria-expanded", "false"); p.hidden = true;
+      if (otkrytaya === g) otkrytaya = null;
+      if (fokus) b.focus();
+    }
+    function grOtkryt(g) {
+      if (otkrytaya && otkrytaya !== g) grZakryt(otkrytaya);
+      g.querySelector(".shapka__gk").setAttribute("aria-expanded", "true");
+      g.querySelector(".shapka__pan").hidden = false;
+      otkrytaya = g;
+    }
+    gruppy.forEach(function (g) {
+      var b = g.querySelector(".shapka__gk");
+      // мышь уже открыла список наведением — нажатие следом его не закрывает
+      b.addEventListener("click", function () {
+        if (otkrytaya === g && Date.now() - navedenie < 600) return;
+        if (otkrytaya === g) grZakryt(g); else grOtkryt(g);
+      });
+      g.addEventListener("pointerenter", function (e) {
+        if (e.pointerType !== "mouse") return;
+        clearTimeout(tajmer);
+        if (otkrytaya !== g) { navedenie = Date.now(); grOtkryt(g); }
+      });
+      g.addEventListener("pointerleave", function (e) {
+        if (e.pointerType !== "mouse") return;
+        clearTimeout(tajmer); tajmer = setTimeout(function () { grZakryt(g); }, 180);
+      });
+      g.addEventListener("focusout", function (e) { if (!g.contains(e.relatedTarget)) grZakryt(g); });
+      g.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && otkrytaya === g) { e.stopPropagation(); grZakryt(g, true); }
+        if (e.key === "ArrowDown" && e.target === b) {
+          e.preventDefault(); grOtkryt(g);
+          var a = g.querySelector(".shapka__pl"); if (a) a.focus();
+        }
+      });
+    });
+    document.addEventListener("click", function (e) { if (otkrytaya && !otkrytaya.contains(e.target)) grZakryt(otkrytaya); });
 
-    // 4. Мобильное меню ≤ 860 px: <dialog> + showModal() — фон инертен, фокус внутри, Esc закрывает
+    // 4. Мобильное меню ≤ 1023 px: <dialog> + showModal() — фон инертен, фокус внутри, Esc закрывает
     var burger = h.querySelector(".shapka__burger");
     if (m && burger && m.showModal) {
       var shut = function () { if (m.open) m.close(); };
@@ -195,9 +238,15 @@
       });
       m.addEventListener("click", function (e) {
         if (e.target === m || e.target.closest("[data-close]") || e.target.closest("a")) shut();
+        // поиск первым в меню: закрыть лист и открыть ту же строку поиска, что у лупы в шапке
+        if (e.target.closest("[data-mnav-poisk]")) {
+          shut();
+          var lupa = h.querySelector("[data-poisk-knopka]");
+          if (lupa) setTimeout(function () { lupa.click(); }, 0);
+        }
       });
       if (window.matchMedia) {
-        var mq = matchMedia("(min-width:861px)");
+        var mq = matchMedia("(min-width:1024px)");
         var f = function (e) { if (e.matches) shut(); };
         if (mq.addEventListener) mq.addEventListener("change", f); else if (mq.addListener) mq.addListener(f);
       }

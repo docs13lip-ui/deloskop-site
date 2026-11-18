@@ -24,7 +24,8 @@ const STATI = [
 
 test('статьи о выборе поставщика ведут на /sravnit/ — первой карточкой «Читайте также»', () => {
   for (const p of STATI) {
-    const s = chitat(p + '/index.html');
+    // шапка сайта (navigaciya-shapka-v1) ведёт на /sravnit/ со всех страниц — считаем ссылки вне неё
+    const s = chitat(p + '/index.html').replace(/<!--shapka-->[\s\S]*?<!--\/shapka-->/, '');
     const more = s.match(/<section class="more"><h2>Читайте также<\/h2><div class="cards">(<a class="card" href="[^"]+")/);
     assert.ok(more, p);
     assert.strictEqual(more[1], '<a class="card" href="/sravnit/"', p);

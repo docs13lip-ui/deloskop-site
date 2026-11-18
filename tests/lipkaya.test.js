@@ -139,14 +139,16 @@ test('адрес отчёта: компактная шапка ставится 
 });
 
 // pervyj-ekran-60s-v1 (11.11.2026, [Ночные запуски]): ответ «платить или нет» — на первом экране отчёта на телефоне
-test('строка «Ответ» под названием: из вывода отчёта, только на телефоне, не в печати; «Проверь счёт» на телефоне — «Выберите»', () => {
+test('строка «Ответ» под названием: из вывода отчёта, на телефоне и компьютере, не в печати; «Проверь счёт» на телефоне — «Выберите»', () => {
   assert.strictEqual(L.OTV, 'Ответ');
   const js = chitat('js/lipkaya.js');
   assert.ok(/function otvetSverhu\(s\)/.test(js) && /s\.otv = otvetSverhu\(s\)/.test(js), 'ставится в mount');
   assert.ok(/var v = vyvod\(rep\)/.test(js), 'текст — тот же вывод, что у липкой строки и окна');
   assert.ok(/MutationObserver/.test(js) && /s\.otv\.mo\.disconnect\(\)/.test(js), 'следит за выводом и снимается при snyat');
   const css = chitat('css/perehod.css');
-  assert.ok(/\.lip-o\{display:none\}/.test(css) && /@media \(max-width:600px\)\{\s*\.lip-o\{display:grid/.test(css), 'шире 600 px — скрыта');
+  // otvet-kompyuter-v1 (18.11): и на компьютере — капсулой в строку; на телефоне — карточкой во всю ширину
+  assert.ok(/\.lip-o\{display:inline-grid;/.test(css) && !/\.lip-o\{display:none\}/.test(css), 'на компьютере видна');
+  assert.ok(/@media \(max-width:600px\)\{\s*\.lip-o\{display:grid/.test(css), 'на телефоне — карточкой');
   assert.ok(/@media print\{\.lip,\.lip-o,dialog\.lip-d\{display:none!important\}\}/.test(css));
   const ps = chitat('proverit-schet/index.html');
   assert.ok(ps.indexOf('<span class="drop__palec">Выберите счёт в&nbsp;PDF</span>') > 0);

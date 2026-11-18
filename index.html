@@ -1016,6 +1016,9 @@ html:not(.rezhim-otcheta) .hero .uv{width:100%;margin-top:0}
     if(!svoj&&window.DlkPlitki){try{DlkPlitki.mount(report,r)}catch(e){}}
     // sudy-pristavy-v1 (план отчёта 15.11, п. 5): «Суды и приставы — подробно» под плитками — 5 последних дел и производств, предметы взыскания группами, «Показать все загруженные»; плитки ведут сюда (js/sudy-pristavy.js)
     if(!svoj&&window.DlkSudyPristavy){try{DlkSudyPristavy.mount(report,r)}catch(e){}}
+    // otchet-p7-v1 (план 18.11, разд. 3 п. 7): «В реестрах» — плитки словами в правой колонке шапки листа, строка ведёт к своей плитке (js/reestry-slovami.js); заметка к компании под названием — та же, что в «Ваших контрагентах», только в браузере (п. 18, js/zametka-otcheta.js)
+    if(!svoj&&window.DlkReestrySlovami){try{DlkReestrySlovami.mount(report,r)}catch(e){}}
+    if(!svoj&&!primer&&window.DlkZametkaOtcheta){try{DlkZametkaOtcheta.mount(report,r)}catch(e){}}
     // krug-v1: «Кто рядом» — организации с тем же руководителем, участником или учредителем-организацией по ИНН из ЕГРЮЛ (/api/krug; слова [команда] ✎ 9, ✎ 11 от 13.11); перед «Все данные из реестров»; только организации, не «своя компания»; js/krug.js
     if(!svoj&&window.DlkKrug){try{DlkKrug.mount(report,r,{api:CAPI}).then(function(o){if(window.DlkPlitki)DlkPlitki.svyazi(report,o)}).catch(function(){if(window.DlkPlitki)DlkPlitki.svyazi(report,null)})}catch(e){}}
     // «Что изменилось» с прошлой проверки из кабинета — на любом устройстве (вошедшим; js/dinamika.js)

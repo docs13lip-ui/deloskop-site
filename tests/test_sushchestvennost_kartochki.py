@@ -87,7 +87,7 @@ def proverit(tc, t, imya):
         for x in S["melkoe"]:
             tc.assertNotIn(txt(x[1]), txt(glavnye.split('class="co-itog__f"')[-1]), imya + ": мелкое — не среди главных")
         if S["melkoe"]:
-            tc.assertIn("Мелкое к выручке:", txt(itog.group(0)), imya)
+            tc.assertIn("Небольшие суммы (меньше 0,1 % выручки за", txt(itog.group(0)), imya)  # chto-za-kompaniya-v1: слова [Право] 18.11
     kor = K._SS_KOR.search(t)
     if kor and B:
         tony = []
@@ -114,7 +114,7 @@ class TestOpublikovannye(unittest.TestCase):
         for m in re.finditer(r"\(([\d,]+) % выручки за", tt):
             self.assertLess(float(m.group(1).replace(",", ".")), 10, "п. 20: ни одной доли от 10 %")
         itog = re.search(r'<section class="co-itog".*?</section>', t, re.S).group(0)
-        self.assertIn("Мелкое к выручке:", txt(itog))
+        self.assertIn("Небольшие суммы (меньше 0,1 % выручки за 2025 год):", txt(itog))
         self.assertNotIn('co-itog__l--minus', itog, "единственный минус «Магнита» — мелкий, не в главном")
         proverit(self, t, "magnit")
 

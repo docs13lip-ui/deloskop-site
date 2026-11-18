@@ -680,6 +680,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         t2 = plyusy_minusy_kartochki(t2)  # kartochki-plyusy-v1: «Плюсы и минусы» из реестров страницы, как у новых
         t2 = pervyj_ekran_kartochki(t2)  # pervyj-ekran-kartochki-v1: «Итог по фактам» над кнопками вместо кольца Индекса, как у новых
         t2 = korotko_po_vesu(t2)  # sushchestvennost-v1: «Коротко» — доля выручки у сумм, мелкое в конце, от 10 % — первым, как у новых
+        t2 = chto_za_kompaniyu(t2)  # chto-za-kompaniya-v1: под ОКВЭД — выручка и штат; итог — словами [Право] 18.11 (2), как у новых
         x["_noindex"] = noindex_html(t2)
         if BEZ_OBOLOCHKI in t2:
             # «голое» тело из комплекта — оболочка той же sobrat_stranicu

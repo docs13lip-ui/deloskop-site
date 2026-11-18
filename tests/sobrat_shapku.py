@@ -95,6 +95,8 @@ SCHETCHIK_JS = '<script src="/js/schetchik.js" defer></script>'
 # podelitsya-v1 (24.10): «Скопировать ссылку» и «Ещё…» блока «Поделиться» — в пакете «yadro»; отдельным тегом — где пакета нет
 # (на странице без блока скрипт сразу выходит). Ставится на все страницы, как счётчик: иначе свёртка в пакет не видит полного набора.
 PODEL_JS = '<script src="/js/podelitsya.js" defer></script>'
+# kontragenty-shapka-v1 (18.11): число в значке «Ваши контрагенты» шапки — в пакете «yadro»; отдельным тегом — где пакета нет
+MOI_JS = '<script src="/js/moi-kontragenty.js" defer></script>'
 # vizual-v1 (17.10, «глубина и свет»): последним стилем страницы — тени в три слоя, дышащий фон, стекло
 GLUBINA_LINK = '<link rel="stylesheet" href="/css/glubina.css">'
 # vizual-v3.0b (18.10): тёмная тема — по системе + переключатель в подвале (решение владельца 18.10 15:38).
@@ -426,6 +428,8 @@ def vstavit_shapku(txt, shapka):
         txt = txt.replace("</head>", SCHETCHIK_JS + "\n</head>", 1)
     if not est(txt, PODEL_JS):
         txt = txt.replace("</head>", PODEL_JS + "\n</head>", 1)
+    if not est(txt, MOI_JS):
+        txt = txt.replace("</head>", MOI_JS + "\n</head>", 1)
     if not est(txt, GLUBINA_LINK):
         txt = txt.replace("</head>", GLUBINA_LINK + "\n</head>", 1)
     if not est(txt, TEMA_LINK):

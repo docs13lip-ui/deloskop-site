@@ -22,7 +22,8 @@
       "js/pwa.js",
       "obnovleniya.js",
       "js/schetchik.js",
-      "js/podelitsya.js"
+      "js/podelitsya.js",
+      "js/moi-kontragenty.js"
     ],
     "glavnaya": [
       "js/vhody.js",

@@ -240,3 +240,13 @@ span.nw,span.nw-k{color:inherit!important;font-size:inherit!important;font-weigh
 .mnav .mnav__h{margin:var(--s-4) 0 var(--s-1);color:var(--muted);font:600 13px/1.2 var(--font);letter-spacing:.06em;text-transform:uppercase}
 .mnav .mnav__extra{margin-top:var(--s-4);padding-top:var(--s-2)}
 @media (max-width:359px){.mnav .mnav__list{grid-template-columns:1fr}}
+/* kontragenty-shapka-v1 (18.11, Н1 — хвост): «Ваши контрагенты» — круглый значок с числом проверенных в этом браузере;
+   нет проверок — значка нет (js/moi-kontragenty.js); до 480 px — только строкой в меню-листе, шапка телефона и так полна */
+.shapka .shapka__moi{position:relative;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border:1px solid var(--line);border-radius:50%;color:var(--ink-2);flex:none;transition:color var(--fast,160ms) var(--ease,ease),border-color var(--fast,160ms) var(--ease,ease)}
+.shapka .shapka__moi:hover{color:var(--ink);border-color:var(--ink-2)}
+.shapka .shapka__moi:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.shapka .shapka__moi[hidden],.mnav .mnav__row[hidden]{display:none}
+.shapka .shapka__moi-n{position:absolute;top:-5px;right:-7px;box-shadow:0 0 0 2px var(--bg)}
+.mnav .mnav__row .shapka__cnt{margin-left:2px}
+@media (max-width:480px){.shapka .shapka__moi{display:none}}
+@media print{.shapka .shapka__moi{display:none}}

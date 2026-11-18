@@ -3,7 +3,9 @@
  * снимки «что изменилось» (localStorage dlk_snimki, js/dinamika.js) и «Недавние проверки» (dlk_nedavnie, js/nedavnie.js).
  * В сеть при показе — ничего; запрос к API идёт, только когда человек сам нажал «Перепроверить» (обычная проверка, тот же лимит).
  * Для ИНН из 12 цифр (ИП) имя не выводим никогда — «Индивидуальный предприниматель».
- * Чистые функции (sobrat, uroven, kogda, html) — без DOM, их проверяет tests/portfel.test.js. */
+ * Заметка к компании (kontragenty-shapka-v1, план 18.11, п. 18) — тоже только в браузере, ключ dlk_zametki,
+ * до 200 знаков; в Метрику уходит только факт «сохранил заметку», без текста.
+ * Чистые функции (sobrat, uroven, kogda, html, zametkaChistit) — без DOM, их проверяет tests/portfel.test.js. */
 (function (root, factory) {
   var api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
@@ -12,7 +14,8 @@
   'use strict';
 
   var NB = '\u00a0';
-  var K_SNIMKI = 'dlk_snimki', K_NEDAVNIE = 'dlk_nedavnie';
+  var K_SNIMKI = 'dlk_snimki', K_NEDAVNIE = 'dlk_nedavnie', K_ZAMETKI = 'dlk_zametki';
+  var ZAMETKA_MAX = 200, ZAMETOK_MAX = 300;
   var DEN = 864e5, STARYJ_DNEJ = 30, POKAZ = 10;
   // уровни по 222-ФЗ (как на /indeks/): хуже — меньше номер порядка
   var UR = {
@@ -117,33 +120,55 @@
 
   var KREST = '<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 
-  function stroka(r, now) {
+  var KARANDASH = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg>';
+
+  // Заметка: без управляющих знаков и лишних пробелов, не длиннее 200 знаков
+  function zametkaChistit(t) {
+    return String(t == null ? '' : t).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+      .replace(/[ \t]+/g, ' ').replace(/\s*\n\s*/g, '\n').replace(/\n{2,}/g, '\n').trim().slice(0, ZAMETKA_MAX).trim();
+  }
+
+  function redaktor(inn, z) {
+    var id = 'pf-z-' + inn;
+    return '<form class="pf__zf" data-pf-zf="' + inn + '"><label class="pf__zl" for="' + id + '">Заметка к' + NB + 'компании — видна только в' + NB + 'этом браузере</label>' +
+      '<textarea class="pf__zt" id="' + id + '" rows="2" maxlength="' + ZAMETKA_MAX + '" placeholder="Например: договор поставки до' + NB + '31.12, менеджер просил предоплату">' + esc(z || '') + '</textarea>' +
+      '<div class="pf__zk"><button type="submit" class="pf__zs">Сохранить</button><button type="button" class="pf__zo" data-pf-zo="' + inn + '">Отмена</button>' +
+      (z ? '<button type="button" class="pf__zu" data-pf-zu="' + inn + '">Удалить заметку</button>' : '') + '</div></form>';
+  }
+
+  function stroka(r, now, zametki, red) {
     var k = kogda(r.t, now);
+    var z = zametki && zametki[r.inn] && zametki[r.inn].z ? String(zametki[r.inn].z) : '';
+    var otkryt = red === r.inn;
     var imya = r.ip ? 'Индивидуальный предприниматель' : (r.nm ? kav(r.nm) : 'Компания');
     return '<li class="pf__r" data-inn="' + r.inn + '">' +
       '<div class="pf__a"><b class="pf__nm">' + esc(imya) + '</b><span class="pf__pill pf__pill--' + r.ur + '">' + UR[r.ur].t + '</span>' +
       (r.isk ? '<span class="pf__isk">' + (ISKLYUCHENA[r.isk] ? 'Компания исключена из' + NB + 'ЕГРЮЛ' : 'ФНС готовит исключение из' + NB + 'ЕГРЮЛ' + (r.isk === '108' ? ' по' + NB + 'сведениям Банка России' : '')) + '</span>' : '') + '</div>' +
       '<div class="pf__b"><span class="pf__inn n">ИНН' + NB + r.inn + '</span><span class="pf__d n' + (k.staryj ? ' pf__d--star' : '') + '">' + k.t + '</span></div>' +
+      (z && !otkryt ? '<p class="pf__z">' + esc(z) + '</p>' : '') +
+      (otkryt ? redaktor(r.inn, z) : '') +
       '<div class="pf__c"><button type="button" class="pf__go" data-pf-go="' + r.inn + '">Перепроверить</button>' +
+      '<button type="button" class="pf__zb" data-pf-z="' + r.inn + '" aria-expanded="' + otkryt + '" aria-label="' + (z ? 'Изменить заметку' : 'Добавить заметку') + '" title="' + (z ? 'Изменить заметку' : 'Добавить заметку') + '">' + KARANDASH + '</button>' +
       '<button type="button" class="pf__x" data-pf-x="' + r.inn + '" aria-label="Убрать из списка">' + KREST + '</button></div></li>';
   }
 
-  // Весь блок. opt.vse — показать все строки (иначе первые 10).
+  // Весь блок. opt.vse — показать все строки (иначе первые 10); opt.zametki — {inn: {z, t}}; opt.red — ИНН с открытой заметкой.
   function html(rows, now, opt) {
     opt = opt || {};
     var n = rows.length;
     if (!n) return '';
     var vid = opt.vse ? rows : rows.slice(0, POKAZ);
+    var zm = opt.zametki || {}, nz = rows.filter(function (r) { return zm[r.inn] && zm[r.inn].z; }).length;
     var sv = svetofor(rows);
     return '<h2 class="pf__h" id="pf-h">Ваши контрагенты</h2>' +
       '<p class="pf__pod">Последние проверки в' + NB + 'этом браузере — ' + n + NB + mn(n, 'компания', 'компании', 'компаний') +
       '. Список хранится только у' + NB + 'вас и' + NB + 'не' + NB + 'уходит на' + NB + 'наш сервер.</p>' +
       (sv ? '<p class="pf__sv">' + sv + '</p><p class="pf__nb">По последней проверке каждой компании, а' + NB + 'не' + NB + 'на' + NB + 'сегодня.</p>' : '') +
-      '<ul class="pf__list">' + vid.map(function (r) { return stroka(r, now); }).join('') + '</ul>' +
+      '<ul class="pf__list">' + vid.map(function (r) { return stroka(r, now, zm, opt.red); }).join('') + '</ul>' +
       (n > POKAZ && !opt.vse ? '<button type="button" class="pf__vse" data-pf-vse>Показать все ' + n + '</button>' : '') +
       '<div class="pf__niz"><button type="button" class="pf__clr" data-pf-clr>Очистить список</button>' +
       '<div class="pf__conf" data-pf-conf hidden role="alertdialog" aria-label="Очистить список"><span>Удалить из' + NB + 'этого браузера все ' + n + NB +
-      mn(n, 'проверку', 'проверки', 'проверок') + '? Отменить нельзя.</span>' +
+      mn(n, 'проверку', 'проверки', 'проверок') + (nz ? ' и' + NB + 'заметки к' + NB + 'ним' : '') + '? Отменить нельзя.</span>' +
       '<button type="button" class="pf__da" data-pf-da>Удалить</button><button type="button" class="pf__net" data-pf-net>Оставить</button></div></div>';
   }
 
@@ -154,19 +179,38 @@
     try { var a = JSON.parse(ls.getItem(K_NEDAVNIE) || '[]'); if (Array.isArray(a)) n = a; } catch (e) {}
     return { s: s, n: n };
   }
+  function zametkiChitat(ls) {
+    try { var o = JSON.parse(ls.getItem(K_ZAMETKI) || '{}'); if (o && typeof o === 'object' && !Array.isArray(o)) return o; } catch (e) {}
+    return {};
+  }
+  // Пустой текст — заметку удалить. Больше 300 заметок — самые старые уходят.
+  function zametkaZapisat(ls, inn, tekst, t) {
+    inn = String(inn || '');
+    if (!INN_RE.test(inn)) return '';
+    var z = zametkaChistit(tekst), o = zametkiChitat(ls);
+    if (z) o[inn] = { z: z, t: Number(t) || Date.now() }; else delete o[inn];
+    var k = Object.keys(o);
+    if (k.length > ZAMETOK_MAX) k.sort(function (a, b) { return (Number(o[a].t) || 0) - (Number(o[b].t) || 0); }).slice(0, k.length - ZAMETOK_MAX).forEach(function (x) { delete o[x]; });
+    try { if (Object.keys(o).length) ls.setItem(K_ZAMETKI, JSON.stringify(o)); else ls.removeItem(K_ZAMETKI); } catch (e) {}
+    return z;
+  }
   function ubrat(ls, inn) {
     var d = chitat(ls);
     delete d.s[inn];
     try { ls.setItem(K_SNIMKI, JSON.stringify(d.s)); } catch (e) {}
     try { ls.setItem(K_NEDAVNIE, JSON.stringify(d.n.filter(function (x) { return !x || x.inn !== inn; }))); } catch (e) {}
+    if (zametkiChitat(ls)[inn]) zametkaZapisat(ls, inn, '');
   }
   function ochistit(ls) {
     try { ls.removeItem(K_SNIMKI); } catch (e) {}
     try { ls.removeItem(K_NEDAVNIE); } catch (e) {}
+    try { ls.removeItem(K_ZAMETKI); } catch (e) {}
   }
 
   // ---- браузер ----
-  var st = { el: null, opt: null, vse: false, pokazan: false };
+  var st = { el: null, opt: null, vse: false, pokazan: false, red: '' };
+  // шапка (js/moi-kontragenty.js) пересчитывает число в значке «Ваши контрагенты»
+  function izmenilos() { try { window.dispatchEvent(new CustomEvent('deloskop:kontragenty')); } catch (e) {} }
   function cel(c, p) { try { if (typeof window !== 'undefined' && window.dlkGoal) window.dlkGoal(c, p); } catch (e) {} }
   function hranilishche() { try { return st.opt.ls || window.localStorage || null; } catch (e) { return null; } }
 
@@ -186,7 +230,8 @@
     var report = h ? h.querySelector('.report') : null;
     // пока открыт настоящий отчёт — блок не показываем (режим отчёта на всю ширину не трогаем)
     if (!rows.length || (report && !report.classList.contains('ex'))) { el.innerHTML = ''; skryt(); return 0; }
-    el.innerHTML = html(rows, Date.now(), { vse: st.vse });
+    if (st.red && !rows.some(function (r) { return r.inn === st.red; })) st.red = '';
+    el.innerHTML = html(rows, Date.now(), { vse: st.vse, zametki: ls ? zametkiChitat(ls) : {}, red: st.red });
     el.hidden = false;
     if (h) h.classList.add('pf-on');
     if (!st.pokazan) { st.pokazan = true; cel('portfel_pokaz', { n: rows.length }); }
@@ -205,22 +250,61 @@
       if (o.form) { if (o.form.requestSubmit) o.form.requestSubmit(); else o.form.dispatchEvent(new Event('submit', { cancelable: true })); }
       return;
     }
-    if (b.hasAttribute('data-pf-x')) { if (ls) ubrat(ls, b.getAttribute('data-pf-x')); cel('portfel_ubrat'); narisovat(); return; }
+    if (b.hasAttribute('data-pf-x')) { if (ls) ubrat(ls, b.getAttribute('data-pf-x')); cel('portfel_ubrat'); narisovat(); izmenilos(); return; }
+    if (b.hasAttribute('data-pf-z')) {
+      var zi = b.getAttribute('data-pf-z');
+      st.red = st.red === zi ? '' : zi;
+      narisovat();
+      if (st.red) fokusZametki(zi); else fokusKnopki(zi);
+      return;
+    }
+    if (b.hasAttribute('data-pf-zo')) { zakrytZametku(b.getAttribute('data-pf-zo')); return; }
+    if (b.hasAttribute('data-pf-zu')) { var zu = b.getAttribute('data-pf-zu'); if (ls) zametkaZapisat(ls, zu, ''); cel('portfel_zametka', { udalil: 1 }); zakrytZametku(zu); return; }
     if (b.hasAttribute('data-pf-vse')) { st.vse = true; narisovat(); return; }
     var conf = st.el.querySelector('[data-pf-conf]');
     if (b.hasAttribute('data-pf-clr') && conf) { conf.hidden = false; b.hidden = true; var da = conf.querySelector('[data-pf-da]'); if (da) da.focus(); return; }
     if (b.hasAttribute('data-pf-net') && conf) { conf.hidden = true; var c = st.el.querySelector('[data-pf-clr]'); if (c) { c.hidden = false; c.focus(); } return; }
-    if (b.hasAttribute('data-pf-da')) { if (ls) ochistit(ls); cel('portfel_ochistit'); narisovat(); }
+    if (b.hasAttribute('data-pf-da')) { if (ls) ochistit(ls); cel('portfel_ochistit'); st.red = ''; narisovat(); izmenilos(); }
+  }
+
+  function fokusZametki(inn) {
+    var t = st.el && st.el.querySelector('#pf-z-' + inn);
+    if (t) { try { t.focus(); t.setSelectionRange(t.value.length, t.value.length); } catch (e) {} }
+  }
+  function fokusKnopki(inn) {
+    var k = st.el && st.el.querySelector('[data-pf-z="' + inn + '"]');
+    if (k) try { k.focus(); } catch (e) {}
+  }
+  function zakrytZametku(inn) { st.red = ''; narisovat(); fokusKnopki(inn); }
+  function sohranit(e) {
+    var f = e.target;
+    if (!f || !f.hasAttribute || !f.hasAttribute('data-pf-zf')) return;
+    e.preventDefault();
+    var inn = f.getAttribute('data-pf-zf'), t = f.querySelector('textarea'), ls = hranilishche();
+    var z = ls && t ? zametkaZapisat(ls, inn, t.value) : '';
+    cel('portfel_zametka', z ? { dlina: z.length } : { udalil: 1 });
+    zakrytZametku(inn);
+  }
+  // в поле заметки: Esc — отмена, Ctrl/⌘ + Enter — сохранить
+  function klavishi(e) {
+    var t = e.target;
+    if (!t || t.tagName !== 'TEXTAREA' || !t.form || !t.form.hasAttribute('data-pf-zf')) return;
+    if (e.key === 'Escape') { e.preventDefault(); zakrytZametku(t.form.getAttribute('data-pf-zf')); }
+    else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      if (t.form.requestSubmit) t.form.requestSubmit(); else sohranit({ target: t.form, preventDefault: function () {} });
+    }
   }
 
   // opt: { form, input, ls? }
   function mount(el, opt) {
     if (!el) return 0;
     st.el = el; st.opt = opt || {};
-    if (!el.dataset.pf) { el.dataset.pf = '1'; el.addEventListener('click', klik); }
+    if (!el.dataset.pf) { el.dataset.pf = '1'; el.addEventListener('click', klik); el.addEventListener('submit', sohranit); el.addEventListener('keydown', klavishi); }
     try { return narisovat(); } catch (e) { skryt(); return 0; }
   }
 
   return { sobrat: sobrat, uroven: uroven, kogda: kogda, html: html, ubrat: ubrat, ochistit: ochistit, chitat: chitat,
+    zametkaChistit: zametkaChistit, zametkaZapisat: zametkaZapisat, zametkiChitat: zametkiChitat, K_ZAMETKI: K_ZAMETKI,
     mount: mount, skryt: skryt, obnovit: function () { return narisovat(); }, UR: UR, K_SNIMKI: K_SNIMKI, K_NEDAVNIE: K_NEDAVNIE };
 });

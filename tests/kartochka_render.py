@@ -6038,3 +6038,124 @@ _html_kartochki_bez_chto = html_kartochki
 def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811
     """chto-za-kompaniya-v1: та же карточка, под ОКВЭД — выручка и штат (итог — через itog_html)."""
     return chto_za_kompaniyu(_html_kartochki_bez_chto(k, V, sosedi, kom, normy, cena, segodnya))
+
+
+# ---------------------------------------------------------------- nalog-ostatok-v1 ([Ночные-2] 18.11)
+# [Право · Налоговый] 18.11 01:30, разд. 5 (claude/Право_карточка_люди_первый_экран_по_спросу_хештеги_18.11.md):
+# задолженность по налогам меньше 500 ₽ — остатком, не минусом: «Задолженность по налогам по набору ФНС на {дата} — {X} ₽»;
+# совет КНД 1120101 — без тревоги; норму (порог требования, ст. 69–70 НК) в текст не пишем до сверки. От 500 ₽ — минус
+# с долей выручки, как было (sushchestvennost-v1). На 22 карточках в «Минусах» стоял «Долг по налогам» в 1–700 ₽.
+# Где меняется: «Коротко» (warn → info, тем же текстом), «Плюсы и минусы» (строка не в минусах, а «Остаток:» под колонками),
+# «Итог по фактам» (не считается минусом; строка «Остаток:» под «Не проверяли»; источник ФНС — в числе проверенных),
+# «Что это значит» и «Перед оплатой» (тревожный абзац снят — он читает warn; совет о справке — спокойный). Идемпотентно.
+NO_POROG = 500
+_NO_SP = r"(?:&#160;|&nbsp;| | )"
+_NO_KOR = re.compile(r'<li class="co-v co-v--warn"><span class="co-v__z"(?: role="img")? aria-label="обратите внимание"></span>'
+                     r'<div><p>Задолженность перед бюджетом' + _NO_SP + r'?— (\d{1,3})' + _NO_SP + r'₽ на' + _NO_SP + r'[^<]*?</p>'
+                     r'(<span class="co-src">[^<]*?сведения на' + _NO_SP + r'(\d\d\.\d\d\.\d{4})[^<]*</span>)</div></li>')
+_NO_PM = re.compile(r"^Долг по\s+налогам\s+(\d{1,3})\s*₽")
+
+
+def no_tekst(summa, d):
+    return "Задолженность по%sналогам по%sнабору ФНС на%s%s%s— %d%s₽" % (NB, NB, NB, d, NB, summa, NB)
+
+
+def nalog_ostatok_korotko(t):
+    """«Коротко»: «Задолженность перед бюджетом — X ₽» (warn) при X < 500 → справочная строка словами [Право]."""
+    def zam(m):
+        s = int(m.group(1))
+        if s <= 0 or s >= NO_POROG:
+            return m.group(0)
+        li = m.group(0).replace("co-v--warn", "co-v--info", 1).replace(ZNAK["warn"][1], ZNAK["info"][1], 1)
+        if 'role="img"' not in li:  # точка — значок с именем (kartochki-rol-znaka-v1)
+            li = li.replace('co-v__z" aria', 'co-v__z" role="img" aria', 1)
+        i, j = li.index("<p>") + 3, li.index("</p>")
+        return li[:i] + no_tekst(s, m.group(3)) + li[j:]
+    return _NO_KOR.sub(zam, t or "") if t else t
+
+
+_vyvody_bez_ostatka = vyvody
+
+
+def vyvody(k):  # noqa: F811 — nalog-ostatok-v1: V10 меньше 500 ₽ — справочно, не «обратите внимание»
+    V = _vyvody_bez_ostatka(k)
+    n = (k.get("fakty") or {}).get("nedoimka") or {}
+    v = n.get("znachenie")
+    if v and 0 < v < NO_POROG and n.get("data"):
+        d = n["data"].strftime("%d.%m.%Y") if hasattr(n["data"], "strftime") else str(n["data"])
+        V = [_v("V10o", "info", no_tekst(int(round(v)), d), x["istochnik"], x["data"]) if x["kod"] == "V10" else x for x in V]
+    return V
+
+
+_no_pm_stroki_bez = plyusy_minusy_stroki
+
+
+def plyusy_minusy_stroki(t):  # noqa: F811 — nalog-ostatok-v1: налог < 500 ₽ — «Остаток», не минус
+    S = _no_pm_stroki_bez(t)
+    if not S:
+        return S
+    S["ostatok"] = []
+    ub = []
+    for x in S["minusy"]:
+        m = _NO_PM.match(x[1]) if x[0] == "tax_debt" else None
+        if m and 0 < int(m.group(1)) < NO_POROG and re.fullmatch(r"\d\d\.\d\d\.\d{4}", x[3] or ""):
+            ub.append(x)
+            S["ostatok"].append((x[0], no_tekst(int(m.group(1)), x[3]), x[2], x[3]))
+    if ub:
+        S["minusy"] = [x for x in S["minusy"] if x not in ub]
+        S["melkoe"] = [x for x in (S.get("melkoe") or []) if x not in ub]
+    return S
+
+
+def no_ostatok_html(S, klass):
+    if not S or not S.get("ostatok"):
+        return ""
+    tx = "; ".join(x[1] for x in S["ostatok"])
+    return '<p class="%s"><span>Остаток:</span> %s.</p>' % (klass, html.escape(tx[:1].lower() + tx[1:], quote=False))
+
+
+_no_pm_html_bez = plyusy_minusy_html
+
+
+def plyusy_minusy_html(S):  # noqa: F811 — nalog-ostatok-v1: «Остаток:» под колонками
+    h = _no_pm_html_bez(S)
+    o = no_ostatok_html(S, "pm__ne pm__ost")
+    if not h or not o:
+        return h
+    i = h.index('<p class="caption pm__ist">')
+    return h[:i] + o.replace("<span>", "<b>").replace("</span>", "</b>") + h[i:]
+
+
+_no_itog_bez = itog_html
+
+
+def itog_html(S, inn, eg_d):  # noqa: F811 — nalog-ostatok-v1: остаток — строкой под «Не проверяли», источник — в K
+    if S and S.get("ostatok") and not (S["plyusy"] or S["minusy"]):
+        return ""
+    h = _no_itog_bez(S, inn, eg_d)
+    if not h or not S.get("ostatok"):
+        return h
+    K0 = len({x[2] for x in S["plyusy"] + S["minusy"] if x[2]})
+    K1 = len({x[2] for x in S["plyusy"] + S["minusy"] + S["ostatok"] if x[2]})
+    if K1 != K0:
+        h = h.replace("по%s%d%sпроверенным" % (NB, K0, NB), "по%s%d%sпроверенным" % (NB, K1, NB), 1)
+    i = h.index("</p>", h.index('<p class="caption co-itog__n">')) + len("</p>")
+    return h[:i] + no_ostatok_html(S, "caption co-itog__n co-itog__o") + h[i:]
+
+
+_NO_PERED_INFO = "Задолженность по налогам по набору ФНС на "
+_un_pered_bez_ostatka = un_pered
+
+
+def un_pered(f):  # noqa: F811 — nalog-ostatok-v1: при остатке < 500 ₽ — спокойный совет о справке
+    s = _un_pered_bez_ostatka(f)
+    o = next((x for t, x in f["V"] if t == "info" and x.replace(NB, " ").startswith(_NO_PERED_INFO)), None)
+    if not o or any("1120101" in x for x in s):
+        return s
+    m = re.search(r"на\W*(\d\d\.\d\d\.\d{4})\W*—\W*(\d{1,3})", o)
+    if not m:
+        return s
+    im = html.escape(un_kratkoe(f["imya"]), quote=False)
+    sovet = ("Справку об%sисполнении обязанности по%sуплате налогов (КНД 1120101) можно попросить у%s%s на%sсвежую дату: "
+             "в%sнаборе ФНС на%s%s%s— остаток %s%s₽." % (NB, NB, NB, im, NB, NB, NB, m.group(1), NB, m.group(2), NB))
+    return s if len(s) >= 3 else [sovet] + s

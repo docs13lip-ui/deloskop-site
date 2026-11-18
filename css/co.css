@@ -204,3 +204,8 @@
 .co-otrs__s{font-size:var(--t-small)}
 .co-otrs__o{grid-column:1/-1;color:var(--muted);font-size:var(--t-caption);margin-top:var(--s-1,4px)}
 .co-otrs--golova{margin-top:var(--s-3);color:var(--ink-2)}
+/* perelinkovka-v1: «Рядом в Делоскопе» внизу карточки — три списка; на телефоне одной колонкой */
+.co-ryadom__g{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--s-6)}
+.co-ryadom__h{font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:0 0 var(--s-1)}
+.co-ryadom__h a{color:inherit;text-decoration:none;border-bottom:1px solid var(--line)}
+.co-ryadom__h a:hover{color:var(--accent)}

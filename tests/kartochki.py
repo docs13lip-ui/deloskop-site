@@ -383,7 +383,7 @@ _WP_CANON = re.compile(r'<link rel="canonical" href="([^"]+)"')
 
 def otpechatok_teksta(t):
     """16 знаков sha256 видимого текста <main> карточки (без тегов, скриптов, вида пробелов); нет <main> — None."""
-    t = _WP_DEJSTV.sub("", razvernut_kartochku(_WP_BLOK.sub("", t)))  # svernut-kartochki-v1: свёртка текст не меняет — отпечаток и дата прежние
+    t = ubrat_ryadom(_WP_DEJSTV.sub("", razvernut_kartochku(_WP_BLOK.sub("", t))))  # perelinkovka-v1: «Рядом в Делоскопе» — навигация, не сведения  # svernut-kartochki-v1: свёртка текст не меняет — отпечаток и дата прежние
     m = _WP_MAIN.search(t)
     if not m:
         return None
@@ -592,6 +592,13 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
 
     def zapisat_k(put, txt):
         p_ = os.path.basename(os.path.dirname(put))
+        if RYADOM_METKA not in txt and os.path.isfile(put):
+            # perelinkovka-v1: «Рядом в Делоскопе» ставит последний проход сборки; до него страница держит прежний блок —
+            # та же сборка тех же данных не переписывает файл дважды (детерминированность и счёт изменённых страниц)
+            with open(put, encoding="utf-8") as fh_:
+                b_ = RYADOM_BLOK.search(fh_.read())
+            if b_:
+                txt = vstavit_ryadom(txt, b_.group(0))
         txt, d_t = vstavit_webpage(tipograf_kartochki(bez_nevidimyh(txt), chisla=True), den_, prezhnie.get(p_))  # kartochki-tipograf-v1
         if d_t:
             daty_teksta["/%s/%s/" % (PAPKA, p_)] = d_t
@@ -722,11 +729,16 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         with open(os.path.join(papka, x["_papka"], "index.html"), encoding="utf-8") as fh:
             teksty[x["inn"]] = bez_tipografa(fh.read())  # kartochki-chisla-v1
     # kartochki-vhod-v1: у каждой открытой карточки — не меньше VHOD_MIN входящих ссылок с других карточек
-    svyazi = svyazi_vse(vse_d, {i for i, t in teksty.items() if noindex_html(t)})
+    zakryty_ = {i for i, t in teksty.items() if noindex_html(t)}
+    svyazi = svyazi_vse(vse_d, zakryty_)
     for x in vse_d:
         put = os.path.join(papka, x["_papka"], "index.html")
         sos_, esh_ = svyazi[x["inn"]]
-        izm += zapisat_k(put, _SOS.sub(lambda m: m.group(1) + sosedi_html(x, sos_, esh_) + m.group(3), teksty[x["inn"]], count=1))
+        t_ = _SOS.sub(lambda m: m.group(1) + sosedi_html(x, sos_, esh_) + m.group(3), teksty[x["inn"]], count=1)
+        # perelinkovka-v1 (Н4): внизу — «В отрасли», «В регионе», «Близкие по выручке», без повторов с правой колонкой
+        uzhe_ = {y["inn"] for y in sos_} | {y["inn"] for y in esh_}
+        t_ = vstavit_ryadom(t_, ryadom_html(x, ryadom_spiski(x, vse_d, uzhe_, zakryty_), kg))
+        izm += zapisat_k(put, t_)
     # kartochki-stati-v1: обратная перелинковка — в одном разделе карточки строка «По теме раздела: «статья»» (подбор —
     # tests/sobrat_stati_kartochki.py, по тем же карточкам, что статьи → карточки); последним шагом, до sitemap: дата
     # изменения текста WebPage и lastmod учитывают строку

@@ -7062,3 +7062,99 @@ def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None)
     """+ «Следить» и «Сравнить» под «Открыть отчёт» — и в ответе API (API = файл); отрасль в BreadcrumbList ставит сборка
     после ssylki_kroshek (ссылка на хаб известна только ей)."""
     return dejstviya_kartochki(_kd_html_bez(k, V, sosedi, kom, normy, cena, segodnya))
+
+
+# ---------------------------------------------------------------- perelinkovka-v1 (решение владельца 18.11, разд. 6 Н4)
+# Внизу карточки — «Рядом в Делоскопе»: «В отрасли», «В регионе», «Близкие по выручке», до RYADOM_N в каждом. Компании,
+# что уже стоят справа в «Похожих» и «Ещё …», и сама карточка — не повторяются; одна компания — в одном списке. Внутри —
+# ближе по обороту (как напечатан), затем ИНН: добор и полная сборка дают одни и те же байты. Карточки за воротами
+# индексации (noindex) не предлагаем. Заголовок списка — ссылкой на хаб группы, если хаб есть. Блок — навигация, не сведения
+# о компании: в отпечаток текста (dateModified) не входит. Ставит его последний проход сборки (kartochki.py), идемпотентно.
+RYADOM_N = 5
+RYADOM_METKA = '<section class="co-sec co-ryadom"'
+RYADOM_BLOK = re.compile(r'<section class="co-sec co-ryadom".*?</section><!--/ryadom-->\n?', re.S)
+_RYADOM_PERED = '<section class="co-sec co-ogov caption">'
+
+
+def _ry_blizost(k):
+    d = math.log1p(_dohod_kart(k))
+    return lambda y: (abs(math.log1p(_dohod_kart(y)) - d), y["inn"])
+
+
+def ryadom_spiski(k, vse, uzhe=(), zakryty=()):
+    """→ [(вид, имя группы, [карточки])] — непустые списки в порядке «отрасль, регион, выручка»."""
+    nelzya = {k["inn"]} | set(uzhe) | set(zakryty)
+    pul = [y for y in vse if y["inn"] not in nelzya]
+    kl = _ry_blizost(k)
+    out = []
+    otr = hab_otrasl(k)
+    if otr != HAB_NET_OTRASLI:
+        s = sorted((y for y in pul if hab_otrasl(y) == otr), key=kl)[:RYADOM_N]
+        if s:
+            out.append(("otrasl", otr, s))
+    vzyato = {y["inn"] for _, _, s in out for y in s}
+    rg = k.get("region")
+    if rg:
+        s = sorted((y for y in pul if y.get("region") == rg and y["inn"] not in vzyato), key=kl)[:RYADOM_N]
+        if s:
+            out.append(("region", rg, s))
+    vzyato |= {y["inn"] for _, _, s in out for y in s}
+    if _dohod_kart(k) > 0:
+        s = sorted((y for y in pul if _dohod_kart(y) > 0 and y["inn"] not in vzyato), key=kl)[:RYADOM_N]
+        if s:
+            out.append(("vyruchka", "", s))
+    return out
+
+
+def _ry_oborot(y):
+    d, g = _dohod_kart(y), _god_dohoda(y)
+    if not d:
+        return ""
+    return "оборот " + e(dengi(d)).replace("&nbsp;", NB) + ((" за%s%d" % (NB, g)) if g else "")
+
+
+def _ry_li(y, vid):
+    mesto = e(y.get("gorod") or y.get("region") or "")
+    otr = hab_otrasl(y)
+    otr = "" if otr == HAB_NET_OTRASLI else e(otr)
+    ob = _ry_oborot(y)
+    if vid == "otrasl":
+        chasti = [mesto, ob]
+    elif vid == "region":
+        chasti = [otr, ob]
+    else:
+        chasti = [ob, mesto]
+    pod = " · ".join(c for c in chasti if c)
+    return '<li><a href="%s">%s</a>%s</li>' % (adres_str(y), e(y["name"]),
+                                             ('<span class="caption">%s</span>' % pod) if pod else "")
+
+
+def ryadom_html(k, spiski, kg=None):
+    if not spiski:
+        return ""
+    kg = kg or {}
+    kol = []
+    for vid, imya, s in spiski:
+        if vid == "vyruchka":
+            zag = "Близкие по выручке"
+        else:
+            zag = ("В отрасли: " if vid == "otrasl" else "В регионе: ") + e(imya)
+            hab = kg.get((vid, imya))
+            if hab:
+                zag = '<a href="%s">%s</a>' % (hab, zag)
+        kol.append('<div class="co-ryadom__k"><h3 class="co-ryadom__h">%s</h3><ul class="co-sos co-sos--ryadom">%s</ul></div>' % (
+            zag, "".join(_ry_li(y, vid) for y in s)))
+    return ('<section class="co-sec co-ryadom" aria-labelledby="ryadom"><h2 id="ryadom">Рядом в&nbsp;Делоскопе</h2>'
+            '<div class="co-ryadom__g">%s</div></section><!--/ryadom-->\n' % "".join(kol))
+
+
+def ubrat_ryadom(t):
+    return RYADOM_BLOK.sub("", t)
+
+
+def vstavit_ryadom(t, blok):
+    """Страница карточки → та же с блоком «Рядом в Делоскопе» перед оговоркой; пустой блок — блока нет. Повтор — те же байты."""
+    t = ubrat_ryadom(t)
+    if not blok or _RYADOM_PERED not in t:
+        return t
+    return t.replace(_RYADOM_PERED, blok + _RYADOM_PERED, 1)

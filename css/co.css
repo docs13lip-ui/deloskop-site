@@ -144,3 +144,14 @@
 .co-chto{margin-top:4px;max-width:720px}
 @media (max-width:640px){.co-itog{padding:var(--s-4)}.co-itog__s{font-size:var(--t-body)}}
 @media print{.co-itog{break-inside:avoid}}
+/* rekvizity-kartochki-v1: «Реквизиты» — строки «подпись · значение» тонкой линейкой, номера — моноширинными цифрами; кнопка — после скрипта */
+.co-rekv__l{margin:0 0 var(--s-2);max-width:760px}
+.co-rekv__s{display:grid;grid-template-columns:minmax(120px,32%) 1fr;gap:2px var(--s-4);padding:var(--s-2) 0;border-top:1px solid var(--line)}
+.co-rekv__s:first-child{border-top:0}
+.co-rekv__s dt{color:var(--muted);font-size:var(--t-small);line-height:1.5}
+.co-rekv__s dd{margin:0;color:var(--ink);line-height:1.5;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.co-rekv__s--inn dd,.co-rekv__s--kpp dd,.co-rekv__s--ogrn dd{font-weight:600;letter-spacing:.02em}
+.co-rekv__k{margin:var(--s-4) 0 0}
+.co-rekv__ok{display:block;min-height:18px;margin-top:var(--s-1);font-size:var(--t-caption);color:var(--muted)}
+@media (max-width:560px){.co-rekv__s{grid-template-columns:38% 1fr;gap:0 var(--s-3);padding:6px 0}.co-rekv__s dt,.co-rekv__s dd{font-size:var(--t-small)}}
+@media print{.co-rekv__k{display:none}}

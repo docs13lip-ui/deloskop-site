@@ -6159,3 +6159,150 @@ def un_pered(f):  # noqa: F811 — nalog-ostatok-v1: при остатке < 500
     sovet = ("Справку об%sисполнении обязанности по%sуплате налогов (КНД 1120101) можно попросить у%s%s на%sсвежую дату: "
              "в%sнаборе ФНС на%s%s%s— остаток %s%s₽." % (NB, NB, NB, im, NB, NB, NB, m.group(1), NB, m.group(2), NB))
     return s if len(s) >= 3 else [sovet] + s
+
+
+# ---------------------------------------------------------------- rekvizity-kartochki-v1 ([Ночные-2] 18.11)
+# Решение владельца 18.11 «сайт лучше конкурентов и справочников», разд. 3 п. 4: блок «Реквизиты» на карточке /company/ —
+# у справочников реквизиты видны сразу и копируются одной кнопкой; у нас ИНН и ОГРН стояли в строке под названием,
+# полного наименования, даты регистрации числом и кнопки «Скопировать» не было. Только сведения самой страницы
+# (JSON-LD Organization, строка под H1, строка ОКВЭД, дата ЕГРЮЛ) и — у новых карточек — КПП и юридический адрес из ответа
+# реестра; чего нет, не пишем и «нет» не ставим. Только организации (10-значный ИНН) — данные ИП не публикуем.
+# Люди — по рамке [Право] 18.11 (1): пока ФИО не подставляются с api (не из git), строка «Руководитель и участники —
+# в полной проверке» со ссылкой на Паспорт контрагента; при PERSONS_PUBLIC=1 строки нет (есть раздел «Руководство и владельцы»).
+# Кнопка «Скопировать реквизиты» — hidden до js/rekvizity-kartochki.js (без скрипта её нет, строки выделяются вручную).
+# Идемпотентно: блок пересобирается из страницы, КПП и адрес переносятся из прежнего блока.
+RK_SKRIPT = '<script src="/js/rekvizity-kartochki.js" defer></script>'
+_RK_SEK = re.compile(r'<section class="co-sec co-rekv"[^>]*>.*?</section><!--/co-rekv-->\n?', re.S)
+_RK_LD = re.compile(r'<script type="application/ld\+json">(.*?)</script>', re.S)
+_RK_SUB = re.compile(r'<p class="co-sub">(.*?)</p>', re.S)
+_RK_OKVED = re.compile(r'<p class="caption co-okved">Основной вид деятельности(?:&#160;|&nbsp;| )— <span class="num">([\d.]+)</span>(.*?)</p>', re.S)
+_RK_EGRUL = re.compile(r"ЕГРЮЛ · сведения на(?:&#160;|&nbsp;| )(\d\d\.\d\d\.\d{4})")
+_RK_STATUSY = ("Действующая", "Ликвидирована", "В процессе ликвидации", "Банкротство", "В процессе реорганизации",
+               "Исключена из ЕГРЮЛ", "Недействующая")
+
+
+def _rk_tekst(h):
+    s = html.unescape(re.sub(r"<[^>]+>", "", h or ""))
+    return re.sub(r"[ \t\r\n]+", " ", s.replace(NB, " ")).strip()
+
+
+def _rk_org(t):
+    for m in _RK_LD.finditer(t or ""):
+        try:
+            d = json.loads(m.group(1))
+        except ValueError:
+            continue
+        for x in (d.get("@graph") or [d]) if isinstance(d, dict) else []:
+            if isinstance(x, dict) and x.get("@type") == "Organization":
+                return x
+    return None
+
+
+def _rk_prezhnie(t):
+    """КПП и адрес из прежнего блока (у опубликованных их нет в JSON-LD — переносим, чтобы повтор не терял)."""
+    m = _RK_SEK.search(t or "")
+    o = {}
+    if m:
+        for kl, dd in re.findall(r'<div class="co-rekv__s co-rekv__s--(kpp|adres)"><dt>[^<]*</dt><dd>(.*?)</dd></div>', m.group(0)):
+            o[kl] = _rk_tekst(dd)
+    return o
+
+
+def rekvizity_polya(t, kpp=None, adres=None):
+    """Страница → [(подпись, значение, класс)] и дата ЕГРЮЛ; не организация или меньше 4 строк — None."""
+    org = _rk_org(t)
+    if not org:
+        return None
+    inn = re.sub(r"\D", "", str(org.get("taxID") or ""))
+    if len(inn) != 10:
+        return None  # ИП (12 цифр) не показываем
+    P = []
+    nm = _rk_tekst(org.get("legalName") or "")
+    if nm:
+        P.append(("Полное наименование", nm, "imya"))
+    P.append(("ИНН", inn, "inn"))
+    kpp = re.sub(r"\D", "", str(kpp or ""))
+    if len(kpp) == 9:
+        P.append(("КПП", kpp, "kpp"))
+    idn = org.get("identifier") or {}
+    ogrn = re.sub(r"\D", "", str(idn.get("value") or "")) if idn.get("propertyID") == "ОГРН" else ""
+    if len(ogrn) == 13:
+        P.append(("ОГРН", ogrn, "ogrn"))
+    fd = re.match(r"(\d{4})-(\d\d)-(\d\d)$", str(org.get("foundingDate") or ""))
+    if fd:
+        P.append(("Дата регистрации", "%s.%s.%s" % (fd.group(3), fd.group(2), fd.group(1)), "data"))
+    ms = _RK_SUB.search(t)
+    st = _rk_tekst(ms.group(1)).split(" · ")[0] if ms else ""
+    if st in _RK_STATUSY:
+        P.append(("Статус", st, "status"))
+    adres = _rk_tekst(adres or "")
+    if adres:
+        P.append(("Юридический адрес", adres, "adres"))
+    else:
+        a = org.get("address") or {}
+        mesto = ", ".join(x for x in (_rk_tekst(a.get("addressRegion") or ""), _rk_tekst(a.get("addressLocality") or "")) if x)
+        if mesto and _rk_tekst(a.get("addressLocality") or "") != _rk_tekst(a.get("addressRegion") or ""):
+            P.append(("Регион и город", mesto, "mesto"))
+        elif mesto:
+            P.append(("Регион", _rk_tekst(a.get("addressRegion") or a.get("addressLocality")), "mesto"))
+    mo = _RK_OKVED.search(t)
+    if mo:
+        nz = _rk_tekst(mo.group(2)).split(" · ЕГРЮЛ")[0].strip()
+        P.append(("Основной вид деятельности (ОКВЭД)", mo.group(1) + ((" — " + nz) if nz else ""), "okved"))
+    if len(P) < 4:
+        return None
+    me = _RK_EGRUL.search(t)
+    return {"inn": inn, "polya": P, "na": me.group(1) if me else ""}
+
+
+def rekvizity_html(R):
+    if not R:
+        return ""
+    st = "".join('<div class="co-rekv__s co-rekv__s--%s"><dt>%s</dt><dd>%s</dd></div>' % (kl, e(p), e(v)) for p, v, kl in R["polya"])
+    if not persons_public():
+        st += ('<div class="co-rekv__s co-rekv__s--lyudi" data-rk-bez><dt>Руководитель и участники</dt>'
+               '<dd><a href="/pasport/kontragent/?inn=%s" rel="nofollow" data-goal="kartochka_rekv_lyudi">в полной проверке →</a></dd></div>'
+               % R["inn"])
+    return ('<section class="co-sec co-rekv" aria-labelledby="rekv"><h2 id="rekv">Реквизиты</h2><dl class="co-rekv__l">%s</dl>'
+            '<span class="co-src">ЕГРЮЛ%s</span>'
+            '<p class="co-rekv__k"><button type="button" class="btn btn--secondary" data-rk-kop hidden>Скопировать реквизиты</button>'
+            '<span class="co-rekv__ok" role="status" aria-live="polite"></span></p></section><!--/co-rekv-->\n'
+            % (st, (" · сведения на " + R["na"]) if R["na"] else ""))
+
+
+def rekvizity_kartochki(t, kpp=None, adres=None):
+    """Карточка → блок «Реквизиты» перед «Датами из реестра» (нет их — перед финансами/реестрами) и скрипт кнопки.
+    Повтор даёт те же байты."""
+    if not t:
+        return t
+    pr = _rk_prezhnie(t)
+    bez = _RK_SEK.sub("", t)
+    R = rekvizity_polya(bez, kpp or pr.get("kpp"), adres or pr.get("adres"))
+    h = rekvizity_html(R)
+    if not h:
+        return bez.replace(RK_SKRIPT + "\n", "")
+    i = -1
+    for metka in ('<section class="co-sec co-daty"', '<section class="co-sec" aria-labelledby="fin"', '<section class="co-sec" aria-labelledby="reestry"'):
+        i = bez.find(metka)
+        if i >= 0:
+            break
+    if i < 0:
+        return bez.replace(RK_SKRIPT + "\n", "")
+    bez = bez[:i] + h + bez[i:]
+    if RK_SKRIPT not in bez:
+        kuda = "</main>" if "</main>" in bez else ("</body>" if "</body>" in bez else None)
+        if kuda:  # как vozrast.js: внутри тела страницы
+            j = bez.rindex(kuda)
+            bez = bez[:j] + RK_SKRIPT + "\n" + bez[j:]
+    return bez
+
+
+_html_kartochki_bez_rekv = html_kartochki
+
+
+def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811
+    """rekvizity-kartochki-v1: та же карточка + «Реквизиты» (у новых — с КПП и юридическим адресом из ответа реестра)."""
+    t = _html_kartochki_bez_rekv(k, V, sosedi, kom, normy, cena, segodnya)
+    if len(re.sub(r"\D", "", str(k.get("inn") or ""))) != 10:
+        return t
+    return rekvizity_kartochki(t, k.get("kpp"), k.get("address"))

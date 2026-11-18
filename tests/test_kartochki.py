@@ -508,10 +508,11 @@ class TestPasportNaKartochke(unittest.TestCase):
         t = K.html_kartochki(k, K.vyvody(k), [])
         self.assertIn('href="/pasport/kontragent/?inn=%s" rel="nofollow"' % k["inn"], t)
         # kartochki-daty-v1: + вход в Паспорт в «Датах из реестра» — две половины беты (одна в <template>, без href)
-        self.assertEqual(t.count("/pasport/kontragent/?inn="), 3)
-        self.assertEqual(t.count('href="/pasport/kontragent/?inn='), 3)  # до режима беты обе половины — с href
+        # rekvizity-kartochki-v1: + «Руководитель и участники — в полной проверке» в «Реквизитах» (вне половин беты)
+        self.assertEqual(t.count("/pasport/kontragent/?inn="), 4)
+        self.assertEqual(t.count('href="/pasport/kontragent/?inn='), 4)  # до режима беты обе половины — с href
         import beta as B
-        self.assertEqual(B.vidimoe(B.primenit(t, True, "")).count('href="/pasport/kontragent/?inn='), 2)
+        self.assertEqual(B.vidimoe(B.primenit(t, True, "")).count('href="/pasport/kontragent/?inn='), 3)
         self.assertNotIn("?id=", t, "номер досье на карточку не попадает")
 
     def test_znaki_kak_v_pasporte(self):

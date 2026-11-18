@@ -89,6 +89,7 @@
 [data-theme=dark] .pf__pill--mnogo{background:#3A1513;color:#FF7B72}
 [data-theme=dark] .pf__go:hover{background:#16357A}
 [data-theme=dark] .pf__x:hover{background:#183060}
+[data-theme=dark] .pf__zb:hover,[data-theme=dark] .pf__zb[aria-expanded=true]{background:#183060}
 [data-theme=dark] .pf__da{background:#3A1513!important;color:#FF7B72!important}
 @media (max-width:520px){[data-theme=dark] .pf__d--star{color:#E8A23A}
 }

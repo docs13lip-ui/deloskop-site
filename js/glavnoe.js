@@ -21,7 +21,13 @@
  *   «Плюсов N, минусов M — по K проверенным источникам на дату» — во всех прочих случаях, в том числе когда сумму не с чем
  *     сравнить (нет выручки, банк, ИП) — тогда строка «Масштаб не посчитать: …».
  * K — сколько источников ответили (реестр, открытые данные ФНС, ГИР БО, каждый внешний реестр с ответом «есть» / «не нашли»);
- * дата — дата проверки. Оценочных слов о компании нет — только счёт фактов (222-ФЗ, п. 3 ст. 2; сторож — tests/glavnoe.test.js). */
+ * дата — дата проверки. Оценочных слов о компании нет — только счёт фактов (222-ФЗ, п. 3 ст. 2; сторож — tests/glavnoe.test.js).
+ * zapros-glavnoe-v1 (план 18.11, разд. 4 «перегнать»: «что запросить у этой компании перед оплатой по найденным минусам»):
+ * под минусами «Главного» — «Что запросить по этим минусам»: до трёх документов из того же списка «Что запросить у них»
+ * (js/usloviya.js, decide().docs — слова юриста и п. 16 письма ФНС от 10.03.2021 № БВ-4-7/3060@), только те, что отвечают
+ * на минус, стоящий в «Главном» (налог → справка КНД 1120101, приставы → погашение, приостановка → отмена решения,
+ * недостоверность → исправление записи и помещение, прогноз ЗСК → второй банк). Новых слов нет; ссылка открывает весь список
+ * и готовое письмо. Нет такого минуса или нет модуля условий — блока нет. Налог меньше 500 ₽ (остаток) — не минус, справки нет. */
 (function (root, factory) {
   var api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
@@ -168,6 +174,9 @@
         sush: sush, summa: sm, d: d };
     }).sort(function (a, b) { return b.ves - a.ves || a.i - b.i; });
     var it = itog(r, S, M, V, segodnya);
+    // vyvod-glavnoe-v1: существенные минусы по весу — их называет пояснение под выводом (js/usloviya.js), чтобы оно
+    // не говорило «серьёзных признаков не найдено» рядом с «Есть N существенных минусов»
+    if (it) it.sushchestvennye = M.filter(function (x) { return x.sush; }).map(function (x) { return { k: x.k, t: x.t, dolya: x.dolya }; });
     var glavnoe = M.filter(function (x) { return x.ves > 0; }).slice(0, MAKS);
     var melkoe = M.filter(function (x) { return x.ves === 0; });
     S.plyusy.slice(0, Math.max(0, MAKS - glavnoe.length)).forEach(function (x) {
@@ -178,6 +187,23 @@
     return { glavnoe: glavnoe, melkoe: melkoe, god: V ? V.god : null, plyusov: S.plyusy.length, minusov: S.minusy.length, itog: it };
   }
 
+  // минус «Главного» → документы списка «Что запросить у них» (js/usloviya.js DOCS), отвечающие именно на него
+  var ZAPROS = { director_change: ['powerNew'], tax_debt: ['taxCert'], damia_fssp: ['fssp'], damia_priostanovki: ['unblock'], address: ['fixRecord', 'premises'], zsk: ['bank'] };
+  var ZAPROS_MAKS = 3;
+  // zapros(G, docs) → [{ id, t }] — только документы, которые есть в списке условий (docs — decide(r).docs), по порядку минусов
+  function zapros(G, docs) {
+    if (!G || !Array.isArray(G.glavnoe) || !Array.isArray(docs)) return [];
+    var est = {}, out = [];
+    docs.forEach(function (d) { if (d && d.id && d.title) est[d.id] = d.title; });
+    G.glavnoe.forEach(function (x) {
+      if (x.znak !== 'minus') return;
+      (ZAPROS[x.k] || []).forEach(function (id) {
+        if (est[id] && out.length < ZAPROS_MAKS && !out.some(function (y) { return y.id === id; })) out.push({ id: id, t: est[id] });
+      });
+    });
+    return out;
+  }
+
   function skl(n, a, b, c) { var k = Math.abs(n) % 100, d = k % 10; return k > 10 && k < 20 ? c : d === 1 ? a : d >= 2 && d <= 4 ? b : c; }
   // тире не переносится в начало строки: «компании — 180 млн ₽»
   function tire(t) { return esc(t).replace(/ — /g, NB + '— '); }
@@ -186,6 +212,12 @@
     return '<li class="gl1__s gl1__s--' + x.znak + '" data-gl="' + esc(x.k) + '"><span class="gl1__t">' + tire(x.t) +
       (x.dolya ? ' <span class="gl1__d">(' + esc(x.dolya) + ')</span>' : '') + '</span>' +
       (meta ? '<small>' + esc(meta) + '</small>' : '') + '</li>';
+  }
+  function zaprosHtml(Z) {
+    if (!Array.isArray(Z) || !Z.length) return '';
+    return '<div class="gl1__z" data-zapros="' + Z.length + '"><p class="gl1__zh">Что запросить по' + NB + 'этим минусам</p><ul>' +
+      Z.map(function (d) { return '<li data-doc="' + esc(d.id) + '">' + tire(d.t) + '</li>'; }).join('') + '</ul>' +
+      '<button type="button" class="gl1__zv">Весь список и' + NB + 'готовое письмо' + NB + '↓</button></div>';
   }
   function html(G) {
     if (!G || (!G.glavnoe.length && !G.melkoe.length)) return '';
@@ -208,7 +240,7 @@
     return '<section class="gl1" aria-labelledby="gl1-h" data-glavnoe="' + G.glavnoe.length + '" data-melkoe="' + m.length + '"' +
       (I && I.vid ? ' data-itog="' + esc(I.vid) + '"' : '') + '>' +
       '<h2 id="gl1-h" class="gl1__h">Главное</h2>' + it +
-      '<ul class="gl1__l">' + G.glavnoe.map(stroka).join('') + '</ul>' + ml + por +
+      '<ul class="gl1__l">' + G.glavnoe.map(stroka).join('') + '</ul>' + ml + zaprosHtml(G.zapros) + por +
       '<a class="gl1__vse" href="#pm-h" aria-label="' + esc('Все плюсы и минусы: ' + G.plyusov + ' ' + skl(G.plyusov, 'плюс', 'плюса', 'плюсов') +
         ' и ' + G.minusov + ' ' + skl(G.minusov, 'минус', 'минуса', 'минусов')) + '">' + vse + '</a>' +
       '</section>';
@@ -235,9 +267,17 @@
     '.gl1__vse{display:inline-block;margin:8px 0 0 22px;font-size:13px;line-height:1.4;color:var(--ink,#0B1B3A);text-decoration:underline;' +
       'text-decoration-color:var(--line,#E3DDCD);text-underline-offset:.2em}' +
     '.gl1__vse:hover{text-decoration-color:currentColor}' +
+    '.gl1__z{margin:8px 0 0 22px;padding:8px 0 0 12px;border-left:2px solid var(--mat-zhdu,#7A5C14)}' +
+    '[data-theme=dark] .gl1__z{border-left-color:var(--mat-zhdu-t,#D9B45A)}' +
+    '.gl1__zh{margin:0 0 2px;font-size:13px;line-height:1.4;font-weight:600;color:var(--ink-2,#3A4868)}' +
+    '.gl1__z ul{margin:0;padding:0 0 0 18px;font-size:13px;line-height:1.5;color:var(--ink,#0B1B3A)}' +
+    '.gl1__z li{margin:2px 0}' +
+    '.gl1__zv{display:inline-block;margin:4px 0 0;padding:0;border:0;background:none;font:inherit;cursor:pointer;font-size:13px;line-height:1.4;color:var(--ink,#0B1B3A);text-decoration:underline;' +
+      'text-decoration-color:var(--line,#E3DDCD);text-underline-offset:.2em}' +
+    '.gl1__zv:hover{text-decoration-color:currentColor}.usl details{scroll-margin-top:96px}' +
     '.pm__d{font-weight:400;font-variant-numeric:tabular-nums;color:var(--ink-2,#3A4868)}.pm{scroll-margin-top:96px}' +
-    '@media (max-width:640px){.gl1{margin-top:12px;padding-top:12px}.gl1__vse{padding:12px 0;margin-top:0}}' +
-    '@media print{.gl1__vse{display:none}}';
+    '@media (max-width:640px){.gl1{margin-top:12px;padding-top:12px}.gl1__vse{padding:12px 0;margin-top:0}.gl1__zv{padding:10px 0;margin:0}}' +
+    '@media print{.gl1__vse,.gl1__zv{display:none}}';
 
   function stil(doc) {
     if (!doc || doc.getElementById('gl1-css')) return;
@@ -263,6 +303,15 @@
     return n;
   }
 
+  // «Что запросить у них» — <details> в «Условиях сделки» (js/usloviya.js), смонтированных раньше «Главного»
+  function spisokZaprosa(report) {
+    var det = null;
+    [].slice.call(report.querySelectorAll('.usl details')).some(function (d) {
+      var s = d.querySelector('summary'); if (s && /Что запросить/.test(s.textContent)) { det = d; return true; } return false;
+    });
+    return det;
+  }
+
   // mount(report, r) — после PlyusyMinusy.mount: в шапку листа (.ot-who), под название и строку «Ответ»
   function mount(report, r, o) {
     o = o || {};
@@ -271,7 +320,11 @@
     if (star && star.parentNode) star.parentNode.removeChild(star);
     var doc = report.ownerDocument;
     try { stil(doc); podpisatDoli(report, r); } catch (e) {}
-    var h = who ? html(sobrat(r)) : '';
+    var G = who ? sobrat(r) : null;
+    // zapros-glavnoe-v1: документы — из того же расчёта, что «Условия сделки» ниже (одна правда на странице)
+    var U = o.usloviya || (typeof self !== 'undefined' ? self.Usloviya : null);
+    if (G && U && U.decide) { try { G.zapros = zapros(G, U.decide(r).docs); } catch (e) { G.zapros = []; } }
+    var h = who ? html(G) : '';
     if (!h) return null;
     var t = doc.createElement('div');
     t.innerHTML = h;
@@ -284,9 +337,20 @@
       try { pm.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (x) { pm.scrollIntoView(); }
       try { if (self.dlkGoal) self.dlkGoal('glavnoe_vse'); } catch (x) {}
     });
+    var z = nov.querySelector('.gl1__zv');
+    if (z && !spisokZaprosa(report)) z.parentNode.removeChild(z);
+    else if (z) z.addEventListener('click', function (e) {
+      var det = spisokZaprosa(report);
+      e.preventDefault();
+      if (!det) return;
+      det.open = true;
+      try { det.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (x) { det.scrollIntoView(); }
+      try { var s = det.querySelector('summary'); if (s) s.focus({ preventScroll: true }); } catch (x) {}
+      try { if (self.dlkGoal) self.dlkGoal('glavnoe_zapros'); } catch (x) {}
+    });
     return nov;
   }
 
-  return { sobrat: sobrat, html: html, mount: mount, stil: stil, podpisatDoli: podpisatDoli, dolyaTekst: dolyaTekst, vyruchka: vyruchka,
+  return { sobrat: sobrat, zapros: zapros, ZAPROS: ZAPROS, html: html, mount: mount, stil: stil, podpisatDoli: podpisatDoli, dolyaTekst: dolyaTekst, vyruchka: vyruchka,
     summa: summa, itog: itog, istochnikov: istochnikov, CSS: CSS, MAKS: MAKS, MELKO: MELKO, KRUPNO: KRUPNO };
 });

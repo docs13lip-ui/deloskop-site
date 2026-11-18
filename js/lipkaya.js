@@ -6,7 +6,11 @@
    Шире 600 px строки нет: вывод и так рядом. Нет IntersectionObserver или <dialog> — ничего не делаем.
    pervyj-ekran-60s-v1 (11.11.2026): на телефоне вывод стоял на 1,2 экрана ниже названия (реквизиты и Индекс выше) —
    ответ «платить или нет» теперь и на первом экране отчёта: строка «Ответ» под названием компании, тот же текст вывода,
-   по нажатию — к выводу. Меняется вместе с выводом («Я плачу им / Они платят мне», сумма). Шире 600 px — скрыта (CSS). */
+   по нажатию — к выводу. Меняется вместе с выводом («Я плачу им / Они платят мне», сумма). Шире 600 px — скрыта (CSS).
+   dosje-pervyj-ekran-v1 (18.11.2026): на компьютере (шире 600 px) рядом с «Ответом» — главная кнопка вывода («Досье сделки»,
+   «Паспорт контрагента» или «Следить»): после «Главного» и «В реестрах» сама кнопка стоит на 1050 px, ниже первого экрана 1280×800.
+   Новых действий нет: подпись и адрес — у кнопки вывода, нажатие нажимает её саму (сумма сделки и цель Метрики — её). На телефоне —
+   скрыта: там липкая строка внизу с тем же окном. */
 (function (root, factory) {
   var api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
@@ -111,11 +115,20 @@
     a.appendChild(el(doc, 'span', 'lip-o__z', OTV));
     a.appendChild(el(doc, 'span', 'lip-o__t'));
     a.appendChild(el(doc, 'span', 'lip-o__s', 'почему\u00a0↓'));
+    var k = el(doc, 'a', 'ot-btn p lip-o-k');
+    var glavnaya = function (v) {
+      for (var i = 0; v && i < v.ssylki.length; i++) if (v.ssylki[i].glavnaya) return v.ssylki[i];
+      return null;
+    };
     var obnovit = function () {
-      var v = vyvod(rep);
+      var v = vyvod(rep), g = glavnaya(v);
       a.hidden = !v;
       a.querySelector('.lip-o__t').textContent = v ? v.kratko : '';
       a.setAttribute('data-ton', v ? v.ton : '');
+      k.hidden = !g;
+      k.textContent = g ? g.t : '';
+      k.setAttribute('href', g ? g.href : '#vyvod');
+      k.classList.toggle('ot-btn--dosje', !!(g && g.ist.classList.contains('ot-btn--dosje')));
     };
     obnovit();
     a.addEventListener('click', function (e) {
@@ -125,22 +138,32 @@
       try { cel.scrollIntoView({ block: 'start', behavior: plavno ? 'smooth' : 'auto' }); } catch (er) { cel.scrollIntoView(); }
       try { if (w.dlkGoal) w.dlkGoal('otvet_sverhu'); } catch (er) {}
     });
+    // dosje-pervyj-ekran-v1: нажатие — сама кнопка вывода (её адрес с суммой сделки, её цель); своя цель — только «нажали сверху»
+    k.addEventListener('click', function (e) {
+      if (e.ctrlKey || e.metaKey || e.shiftKey || e.button) return;
+      var g = glavnaya(vyvod(rep));
+      if (!g) return;
+      e.preventDefault();
+      try { if (w.dlkGoal) w.dlkGoal('otvet_knopka'); } catch (er) {}
+      g.ist.click();
+    });
     who.appendChild(a);
+    who.insertBefore(k, a.nextSibling);
     var mo = null;
     if (typeof w.MutationObserver === 'function') {
       mo = new w.MutationObserver(function (z) {
-        for (var i = 0; i < z.length; i++) if (!a.contains(z[i].target)) { obnovit(); return; }
+        for (var i = 0; i < z.length; i++) if (!a.contains(z[i].target) && !k.contains(z[i].target)) { obnovit(); return; }
       });
       mo.observe(vd, { subtree: true, childList: true, characterData: true });
     }
-    return { a: a, mo: mo };
+    return { a: a, k: k, mo: mo };
   }
 
   function snyat() {
     var s = sostoyanie;
     if (!s) return;
     sostoyanie = null;
-    try { if (s.otv) { if (s.otv.mo) s.otv.mo.disconnect(); if (s.otv.a.parentNode) s.otv.a.parentNode.removeChild(s.otv.a); } } catch (e) {}
+    try { if (s.otv) { if (s.otv.mo) s.otv.mo.disconnect(); if (s.otv.a.parentNode) s.otv.a.parentNode.removeChild(s.otv.a); if (s.otv.k && s.otv.k.parentNode) s.otv.k.parentNode.removeChild(s.otv.k); } } catch (e) {}
     try { if (s.io) s.io.disconnect(); if (s.ro) s.ro.disconnect(); } catch (e) {}
     try { if (s.dlg.open) s.dlg.close(); } catch (e) {}
     if (s.bar.parentNode) s.bar.parentNode.removeChild(s.bar);

@@ -139,16 +139,35 @@ test('адрес отчёта: компактная шапка ставится 
 });
 
 // pervyj-ekran-60s-v1 (11.11.2026, [Ночные запуски]): ответ «платить или нет» — на первом экране отчёта на телефоне
-test('строка «Ответ» под названием: из вывода отчёта, только на телефоне, не в печати; «Проверь счёт» на телефоне — «Выберите»', () => {
+test('строка «Ответ» под названием: из вывода отчёта, на телефоне и компьютере, не в печати; «Проверь счёт» на телефоне — «Выберите»', () => {
   assert.strictEqual(L.OTV, 'Ответ');
   const js = chitat('js/lipkaya.js');
   assert.ok(/function otvetSverhu\(s\)/.test(js) && /s\.otv = otvetSverhu\(s\)/.test(js), 'ставится в mount');
   assert.ok(/var v = vyvod\(rep\)/.test(js), 'текст — тот же вывод, что у липкой строки и окна');
   assert.ok(/MutationObserver/.test(js) && /s\.otv\.mo\.disconnect\(\)/.test(js), 'следит за выводом и снимается при snyat');
   const css = chitat('css/perehod.css');
-  assert.ok(/\.lip-o\{display:none\}/.test(css) && /@media \(max-width:600px\)\{\s*\.lip-o\{display:grid/.test(css), 'шире 600 px — скрыта');
-  assert.ok(/@media print\{\.lip,\.lip-o,dialog\.lip-d\{display:none!important\}\}/.test(css));
+  // otvet-kompyuter-v1 (18.11): и на компьютере — капсулой в строку; на телефоне — карточкой во всю ширину
+  assert.ok(/\.lip-o\{display:inline-grid;/.test(css) && !/\.lip-o\{display:none\}/.test(css), 'на компьютере видна');
+  assert.ok(/@media \(max-width:600px\)\{\s*\.lip-o\{display:grid/.test(css), 'на телефоне — карточкой');
+  assert.ok(/@media print\{\.lip,\.lip-o,\.lip-o-k,dialog\.lip-d\{display:none!important\}\}/.test(css));
   const ps = chitat('proverit-schet/index.html');
   assert.ok(ps.indexOf('<span class="drop__palec">Выберите счёт в&nbsp;PDF</span>') > 0);
   assert.ok(/@media \(hover:none\) and \(pointer:coarse\)\{\.drop__mysh\{display:none\}\.drop__palec\{display:inline\}/.test(ps));
+});
+
+// dosje-pervyj-ekran-v1 (18.11.2026, [Ночные запуски]): на компьютере главная кнопка вывода стояла на 1050 px — ниже первого экрана 1280×800
+test('рядом с «Ответом» на компьютере — главная кнопка вывода: её подпись и адрес, нажатие — она сама; на телефоне и в печати — нет', () => {
+  const js = chitat('js/lipkaya.js');
+  assert.ok(/var k = el\(doc, 'a', 'ot-btn p lip-o-k'\);/.test(js), 'кнопка — тем же классом, что главная кнопка вывода');
+  assert.ok(/if \(v\.ssylki\[i\]\.glavnaya\) return v\.ssylki\[i\];/.test(js), 'берёт главную ссылку вывода (Досье сделки / Паспорт / Следить)');
+  assert.ok(/k\.textContent = g \? g\.t : '';/.test(js) && /k\.setAttribute\('href', g \? g\.href : '#vyvod'\);/.test(js), 'подпись и адрес — у кнопки вывода');
+  assert.ok(/k\.hidden = !g;/.test(js), 'нет главной кнопки — нет и копии');
+  assert.ok(/w\.dlkGoal\('otvet_knopka'\);\s*\}[^\n]*\n\s*g\.ist\.click\(\);/.test(js), 'нажатие — сама кнопка вывода (сумма сделки в адресе и её цель)');
+  assert.ok(!/lip-o-k[^\n]*data-cel/.test(js), 'своей data-cel нет — цель «otchet_pasport» не считается дважды');
+  assert.ok(/!a\.contains\(z\[i\]\.target\) && !k\.contains\(z\[i\]\.target\)/.test(js), 'своя правка не будит наблюдателя');
+  assert.ok(/s\.otv\.k\.parentNode\.removeChild\(s\.otv\.k\)/.test(js), 'снимается при snyat');
+  const css = chitat('css/perehod.css');
+  assert.ok(/\.report\.ot \.lip-o-k\{margin:16px 0 0;vertical-align:top\}/.test(css));
+  assert.ok(/\.lip-o-k\[hidden\]\{display:none\}/.test(css));
+  assert.ok(/@media \(max-width:600px\)\{[^}]*\}[^@]*\.report\.ot \.lip-o-k\{display:none\}/.test(css), 'на телефоне — липкая строка, копии нет');
 });

@@ -153,3 +153,18 @@ test('старая отчётность: годы по дате проверки
   assert.match(h, new RegExp('data-minusy="' + s.minusy.length + '"'));
   assert.ok(!/Последняя отчётность/.test(bezNb(h)));
 });
+
+// povtor-rukovoditel-v1 [Ночные запуски] 18.11 20:05: живой /api/check 18.11 20:07 (крупная компания, руководитель с 21.05.2026)
+// шлёт и признак director_change «Руководитель сменился недавно», и замечание dossier «Недавняя смена руководителя» —
+// в минусах и в «Главном» было две строки об одном. Пишем одну — признак (с источником ЕГРЮЛ).
+test('povtor-rukovoditel-v1: смена руководителя — одна строка, замечание сервера о том же не повторяется', () => {
+  const r = otvet({ dossier: { concerns: ['Недавняя смена руководителя', 'Убыток по итогам года'] } });
+  r.signals.push({ id: 'director_change', title: 'Руководитель сменился недавно', status: 'warn', detail: 'Иванов Иван Иванович — с 21.05.2026', source: 'ЕГРЮЛ' });
+  const m = teksty(PM.sobrat(r, new Date('2026-11-18')).minusy);
+  assert.strictEqual(m.filter((t) => /руководител/i.test(t)).length, 1, JSON.stringify(m));
+  assert.ok(m.includes('Руководитель сменился недавно: с 21.05.2026'), 'дата смены — да, ФИО — нет');
+  assert.ok(!m.some((t) => /Иванов|иванов/.test(t)));
+  assert.ok(m.includes('Убыток по итогам года'), 'прочие замечания на месте');
+  const r2 = otvet({ dossier: { concerns: ['Недавняя смена руководителя'] } });
+  assert.ok(teksty(PM.sobrat(r2, new Date('2026-11-18')).minusy).includes('Недавняя смена руководителя'), 'без признака — замечание остаётся');
+});

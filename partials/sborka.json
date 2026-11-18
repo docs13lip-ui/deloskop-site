@@ -22,7 +22,8 @@
       "js/pwa.js",
       "obnovleniya.js",
       "js/schetchik.js",
-      "js/podelitsya.js"
+      "js/podelitsya.js",
+      "js/moi-kontragenty.js"
     ],
     "glavnaya": [
       "js/vhody.js",
@@ -59,7 +60,7 @@
       "js/dengi-na-konu.js",
       "js/plyusy-minusy.js",
       "js/plitki.js",
-      "js/sudy-pristavy.js", "js/glavnoe.js", "js/rekvizity-kompanii.js", "js/oglavlenie-otcheta.js",
+      "js/sudy-pristavy.js", "js/glavnoe.js", "js/rekvizity-kompanii.js", "js/reestry-slovami.js", "js/zametka-otcheta.js", "js/oglavlenie-otcheta.js",
       "js/krug.js",
       "js/terminy.js",
       "js/pasport-cta.js",

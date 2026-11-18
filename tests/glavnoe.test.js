@@ -226,3 +226,117 @@ test('сумма без «Денег на кону» — из detail сигна�
   assert.strictEqual(S.ostatok.length, 0);
   assert.ok(S.minusy.some((x) => x.k === 'tax_debt'));
 });
+
+// zapros-glavnoe-v1 [Ночные запуски] 18.11 19:05: «Что запросить по этим минусам» — документы из списка «Условий сделки»
+// (js/usloviya.js decide().docs), только те, что отвечают на минус в «Главном» (план 18.11, разд. 4 «перегнать»).
+const U = require('../js/usloviya.js');
+const zaprosOf = (r) => { const g = G.sobrat(r, SEG, PM); g.zapros = G.zapros(g, U.decide(r).docs); return g; };
+
+test('zapros-glavnoe-v1: каждый документ карты есть в словаре DOCS условий — слова не свои', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'js', 'usloviya.js'), 'utf8');
+  Object.keys(G.ZAPROS).forEach((k) => G.ZAPROS[k].forEach((id) => assert.match(src, new RegExp('\\n\\s+' + id + ': \\{'), id)));
+});
+
+test('zapros-glavnoe-v1: долг по налогам и приостановка — справка КНД 1120101 и отмена решения ФНС, тем же текстом, что в «Что запросить у них»', () => {
+  const r = sNalogom(412062);
+  r.damia.priostanovki = { nazvanie: 'Счета: решения ФНС о приостановлении', istochnik: 'ФНС', sostoyanie: 'found', data_svedeniy: '2026-11-17' };
+  r.signals.push({ id: 'priostanovki', title: 'Приостановка операций по счетам', status: 'bad', detail: 'Есть решение', source: 'ФНС' });
+  const docs = U.decide(r).docs;
+  const g = zaprosOf(r);
+  const ids = g.zapros.map((x) => x.id);
+  assert.deepStrictEqual(ids, ['unblock', 'taxCert'], 'по порядку минусов: приостановка выше долга');
+  g.zapros.forEach((x) => assert.strictEqual(x.t, docs.filter((d) => d.id === x.id)[0].title, 'текст из DOCS'));
+  assert.ok(g.zapros.length <= 3);
+  const h = bez(G.html(g));
+  assert.match(h, /<p class="gl1__zh">Что запросить по этим минусам<\/p>/);
+  assert.match(h, /Справка об исполнении обязанности по уплате налогов \(КНД 1120101\)/);
+  assert.match(h, /<button type="button" class="gl1__zv">Весь список и готовое письмо ↓<\/button>/);
+  assert.ok(h.indexOf('gl1__l') < h.indexOf('gl1__z'), 'под фактами');
+  assert.doesNotMatch(h, ZAPRET);
+});
+
+test('zapros-glavnoe-v1: нет минуса с документом (мелкий иск) — блока нет; налог 1 ₽ (остаток) — справку не просим', () => {
+  [otvet(), sNalogom(1)].forEach((r) => {
+    const g = zaprosOf(r);
+    assert.deepStrictEqual(g.zapros, []);
+    assert.doesNotMatch(G.html(g), /gl1__z/);
+  });
+});
+
+test('zapros-glavnoe-v1: документа нет в списке условий — не показываем (одна правда на странице); без условий — блока нет', () => {
+  const r = sNalogom(412062);
+  const g = G.sobrat(r, SEG, PM);
+  assert.deepStrictEqual(G.zapros(g, [{ id: 'power', title: 'x' }]), []);
+  assert.deepStrictEqual(G.zapros(g, null), []);
+  assert.deepStrictEqual(G.zapros(null, []), []);
+  assert.doesNotMatch(G.html(g), /gl1__z/);
+});
+
+test('zapros-glavnoe-v1: приставы и приостановка блоком damia (без сигналов, как в живом ответе) — в «Что запросить у них» и в «Главном»; точный ноль — нет', () => {
+  const r = otvet();
+  r.damia.fssp = { nazvanie: 'Приставы', istochnik: 'ФССП (через Checko)', status: 'polucheno', sostoyanie: 'found', data_svedeniy: '2026-11-12',
+    dannye: { otkryto: 4, ostatok: 2500000, ostatok_ohvat: 'vse', ostatok_tochno: true } };
+  r.damia.priostanovki = { nazvanie: 'Счета: решения ФНС о приостановлении', istochnik: 'ФНС', sostoyanie: 'found', data_svedeniy: '2026-11-17' };
+  const d = U.decide(r);
+  assert.ok(d.docs.some((x) => x.id === 'fssp') && d.docs.some((x) => x.id === 'unblock'), JSON.stringify(d.docs.map((x) => x.id)));
+  const g = zaprosOf(r);
+  assert.deepStrictEqual(g.zapros.map((x) => x.id), ['unblock', 'fssp']);
+  r.damia.fssp.dannye.ostatok = 0; delete r.damia.priostanovki;
+  assert.ok(!U.decide(r).docs.some((x) => x.id === 'fssp'), 'точный ноль — не «погашение»');
+});
+
+// povtor-rukovoditel-v1 [Ночные запуски] 18.11 20:05: смена руководителя — минус «Главного» без документа; в списке условий
+// для него уже есть «Решение о назначении нового директора и его подпись на договоре» (decide().docs, powerNew)
+test('povtor-rukovoditel-v1: смена руководителя в «Главном» — просим решение о назначении, тем же текстом; строка одна', () => {
+  const r = otvet();
+  r.dossier.concerns = ['Недавняя смена руководителя'];
+  r.signals.push({ id: 'director_change', title: 'Руководитель сменился недавно', status: 'warn', detail: 'Иванов Иван Иванович — с 21.05.2026', source: 'ЕГРЮЛ' });
+  const docs = U.decide(r).docs;
+  const g = zaprosOf(r);
+  assert.strictEqual(g.glavnoe.filter((x) => /руководител/i.test(x.t)).length, 1);
+  assert.deepStrictEqual(g.zapros.map((x) => x.id), ['powerNew']);
+  assert.strictEqual(g.zapros[0].t, docs.filter((d) => d.id === 'powerNew')[0].title);
+  assert.match(bez(G.html(g)), /Решение о назначении нового директора и его подпись на договоре/);
+});
+
+// vyvod-glavnoe-v1 [Ночные запуски] 19.11 00:20: пояснение под выводом не спорит с «Главным». Живой /api/check 8602060185
+// (19.11 00:13): «Работать можно. Серьёзных признаков риска не найдено» под выводом и «Есть 1 существенный минус» — иски
+// 169,2 млн ₽ (0,1 % выручки) — в «Главном» на том же экране. Компании ниже вымышленные.
+const SERYOZNYH = 'Серьёзных признаков риска не найдено';
+const krupnyjIsk = () => otvet({ damia: {
+  sudy: { nazvanie: 'Арбитражные суды', istochnik: 'Картотека арбитражных дел (через Checko)', sostoyanie: 'found', data_svedeniy: '2026-11-13T09:17+03:00',
+    dannye: { otvetchik_nezaversheno: 34, otvetchik_summa_nezaversheno: 169231336.84 } },
+  fssp: { nazvanie: 'Приставы', istochnik: 'ФССП (через Checko)', sostoyanie: 'not_found', data_svedeniy: '2026-11-13T09:17+03:00', dannye: { otkryto: 0, ostatok: 0 } }
+}, dengi: { vyruchka: { summa: 113976150000, god: 2025 }, sostavlyayushchie: [] } });
+
+test('vyvod-glavnoe-v1: один существенный минус — вместо «не найдено» итог «Главного» и сам минус с долей выручки, теми же словами', () => {
+  const g = G.sobrat(krupnyjIsk(), SEG, PM);
+  assert.strictEqual(g.itog.vid, 'est');
+  assert.strictEqual(g.itog.sushchestvennye.length, 1);
+  const t = bez(U.poGlavnomu(g.itog, SERYOZNYH));
+  assert.ok(!/не найдено/.test(t), t);
+  assert.ok(t.startsWith(bez(g.itog.t) + ': '), t);
+  assert.ok(t.includes(bez(g.itog.sushchestvennye[0].t)), 'строка минуса — та же, что в «Главном»');
+  assert.ok(/\(0,1 % выручки за 2025 год\)$/.test(t), t);
+});
+
+test('vyvod-glavnoe-v1: существенных нет, или пояснение не говорит «не найдено», или «Главного» нет — пояснение как было', () => {
+  const g = G.sobrat(otvet(), SEG, PM);                    // мелкий иск — итог не «est»
+  assert.notStrictEqual(g.itog.vid, 'est');
+  assert.strictEqual(U.poGlavnomu(g.itog, SERYOZNYH), SERYOZNYH);
+  const k = G.sobrat(krupnyjIsk(), SEG, PM).itog;
+  assert.strictEqual(U.poGlavnomu(k, 'Не проверяли: суды. Перед крупной оплатой посмотрите их сами'), 'Не проверяли: суды. Перед крупной оплатой посмотрите их сами');
+  assert.strictEqual(U.poGlavnomu(null, SERYOZNYH), SERYOZNYH);
+  assert.strictEqual(U.poGlavnomu({ vid: 'est', t: 'Есть 1 существенный минус на 18.11.2026', sushchestvennye: [] }, SERYOZNYH), SERYOZNYH);
+});
+
+test('vyvod-glavnoe-v1: несколько существенных — итог и куда смотреть, без перечня (он в «Главном»)', () => {
+  const it = { vid: 'est', t: 'Есть 2 существенных минуса на 18.11.2026', sushchestvennye: [{ t: 'а', dolya: '' }, { t: 'б', dolya: '' }] };
+  assert.strictEqual(bez(U.poGlavnomu(it, SERYOZNYH)), 'Есть 2 существенных минуса на 18.11.2026 — первыми в «Главном»');
+});
+
+test('vyvod-glavnoe-v1: usloviya берёт итог «Главного» при отрисовке (один раз за проверку) и только в пояснении без причин', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'js', 'usloviya.js'), 'utf8');
+  assert.ok(/st\.itogG = itogGlavnogo\(win, r\)/.test(src));
+  assert.ok(/v\.reasons\.length \? v\.reasons\.join\(', '\) : poGlavnomu\(st\.itogG, chestnoPoyasnenie\(/.test(src));
+});

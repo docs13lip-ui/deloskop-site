@@ -572,10 +572,10 @@ html:not(.rezhim-otcheta) .hero .uv{width:100%;margin-top:0}
 }
 </style>
 <!-- vizual-v3.0a: стили и скрипты главной — пятью файлами вместо 17 (partials/sborka.json, tests/sobrat_js.py) -->
-<link rel="stylesheet" href="/css/b/ds.189ec5a146.css">
-<link rel="stylesheet" href="/css/b/glavnaya-stil.a41b35b749.css">
-<script src="/js/b/yadro.d6f0f29b35.js" defer></script>
-<script src="/js/b/glavnaya.f2239b5388.js" defer></script>
+<link rel="stylesheet" href="/css/b/ds.48f13371c7.css">
+<link rel="stylesheet" href="/css/b/glavnaya-stil.dda2be5298.css">
+<script src="/js/b/yadro.13f940724b.js" defer></script>
+<script src="/js/b/glavnaya.7051b40101.js" defer></script>
 <link rel="icon" type="image/png" sizes="120x120" href="/favicon-120.png">
 <link rel="alternate" type="application/rss+xml" title="Разборы дел — Делоскоп" href="/praktika/rss.xml">
 <link rel="manifest" href="/manifest.webmanifest">
@@ -640,6 +640,7 @@ html:not(.rezhim-otcheta) .hero .uv{width:100%;margin-top:0}
    </ul>
   </nav>
   <div class="shapka__right">
+   <a class="shapka__moi" href="/#portfel" data-moi data-moi-podpis hidden aria-label="Ваши контрагенты"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="7.5" width="17" height="12" rx="2.5"/><path d="M6.5 4.5h11M9 12h6"/></svg><span class="shapka__cnt shapka__moi-n" data-moi-n></span></a>
    <a class="shapka__link shapka__login" href="/cabinet.html" data-auth-out>Войти</a>
    <a class="shapka__link shapka__login" href="/cabinet.html" data-auth-in hidden>Кабинет</a>
    <button class="shapka__poisk" type="button" data-poisk-knopka data-poisk-src="/js/b/poisk-okno.76c3db2a8b.js" data-scena-src="/js/b/scena.d43f1e7c64.js" aria-label="Найти: ИНН, название, счёт или вопрос" aria-keyshortcuts="/ Control+K" title="Найти · клавиша /"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><span class="shapka__poisk-t">ИНН или&nbsp;название</span><kbd class="shapka__poisk-k">/</kbd></button>
@@ -685,6 +686,7 @@ html:not(.rezhim-otcheta) .hero .uv{width:100%;margin-top:0}
     <li><a class="mnav__link" href="/obnovleniya/">Что нового</a></li>
   </ul>
   <div class="mnav__extra">
+   <a class="mnav__row" href="/#portfel" data-moi hidden>Ваши контрагенты<span class="shapka__cnt" data-moi-n></span></a>
    <a class="mnav__row" href="/cabinet.html" data-auth-out>Войти</a>
    <a class="mnav__row" href="/cabinet.html" data-auth-in hidden>Кабинет</a>
   </div>
@@ -1016,6 +1018,9 @@ html:not(.rezhim-otcheta) .hero .uv{width:100%;margin-top:0}
     if(!svoj&&window.DlkPlitki){try{DlkPlitki.mount(report,r)}catch(e){}}
     // sudy-pristavy-v1 (план отчёта 15.11, п. 5): «Суды и приставы — подробно» под плитками — 5 последних дел и производств, предметы взыскания группами, «Показать все загруженные»; плитки ведут сюда (js/sudy-pristavy.js)
     if(!svoj&&window.DlkSudyPristavy){try{DlkSudyPristavy.mount(report,r)}catch(e){}}
+    // otchet-p7-v1 (план 18.11, разд. 3 п. 7): «В реестрах» — плитки словами в правой колонке шапки листа, строка ведёт к своей плитке (js/reestry-slovami.js); заметка к компании под названием — та же, что в «Ваших контрагентах», только в браузере (п. 18, js/zametka-otcheta.js)
+    if(!svoj&&window.DlkReestrySlovami){try{DlkReestrySlovami.mount(report,r)}catch(e){}}
+    if(!svoj&&!primer&&window.DlkZametkaOtcheta){try{DlkZametkaOtcheta.mount(report,r)}catch(e){}}
     // krug-v1: «Кто рядом» — организации с тем же руководителем, участником или учредителем-организацией по ИНН из ЕГРЮЛ (/api/krug; слова [команда] ✎ 9, ✎ 11 от 13.11); перед «Все данные из реестров»; только организации, не «своя компания»; js/krug.js
     if(!svoj&&window.DlkKrug){try{DlkKrug.mount(report,r,{api:CAPI}).then(function(o){if(window.DlkPlitki)DlkPlitki.svyazi(report,o)}).catch(function(){if(window.DlkPlitki)DlkPlitki.svyazi(report,null)})}catch(e){}}
     // «Что изменилось» с прошлой проверки из кабинета — на любом устройстве (вошедшим; js/dinamika.js)
@@ -1044,7 +1049,7 @@ html:not(.rezhim-otcheta) .hero .uv{width:100%;margin-top:0}
   // primer-legkij-v1 (25.10): пример «Условий сделки» просит только пакет «primer» (usloviya + sushchestvennoe + status-kod, ~130 КБ), а не весь отчёт (~535 КБ):
   // сервер пока отдаёт без сжатия, и каждый заход на главную без проверки скачивал полмегабайта. Весь отчёт — при проверке и намерении проверить.
   // Оба тега — async=false: исполняются в порядке вставки (как defer), «primer» всегда раньше «otchet».
-  var PRIMER_JS='/js/b/primer.5822e4887b.js', OTCHET_JS='/js/b/otchet.1016c13c5f.js', primerP=null, moduliP=null;
+  var PRIMER_JS='/js/b/primer.e4c9aeb342.js', OTCHET_JS='/js/b/otchet.c37a719b07.js', primerP=null, moduliP=null;
   function teg(src){return new Promise(function(ok){var s=document.createElement('script');s.src=src;s.async=false;s.onload=s.onerror=function(){ok()};document.head.appendChild(s);});}
   function gruzitPrimer(){if(!primerP)primerP=teg(PRIMER_JS);return primerP;}
   function gruzitModuli(){if(moduliP)return moduliP;var p=gruzitPrimer();moduliP=Promise.all([p,teg(OTCHET_JS)]);return moduliP;}

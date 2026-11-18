@@ -226,3 +226,61 @@ test('сумма без «Денег на кону» — из detail сигна�
   assert.strictEqual(S.ostatok.length, 0);
   assert.ok(S.minusy.some((x) => x.k === 'tax_debt'));
 });
+
+// zapros-glavnoe-v1 [Ночные запуски] 18.11 19:05: «Что запросить по этим минусам» — документы из списка «Условий сделки»
+// (js/usloviya.js decide().docs), только те, что отвечают на минус в «Главном» (план 18.11, разд. 4 «перегнать»).
+const U = require('../js/usloviya.js');
+const zaprosOf = (r) => { const g = G.sobrat(r, SEG, PM); g.zapros = G.zapros(g, U.decide(r).docs); return g; };
+
+test('zapros-glavnoe-v1: каждый документ карты есть в словаре DOCS условий — слова не свои', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'js', 'usloviya.js'), 'utf8');
+  Object.keys(G.ZAPROS).forEach((k) => G.ZAPROS[k].forEach((id) => assert.match(src, new RegExp('\\n\\s+' + id + ': \\{'), id)));
+});
+
+test('zapros-glavnoe-v1: долг по налогам и приостановка — справка КНД 1120101 и отмена решения ФНС, тем же текстом, что в «Что запросить у них»', () => {
+  const r = sNalogom(412062);
+  r.damia.priostanovki = { nazvanie: 'Счета: решения ФНС о приостановлении', istochnik: 'ФНС', sostoyanie: 'found', data_svedeniy: '2026-11-17' };
+  r.signals.push({ id: 'priostanovki', title: 'Приостановка операций по счетам', status: 'bad', detail: 'Есть решение', source: 'ФНС' });
+  const docs = U.decide(r).docs;
+  const g = zaprosOf(r);
+  const ids = g.zapros.map((x) => x.id);
+  assert.deepStrictEqual(ids, ['unblock', 'taxCert'], 'по порядку минусов: приостановка выше долга');
+  g.zapros.forEach((x) => assert.strictEqual(x.t, docs.filter((d) => d.id === x.id)[0].title, 'текст из DOCS'));
+  assert.ok(g.zapros.length <= 3);
+  const h = bez(G.html(g));
+  assert.match(h, /<p class="gl1__zh">Что запросить по этим минусам<\/p>/);
+  assert.match(h, /Справка об исполнении обязанности по уплате налогов \(КНД 1120101\)/);
+  assert.match(h, /<button type="button" class="gl1__zv">Весь список и готовое письмо ↓<\/button>/);
+  assert.ok(h.indexOf('gl1__l') < h.indexOf('gl1__z'), 'под фактами');
+  assert.doesNotMatch(h, ZAPRET);
+});
+
+test('zapros-glavnoe-v1: нет минуса с документом (мелкий иск) — блока нет; налог 1 ₽ (остаток) — справку не просим', () => {
+  [otvet(), sNalogom(1)].forEach((r) => {
+    const g = zaprosOf(r);
+    assert.deepStrictEqual(g.zapros, []);
+    assert.doesNotMatch(G.html(g), /gl1__z/);
+  });
+});
+
+test('zapros-glavnoe-v1: документа нет в списке условий — не показываем (одна правда на странице); без условий — блока нет', () => {
+  const r = sNalogom(412062);
+  const g = G.sobrat(r, SEG, PM);
+  assert.deepStrictEqual(G.zapros(g, [{ id: 'power', title: 'x' }]), []);
+  assert.deepStrictEqual(G.zapros(g, null), []);
+  assert.deepStrictEqual(G.zapros(null, []), []);
+  assert.doesNotMatch(G.html(g), /gl1__z/);
+});
+
+test('zapros-glavnoe-v1: приставы и приостановка блоком damia (без сигналов, как в живом ответе) — в «Что запросить у них» и в «Главном»; точный ноль — нет', () => {
+  const r = otvet();
+  r.damia.fssp = { nazvanie: 'Приставы', istochnik: 'ФССП (через Checko)', status: 'polucheno', sostoyanie: 'found', data_svedeniy: '2026-11-12',
+    dannye: { otkryto: 4, ostatok: 2500000, ostatok_ohvat: 'vse', ostatok_tochno: true } };
+  r.damia.priostanovki = { nazvanie: 'Счета: решения ФНС о приостановлении', istochnik: 'ФНС', sostoyanie: 'found', data_svedeniy: '2026-11-17' };
+  const d = U.decide(r);
+  assert.ok(d.docs.some((x) => x.id === 'fssp') && d.docs.some((x) => x.id === 'unblock'), JSON.stringify(d.docs.map((x) => x.id)));
+  const g = zaprosOf(r);
+  assert.deepStrictEqual(g.zapros.map((x) => x.id), ['unblock', 'fssp']);
+  r.damia.fssp.dannye.ostatok = 0; delete r.damia.priostanovki;
+  assert.ok(!U.decide(r).docs.some((x) => x.id === 'fssp'), 'точный ноль — не «погашение»');
+});

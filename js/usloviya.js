@@ -208,7 +208,19 @@
       f.otchetGod = String(god);
       f.vyruchkaNol = !(f.revenue > 0) && !(o && o.vyruchka > 0);
     }
+    // zapros-glavnoe-v1 (18.11): приставы и приостановки сервер отдаёт блоком damia, а не сигналом — без этого
+    // «Что запросить у них» молчал о производствах на миллионы (живой /api/check: сигналов fssp и priostanovki нет).
+    // Только для списка документов: тон, предел и вывод не меняются. Точный ноль у приставов (неимущественные) — не «погашение».
+    var dm = (r && r.damia) || {}, dn = (dm.fssp && dm.fssp.dannye) || {};
+    if (dmNajdeno(dm.fssp) && !(dn.ostatok === 0 && dn.ostatok_tochno === true)) f.zaprosFssp = true;
+    if (dmNajdeno(dm.priostanovki)) f.zaprosBlock = true;
     return f;
+  }
+  function dmNajdeno(b) {
+    if (!b || typeof b !== 'object') return false;
+    var s = b.status;
+    if (s === 'polucheno' || s === 'ne_provereno' || !s) s = b.sostoyanie;
+    return s === 'found';
   }
   function modulSushch() {
     if (typeof Sushchestvennoe !== 'undefined') return Sushchestvennoe;
@@ -592,9 +604,9 @@
     add('card');
     if (f.bad.nedost || f.warn.nedost) { add('fixRecord'); add('premises'); }
     if (f.bad.mass || f.warn.mass) add('premises');
-    if (f.bad.block || f.warn.block) add('unblock');
+    if (f.bad.block || f.warn.block || f.zaprosBlock) add('unblock');
     if (f.bad.dolg || f.warn.dolg) add('taxCert');
-    if (f.bad.fssp || f.warn.fssp) add('fssp');
+    if (f.bad.fssp || f.warn.fssp || f.zaprosFssp) add('fssp');
     if (f.zsk === 'medium' || f.zsk === 'high') add('bank');
     if (f.bad.staff || f.warn.staff || f.staff === 0 || f.staff === 1 || f.warn.young || (mid && t !== 'go')) add('resources');
     if (big || t === 'post' || t === 'stop') add('experience');
@@ -610,9 +622,9 @@
     var ids = [];
     function add(id) { if (ids.indexOf(id) < 0) ids.push(id); }
     add(f.bad.director || f.warn.director ? 'powerNew' : 'power');
-    if (f.bad.fssp || f.warn.fssp) add('fssp');
+    if (f.bad.fssp || f.warn.fssp || f.zaprosFssp) add('fssp');
     if (f.bad.dolg || f.warn.dolg) add('taxCert');
-    if (f.bad.block || f.warn.block) add('unblock');
+    if (f.bad.block || f.warn.block || f.zaprosBlock) add('unblock');
     if (f.zsk === 'medium' || f.zsk === 'high') add('bank');
     if (f.bad.nedost || f.warn.nedost) { add('fixRecord'); add('premises'); }
     if (f.bad.mass || f.warn.mass) add('premises');

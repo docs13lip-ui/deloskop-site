@@ -636,7 +636,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         txt = ss.sobrat_stranicu(bez_tipografa(html_kartochki(k, k["_V"], sos_, kom, normy, cena)), r, podval, shapka)  # kartochki-chisla-v1: NB_T — при записи
         txt = ssylki_kroshek(txt, kg)
         txt = pochinit_vozrast(txt, den)
-        txt = rekvizity_kartochki(txt)  # rekvizity-kartochki-v1: скрипт кнопки — внутри <main> готовой страницы (блок с КПП и адресом — уже из html_kartochki)
+        txt = oglavlenie_kartochki(rekvizity_kartochki(txt))  # oglavlenie-kartochki-v1: скрипт — внутри <main>, как у реквизитов · rekvizity-kartochki-v1: скрипт кнопки — внутри <main> готовой страницы (блок с КПП и адресом — уже из html_kartochki)
         # kartochki-indeks-v2 ([Ночные-2] 14.11): ворота индексации — по готовой странице, как у опубликованных (t2 ниже).
         # В шаблоне они считались до svodka_zel: «комментарий команды» ещё был <div class="kom …>, потом зелёные
         # комментарии становились строками сводки — и 4 из 88 карточек n13 (нет изменения год к году) шли в индекс.
@@ -684,6 +684,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         t2 = korotko_po_vesu(t2)  # sushchestvennost-v1: «Коротко» — доля выручки у сумм, мелкое в конце, от 10 % — первым, как у новых
         t2 = rekvizity_kartochki(t2)  # rekvizity-kartochki-v1: «Реквизиты» перед «Датами из реестра» и кнопка «Скопировать», как у новых
         t2 = chto_za_kompaniyu(t2)  # chto-za-kompaniya-v1: под ОКВЭД — выручка и штат; итог — словами [Право] 18.11 (2), как у новых
+        t2 = oglavlenie_kartochki(t2)  # oglavlenie-kartochki-v1: оглавление по разделам страницы, как у новых
         x["_noindex"] = noindex_html(t2)
         if BEZ_OBOLOCHKI in t2:
             # «голое» тело из комплекта — оболочка той же sobrat_stranicu
@@ -696,7 +697,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         put = os.path.join(papka, k_["_papka"], "index.html")
         with open(put, encoding="utf-8") as fh:
             t = bez_tipografa(fh.read())  # kartochki-chisla-v1
-        izm += zapisat_k(put, vstavit_znachit(t))
+        izm += zapisat_k(put, oglavlenie_kartochki(vstavit_znachit(t)))  # oglavlenie-kartochki-v1: оглавление — по готовому составу разделов, последним
     # kartochki-unik-v3: «Похожие» (подпись — сравнение по обороту) — по напечатанному на всех карточках, как у добора:
     # первая сборка из сведений и следующий добор дают одни и те же байты
     na_d = kartochki_na_diske(koren)

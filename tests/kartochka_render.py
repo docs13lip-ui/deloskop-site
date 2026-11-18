@@ -6306,3 +6306,95 @@ def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None)
     if len(re.sub(r"\D", "", str(k.get("inn") or ""))) != 10:
         return t
     return rekvizity_kartochki(t, k.get("kpp"), k.get("address"))
+
+
+# ---------------------------------------------------------------- oglavlenie-kartochki-v1 ([Ночные-2] 18.11)
+# Решение владельца 18.11 «сайт лучше конкурентов и справочников», разд. 3 п. 5 и п. 14, разд. 6 Н3: оглавление карточки.
+# Карточка — 14 разделов, 8–9 экранов на компьютере и ~14 на телефоне, переходов по разделам не было (у справочников —
+# вкладки или оглавление со счётчиками). На компьютере — список сбоку, липкий (правая колонка теперь не липкая целиком:
+# она была выше экрана 1440×900, низ «Похожих» не виден); на телефоне — строка разделов под шапкой сайта с прокруткой вбок.
+# Оба списка — в HTML (без скрипта работают как ссылки); виден один: другой скрыт display:none по ширине экрана.
+# У пункта — счётчик и точка-вывод только там, где у раздела есть свой счёт на странице: «Плюсы и минусы» (плюсов/минусов,
+# точка — по итогу: существенные / есть минусы / минусов нет), «Коротко» (строк; янтарная, если есть строка «на заметку»),
+# «Реестры» (строк), «Для банка и налоговой» (пунктов). Оценок словами нет. Скрипт (js/oglavlenie-kartochki.js) — только
+# подсветка текущего раздела. Идемпотентно: оба списка пересобираются из страницы.
+OG_SKRIPT = '<script src="/js/oglavlenie-kartochki.js" defer></script>'
+OG_PODPISI = {"itog": "Итог", "pm": "Плюсы и минусы", "korotko": "Коротко", "razbor": "Разбор по цифрам",
+              "znachit": "Что это значит", "pered": "Перед оплатой", "rekv": "Реквизиты", "daty": "Даты",
+              "fin": "Финансы", "bal": "Баланс", "reestry": "Реестры", "zel": "Для банка и налоговой", "lyudi": "Руководство"}
+OG_TOCHKA = {"ok": "", "warn": "", "bad": ", есть существенные минусы"}
+_OG_NAV = re.compile(r'<nav class="co-og(?:m)?" [^>]*>.*?</nav><!--/co-og-->\n?', re.S)
+_OG_SEK = re.compile(r'<section class="(co-sec[^"]*|co-itog)" aria-labelledby="([a-z]+)"[^>]*>.*?</section>', re.S)
+
+
+def oglavlenie_punkty(t):
+    """Страница → [(id, подпись, счётчик-html, точка)] в порядке разделов; меньше 4 разделов — []."""
+    P = []
+    for m in _OG_SEK.finditer(t or ""):
+        sid, sek = m.group(2), m.group(0)
+        if sid not in OG_PODPISI or any(p[0] == sid for p in P) or ('id="%s"' % sid) not in sek:
+            continue
+        n, z = "", ""
+        if sid == "pm":
+            mp = re.search(r'data-plyusy="(\d+)" data-minusy="(\d+)"', sek)
+            if mp:
+                pl, mn = int(mp.group(1)), int(mp.group(2))
+                n = ('<span aria-hidden="true">+%d&nbsp;−%d</span><span class="vh">: плюсов %d, минусов %d</span>' % (pl, mn, pl, mn))
+                mi = re.search(r'<h2 id="itog"[^>]*>(.*?)</h2>', t, re.S)
+                sush = bool(mi and re.match(r"Есть\s", _rk_tekst(mi.group(1))) and "существенн" in mi.group(1))
+                z = "bad" if sush else ("warn" if mn else "ok")
+        elif sid == "korotko":
+            kl = re.findall(r'<li class="co-v co-v--(\w+)"', sek)
+            if kl:
+                n = str(len(kl))
+                z = "warn" if "warn" in kl else ("ok" if "ok" in kl else "")
+        elif sid == "reestry":
+            c = sek.count('<div class="fact">')
+            n = str(c) if c else ""
+        elif sid == "zel":
+            c = len(re.findall(r'<li class="kom [^"]*co-zel__i"', sek))
+            n = str(c) if c else ""
+        P.append((sid, OG_PODPISI[sid], n, z))
+    return P if len(P) >= 4 else []
+
+
+def oglavlenie_html(P, mobil=False):
+    if not P:
+        return ""
+    li = []
+    for sid, pod, n, z in P:
+        tochka = ('<i class="co-og__t co-og__t--%s" aria-hidden="true"></i>' % z) if z else ""
+        sch = "" if mobil else (('<span class="co-og__n">%s</span>' % n) if n else "")
+        vh = ('<span class="vh">%s</span>' % OG_TOCHKA[z]) if z and OG_TOCHKA.get(z) else ""
+        li.append('<li><a href="#%s" data-og="%s">%s<span class="co-og__p">%s</span>%s%s</a></li>' % (sid, sid, tochka, e(pod), sch, vh))
+    if mobil:
+        return '<nav class="co-ogm" aria-label="Разделы карточки"><ol class="co-ogm__l">%s</ol></nav><!--/co-og-->\n' % "".join(li)
+    return ('<nav class="co-og" aria-label="Разделы карточки"><p class="co-og__h">На&nbsp;странице</p><ol class="co-og__l">%s</ol></nav><!--/co-og-->\n'
+            % "".join(li))
+
+
+def oglavlenie_kartochki(t):
+    """Карточка → строка разделов перед <div class="co-grid"> (телефон) и список первым в правой колонке (компьютер)
+    + скрипт подсветки. Повтор даёт те же байты."""
+    if not t:
+        return t
+    bez = _OG_NAV.sub("", t)
+    P = oglavlenie_punkty(bez)
+    if not P or '<div class="co-grid">' not in bez or '<div class="co-aside">\n' not in bez:
+        return bez.replace(OG_SKRIPT + "\n", "")
+    bez = bez.replace('<div class="co-grid">', oglavlenie_html(P, True) + '<div class="co-grid">', 1)
+    bez = bez.replace('<div class="co-aside">\n', '<div class="co-aside">\n' + oglavlenie_html(P), 1)
+    if OG_SKRIPT not in bez:
+        kuda = "</main>" if "</main>" in bez else ("</body>" if "</body>" in bez else None)
+        if kuda:
+            j = bez.rindex(kuda)
+            bez = bez[:j] + OG_SKRIPT + "\n" + bez[j:]
+    return bez
+
+
+_html_kartochki_bez_og = html_kartochki
+
+
+def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811
+    """oglavlenie-kartochki-v1: та же карточка + оглавление (сборка сайта и API — одна функция)."""
+    return oglavlenie_kartochki(_html_kartochki_bez_og(k, V, sosedi, kom, normy, cena, segodnya))

@@ -217,6 +217,15 @@ _SOS = re.compile(r'(<aside class="co-side card"><h2 class="co-h3">Полный 
 NORMY_FNS = os.path.join(KOREN, "data", "fns-normy-2025.json")
 
 
+def zagruzit_spravochnik(put=NORMY_FNS):
+    """otrasl-na-kartochke-v1: весь справочник ФНС (nagruzka, rentabelnost, rentabelnost_2024); нет файла — None."""
+    try:
+        with open(put, encoding="utf-8") as fh:
+            return json.load(fh)
+    except (OSError, ValueError):
+        return None
+
+
 def zagruzit_normy(put=NORMY_FNS):
     """v3.8b: строки «nagruzka» справочника ФНС; нет файла — []."""
     try:
@@ -623,6 +632,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
     podval = ss.podval_html(r)
     shapka = ss.shapka_html()
     normy = zagruzit_normy()
+    otr_ustanovit(zagruzit_spravochnik())  # otrasl-na-kartochke-v1: рентабельность и нагрузка против средних ФНС (весь справочник)
     cena = cena_pasporta()  # kartochki-daty-v1: цена Паспорта после беты — из tarify.json
     kom = kommentarii.zagruzit()  # «Комментарий команды» — data/kommentarii.json (только утверждённые [Право] тексты)
     # kartochki-haby-v1: хабы отраслей и регионов (≥ HAB_GRUPPY_OT карточек) — до карточек: крошки ссылаются на них
@@ -684,6 +694,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         t2 = korotko_po_vesu(t2)  # sushchestvennost-v1: «Коротко» — доля выручки у сумм, мелкое в конце, от 10 % — первым, как у новых
         t2 = rekvizity_kartochki(t2)  # rekvizity-kartochki-v1: «Реквизиты» перед «Датами из реестра» и кнопка «Скопировать», как у новых
         t2 = chto_za_kompaniyu(t2)  # chto-za-kompaniya-v1: под ОКВЭД — выручка и штат; итог — словами [Право] 18.11 (2), как у новых
+        t2 = otrasl_na_kartochke(t2)  # otrasl-na-kartochke-v1: «против средних по отрасли» и «Разбор» без долей больше 100 % выручки, как у новых
         t2 = oglavlenie_kartochki(t2)  # oglavlenie-kartochki-v1: оглавление по разделам страницы, как у новых
         x["_noindex"] = noindex_html(t2)
         if BEZ_OBOLOCHKI in t2:

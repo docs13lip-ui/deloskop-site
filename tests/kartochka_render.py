@@ -3972,6 +3972,9 @@ def un_frazy(f):
     elif dl is not None and dl <= -0.3:
         out.append("Выручка %s %s — %s, на %s меньше, чем годом раньше: спросите у %s о причине и уточните, хватит ли "
                    "людей и мощностей на ваш объём." % (im, za, dengi(r1), _zn_proc(dl), im))
+    elif pr1 is not None and pr1 > r1:  # otrasl-na-kartochke-v1: прибыль больше выручки — «с каждых 100 ₽ остаётся 109 ₽» не пишем
+        out.append("Чистая прибыль %s %s — %s при выручке %s: часть прибыли получена не от продаж, поэтому долю прибыли "
+                   "в выручке %s не считаем." % (im, za, dengi(pr1), dengi(r1), im))
     elif pr1 is not None and pr1 > 0:
         m1 = pr1 / r1
         m0 = p0["pribyl"] / p0["dohod"] if p0 and p0.get("pribyl") and p0["pribyl"] > 0 else None
@@ -6545,3 +6548,276 @@ def tipograf_kartochki(t, chisla=False):  # noqa: F811 — svernut-kartochki-v1:
 
 def bez_tipografa(t):  # noqa: F811 — svernut-kartochki-v1: и без свёртки — как до неё
     return razvernut_kartochku(_bez_tipografa_bez_dal(t))
+
+
+# ---------------------------------------------------------------- otrasl-na-kartochke-v1 ([Ночные-2] 18.11)
+# Решение владельца 18.11, разд. 3 п. 6 и п. 20 (claude/Решения_владельца_18.11_сайт_лучше_конкурентов_и_справочников.md):
+# рентабельность и налоговая нагрузка компании против средних ФНС по её отрасли (data/fns-normy-2025.json — Информация ФНС
+# от 05.05.2026 и от 07.05.2025, приложения 3 и 4 к приказу ФНС от 30.05.2007 № ММ-3-06/333@) словом «выше / на уровне /
+# ниже средней»; у компании с чистой прибылью больше выручки (головные и управляющие компании групп) — нормы отрасли
+# не сравниваем, и проценты «к выручке» (рентабельность 1299 %, налоги 489 % выручки, «самая высокая рентабельность
+# в разделе») не печатаем — ошибка 93 211 % у справочника на том же «Магните».
+# Правила — те же, что у отчёта по ИНН (js/rentabelnost.js, js/nagruzka-proverka.js):
+#   1) только действующие организации, без банков и страховщиков (64.1, 65); строка нормы — самая подробная по ОКВЭД,
+#      «Всего по РФ» не подставляем; год прибыли = год баланса = год нормы (2025 или 2024);
+#   2) рентабельность активов — оценка: чистая прибыль за год к активам на 31.12 того же года (капитал + обязательства
+#      из таблицы баланса страницы); у ФНС — сальдированный результат до налога; активы меньше 1 млн ₽ — строки нет;
+#   3) налоги — набор ФНС «уплаченные налоги» вместе со страховыми взносами, поэтому сравниваем с суммой «налоговая
+#      нагрузка + взносы» того же года; в наборе нет НДФЛ за работников — оценка ниже настоящей (пишем это);
+#      УСН и ЕСХН с общей нормой не сравниваем: сравниваем, только если выручка года больше предела УСН (ст. 346.13 НК:
+#      450 млн ₽ — 2025, 265,8 млн ₽ — 2024) и отрасль не сельское хозяйство (ЕСХН);
+#   4) «ниже / выше средней» — отклонение от 10 % (критерий 11 приложения 2 к Концепции), между ними — «на уровне средней».
+# Всё — по напечатанной странице (как chto-za-kompaniya-v1): одинаково для новых и опубликованных карточек.
+# Справочник модуль не читает (его берёт API): заполняет вызывающий — otr_ustanovit(json).
+OTR = {"dannye": None}
+OTR_MIN = 1e6
+OTR_PORUG = 0.10
+OTR_USN = {2025: 450e6, 2024: 265.8e6}
+_OTR_SEK = re.compile(r'<!--co-otrs-->.*?<!--/co-otrs-->', re.S)
+_OTR_KUDA = re.compile(r'(<p class="small co-otr">Средняя налоговая нагрузка.*?</p>)', re.S)
+_OTR_STATUS = re.compile(r'Статус</dt><dd>([^<]*)</dd>')
+_OTR_OKVED = re.compile(r'co-okved">[^<]*<span class="num">([0-9.]+)</span>')
+_OTR_NALOGI = re.compile(r'<div class="fact"><span>Налоги и взносы за год</span><span class="fact__v">([^<]*?)'
+                         r'(?:&nbsp;| | )за(?:&nbsp;| | )(\d{4})</span>')
+_OTR_BAL_H = re.compile(r'баланс на(?:&nbsp;|&#160;| | )31\.12\.(\d{4})</h3><div class="table-wrap"><table class="table">(.*?)</table>', re.S)
+_OTR_BAL_STR = re.compile(r'<tr><td>(Собственный капитал|Долгосрочные обязательства|Краткосрочные обязательства)</td>'
+                          r'<td class="num">([^<]*)</td>')
+
+
+def otr_ustanovit(dannye):
+    """dannye — весь data/fns-normy-2025.json (нужны nagruzka, rentabelnost, rentabelnost_2024)."""
+    OTR["dannye"] = dannye if isinstance(dannye, dict) else None
+    return OTR["dannye"]
+
+
+def _otr_stroka(okved, stroki):
+    kod = re.sub(r"[^0-9.]", "", str(okved or ""))
+    luchshij = None
+    for r in stroki or []:
+        ok = r.get("okved") or []
+        for pr in ok:
+            klyuch = (len(pr), -len(ok))
+            if kod and kod.startswith(pr) and (luchshij is None or klyuch > luchshij[0]):
+                luchshij = (klyuch, r)
+    return luchshij[1] if luchshij else None
+
+
+def otr_normy(okved, god, D=None):
+    """→ {rent: (название, %), nagr: (название, налоги %, взносы %)} за год или None (норма не числом — нет пункта)."""
+    D = D if D is not None else OTR["dannye"]
+    if not D or god not in (2024, 2025):
+        return None
+    out = {}
+    rs = _otr_stroka(okved, (D.get("rentabelnost") or {}).get("stroki"))
+    if rs:
+        v = rs.get("aktivy") if god == 2025 else (((D.get("rentabelnost_2024") or {}).get("znacheniya") or {}).get(rs["kod"]) or [None, None])[1]
+        if isinstance(v, (int, float)):
+            out["rent"] = (_nazv_normy(rs), float(v))
+    ns = _otr_stroka(okved, D.get("nagruzka"))
+    if ns:
+        n, s = (ns.get("nagruzka") or {}).get(str(god)), (ns.get("sv") or {}).get(str(god))
+        if isinstance(n, (int, float)) and isinstance(s, (int, float)):
+            out["nagr"] = (_nazv_normy(ns), float(n), float(s))
+    return out or None
+
+
+def otr_slovo(x, norma):
+    """«выше средней» / «на уровне средней» / «ниже средней» — отклонение от 10 % средней (критерий 11 Концепции)."""
+    if norma > 0:
+        if x <= norma * (1 - OTR_PORUG):
+            return "ниже средней"
+        if x >= norma * (1 + OTR_PORUG):
+            return "выше средней"
+        return "на уровне средней"
+    return ""
+
+
+def _otr_p(x):
+    v = round(x, 1)
+    return ("%.1f" % abs(v)).replace(".", ",").replace(",0", ",0") if abs(v) < 100 else "%d" % round(abs(v))
+
+
+def otr_proc(x):
+    return ("−" if round(x, 1) < 0 else "") + _otr_p(x) + NB + "%"
+
+
+def otr_fakty(t):
+    """Числа страницы для сравнения → dict или None (не карточка, не действует, банк, нет ряда)."""
+    t = t or ""
+    st = _OTR_STATUS.search(t)
+    mo = _OTR_OKVED.search(t)
+    if not st or st.group(1).strip() != "Действующая" or not mo:
+        return None
+    okved = mo.group(1)
+    if re.match(r"64\.1|65(\.|$)", okved):
+        return None
+    f = zn_fakty(t)
+    ryad = {x["god"]: x for x in f.get("ryad") or [] if x.get("god") and x.get("dohod") and not x.get("fns")}
+    if not ryad:
+        return None
+    g = max(ryad)
+    x = ryad[g]
+    out = {"okved": okved, "god": g, "vyruchka": x["dohod"], "pribyl": x.get("pribyl"), "imya": f.get("imya") or ""}
+    out["golovnaya"] = bool(out["pribyl"] and out["vyruchka"] > 0 and out["pribyl"] > out["vyruchka"])
+    mb = _OTR_BAL_H.search(t)
+    if mb and int(mb.group(1)) == g:
+        sm = [zn_summa(v) for _, v in _OTR_BAL_STR.findall(mb.group(2))]
+        neg = [("−" in v or "-" in v) for _, v in _OTR_BAL_STR.findall(mb.group(2))]
+        if len(sm) == 3 and all(v is not None for v in sm):
+            out["aktivy"] = sum(-abs(v) if n else v for v, n in zip(sm, neg))
+    mn = _OTR_NALOGI.search(t)
+    if mn and int(mn.group(2)) == g:
+        out["nalogi"] = zn_summa(mn.group(1))
+    return out
+
+
+def otr_html(t, D=None):
+    """Блок «Против средних по отрасли» (или строка «для головной компании нормы отрасли не применимы») либо ""."""
+    F = otr_fakty(t)
+    if not F:
+        return ""
+    N = otr_normy(F["okved"], F["god"], D)
+    imya = un_kratkoe(F["imya"]) or "компании"
+    g = F["god"]
+    if F["golovnaya"]:
+        if not N and not _OTR_KUDA.search(t or ""):
+            return ""
+        return ('<p class="small co-otrs co-otrs--golova">Чистая прибыль %s за%s%d%sгод больше выручки: часть прибыли получена '
+                'не%sот%sпродаж. Так бывает у%sголовных и%sуправляющих компаний групп; средние показатели ФНС по%sотрасли '
+                '(налоговая нагрузка, рентабельность) к%sтакой компании не%sприменимы.</p>'
+                % (e(imya), NB, g, NB, NB, NB, NB, NB, NB, NB, NB))
+    if not N:
+        return ""
+    li = []
+    pr, ak = F.get("pribyl"), F.get("aktivy")
+    if "rent" in N and pr is not None and ak and ak >= OTR_MIN:
+        nz, norma = N["rent"]
+        x = pr / ak * 100
+        sl = otr_slovo(x, norma)
+        if sl:
+            li.append('<li><span class="co-otrs__k">Рентабельность активов</span> <span class="co-otrs__v">%s</span> '
+                      '<span class="co-otrs__n">средняя по%sотрасли «%s»%s— %s</span> <b class="co-otrs__s">%s</b>'
+                      '<span class="co-otrs__o">Оценка: чистая прибыль за%s%d%sгод к%sактивам на%s31.12.%d (ГИР%sБО); у%sФНС%s— результат до%sналога.</span></li>'
+                      % (otr_proc(x), NB, e(nz), NB, otr_proc(norma), sl, NB, g, NB, NB, NB, g, NB, NB, NB, NB))
+    nl, vr = F.get("nalogi"), F["vyruchka"]
+    selhoz = re.match(r"0[123](\.|$)", F["okved"])
+    if "nagr" in N and nl and vr >= max(OTR_MIN, OTR_USN.get(g, float("inf"))) and not selhoz:
+        nz, n, s = N["nagr"]
+        mr = _OTR_RZ_NAL.search(t or "")  # то же число, что в «Разборе по цифрам» (посчитано из точных сумм)
+        x = _otr_chislo(mr.group(1)) if mr else nl / vr * 100
+        sl = otr_slovo(x, n + s)
+        if sl:
+            li.append('<li><span class="co-otrs__k">Налоги и%sвзносы к%sвыручке</span> <span class="co-otrs__v">%s</span> '
+                      '<span class="co-otrs__n">средняя по%sотрасли «%s»%s— %s (налоги %s и%sвзносы %s)</span> <b class="co-otrs__s">%s</b>'
+                      '<span class="co-otrs__o">Оценка за%s%d%sгод: уплаченные налоги и%sвзносы (ФНС) к%sвыручке (ГИР%sБО). В%sоткрытом '
+                      'наборе ФНС нет НДФЛ за%sработников, а%sв%sсредней он есть,%s— настоящая нагрузка выше этой оценки.</span></li>'
+                      % (NB, NB, otr_proc(x), NB, e(nz), NB, otr_proc(n + s), otr_proc(n), NB, otr_proc(s), sl,
+                         NB, g, NB, NB, NB, NB, NB, NB, NB, NB, NB))
+    if not li:
+        return ""
+    return ('<div class="co-otrs" aria-labelledby="otrs"><h3 class="co-h3" id="otrs">%s против средних по%sотрасли за%s%d%sгод</h3>'
+            '<ul class="co-otrs__l">%s</ul><p class="caption">Средние%s— Информация ФНС от%s%s (приложения 3 и%s4 к%sприказу ФНС '
+            'от%s30.05.2007 №%sММ-3-06/333@). Отклонение от%s10%s%% считаем «выше» или%s«ниже средней». Это сравнение по%sоткрытым '
+            'данным, не%sвывод о%sкомпании.</p></div>'
+            % (e(imya), NB, NB, g, NB, "".join(li), NB, NB, "05.05.2026" if g == 2025 else "07.05.2025",
+               NB, NB, NB, NB, NB, NB, NB, NB, NB, NB))
+
+
+# «Разбор по цифрам»: доля к выручке, когда прибыль или налоги больше выручки, — не показатель (п. 20).
+_OTR_RZ_RENT = re.compile(r"Чистая рентабельность за" + _UN_RENT_S + r"(\d{4})" + _UN_RENT_S + r"?—" + _UN_RENT_S
+                          + r"(−?[\d,]+)" + _UN_RENT_S + r"%(?P<hv>, годом раньше — (−?[\d,]+)" + _UN_RENT_S + r"%)?[^<]*?\.(?=</p>)")
+_OTR_RZ_NAL = re.compile(r"Налоги и взносы — ([\d,]+)" + _UN_RENT_S + r"% выручки за год\.(?=</p>)")
+
+
+def _otr_chislo(s):
+    return float(s.replace("−", "-").replace(",", "."))
+
+
+def _otr_raz(p):
+    return _raz(1, p / 100)
+
+
+def otr_razbor(t):
+    def rent(m):
+        m1 = _otr_chislo(m.group(2))
+        if m1 > 100:
+            return ("Чистая прибыль за%s%s%sгод больше выручки в%s%s: часть прибыли получена не%sот%sпродаж, "
+                    "поэтому рентабельность к%sвыручке здесь не%sпоказатель." % (NB, m.group(1), NB, NB, _otr_raz(m1), NB, NB, NB, NB))
+        if m.group("hv") and _otr_chislo(m.group(4)) > 100:
+            return m.group(0)[:m.start("hv") - m.start(0)] + "."
+        return m.group(0)
+    def nal(m):
+        p = _otr_chislo(m.group(1))
+        if p <= 100:
+            return m.group(0)
+        return "Налоги и%sвзносы за%sгод больше выручки в%s%s%s— долю к%sвыручке не%sсчитаем." % (NB, NB, NB, _otr_raz(p), NB, NB, NB)
+    i = t.find('aria-labelledby="razbor"')
+    if i < 0:
+        return t
+    j = t.find("</section>", i)
+    sek = _OTR_RZ_NAL.sub(nal, _OTR_RZ_RENT.sub(rent, t[i:j]))
+    return t[:i] + sek + t[j:]
+
+
+_OTR_SP = r"(?:&nbsp;|&#160;| | )"
+_OTR_BAL_TD = re.compile(r'<td class="num">(?:в' + _OTR_SP + r'[\d,]+' + _OTR_SP + r'раза?' + _OTR_SP + r'больше выручки|[\d,]+' + _OTR_SP
+                         + r'%' + _OTR_SP + r'выручки)' + _OTR_SP + r'за' + _OTR_SP + r'\d{4}</td>')
+_OTR_BAL_FR = re.compile(r',' + _OTR_SP + r'(?:в' + _OTR_SP + r'[\d,]+' + _OTR_SP + r'раза?' + _OTR_SP + r'больше выручки|[\d,]+' + _OTR_SP
+                         + r'%' + _OTR_SP + r'выручки)' + _OTR_SP + r'за' + _OTR_SP + r'\d{4}' + _OTR_SP + r'год(?=\.)')
+
+
+def otr_balans_golova(t):
+    """Головная компания: долги баланса к выручке («в 919 раз больше выручки») — не показатель, снимаем (п. 20)."""
+    i = t.find('aria-labelledby="bal"')
+    if i < 0:
+        return t
+    j = t.find("</section>", i)
+    sek = _OTR_BAL_FR.sub("", _OTR_BAL_TD.sub('<td class="num"></td>', t[i:j]))
+    return t[:i] + sek + t[j:]
+
+
+def otrasl_na_kartochke(t, D=None):
+    """Карточка → блок «против средних по отрасли» под строкой нормы ФНС и «Разбор» без долей больше 100 % выручки.
+    Повтор даёт те же байты; без справочника (otr_ustanovit) блок не ставится, «Разбор» правится."""
+    if not t or 'class="co-grid"' not in t:
+        return t
+    bez = _OTR_SEK.sub("", t)
+    bez = otr_razbor(bez)
+    F = otr_fakty(bez)
+    if F and F["golovnaya"]:
+        bez = otr_balans_golova(bez)
+    s = otr_html(bez, D)
+    if not s:
+        return bez
+    s = "<!--co-otrs-->" + s + "<!--/co-otrs-->"
+    m = _OTR_KUDA.search(bez)
+    if m:
+        return bez[:m.end()] + s + bez[m.end():]
+    k = bez.find("</section>", bez.find('aria-labelledby="fin"')) if 'aria-labelledby="fin"' in bez else -1
+    return bez[:k] + s + bez[k:] if k > 0 else bez
+
+
+_un_otlichie_vid_bez_golovy = _un_otlichie_vid
+
+
+def _un_otlichie_vid(k, vse):  # noqa: F811 — otrasl-na-kartochke-v1: прибыль больше выручки — вне «рентабельности в разделе»
+    def bez(x):
+        return dict(x, pr1=None) if x and x.get("pr1") is not None and x.get("r1") and x["pr1"] > x["r1"] else x
+    return _un_otlichie_vid_bez_golovy(bez(k), {i: bez(x) for i, x in (vse or {}).items()})
+
+
+_html_kartochki_bez_otrasli = html_kartochki
+
+
+def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811 — otrasl-na-kartochke-v1
+    return otrasl_na_kartochke(_html_kartochki_bez_otrasli(k, V, sosedi, kom, normy, cena, segodnya))
+
+
+_un_mesyac_bez_golovy = un_mesyac
+
+
+def un_mesyac(im, za, r1, pr1, dl):  # noqa: F811 — otrasl-na-kartochke-v1: прибыль больше выручки — сделку к выручке не меряем
+    if pr1 is not None and r1 and pr1 > r1:
+        return ("Прибыль %s %s больше её выручки (%s в месяц): сделку с %s по выручке не соизмерить — перед крупной оплатой "
+                "сверьте, с каким юрлицом %s договор, и запросите у %s свежую отчётность." % (im, za, dengi(r1 / 12), im, im, im))
+    return _un_mesyac_bez_golovy(im, za, r1, pr1, dl)

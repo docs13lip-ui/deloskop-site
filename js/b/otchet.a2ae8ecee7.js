@@ -4154,6 +4154,62 @@ if (k !== 'damia_fssp' || sm !== 0) return false;
 var dn = (((r && r.damia) || {}).fssp || {}).dannye || {};
 return dn.ostatok_tochno === true && (!dn.ostatok_ohvat || dn.ostatok_ohvat === 'vse');
 }
+function sost(b) {
+if (!b || typeof b !== 'object') return '';
+var s = b.status;
+if (s === 'polucheno' || s === 'ne_provereno' || !s) s = b.sostoyanie || (s === 'ne_provereno' ? 'not_checked' : '');
+return s;
+}
+function istochnikov(r, S) {
+var I = {}, sig = Array.isArray(r && r.signals) ? r.signals : [];
+function est(ids) { return sig.some(function (x) { return x && ids.indexOf(x.id) >= 0 && /^(ok|warn|bad)$/.test(x.status); }); }
+if (est(['status', 'address', 'age'])) I.reestr = 1;
+if (est(['tax_debt', 'tax', 'employees', 'staff'])) I.fns = 1;
+if (S && S.plyusy.some(function (x) { return x.k === 'otchetnost'; })) I.girbo = 1;
+var dm = (r && r.damia) || {};
+Object.keys(dm).forEach(function (k) {
+var b = dm[k], q = sost(b);
+if (b && typeof b === 'object' && b.nazvanie && (q === 'found' || q === 'not_found')) I['d_' + k] = 1;
+});
+return Object.keys(I).length;
+}
+function dataProverki(r, segodnya) {
+var t = Date.parse((r && r.checked_at) || ''), d = new Date((isFinite(t) ? t : (segodnya || new Date()).getTime()) + 3 * 3600 * 1000);
+var dd = d.getUTCDate(), mm = d.getUTCMonth() + 1;
+return (dd < 10 ? '0' : '') + dd + '.' + (mm < 10 ? '0' : '') + mm + '.' + d.getUTCFullYear();
+}
+var SOBYTIYA = 'банкротство, ликвидация или' + NB + 'исключение из' + NB + 'реестра, недостоверность, приостановка счетов, обеспечительные меры, запись в' + NB + 'РНП';
+function masshtab(r, segodnya) {
+if (ip(r)) return 'Масштаб не' + NB + 'посчитать: у' + NB + 'ИП нет бухгалтерской отчётности в' + NB + 'ГИР' + NB + 'БО';
+if (bank(r)) return 'Масштаб не' + NB + 'посчитать: суммы банка к' + NB + 'выручке не' + NB + 'соотносим';
+return 'Масштаб не' + NB + 'посчитать: выручка за' + NB + (godNa(r, segodnya) - 1) + NB + 'год в' + NB + 'открытых данных не' + NB + 'найдена';
+}
+function itog(r, S, M, V, segodnya) {
+var K = istochnikov(r, S);
+if (!K) return null;
+var na = 'на' + NB + dataProverki(r, segodnya);
+var po = 'по' + NB + K + NB + (K % 10 === 1 && K % 100 !== 11 ? 'проверенному источнику' : 'проверенным источникам');
+var sush = M.filter(function (x) { return x.sush; }).length;
+var bezMasshtaba = M.some(function (x) { return x.summa > 0 && x.d == null; });
+var prochie = M.filter(function (x) { return !x.sush && x.ves !== 0; }).length;
+var ne = S.ne.map(function (x) { return x.t; }).filter(function (t, i, a) { return a.indexOf(t) === i; });
+var porog = 'Существенно — ' + (V ? 'сумма от' + NB + '0,1' + NB + '% выручки за' + NB + V.god + NB + 'год (ГИР' + NB + 'БО) или событие без суммы: ' :
+'событие без суммы: ') + SOBYTIYA;
+var o = { vid: '', t: '', ne: ne, porog: '', masshtab: bezMasshtaba ? masshtab(r, segodnya) : '' };
+if (sush > 0) {
+o.vid = 'est';
+o.t = 'Есть ' + sush + NB + skl(sush, 'существенный минус', 'существенных минуса', 'существенных минусов') + ' ' + na;
+o.porog = porog;
+} else if (!prochie && !bezMasshtaba) {
+o.vid = 'net';
+o.t = 'Существенных минусов не' + NB + 'нашли' + NB + '— ' + po + ' ' + na;
+o.porog = porog;
+} else {
+o.vid = 'schet';
+o.t = 'Плюсов ' + S.plyusy.length + ', минусов ' + S.minusy.length + NB + '— ' + po + ' ' + na;
+}
+return o;
+}
 function procent(d) {
 var p = d * 100;
 if (p < 1) return (Math.round(p * 10) / 10).toFixed(1).replace('.', ',');
@@ -4174,16 +4230,18 @@ var V = vyruchka(r, segodnya);
 var M = S.minusy.map(function (x, i) {
 var sm = summa(r, x.k), d = V && sm > 0 ? sm / V.summa : null;
 var ves = TYAZHELYE.indexOf(x.k) >= 0 ? 3 : nolTochno(r, x.k, sm) ? 1 : d == null ? 2 : d >= KRUPNO ? 3 : d >= MELKO ? 2 : 0;
-return { znak: 'minus', k: x.k, t: x.t, ist: x.ist, data: x.data, dolya: d != null ? dolyaTekst(d, V.god) : '', ves: ves, i: i };
+var sush = TYAZHELYE.indexOf(x.k) >= 0 || (d != null && d >= MELKO);
+return { znak: 'minus', k: x.k, t: x.t, ist: x.ist, data: x.data, dolya: d != null ? dolyaTekst(d, V.god) : '', ves: ves, i: i,
+sush: sush, summa: sm, d: d };
 }).sort(function (a, b) { return b.ves - a.ves || a.i - b.i; });
+var it = itog(r, S, M, V, segodnya);
 var glavnoe = M.filter(function (x) { return x.ves > 0; }).slice(0, MAKS);
 var melkoe = M.filter(function (x) { return x.ves === 0; });
 S.plyusy.slice(0, Math.max(0, MAKS - glavnoe.length)).forEach(function (x) {
 glavnoe.push({ znak: 'plus', k: x.k, t: x.t, ist: x.ist, data: x.data, dolya: '' });
 });
-glavnoe.forEach(function (x) { delete x.ves; delete x.i; });
-melkoe.forEach(function (x) { delete x.ves; delete x.i; });
-return { glavnoe: glavnoe, melkoe: melkoe, plyusov: S.plyusy.length, minusov: S.minusy.length };
+[glavnoe, melkoe].forEach(function (L) { L.forEach(function (x) { delete x.ves; delete x.i; delete x.sush; delete x.summa; delete x.d; }); });
+return { glavnoe: glavnoe, melkoe: melkoe, plyusov: S.plyusy.length, minusov: S.minusy.length, itog: it };
 }
 function skl(n, a, b, c) { var k = Math.abs(n) % 100, d = k % 10; return k > 10 && k < 20 ? c : d === 1 ? a : d >= 2 && d <= 4 ? b : c; }
 function tire(t) { return esc(t).replace(/ — /g, NB + '— '); }
@@ -4201,9 +4259,17 @@ ml = '<p class="gl1__m"><span>Мелкое к' + NB + 'выручке:</span> ' 
 (m.length > 1 ? ' и' + NB + 'ещё ' + (m.length - 1) : '') + '</p>';
 }
 var vse = 'Все плюсы и' + NB + 'минусы: ' + G.plyusov + NB + 'и' + NB + G.minusov + NB + '↓';
-return '<section class="gl1" aria-labelledby="gl1-h" data-glavnoe="' + G.glavnoe.length + '" data-melkoe="' + m.length + '">' +
-'<h2 id="gl1-h" class="gl1__h">Главное</h2>' +
-'<ul class="gl1__l">' + G.glavnoe.map(stroka).join('') + '</ul>' + ml +
+var I = G.itog, it = '', por = '';
+if (I && I.t) {
+it = '<p class="gl1__i gl1__i--' + esc(I.vid) + '">' + tire(I.t) + '</p>' +
+(I.ne.length ? '<p class="gl1__ne"><span>Не' + NB + 'проверяли:</span> ' + I.ne.map(esc).join(', ') + '</p>' : '') +
+(I.masshtab ? '<p class="gl1__ne">' + esc(I.masshtab) + '</p>' : '');
+if (I.porog) por = '<p class="gl1__por">' + tire(I.porog) + '</p>';
+}
+return '<section class="gl1" aria-labelledby="gl1-h" data-glavnoe="' + G.glavnoe.length + '" data-melkoe="' + m.length + '"' +
+(I && I.vid ? ' data-itog="' + esc(I.vid) + '"' : '') + '>' +
+'<h2 id="gl1-h" class="gl1__h">Главное</h2>' + it +
+'<ul class="gl1__l">' + G.glavnoe.map(stroka).join('') + '</ul>' + ml + por +
 '<a class="gl1__vse" href="#pm-h" aria-label="' + esc('Все плюсы и минусы: ' + G.plyusov + ' ' + skl(G.plyusov, 'плюс', 'плюса', 'плюсов') +
 ' и ' + G.minusov + ' ' + skl(G.minusov, 'минус', 'минуса', 'минусов')) + '">' + vse + '</a>' +
 '</section>';
@@ -4211,6 +4277,10 @@ return '<section class="gl1" aria-labelledby="gl1-h" data-glavnoe="' + G.glavnoe
 var CSS =
 '.gl1{margin:16px 0 0;padding:14px 0 0;border-top:1px solid var(--line,#E3DDCD);max-width:560px}' +
 '.gl1__h{margin:0 0 6px;font-size:13px;line-height:1.4;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#5B6783)}' +
+'.gl1__i{margin:0 0 2px;font-size:17px;line-height:1.35;font-weight:600;color:var(--ink,#0B1B3A);text-wrap:pretty}' +
+'.gl1__ne{margin:0 0 6px;font-size:13px;line-height:1.5;color:var(--muted,#5B6783)}' +
+'.gl1__ne span{font-weight:600;color:var(--ink-2,#3A4868)}' +
+'.gl1__por{margin:6px 0 0 22px;font-size:12px;line-height:1.45;color:var(--muted,#5B6783)}' +
 '.gl1__l{list-style:none;margin:0;padding:0}' +
 '.gl1__s{position:relative;padding:5px 0 5px 22px}' +
 '.gl1__s::before{position:absolute;left:2px;top:5px;font-weight:600;line-height:1.4;font-size:15px}' +
@@ -4272,7 +4342,7 @@ try { if (self.dlkGoal) self.dlkGoal('glavnoe_vse'); } catch (x) {}
 return nov;
 }
 return { sobrat: sobrat, html: html, mount: mount, stil: stil, podpisatDoli: podpisatDoli, dolyaTekst: dolyaTekst, vyruchka: vyruchka,
-summa: summa, CSS: CSS, MAKS: MAKS, MELKO: MELKO, KRUPNO: KRUPNO };
+summa: summa, itog: itog, istochnikov: istochnikov, CSS: CSS, MAKS: MAKS, MELKO: MELKO, KRUPNO: KRUPNO };
 });
 ;
 /* --- /js/rekvizity-kompanii.js --- */

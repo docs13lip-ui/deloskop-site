@@ -7129,10 +7129,48 @@ def _ry_li(y, vid):
                                              ('<span class="caption">%s</span>' % pod) if pod else "")
 
 
-def ryadom_html(k, spiski, kg=None):
+# mesto-na-rynke-v1 (решение владельца 18.11, разд. 3 п. 11; замер справочников — «место в регионе и отрасли»): в колонке
+# «В отрасли» и «В регионе» — место компании по обороту среди карточек той же группы с оборотом за тот же год. Честно:
+# «в базе Делоскопа» и число компаний; меньше MESTO_OT таких карточек — места не пишем (сравнивать не с чем). Оборот —
+# как напечатан на карточках (выручка ГИР БО или доходы ФНС). Место меняется с каждой волной карточек — поэтому оно
+# в блоке «Рядом в Делоскопе», вне отпечатка текста: dateModified от новых карточек не сдвигается.
+MESTO_OT = 10
+# п. 20: у компании с чистой прибылью больше выручки (строка «…к такой компании не применимы», otrasl-na-kartochke-v1)
+# место по обороту ничего не говорит о масштабе — не пишем (не повторить ошибку «93 211 %» справочника).
+MESTO_NE_PRIMENIMO = "co-otrs--golova"
+
+
+def mesto_v_gruppe(k, vse, vid):
+    """→ (место, из скольких, год) по обороту среди карточек группы vid ("otrasl" | "region") с оборотом за тот же год; нет — None."""
+    d, g = _dohod_kart(k), _god_dohoda(k)
+    if not d or not g:
+        return None
+    gr = hab_otrasl(k) if vid == "otrasl" else (k.get("region") or "")
+    if not gr or gr == HAB_NET_OTRASLI:
+        return None
+    pul = [y for y in vse if _dohod_kart(y) > 0 and _god_dohoda(y) == g
+           and (hab_otrasl(y) if vid == "otrasl" else (y.get("region") or "")) == gr]
+    if k["inn"] not in {y["inn"] for y in pul}:
+        pul.append(k)
+    if len(pul) < MESTO_OT:
+        return None
+    return 1 + sum(1 for y in pul if _dohod_kart(y) > d), len(pul), g
+
+
+def mesto_html(m, vid):
+    if not m:
+        return ""
+    n, iz, g = m
+    return ('<p class="co-ryadom__m caption">По обороту за%s%d год — %d-е место из%s%d %s %s в%sбазе Делоскопа</p>' % (
+        NB, g, n, NB, iz, plural(iz, "компании", "компаний", "компаний"),
+        "этой отрасли" if vid == "otrasl" else "этого региона", NB))
+
+
+def ryadom_html(k, spiski, kg=None, mesta=None):
     if not spiski:
         return ""
     kg = kg or {}
+    mesta = mesta or {}
     kol = []
     for vid, imya, s in spiski:
         if vid == "vyruchka":
@@ -7142,8 +7180,8 @@ def ryadom_html(k, spiski, kg=None):
             hab = kg.get((vid, imya))
             if hab:
                 zag = '<a href="%s">%s</a>' % (hab, zag)
-        kol.append('<div class="co-ryadom__k"><h3 class="co-ryadom__h">%s</h3><ul class="co-sos co-sos--ryadom">%s</ul></div>' % (
-            zag, "".join(_ry_li(y, vid) for y in s)))
+        kol.append('<div class="co-ryadom__k"><h3 class="co-ryadom__h">%s</h3>%s<ul class="co-sos co-sos--ryadom">%s</ul></div>' % (
+            zag, mesto_html(mesta.get(vid), vid), "".join(_ry_li(y, vid) for y in s)))
     return ('<section class="co-sec co-ryadom" aria-labelledby="ryadom"><h2 id="ryadom">Рядом в&nbsp;Делоскопе</h2>'
             '<div class="co-ryadom__g">%s</div></section><!--/ryadom-->\n' % "".join(kol))
 

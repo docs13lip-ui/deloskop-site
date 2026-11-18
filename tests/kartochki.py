@@ -737,7 +737,9 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         t_ = _SOS.sub(lambda m: m.group(1) + sosedi_html(x, sos_, esh_) + m.group(3), teksty[x["inn"]], count=1)
         # perelinkovka-v1 (Н4): внизу — «В отрасли», «В регионе», «Близкие по выручке», без повторов с правой колонкой
         uzhe_ = {y["inn"] for y in sos_} | {y["inn"] for y in esh_}
-        t_ = vstavit_ryadom(t_, ryadom_html(x, ryadom_spiski(x, vse_d, uzhe_, zakryty_), kg))
+        mesta_ = {} if MESTO_NE_PRIMENIMO in teksty[x["inn"]] else {
+            v_: mesto_v_gruppe(x, vse_d, v_) for v_ in ("otrasl", "region")}  # mesto-na-rynke-v1
+        t_ = vstavit_ryadom(t_, ryadom_html(x, ryadom_spiski(x, vse_d, uzhe_, zakryty_), kg, mesta_))
         izm += zapisat_k(put, t_)
     # kartochki-stati-v1: обратная перелинковка — в одном разделе карточки строка «По теме раздела: «статья»» (подбор —
     # tests/sobrat_stati_kartochki.py, по тем же карточкам, что статьи → карточки); последним шагом, до sitemap: дата

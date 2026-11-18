@@ -92,7 +92,10 @@ test('(г) по умолчанию «Я плачу им», и вывод поб�
   Object.keys(F).forEach((k) => {
     const bez = U.decide(F[k]), summa = U.decide(F[k], { amount: 500000 });
     assert.strictEqual(sha(bez), SNIMOK[k].bez, k + ': без суммы — вывод «Я плачу им» изменился');
-    assert.strictEqual(sha(summa), SNIMOK[k].summa, k + ': с суммой — вывод «Я плачу им» изменился');
+    // nalichnye-usloviya-v1: при сумме больше 100 000 ₽ добавлено одно поле — строка о 5348-У; остальное побайтно прежнее
+    assert.ok(/5348/.test(summa.nalichnye), k + ': при 500 000 — строка о наличных');
+    const bezNal = Object.assign({}, summa); delete bezNal.nalichnye;
+    assert.strictEqual(sha(bezNal), SNIMOK[k].summa, k + ': с суммой — вывод «Я плачу им» изменился');
     assert.strictEqual(JSON.stringify(U.decide(F[k], { napravlenie: 'platim', amount: 500000 })), JSON.stringify(summa), k + ': platim = по умолчанию');
     assert.ok(!('napravlenie' in bez), k + ': в прежнем выводе нового поля нет');
   });

@@ -55,7 +55,7 @@ test('ликвидированный или «стоп» банк — прежн
 
 test('отрисовка: пустой совет по сумме не рисует пустую строку', () => {
   const u = chitat('js/usloviya.js');
-  assert.match(u, /v\.amount && \(v\.prepay \|\| stake\)/);
+  assert.match(u, /v\.amount && \(v\.prepay \|\| stake( \|\| v\.nalichnye)?\)/);   // nalichnye-usloviya-v1: + строка о наличных
 });
 
 test('Паспорт контрагента: «Предел аванса — не считаем»', () => {

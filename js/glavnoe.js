@@ -119,7 +119,9 @@
     var ne = S.ne.map(function (x) { return x.t; }).filter(function (t, i, a) { return a.indexOf(t) === i; });
     var porog = 'Существенно — ' + (V ? 'сумма от' + NB + '0,1' + NB + '% выручки за' + NB + V.god + NB + 'год (ГИР' + NB + 'БО) или событие без суммы: ' :
       'событие без суммы: ') + SOBYTIYA;
-    var o = { vid: '', t: '', ne: ne, porog: '', masshtab: bezMasshtaba ? masshtab(r, segodnya) : '' };
+    // nalog-ostatok-otcheta-v1: налог меньше 500 ₽ — не минус, а «Остаток: …» сразу под «Не проверяли» (как на карточках)
+    var ost = (S.ostatok || []).map(function (x) { return x.t; });
+    var o = { vid: '', t: '', ne: ne, ostatok: ost, porog: '', masshtab: bezMasshtaba ? masshtab(r, segodnya) : '' };
     if (sush > 0) {
       o.vid = 'est';
       o.t = 'Есть ' + sush + NB + skl(sush, 'существенный минус', 'существенных минуса', 'существенных минусов') + ' ' + na;
@@ -173,7 +175,7 @@
     });
     // «тяжёлых» минусов больше трёх — остальные не прячем: счётчик внизу ведёт ко всем
     [glavnoe, melkoe].forEach(function (L) { L.forEach(function (x) { delete x.ves; delete x.i; delete x.sush; delete x.summa; delete x.d; }); });
-    return { glavnoe: glavnoe, melkoe: melkoe, plyusov: S.plyusy.length, minusov: S.minusy.length, itog: it };
+    return { glavnoe: glavnoe, melkoe: melkoe, god: V ? V.god : null, plyusov: S.plyusy.length, minusov: S.minusy.length, itog: it };
   }
 
   function skl(n, a, b, c) { var k = Math.abs(n) % 100, d = k % 10; return k > 10 && k < 20 ? c : d === 1 ? a : d >= 2 && d <= 4 ? b : c; }
@@ -189,7 +191,9 @@
     if (!G || (!G.glavnoe.length && !G.melkoe.length)) return '';
     var m = G.melkoe, ml = '';
     if (m.length) {
-      ml = '<p class="gl1__m"><span>Мелкое к' + NB + 'выручке:</span> ' + tire(m[0].t) + (m[0].dolya ? ' (' + esc(m[0].dolya) + ')' : '') +
+      // юрист 18.11 01:30, разд. 2 «мелочь вслух не пишем»: не «Мелкое», а «Небольшие суммы (меньше 0,1 % выручки за год)» —
+      // как на карточках (chto-za-kompaniya-v1); доля уже в подписи, у строки её не повторяем
+      ml = '<p class="gl1__m"><span>Небольшие суммы' + (G.god ? ' (меньше 0,1' + NB + '% выручки за' + NB + G.god + NB + 'год)' : '') + ':</span> ' + tire(m[0].t) +
         (m.length > 1 ? ' и' + NB + 'ещё ' + (m.length - 1) : '') + '</p>';
     }
     var vse = 'Все плюсы и' + NB + 'минусы: ' + G.plyusov + NB + 'и' + NB + G.minusov + NB + '↓';
@@ -197,6 +201,7 @@
     if (I && I.t) {
       it = '<p class="gl1__i gl1__i--' + esc(I.vid) + '">' + tire(I.t) + '</p>' +
         (I.ne.length ? '<p class="gl1__ne"><span>Не' + NB + 'проверяли:</span> ' + I.ne.map(esc).join(', ') + '</p>' : '') +
+        (I.ostatok || []).map(function (t) { return '<p class="gl1__ne gl1__ost">' + tire(t) + '</p>'; }).join('') +
         (I.masshtab ? '<p class="gl1__ne">' + esc(I.masshtab) + '</p>' : '');
       if (I.porog) por = '<p class="gl1__por">' + tire(I.porog) + '</p>';
     }

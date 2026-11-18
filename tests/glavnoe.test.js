@@ -31,14 +31,17 @@ function otvet(o) {
   };
 }
 
-test('мелкий иск (< 0,1 % выручки) — не в главном, а строкой «Мелкое к выручке» с долей; свободные места — плюсы', () => {
+test('мелкий иск (< 0,1 % выручки) — не в главном, а строкой «Небольшие суммы (меньше 0,1 % выручки за год)»; свободные места — плюсы', () => {
   const g = G.sobrat(otvet(), SEG, PM);
   assert.strictEqual(g.glavnoe.length, 3);
   assert.ok(g.glavnoe.every((x) => x.znak === 'plus'), 'одни плюсы');
   assert.strictEqual(g.melkoe.length, 1);
   assert.strictEqual(bez(g.melkoe[0].dolya), 'меньше 0,1 % выручки за 2024 год');
   const h = bez(G.html(g));
-  assert.match(h, /Мелкое к выручке:<\/span> 3 незавершённых дела/);
+  // nalog-ostatok-otcheta-v1 (юрист 18.11, разд. 2 «мелочь вслух не пишем»): подпись — как на карточках, доля в подписи, не у строки
+  assert.match(h, /Небольшие суммы \(меньше 0,1 % выручки за 2024 год\):<\/span> 3 незавершённых дела/);
+  assert.ok(!/Мелкое/.test(h), 'слова «Мелкое» больше нет');
+  assert.ok(!/\(меньше 0,1 % выручки за 2024 год\)<\/p>/.test(h), 'доля не повторяется у строки');
   assert.match(h, /Все плюсы и минусы: \d+ и 1 ↓/);
 });
 
@@ -173,4 +176,53 @@ test('itog-glavnoe-v1: один источник — «по 1 проверенн
   const g = G.sobrat(r, SEG, PM);
   assert.match(bez(g.itog.t), /по 1 проверенному источнику на 18\.11\.2026$/);
   assert.strictEqual(G.istochnikov({ signals: [], damia: {} }, { plyusy: [] }), 0);
+});
+
+// nalog-ostatok-otcheta-v1 [Ночные запуски] 18.11 08:05: юрист · налоги 18.11 01:30, разд. 5 — налог меньше 500 ₽ не минус, а остаток
+// строкой («Остаток: задолженность по налогам по набору ФНС на {дата} — X ₽»), без нормы. Форма — живой /api/check 18.11 08:10
+// (ООО «Экопэт»: tax_debt warn «1 ₽ (недоимка, пени и штрафы)», as_of «01.10.2026», dengi nedoimka 1). Компания ниже вымышленная.
+function sNalogom(summa) {
+  const r = otvet({ damia: {
+    sudy: { nazvanie: 'Арбитражные суды', istochnik: 'Картотека арбитражных дел (через Checko)', sostoyanie: 'not_found', data_svedeniy: '2026-11-13T09:15+03:00', dannye: {} },
+    fssp: { nazvanie: 'Приставы', istochnik: 'ФССП (через Checko)', sostoyanie: 'not_found', data_svedeniy: '2026-11-13T09:15+03:00', dannye: { otkryto: 0, ostatok: 0 } } } });
+  r.signals[2] = { id: 'tax_debt', title: 'Задолженность по налогам', status: 'warn', detail: summa.toLocaleString('ru-RU') + ' ₽ (недоимка, пени и штрафы)', source: 'ФНС, открытые данные', as_of: '01.10.2026' };
+  r.dengi.sostavlyayushchie = [{ vid: 'nedoimka', summa: summa }];
+  r.dossier.concerns = ['Налоговый долг ' + summa + ' ₽'];
+  return r;
+}
+test('налог 1 ₽ — не минус: «Остаток: …» под «Не проверяли» в «Главном» и под «Не проверено» в «Плюсах и минусах»; итог «не нашли»', () => {
+  const r = sNalogom(1);
+  const S = PM.sobrat(r, SEG);
+  assert.ok(!S.minusy.some((x) => x.k === 'tax_debt'), 'не в минусах');
+  assert.strictEqual(S.ostatok.length, 1);
+  assert.strictEqual(bez(S.ostatok[0].t), 'Остаток: задолженность по налогам по набору ФНС на 01.10.2026 — 1 ₽');
+  const g = G.sobrat(r, SEG, PM);
+  assert.strictEqual(g.itog.vid, 'net');
+  const h = bez(G.html(g));
+  assert.match(h, /Существенных минусов не нашли/);
+  assert.match(h, /<p class="gl1__ne gl1__ost">Остаток: задолженность по налогам по набору ФНС на 01\.10\.2026 — 1 ₽<\/p>/);
+  const pm = bez(PM.html(S));
+  assert.match(pm, /<p class="pm__ost" data-pm-ost="tax_debt">Остаток: задолженность по налогам по набору ФНС на 01\.10\.2026 — 1 ₽<\/p>/);
+  assert.ok(!/Долг по налогам/.test(pm + h), 'слов «Долг по налогам» нет');
+  assert.ok(!/ст\.\s*69|ст\.\s*70|норм/i.test(pm + h), 'норму до сверки не пишем');
+});
+test('налог 499 ₽ — остаток; 500 ₽ и больше — минус «Долг по налогам» с долей выручки, как было', () => {
+  assert.strictEqual(PM.sobrat(sNalogom(499), SEG).ostatok.length, 1);
+  [500, 412062].forEach((n) => {
+    const S = PM.sobrat(sNalogom(n), SEG);
+    assert.strictEqual(S.ostatok.length, 0, String(n));
+    assert.ok(S.minusy.some((x) => x.k === 'tax_debt' && /^Долг по налогам/.test(bez(x.t))), String(n));
+  });
+  const g = G.sobrat(sNalogom(412062), SEG, PM);
+  const t = g.glavnoe.filter((x) => x.k === 'tax_debt')[0];
+  assert.strictEqual(bez(t.dolya), '0,1 % выручки за 2024 год');
+});
+test('сумма без «Денег на кону» — из detail сигнала; нет суммы — минус, как было (неизвестное не прячем)', () => {
+  const r = sNalogom(3);
+  r.dengi = null;
+  assert.strictEqual(PM.sobrat(r, SEG).ostatok.length, 1);
+  r.signals[2].detail = 'Есть задолженность';
+  const S = PM.sobrat(r, SEG);
+  assert.strictEqual(S.ostatok.length, 0);
+  assert.ok(S.minusy.some((x) => x.k === 'tax_debt'));
 });

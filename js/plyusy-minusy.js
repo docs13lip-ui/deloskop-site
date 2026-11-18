@@ -115,13 +115,24 @@
     return posl === g + 1 ? 'за' + NB + posl + NB + 'год' : 'за' + NB + (g + 1) + '\u2060–\u2060' + posl + NB + 'годы';
   }
 
+  // налог меньше этой суммы — «остаток», не минус (юрист · налоги 18.11, разд. 5; тот же порог, что на карточках)
+  var OSTATOK_DO = 500;
+  // сумма недоимки: из «Денег на кону» (dengi.sostavlyayushchie, vid nedoimka), иначе из начала detail сигнала («1 ₽ (недоимка…)»)
+  function nedoimka(r, sm) {
+    var D = r && r.dengi, L = D && Array.isArray(D.sostavlyayushchie) ? D.sostavlyayushchie : [];
+    for (var i = 0; i < L.length; i++) if (L[i] && L[i].vid === 'nedoimka' && num(L[i].summa) !== null) return num(L[i].summa);
+    if (!sm) return null;
+    var n = Number(sm[0].replace(/[^\d,]/g, '').replace(',', '.'));
+    return isFinite(n) ? n : null;
+  }
+
   // Темы, которые колонки уже называют сами: такие замечания сервера (dossier.concerns) второй раз не пишем
   var UZHE = /налог|штат|сотрудн|недостовер|суд|дел[аео]?\b|пристав|ФССП|исполнит|банкрот|приостанов|РНП|недобросовест|ЗСК|отч[её]тност|ликвид|статус/i;
 
   // r → { plyusy: [x], minusy: [x], ne: [{k, t}] }; x = { k, t, ist, data, nazv }
   //   k — ключ строки (= data-fakt «Существенных фактов»), t — текст строки, nazv — название раздела «Все данные из реестров»
   function sobrat(r, segodnya) {
-    var P = [], M = [], N = [];
+    var P = [], M = [], N = [], O = [];
     if (!r || !r.company) return { plyusy: P, minusy: M, ne: N };
     var c = r.company, fl = ip(r), dm = r.damia || {}, reestr = fl ? 'ЕГРИП' : 'ЕГРЮЛ';
     var na = data(r.checked_at) || segodnya || new Date();
@@ -157,8 +168,12 @@
     // «нет долгов» — шире данных: набор ФНС — недоимка на свою дату, долг мог появиться позже (правовая сверка 16.11)
     if (s && s.status === 'ok') plus('tax_debt', NEDOIMKI_NET + svedeniyaNa(s.as_of), s.source, s.as_of);
     else if (s && (s.status === 'warn' || s.status === 'bad')) {
-      var sm = /^[\d\s ,]+₽/.exec(String(s.detail || ''));
-      minus('tax_debt', 'Долг по налогам' + (sm ? ' ' + sm[0].trim().replace(/\s/g, NB) : ''), s.source, s.as_of);
+      var sm = /^[\d\s ,]+₽/.exec(String(s.detail || '')), nd = nedoimka(r, sm);
+      // nalog-ostatok-otcheta-v1 (юрист · налоги 18.11 01:30, разд. 5; на карточках — nalog-ostatok-v1): меньше 500 ₽ — не минус,
+      // а остаток строкой под «Не проверено»; нормы (ст. 69–70 НК) не пишем до сверки; от 500 ₽ — минус с долей выручки, как было
+      if (nd !== null && nd > 0 && nd < OSTATOK_DO) O.push({ k: 'tax_debt', t: 'Остаток: задолженность по' + NB + 'налогам по' + NB + 'набору ФНС' +
+        (dmy(s.as_of) ? ' на' + NB + dmy(s.as_of) : '') + ' — ' + chislo(nd) + NB + '₽', ist: s.source, data: dmy(s.as_of) });
+      else minus('tax_debt', 'Долг по налогам' + (sm ? ' ' + sm[0].trim().replace(/\s/g, NB) : ''), s.source, s.as_of);
     }
     s = signal(r, 'employees');
     if (s) {
@@ -267,7 +282,7 @@
     P = P.map(function (x, i) { x.i = i; return x; }).sort(function (a, b) { return poryadok(PORYADOK_P)(a, b) || a.i - b.i; });
     M = M.map(function (x, i) { x.i = i; return x; }).sort(function (a, b) { return poryadok(PORYADOK_M)(a, b) || a.i - b.i; });
     P.forEach(function (x) { delete x.i; }); M.forEach(function (x) { delete x.i; });
-    return { plyusy: P, minusy: M, ne: N };
+    return { plyusy: P, minusy: M, ne: N, ostatok: O };
   }
   var PORYADOK_P = ['status', 'tax_debt', 'damia_sudy', 'damia_fssp', 'damia_bankrotstvo', 'damia_priostanovki', 'address', 'otchetnost', 'age', 'employees', 'damia_kontrakty', 'rukovoditel', 'damia_rnp', 'podderzhka'];
   var PORYADOK_M = ['status', 'damia_bankrotstvo', 'damia_priostanovki', 'damia_rnp', 'damia_mery', 'address', 'damia_sudy', 'damia_fssp', 'tax_debt', 'otchetnost', 'zsk', 'employees', 'age'];
@@ -297,6 +312,7 @@
       kolonka('Минусы', 'чего нет или что настораживает', S.minusy, 'minus', 'По проверенным источникам замечаний нет') +
       '</div>' +
       (ne.length ? '<p class="pm__ne"><b>Не проверено:</b> ' + ne.map(function (x) { return esc(x.t); }).join(', ') + ' — не' + NB + 'проверяли ≠ не' + NB + 'нашли</p>' : '') +
+      (S.ostatok || []).map(function (x) { return '<p class="pm__ost" data-pm-ost="' + esc(x.k) + '">' + esc(x.t) + '</p>'; }).join('') +
       '</section>';
   }
 
@@ -321,6 +337,7 @@
     '.pm__e summary{cursor:pointer;padding:8px 0 0 22px;font-size:13px;color:var(--muted,#5B6783)}' +
     '.pm__ne{margin:14px 0 0;padding-top:12px;border-top:1px solid var(--line,#E3DDCD);font-size:13px;line-height:1.5;color:var(--muted,#5B6783)}' +
     '.pm__ne b{font-weight:600;color:var(--ink-2,#3A4868)}' +
+    '.pm__ost{margin:6px 0 0;font-size:13px;line-height:1.5;color:var(--muted,#5B6783)}' +
     '.pm-vspyshka{outline:2px solid var(--mat-fokus,#A07A28);outline-offset:4px;border-radius:8px;transition:outline-color 1.2s}' +
     '[data-theme=dark] .pm-vspyshka{outline-color:var(--mat-fokus-t,#D9B45A)}' +
     '@media (max-width:640px){.pm{padding:16px}.pm__kk{grid-template-columns:1fr}.pm__h{font-size:17px}}' +

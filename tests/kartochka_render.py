@@ -6991,3 +6991,74 @@ def chto_za_html(t):  # noqa: F811 — minusy-gir-bo-v1 ([Право] 18.11 12:2
         i = s.index(" Так бывает у")
         return s[:i] + "</p><!--/co-chto-->"
     return s
+
+
+# ---------------------------------------------------------------- kartochka-dejstviya-v1 ([Ночные-2] 18.11)
+# (1) ✎ [Ночные] 18.11 (otchet-p7-v1, п. 7 плана 18.11 «на карточке»): у отчёта по ИНН есть «Следить» и «Сравнить»,
+#     у карточки /company/ — только «Открыть отчёт» и «Собрать Паспорт». Под «Открыть отчёт» — две тихие кнопки:
+#     «Следить за компанией» (/cabinet.html?inn=ИНН#watch — та же форма, что в отчёте, js/sledit.js) и «Сравнить
+#     с другой» (/sravnit/?a=ИНН — js/sravnenie.js). Обе rel="nofollow": кабинет и /sravnit/?… закрыты для роботов.
+#     Цели Метрики — data-cel (kartochka_sled, kartochka_sravnit), слушает js/rekvizity-kartochki.js.
+# (2) ✎ [Ночные] 18.11 (kroshki-v1, Н2): видимый путь карточки «Делоскоп › Компании › Регион › Отрасль», а в разметке
+#     BreadcrumbList — «Делоскоп › Компании › название». Теперь разметка = ссылки видимого пути: регион и отрасль
+#     входят, когда в крошках они ссылкой на хаб (/company/region|otrasl/…/), текстом — нет. Так сторож kroshki-v1
+#     (tests/test_kroshki.py: ссылки на экране = родители в разметке) можно сделать строгим и для карточек.
+_KD_SIDE = re.compile(r'(<aside class="co-side card"><h2 class="co-h3">Полный отчёт</h2>.*?<a class="btn btn--secondary co-w100" '
+                      r'href="/\?inn=(\d{10})">Открыть отчёт</a>)(?:<p class="co-dejstv">.*?</p>)?(</aside>)', re.S)
+
+
+def dejstviya_html(inn):
+    return ('<p class="co-dejstv"><a class="btn btn--ghost co-w100" href="/cabinet.html?inn=%s#watch" rel="nofollow" '
+            'data-cel="kartochka_sled">Следить за%sкомпанией</a><a class="btn btn--ghost co-w100" href="/sravnit/?a=%s" '
+            'rel="nofollow" data-cel="kartochka_sravnit">Сравнить с%sдругой</a></p>' % (inn, NB, inn, NB))
+
+
+def dejstviya_kartochki(t):
+    """«Следить» и «Сравнить» под «Открыть отчёт»; повторный вызов ничего не меняет."""
+    if not t:
+        return t
+    return _KD_SIDE.sub(lambda m: m.group(1) + dejstviya_html(m.group(2)) + m.group(3), t, count=1)
+
+
+_KD_KROSH = re.compile(r'<nav class="co-krosh caption" aria-label="Навигация"[^>]*>(.*?)</nav>', re.S)
+_KD_HAB = re.compile(r'<a href="(/%s/(?:region|otrasl)/[a-z0-9-]+/)">([^<]+)</a>' % PAPKA)
+_KD_LD = re.compile(r'(<script type="application/ld\+json">)(\{"@context": "https://schema.org", "@graph": .*?)(</script>)', re.S)
+
+
+def kroshki_ld_otrasl(t):
+    """BreadcrumbList карточки = «Делоскоп › Компании › [Регион] › [Отрасль] › название» — звенья, что в крошках ссылкой
+    на хаб; хаб пропал — уровень снят."""
+    if not t:
+        return t
+    mk, ml = _KD_KROSH.search(t), _KD_LD.search(t)
+    if not mk or not ml:
+        return t
+    try:
+        ld = json.loads(ml.group(2).replace("<\\/", "</"))
+    except ValueError:
+        return t
+    bc = next((x for x in ld.get("@graph") or [] if isinstance(x, dict) and x.get("@type") == "BreadcrumbList"), None)
+    el = (bc or {}).get("itemListElement") or []
+    if len(el) < 3:
+        return t
+    el = sorted(el, key=lambda x: x.get("position", 0))
+    baza, kart = el[:2], el[-1]
+    if not str(kart.get("item", "")).startswith(SAJT + "/%s/" % PAPKA) or re.search(r"/(?:otrasl|region)/", str(kart.get("item", ""))):
+        return t
+    haby = [{"@type": "ListItem", "item": SAJT + a, "name": html.unescape(n).replace(NB, " ")} for a, n in _KD_HAB.findall(mk.group(1))]
+    nov = baza + haby + [kart]
+    nov = [dict(x, position=i + 1) for i, x in enumerate(nov)]
+    if nov == el:
+        return t
+    bc["itemListElement"] = nov
+    s = json.dumps(ld, ensure_ascii=False, sort_keys=True).replace("</", "<\\/")
+    return t[:ml.start(2)] + s + t[ml.end(2):]
+
+
+_kd_html_bez = html_kartochki
+
+
+def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811 — kartochka-dejstviya-v1
+    """+ «Следить» и «Сравнить» под «Открыть отчёт» — и в ответе API (API = файл); отрасль в BreadcrumbList ставит сборка
+    после ssylki_kroshek (ссылка на хаб известна только ей)."""
+    return dejstviya_kartochki(_kd_html_bez(k, V, sosedi, kom, normy, cena, segodnya))

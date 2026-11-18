@@ -838,6 +838,25 @@
     return nach + '. Перед крупной оплатой посмотрите их сами';
   }
 
+  // vyvod-glavnoe-v1 (сверка 19.11 00:20 на живых /api/check: 8602060185 — «Работать можно. Серьёзных признаков риска не найдено»
+  // под выводом, а выше, в «Главном» (js/glavnoe.js), — «Есть 1 существенный минус» — иски 169,2 млн ₽, 0,1 % выручки): на одном
+  // экране два противоположных ответа. Причин в выводе нет, пояснение говорит «не найдено», а «Главное» насчитало существенные
+  // минусы (слова юриста 18.11 п. 2) — вместо «не найдено» пишем итог «Главного» и сам минус, теми же словами. Новых утверждений нет.
+  var NE_NAJDENO = /(не\s+найден|не\s+обнаружен|признаков\s+(риска\s+)?нет|сигналов\s+нет)/i;
+  function poGlavnomu(it, poyasnenie) {
+    var t = String(poyasnenie == null ? '' : poyasnenie);
+    if (!it || it.vid !== 'est' || !NE_NAJDENO.test(t)) return t;
+    var S = Array.isArray(it.sushchestvennye) ? it.sushchestvennye : [];
+    if (!S.length || !it.t) return t;
+    if (S.length > 1) return it.t + ' — первыми в\u00a0«Главном»';
+    return it.t + ': ' + S[0].t + (S[0].dolya ? ' (' + S[0].dolya + ')' : '');
+  }
+  function itogGlavnogo(win, r) {
+    var G = win && win.DlkGlavnoe;
+    if (!G || typeof G.sobrat !== 'function') return null;
+    try { var x = G.sobrat(r); return x && x.itog ? x.itog : null; } catch (_) { return null; }
+  }
+
   // ne-povtor-v1 [команда] 11.10: какие реестры уже названы в выводе («Не проверяли: …») — ключи damia (sudy, bankrotstvo, fssp).
   // Нужны «Существенным фактам», чтобы строка под ними не повторяла вывод. Причины в выводе есть — строки «Не проверяли» нет → [].
   function vVyvode(r) {
@@ -898,7 +917,8 @@
       // chestnyj-nol-v2 ([команда] 13.11 12:40 п. 1.1; 09:40 п. 2): под «Проверили не всё» — «Напомнить завтра» (.ics, js/perepoverit.js)
       var PP = win && win.Perepoverit, zavtra = neVse && !o.compact && PP && PP.srokZavtra ? PP.srokZavtra(r) : null;
       box.className = 'usl ' + v.tone + (v.nedostatochno || neVse ? ' ned' : ''); // chestnyj-nol-v1: «Проверили не всё» — серым, не зелёным   // doverie-v1: неизвестное — нейтральным цветом
-      var why = v.reasons.length ? v.reasons.join(', ') : chestnoPoyasnenie(r, bezPovtora(r && r.verdict, v.headline)); // точку ставит строка ниже — без «найдено..»
+      if (st.itogG === undefined || st.itogG === null) st.itogG = itogGlavnogo(win, r);   // vyvod-glavnoe-v1: «Главное» — один раз за проверку
+      var why = v.reasons.length ? v.reasons.join(', ') : poGlavnomu(st.itogG, chestnoPoyasnenie(r, bezPovtora(r && r.verdict, v.headline))); // точку ставит строка ниже — без «найдено..»
       var stake = '';
       if (v.stake) {
         stake = v.stake.utochnit === 'nds'
@@ -982,7 +1002,7 @@
   return {
     decide: decide, mount: mount, rynokStroka: rynokStroka, facts: facts, tone: tone, reorgPrekr: reorgPrekr, REORG_PREKRASHCHENIE: REORG_PREKRASHCHENIE, REORG_SDELAT: REORG_SDELAT, REORG_DOLG: REORG_DOLG, prepayCap: prepayCap, atStake: atStake,
     docs: docs, letter: letter, LETTER_NELZYA: LETTER_NELZYA, kartaKartochek: kartaKartochek, parseAmount: parseAmount, money: money, moneyKrupno: moneyKrupno, niceFloor: niceFloor, kindOf: kindOf, signalId: signalId, SIGNALY: SIGNALY.map(function (x) { return x[0]; }),
-    neProvereno: neProvereno, kakPoschitali: kakPoschitali, otgruzkaAdvice: otgruzkaAdvice, NAPR: NAPR, bezPovtora: bezPovtora, chestnoPoyasnenie: chestnoPoyasnenie, neProverenyKlyuchevye: neProverenyKlyuchevye, vVyvode: vVyvode, STATYA: STATYA, FORMULA: FORMULA,
+    neProvereno: neProvereno, kakPoschitali: kakPoschitali, otgruzkaAdvice: otgruzkaAdvice, NAPR: NAPR, bezPovtora: bezPovtora, chestnoPoyasnenie: chestnoPoyasnenie, poGlavnomu: poGlavnomu, neProverenyKlyuchevye: neProverenyKlyuchevye, vVyvode: vVyvode, STATYA: STATYA, FORMULA: FORMULA,
     predvaritelno: predvaritelno, neOtvetiliSudyFssp: neOtvetiliSudyFssp, NET_VYVODA: NET_VYVODA, METODIKA: { DELITEL: DELITEL, POTOLKI: POTOLKI, OSTOROZHNO: OSTOROZHNO, MINIMUM: MINIMUM, PRAVILO: PRAVILO },
     RATES: { VAT: VAT, PROFIT: PROFIT, USN_DR: USN_DR }
   };

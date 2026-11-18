@@ -174,6 +174,9 @@
         sush: sush, summa: sm, d: d };
     }).sort(function (a, b) { return b.ves - a.ves || a.i - b.i; });
     var it = itog(r, S, M, V, segodnya);
+    // vyvod-glavnoe-v1: существенные минусы по весу — их называет пояснение под выводом (js/usloviya.js), чтобы оно
+    // не говорило «серьёзных признаков не найдено» рядом с «Есть N существенных минусов»
+    if (it) it.sushchestvennye = M.filter(function (x) { return x.sush; }).map(function (x) { return { k: x.k, t: x.t, dolya: x.dolya }; });
     var glavnoe = M.filter(function (x) { return x.ves > 0; }).slice(0, MAKS);
     var melkoe = M.filter(function (x) { return x.ves === 0; });
     S.plyusy.slice(0, Math.max(0, MAKS - glavnoe.length)).forEach(function (x) {

@@ -3354,7 +3354,8 @@ b = blok('fssp');
 if (b) {
 var sf = sost(b), df = b.dannye || {}, ot = num(df.otkryto), os = num(df.ostatok);
 if (sf === 'found') minus('damia_fssp', 'Производства у приставов' + (ot > 0 ? ': ' + chislo(ot) : '') +
-(os > 0 ? ', остаток долга — ' + (df.ostatok_tochno === false ? 'не' + NB + 'меньше ' + rub(os, true) + poChasti(df, ot) : rub(os)) : ''), b.istochnik, b.data_svedeniy, b.nazvanie);
+(os > 0 ? ', остаток долга — ' + (df.ostatok_tochno === false ? 'не' + NB + 'меньше ' + rub(os, true) + poChasti(df, ot) : rub(os)) :
+os === 0 && ot > 0 && df.ostatok_tochno === true && (!df.ostatok_ohvat || df.ostatok_ohvat === 'vse') ? ', остаток долга — 0' + NB + '₽' : ''), b.istochnik, b.data_svedeniy, b.nazvanie);
 else if (sf === 'not_found') plus('damia_fssp', 'Производств у' + NB + 'приставов не' + NB + 'нашли' + naDatu(b.data_svedeniy), b.istochnik, b.data_svedeniy, b.nazvanie);
 }
 b = blok('bankrotstvo');
@@ -4148,6 +4149,11 @@ return s ? num(s.summa) : null;
 }
 return null;
 }
+function nolTochno(r, k, sm) {
+if (k !== 'damia_fssp' || sm !== 0) return false;
+var dn = (((r && r.damia) || {}).fssp || {}).dannye || {};
+return dn.ostatok_tochno === true && (!dn.ostatok_ohvat || dn.ostatok_ohvat === 'vse');
+}
 function procent(d) {
 var p = d * 100;
 if (p < 1) return (Math.round(p * 10) / 10).toFixed(1).replace('.', ',');
@@ -4167,7 +4173,7 @@ if (!S || (!S.plyusy.length && !S.minusy.length)) return null;
 var V = vyruchka(r, segodnya);
 var M = S.minusy.map(function (x, i) {
 var sm = summa(r, x.k), d = V && sm > 0 ? sm / V.summa : null;
-var ves = TYAZHELYE.indexOf(x.k) >= 0 ? 3 : d == null ? 2 : d >= KRUPNO ? 3 : d >= MELKO ? 2 : 0;
+var ves = TYAZHELYE.indexOf(x.k) >= 0 ? 3 : nolTochno(r, x.k, sm) ? 1 : d == null ? 2 : d >= KRUPNO ? 3 : d >= MELKO ? 2 : 0;
 return { znak: 'minus', k: x.k, t: x.t, ist: x.ist, data: x.data, dolya: d != null ? dolyaTekst(d, V.god) : '', ves: ves, i: i };
 }).sort(function (a, b) { return b.ves - a.ves || a.i - b.i; });
 var glavnoe = M.filter(function (x) { return x.ves > 0; }).slice(0, MAKS);

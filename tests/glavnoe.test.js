@@ -114,3 +114,63 @@ test('ноль не точный или по части производств �
     assert.strictEqual(g.glavnoe[0].k, 'damia_fssp');
   });
 });
+
+// itog-glavnoe-v1 [Ночные запуски] 18.11: итог одной строкой словами юриста 18.11 02:10 (п. 2) + «Не проверяли» + порог «существенно»
+const ZAPRET = /надёжн|надежн|чист[аяо]|можно платить|безопасн/i;
+
+test('itog-glavnoe-v1: только мелкое — «Существенных минусов не нашли — по K проверенным источникам на дату», порог с годом выручки', () => {
+  const g = G.sobrat(otvet(), SEG, PM);
+  assert.strictEqual(g.itog.vid, 'net');
+  assert.strictEqual(bez(g.itog.t), 'Существенных минусов не нашли — по 4 проверенным источникам на 18.11.2026');
+  assert.match(bez(g.itog.porog), /^Существенно — сумма от 0,1 % выручки за 2024 год \(ГИР БО\) или событие без суммы: банкротство/);
+  const h = bez(G.html(g));
+  assert.match(h, /data-itog="net"/);
+  assert.ok(h.indexOf('gl1__i') < h.indexOf('gl1__l'), 'итог — над фактами');
+  assert.doesNotMatch(h, ZAPRET);
+});
+
+test('itog-glavnoe-v1: иск от 0,1 % выручки и приостановка — «Есть 2 существенных минуса на дату»; один — «существенный минус»', () => {
+  const r = otvet();
+  r.damia.sudy.dannye.otvetchik_summa_nezaversheno = 4120620; // 1 %
+  let g = G.sobrat(r, SEG, PM);
+  assert.strictEqual(g.itog.vid, 'est');
+  assert.strictEqual(bez(g.itog.t), 'Есть 1 существенный минус на 18.11.2026');
+  r.damia.priostanovki = { nazvanie: 'Счета: решения ФНС о приостановлении', istochnik: 'ФНС', sostoyanie: 'found', data_svedeniy: '2026-11-17' };
+  g = G.sobrat(r, SEG, PM);
+  assert.strictEqual(bez(g.itog.t), 'Есть 2 существенных минуса на 18.11.2026');
+  assert.doesNotMatch(bez(G.html(g)), ZAPRET);
+});
+
+test('itog-glavnoe-v1: сумму не с чем сравнить (нет выручки) — не «не нашли», а счёт плюсов и минусов + «Масштаб не посчитать»', () => {
+  const g = G.sobrat(otvet({ dengi: null }), SEG, PM);
+  assert.strictEqual(g.itog.vid, 'schet');
+  assert.match(bez(g.itog.t), /^Плюсов \d+, минусов 1 — по 4 проверенным источникам на 18\.11\.2026$/);
+  assert.strictEqual(bez(g.itog.masshtab), 'Масштаб не посчитать: выручка за 2025 год в открытых данных не найдена');
+  assert.strictEqual(g.itog.porog, '');
+  assert.doesNotMatch(bez(G.html(g)), /Существенн/);
+});
+
+test('itog-glavnoe-v1: минус без суммы (нет сотрудников) — тоже не «не нашли»', () => {
+  const r = otvet();
+  r.signals.push({ id: 'employees', title: 'Сотрудники', status: 'warn', detail: '0', source: 'ФНС, открытые данные', as_of: '2025-12-31' });
+  const g = G.sobrat(r, SEG, PM);
+  assert.strictEqual(g.itog.vid, 'schet');
+});
+
+test('itog-glavnoe-v1: реестр не ответил — «Не проверяли: …» сразу под итогом и не в счёте источников', () => {
+  const r = otvet();
+  r.damia.mery = { nazvanie: 'ФНС: обеспечительные меры', istochnik: 'ФНС', sostoyanie: 'not_checked' };
+  r.damia.rnp = { nazvanie: 'РНП', istochnik: 'ЕИС', sostoyanie: 'not_checked' };
+  const g = G.sobrat(r, SEG, PM);
+  assert.strictEqual(bez(g.itog.t), 'Существенных минусов не нашли — по 4 проверенным источникам на 18.11.2026');
+  assert.deepStrictEqual(g.itog.ne.map(bez), ['обеспечительные меры ФНС', 'РНП']);
+  const h = bez(G.html(g));
+  assert.match(h, /<\/p><p class="gl1__ne"><span>Не проверяли:<\/span> обеспечительные меры ФНС, РНП<\/p><ul/);
+});
+
+test('itog-glavnoe-v1: один источник — «по 1 проверенному источнику»; ни одного — итога нет', () => {
+  const r = otvet({ signals: [{ id: 'status', title: 'Статус', status: 'ok', detail: 'Действующая', source: 'ЕГРЮЛ' }], damia: {} });
+  const g = G.sobrat(r, SEG, PM);
+  assert.match(bez(g.itog.t), /по 1 проверенному источнику на 18\.11\.2026$/);
+  assert.strictEqual(G.istochnikov({ signals: [], damia: {} }, { plyusy: [] }), 0);
+});

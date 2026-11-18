@@ -43,7 +43,10 @@ def proverit(tc, t, imya):
     tc.assertTrue(1 <= len(li) <= 3, imya)
     vidy = [x[0] for x in li]
     tc.assertEqual(vidy, sorted(vidy, key=lambda v: v != "minus"), imya + ": минусы первыми")
-    if int(s.group(2)):
+    # sushchestvennost-v1: минус меньше 0,1 % выручки — не в главном, а строкой «Мелкое к выручке»
+    melkih = len(re.findall(r"меньше 0,1(?:&nbsp;| )% выручки", "".join(v for k, v in _PM_LI.findall(
+        t[t.index('class="co-sec co-pm"'):t.index("</section>", t.index('class="co-sec co-pm"'))]))))
+    if int(s.group(2)) > melkih:
         tc.assertEqual(vidy[0], "minus", imya)
     stroki_pm = {(k, txt(v)) for k, v in _PM_LI.findall(t[t.index('class="co-sec co-pm"'):])}
     for _, k, v in li:

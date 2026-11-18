@@ -663,6 +663,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         t2 = pochinit_ruk_mesyac(t2)  # rukovod-mesyac-v1: «в этом месяце» → «менее чем за месяц до <день сведений>»
         t2 = pochinit_slova_pravo(t2)  # kartochki-slova-pravo-v1: «требования к компании — X», «не нашли на дату», как у новых (до shablon_v2: description пересобирается по новым словам и длине)
         t2 = pochinit_procenty(t2)  # procent-malo-v1: «0 %» при ненулевой доле — число по таблице страницы; рост прибыли ×3+ — «в N раз», как у новых
+        t2 = korotko_po_vesu(t2)  # sushchestvennost-v1: «Коротко» по весу до shablon_v2 — description берёт первый вывод уже по весу
         t2 = shablon_v2(t2)  # kartochki-shablon-v1: H1 с ИНН, строка под H1, description — как у новых
         t2 = pochinit_imya(t2)  # kartochki-imya-v1: советы и заголовок реестров — с названием, как у новых
         t2 = svodka_zel(t2)  # kartochki-svodka-v1: зелёные комментарии — одним блоком под реестрами, как у новых
@@ -678,6 +679,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         t2 = linza_kartochki(t2)  # linza-indeksa-v1: плашка Индекса — «Линзой» (кольцо 1–99 и кнопка), как у новых
         t2 = plyusy_minusy_kartochki(t2)  # kartochki-plyusy-v1: «Плюсы и минусы» из реестров страницы, как у новых
         t2 = pervyj_ekran_kartochki(t2)  # pervyj-ekran-kartochki-v1: «Итог по фактам» над кнопками вместо кольца Индекса, как у новых
+        t2 = korotko_po_vesu(t2)  # sushchestvennost-v1: «Коротко» — доля выручки у сумм, мелкое в конце, от 10 % — первым, как у новых
         x["_noindex"] = noindex_html(t2)
         if BEZ_OBOLOCHKI in t2:
             # «голое» тело из комплекта — оболочка той же sobrat_stranicu

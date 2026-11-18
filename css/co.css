@@ -192,3 +192,13 @@
 .co-dal[open]>.co-dal__s{margin-bottom:var(--s-2)}
 @media (prefers-reduced-motion:reduce){.co-dal__s::after{transition:none}}
 @media print{.co-dal__s{display:none}}
+/* otrasl-na-kartochke-v1: «… против средних по отрасли» — показатель и его значение, средняя и слово, оговорка */
+.co-otrs{margin-top:var(--s-4)}
+.co-otrs__l{list-style:none;padding:0;margin:var(--s-2) 0 var(--s-3)}
+.co-otrs__l li{display:grid;grid-template-columns:1fr auto;gap:2px var(--s-3);padding:var(--s-3) 0;border-top:1px solid var(--line)}
+.co-otrs__k,.co-otrs__v,.co-otrs__s{font-weight:600;color:var(--ink)}
+.co-otrs__v,.co-otrs__s{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.co-otrs__n{color:var(--ink-2);font-size:var(--t-small)}
+.co-otrs__s{font-size:var(--t-small)}
+.co-otrs__o{grid-column:1/-1;color:var(--muted);font-size:var(--t-caption);margin-top:var(--s-1,4px)}
+.co-otrs--golova{margin-top:var(--s-3);color:var(--ink-2)}

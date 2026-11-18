@@ -61,8 +61,14 @@ dialog.lip-d[open]{animation:lip-vverh .28s cubic-bezier(.2,.7,.2,1)}
 .lip-o:hover .lip-o__s{text-decoration:underline}
 .lip-o:focus-visible{outline:3px solid var(--accent,#12305F);outline-offset:2px}
 .ot-vd .ot-vt{scroll-margin-top:84px}
+/* dosje-pervyj-ekran-v1 (18.11) — главная кнопка вывода рядом с «Ответом» на компьютере (сама кнопка вывода — на 1050 px, ниже первого экрана); на телефоне — липкая строка */
+.report.ot .lip-o:not([hidden]){margin-right:12px;vertical-align:top}
+.report.ot .lip-o-k{margin:16px 0 0;vertical-align:top}
+.lip-o-k[hidden]{display:none}
 @media (max-width:600px){
   .lip-o{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"z s" "t s";align-items:center;margin:14px 0 0;padding:10px 14px;border-radius:16px}
   .lip-o[hidden]{display:none}
+  .report.ot .lip-o:not([hidden]){margin-right:0}
+  .report.ot .lip-o-k{display:none}
 }
-@media print{.lip,.lip-o,dialog.lip-d{display:none!important}}
+@media print{.lip,.lip-o,.lip-o-k,dialog.lip-d{display:none!important}}

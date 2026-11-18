@@ -13,3 +13,12 @@ test('oglavlenie-kartochki-v1: раздела нет на странице (null
   assert.strictEqual(O.aktivnyj([-500, null, 400], 100), 0);
   assert.strictEqual(O.aktivnyj([], 100), -1);
 });
+
+test('svernut-kartochki-v1: раскрыть все свёрнутые <details> вокруг элемента', () => {
+  const d2 = { tagName: 'DETAILS', open: false, parentNode: { tagName: 'BODY', parentNode: null } };
+  const d1 = { tagName: 'DETAILS', open: true, parentNode: d2 };
+  const el = { tagName: 'DIV', parentNode: { tagName: 'UL', parentNode: d1 } };
+  assert.strictEqual(O.raskryt(el), 1);
+  assert.strictEqual(d2.open, true);
+  assert.strictEqual(O.raskryt(el), 0);
+});

@@ -372,7 +372,7 @@ _WP_CANON = re.compile(r'<link rel="canonical" href="([^"]+)"')
 
 def otpechatok_teksta(t):
     """16 знаков sha256 видимого текста <main> карточки (без тегов, скриптов, вида пробелов); нет <main> — None."""
-    t = _WP_BLOK.sub("", t)
+    t = razvernut_kartochku(_WP_BLOK.sub("", t))  # svernut-kartochki-v1: свёртка текст не меняет — отпечаток и дата прежние
     m = _WP_MAIN.search(t)
     if not m:
         return None

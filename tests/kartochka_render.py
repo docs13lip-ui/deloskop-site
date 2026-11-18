@@ -6398,3 +6398,150 @@ _html_kartochki_bez_og = html_kartochki
 def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811
     """oglavlenie-kartochki-v1: та же карточка + оглавление (сборка сайта и API — одна функция)."""
     return oglavlenie_kartochki(_html_kartochki_bez_og(k, V, sosedi, kom, normy, cena, segodnya))
+
+
+# ---------------------------------------------------------------- svernut-kartochki-v1 ([Ночные-2] 18.11)
+# Решение владельца 18.11, разд. 3 п. 5 (вторая половина): «длинные разделы свёрнуты до главного; цель — не больше
+# 5 экранов на компьютере и 8 на телефоне без потери сведений». «Магнит» до этого — 9,2 и 15,2 экрана.
+# Свёртка — <details>: сведения остаются в HTML (поиск их видит, читалка читает, «Найти на странице» и переход
+# по ссылке раскрывают — js/oglavlenie-kartochki.js открывает раздел при переходе и перед печатью). На виду в разделе —
+# главное: первые строки «Коротко» (они уже по весу), первые строки реестров, первый вывод «Что это значит»,
+# основные реквизиты и кнопка «Скопировать», выводы баланса и график выручки; таблицы и пояснения по строкам — под
+# «Показать». «Плюсы и минусы», итог, «Перед оплатой», «Даты» и вход в Паспорт не сворачиваются.
+# Свёртка — последний шаг печати карточки (tipograf_kartochki(…, chisla=True)), снятие — первый шаг чтения
+# (bez_tipografa): все прежние шаги сборки видят карточку, как до свёртки, байт в байт.
+DAL_B = '<details class="co-dal" data-dal="b"><summary class="co-dal__s">%s</summary>'
+DAL_B_KON = '</details><!--/co-dal-b-->'
+DAL_S_KON = '</details><!--/co-dal-s-->'
+_DAL_B_RE = re.compile(r'<details class="co-dal" data-dal="b"><summary class="co-dal__s">.*?</summary>', re.S)
+_DAL_S_RE = re.compile(r'</(ul|dl)><details class="co-dal" data-dal="s"><summary class="co-dal__s">.*?</summary><\1 class="[^"]*">', re.S)
+_DAL_S_KON_RE = re.compile(r'</(ul|dl)>' + re.escape(DAL_S_KON))
+_DAL_SEK = r'(<section class="co-sec[^"]*" aria-labelledby="%s"[^>]*>)(.*?)(</section>)'
+DAL_KOROTKO, DAL_RAZBOR, DAL_REESTRY, DAL_REKV = 3, 2, 3, 3  # строк на виду
+
+
+def razvernut_kartochku(t):
+    """Карточка без свёртки svernut-kartochki-v1 — как до неё, байт в байт."""
+    if not t or "co-dal" not in t:
+        return t
+    t = _DAL_S_RE.sub("", t)
+    t = _DAL_S_KON_RE.sub(lambda m: "</%s>" % m.group(1), t)
+    return _DAL_B_RE.sub("", t).replace(DAL_B_KON, "")
+
+
+def _dal_konec(sek):
+    """Конец сворачиваемого хвоста раздела: строка «По теме раздела» (sobrat_stati_kartochki ставит её последней
+    перед </section>) остаётся на виду и вне свёртки."""
+    k = sek.find("<!--karta-statya-->")
+    return k if k >= 0 else sek.rindex("</section>")
+
+
+def _dal_eshche(n, odna, dve, pyat):
+    return "Ещё %d&nbsp;%s" % (n, plural(n, odna, dve, pyat))
+
+
+def _dal_spisok(sek, teg, klass, el_re, vidno, podpis):
+    """Список <teg class="klass"> раздела: первые vidno элементов на виду, остальные — под «Ещё N …»."""
+    m = re.search(r'<%s class="%s">(.*?)</%s>' % (teg, re.escape(klass), teg), sek, re.S)
+    if not m:
+        return sek
+    el = list(re.finditer(el_re, m.group(1), re.S))
+    if len(el) <= vidno + 1:  # прятать одну строку — не экономия
+        return sek
+    k = m.start(1) + el[vidno].start()
+    ost = len(el) - vidno
+    return (sek[:k] + '</%s><details class="co-dal" data-dal="s"><summary class="co-dal__s">%s</summary><%s class="%s">'
+            % (teg, podpis(ost), teg, klass) + sek[k:m.end(1)] + "</%s>" % teg + DAL_S_KON + sek[m.end():])
+
+
+def _dal_obernut(sek, nach, kon, podpis):
+    """Кусок раздела [nach, kon) — под «Показать …»."""
+    if nach < 0 or kon <= nach:
+        return sek
+    return sek[:nach] + DAL_B % podpis + sek[nach:kon] + DAL_B_KON + sek[kon:]
+
+
+def _dal_korotko(sek):
+    return _dal_spisok(sek, "ul", "co-vv", r'<li class="co-v co-v--\w+">.*?</li>', DAL_KOROTKO,
+                       lambda n: _dal_eshche(n, "строка", "строки", "строк"))
+
+
+def _dal_razbor(sek):
+    return _dal_spisok(sek, "ul", "co-vv", r'<li class="co-v co-v--\w+">.*?</li>', DAL_RAZBOR,
+                       lambda n: _dal_eshche(n, "расчёт", "расчёта", "расчётов"))
+
+
+def _dal_reestry(sek):
+    f = [m.start() for m in re.finditer(r'<div class="fact">', sek)]
+    if len(f) <= DAL_REESTRY + 1:
+        return sek
+    k = _dal_konec(sek)
+    if k <= f[DAL_REESTRY]:
+        return sek
+    return _dal_obernut(sek, f[DAL_REESTRY], k, _dal_eshche(len(f) - DAL_REESTRY, "строка реестров", "строки реестров", "строк реестров"))
+
+
+def _dal_rekv(sek):
+    return _dal_spisok(sek, "dl", "co-rekv__l", r'<div class="co-rekv__s[^"]*"[^>]*>.*?</div>', DAL_REKV,
+                       lambda n: "Все реквизиты")
+
+
+def _dal_znachit(sek):
+    p = [m.start() for m in re.finditer(r"<p>", sek)]
+    if len(p) < 3:
+        return sek
+    kon = sek.find('<p class="caption">')
+    kon = kon if kon > p[1] else _dal_konec(sek)
+    return _dal_obernut(sek, p[1], kon, _dal_eshche(len(p) - 1, "вывод", "вывода", "выводов"))
+
+
+def _dal_fin(sek):
+    m = re.search(r'<div class="table-wrap">.*?</table></div>', sek, re.S)
+    if not m or "<svg" not in sek[:m.start()]:  # без графика таблица — единственные числа раздела: не прятать
+        return sek
+    return _dal_obernut(sek, m.start(), m.end(), "Таблица по&nbsp;годам")
+
+
+def _dal_bal(sek):
+    nach = sek.find('<h3 class="co-h3">')
+    kon = sek.find('<p class="co-bal-vyv">')
+    if nach < 0 or kon < nach:
+        return sek
+    return _dal_obernut(sek, nach, kon, "Таблицы баланса и&nbsp;расчётов")
+
+
+def _dal_zel(sek):
+    nach = sek.find('<ul class="co-zel__s">')
+    n = len(re.findall(r'<li class="kom [^"]*co-zel__i"', sek))
+    if nach < 0 or n < 2:
+        return sek
+    return _dal_obernut(sek, nach, _dal_konec(sek),
+                        "Пояснения по&nbsp;%d&nbsp;%s" % (n, plural(n, "строке", "строкам", "строкам")))
+
+
+DAL_RAZDELY = (("korotko", _dal_korotko), ("razbor", _dal_razbor), ("znachit", _dal_znachit), ("rekv", _dal_rekv), ("fin", _dal_fin),
+               ("bal", _dal_bal), ("reestry", _dal_reestry), ("zel", _dal_zel))
+
+
+def svernut_kartochku(t):
+    """Длинные разделы карточки — до главного (svernut-kartochki-v1). Повтор даёт те же байты; страница без
+    разделов карточки (хабы, каталог) не меняется."""
+    if not t or 'class="co-grid"' not in t:
+        return t
+    t = razvernut_kartochku(t)
+    for sid, f in DAL_RAZDELY:
+        t = re.sub(_DAL_SEK % sid, lambda m: m.group(1) + f(m.group(2) + m.group(3))[:-len(m.group(3))] + m.group(3), t, count=1, flags=re.S)
+    return t
+
+
+_tipograf_kartochki_bez_dal = tipograf_kartochki
+_bez_tipografa_bez_dal = bez_tipografa
+
+
+def tipograf_kartochki(t, chisla=False):  # noqa: F811 — svernut-kartochki-v1: свёртка — последним шагом печати
+    t = _tipograf_kartochki_bez_dal(t, chisla=chisla)
+    return svernut_kartochku(t) if chisla else t
+
+
+def bez_tipografa(t):  # noqa: F811 — svernut-kartochki-v1: и без свёртки — как до неё
+    return razvernut_kartochku(_bez_tipografa_bez_dal(t))

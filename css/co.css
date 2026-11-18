@@ -181,3 +181,14 @@
   html:has(.co-ogm){scroll-padding-top:calc(var(--header-h) + 60px)}
 }
 @media print{.co-og,.co-ogm{display:none}}
+/* svernut-kartochki-v1: длинные разделы карточки свёрнуты до главного — «Ещё N строк», «Таблица по годам»… */
+.co-dal{margin:0}
+.co-dal__s{display:inline-flex;align-items:center;gap:var(--s-2);min-height:44px;cursor:pointer;list-style:none;font-size:var(--t-small);font-weight:600;color:var(--accent)}
+.co-dal__s::-webkit-details-marker{display:none}
+.co-dal__s::after{content:"";width:7px;height:7px;margin-top:-3px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);transition:transform .2s}
+.co-dal[open]>.co-dal__s::after{margin-top:3px;transform:rotate(-135deg)}
+.co-dal__s:hover{color:var(--accent-hover)}
+.co-dal__s:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:var(--r-s)}
+.co-dal[open]>.co-dal__s{margin-bottom:var(--s-2)}
+@media (prefers-reduced-motion:reduce){.co-dal__s::after{transition:none}}
+@media print{.co-dal__s{display:none}}

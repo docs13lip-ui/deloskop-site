@@ -2,7 +2,9 @@
    Сборка печатает два списка — сбоку на компьютере (.co-og) и строкой под шапкой на телефоне (.co-ogm); без скрипта
    это обычные ссылки на разделы. Скрипт ставит aria-current пункту раздела, который сейчас под шапкой, и в строке
    телефона прокручивает её вбок так, чтобы пункт был виден. Сети нет, целей нет.
-   aktivnyj(verhi, porog) — чистая функция, её проверяет tests/oglavlenie_kartochki.test.js. */
+   aktivnyj(verhi, porog) — чистая функция, её проверяет tests/oglavlenie_kartochki.test.js.
+   svernut-kartochki-v1: длинные разделы свёрнуты в <details class="co-dal">; переход по ссылке на место внутри
+   свёрнутого (#якорь) раскрывает его, перед печатью раскрываются все и после печати сворачиваются обратно. */
 (function (root, factory) {
   var api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
@@ -20,7 +22,33 @@
     return a;
   }
 
+  // svernut-kartochki-v1: раскрыть все свёрнутые <details> вокруг элемента; вернуть, сколько раскрыто.
+  function raskryt(el) {
+    var n = 0;
+    for (var d = el; d && d.parentNode; d = d.parentNode) {
+      if (d.tagName === 'DETAILS' && !d.open) { d.open = true; n++; }
+    }
+    return n;
+  }
+
+  function svertka(doc, win) {
+    function poYakoryu() {
+      var id = (win.location.hash || '').slice(1), el = null;
+      try { el = id && doc.getElementById(decodeURIComponent(id)); } catch (e) { el = null; }
+      if (el && raskryt(el)) el.scrollIntoView();
+    }
+    win.addEventListener('hashchange', poYakoryu);
+    poYakoryu();
+    var zakryty = [];
+    win.addEventListener('beforeprint', function () {
+      zakryty = Array.prototype.filter.call(doc.querySelectorAll('details.co-dal'), function (d) { return !d.open; });
+      zakryty.forEach(function (d) { d.open = true; });
+    });
+    win.addEventListener('afterprint', function () { zakryty.forEach(function (d) { d.open = false; }); zakryty = []; });
+  }
+
   function zapusk(doc, win) {
+    svertka(doc, win);
     var nav = doc.querySelector('.co-og') || doc.querySelector('.co-ogm');
     if (!nav) return;
     var ids = Array.prototype.map.call(nav.querySelectorAll('a[data-og]'), function (a) { return a.getAttribute('data-og'); });
@@ -66,5 +94,5 @@
     else zapusk(document, window);
   }
 
-  return { aktivnyj: aktivnyj };
+  return { aktivnyj: aktivnyj, raskryt: raskryt };
 });

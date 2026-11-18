@@ -185,7 +185,7 @@
   }
 
   // минус «Главного» → документы списка «Что запросить у них» (js/usloviya.js DOCS), отвечающие именно на него
-  var ZAPROS = { tax_debt: ['taxCert'], damia_fssp: ['fssp'], damia_priostanovki: ['unblock'], address: ['fixRecord', 'premises'], zsk: ['bank'] };
+  var ZAPROS = { director_change: ['powerNew'], tax_debt: ['taxCert'], damia_fssp: ['fssp'], damia_priostanovki: ['unblock'], address: ['fixRecord', 'premises'], zsk: ['bank'] };
   var ZAPROS_MAKS = 3;
   // zapros(G, docs) → [{ id, t }] — только документы, которые есть в списке условий (docs — decide(r).docs), по порядку минусов
   function zapros(G, docs) {

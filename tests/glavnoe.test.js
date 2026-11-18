@@ -284,3 +284,17 @@ test('zapros-glavnoe-v1: приставы и приостановка блоко
   r.damia.fssp.dannye.ostatok = 0; delete r.damia.priostanovki;
   assert.ok(!U.decide(r).docs.some((x) => x.id === 'fssp'), 'точный ноль — не «погашение»');
 });
+
+// povtor-rukovoditel-v1 [Ночные запуски] 18.11 20:05: смена руководителя — минус «Главного» без документа; в списке условий
+// для него уже есть «Решение о назначении нового директора и его подпись на договоре» (decide().docs, powerNew)
+test('povtor-rukovoditel-v1: смена руководителя в «Главном» — просим решение о назначении, тем же текстом; строка одна', () => {
+  const r = otvet();
+  r.dossier.concerns = ['Недавняя смена руководителя'];
+  r.signals.push({ id: 'director_change', title: 'Руководитель сменился недавно', status: 'warn', detail: 'Иванов Иван Иванович — с 21.05.2026', source: 'ЕГРЮЛ' });
+  const docs = U.decide(r).docs;
+  const g = zaprosOf(r);
+  assert.strictEqual(g.glavnoe.filter((x) => /руководител/i.test(x.t)).length, 1);
+  assert.deepStrictEqual(g.zapros.map((x) => x.id), ['powerNew']);
+  assert.strictEqual(g.zapros[0].t, docs.filter((d) => d.id === 'powerNew')[0].title);
+  assert.match(bez(G.html(g)), /Решение о назначении нового директора и его подпись на договоре/);
+});

@@ -189,6 +189,8 @@
       if (!x || SVOI.indexOf(x.id) >= 0 || !x.title) return;
       if (x.status !== 'warn' && x.status !== 'bad') return;
       var d = String(x.detail || '').trim();
+      // povtor-rukovoditel-v1: у смены руководителя в detail — ФИО и дата; ФИО не пишем (mal() делал фамилию строчной), дату — да
+      if (x.id === 'director_change') { var dm1 = d.match(/с\s\d{2}\.\d{2}\.\d{4}/); d = dm1 ? dm1[0].replace(/\s/, NB) : ''; }
       minus(x.id, x.title + (d && d.length <= 40 ? ': ' + mal(d) : ''), x.source, x.as_of);
     });
 
@@ -255,9 +257,11 @@
     if (pd && pd.status === 'najdeno' && !fl) plus('podderzhka', 'Есть в' + NB + 'реестре получателей поддержки МСП (ФНС)' + naDatu(pd.data_nabora), pd.istochnik, pd.data_nabora);
 
     // ---- замечания сервера, которых колонки не называют (например, недавняя смена руководителя) ----
+    // povtor-rukovoditel-v1: признак «Руководитель сменился недавно» уже в минусах — замечание «Недавняя смена руководителя» второй раз не пишем
+    var rukUzhe = M.some(function (x) { return /руководител|директор/i.test(x.t); });
     (Array.isArray(D.concerns) ? D.concerns : []).forEach(function (t) {
       t = String(t || '').trim();
-      if (t && !UZHE.test(t) && !(fl && /руководител/i.test(t))) minus('dossier', t, 'по ответу проверки');
+      if (t && !UZHE.test(t) && !((fl || rukUzhe) && /руководител|директор/i.test(t))) minus('dossier', t, 'по ответу проверки');
     });
 
     // ---- не проверено: реестр не ответил или не опрашивался ----

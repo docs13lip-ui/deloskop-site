@@ -138,5 +138,9 @@
 .co-itog__m{margin:var(--s-2) 0 0;padding-left:22px;color:var(--muted)}
 .co-itog__m span{font-weight:600;color:var(--ink-2)}
 .co-itog__m a{color:inherit;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:.2em}
+/* chto-za-kompaniya-v1 (18.11): «Не проверяли» сразу под итогом, порог «существенно»; под ОКВЭД — выручка и штат */
+.co-itog__n,.co-itog__p{margin:var(--s-2) 0 0;padding-left:22px;color:var(--muted)}
+.co-itog__n span{font-weight:600;color:var(--ink-2)}
+.co-chto{margin-top:4px;max-width:720px}
 @media (max-width:640px){.co-itog{padding:var(--s-4)}.co-itog__s{font-size:var(--t-body)}}
 @media print{.co-itog{break-inside:avoid}}

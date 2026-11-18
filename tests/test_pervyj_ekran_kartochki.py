@@ -18,8 +18,11 @@ import kartochka_render as K  # noqa: E402
 KOREN = Path(__file__).resolve().parent.parent
 NB = K.NB
 _ITOG = re.compile(r'<section class="co-itog" aria-labelledby="itog">(.*?)</section><!--/co-itog-->', re.S)
-_STROKA = re.compile(r'<h2 id="itog" class="co-itog__s">Плюсов (\d+), минусов (\d+)(?:, не(?:&nbsp;| )проверено (\d+))?'
-                     r'<span class="co-itog__d">(?:&nbsp;| )— по(?:&nbsp;| )фактам, собранным (\d{2}\.\d{2}\.\d{4})</span></h2>')
+# chto-za-kompaniya-v1: три формы итога словами [Право] 18.11 (2) — «Плюсов N, минусов M», «Есть M существенных минуса»,
+# «Существенных минусов не нашли» — и «— по K проверенным источникам на ДД.ММ.ГГГГ»
+_STROKA = re.compile(r'<h2 id="itog" class="co-itog__s">(?:Плюсов (\d+), минусов (\d+)|Есть (\d+)(?:&nbsp;|&#160;|\u00a0| )существенн[а-я]+ минус[а-я]*|'
+                     r'Существенных минусов не(?:&nbsp;|&#160;|\u00a0| )нашли)'
+                     r'<span class="co-itog__d">(?:&nbsp;|&#160;|\u00a0| )— по(?:&nbsp;|&#160;|\u00a0| )(\d+)(?:&nbsp;|&#160;|\u00a0| )проверенным источникам на(?:&nbsp;|&#160;|\u00a0| )(\d{2}\.\d{2}\.\d{4})</span></h2>')
 _LI = re.compile(r'<li class="co-itog__l co-itog__l--(plus|minus)" data-pm="([a-z_]+)"><a href="#reestry"[^>]*><span class="vh">[^<]*</span>(.*?)</a></li>', re.S)
 _PM_LI = re.compile(r'<li data-pm="([a-z_]+)"><a class="pm__a" href="#reestry"[^>]*>(.*?)</a></li>', re.S)
 
@@ -36,9 +39,24 @@ def proverit(tc, t, imya):
     tc.assertTrue(s, imya + ": строка итога")
     pm = re.search(r'<section class="co-sec co-pm"[^>]*data-plyusy="(\d+)" data-minusy="(\d+)"', t)
     tc.assertTrue(pm, imya)
-    tc.assertEqual((s.group(1), s.group(2)), pm.groups(), imya + ": число плюсов и минусов как в «Плюсах и минусах»")
-    eg = re.search(r'<p class="caption co-okved">.*?ЕГРЮЛ · сведения на(?:&#160;|&nbsp;| | )(\d{2}\.\d{2}\.\d{4})</p>', t, re.S)
-    tc.assertEqual(s.group(4), eg.group(1), imya + ": дата — сбор фактов (ЕГРЮЛ под названием)")
+    S = K.plyusy_minusy_stroki(t)
+    sush = [x for x in S["minusy"] if K.cz_sushchestvennyj(x, S["baza"])]
+    if sush:
+        tc.assertEqual(s.group(3), str(len(sush)), imya + ": «Есть M существенных» — M по порогу")
+    elif pm.group(2) == "0":
+        tc.assertIn("Существенных минусов не", s.group(0), imya + ": «не нашли» — только без минусов")
+    else:
+        tc.assertEqual((s.group(1), s.group(2)), pm.groups(), imya + ": число плюсов и минусов как в «Плюсах и минусах»")
+    ist = {x[2] for x in S["plyusy"] + S["minusy"] if x[2]}
+    tc.assertEqual(int(s.group(4)), len(ist), imya + ": K — число разных источников у строк")
+    eg = re.search(r'<p class="caption co-okved">.*?ЕГРЮЛ · сведения на(?:&#160;|&nbsp;| | )(\d{2}\.\d{2}\.\d{4})</p>', t, re.S)
+    tc.assertEqual(s.group(5), eg.group(1), imya + ": дата — сбор фактов (ЕГРЮЛ под названием)")
+    n = re.search(r'<p class="caption co-itog__n"><span>Не(?:&#160;|&nbsp;| )проверяли:</span> ([^<]+)\.</p>', blok)
+    tc.assertTrue(n, imya + ": «Не проверяли» сразу под итогом")
+    for x in S["ne"] + K.CZ_NE_VSEGDA:
+        tc.assertIn(txt(x), txt(n.group(1)), imya)
+    if "существенн" in txt(s.group(0)).lower():
+        tc.assertIn("Существенно — сумма от 0,1 % выручки", txt(blok), imya + ": порог раскрыт")
     li = _LI.findall(blok)
     tc.assertTrue(1 <= len(li) <= 3, imya)
     vidy = [x[0] for x in li]
@@ -46,7 +64,7 @@ def proverit(tc, t, imya):
     # sushchestvennost-v1: минус меньше 0,1 % выручки — не в главном, а строкой «Мелкое к выручке»
     melkih = len(re.findall(r"меньше 0,1(?:&nbsp;| )% выручки", "".join(v for k, v in _PM_LI.findall(
         t[t.index('class="co-sec co-pm"'):t.index("</section>", t.index('class="co-sec co-pm"'))]))))
-    if int(s.group(2)) > melkih:
+    if int(pm.group(2)) > melkih:
         tc.assertEqual(vidy[0], "minus", imya)
     stroki_pm = {(k, txt(v)) for k, v in _PM_LI.findall(t[t.index('class="co-sec co-pm"'):])}
     for _, k, v in li:
@@ -55,7 +73,7 @@ def proverit(tc, t, imya):
     tc.assertNotIn("co-ind--wait", t, imya + ": кольца нет")
     tc.assertNotIn("/js/linza.js", t, imya)
     tc.assertEqual(t.count('data-goal="kartochka_indeks"'), 1, imya)
-    tc.assertIsNone(re.search(r"(?i)существенн|надёжн|рискованн|опасн", txt(blok)), imya + ": итог без оценок")
+    tc.assertIsNone(re.search(r"(?i)надёжн|рискованн|опасн|чист[аы]|можно платить|безопасн|мелоч|мелкое", txt(blok)), imya + ": итог без оценок")
 
 
 class TestPervyjEkran(unittest.TestCase):
@@ -96,7 +114,16 @@ class TestPervyjEkran(unittest.TestCase):
                         ("age", "На рынке с 2003 года", "ЕГРЮЛ", "15.11.2026")],
              "minusy": [], "ne": ["арбитражные суды"], "imya": "ООО «Тест»"}
         h = K.itog_html(S, "7707083893", "15.11.2026")
-        self.assertIn("Плюсов 3, минусов 0, не" + NB + "проверено 1", h)
+        # chto-za-kompaniya-v1: минусов нет — «Существенных минусов не нашли — по K источникам на дату», «Не проверяли» под ним
+        self.assertIn("Существенных минусов не" + NB + "нашли", h)
+        self.assertIn("по" + NB + "2" + NB + "проверенным источникам на" + NB + "15.11.2026", h)
+        self.assertIn("арбитражные суды, приставы", h.replace("приостановки", "приставы"), "«Не проверяли» — сначала непроверенное страницей")
+        S2 = dict(S, minusy=[("bankrotstvo", "Сообщения о банкротстве в ЕФРСБ", "ЕФРСБ", "12.11.2026")])
+        self.assertIn("Есть 1" + NB + "существенный минус", K.itog_html(S2, "7707083893", "15.11.2026"))
+        S3 = dict(S, minusy=[("pravonarusheniya", "Налоговые правонарушения: есть", "ФНС", "01.10.2026")])
+        h3 = K.itog_html(S3, "7707083893", "15.11.2026")
+        self.assertIn("Плюсов 3, минусов 1", h3, "минус без суммы и не из списка — нейтральная форма")
+        self.assertNotIn("не" + NB + "нашли", h3.split("</h2>")[0])
         self.assertEqual([x[1] for x in _LI.findall(h)], ["fssp", "status", "age"], "плюсы по весу: приставы раньше статуса")
         self.assertEqual(K.itog_html(S, "7707083893", ""), "", "без даты сбора итога нет")
         self.assertEqual(K.itog_html({"plyusy": [], "minusy": [], "ne": [], "imya": "x"}, "7707083893", "15.11.2026"), "")

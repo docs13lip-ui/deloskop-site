@@ -5906,3 +5906,135 @@ def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None)
     t = _html_kartochki_bez_vesa(k, V, sosedi, kom, normy, cena, segodnya)
     t2 = korotko_po_vesu(t)
     return t2 if t2 == t else shablon_v2(t2)  # description — по первому выводу уже по весу, как у опубликованных
+
+
+# ---------------------------------------------------------------- chto-za-kompaniya-v1 ([Ночные-2] 18.11)
+# Решение владельца 18.11 «сайт лучше справочников», разд. 3 пп. 1 и 3; слова — [Право] 18.11 01:30 и 02:10
+# (claude/Право_карточка_люди_итог_хештеги_18.11.md, (2) и (3)). Тот же порог и те же три формы, что в «Главном» отчёта
+# (itog-glavnoe-v1, js/glavnoe.js `itog`), чтобы отчёт и карточка говорили одно:
+#   «Существенных минусов не нашли — по K проверенным источникам на дату» — только когда минусов нет вовсе;
+#   «Есть M существенных минуса — по K проверенным источникам на дату» — статус, банкротство, недостоверность или сумма
+#     от 0,1 % выручки последнего года ГИР БО;
+#   иначе — «Плюсов N, минусов M — по K проверенным источникам на дату» (мелкое, сумма без масштаба, «не меньше …»).
+# Сразу под итогом — «Не проверяли: …» (без неё «не нашли» шире данных, ст. 152 ГК) и, при слове «существенн», — раскрытие
+# порога; без выручки — «Масштаб не посчитать: …». «Мелкое к выручке» → «Небольшие суммы (меньше 0,1 % выручки за год)»
+# ([Право] 01:30, разд. 2: «мелочь» вслух не пишем). K — сколько разных источников стоит у строк «Плюсов и минусов».
+# «Что за компания» (п. 3): под строкой ОКВЭД — «Выручка за год — X, работников — N (ФНС, на дату).» Если штат до 10 человек
+# при выручке от 1 млрд ₽ или чистая прибыль больше выручки (основной доход не от продаж) — общее правило без догадки
+# о компании: «Так бывает у головных и управляющих компаний групп. Перед оплатой сверьте, что ИНН в счёте и договоре — ИНН».
+# Слов «группа» (кроме общего правила [Право]), «аффилирована», «техническая», «похоже» нет. Идемпотентно.
+CZ_NE_VSEGDA = ["приостановки счетов", "реестр недобросовестных поставщиков", "дисквалификация руководителя"]
+CZ_SHTAT_MALO = 10
+CZ_VYRUCHKA_MNOGO = 1e9
+
+
+def cz_sushchestvennyj(x, B):
+    k, tx = x[0], x[1]
+    if k in SS_TYAZHELYE:
+        return True
+    sm = ss_summa(tx)
+    return bool(B and sm and sm / B["summa"] >= SS_MELKO)
+
+
+def cz_minusa(n):
+    return plural_pm(n, "существенный минус", "существенных минуса", "существенных минусов")
+
+
+_cz_pm_stroki_bez = plyusy_minusy_stroki
+
+
+def plyusy_minusy_stroki(t):  # noqa: F811 — chto-za-kompaniya-v1: + база масштаба для итога
+    S = _cz_pm_stroki_bez(t)
+    if S is not None:
+        S["baza"] = ss_baza(t)
+        S["bank"] = bool(re.search(r'co-okved">[^<]*<span class="num">64\.1', t or ""))
+        S.setdefault("melkoe", [])
+    return S
+
+
+_CZ_DOLYA_V_KONCE = re.compile(r" \(меньше 0,1" + _SP_PROB + r"%" + _SP_PROB + r"выручки за" + _SP_PROB + r"\d{4}" + _SP_PROB + r"год\)$")
+
+
+def itog_html(S, inn, eg_d):  # noqa: F811 — chto-za-kompaniya-v1: три формы [Право] 18.11 (2), «Не проверяли», порог
+    if not S or not (S["plyusy"] or S["minusy"]) or not re.fullmatch(r"\d{2}\.\d{2}\.\d{4}", eg_d or ""):
+        return ""
+    B = S.get("baza")
+    mel = S.get("melkoe") or []
+    P = sorted(S["plyusy"], key=lambda x: IT_VES_P.index(x[0]) if x[0] in IT_VES_P else 99)
+    glavnye = [(x, "minus") for x in S["minusy"] if x not in mel][:IT_FAKTOV]
+    glavnye += [(x, "plus") for x in P][:IT_FAKTOV - len(glavnye)]
+    K = len({x[2] for x in S["plyusy"] + S["minusy"] if x[2]})
+    sush = [x for x in S["minusy"] if cz_sushchestvennyj(x, B)]
+    po = "%s— по%s%d%sпроверенным источникам на%s%s" % (NB, NB, K, NB, NB, eg_d)
+    if sush:
+        zag = "Есть %d%s%s" % (len(sush), NB, cz_minusa(len(sush)))
+    elif not S["minusy"]:
+        zag = "Существенных минусов не" + NB + "нашли"
+    else:
+        zag = "Плюсов %d, минусов %d" % (len(S["plyusy"]), len(S["minusy"]))
+    ne = list(S["ne"]) + [x for x in CZ_NE_VSEGDA if x not in S["ne"]]
+    niz = ['<p class="caption co-itog__n"><span>Не проверяли:</span> %s.</p>' % ", ".join(ne)]
+    if mel:
+        god = B["god"] if B else ""
+        niz.append('<p class="caption co-itog__m"><span>Небольшие суммы (меньше 0,1%s%% выручки за%s%s%sгод):</span> <a href="#pm">%s</a>%s</p>'
+                   % (NB, NB, god, NB, html.escape(_CZ_DOLYA_V_KONCE.sub("", mel[0][1]), quote=False),
+                      (" и" + NB + "ещё " + str(len(mel) - 1)) if len(mel) > 1 else ""))
+    est_summy = any(ss_summa(x[1]) for x in S["minusy"])
+    if not B and est_summy and not S.get("bank"):
+        niz.append('<p class="caption co-itog__p">Масштаб не%sпосчитать: выручка за%s%d%sгод в%sоткрытых данных не%sнайдена.</p>'
+                   % (NB, NB, int(eg_d[-4:]) - 1, NB, NB, NB))
+    elif sush or not S["minusy"]:
+        niz.append('<p class="caption co-itog__p">Существенно%s— сумма от%s0,1%s%% выручки%s или%sсобытие без%sсуммы: '
+                   'банкротство, ликвидация или%sисключение из%sреестра, недостоверность сведений.</p>'
+                   % (NB, NB, NB, (" за" + NB + str(B["god"]) + NB + "год (ГИР" + NB + "БО)") if B else "", NB, NB, NB, NB))
+    return ('<section class="co-itog" aria-labelledby="itog"><h2 id="itog" class="co-itog__s">%s'
+            '<span class="co-itog__d">%s</span></h2><ul class="co-itog__f">%s</ul>%s'
+            '<p class="caption co-itog__i"><a href="#pm">Все плюсы и%sминусы</a> · <a href="/?inn=%s" data-goal="kartochka_indeks">'
+            'Индекс%s— в%sполном отчёте ›</a> (балл от%s1 до%s99 на%sсегодня)</p></section><!--/co-itog-->'
+            % (zag, po, "".join(_it_li(x, m) for x, m in glavnye), "".join(niz),
+               NB, inn, NB, NB, NB, NB, NB))
+
+
+_CZ_SEK = re.compile(r'<p class="caption co-chto">.*?</p><!--/co-chto-->', re.S)
+_CZ_OKVED_P = re.compile(r'<p class="caption co-okved">.*?</p>', re.S)
+_CZ_SHTAT = re.compile(r'<div class="fact"><span>Сотрудники</span><span class="fact__v">(\d(?:\d|' + _SP_PROB + r')*?)' + _SP_PROB
+                       + r'человек[а]?</span><span class="fact__src co-src">(.*?)</span></div>', re.S)
+
+
+def chto_za_html(t):
+    """Строка «Что за компания» или ""."""
+    B = ss_baza(t)
+    m = _CZ_SHTAT.search(t or "")
+    mi = _KANON_INN.search(t or "")
+    if not B or not m or not mi:
+        return ""
+    n = int(re.sub(r"\D", "", m.group(1).replace("&nbsp;", "").replace("&#160;", "")))
+    if n <= 0:
+        return ""
+    ist, d = _pm_ist(m.group(2))
+    s = ("Выручка за%s%d%sгод%s— %s, работников%s— %d (ФНС%s)."
+         % (NB, B["god"], NB, NB, dengi(B["summa"]), NB, n, (", на" + NB + d) if d else ""))
+    if B["golovnaya"] or (n <= CZ_SHTAT_MALO and B["summa"] >= CZ_VYRUCHKA_MNOGO):
+        s += (" Так бывает у%sголовных и%sуправляющих компаний групп. Перед оплатой сверьте, что ИНН в%sсчёте и%sдоговоре%s— "
+              '<span class="num">%s</span>.' % (NB, NB, NB, NB, NB, mi.group(1)))
+    return '<p class="caption co-chto">%s</p><!--/co-chto-->' % s
+
+
+def chto_za_kompaniyu(t):
+    """Карточка → строка «Что за компания» под ОКВЭД; итог первого экрана — словами [Право]. Повтор даёт те же байты."""
+    if not t:
+        return t
+    bez = _CZ_SEK.sub("", t)
+    mo = _CZ_OKVED_P.search(bez)
+    if not mo:
+        return bez
+    s = chto_za_html(bez)
+    return bez[:mo.end()] + s + bez[mo.end():] if s else bez
+
+
+_html_kartochki_bez_chto = html_kartochki
+
+
+def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811
+    """chto-za-kompaniya-v1: та же карточка, под ОКВЭД — выручка и штат (итог — через itog_html)."""
+    return chto_za_kompaniyu(_html_kartochki_bez_chto(k, V, sosedi, kom, normy, cena, segodnya))

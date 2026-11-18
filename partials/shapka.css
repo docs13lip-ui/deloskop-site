@@ -49,8 +49,8 @@ a.skip:focus{top:var(--s-2);color:var(--on-accent)}
 .shapka .shapka__burger:hover,.mnav .shapka__burger:hover{background:var(--surface-2)}
 
 @media (max-width:1199px){.shapka__new-l{display:none}.shapka__new-s{display:inline}}
-/* fokus-shapka-v1 (12.11): в шапке 3 ссылки без выпадающих меню — помещаются до 861 px */
-@media (max-width:860px){
+/* fokus-shapka-v1 (12.11) → navigaciya-shapka-v1 (18.11): четыре раздела помещаются от 1024 px, ниже — меню-лист */
+@media (max-width:1023px){
  .shapka .shapka__nav,.shapka .shapka__new,.shapka .shapka__login{display:none}
  .shapka .shapka__burger{display:inline-grid}
  .shapka .shapka__right{margin-left:auto}
@@ -70,10 +70,8 @@ dialog.mnav::backdrop{background:rgba(10,23,51,.4);-webkit-backdrop-filter:blur(
 .mnav .mnav__top,.mnav .mnav__body{max-width:calc(var(--wide) + 2*var(--gutter));margin:0 auto;padding:0 var(--gutter)}
 .mnav .mnav__top{height:var(--header-h);display:flex;align-items:center;justify-content:space-between}
 .mnav .mnav__top .shapka__burger{display:inline-grid}
-.mnav .mnav__list{margin-top:var(--s-4)}
-.mnav .mnav__list>li{border-top:1px solid var(--line);padding:var(--s-3) 0}
-.mnav .mnav__list>li:first-child{border-top:0}
-.mnav .mnav__link{display:flex;align-items:center;min-height:44px;color:var(--ink);font:600 24px/1.25 var(--font);letter-spacing:-.01em}
+.mnav .mnav__list{display:grid;grid-template-columns:1fr 1fr;gap:0 var(--s-3)}
+.mnav .mnav__link{display:flex;align-items:center;min-height:44px;color:var(--ink);font:500 17px/1.25 var(--font)}
 .mnav .mnav__link.is-active,.mnav .mnav__link[aria-current=page]{color:var(--accent)}
 .mnav .mnav__extra{display:flex;flex-direction:column;margin-top:var(--s-4);padding-top:var(--s-4);border-top:1px solid var(--line)}
 .mnav .mnav__row{display:flex;align-items:center;gap:var(--s-2);min-height:44px;padding:0;border:0;background:none;color:var(--ink-2);font:500 17px/1 var(--font);text-align:left;cursor:pointer}
@@ -216,3 +214,29 @@ span.nw,span.nw-k{color:inherit!important;font-size:inherit!important;font-weigh
 @keyframes dlk-ikonka{from{rotate:-90deg;scale:.4;opacity:0}to{rotate:0deg;scale:1;opacity:1}}
 .tema-ik .shapka .shapka__tema svg{animation:dlk-ikonka .48s var(--ease,cubic-bezier(.2,.7,.2,1)) both}
 @media (prefers-reduced-motion:reduce){.tema-ik .shapka .shapka__tema svg{animation:none}}
+/* navigaciya-shapka-v1 (18.11, план «лучше справочников», разд. 6 Н1): четыре раздела с раскрывающимся списком;
+   до любого раздела — два нажатия с любой страницы; ≤ 1023 px — те же группы в меню-листе, поиск первым */
+.shapka .shapka__gr{position:relative}
+.shapka .shapka__chev{flex:none;margin-left:-1px;transition:transform var(--fast) var(--ease)}
+.shapka .shapka__gk[aria-expanded=true]{color:var(--ink);background:var(--surface-2)}
+.shapka .shapka__gk[aria-expanded=true] .shapka__chev{transform:rotate(180deg)}
+.shapka .shapka__pan{position:absolute;top:calc(100% + 10px);left:-8px;z-index:45;width:328px;padding:var(--s-2);border:1px solid var(--line);border-radius:var(--r-l);background:var(--bg);box-shadow:var(--shadow);animation:shapka-pan var(--fast) var(--ease)}
+@keyframes shapka-pan{from{opacity:0;transform:translateY(-4px)}}
+.shapka .shapka__pan::before{content:"";position:absolute;left:0;right:0;top:-12px;height:12px}
+.shapka .shapka__pl{display:flex;flex-direction:column;gap:3px;padding:10px 12px;border-radius:var(--r-m);color:var(--ink);text-decoration:none;transition:background var(--fast) var(--ease)}
+.shapka .shapka__pl:hover,.shapka .shapka__pl:focus-visible{background:var(--surface-2);color:var(--ink)}
+.shapka .shapka__pl[aria-current=page] .shapka__pn{color:var(--accent)}
+.shapka .shapka__pn{font:600 15px/1.25 var(--font)}
+.shapka .shapka__pd{font:400 13px/1.35 var(--font);color:var(--muted)}
+.shapka .shapka__poisk-t,.shapka .shapka__poisk-k{display:none}
+@media (min-width:1200px){
+ .shapka .shapka__poisk{width:auto;gap:var(--s-2);padding:0 8px 0 12px;border-radius:var(--r-pill)}
+ .shapka .shapka__poisk-t{display:inline;font:400 15px/1 var(--font);color:var(--muted);white-space:nowrap}
+ .shapka .shapka__poisk-k{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border:1px solid var(--line);border-radius:6px;font:500 12px/1 var(--font);color:var(--muted)}
+ body:has(#inn) .shapka .shapka__poisk{width:40px;padding:0;border-radius:50%}
+ body:has(#inn) .shapka .shapka__poisk-t,body:has(#inn) .shapka .shapka__poisk-k{display:none}
+}
+.mnav .mnav__poisk{display:flex;align-items:center;gap:var(--s-2);width:100%;min-height:48px;margin-top:var(--s-3);padding:0 16px;border:1px solid var(--line);border-radius:var(--r-pill);background:var(--surface);color:var(--muted);font:400 17px/1 var(--font);text-align:left;cursor:pointer}
+.mnav .mnav__h{margin:var(--s-4) 0 var(--s-1);color:var(--muted);font:600 13px/1.2 var(--font);letter-spacing:.06em;text-transform:uppercase}
+.mnav .mnav__extra{margin-top:var(--s-4);padding-top:var(--s-2)}
+@media (max-width:359px){.mnav .mnav__list{grid-template-columns:1fr}}

@@ -40,25 +40,22 @@ test('логотип — знак-печать с галочкой (logo-v2), д
   assert.ok(!p.includes('favicon'));
 });
 
-test('5 мест в шапке без выпадающих меню (fokus-shapka-v1), без aria-current/is-active/style, цвета — только цвета логотипа', () => {
+test('шапка: четыре раздела со списками (navigaciya-shapka-v1, решение 18.11 Н1), без aria-current/is-active/style, цвета — только цвета логотипа', () => {
   const p = chitat('partials/shapka.html');
   const shapka = p.slice(p.indexOf('<header'), p.indexOf('</header>'));
   const nav = p.slice(p.indexOf('<ul class="shapka__list">'), p.indexOf('</nav>'));
-  const punkty = [...nav.matchAll(/<a class="shapka__link" href="([^"]+)"[^>]*>([^<]+)</g)].map(m => [m[1], m[2].replace(/&nbsp;/g, ' ')]);
-  // решение владельца 11.11 ~21:42: Проверить · Проверь счёт · Кому вы платите · Разборы дел · Войти
-  assert.deepStrictEqual(punkty, [['/proverit-schet/', 'Проверь счёт'], ['/kontragenty-iz-vypiski/', 'Кому вы платите'], ['/praktika/', 'Разборы дел']]);
+  const razdely = [...nav.matchAll(/<button class="shapka__link shapka__gk"[^>]*>([^<]+)</g)].map(m => m[1].replace(/&nbsp;/g, ' '));
+  assert.deepStrictEqual(razdely, ['Проверка', 'Компании', 'Знания', 'О сервисе']);
   assert.match(shapka, /<a class="shapka__link shapka__login" href="\/cabinet\.html" data-auth-out>Войти<\/a>/);
   assert.match(shapka, /<a class="shapka__btn" href="\/#inn" data-check>Проверить<\/a>/);
-  const kuda = new Set([...shapka.matchAll(/<a [^>]*href="([^"]+)"/g)].map(m => m[1]).filter(h => h !== '/' && h !== '#main'));
-  assert.deepStrictEqual([...kuda].sort(), ['/#inn', '/cabinet.html', '/kontragenty-iz-vypiski/', '/praktika/', '/proverit-schet/']);
-  assert.ok(!/shapka__dd|shapka__menu|aria-controls="dd-|data-whatsnew/.test(p), 'выпадающие меню и «Что нового» — не в шапке (они в подвале)');
+  assert.ok(!/shapka__dd|shapka__menu|aria-controls="dd-|data-whatsnew/.test(p), 'прежние выпадающие меню (до fokus-shapka-v1) и кнопка «Что нового» — не возвращаем');
   assert.ok(!/href="\/sdelka\/"/.test(p), '«Досье сделки» — без своего адреса (/sdelka/ — мягкая 404), в меню не ставим');
   // мобильное меню — тот же состав и порядок, что верхнее
-  const mob = [...p.slice(p.indexOf('<ul class="mnav__list">'), p.indexOf('<div class="mnav__extra">')).matchAll(/href="([^"]+)"/g)].map(m => m[1]);
+  const mob = [...p.slice(p.indexOf('<nav class="mnav__body"'), p.indexOf('<div class="mnav__extra">')).matchAll(/href="([^"]+)"/g)].map(m => m[1]);
   const verh = [...nav.matchAll(/href="([^"]+)"/g)].map(m => m[1]);
   assert.deepStrictEqual(mob, verh);
   assert.ok(!/aria-current|is-active|style=/.test(p));
-  const hex = (p.match(/#[0-9A-Fa-f]{3,6}\b/g) || []).filter(x => !['#12305F', '#0D2247', '#FFFFFF'].includes(x));
+  const hex = (p.match(/(?<!&)#[0-9A-Fa-f]{3,6}\b/g) || []).filter(x => !['#12305F', '#0D2247', '#FFFFFF'].includes(x));
   assert.deepStrictEqual(hex, []);
 });
 

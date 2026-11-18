@@ -27,7 +27,7 @@ test('есть заметка — текст экранирован, подпи�
 
 test('редактор: подпись поля, 200 знаков, «Удалить» — только когда заметка есть', () => {
   const h = bezNb(Z.html('7700000001', 'x', true));
-  assert.match(h, /<label class="zo__h" for="zo-t-7700000001">Заметка к компании — видна только в этом браузере<\/label>/);
+  assert.match(h, /<label class="zo__h" for="zo-t-7700000001">Заметка к компании — видна только в этом браузере\. Не пишите сюда паспортные данные и пароли\.<\/label>/);
   assert.match(h, /maxlength="200"/);
   assert.match(h, /data-zo-del/);
   assert.ok(!/data-zo-del/.test(Z.html('7700000001', '', true)));

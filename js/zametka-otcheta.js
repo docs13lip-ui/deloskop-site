@@ -25,13 +25,13 @@
     z = String(z || '');
     if (red) {
       var id = 'zo-t-' + inn;
-      return '<form class="zo zo--red" data-zo-f><label class="zo__h" for="' + id + '">Заметка к' + NB + 'компании — видна только в' + NB + 'этом браузере</label>' +
-        '<textarea class="pf__zt" id="' + id + '" rows="2" maxlength="' + MAX + '" placeholder="Например: договор поставки до' + NB + '31.12, менеджер просил предоплату">' + esc(z) + '</textarea>' +
+      return '<form class="zo zo--red" data-zo-f><label class="zo__h" for="' + id + '">Заметка к' + NB + 'компании — видна только в' + NB + 'этом браузере. Не' + NB + 'пишите сюда паспортные данные и' + NB + 'пароли.</label>' +
+        '<textarea class="pf__zt ym-disable-keys" id="' + id + '" rows="2" maxlength="' + MAX + '" placeholder="Например: договор поставки до' + NB + '31.12, менеджер просил предоплату">' + esc(z) + '</textarea>' +
         '<div class="pf__zk"><button type="submit" class="pf__zs">Сохранить</button><button type="button" class="pf__zo" data-zo-otm>Отмена</button>' +
         (z ? '<button type="button" class="pf__zu" data-zo-del>Удалить заметку</button>' : '') + '</div></form>';
     }
     if (z) {
-      return '<div class="zo"><p class="zo__h">Ваша заметка</p><p class="zo__z">' + esc(z) + '</p>' +
+      return '<div class="zo"><p class="zo__h">Ваша заметка</p><p class="zo__z ym-hide-content">' + esc(z) + '</p>' +
         '<p class="zo__n">Видна только в' + NB + 'этом браузере · <button type="button" class="zo__b" data-zo-red>Изменить</button></p></div>';
     }
     return '<div class="zo zo--pusto"><button type="button" class="zo__b zo__b--plus" data-zo-red aria-label="Добавить заметку к' + NB + 'компании">+ Заметка к' + NB + 'компании</button></div>';

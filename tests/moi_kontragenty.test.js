@@ -107,12 +107,12 @@ test('заметка в списке: текст экранирован, под 
   const rows = P.sobrat({ '7707083893': [{ t: NOW, inn: '7707083893', lvl: 'low', nm: 'ПАО Сбербанк' }] }, []);
   const zm = { '7707083893': { z: '<b>предоплата</b>', t: NOW } };
   const h = P.html(rows, NOW, { zametki: zm });
-  assert.ok(h.includes('<p class="pf__z">&lt;b&gt;предоплата&lt;/b&gt;</p>'));
+  assert.ok(h.includes('<p class="pf__z ym-hide-content">&lt;b&gt;предоплата&lt;/b&gt;</p>'));
   assert.ok(h.includes('aria-label="Изменить заметку"'));
   assert.ok(h.includes('и заметки к ним? Отменить нельзя.'), 'очистка предупреждает о заметках');
   const r = P.html(rows, NOW, { zametki: zm, red: '7707083893' });
   assert.ok(r.includes('<form class="pf__zf" data-pf-zf="7707083893">') && r.includes('видна только в этом браузере'));
-  assert.ok(r.includes('maxlength="200"') && r.includes('Удалить заметку') && !r.includes('<p class="pf__z">'));
+  assert.ok(r.includes('maxlength="200"') && r.includes('Удалить заметку') && !r.includes('<p class="pf__z'));
   const bez = P.html(rows, NOW, {});
   assert.ok(bez.includes('aria-label="Добавить заметку"') && !bez.includes('pf__z"') && !bez.includes('заметки к'));
 });

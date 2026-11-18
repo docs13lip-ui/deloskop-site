@@ -130,8 +130,8 @@
 
   function redaktor(inn, z) {
     var id = 'pf-z-' + inn;
-    return '<form class="pf__zf" data-pf-zf="' + inn + '"><label class="pf__zl" for="' + id + '">Заметка к' + NB + 'компании — видна только в' + NB + 'этом браузере</label>' +
-      '<textarea class="pf__zt" id="' + id + '" rows="2" maxlength="' + ZAMETKA_MAX + '" placeholder="Например: договор поставки до' + NB + '31.12, менеджер просил предоплату">' + esc(z || '') + '</textarea>' +
+    return '<form class="pf__zf" data-pf-zf="' + inn + '"><label class="pf__zl" for="' + id + '">Заметка к' + NB + 'компании — видна только в' + NB + 'этом браузере. Не' + NB + 'пишите сюда паспортные данные и' + NB + 'пароли.</label>' +
+      '<textarea class="pf__zt ym-disable-keys" id="' + id + '" rows="2" maxlength="' + ZAMETKA_MAX + '" placeholder="Например: договор поставки до' + NB + '31.12, менеджер просил предоплату">' + esc(z || '') + '</textarea>' +
       '<div class="pf__zk"><button type="submit" class="pf__zs">Сохранить</button><button type="button" class="pf__zo" data-pf-zo="' + inn + '">Отмена</button>' +
       (z ? '<button type="button" class="pf__zu" data-pf-zu="' + inn + '">Удалить заметку</button>' : '') + '</div></form>';
   }
@@ -145,7 +145,7 @@
       '<div class="pf__a"><b class="pf__nm">' + esc(imya) + '</b><span class="pf__pill pf__pill--' + r.ur + '">' + UR[r.ur].t + '</span>' +
       (r.isk ? '<span class="pf__isk">' + (ISKLYUCHENA[r.isk] ? 'Компания исключена из' + NB + 'ЕГРЮЛ' : 'ФНС готовит исключение из' + NB + 'ЕГРЮЛ' + (r.isk === '108' ? ' по' + NB + 'сведениям Банка России' : '')) + '</span>' : '') + '</div>' +
       '<div class="pf__b"><span class="pf__inn n">ИНН' + NB + r.inn + '</span><span class="pf__d n' + (k.staryj ? ' pf__d--star' : '') + '">' + k.t + '</span></div>' +
-      (z && !otkryt ? '<p class="pf__z">' + esc(z) + '</p>' : '') +
+      (z && !otkryt ? '<p class="pf__z ym-hide-content">' + esc(z) + '</p>' : '') +
       (otkryt ? redaktor(r.inn, z) : '') +
       '<div class="pf__c"><button type="button" class="pf__go" data-pf-go="' + r.inn + '">Перепроверить</button>' +
       '<button type="button" class="pf__zb" data-pf-z="' + r.inn + '" aria-expanded="' + otkryt + '" aria-label="' + (z ? 'Изменить заметку' : 'Добавить заметку') + '" title="' + (z ? 'Изменить заметку' : 'Добавить заметку') + '">' + KARANDASH + '</button>' +

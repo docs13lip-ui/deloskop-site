@@ -96,7 +96,7 @@ test('точный ноль у приставов: «остаток долга �
   const r = otvet();
   r.damia.fssp = { nazvanie: 'Приставы', istochnik: 'ФССП (через Checko)', sostoyanie: 'found', data_svedeniy: '2026-11-12T23:38+03:00',
     dannye: { otkryto: 2, ostatok: 0, ostatok_ohvat: 'vse', ostatok_tochno: true } };
-  r.damia.sudy.dannye.otvetchik_summa_nezaversheno = 2060310; // 0,5 % — выше нуля у приставов
+  r.damia.sudy.dannye.otvetchik_summa_nezaversheno = 8241240; // 2 % — выше нуля у приставов (иски существенны от 1 %, pravo-sdelka-v1)
   const g = G.sobrat(r, SEG, PM);
   assert.deepStrictEqual(g.glavnoe.slice(0, 2).map((x) => x.k), ['damia_sudy', 'damia_fssp']);
   const f = g.glavnoe[1];
@@ -248,7 +248,7 @@ test('zapros-glavnoe-v1: долг по налогам и приостановк�
   g.zapros.forEach((x) => assert.strictEqual(x.t, docs.filter((d) => d.id === x.id)[0].title, 'текст из DOCS'));
   assert.ok(g.zapros.length <= 3);
   const h = bez(G.html(g));
-  assert.match(h, /<p class="gl1__zh">Что запросить по этим минусам<\/p>/);
+  assert.match(h, /<p class="gl1__zh">Что можно запросить у компании<\/p>/); // pravo-sdelka-v1: подпись юристов 19.11
   assert.match(h, /Справка об исполнении обязанности по уплате налогов \(КНД 1120101\)/);
   assert.match(h, /<button type="button" class="gl1__zv">Весь список и готовое письмо ↓<\/button>/);
   assert.ok(h.indexOf('gl1__l') < h.indexOf('gl1__z'), 'под фактами');
@@ -308,23 +308,33 @@ const krupnyjIsk = () => otvet({ damia: {
     dannye: { otvetchik_nezaversheno: 34, otvetchik_summa_nezaversheno: 169231336.84 } },
   fssp: { nazvanie: 'Приставы', istochnik: 'ФССП (через Checko)', sostoyanie: 'not_found', data_svedeniy: '2026-11-13T09:17+03:00', dannye: { otkryto: 0, ostatok: 0 } }
 }, dengi: { vyruchka: { summa: 113976150000, god: 2025 }, sostavlyayushchie: [] } });
+// pravo-sdelka-v1: иски от 1 % выручки — существенны; тот же ответ с исками на 2 % выручки
+const ochenKrupnyjIsk = () => { const r = krupnyjIsk(); r.damia.sudy.dannye.otvetchik_summa_nezaversheno = 2279523000; return r; };
+
+test('pravo-sdelka-v1: иски 0,15 % выручки (сетевая компания) — не существенный минус: ни в «Главном», ни в «Небольших суммах», итог не «est»', () => {
+  const g = G.sobrat(krupnyjIsk(), SEG, PM);
+  assert.notStrictEqual(g.itog.vid, 'est');
+  assert.strictEqual(g.itog.sushchestvennye.length, 0);
+  assert.ok(!g.glavnoe.some((x) => x.k === 'damia_sudy') && !g.melkoe.some((x) => x.k === 'damia_sudy'));
+  assert.strictEqual(G.POROG_ISKOV, 0.01);
+});
 
 test('vyvod-glavnoe-v1: один существенный минус — вместо «не найдено» итог «Главного» и сам минус с долей выручки, теми же словами', () => {
-  const g = G.sobrat(krupnyjIsk(), SEG, PM);
+  const g = G.sobrat(ochenKrupnyjIsk(), SEG, PM);
   assert.strictEqual(g.itog.vid, 'est');
   assert.strictEqual(g.itog.sushchestvennye.length, 1);
   const t = bez(U.poGlavnomu(g.itog, SERYOZNYH));
   assert.ok(!/не найдено/.test(t), t);
   assert.ok(t.startsWith(bez(g.itog.t) + ': '), t);
   assert.ok(t.includes(bez(g.itog.sushchestvennye[0].t)), 'строка минуса — та же, что в «Главном»');
-  assert.ok(/\(0,1 % выручки за 2025 год\)$/.test(t), t);
+  assert.ok(/\(\d+(,\d+)? % выручки за 2025 год\)$/.test(t), t);
 });
 
 test('vyvod-glavnoe-v1: существенных нет, или пояснение не говорит «не найдено», или «Главного» нет — пояснение как было', () => {
   const g = G.sobrat(otvet(), SEG, PM);                    // мелкий иск — итог не «est»
   assert.notStrictEqual(g.itog.vid, 'est');
   assert.strictEqual(U.poGlavnomu(g.itog, SERYOZNYH), SERYOZNYH);
-  const k = G.sobrat(krupnyjIsk(), SEG, PM).itog;
+  const k = G.sobrat(ochenKrupnyjIsk(), SEG, PM).itog;
   assert.strictEqual(U.poGlavnomu(k, 'Не проверяли: суды. Перед крупной оплатой посмотрите их сами'), 'Не проверяли: суды. Перед крупной оплатой посмотрите их сами');
   assert.strictEqual(U.poGlavnomu(null, SERYOZNYH), SERYOZNYH);
   assert.strictEqual(U.poGlavnomu({ vid: 'est', t: 'Есть 1 существенный минус на 18.11.2026', sushchestvennye: [] }, SERYOZNYH), SERYOZNYH);

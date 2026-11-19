@@ -50,7 +50,7 @@ test('«не нашли» — с источником и датой; «не пр
   assert.strictEqual(bezNb(po(s, 'fssp').t), 'Производств не нашли');
   assert.strictEqual(bezNb(po(s, 'fssp').meta), 'ФССП · на 12.11.2026');
   assert.strictEqual(bezNb(po(s, 'bankrotstvo').t), 'Сообщений о банкротстве не нашли');
-  assert.strictEqual(bezNb(po(s, 'priostanovki').t), 'Сегодня не проверяли');
+  assert.strictEqual(bezNb(po(s, 'priostanovki').t), 'Не проверяли в этот раз');
   assert.strictEqual(po(s, 'priostanovki').ton, 'ne');
   s.forEach((x) => assert.ok(!/чист|нет долгов|надёжн/i.test(x.t), x.t));
 });

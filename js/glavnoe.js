@@ -38,7 +38,10 @@
   var NB = ' ';
   var MAKS = 3;          // главных строк
   var MELKO = 0.001;     // меньше 0,1 % выручки — «мелкое» (план 18.11, разд. 3 п. 2)
-  var KRUPNO = 0.1;      // от 10 % — вес как у статуса (порог «Денег на кону»: srednyaya)
+  var KRUPNO = 0.1;
+  // pravo-sdelka-v1 (юристы 19.11 разд. 4): иски (компания — ответчик, идущие дела) существенны от 1 % выручки; ниже — строкой
+  // в «Плюсах и минусах» с долей, в «Главное» не поднимаем (0,15 % у энергосбыта «существенным» не называем — ст. 152 ГК)
+  var POROG_ISKOV = 0.01;      // от 10 % — вес как у статуса (порог «Денег на кону»: srednyaya)
   // минусы без суммы, которые решают про деньги сразу (как начало PORYADOK_M в js/plyusy-minusy.js)
   var TYAZHELYE = ['status', 'damia_bankrotstvo', 'damia_priostanovki', 'damia_rnp', 'damia_mery', 'address'];
 
@@ -170,6 +173,7 @@
       var ves = TYAZHELYE.indexOf(x.k) >= 0 ? 3 : nolTochno(r, x.k, sm) ? 1 : d == null ? 2 : d >= KRUPNO ? 3 : d >= MELKO ? 2 : 0;
       // существенно (слова юриста 18.11 п. 2): событие без суммы из TYAZHELYE или сумма от 0,1 % выручки
       var sush = TYAZHELYE.indexOf(x.k) >= 0 || (d != null && d >= MELKO);
+      if (x.k === 'damia_sudy' && d != null && d < POROG_ISKOV) { sush = false; if (ves > 0) ves = -1; } // ни в «Главное», ни в «Небольшие суммы»
       return { znak: 'minus', k: x.k, t: x.t, ist: x.ist, data: x.data, dolya: d != null ? dolyaTekst(d, V.god) : '', ves: ves, i: i,
         sush: sush, summa: sm, d: d };
     }).sort(function (a, b) { return b.ves - a.ves || a.i - b.i; });
@@ -188,7 +192,7 @@
   }
 
   // минус «Главного» → документы списка «Что запросить у них» (js/usloviya.js DOCS), отвечающие именно на него
-  var ZAPROS = { director_change: ['powerNew'], tax_debt: ['taxCert'], damia_fssp: ['fssp'], damia_priostanovki: ['unblock'], address: ['fixRecord', 'premises'], zsk: ['bank'] };
+  var ZAPROS = { director_change: ['powerNew'], tax_debt: ['taxCert'], damia_fssp: ['fssp'], damia_sudy: ['sudy'], damia_priostanovki: ['unblock'], address: ['fixRecord', 'premises'], zsk: ['bank'] };
   var ZAPROS_MAKS = 3;
   // zapros(G, docs) → [{ id, t }] — только документы, которые есть в списке условий (docs — decide(r).docs), по порядку минусов
   function zapros(G, docs) {
@@ -215,7 +219,7 @@
   }
   function zaprosHtml(Z) {
     if (!Array.isArray(Z) || !Z.length) return '';
-    return '<div class="gl1__z" data-zapros="' + Z.length + '"><p class="gl1__zh">Что запросить по' + NB + 'этим минусам</p><ul>' +
+    return '<div class="gl1__z" data-zapros="' + Z.length + '"><p class="gl1__zh">Что можно запросить у' + NB + 'компании</p><ul>' +
       Z.map(function (d) { return '<li data-doc="' + esc(d.id) + '">' + tire(d.t) + '</li>'; }).join('') + '</ul>' +
       '<button type="button" class="gl1__zv">Весь список и' + NB + 'готовое письмо' + NB + '↓</button></div>';
   }
@@ -352,5 +356,5 @@
   }
 
   return { sobrat: sobrat, zapros: zapros, ZAPROS: ZAPROS, html: html, mount: mount, stil: stil, podpisatDoli: podpisatDoli, dolyaTekst: dolyaTekst, vyruchka: vyruchka,
-    summa: summa, itog: itog, istochnikov: istochnikov, CSS: CSS, MAKS: MAKS, MELKO: MELKO, KRUPNO: KRUPNO };
+    summa: summa, itog: itog, istochnikov: istochnikov, CSS: CSS, MAKS: MAKS, MELKO: MELKO, KRUPNO: KRUPNO, POROG_ISKOV: POROG_ISKOV };
 });

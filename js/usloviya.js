@@ -697,7 +697,16 @@
   var LIMIT_NALICHNYH = 100000;
   var NALICHNYE = 'Наличными — нельзя: по одному договору между компаниями и ИП наличными можно заплатить не больше 100 000 ₽ (п. 4 Указания Банка России от 09.12.2019 № 5348\u2011У). Всё, что больше, — только безналично.';
   // поле только при сумме больше предела: без него вывод побайтно прежний (снимки tests/otsrochka_pokupatelyu.test.js)
-  function sNal(v, amount) { var x = nalichnye(amount); if (x) v.nalichnye = x; return v; }
+  // sposob-oplaty-v1 (план 19.11 п. 1 «ИНН + сумма + предмет + способ оплаты»): «Как платите» —
+  // «Безналично» снимает строку (она не о вашей сделке), «Наличными» ставит её первой и выделяет; не выбрано — как раньше.
+  // Новых слов нет: строка та же (слова юристов); «Картой или СБП» не добавляли — нужны слова юристов.
+  var SPOSOB = [{ id: 'bezn', t: 'Безналично' }, { id: 'nal', t: 'Наличными' }];
+  function sNal(v, amount, sposob) {
+    if (sposob === 'bezn' || sposob === 'nal') v.sposob = sposob;
+    if (sposob === 'bezn') return v;
+    var x = nalichnye(amount); if (x) { v.nalichnye = x; if (sposob === 'nal') v.nalPervoj = true; }
+    return v;
+  }
   function nalichnye(amount) { amount = parseAmount(amount); return amount && amount > LIMIT_NALICHNYH ? NALICHNYE : null; }
   function decide(r, opts) {
     opts = opts || {};
@@ -715,7 +724,7 @@
         headline: headlineOtg(f, t, pc.cap, pc.malo, pv, pc.nedostatochno), reasons: reasons(f), advice: sNetVyvoda(pv, t, adviceOtg(f, t, pc.malo)),
         amount: amount, regime: regime, stake: null, prepay: pc.nedostatochno && amount ? NEDOST_SOVET(true) : otgruzkaAdvice(amount, pc.cap, t, pv),
         docs: list, letter: letterOtg(f, list, amount)
-      }, pv), amount);
+      }, pv), amount, opts.sposob);
     }
     return sNal(sFinorg(pc, {
       facts: f, tone: t, cap: pc.cap, malo: !!pc.malo, capRule: pc.rule, raschet: pc.raschet, neProvereno: np,
@@ -723,7 +732,7 @@
       headline: headline(f, t, pc.cap, pc.malo, pv, pc.nedostatochno), reasons: reasons(f), advice: sNetVyvoda(pv, t, advice(f, t, pc.malo)),
       amount: amount, regime: regime, stake: atStake(amount, regime), prepay: pc.nedostatochno && amount ? NEDOST_SOVET(false) : prepayAdvice(amount, pc.cap, t, pv),
       docs: list, letter: letter(f, list, amount, { kartochka: opts.kartochka, data: dataRu(r.checked_at) || '' })
-    }, pv), amount);
+    }, pv), amount, opts.sposob);
   }
   // finorg — только у банка или страховой: у остальных вывод побайтно прежний (снимок tests/otsrochka_pokupatelyu.test.js);
   // predvaritelno — только когда ориентир предварительный (predvaritelno-v1)
@@ -761,6 +770,9 @@
     '.usl-out{display:flex;flex-direction:column;gap:6px;font-size:15px}' +
     '.usl-out b{font-variant-numeric:tabular-nums}' +
     '.usl-out .usl-nal{border-left:2px solid var(--mat-zhdu,#7A5C14);padding-left:12px}[data-theme=dark] .usl-out .usl-nal{border-left-color:var(--mat-zhdu-t,#D9B45A)}' +
+    '.usl-out .usl-nal1{font-weight:600}' +
+    '.usl-sp{grid-column:1/-1;display:flex;align-items:center;gap:10px}.usl-sp>span{flex:none}.usl-sp .usl-napr{flex:0 1 auto;min-width:0}.usl-sp>span{font-size:13px;color:var(--muted,#5B6783)}.usl-sp .usl-napr{margin:0}.usl-sp .usl-napr button{min-height:32px;font-size:13px;padding:0 12px}' +
+    '@media (max-width:640px),(pointer:coarse){.usl-sp .usl-napr button{min-height:44px;font-size:15px}}@media (max-width:520px){.usl-sp{flex-wrap:wrap;gap:6px}.usl-sp .usl-napr{flex:1 1 100%}}' +
     '.usl-out .z{color:var(--ok,#16723F)}' +
     '.usl details{border-top:1px solid #E3DDCD;padding-top:10px}' +
     '.usl summary{cursor:pointer;font-weight:600;font-size:15px;list-style:none;display:flex;justify-content:space-between;gap:10px}' +
@@ -906,7 +918,7 @@
     if (!r || !r.company || !r.company.inn) throw new Error('usloviya: нет данных о компании');
     var doc = el.ownerDocument; injectCss(doc);
     var uid = 'usl' + Math.random().toString(36).slice(2, 7);
-    var st = { amount: o.amount || 0, regime: store('usl.regime') || 'osno', napravlenie: store('usl.napr') === 'otgruzhaem' ? 'otgruzhaem' : 'platim' };
+    var st = { amount: o.amount || 0, regime: store('usl.regime') || 'osno', napravlenie: store('usl.napr') === 'otgruzhaem' ? 'otgruzhaem' : 'platim', sposob: null }; // способ не запоминаем: он у каждой сделки свой
     var celi = {};                                         // цели Метрики — один раз за проверку (за mount)
     var box = doc.createElement('section');
     box.setAttribute('aria-label', 'Условия сделки');
@@ -950,8 +962,10 @@
         (o.compact ? '' :
         '<div class="usl-sum"><label for="' + uid + 'a">' + (otg ? 'Сумма отгрузки' : 'Сумма сделки — посчитаем предоплату и деньги на кону') + '</label>' +
           '<div class="usl-in"><input id="' + uid + 'a" inputmode="numeric" autocomplete="off" placeholder="например, 500 000" value="' + (st.amount ? esc(money(st.amount).replace(/ ₽$/, '')) : '') + '"><span>₽</span></div>' +
-          (otg ? '' : '<select aria-label="Ваш режим налогов">' + sel + '</select>') + '</div>' +
-        (v.amount && (v.prepay || stake || v.nalichnye) ? '<div class="usl-out" aria-live="polite">' + (v.prepay ? '<div>' + esc(v.prepay) + '</div>' : '') + stake + (v.nalichnye ? '<div class="usl-nal">' + esc(v.nalichnye) + '</div>' : '') + '</div>' : '')) +
+          (otg ? '' : '<select aria-label="Ваш режим налогов">' + sel + '</select>') +
+          '<div class="usl-sp"><span id="' + uid + 's">' + (otg ? 'Как платят вам' : 'Как платите') + '</span><div class="usl-napr" role="group" aria-labelledby="' + uid + 's">' + SPOSOB.map(function (x) {
+            return '<button type="button" data-sposob="' + x.id + '" aria-pressed="' + (x.id === st.sposob) + '">' + esc(x.t) + '</button>'; }).join('') + '</div></div>' + '</div>' +
+        (v.amount && (v.prepay || stake || v.nalichnye) ? '<div class="usl-out" aria-live="polite">' + (v.nalPervoj ? '<div class="usl-nal usl-nal1">' + esc(v.nalichnye) + '</div>' : '') + (v.prepay ? '<div>' + esc(v.prepay) + '</div>' : '') + stake + (v.nalichnye && !v.nalPervoj ? '<div class="usl-nal">' + esc(v.nalichnye) + '</div>' : '') + '</div>' : '')) +
         '<div class="usl-kak" data-u="kak"><p>' + esc(v.kak.kak) + '</p>' +
           (v.kak.ne ? '<p class="usl-ne">' + esc(v.kak.ne) + '</p>' : '') +
           (v.kak.ssylka ? '<p class="usl-ne" data-u="bank"><a href="' + esc(v.kak.ssylka.u) + '" target="_blank" rel="noopener">' + esc(v.kak.ssylka.t) + ' →</a></p>' : '') +
@@ -975,6 +989,15 @@
         if (keepFocus) { inp.focus(); var L = inp.value.length; try { inp.setSelectionRange(L, L); } catch (_) {} }
       }
       if (s) s.addEventListener('change', function () { st.regime = s.value; store('usl.regime', s.value); draw(); });
+      Array.prototype.forEach.call(box.querySelectorAll('[data-sposob]'), function (b) {
+        b.addEventListener('click', function () {
+          var n = b.getAttribute('data-sposob');
+          st.sposob = st.sposob === n ? null : n;            // второе нажатие снимает выбор
+          if (st.sposob === 'nal' && !celi.nal) { celi.nal = 1; cel('usl_nalichnymi'); }
+          draw();
+          var nb = box.querySelector('[data-sposob="' + n + '"]'); if (nb) nb.focus();
+        });
+      });
       Array.prototype.forEach.call(box.querySelectorAll('[data-napr]'), function (b) {
         b.addEventListener('click', function () {
           var n = b.getAttribute('data-napr');
@@ -1009,7 +1032,7 @@
   }
 
   return {
-    decide: decide, mount: mount, nalichnye: nalichnye, NALICHNYE: NALICHNYE, LIMIT_NALICHNYH: LIMIT_NALICHNYH, rynokStroka: rynokStroka, facts: facts, tone: tone, reorgPrekr: reorgPrekr, REORG_PREKRASHCHENIE: REORG_PREKRASHCHENIE, REORG_SDELAT: REORG_SDELAT, REORG_DOLG: REORG_DOLG, prepayCap: prepayCap, atStake: atStake,
+    decide: decide, mount: mount, nalichnye: nalichnye, SPOSOB: SPOSOB, NALICHNYE: NALICHNYE, LIMIT_NALICHNYH: LIMIT_NALICHNYH, rynokStroka: rynokStroka, facts: facts, tone: tone, reorgPrekr: reorgPrekr, REORG_PREKRASHCHENIE: REORG_PREKRASHCHENIE, REORG_SDELAT: REORG_SDELAT, REORG_DOLG: REORG_DOLG, prepayCap: prepayCap, atStake: atStake,
     docs: docs, letter: letter, LETTER_NELZYA: LETTER_NELZYA, kartaKartochek: kartaKartochek, parseAmount: parseAmount, money: money, moneyKrupno: moneyKrupno, niceFloor: niceFloor, kindOf: kindOf, signalId: signalId, SIGNALY: SIGNALY.map(function (x) { return x[0]; }),
     neProvereno: neProvereno, kakPoschitali: kakPoschitali, otgruzkaAdvice: otgruzkaAdvice, NAPR: NAPR, bezPovtora: bezPovtora, chestnoPoyasnenie: chestnoPoyasnenie, poGlavnomu: poGlavnomu, neProverenyKlyuchevye: neProverenyKlyuchevye, vVyvode: vVyvode, STATYA: STATYA, FORMULA: FORMULA,
     predvaritelno: predvaritelno, neOtvetiliSudyFssp: neOtvetiliSudyFssp, NET_VYVODA: NET_VYVODA, METODIKA: { DELITEL: DELITEL, POTOLKI: POTOLKI, OSTOROZHNO: OSTOROZHNO, MINIMUM: MINIMUM, PRAVILO: PRAVILO },

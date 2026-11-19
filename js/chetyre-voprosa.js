@@ -151,7 +151,10 @@
     var pr = (v.predel && v.predel.pravilo) || (U && U.METODIKA && U.METODIKA.PRAVILO) || '', dp = dataPravila(pr);
     var sost = (v.predel && v.predel.sostoyanie) || (v.cap > 0 ? 'positive' : v.cap === 0 ? 'zero' : 'insufficient_data'), a;
     var money = U ? U.money : function (x) { return Math.round(x) + NB + '₽'; };
-    if (sost === 'positive') a = 'Предоплата — до' + NB + money(v.cap) + '. Расчёт по' + NB + 'правилу от' + NB + dp + '.';
+    // predel-chestno-v1 (аудит 19.11): при неполной проверке и предварительном ориентире — без «до X», теми же словами, что «Условия сделки»
+    if (sost === 'positive' && v.predvaritelno) a = 'Предоплата — предварительно не больше' + NB + money(v.cap) + ': до проверки того, чего мы не видели, — по факту поставки. Расчёт по' + NB + 'правилу от' + NB + dp + '.';
+    else if (sost === 'positive' && v.nepolno) a = 'Предоплата — по нашей оценке не больше' + NB + money(v.cap) + '; это не гарантия исполнения договора. Не проверяли в' + NB + 'этот раз: ' + v.nepolno.join(', ') + '. Расчёт по' + NB + 'правилу от' + NB + dp + '.';
+    else if (sost === 'positive') a = 'Предоплата — до' + NB + money(v.cap) + '. Расчёт по' + NB + 'правилу от' + NB + dp + '.';
     else if (sost === 'zero') a = 'Без предоплаты. Основание: ' + ((v.reasons && v.reasons[0]) || v.capRule || 'правило Делоскопа') + '.';
     else if (sost === 'finorg') a = 'Сумму аванса не' + NB + 'считаем: это банк или страховая организация.';
     else a = 'Сумму аванса не' + NB + 'считаем: неизвестны возраст и' + NB + 'выручка компании. Запросите у' + NB + 'контрагента последнюю бухгалтерскую отчётность.';

@@ -536,6 +536,8 @@
       // doverie-v1: выручка и возраст неизвестны — предел не посчитан (не «—» с зелёным тоном и не сумма)
       else if (u.nedostatochno) fakt('predel', 'Предел аванса', 'не считаем — выручка и возраст компании неизвестны; до проверки — по факту поставки', { ton: 'warn', istochnik: 'формула Делоскопа' });
       else if (u.predvaritelno && typeof u.cap === 'number') fakt('predel', 'Предел аванса', 'предварительно: ' + U.money(u.cap) + ' — после проверки того, чего мы не видели; до неё — по факту поставки', { ton: 'warn', istochnik: 'формула Делоскопа' });
+      // predel-chestno-v1 (аудит 19.11): не ответили реестры, от которых зависит вывод о деньгах, — те же слова, что «Условия сделки»
+      else if (u.nepolno && u.cap > 0) fakt('predel', 'Предел аванса', 'по нашей оценке не больше ' + U.money(u.cap) + ' — по проверенным источникам, это не гарантия исполнения договора', { ton: 'warn', istochnik: 'формула Делоскопа' });
       else fakt('predel', 'Предел аванса', typeof u.cap === 'number' ? U.money(u.cap) : '—', { ton: u.malo ? 'warn' : u.tone === 'go' ? 'ok' : u.tone === 'cap' ? 'warn' : 'bad', istochnik: 'формула Делоскопа' });
       var kk = u.kak && (typeof u.kak === 'string' ? { kak: u.kak } : u.kak);
       if (kk && kk.kak) fakt('predel', 'Как посчитали', kk.kak.replace(/^Как посчитали:\s*/, ''), { ton: 'info', istochnik: 'формула Делоскопа' });

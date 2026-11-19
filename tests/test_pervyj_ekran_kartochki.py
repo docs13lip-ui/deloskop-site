@@ -22,9 +22,9 @@ _ITOG = re.compile(r'<section class="co-itog" aria-labelledby="itog">(.*?)</sect
 # «Существенных минусов не нашли» — и «— по K проверенным источникам на ДД.ММ.ГГГГ»
 _STROKA = re.compile(r'<h2 id="itog" class="co-itog__s">(?:Плюсов (\d+), минусов (\d+)|Есть (\d+)(?:&nbsp;|&#160;|\u00a0| )существенн[а-я]+ минус[а-я]*|'
                      r'Существенных минусов не(?:&nbsp;|&#160;|\u00a0| )нашли)'
-                     r'<span class="co-itog__d">(?:&nbsp;|&#160;|\u00a0| )— по(?:&nbsp;|&#160;|\u00a0| )(\d+)(?:&nbsp;|&#160;|\u00a0| )проверенным источникам на(?:&nbsp;|&#160;|\u00a0| )(\d{2}\.\d{2}\.\d{4})</span></h2>')
-_LI = re.compile(r'<li class="co-itog__l co-itog__l--(plus|minus)" data-pm="([a-z_]+)"><a href="#reestry"[^>]*><span class="vh">[^<]*</span>(.*?)</a></li>', re.S)
-_PM_LI = re.compile(r'<li data-pm="([a-z_]+)"><a class="pm__a" href="#reestry"[^>]*>(.*?)</a></li>', re.S)
+                     r'<span class="co-itog__d">(?:&nbsp;|&#160;|\u00a0| )— по(?:&nbsp;|&#160;|\u00a0| )(\d+)(?:&nbsp;|&#160;|\u00a0| )проверенным источникам(?: на|, проверено)(?:&nbsp;|&#160;|\u00a0| )(\d{2}\.\d{2}\.\d{4})</span></h2>')
+_LI = re.compile(r'<li class="co-itog__l co-itog__l--(plus|minus)" data-pm="([a-z_]+)"><a href="#(?:reestry|fin|bal)"[^>]*><span class="vh">[^<]*</span>(.*?)</a></li>', re.S)
+_PM_LI = re.compile(r'<li data-pm="([a-z_]+)"><a class="pm__a" href="#(?:reestry|fin|bal)"[^>]*>(.*?)</a></li>', re.S)
 
 
 def txt(s):
@@ -116,7 +116,7 @@ class TestPervyjEkran(unittest.TestCase):
         h = K.itog_html(S, "7707083893", "15.11.2026")
         # chto-za-kompaniya-v1: минусов нет — «Существенных минусов не нашли — по K источникам на дату», «Не проверяли» под ним
         self.assertIn("Существенных минусов не" + NB + "нашли", h)
-        self.assertIn("по" + NB + "2" + NB + "проверенным источникам на" + NB + "15.11.2026", h)
+        self.assertIn("по" + NB + "2" + NB + "проверенным источникам, проверено" + NB + "15.11.2026", h)
         self.assertIn("арбитражные суды, приставы", h.replace("приостановки", "приставы"), "«Не проверяли» — сначала непроверенное страницей")
         S2 = dict(S, minusy=[("bankrotstvo", "Сообщения о банкротстве в ЕФРСБ", "ЕФРСБ", "12.11.2026")])
         self.assertIn("Есть 1" + NB + "существенный минус", K.itog_html(S2, "7707083893", "15.11.2026"))

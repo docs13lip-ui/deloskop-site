@@ -171,7 +171,8 @@ class TestOpublikovannye(unittest.TestCase):
             self.assertFalse(K.STOP_SLOVA.search(tx), f)  # без оценок компании
             self.assertNotIn("#C", b)  # цвета — только в css/co.css через var()
             for li in re.findall(r"<li data-pm=.*?</li>", b):
-                self.assertIn('href="#reestry"', li, f)
+                # minusy-gir-bo-v1: убыток и отрицательный капитал ГИР БО ведут к «Финансам» и «Балансу»
+                self.assertIn({'ubytok': 'href="#fin"', 'kapital': 'href="#bal"'}.get(re.search(r'data-pm="([a-z_]+)"', li).group(1), 'href="#reestry"'), li, f)
                 self.assertIn(' на' + NB, html.unescape(re.search(r'title="([^"]*)"', li).group(1)), f)
 
     def test_css(self):

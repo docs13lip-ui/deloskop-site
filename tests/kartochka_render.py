@@ -7425,3 +7425,100 @@ def nds_fakt_korotko(t):
         i, j = nov.index("<p>") + 3, nov.index("</p>")
         return li + nov[:i] + tekst + nov[j:]
     return _NDS_FAKT_V23.sub(zam, t)
+
+
+# ---------------------------------------------------------------- staraya-otchetnost-v1 ([Ночные-2] 19.11, слова [Право] 19.11
+# вечер разд. 1 (1), claude/Право_✎_старая_отчётность_чек_СБП_617-9_Разбор57_замена_19.11.md): год сведений − год последней
+# открытой отчётности > 2 → совет по старым цифрам не ставим (читается как оценка нынешнего положения, ст. 152 ГК). Было у
+# «Моторинвест» (4810004427): «У … за 2021 год убыток 202 млн ₽… Аванс лучше разбить на этапы…» и «Аванс — частями…: убыток
+# 202 млн ₽ за 2021 год». Теперь «Что это значит» — только факт с годом и оговорка (абзац давности сливается с ним, без
+# повтора «Последняя открытая отчётность»), «Перед оплатой» — запрос свежей отчётности словами [Право]. Свежая отчётность
+# и отчётность позапрошлого года — без изменений. Новых утверждений нет; повтор — те же байты.
+def _so_norm(s):
+    return re.sub(r"[   ]", " ", html.unescape(re.sub(r"<[^>]+>", "", s or "")))
+
+
+def staraya_god(f):
+    """(год последней отчётности, год сведений), если отчётность старше двух лет; иначе None. Доход ФНС — не отчётность."""
+    ryad = [x for x in f.get("ryad") or [] if x.get("dohod") and x["dohod"] > 0]
+    na = f.get("na")
+    if not ryad or not na or ryad[-1].get("fns"):
+        return None
+    g1 = ryad[-1].get("god")
+    return (g1, na.year) if g1 and na.year - g1 >= 3 else None
+
+
+_SO_SOVET = re.compile(r"аванс|вперёд|спросите|долю прибыли|этап", re.I)
+
+
+def staraya_fakt(f):
+    ryad = [x for x in f["ryad"] if x.get("dohod") and x["dohod"] > 0]
+    p1 = ryad[-1]
+    r1, pr1 = p1["dohod"], p1.get("pribyl")
+    if pr1 is not None and pr1 < 0:
+        s = "убыток %s при выручке %s" % (dengi(-pr1), dengi(r1))
+    elif pr1 is not None:
+        s = "выручка %s, чистая прибыль %s" % (dengi(r1), dengi(pr1))
+    else:
+        s = "выручка %s" % dengi(r1)
+    kap = re.search(r"минус ([^:]+):", _zn_v(f, "warn", "Собственный капитал") or "")
+    if kap:
+        s += ", обязательства больше активов на %s" % _zn_ed(kap.group(1))
+    return s
+
+
+_un_frazy_bez_staroj = un_frazy
+
+
+def un_frazy(f):  # noqa: F811 — staraya-otchetnost-v1
+    out = _un_frazy_bez_staroj(f)
+    G = staraya_god(f) if out else None
+    if not G:
+        return out
+    g1 = G[0]
+    im = _so_norm(un_kratkoe(f["imya"]))
+    za = "за %d год" % g1
+    nachala = ("У %s %s " % (im, za), "Обязательства %s больше активов" % im, "Прибыль %s %s" % (im, za),
+               "Выручка %s %s" % (im, za), "Чистая прибыль %s %s" % (im, za))
+    den = next((i for i, x in enumerate(out) if _so_norm(x).startswith(nachala) and _SO_SOVET.search(_so_norm(x))), None)
+    if den is None:
+        return out
+    davn_n = "Последняя открытая отчётность %s — за %d год. " % (im, g1)
+    davn = next((i for i, x in enumerate(out) if _so_norm(x).startswith(davn_n)), None)
+    t = ("Последняя открытая отчётность %s — %s: %s. Это старые данные — о нынешнем положении компании они не говорят."
+         % (un_kratkoe(f["imya"]), za, staraya_fakt(f)))
+    if davn is not None:
+        hvost = out[davn][len(davn_n):]  # NB → пробел 1:1 — длина та же, неразрывные пробелы хвоста сохраняются
+        hvost = re.sub(r"ГИР([ \u00a0])БО её([ \u00a0])нет", r"ГИР\1БО отчётности\2нет", hvost, count=1)
+        t += " " + hvost
+    t = _zn_nb(t)
+    assert not STOP_SLOVA.search(t), t
+    return [t if i == den else x for i, x in enumerate(out) if i != davn]
+
+
+def staraya_pered_tekst(god_svedenij):
+    return ("Свежей отчётности в%sоткрытых данных нет. Запросите баланс и%sотчёт о%sфинансовых результатах за%s%d%sгод "
+            "с%sквитанцией о%sприёме налоговой. До%sэтого%s— платите по%sфакту поставки или этапами."
+            % (NB, NB, NB, NB, god_svedenij - 1, NB, NB, NB, NB, NB, NB))
+
+
+_un_pered_bez_staroj = un_pered
+
+
+def un_pered(f):  # noqa: F811 — staraya-otchetnost-v1: «Перед оплатой» без советов по цифрам старше двух лет
+    s = _un_pered_bez_staroj(f)
+    G = staraya_god(f)
+    if not G or not f.get("imya"):
+        return s
+    g1, gs = G
+    po_staroj = re.compile(r"за[\s ]+%d[\s ]+год" % g1)
+    sovet = staraya_pered_tekst(gs)
+    schet = [x for x in s if "/proverit-schet/" in x]
+    if any("замечаний нет" in x for x in schet):
+        im = html.escape(un_kratkoe(f["imya"]), quote=False)
+        schet = ['Счёт от %s: сверьте ИНН%s%s, название и банк. <a href="/proverit-schet/">Проверить счёт</a>'
+                 % (im, NB, f.get("inn", ""))]
+    drugie = [x for x in s if x not in schet and "/proverit-schet/" not in x and not po_staroj.search(_so_norm(x))
+              and x != sovet]
+    res = drugie[:2] + [sovet] + schet
+    return res[:3]

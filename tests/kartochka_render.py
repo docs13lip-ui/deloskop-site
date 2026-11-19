@@ -7291,3 +7291,85 @@ def vstavit_ryadom(t, blok):
     if not blok or _RYADOM_PERED not in t:
         return t
     return t.replace(_RYADOM_PERED, blok + _RYADOM_PERED, 1)
+
+
+# ---------------------------------------------------------------- razbor-gody-v1 ([Ночные-2] 19.11, аудит 19.11 «чрезмерно уверенные выводы»)
+# «Разбор по цифрам» делил выручку одного года на штат и налоги другого: «Моторинвест» (4810004427) — выручка за 2021
+# (ГИР БО) на штат и налоги за 2025 (ФНС): «Выручка на одного сотрудника — 119 тыс. ₽», «Налоги и взносы за год больше
+# выручки в 103 раза». Таких карточек 25 из 396 (выручка за 2021–2024, штат и налоги — за 2025). Правило то же, что у
+# «места на рынке» и «против средних по отрасли»: сравниваем только числа одного года. Годы разные — строку снимаем
+# (оба числа остаются на странице в «Коротко» и «Финансах» со своими датами); год не виден — строку не трогаем.
+# Чистая функция по разметке; повтор — те же байты; новых утверждений нет.
+_RG_FAKT = re.compile(r'<div class="fact"><span>([^<]*)</span><span class="fact__v">(.*?)</span><span class="fact__src co-src">([^<]*)</span>', re.S)
+_RG_LI = re.compile(r'<li class="co-v co-v--info">(?:(?!</li>).)*</li>', re.S)
+_RG_GOD = re.compile(r"(20\d\d)")
+
+
+def _rg_tekst(s):
+    return re.sub(r"[   ]", " ", html.unescape(re.sub(r"<[^>]+>", "", s)))
+
+
+def razbor_gody_fakty(t):
+    """Годы чисел «Коротко»: {'v': год выручки, 'sh': год штата, 'nl': год налогов} — None, если не виден."""
+    d = {"v": None, "sh": None, "nl": None}
+    vid = False
+    for l, v, s in _RG_FAKT.findall(t or ""):
+        l, v, s = _rg_tekst(l), _rg_tekst(v), _rg_tekst(s)
+        if not vid and (l.startswith("Выручка за") or l.startswith("Доходы")):
+            vid = True
+            m = _RG_GOD.search(l + " " + v) or re.search(r"31\.12\.(20\d\d)", s)
+            d["v"] = int(m.group(1)) if m else None
+        elif l.startswith("Сотрудники"):
+            m = re.search(r"31\.12\.(20\d\d)", s)
+            d["sh"] = int(m.group(1)) if m else None
+        elif l.startswith("Налоги и взносы"):
+            m = re.search(r"за\s*(20\d\d)", v) or re.search(r"31\.12\.(20\d\d)", s)
+            d["nl"] = int(m.group(1)) if m else None
+    return d
+
+
+def razbor_gody(t):
+    """«Разбор по цифрам» без долей выручки к штату и налогам другого года. Строк не осталось — раздела нет."""
+    if not t:
+        return t
+    i = t.find('aria-labelledby="razbor"')
+    if i < 0:
+        return t
+    s = t.rfind("<section", 0, i)
+    j = t.find("</section>", i)
+    if s < 0 or j < 0:
+        return t
+    j += len("</section>")
+    G = razbor_gody_fakty(t)
+    if not G["v"]:
+        return t
+
+    def lishnyaya(li):
+        x = _rg_tekst(li)
+        if "на одного сотрудника" in x:
+            return bool(G["sh"]) and G["sh"] != G["v"]
+        if x.lstrip().startswith("Налоги и взносы") and "выручк" in x:
+            return bool(G["nl"]) and G["nl"] != G["v"]
+        return False
+
+    sek = t[s:j]
+    nov = _RG_LI.sub(lambda m: "" if lishnyaya(m.group(0)) else m.group(0), sek)
+    if nov == sek:
+        return t
+    if not _RG_LI.search(nov):
+        return t[:s] + t[j:]
+    return t[:s] + nov + t[j:]
+
+
+_otrasl_na_kartochke_bez_godov = otrasl_na_kartochke
+
+
+def otrasl_na_kartochke(t, D=None):  # noqa: F811 — razbor-gody-v1: и новые карточки (html_kartochki), и опубликованные (perepechatat)
+    return razbor_gody(_otrasl_na_kartochke_bez_godov(t, D))
+
+
+_korotko_po_vesu_bez_godov = korotko_po_vesu
+
+
+def korotko_po_vesu(t):  # noqa: F811 — razbor-gody-v1: и до shablon_v2 — description берёт «Разбор» уже без строк другого года (перепечатка сходится с первого прохода)
+    return razbor_gody(_korotko_po_vesu_bez_godov(t))

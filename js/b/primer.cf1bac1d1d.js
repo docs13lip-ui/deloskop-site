@@ -695,6 +695,8 @@ f.vyruchkaNol = !(f.revenue > 0) && !(o && o.vyruchka > 0);
 var dm = (r && r.damia) || {}, dn = (dm.fssp && dm.fssp.dannye) || {};
 if (dmNajdeno(dm.fssp) && !(dn.ostatok === 0 && dn.ostatok_tochno === true)) f.zaprosFssp = true;
 if (dmNajdeno(dm.priostanovki)) f.zaprosBlock = true;
+var ds = (dm.sudy && dm.sudy.dannye) || {};
+if (dmNajdeno(dm.sudy) && Number(ds.otvetchik_nezaversheno) > 0) f.zaprosSudy = true;
 return f;
 }
 function dmNajdeno(b) {
@@ -851,8 +853,10 @@ ne = 'Не проверяли: ' + np.spisok.join(', ') + '. Если они е�
 (np.nalogiNa ? ' Долги по налогам — нет в списке ФНС на\u00a0' + np.nalogiNa + '.' : '') +
 (np.provereno != null && np.iz ? ' Из внешних реестров ответили ' + np.provereno + ' из ' + np.iz + (np.data ? ' на ' + dataRu(np.data) : '') + '.' : '');
 } else if (nv && nv.length && (t === 'go' || t === 'cap')) {
-ne = 'Не проверяли в\u00a0этот раз: ' + nv.join(', ') + '. Оценка\u00a0— по\u00a0проверенным источникам; ' + (otg ? 'это не\u00a0гарантия оплаты' : NE_GARANTIYA) + '.' +
+ne = 'Не проверяли в\u00a0этот раз: ' + nv.join(', ') + '. ' + RASCHET(np, otg) +
 (np && np.provereno != null && np.iz ? ' Из внешних реестров ответили ' + np.provereno + ' из ' + np.iz + (np.data ? ' на ' + dataRu(np.data) : '') + '.' : '');
+} else if (t === 'cap' && pc && pc.cap > 0) {
+ne = RASCHET(np, otg);
 }
 if (otg && R.base !== 'finorg') kak = OBA_NAPRAVLENIYA + ' ' + kak;
 var out = { kak: kak, ne: ne,
@@ -916,6 +920,9 @@ function zagNeVse(pv) { var k = neOtvetiliSudyFssp(pv); return 'Проверил
 var NET_VYVODA = 'Вывода о рисках пока нет.';
 function sNetVyvoda(pv, t, sovet) { return neOtvetiliSudyFssp(pv) && t === 'go' ? NET_VYVODA + ' ' + sovet : sovet; }
 var NE_GARANTIYA = 'это не\u00a0гарантия исполнения договора';
+function RASCHET(np, otg) {
+return 'Это расчёт по\u00a0проверенным источникам' + (np && np.data ? ' на\u00a0' + dataRu(np.data) : '') + ', а\u00a0не\u00a0гарантия ' + (otg ? 'оплаты' : 'исполнения договора') + '.';
+}
 var BEZ_SIGNALOV = 'Серьёзных сигналов в\u00a0проверенных источниках нет';
 function nvHeadline(t, cap, malo, otg) {
 if (t === 'go') return BEZ_SIGNALOV;
@@ -933,8 +940,7 @@ if (t === 'stop') return 'Не платите вперёд';
 if (t === 'post' && reorgPrekr(f)) return 'Только оплата по факту\u00a0— до проверки правопреемника';
 if (t === 'post') return 'Только оплата по факту';
 if (nv && (t === 'go' || t === 'cap')) return nvHeadline(t, cap, malo, false);
-if (t === 'cap' && malo) return 'Можно, оплата — по факту поставки';
-if (t === 'cap') return 'Можно, предоплата — до ' + money(cap);
+if (t === 'cap') return nvHeadline(t, cap, malo, false);
 return 'Работать можно';
 }
 function headlineOtg(f, t, cap, malo, pv, ned, nv) {
@@ -947,9 +953,7 @@ if (t === 'stop') return 'Отгружайте только после опла�
 if (t === 'post' && reorgPrekr(f)) return 'Только по предоплате\u00a0— до проверки правопреемника';
 if (t === 'post') return 'Только по предоплате';
 if (nv && (t === 'go' || t === 'cap')) return nvHeadline(t, cap, malo, true);
-if (t === 'cap' && malo) return 'Можно, но без отсрочки';
-if (t === 'cap' && cap == null) return 'Можно, но есть замечания';
-if (t === 'cap') return 'Можно, отсрочка — до ' + money(cap);
+if (t === 'cap') return nvHeadline(t, cap, malo, true);
 return 'Работать можно';
 }
 function adviceOtg(f, t, malo) {
@@ -1016,6 +1020,8 @@ taxCert: { t: 'Справка об исполнении обязанности �
 resources: { t: 'Подтверждение ресурсов: люди, склад, техника', why: 'штат, аренда склада, ПТС или договоры субподряда — кто и чем будет исполнять договор (п. 14–15 письма ФНС)', ask: 'Сведения о ресурсах для исполнения договора: штат, склад или техника либо договоры субподряда' },
 experience: { t: '2–3 исполненных похожих договора или отзывы клиентов', why: 'опыт и деловая репутация — прямо названы ФНС среди признаков реальной компании', ask: 'Копии 2–3 исполненных договоров, похожих на наш (цены можно скрыть), или отзывы клиентов' },
 regime: { t: 'Подтверждение режима налогообложения', why: 'для вычета НДС нужен счёт-фактура от плательщика НДС; на УСН — уведомление о переходе', ask: 'Подтверждение режима налогообложения (для УСН — уведомление о переходе)' },
+sudy: { t: 'Пояснение по делам, где компания\u00a0— ответчик', why: 'суть требований и как идут дела', ask: 'Пояснение по делам, где компания — ответчик: суть требований и как идут дела' },
+chek: { t: 'Кассовый чек на каждый платёж', why: 'при наличных касса обязательна и между компаниями', ask: 'Кассовый чек на каждый платёж наличными' },
 fssp: { t: 'Пояснение по долгам у приставов', why: 'как и когда погасят: при аресте счёта ваша предоплата застрянет', ask: 'Информация о погашении исполнительных производств или план погашения' },
 unblock: { t: 'Решение ФНС об отмене приостановления операций по счёту', why: 'пока счёт заблокирован налоговой, компания не сможет тратить ваши деньги', ask: 'Решение ФНС об отмене приостановления операций по счёту' },
 bank: { t: 'Письмо о том, что счёт не ограничен банком, и реквизиты второго банка', why: 'прогноз ЗСК повышен — запасной счёт спасёт сделку, если банк остановит платёж', ask: 'Подтверждение, что расчётный счёт не ограничен, и реквизиты второго банка' },
@@ -1037,6 +1043,7 @@ if (f.bad.mass || f.warn.mass) add('premises');
 if (f.bad.block || f.warn.block || f.zaprosBlock) add('unblock');
 if (f.bad.dolg || f.warn.dolg) add('taxCert');
 if (f.bad.fssp || f.warn.fssp || f.zaprosFssp) add('fssp');
+if (f.zaprosSudy) add('sudy');
 if (f.zsk === 'medium' || f.zsk === 'high') add('bank');
 if (f.bad.staff || f.warn.staff || f.staff === 0 || f.staff === 1 || f.warn.young || (mid && t !== 'go')) add('resources');
 if (big || t === 'post' || t === 'stop') add('experience');
@@ -1050,6 +1057,7 @@ var ids = [];
 function add(id) { if (ids.indexOf(id) < 0) ids.push(id); }
 add(f.bad.director || f.warn.director ? 'powerNew' : 'power');
 if (f.bad.fssp || f.warn.fssp || f.zaprosFssp) add('fssp');
+if (f.zaprosSudy) add('sudy');
 if (f.bad.dolg || f.warn.dolg) add('taxCert');
 if (f.bad.block || f.warn.block || f.zaprosBlock) add('unblock');
 if (f.zsk === 'medium' || f.zsk === 'high') add('bank');
@@ -1124,12 +1132,18 @@ if (['found', 'not_found', 'not_applicable', 'provereno'].indexOf(st) < 0) out.p
 return out.length ? out : null;
 }
 var LIMIT_NALICHNYH = 100000;
-var NALICHNYE = 'Наличными — не больше 100 000 ₽ по одному договору, остальное — безналично: так ограничены расчёты между компаниями и ИП (п. 4 Указания Банка России от 09.12.2019 № 5348\u2011У).';
-var SPOSOB = [{ id: 'bezn', t: 'Безналично' }, { id: 'nal', t: 'Наличными' }];
+var NALICHNYE = 'Наличными — не больше 100 000 ₽ по одному договору, остальное — безналично: так ограничены расчёты между компаниями и ИП (п. 4 Указания Банка России от 09.12.2019 № 5348\u2011У). Предел\u00a0— на\u00a0весь договор, сколько бы платежей ни\u00a0было.';
+var SPOSOB = [{ id: 'bezn', t: 'Безналично' }, { id: 'nal', t: 'Наличными' }, { id: 'karta', t: 'Картой или СБП' }];
+var KARTA = 'Картой или по\u00a0СБП со\u00a0счёта компании\u00a0— это безналичный расчёт, предела 100\u00a0000\u00a0₽ нет.';
+var KARTA_CHEK = 'Поставщик выдаёт кассовый чек.';
+var CHEK = 'Возьмите кассовый чек: при наличных касса обязательна и\u00a0между компаниями.';
 function sNal(v, amount, sposob) {
-if (sposob === 'bezn' || sposob === 'nal') v.sposob = sposob;
+if (sposob === 'bezn' || sposob === 'nal' || sposob === 'karta') v.sposob = sposob;
+var prodavec = v.napravlenie === 'otgruzhaem';
+if (sposob === 'karta') { v.karta = prodavec ? KARTA : KARTA + ' ' + KARTA_CHEK; return v; }
 if (sposob === 'bezn') return v;
 var x = nalichnye(amount); if (x) { v.nalichnye = x; if (sposob === 'nal') v.nalPervoj = true; }
+if (sposob === 'nal' && !prodavec && parseAmount(amount)) v.chek = CHEK;
 return v;
 }
 function nalichnye(amount) { amount = parseAmount(amount); return amount && amount > LIMIT_NALICHNYH ? NALICHNYE : null; }
@@ -1139,6 +1153,7 @@ var f = facts(r), t = tone(f), np = neProvereno(r, f), pc = prepayCap(f, t, np),
 var pv = predvaritelno(r, f, t, pc, np), nv = nepolno(r, t, pv, np);
 var nvKak = nv || (pv && pv.baza === 'staraya' ? nepolno(r, t, null, null) : null);
 var list = docs(f, t, amount, regime);
+if (opts.sposob === 'nal' && opts.napravlenie !== 'otgruzhaem' && !list.some(function (d) { return d.id === 'chek'; })) list.push(docItem('chek'));
 if (opts.napravlenie === 'otgruzhaem') {
 list = docsOtg(f, t, amount, pc.cap);
 return sNal(sFinorg(pc, {
@@ -1192,7 +1207,7 @@ var CSS = '' +
 '.usl-out .usl-nal{border-left:2px solid var(--mat-zhdu,#7A5C14);padding-left:12px}[data-theme=dark] .usl-out .usl-nal{border-left-color:var(--mat-zhdu-t,#D9B45A)}' +
 '.usl-out .usl-nal1{font-weight:600}' +
 '.usl-sp{grid-column:1/-1;display:flex;align-items:center;gap:10px}.usl-sp>span{flex:none}.usl-sp .usl-napr{flex:0 1 auto;min-width:0}.usl-sp>span{font-size:13px;color:var(--muted,#5B6783)}.usl-sp .usl-napr{margin:0}.usl-sp .usl-napr button{min-height:32px;font-size:13px;padding:0 12px}' +
-'@media (max-width:640px),(pointer:coarse){.usl-sp .usl-napr button{min-height:44px;font-size:15px}}@media (max-width:520px){.usl-sp{flex-wrap:wrap;gap:6px}.usl-sp .usl-napr{flex:1 1 100%}}' +
+'@media (max-width:640px),(pointer:coarse){.usl-sp .usl-napr button{min-height:44px;font-size:15px}}@media (max-width:520px){.usl-sp{flex-wrap:wrap;gap:6px}.usl-sp .usl-napr{flex:1 1 100%}.usl-sp .usl-napr button{flex:1 1 auto;padding:0 6px}}' +
 '.usl-out .z{color:var(--ok,#16723F)}' +
 '.usl details{border-top:1px solid #E3DDCD;padding-top:10px}' +
 '.usl summary{cursor:pointer;font-weight:600;font-size:15px;list-style:none;display:flex;justify-content:space-between;gap:10px}' +
@@ -1352,7 +1367,8 @@ box.innerHTML = napr +
 (otg ? '' : '<select aria-label="Ваш режим налогов">' + sel + '</select>') +
 '<div class="usl-sp"><span id="' + uid + 's">' + (otg ? 'Как платят вам' : 'Как платите') + '</span><div class="usl-napr" role="group" aria-labelledby="' + uid + 's">' + SPOSOB.map(function (x) {
 return '<button type="button" data-sposob="' + x.id + '" aria-pressed="' + (x.id === st.sposob) + '">' + esc(x.t) + '</button>'; }).join('') + '</div></div>' + '</div>' +
-(v.amount && (v.prepay || stake || v.nalichnye) ? '<div class="usl-out" aria-live="polite">' + (v.nalPervoj ? '<div class="usl-nal usl-nal1">' + esc(v.nalichnye) + '</div>' : '') + (v.prepay ? '<div>' + esc(v.prepay) + '</div>' : '') + stake + (v.nalichnye && !v.nalPervoj ? '<div class="usl-nal">' + esc(v.nalichnye) + '</div>' : '') + '</div>' : '')) +
+(v.amount && (v.prepay || stake || v.nalichnye || v.karta || v.chek) ? '<div class="usl-out" aria-live="polite">' + (v.nalPervoj ? '<div class="usl-nal usl-nal1">' + esc(v.nalichnye) + '</div>' : '') +
+(v.chek ? '<div class="usl-nal">' + esc(v.chek) + '</div>' : '') + (v.karta ? '<div class="usl-nal">' + esc(v.karta) + '</div>' : '') + (v.prepay ? '<div>' + esc(v.prepay) + '</div>' : '') + stake + (v.nalichnye && !v.nalPervoj ? '<div class="usl-nal">' + esc(v.nalichnye) + '</div>' : '') + '</div>' : '')) +
 '<div class="usl-kak" data-u="kak"><p>' + esc(v.kak.kak) + '</p>' +
 (v.kak.ne ? '<p class="usl-ne">' + esc(v.kak.ne) + '</p>' : '') +
 (v.kak.ssylka ? '<p class="usl-ne" data-u="bank"><a href="' + esc(v.kak.ssylka.u) + '" target="_blank" rel="noopener">' + esc(v.kak.ssylka.t) + ' →</a></p>' : '') +

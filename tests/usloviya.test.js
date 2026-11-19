@@ -192,19 +192,34 @@ t('наличные: больше 100 000 ₽ — строка о 5348-У дос
 // sposob-oplaty-v1: «Как платите» — безналично снимает строку о наличных, наличными — ставит первой; без выбора — как раньше
 t('способ оплаты: «Безналично» — строки нет; «Наличными» — строка первой; не выбран — поле прежнее, без лишних ключей', function () {
   var L = require('../js/lestnica.js');
-  assert.deepStrictEqual(U.SPOSOB.map(function (x) { return x.id; }), ['bezn', 'nal']);
+  assert.deepStrictEqual(U.SPOSOB.map(function (x) { return x.id; }), ['bezn', 'nal', 'karta']);
   var b = U.decide(resp(), { amount: 500000, sposob: 'bezn' });
   assert.ok(!('nalichnye' in b) && !('nalPervoj' in b) && b.sposob === 'bezn', JSON.stringify(b.sposob));
   var nl = U.decide(resp(), { amount: 500000, sposob: 'nal' });
   assert.strictEqual(nl.nalichnye, L.NALICHNYE); assert.strictEqual(nl.nalPervoj, true);
   var malo = U.decide(resp(), { amount: 90000, sposob: 'nal' });
-  assert.ok(!('nalichnye' in malo) && !('nalPervoj' in malo), 'до 100 000 ₽ — новых слов нет');
+  assert.ok(!('nalichnye' in malo) && !('nalPervoj' in malo), 'до 100 000 ₽ — строки о пределе нет');
   var otg = U.decide(resp(), { amount: 2400000, napravlenie: 'otgruzhaem', sposob: 'nal' });
   assert.ok(otg.nalPervoj && otg.nalichnye === L.NALICHNYE, 'и когда платят вам');
-  var bez = U.decide(resp(), { amount: 500000 }), stary = U.decide(resp(), { amount: 500000, sposob: 'karta' });
+  var bez = U.decide(resp(), { amount: 500000 }), stary = U.decide(resp(), { amount: 500000, sposob: 'kripta' });
   assert.ok(!('sposob' in bez) && !('nalPervoj' in bez) && bez.nalichnye === L.NALICHNYE, 'не выбран — как до комплекта');
   assert.deepStrictEqual(Object.keys(stary), Object.keys(bez), 'неизвестный способ — как не выбран');
-  var keyOf = function (v) { var o = Object.assign({}, v); delete o.sposob; delete o.nalPervoj; delete o.nalichnye; return JSON.stringify(o); };
-  assert.strictEqual(keyOf(nl), keyOf(bez), 'вывод, предел, документы и письмо от способа не зависят');
+  var keyOf = function (v) { var o = Object.assign({}, v); delete o.sposob; delete o.nalPervoj; delete o.nalichnye; delete o.chek; delete o.karta; delete o.docs; delete o.letter; return JSON.stringify(o); };
+  assert.strictEqual(keyOf(nl), keyOf(bez), 'вывод и предел от способа не зависят');
+});
+// pravo-sdelka-v1 (юристы 19.11 разд. 2, дословно): карта/СБП — безналичный расчёт, предела нет; наличные — чек при любой сумме и в списке документов
+t('способ оплаты: «Картой или СБП» — без строки о пределе; «Наличными» — кассовый чек в выводе, списке и письме', function () {
+  var k = U.decide(resp(), { amount: 500000, sposob: 'karta' });
+  assert.ok(!('nalichnye' in k) && !('chek' in k));
+  assert.strictEqual(k.karta.replace(/\u00a0/g, ' '), 'Картой или по СБП со счёта компании — это безналичный расчёт, предела 100 000 ₽ нет. Поставщик выдаёт кассовый чек.');
+  var ko = U.decide(resp(), { amount: 500000, sposob: 'karta', napravlenie: 'otgruzhaem' });
+  assert.ok(!/Поставщик/.test(ko.karta), 'когда платят вам — без фразы о чеке поставщика');
+  var malo = U.decide(resp(), { amount: 90000, sposob: 'nal' });
+  assert.strictEqual(malo.chek.replace(/\u00a0/g, ' '), 'Возьмите кассовый чек: при наличных касса обязательна и между компаниями.');
+  assert.ok(malo.docs.some(function (d) { return d.id === 'chek'; }) && /Кассовый чек на каждый платёж/.test(malo.letter.body));
+  assert.ok(!U.decide(resp(), { amount: 90000, sposob: 'bezn' }).docs.some(function (d) { return d.id === 'chek'; }), 'безналично — чека в списке нет');
+  var otg = U.decide(resp(), { amount: 90000, sposob: 'nal', napravlenie: 'otgruzhaem' });
+  assert.ok(!('chek' in otg) && !otg.docs.some(function (d) { return d.id === 'chek'; }), 'когда платят вам — чек выдаёте вы, не просите');
+  assert.ok(/Предел — на весь договор, сколько бы платежей ни было\.$/.test(U.NALICHNYE.replace(/\u00a0/g, ' ')));
 });
 console.log('\nПройдено тестов: ' + n);

@@ -189,4 +189,22 @@ t('наличные: больше 100 000 ₽ — строка о 5348-У дос
   var stop = U.decide(resp({ company: { inn: '7700000003', name_short: 'ООО «Бывшее»', status: 'LIQUIDATED', reg_date: '2012-03-01' } }), { amount: 500000 });
   assert.strictEqual(stop.nalichnye, L.NALICHNYE, 'строка — о законе, не о компании: при любом тоне');
 });
+// sposob-oplaty-v1: «Как платите» — безналично снимает строку о наличных, наличными — ставит первой; без выбора — как раньше
+t('способ оплаты: «Безналично» — строки нет; «Наличными» — строка первой; не выбран — поле прежнее, без лишних ключей', function () {
+  var L = require('../js/lestnica.js');
+  assert.deepStrictEqual(U.SPOSOB.map(function (x) { return x.id; }), ['bezn', 'nal']);
+  var b = U.decide(resp(), { amount: 500000, sposob: 'bezn' });
+  assert.ok(!('nalichnye' in b) && !('nalPervoj' in b) && b.sposob === 'bezn', JSON.stringify(b.sposob));
+  var nl = U.decide(resp(), { amount: 500000, sposob: 'nal' });
+  assert.strictEqual(nl.nalichnye, L.NALICHNYE); assert.strictEqual(nl.nalPervoj, true);
+  var malo = U.decide(resp(), { amount: 90000, sposob: 'nal' });
+  assert.ok(!('nalichnye' in malo) && !('nalPervoj' in malo), 'до 100 000 ₽ — новых слов нет');
+  var otg = U.decide(resp(), { amount: 2400000, napravlenie: 'otgruzhaem', sposob: 'nal' });
+  assert.ok(otg.nalPervoj && otg.nalichnye === L.NALICHNYE, 'и когда платят вам');
+  var bez = U.decide(resp(), { amount: 500000 }), stary = U.decide(resp(), { amount: 500000, sposob: 'karta' });
+  assert.ok(!('sposob' in bez) && !('nalPervoj' in bez) && bez.nalichnye === L.NALICHNYE, 'не выбран — как до комплекта');
+  assert.deepStrictEqual(Object.keys(stary), Object.keys(bez), 'неизвестный способ — как не выбран');
+  var keyOf = function (v) { var o = Object.assign({}, v); delete o.sposob; delete o.nalPervoj; delete o.nalichnye; return JSON.stringify(o); };
+  assert.strictEqual(keyOf(nl), keyOf(bez), 'вывод, предел, документы и письмо от способа не зависят');
+});
 console.log('\nПройдено тестов: ' + n);

@@ -842,7 +842,8 @@ kak = 'Как посчитали: потолок ' + money(R.byAge) + polovina +
 }
 var ne = '';
 if (pv) {
-ne = predvTekst(pv, otg) +
+var esche = (nv || []).filter(function (x) { return pv.ne.indexOf(x) < 0; });
+ne = predvTekst(pv, otg) + (esche.length ? ' Не проверяли в\u00a0этот раз: ' + esche.join(', ') + '.' : '') +
 (np && np.nalogiNa ? ' Долги по налогам — нет в списке ФНС на\u00a0' + np.nalogiNa + '.' : '') +
 (np && np.provereno != null && np.iz ? ' Из внешних реестров ответили ' + np.provereno + ' из ' + np.iz + (np.data ? ' на ' + dataRu(np.data) : '') + '.' : '');
 } else if (np && np.spisok.length && (t === 'go' || t === 'cap')) {
@@ -1086,10 +1087,13 @@ var body = 'Добрый день!\n\n' +
 return { subject: subj, body: body };
 }
 var PREDV_BAZA = { age: 'выручки в отчётности нет — предел посчитан по возрасту компании', insufficient_data: 'выручка и возраст неизвестны — предел не считаем' };
+var STARAYA_LET = 2;
+function godProverki(r) { var m = /^(\d{4})-/.exec(String(r && r.checked_at || '')); return m ? +m[1] : new Date().getFullYear(); }
+function vyruchkaStaraya(r, R) { var g = +(R && R.revenueYear); return !!(R && R.base === 'revenue' && g && godProverki(r) - g > STARAYA_LET); }
 function predvaritelno(r, f, t, pc, np) {
 if (t !== 'go' && t !== 'cap') return null;
 if (pc.malo || pc.cap === 0) return null;
-var R = pc.raschet || {}, baza = !pc.finorg && (R.base === 'age' || R.base === 'insufficient_data') ? R.base : null, ne = [];
+var R = pc.raschet || {}, baza = !pc.finorg && (R.base === 'age' || R.base === 'insufficient_data') ? R.base : !pc.finorg && vyruchkaStaraya(r, R) ? 'staraya' : null, ne = [];
 (np && np.spisok || []).forEach(function (x) { ne.push(x); });
 neProverenyPodrobno(r).forEach(function (x) {
 var t2 = x.k === 'fssp' ? 'долги у приставов' : x.t;
@@ -1097,7 +1101,7 @@ if (ne.some(function (y) { return y.indexOf(t2) === 0; })) return;
 ne.push(t2);
 });
 if (!baza && !ne.length) return null;
-return { baza: baza, prichina: baza ? PREDV_BAZA[baza] : '', ne: ne };
+return { baza: baza, prichina: baza === 'staraya' ? 'последняя выручка в открытой отчётности — за\u00a0' + R.revenueYear + '\u00a0год, предел посчитан по\u00a0ней' : baza ? PREDV_BAZA[baza] : '', ne: ne };
 }
 function predvTekst(pv, otg) {
 var a = [];
@@ -1133,13 +1137,14 @@ function decide(r, opts) {
 opts = opts || {};
 var f = facts(r), t = tone(f), np = neProvereno(r, f), pc = prepayCap(f, t, np), amount = parseAmount(opts.amount), regime = opts.regime || 'osno';
 var pv = predvaritelno(r, f, t, pc, np), nv = nepolno(r, t, pv, np);
+var nvKak = nv || (pv && pv.baza === 'staraya' ? nepolno(r, t, null, null) : null);
 var list = docs(f, t, amount, regime);
 if (opts.napravlenie === 'otgruzhaem') {
 list = docsOtg(f, t, amount, pc.cap);
 return sNal(sFinorg(pc, {
 napravlenie: 'otgruzhaem',
 facts: f, tone: t, cap: pc.cap, malo: !!pc.malo, capRule: pc.rule, raschet: pc.raschet, neProvereno: np,
-kak: kakPoschitali(f, t, pc, reasons(f), np, 'otgruzhaem', pv, nv),
+kak: kakPoschitali(f, t, pc, reasons(f), np, 'otgruzhaem', pv, nvKak),
 headline: headlineOtg(f, t, pc.cap, pc.malo, pv, pc.nedostatochno, nv), reasons: reasons(f), advice: sNetVyvoda(pv, t, adviceOtg(f, t, pc.malo)),
 amount: amount, regime: regime, stake: null, prepay: pc.nedostatochno && amount ? NEDOST_SOVET(true) : otgruzkaAdvice(amount, pc.cap, t, pv, nv),
 docs: list, letter: letterOtg(f, list, amount)
@@ -1147,7 +1152,7 @@ docs: list, letter: letterOtg(f, list, amount)
 }
 return sNal(sFinorg(pc, {
 facts: f, tone: t, cap: pc.cap, malo: !!pc.malo, capRule: pc.rule, raschet: pc.raschet, neProvereno: np,
-kak: kakPoschitali(f, t, pc, reasons(f), np, null, pv, nv),
+kak: kakPoschitali(f, t, pc, reasons(f), np, null, pv, nvKak),
 headline: headline(f, t, pc.cap, pc.malo, pv, pc.nedostatochno, nv), reasons: reasons(f), advice: sNetVyvoda(pv, t, advice(f, t, pc.malo)),
 amount: amount, regime: regime, stake: atStake(amount, regime), prepay: pc.nedostatochno && amount ? NEDOST_SOVET(false) : prepayAdvice(amount, pc.cap, t, pv, nv),
 docs: list, letter: letter(f, list, amount, { kartochka: opts.kartochka, data: dataRu(r.checked_at) || '' })

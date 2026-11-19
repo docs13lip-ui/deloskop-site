@@ -680,6 +680,8 @@ try { return U.decide(r, {}); } catch (e) { return null; }
 }
 function yPredoplata(u) {
 if (!u) return { t: 'В полном отчёте', ton: 'neutral' };
+if (u.cap > 0 && u.predvaritelno) return { t: 'Предварительно не больше' + NB + dengi(u.cap), pod: 'до проверки того, чего мы не видели, — по факту поставки', ton: 'neutral' };
+if (u.cap > 0 && u.nepolno) return { t: 'Не больше' + NB + dengi(u.cap), pod: 'по нашей оценке; не проверяли в этот раз: ' + u.nepolno.join(', '), ton: TON_USL[u.tone] || 'neutral' };
 if (u.cap > 0) return { t: 'До' + NB + dengi(u.cap), pod: u.capRule || '', ton: TON_USL[u.tone] || 'neutral' };
 if (u.nedostatochno) return { t: 'Не считаем', pod: 'выручка и возраст компании неизвестны', ton: 'neutral', nepr: true };
 return { t: zaglavnaya(u.capRule || 'Не считаем'), ton: TON_USL[u.tone] || 'neutral' };

@@ -573,7 +573,7 @@ html:not(.rezhim-otcheta) .hero .uv{width:100%;margin-top:0}
 </style>
 <!-- vizual-v3.0a: стили и скрипты главной — пятью файлами вместо 17 (partials/sborka.json, tests/sobrat_js.py) -->
 <link rel="stylesheet" href="/css/b/ds.48f13371c7.css">
-<link rel="stylesheet" href="/css/b/glavnaya-stil.dda2be5298.css">
+<link rel="stylesheet" href="/css/b/glavnaya-stil.dfb5244da2.css">
 <script src="/js/b/yadro.13f940724b.js" defer></script>
 <script src="/js/b/glavnaya.7051b40101.js" defer></script>
 <link rel="icon" type="image/png" sizes="120x120" href="/favicon-120.png">
@@ -1002,7 +1002,7 @@ html:not(.rezhim-otcheta) .hero .uv{width:100%;margin-top:0}
     if(cb)cb.onclick=function(e){
       if(shR){try{navigator.clipboard.writeText(Shchit.kratko(shR)+' — deloskop.ru');e.target.textContent='Скопировано'}catch(_){}return;}
       var u=window.Usloviya?Usloviya.decide(r):null;
-      var t=name+' (ИНН '+c.inn+'): '+({low:'Без серьёзных сигналов',medium:'Есть вопросы',high:'Есть серьёзные сигналы'}[r.risk_level]||'')+'. '+(u?u.headline+'. '+u.advice:(r.verdict||''))+' — проверено на deloskop.ru';
+      var t=name+' (ИНН '+c.inn+'): '+(u&&u.pered?'':({low:'Без серьёзных сигналов',medium:'Есть вопросы',high:'Есть серьёзные сигналы'}[r.risk_level]||'')+'. ')+(u?u.headline+'. '+u.advice:(r.verdict||''))+' — проверено на deloskop.ru';
       try{navigator.clipboard.writeText(t);e.target.textContent='Скопировано'}catch(_){}};
     // лист «Отчёт о проверке» на всю ширину: шапка → вывод → факты, динамика, все данные; справа — как посчитали и откуда данные (js/otchet.js)
     if(window.Otchet){try{Otchet.razlozhit(report,r,{svoj:!!shR,shR:shR,usl:ub,api:CAPI})}catch(e){}}
@@ -1053,7 +1053,7 @@ html:not(.rezhim-otcheta) .hero .uv{width:100%;margin-top:0}
   // primer-legkij-v1 (25.10): пример «Условий сделки» просит только пакет «primer» (usloviya + sushchestvennoe + status-kod, ~130 КБ), а не весь отчёт (~535 КБ):
   // сервер пока отдаёт без сжатия, и каждый заход на главную без проверки скачивал полмегабайта. Весь отчёт — при проверке и намерении проверить.
   // Оба тега — async=false: исполняются в порядке вставки (как defer), «primer» всегда раньше «otchet».
-  var PRIMER_JS='/js/b/primer.cf1bac1d1d.js', OTCHET_JS='/js/b/otchet.0d47644c9a.js', primerP=null, moduliP=null;
+  var PRIMER_JS='/js/b/primer.2b2e49945f.js', OTCHET_JS='/js/b/otchet.3ef3648a95.js', primerP=null, moduliP=null;
   function teg(src){return new Promise(function(ok){var s=document.createElement('script');s.src=src;s.async=false;s.onload=s.onerror=function(){ok()};document.head.appendChild(s);});}
   function gruzitPrimer(){if(!primerP)primerP=teg(PRIMER_JS);return primerP;}
   function gruzitModuli(){if(moduliP)return moduliP;var p=gruzitPrimer();moduliP=Promise.all([p,teg(OTCHET_JS)]);return moduliP;}

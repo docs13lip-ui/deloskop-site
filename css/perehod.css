@@ -57,6 +57,7 @@ dialog.lip-d[open]{animation:lip-vverh .28s cubic-bezier(.2,.7,.2,1)}
 .lip-o__t::before{content:"";display:inline-block;width:8px;height:8px;margin-right:8px;border-radius:50%;vertical-align:2px;background:var(--warn-dot,#B86E00)}
 .lip-o[data-ton=ok] .lip-o__t::before{background:var(--ok-dot,#16723F)}
 .lip-o[data-ton=bad] .lip-o__t::before{background:var(--bad-dot,#B3261E)}
+.lip[data-ton=nejtr] .lip__t::before,.lip-o[data-ton=nejtr] .lip-o__t::before{background:var(--muted,#5B6783)}
 .lip-o__s{grid-area:s;color:var(--accent,#12305F);font-size:13px;white-space:nowrap}
 .lip-o:hover .lip-o__s{text-decoration:underline}
 .lip-o:focus-visible{outline:3px solid var(--accent,#12305F);outline-offset:2px}

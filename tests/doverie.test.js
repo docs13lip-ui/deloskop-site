@@ -110,7 +110,7 @@ test('(1) Паспорт: при неизвестных выручке и воз
 
 test('(1) интерфейс: «данных мало» — нейтральная метка, не зелёная', () => {
   const src = chitat('js/usloviya.js');
-  assert.match(src, /\(v\.nedostatochno( \|\| neVse)? \? ' ned' : ''\)/); // chestnyj-nol-v1/v2: и «Проверили не всё»
+  assert.match(src, /\(v\.nedostatochno( \|\| neVse)?( \|\| v\.pered)? \? ' ned' : ''\)/); // chestnyj-nol-v1/v2: и «Проверили не всё»; ton-vyvoda-v1: и «Перед оплатой посмотрите»
   assert.match(src, /var neVse = v\.tone === 'go' && !!neOtvetiliSudyFssp\(v\.predvaritelno\);/);
   assert.match(src, /\.usl\.ned \.usl-mark\{background:#8A97B5/);
 });

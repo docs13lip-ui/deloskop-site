@@ -56,9 +56,16 @@
     var dm = (r && r.damia) || {};
     return ['sudy', 'fssp'].some(function (k) { return dm[k] && typeof dm[k] === 'object' && dm[k].sostoyanie === 'not_checked'; });
   }
+  function peredOplatoj(r) {
+    var U = typeof self !== 'undefined' ? self.Usloviya : null;
+    if (!U || typeof U.decide !== 'function') return false;
+    try { return !!U.decide(r).pered; } catch (e) { return false; }
+  }
   function tonPolosy(r) {
     var l = r && r.risk_level;
     if (l === 'low' && neOtvetiliSF(r)) return 'warn';
+    // ton-vyvoda-v1 (юристы 19.11 разд. 4): «Перед оплатой посмотрите: {минус}» — нейтральная полоса, не зелёная (тот же вывод, что «Условия сделки»)
+    if (l === 'low' && peredOplatoj(r)) return 'nejtr';
     return l === 'low' ? 'ok' : l === 'high' ? 'bad' : 'warn';
   }
 

@@ -177,4 +177,16 @@ t('Прекращённая компания: не «договор недейс
   assert.ok(!/недействител/.test(v.advice), v.advice);
   assert.ok(/заключить нельзя/.test(v.advice) && /не оплачивайте/.test(v.advice), v.advice);
 });
+// nalichnye-usloviya-v1: предел наличных расчётов в «Условиях сделки» — те же слова, что в «Лестнице», тот же порог
+t('наличные: больше 100 000 ₽ — строка о 5348-У дословно как в «Лестнице»; ровно 100 000 и без суммы — без неё; в обе стороны', function () {
+  var L = require('../js/lestnica.js');
+  assert.strictEqual(U.NALICHNYE, L.NALICHNYE, 'слова юристов — дословно, одной строкой с «Лестницей»');
+  assert.strictEqual(U.LIMIT_NALICHNYH, L.LIMIT_NALICHNYH);
+  assert.ok(!('nalichnye' in U.decide(resp(), { amount: 100000 })), 'ровно 100 000 — поля нет');
+  assert.ok(!('nalichnye' in U.decide(resp())), 'без суммы — поля нет');
+  assert.strictEqual(U.decide(resp(), { amount: '100 001' }).nalichnye, L.NALICHNYE);
+  assert.strictEqual(U.decide(resp(), { amount: 2400000, napravlenie: 'otgruzhaem' }).nalichnye, L.NALICHNYE, 'и когда платят вам');
+  var stop = U.decide(resp({ company: { inn: '7700000003', name_short: 'ООО «Бывшее»', status: 'LIQUIDATED', reg_date: '2012-03-01' } }), { amount: 500000 });
+  assert.strictEqual(stop.nalichnye, L.NALICHNYE, 'строка — о законе, не о компании: при любом тоне');
+});
 console.log('\nПройдено тестов: ' + n);

@@ -147,12 +147,13 @@ footer a{color:var(--muted)}
   <nav class="shapka__nav" aria-label="Основное меню">
    <ul class="shapka__list">
     <li class="shapka__gr" data-gr>
-     <button class="shapka__link shapka__gk" type="button" aria-expanded="false" aria-controls="ng-proverka" data-match="^/(proverit-schet|kontragenty-iz-vypiski|pasport/kontragent|sravnit)/">Проверка<svg class="shapka__chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 4.5 3 3 3-3"/></svg></button>
+     <button class="shapka__link shapka__gk" type="button" aria-expanded="false" aria-controls="ng-proverka" data-match="^/(proverit-schet|kontragenty-iz-vypiski|proverka-spiska|pasport/kontragent|sravnit)/">Проверка<svg class="shapka__chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 4.5 3 3 3-3"/></svg></button>
      <div class="shapka__pan" id="ng-proverka" hidden>
       <ul class="shapka__pul">
       <li><a class="shapka__pl" href="/#inn"><span class="shapka__pn">По&nbsp;ИНН</span><span class="shapka__pd">Факты из&nbsp;реестров и&nbsp;вывод перед оплатой</span></a></li>
       <li><a class="shapka__pl" href="/proverit-schet/"><span class="shapka__pn">Проверь счёт</span><span class="shapka__pd">Реквизиты счёта&nbsp;— до&nbsp;того, как платить</span></a></li>
       <li><a class="shapka__pl" href="/kontragenty-iz-vypiski/"><span class="shapka__pn">Кому вы&nbsp;платите</span><span class="shapka__pd">Все получатели из&nbsp;выписки банка или 1С</span></a></li>
+      <li><a class="shapka__pl" href="/proverka-spiska/"><span class="shapka__pn">Проверка списка</span><span class="shapka__pd">Справочник контрагентов из&nbsp;файла&nbsp;— до&nbsp;200&nbsp;сразу</span></a></li>
       <li><a class="shapka__pl" href="/pasport/kontragent/"><span class="shapka__pn">Паспорт контрагента</span><span class="shapka__pd">17&nbsp;разделов с&nbsp;источником и&nbsp;датой</span></a></li>
       <li><a class="shapka__pl" href="/sravnit/"><span class="shapka__pn">Сравнить</span><span class="shapka__pd">Два ИНН&nbsp;— одна таблица</span></a></li>
       </ul>
@@ -215,6 +216,7 @@ footer a{color:var(--muted)}
     <li><a class="mnav__link" href="/#inn">По&nbsp;ИНН</a></li>
     <li><a class="mnav__link" href="/proverit-schet/">Проверь счёт</a></li>
     <li><a class="mnav__link" href="/kontragenty-iz-vypiski/">Кому вы&nbsp;платите</a></li>
+    <li><a class="mnav__link" href="/proverka-spiska/">Проверка списка</a></li>
     <li><a class="mnav__link" href="/pasport/kontragent/">Паспорт контрагента</a></li>
     <li><a class="mnav__link" href="/sravnit/">Сравнить</a></li>
   </ul>
@@ -297,18 +299,18 @@ footer a{color:var(--muted)}
 <h2 id="puls">Пульс проекта</h2>
 <p>Делоскоп меняется каждый день. Все изменения&nbsp;— в&nbsp;открытой <a href="/obnovleniya/">ленте «Что&nbsp;нового»</a>: что&nbsp;сделали и&nbsp;что&nbsp;проверить самому.</p>
 <div class="cifry" data-cifry>
-<div class="cifra"><b data-c="zapisej">677</b><span data-c-l>обновлений в&nbsp;ленте с&nbsp;25&nbsp;сентября&nbsp;2026</span></div>
+<div class="cifra"><b data-c="zapisej">679</b><span data-c-l>обновлений в&nbsp;ленте с&nbsp;25&nbsp;сентября&nbsp;2026</span></div>
 <div class="cifra"><b>308</b><span>карточек компаний&nbsp;— у&nbsp;каждой свой вывод</span></div>
 <div class="cifra"><b>43</b><span>разбора судебных и&nbsp;налоговых дел</span></div>
 <div class="cifra"><b>27</b><span>статей о&nbsp;115&#8209;ФЗ и&nbsp;налогах простыми словами</span></div>
 </div>
 <p class="cap">Цифры на&nbsp;18&nbsp;ноября&nbsp;2026.</p>
 <div class="puls"><p class="puls__h">Последние изменения</p><ul class="puls__l" data-puls>
+<li><time datetime="2026-11-18">18&nbsp;ноября</time><a href="/obnovleniya/#2026-11-18-4607">Проверка справочника контрагентов: до&nbsp;200&nbsp;организаций из&nbsp;файла</a></li>
+<li><time datetime="2026-11-18">18&nbsp;ноября</time><a href="/obnovleniya/#2026-11-18-4595">Условия сделки: предел наличных расчётов рядом с&nbsp;суммой</a></li>
 <li><time datetime="2026-11-18">18&nbsp;ноября</time><a href="/obnovleniya/#2026-11-18-4559">Карточка компании: место по&nbsp;обороту в&nbsp;своей отрасли и&nbsp;регионе</a></li>
 <li><time datetime="2026-11-18">18&nbsp;ноября</time><a href="/obnovleniya/#2026-11-18-4523">Карточка компании: внизу&nbsp;— компании рядом по&nbsp;отрасли, региону и&nbsp;выручке</a></li>
 <li><time datetime="2026-11-18">18&nbsp;ноября</time><a href="/obnovleniya/#2026-11-18-4511">Карточка компании: «Следить» и&nbsp;«Сравнить» рядом с&nbsp;отчётом</a></li>
-<li><time datetime="2026-11-18">18&nbsp;ноября</time><a href="/obnovleniya/#2026-11-18-4499">Карточка компании: убыток и&nbsp;отрицательный капитал&nbsp;— в&nbsp;минусах</a></li>
-<li><time datetime="2026-11-18">18&nbsp;ноября</time><a href="/obnovleniya/#2026-11-18-4487">«Ваши контрагенты»&nbsp;— в&nbsp;шапке на&nbsp;всех страницах, заметка к&nbsp;компании&nbsp;— в&nbsp;списке и&nbsp;в&nbsp;отчёте, ответ, реестры словами и&nbsp;что запросить по&nbsp;минусам&nbsp;— в&nbsp;шапке отчёта</a></li>
 </ul><a class="dalee" href="/obnovleniya/">Вся лента →</a></div>
 
 <h2 id="kuda">Куда мы&nbsp;идём</h2>

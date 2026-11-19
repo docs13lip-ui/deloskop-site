@@ -691,6 +691,14 @@
     if (pv.prichina) a.push(pv.prichina);
     return 'Ориентир предварительный: ' + a.join('; ') + '. Не проверено — не значит «в порядке»: ' + (otg ? 'в долг не отгружайте' : 'вперёд не платите') + ', пока не проверите' + (pv.baza && !pv.ne.length ? ' отчётность' : '') + '.';
   }
+  // nalichnye-usloviya-v1 (принцип владельца «контроль наличных — везде»; решение 19.11 п. 1 «способ оплаты»):
+  // сумма больше 100 000 ₽ — строка о пределе наличных расчётов теми же словами, что в «Лестнице» (js/lestnica.js,
+  // слова юристов; сторож tests/usloviya.test.js сверяет дословно). Ровно 100 000 — без строки, как в «Лестнице».
+  var LIMIT_NALICHNYH = 100000;
+  var NALICHNYE = 'Наличными — нельзя: по одному договору между компаниями и ИП наличными можно заплатить не больше 100 000 ₽ (п. 4 Указания Банка России от 09.12.2019 № 5348\u2011У). Всё, что больше, — только безналично.';
+  // поле только при сумме больше предела: без него вывод побайтно прежний (снимки tests/otsrochka_pokupatelyu.test.js)
+  function sNal(v, amount) { var x = nalichnye(amount); if (x) v.nalichnye = x; return v; }
+  function nalichnye(amount) { amount = parseAmount(amount); return amount && amount > LIMIT_NALICHNYH ? NALICHNYE : null; }
   function decide(r, opts) {
     opts = opts || {};
     var f = facts(r), t = tone(f), np = neProvereno(r, f), pc = prepayCap(f, t, np), amount = parseAmount(opts.amount), regime = opts.regime || 'osno';
@@ -700,22 +708,22 @@
       // «Они платят мне»: число то же (pc.cap), меняются слова; ст. 54.1 — про вычеты покупателя, «На кону» не считаем;
       // список и письмо — свои (docsOtg, letterOtg): без card, regime, resources, license, experience и без ст. 54.1
       list = docsOtg(f, t, amount, pc.cap);
-      return sFinorg(pc, {
+      return sNal(sFinorg(pc, {
         napravlenie: 'otgruzhaem',
         facts: f, tone: t, cap: pc.cap, malo: !!pc.malo, capRule: pc.rule, raschet: pc.raschet, neProvereno: np,
         kak: kakPoschitali(f, t, pc, reasons(f), np, 'otgruzhaem', pv),
         headline: headlineOtg(f, t, pc.cap, pc.malo, pv, pc.nedostatochno), reasons: reasons(f), advice: sNetVyvoda(pv, t, adviceOtg(f, t, pc.malo)),
         amount: amount, regime: regime, stake: null, prepay: pc.nedostatochno && amount ? NEDOST_SOVET(true) : otgruzkaAdvice(amount, pc.cap, t, pv),
         docs: list, letter: letterOtg(f, list, amount)
-      }, pv);
+      }, pv), amount);
     }
-    return sFinorg(pc, {
+    return sNal(sFinorg(pc, {
       facts: f, tone: t, cap: pc.cap, malo: !!pc.malo, capRule: pc.rule, raschet: pc.raschet, neProvereno: np,
       kak: kakPoschitali(f, t, pc, reasons(f), np, null, pv),
       headline: headline(f, t, pc.cap, pc.malo, pv, pc.nedostatochno), reasons: reasons(f), advice: sNetVyvoda(pv, t, advice(f, t, pc.malo)),
       amount: amount, regime: regime, stake: atStake(amount, regime), prepay: pc.nedostatochno && amount ? NEDOST_SOVET(false) : prepayAdvice(amount, pc.cap, t, pv),
       docs: list, letter: letter(f, list, amount, { kartochka: opts.kartochka, data: dataRu(r.checked_at) || '' })
-    }, pv);
+    }, pv), amount);
   }
   // finorg — только у банка или страховой: у остальных вывод побайтно прежний (снимок tests/otsrochka_pokupatelyu.test.js);
   // predvaritelno — только когда ориентир предварительный (predvaritelno-v1)
@@ -752,6 +760,7 @@
     '.usl select{font:inherit;font-size:15px;border:1px solid #DADAD4;border-radius:10px;padding:10px 30px 10px 12px;background:#fff;max-width:190px;color:inherit}' +
     '.usl-out{display:flex;flex-direction:column;gap:6px;font-size:15px}' +
     '.usl-out b{font-variant-numeric:tabular-nums}' +
+    '.usl-out .usl-nal{border-left:2px solid var(--mat-zhdu,#7A5C14);padding-left:12px}[data-theme=dark] .usl-out .usl-nal{border-left-color:var(--mat-zhdu-t,#D9B45A)}' +
     '.usl-out .z{color:var(--ok,#16723F)}' +
     '.usl details{border-top:1px solid #E3DDCD;padding-top:10px}' +
     '.usl summary{cursor:pointer;font-weight:600;font-size:15px;list-style:none;display:flex;justify-content:space-between;gap:10px}' +
@@ -942,7 +951,7 @@
         '<div class="usl-sum"><label for="' + uid + 'a">' + (otg ? 'Сумма отгрузки' : 'Сумма сделки — посчитаем предоплату и деньги на кону') + '</label>' +
           '<div class="usl-in"><input id="' + uid + 'a" inputmode="numeric" autocomplete="off" placeholder="например, 500 000" value="' + (st.amount ? esc(money(st.amount).replace(/ ₽$/, '')) : '') + '"><span>₽</span></div>' +
           (otg ? '' : '<select aria-label="Ваш режим налогов">' + sel + '</select>') + '</div>' +
-        (v.amount && (v.prepay || stake) ? '<div class="usl-out" aria-live="polite">' + (v.prepay ? '<div>' + esc(v.prepay) + '</div>' : '') + stake + '</div>' : '')) +
+        (v.amount && (v.prepay || stake || v.nalichnye) ? '<div class="usl-out" aria-live="polite">' + (v.prepay ? '<div>' + esc(v.prepay) + '</div>' : '') + stake + (v.nalichnye ? '<div class="usl-nal">' + esc(v.nalichnye) + '</div>' : '') + '</div>' : '')) +
         '<div class="usl-kak" data-u="kak"><p>' + esc(v.kak.kak) + '</p>' +
           (v.kak.ne ? '<p class="usl-ne">' + esc(v.kak.ne) + '</p>' : '') +
           (v.kak.ssylka ? '<p class="usl-ne" data-u="bank"><a href="' + esc(v.kak.ssylka.u) + '" target="_blank" rel="noopener">' + esc(v.kak.ssylka.t) + ' →</a></p>' : '') +
@@ -1000,7 +1009,7 @@
   }
 
   return {
-    decide: decide, mount: mount, rynokStroka: rynokStroka, facts: facts, tone: tone, reorgPrekr: reorgPrekr, REORG_PREKRASHCHENIE: REORG_PREKRASHCHENIE, REORG_SDELAT: REORG_SDELAT, REORG_DOLG: REORG_DOLG, prepayCap: prepayCap, atStake: atStake,
+    decide: decide, mount: mount, nalichnye: nalichnye, NALICHNYE: NALICHNYE, LIMIT_NALICHNYH: LIMIT_NALICHNYH, rynokStroka: rynokStroka, facts: facts, tone: tone, reorgPrekr: reorgPrekr, REORG_PREKRASHCHENIE: REORG_PREKRASHCHENIE, REORG_SDELAT: REORG_SDELAT, REORG_DOLG: REORG_DOLG, prepayCap: prepayCap, atStake: atStake,
     docs: docs, letter: letter, LETTER_NELZYA: LETTER_NELZYA, kartaKartochek: kartaKartochek, parseAmount: parseAmount, money: money, moneyKrupno: moneyKrupno, niceFloor: niceFloor, kindOf: kindOf, signalId: signalId, SIGNALY: SIGNALY.map(function (x) { return x[0]; }),
     neProvereno: neProvereno, kakPoschitali: kakPoschitali, otgruzkaAdvice: otgruzkaAdvice, NAPR: NAPR, bezPovtora: bezPovtora, chestnoPoyasnenie: chestnoPoyasnenie, poGlavnomu: poGlavnomu, neProverenyKlyuchevye: neProverenyKlyuchevye, vVyvode: vVyvode, STATYA: STATYA, FORMULA: FORMULA,
     predvaritelno: predvaritelno, neOtvetiliSudyFssp: neOtvetiliSudyFssp, NET_VYVODA: NET_VYVODA, METODIKA: { DELITEL: DELITEL, POTOLKI: POTOLKI, OSTOROZHNO: OSTOROZHNO, MINIMUM: MINIMUM, PRAVILO: PRAVILO },

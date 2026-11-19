@@ -34,6 +34,7 @@ STRANICY = {
     "skoraya-115-fz/index.html": "main",
     "proverit-schet/index.html": "main",
     "sravnit/index.html": "main",  # sravnit-v1 (23.10.2026): «Сравнить двух поставщиков»
+    "proverka-spiska/index.html": "main",  # spisok-iz-1s-v1 (19.11.2026): «Проверка справочника контрагентов»
     "kak-rabotaet/index.html": "main",  # demo-vitrina-v1 (25.10.2026): показы продуктов
     "osnovatel/index.html": "main",
     "index.html": "main",  # tipograf-tarify-v1 (18.10.2026): главная — пишется руками; строку цен и JSON-LD правит sobrat_tarify

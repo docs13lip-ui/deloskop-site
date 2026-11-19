@@ -13,7 +13,7 @@ const NAV = P.slice(P.indexOf('<ul class="shapka__list">'), P.indexOf('</nav>'))
 
 // разделы сайта из Н1 — каждый должен быть в одном из четырёх списков (нажатие 1 — раздел, 2 — ссылка)
 const NUZHNO = {
-  'Проверка': ['/#inn', '/proverit-schet/', '/kontragenty-iz-vypiski/', '/pasport/kontragent/', '/sravnit/'],
+  'Проверка': ['/#inn', '/proverit-schet/', '/kontragenty-iz-vypiski/', '/proverka-spiska/', '/pasport/kontragent/', '/sravnit/'],
   'Компании': ['/company/', '/reyting/'],  // отрасли и регионы — после Н5: хабы групп пока появляются и исчезают с числом карточек
   'Знания': ['/praktika/', '/nalogi/', '/115-fz/', '/zhurnal/'],
   'О сервисе': ['/indeks/', '/tochnost/', '/vse-vozmozhnosti/', '/tarify/', '/obnovleniya/'],

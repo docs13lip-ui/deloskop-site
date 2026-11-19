@@ -2363,7 +2363,7 @@ def _hab_poryadok(kart):
         po_otr.setdefault(hab_otrasl(k), []).append(k)
     # порядок: больше карточек — выше; «Отрасль не указана» — всегда последней
     otrasli = sorted(po_otr, key=lambda o: (o == HAB_NET_OTRASLI, -len(po_otr[o]), o))
-    return [x for o in otrasli for x in sorted(po_otr[o], key=lambda x: x["name"])]
+    return [x for o in otrasli for x in sorted(po_otr[o], key=_po_oborotu)]  # katalog-kompanij-v1: по обороту
 
 
 # kartochki-hab-v3 (ТЗ [Продукт] 23.10 С2): на /company/ — ВСЕ карточки, что стоят в sitemap-companies.xml (до
@@ -2417,6 +2417,55 @@ STATYA_NET_OTCHETNOSTI = "/nalogi/net-otchetnosti-v-otkrytyh-dannyh/"
 HAB_CHITAT_SSYLKI = {"Дата сведений — не дата страницы": (STATYA_NET_OTCHETNOSTI, "Почему отчётности может не быть")}
 
 
+# katalog-kompanij-v1 (решение владельца 18.11, Н5): на /company/ — «Каталог»: все отрасли и регионы, где есть карточки,
+# с числом карточек. Ссылка — на страницу группы, если она есть; отрасль без своей страницы — на свой раздел этой страницы;
+# регион без страницы — текстом (страницы нет — ссылки нет). Регионов на виду KATALOG_REG_VIDNO, остальные — под «Ещё».
+KATALOG_REG_VIDNO = 12
+
+
+def yakor_otrasli(o):
+    return "o-" + (slug(o) or "net")
+
+
+def katalog_html(vse, kg, razdely=frozenset()):
+    kg = kg or {}
+    otr, reg = {}, {}
+    for k in vse:
+        o = hab_otrasl(k)
+        if o != HAB_NET_OTRASLI:
+            otr[o] = otr.get(o, 0) + 1
+        r = k.get("region") or ""
+        if r:
+            reg[r] = reg.get(r, 0) + 1
+    if not otr and not reg:
+        return ""
+
+    def li(vid, imya, c):
+        adr = kg.get((vid, imya)) or (("#" + yakor_otrasli(imya)) if vid == "otrasl" and imya in razdely else "")
+        im = ('<a href="%s">%s</a>' % (adr, e(imya))) if adr else '<span>%s</span>' % e(imya)
+        return '<li>%s<span class="caption num">%d</span></li>' % (im, c)
+
+    def poryadok(d):
+        return sorted(d.items(), key=lambda x: (-x[1], x[0]))
+    kol = []
+    if otr:
+        kol.append('<div class="co-kat__k"><h2 id="po-otraslyam">По отраслям <span class="caption">%d</span></h2>'
+                   '<ul class="co-kat__sp">%s</ul></div>' % (len(otr), "".join(li("otrasl", o, c) for o, c in poryadok(otr))))
+    if reg:
+        sp = [li("region", r, c) for r, c in poryadok(reg)]
+        esche = ""
+        if len(sp) > KATALOG_REG_VIDNO + 1:
+            ost = len(sp) - KATALOG_REG_VIDNO
+            esche = '<details class="co-esche"><summary>Ещё%s%d%s%s</summary><ul class="co-kat__sp">%s</ul></details>' % (
+                NB, ost, NB, plural(ost, "регион", "региона", "регионов"), "".join(sp[KATALOG_REG_VIDNO:]))
+            sp = sp[:KATALOG_REG_VIDNO]
+        kol.append('<div class="co-kat__k"><h2 id="po-regionam">По регионам <span class="caption">%d</span></h2>'
+                   '<ul class="co-kat__sp">%s</ul>%s</div>' % (len(reg), "".join(sp), esche))
+    return ('<nav class="co-sec co-kat" aria-label="Каталог компаний">%s<p class="co-kat__p caption">Число — карточек в%sДелоскопе. '
+            'Отрасль — по основному виду деятельности в ЕГРЮЛ, регион — по адресу в ЕГРЮЛ. В списках — сначала компании '
+            'с большим оборотом за последний год на карточке.</p></nav>\n' % ("".join(kol), NB))
+
+
 def html_haba(kart, index, n=1, vsego=1, vse=None, kg=None, statyi=frozenset(), v_sitemap=None):
     """Страница n из vsego хаба; kart — карточки этой страницы, vse — все (для описания и строки регионов);
     kg — {(vid, имя): адрес} хабов групп (kartochki-haby-v1): заголовок отрасли и регион — ссылкой на свой хаб;
@@ -2442,7 +2491,7 @@ def html_haba(kart, index, n=1, vsego=1, vse=None, kg=None, statyi=frozenset(), 
     bloki = []
     razdelit = bool(v_sitemap) and n <= 1  # kartochki-hab-v3: все карточки страницы 1, длинные группы — под <details>
     for o in otrasli:
-        sp = sorted(po_otr[o], key=lambda x: x["name"])
+        sp = sorted(po_otr[o], key=_po_oborotu)  # katalog-kompanij-v1: по обороту, как в группах
         # kartochki-okved-v1 (ТЗ 16:50, разд. 2): под названием — «город · ОКВЭД 46.71», если код напечатан на карточке
         li = ['<li><a href="%s">%s</a><span class="caption">%s</span></li>' % (
             adres_str(x), e(x["name"]), " · ".join(filter(None, [e(x.get("gorod") or x.get("region") or ""),
@@ -2455,17 +2504,13 @@ def html_haba(kart, index, n=1, vsego=1, vse=None, kg=None, statyi=frozenset(), 
                       '<ul class="co-sos co-sos--cols">%s</ul></details>') % (
                 "".join(li[:HAB_VIDNO]), NB, ostalos, NB, plural(ostalos, "компания", "компании", "компаний"),
                 "".join(li[HAB_VIDNO:]))
-        bloki.append('<section class="co-sec"><h2>%s <span class="caption">%d</span></h2>%s</section>' % (
-            _s("otrasl", o, e(o)), len(sp), spisok))
+        bloki.append('<section class="co-sec" id="%s"><h2>%s <span class="caption">%d</span></h2>%s</section>' % (
+            yakor_otrasli(o), _s("otrasl", o, e(o)), len(sp), spisok))
     regiony = ""
-    if razdelit:
-        # kartochki-hab-v3: отрасль, у которой нет карточек в поиске, без своего раздела — но ссылка на её хаб остаётся
-        net = [(imya, adr) for (vid, imya), adr in sorted(kg.items()) if vid == "otrasl" and imya not in po_otr]
-        if net:
-            regiony = '<p class="co-reg caption">Ещё отрасли: %s.</p>' % " · ".join('<a href="%s">%s</a>' % (adr, e(imya)) for imya, adr in net)
+    # katalog-kompanij-v1 (Н5): все отрасли и регионы — в «Каталоге» под шапкой (раньше — строка регионов и «Ещё отрасли»)
     if po_reg and n <= 1:
-        regiony = regiony + '<p class="co-reg caption">Группы — по основному виду деятельности в ЕГРЮЛ (раздел ОКВЭД%s2). По регионам: %s.</p>' % (NB, " · ".join(
-            "%s%s—%s%d" % (_s("region", r, e(r)), NB, NB, c) for r, c in sorted(po_reg.items(), key=lambda x: (-x[1], x[0]))))
+        regiony = '<p class="co-reg caption">Группы — по основному виду деятельности в ЕГРЮЛ (раздел ОКВЭД%s2).</p>' % NB
+    katalog = katalog_html(vse, kg, set(po_otr)) if n <= 1 else ""
     chitat = ('<section class="co-sec co-chit" id="kak-chitat"><h2>Как читать карточку</h2><ol class="co-chit__sp">%s</ol>'
               '<p class="caption">Сведения — из открытых государственных реестров на указанные даты; выводы — наш расчёт по этим '
               'сведениям, а не решение банка или налоговой. Средняя налоговая нагрузка по отраслям — '
@@ -2489,7 +2534,7 @@ def html_haba(kart, index, n=1, vsego=1, vse=None, kg=None, statyi=frozenset(), 
     ld2 = ""
     if razdelit:
         h1 = "%d%s%s в%sДелоскопе" % (n_k, NB, plural(n_k, "компания", "компании", "компаний"), NB)
-        sp_ld = [x for o in otrasli for x in sorted(po_otr[o], key=lambda x: x["name"])]
+        sp_ld = [x for o in otrasli for x in sorted(po_otr[o], key=_po_oborotu)]
         ld2 = json.dumps({"@context": "https://schema.org", "@type": "CollectionPage", "name": "Компании в Делоскопе",
                           "url": "%s/%s/" % (SAJT, PAPKA), "inLanguage": "ru",
                           "mainEntity": {"@type": "ItemList", "numberOfItems": len(sp_ld), "itemListElement": [
@@ -2531,12 +2576,13 @@ def html_haba(kart, index, n=1, vsego=1, vse=None, kg=None, statyi=frozenset(), 
 <main id="main" class="wrap co-wrap">
 <nav class="co-krosh caption" aria-label="Навигация"><a href="/">Делоскоп</a> › {krosh}</nav>
 <header class="co-head"><h1>{h1}</h1><p class="lead">{lead}</p>{regiony}</header>
-{bloki}
+{katalog}{bloki}
 {nav}{chitat}
 </main>
 </body>
 </html>
 """.format(t=e(t), robots=robots, d=e(d), sajt=SAJT, kanon=adres_stranicy_haba(n), bloki="".join(bloki), regiony=regiony,
+           katalog=katalog,
            chitat=chitat, nav=nav + ("\n" if nav else ""), h1=h1, krosh=krosh, lead=lead, ld2=ld2,
            ld=json.dumps(ld, ensure_ascii=False, separators=(",", ":")))
 
@@ -2551,6 +2597,14 @@ def html_haba(kart, index, n=1, vsego=1, vse=None, kg=None, statyi=frozenset(), 
 # «регион» и «раздел» в крошках карточек. Тексты — только о том, что делает страница (без норм права).
 HAB_GRUPPY_OT = 30
 GRUPPY_VIDY = ("otrasl", "region")
+# katalog-kompanij-v1 (решение владельца 18.11, Н5: «/company/ со всеми отраслями и регионами, где есть карточки; списки
+# с сортировкой по выручке, по 50 на страницу»): страница группы есть уже от HAB_STRANICA_OT карточек — человеку есть куда
+# перейти из каталога и крошек, — но в индекс и sitemap она идёт по-прежнему от HAB_GRUPPY_OT карточек за воротами
+# (тонкий список не индексируем). Карточки группы — по обороту, как он напечатан на карточках (крупные первыми; без оборота —
+# в конце по названию), по HAB_GRUPPY_NA на страницу.
+HAB_STRANICA_OT = 10
+HAB_GRUPPY_NA = 50
+HAB_PORYADOK_OBOROT = "Сначала — компании с большим оборотом за последний год на карточке."
 
 
 def region_polnyj(r):
@@ -2567,6 +2621,11 @@ def gruppa_karty(k, vid):
         o = hab_otrasl(k)
         return "" if o == HAB_NET_OTRASLI else o
     return k.get("region") or ""
+
+
+def _po_oborotu(x):
+    """katalog-kompanij-v1: ключ «оборот как напечатан — по убыванию, затем название и ИНН» (детерминирован)."""
+    return (-_dohod_kart(x), x["name"], x["inn"])
 
 
 def gruppy_haba(vse, ot=None):
@@ -2588,7 +2647,7 @@ def gruppy_haba(vse, ot=None):
             while s in zanyato:
                 s, i = "%s-%d" % (s0, i), i + 1
             zanyato.add(s)
-            out.append({"vid": vid, "imya": imya, "slug": s, "kart": sorted(po[imya], key=lambda x: (x["name"], x["inn"]))})
+            out.append({"vid": vid, "imya": imya, "slug": s, "kart": sorted(po[imya], key=_po_oborotu)})
     return out
 
 
@@ -2659,6 +2718,7 @@ def html_gruppy(g, kart, index, n=1, vsego=1):
         lead = ("%s, у которых основной вид деятельности в ЕГРЮЛ — из раздела «%s» (ОКВЭД%s2). " % (kom, e(imya), NB))
         d = "%s в Делоскопе с основным видом деятельности «%s»: доходы, штат, налоги и долги — с источником и датой сведений." % (kom, imya)
         bloki = '<section class="co-sec"><ul class="co-sos co-sos--cols">%s</ul></section>' % "".join(_li_haba(x) for x in kart)
+    lead += HAB_PORYADOK_OBOROT + " "  # katalog-kompanij-v1
     lead += ('У каждой цифры на карточке — источник и дата сведений. Нет нужной компании — проверьте её по ИНН на '
              '<a href="/">главной</a>. <a href="/%s/#kak-chitat">Как читать карточку%s›</a>' % (PAPKA, NB))
     t = title_gruppy(g)

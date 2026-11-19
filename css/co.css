@@ -210,3 +210,10 @@
 .co-ryadom__h a{color:inherit;text-decoration:none;border-bottom:1px solid var(--line)}
 .co-ryadom__h a:hover{color:var(--accent)}
 .co-ryadom__m{margin:0 0 var(--s-2);color:var(--muted)}
+/* katalog-kompanij-v1 (Н5): «Каталог» на /company/ — все отрасли и регионы с числом карточек (только токены ds.css) */
+.co-kat{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--s-5) var(--s-7)}
+@media (min-width:760px){.co-kat{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.co-kat__sp{list-style:none;margin:0;padding:0;columns:2 180px;column-gap:var(--s-5)}
+.co-kat__sp li{break-inside:avoid;display:flex;justify-content:space-between;align-items:baseline;gap:var(--s-2);padding:var(--s-2) 0;border-bottom:1px solid var(--line)}
+.co-kat__sp a{text-decoration:none;font-weight:500;overflow-wrap:anywhere}.co-kat__sp a:hover{text-decoration:underline}
+.co-kat .co-esche{margin-top:var(--s-3)}.co-kat__p{grid-column:1/-1;margin:0;max-width:760px}

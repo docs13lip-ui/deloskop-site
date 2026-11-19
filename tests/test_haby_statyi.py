@@ -59,9 +59,16 @@ class TestHabyStatyi(unittest.TestCase):
             s = chitat(p)
             stroki = re.findall(r'<li><a href="/nalogi/nagruzka-po-otraslyam-2025/#(n-[0-9a-z-]+)">([^<]+)</a>'
                                 r'<span class="caption">[^<]*?(\d+,\d)&nbsp;%[^<]*· (\d+)&nbsp;', s)
-            self.assertTrue(stroki, "%s: нет строк справочника ФНС" % p)
+            if not stroki:
+                # katalog-kompanij-v1: у групп от 10 карточек бывают разделы, которых в справочнике ФНС нет (K — финансы,
+                # M — научная деятельность): тогда строк нет вовсе, а не пустой блок; у трёх давних хабов — обязательно есть
+                self.assertNotIn("nagruzka-po-otraslyam-2025/#n-", s, p)
+                self.assertNotIn(os.path.basename(os.path.dirname(p)), ("torgovlya", "energetika", "obrabatyvayuschie-proizvodstva"), p)
+                continue
             self.assertLessEqual(len(stroki), R.HAB_NORM_MAKS)
-            n_kart = len(re.findall(r'<li><a href="/company/\d{10}-', open(p, encoding="utf-8").read()))
+            # katalog-kompanij-v1: группа — по 50 на страницу; считаем карточки на всех её страницах
+            n_kart = sum(len(re.findall(r'<li><a href="/company/\d{10}-', open(q, encoding="utf-8").read()))
+                         for q in [p] + sorted(glob.glob(os.path.join(os.path.dirname(p), "stranica", "*", "index.html"))))
             self.assertLessEqual(sum(int(x[3]) for x in stroki), n_kart)
             for y, nz, proc, _ in stroki:
                 self.assertIn('id="%s"' % y, SPR, "якорь %s есть в справочнике" % y)

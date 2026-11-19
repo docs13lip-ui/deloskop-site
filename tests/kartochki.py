@@ -529,7 +529,7 @@ def sobrat_gruppy(gruppy, lm, koren, r, podval, shapka):
     for g in gruppy:
         lms = [lm[adres_str(k)] for k in g["kart"] if adres_str(k) in lm]
         index = len(lms) >= HAB_GRUPPY_OT
-        chasti = stranicy_gruppy(g, HAB_NA_STRANICE)
+        chasti = stranicy_gruppy(g, HAB_GRUPPY_NA)  # katalog-kompanij-v1: по 50 на страницу
         for n, chast in enumerate(chasti, 1):
             a = adres_gruppy(g, n)
             nuzhnye.add(a)
@@ -645,7 +645,8 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
     cena = cena_pasporta()  # kartochki-daty-v1: цена Паспорта после беты — из tarify.json
     kom = kommentarii.zagruzit()  # «Комментарий команды» — data/kommentarii.json (только утверждённые [Право] тексты)
     # kartochki-haby-v1: хабы отраслей и регионов (≥ HAB_GRUPPY_OT карточек) — до карточек: крошки ссылаются на них
-    gruppy = gruppy_haba(vse, HAB_GRUPPY_OT)
+    # katalog-kompanij-v1: страница группы — от HAB_STRANICA_OT карточек (в индекс — по-прежнему от HAB_GRUPPY_OT, см. sobrat_gruppy)
+    gruppy = gruppy_haba(vse, min(HAB_STRANICA_OT, HAB_GRUPPY_OT))
     kg = karta_grupp(gruppy)
     izm = 0
     den = segodnya or segodnya_msk()  # vozrast-segodnya-v1: возраст компании — на день сборки по Москве

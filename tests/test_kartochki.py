@@ -378,18 +378,24 @@ class TestHabyGrupp(unittest.TestCase):
 
     def setUp(self):
         self._ot, self._na = K.HAB_GRUPPY_OT, K.HAB_NA_STRANICE
+        self._so, self._gn = K.HAB_STRANICA_OT, K.HAB_GRUPPY_NA
 
     def tearDown(self):
         K.HAB_GRUPPY_OT, K.HAB_NA_STRANICE = self._ot, self._na
+        K.HAB_STRANICA_OT, K.HAB_GRUPPY_NA = self._so, self._gn
 
     def haby(self, d):
         return sorted(str(p.relative_to(d)) for p in pathlib.Path(d, "company").glob("*/*/index.html")
                       if p.parts[-3] in K.GRUPPY_VIDY)
 
     def test_po_umolchaniyu_net_hubov_i_ssylok(self):
-        d, _, _ = sobrat(O.nabor(30), segodnya=self.D1)  # в образце 10 на отрасль, 30 на регион — порог 30
-        self.assertEqual(self.haby(d), ["company/region/obrazcovskaya-oblast/index.html"])
-        K.HAB_GRUPPY_OT = 31
+        d, _, _ = sobrat(O.nabor(30), segodnya=self.D1)  # в образце 10 на отрасль, 30 на регион
+        # katalog-kompanij-v1: страница группы — от HAB_STRANICA_OT (10), в индекс — от HAB_GRUPPY_OT за воротами
+        self.assertEqual(len(self.haby(d)), 4, self.haby(d))
+        self.assertIn("company/region/obrazcovskaya-oblast/index.html", self.haby(d))
+        for h in self.haby(d):
+            self.assertIn('content="noindex, follow"', chitat(pathlib.Path(d, h)))
+        K.HAB_GRUPPY_OT = K.HAB_STRANICA_OT = 31
         d2, _, _ = sobrat(O.nabor(30), segodnya=self.D1)
         self.assertFalse(pathlib.Path(d2, "company", "region").exists())
         self.assertFalse(pathlib.Path(d2, "company", "otrasl").exists())
@@ -446,7 +452,7 @@ class TestHabyGrupp(unittest.TestCase):
             self.assertIn('content="noindex, follow"', chitat(pathlib.Path(d, a.strip("/"), "index.html")))
 
     def test_stranicy_gruppy_i_uborka(self):
-        K.HAB_GRUPPY_OT, K.HAB_NA_STRANICE = 10, 4
+        K.HAB_GRUPPY_OT, K.HAB_GRUPPY_NA = 10, 4
         d, kart, _ = sobrat(O.nabor(30), segodnya=self.D1)
         g = next(x for x in K.gruppy_haba(kart, K.HAB_GRUPPY_OT) if x["vid"] == "otrasl")
         a1, a3 = K.adres_gruppy(g), K.adres_gruppy(g, 3)
@@ -460,10 +466,10 @@ class TestHabyGrupp(unittest.TestCase):
         ssylki = [x for p in pathlib.Path(d, a1.strip("/")).rglob("index.html")
                   for x in re.findall(r'<li><a href="(/company/\d{10}-[^"]+)"', chitat(p))]
         self.assertEqual(sorted(ssylki), sorted(K.adres_str(k) for k in g["kart"]), "каждая карточка группы — ровно один раз")
-        K.HAB_NA_STRANICE = 100
+        K.HAB_GRUPPY_NA = 100
         K.sobrat(O.nabor(30), d, segodnya=self.D1)
         self.assertFalse(pathlib.Path(d, a1.strip("/"), "stranica").exists(), "лишние страницы группы остались")
-        K.HAB_GRUPPY_OT = 31
+        K.HAB_GRUPPY_OT = K.HAB_STRANICA_OT = 31
         K.sobrat(O.nabor(30), d, segodnya=self.D1)
         self.assertEqual(self.haby(d), [])
         self.assertFalse(pathlib.Path(d, "company", "otrasl").exists())
@@ -728,6 +734,9 @@ class TestObshchijRender(unittest.TestCase):
         import kartochka_render as R
         import sobrat_shapku as ss
         os.environ.pop("PERSONS_PUBLIC", None)
+        # katalog-kompanij-v1: API хабов групп не знает (крошки — текстом); в образце из 12 хаба быть не должно
+        self.addCleanup(setattr, K, "HAB_STRANICA_OT", K.HAB_STRANICA_OT)
+        K.HAB_STRANICA_OT = 31
         zap = O.nabor(12)
         d, kart, _ = sobrat(zap)
         r = ss.rekv_sajta()
@@ -1335,6 +1344,10 @@ class TestDoborV35(unittest.TestCase):
         return {str(p.relative_to(d)): p.read_bytes() for p in pathlib.Path(d).rglob("*") if p.is_file()}
 
     def test_dobor_kak_polnaya_sborka(self):
+        # katalog-kompanij-v1: при доборе 7 → 12 регион образца переходит порог страницы группы (10) — крошки опубликованных
+        # карточек законно получают ссылку на хаб; правило «добор = полная сборка» проверяем без перехода порога
+        self.addCleanup(setattr, K, "HAB_STRANICA_OT", K.HAB_STRANICA_OT)
+        K.HAB_STRANICA_OT = 31
         z = O.nabor(12)
         d1, _, _ = sobrat(z)
         d2, _, _ = sobrat(z[:7])
@@ -1520,7 +1533,7 @@ class TestHabV2(unittest.TestCase):
         cls.hub = chitat(pathlib.Path(cls.d, "company", "index.html"))
 
     def test_razdely_okved(self):
-        h2 = [re.sub(r"<[^>]+>.*", "", x).strip() for x in re.findall(r'<section class="co-sec"><h2>(.*?)</h2>', self.hub)]
+        h2 = [re.sub(r"<[^>]+>.*", "", x).strip() for x in re.findall(r'<section class="co-sec"(?: id="[^"]*")?><h2>(.*?)</h2>', self.hub)]
         self.assertEqual(sorted(h2), sorted(["Строительство", "Торговля", "Транспорт и хранение"]))
         self.assertIn("по основному виду деятельности в ЕГРЮЛ", self.hub)
 
@@ -1533,7 +1546,7 @@ class TestHabV2(unittest.TestCase):
         z["company"]["okved"] = ""
         d, kart, _ = sobrat(O.nabor(4) + [z])
         hub = chitat(pathlib.Path(d, "company", "index.html"))
-        h2 = re.findall(r'<section class="co-sec"><h2>([^<]*?) <span', hub)
+        h2 = re.findall(r'<section class="co-sec"(?: id="[^"]*")?><h2>([^<]*?) <span', hub)
         self.assertEqual(h2[-1], "Отрасль не указана")
 
     def test_kak_chitat(self):
@@ -1548,7 +1561,7 @@ class TestHabV2(unittest.TestCase):
         self.assertIn("«Не проверяли» ≠ «не нашли»", blok)
 
     def test_regiony_i_razmetka(self):
-        self.assertIn("По регионам:", self.hub)
+        self.assertIn('id="po-regionam">По регионам', self.hub)  # katalog-kompanij-v1: «Каталог» вместо строки регионов
         ld = json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', self.hub).group(1))
         self.assertEqual(ld["@type"], "BreadcrumbList")
         self.assertEqual(ld["itemListElement"][-1]["item"], "https://deloskop.ru/company/")

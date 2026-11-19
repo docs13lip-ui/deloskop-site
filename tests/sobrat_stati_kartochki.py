@@ -63,7 +63,9 @@ TEMY = [
     ("nalogi/pismo-o-smene-rekvizitov-kak-proverit", "pered", "раздел «Перед оплатой»: с&nbsp;какими ИНН, названием и&nbsp;банком сверять счёт", "сверьте ИНН"),
     ("nalogi/chto-oznachayut-cifry-inn-i-kpp", "pered", "раздел «Перед оплатой»: ИНН компании, с&nbsp;которым сверяют счёт", "сверьте ИНН"),
     ("nalogi/net-otchetnosti-v-otkrytyh-dannyh", "fin", "раздел с&nbsp;выручкой и&nbsp;прибылью по&nbsp;годам из&nbsp;ГИР&nbsp;БО", None),
-    ("nalogi/nds-postavshchika-na-usn-po-inn", "fin", "раздел с&nbsp;выручкой по&nbsp;годам из&nbsp;ГИР&nbsp;БО", None),
+    # nds-kartochki-v1 (19.11, [Ночные-2], Н4 хвост): статья о НДС поставщика ↔ карточки со строкой «в том числе НДС»
+    # (nds-uplacheno-v1, набор ФНС «уплаченные налоги») — живой пример темы, а не просто выручка по годам
+    ("nalogi/nds-postavshchika-na-usn-po-inn", "korotko", "раздел «Коротко о&nbsp;компании», строка «Уплатила налогов и&nbsp;взносов…, в&nbsp;том числе НДС»", "в том числе НДС"),
     ("nalogi/nagruzka", "fin", "под выручкой&nbsp;— средняя налоговая нагрузка отрасли компании по&nbsp;данным ФНС", "Средняя налоговая нагрузка"),
     ("115-fz/proverit-kontragenta-zsk-po-inn", "zel", "раздел о&nbsp;том, что значат зелёные строки компании для&nbsp;банка и&nbsp;налоговой", None),
     ("115-fz/zapros-banka-po-115-fz-kak-otvetit", "zel", "раздел о&nbsp;том, что значат зелёные строки компании для&nbsp;банка и&nbsp;налоговой", None),
@@ -77,6 +79,9 @@ BEZ_IMEN = {
     "115-fz/proverit-kontragenta-zsk-po-inn",
     "115-fz/zapros-banka-po-115-fz-kak-otvetit",
 }
+# nds-kartochki-v1: у карточки, где строка темы есть, строка «По теме раздела» ведёт на эту статью первой — тема точнее
+# раздела (уплаченный НДС → «Будет ли НДС в счёте поставщика»); взаимные ссылки статьи ↔ карточки по-прежнему главнее
+PERVYMI = ("nalogi/nds-postavshchika-na-usn-po-inn",)
 PODPIS = "Компании&nbsp;— для&nbsp;примера раздела: по&nbsp;алфавиту, не&nbsp;по&nbsp;признакам. Это не&nbsp;рейтинг и&nbsp;не&nbsp;оценка."
 BEZ_IMEN_TEKST = ("<!--stati-kartochki--><p class=\"stati-komp\"><strong>Как это выглядит на&nbsp;карточке компании:</strong> "
                   "раздел с&nbsp;проверкой по&nbsp;реестрам есть на&nbsp;каждой карточке&nbsp;→ <a href=\"/company/\">карточки компаний</a>.</p>"
@@ -173,7 +178,8 @@ def obratno(kart, po, koren=KOREN):
                      if statya in est and yakor in k[5] and (not filtr or filtr in k[4]) and ("/%s/" % statya) not in k[6]]
         if not podhodyat:
             continue
-        statya, yakor = min(podhodyat, key=lambda x: (nagruzka[x[0]], _hesh(x[0], k[1])))
+        pervye = [x for x in podhodyat if x[0] in PERVYMI]  # nds-kartochki-v1
+        statya, yakor = min(pervye or podhodyat, key=lambda x: (nagruzka[x[0]], _hesh(x[0], k[1])))
         out[k[0]] = (statya, yakor)
         nagruzka[statya] += 1
     return out

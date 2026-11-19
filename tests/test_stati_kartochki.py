@@ -175,5 +175,25 @@ class TestKartochkiStati(unittest.TestCase):
         self.assertEqual(S.vstavit_v_kartochku(t, st, yakor, S.zagolovok_stati(st)), t, "повторная вставка меняет страницу")
 
 
+    def test_nds_kartochki_k_state_nds(self):
+        """nds-kartochki-v1: карточка в индексе со строкой «в том числе НДС» ведёт «По теме раздела» на статью о НДС
+        поставщика — если только её не назвала другая статья (взаимная ссылка главнее) и ссылки на статью ещё нет."""
+        st = "nalogi/nds-postavshchika-na-usn-po-inn"
+        po = S.raspredelit(list(KART.values()))
+        nazvany = {k[0] for s2, v in po.items() if s2 != st for k in v}
+        est = 0
+        for d, k in KART.items():
+            if "в том числе НДС" not in k[4] or d in nazvany:
+                continue
+            t = open(os.path.join(KOREN, "company", d, "index.html"), encoding="utf-8").read()
+            m = re.search(r'<!--karta-statya-->.*?href="/([^"]+)/"', t, re.S)
+            self.assertTrue(m and m.group(1) == st or ("/%s/" % st) in k[6], d)
+            est += 1
+        self.assertGreater(est, 0, "ни одной карточки со строкой НДС — проверьте фильтр темы")
+        _, b = blok_stati(st)
+        for inn_papka in re.findall(r'href="/company/([^/"]+)/#korotko"', b):
+            self.assertIn("в том числе НДС", KART[inn_papka][4], inn_papka)
+
+
 if __name__ == "__main__":
     unittest.main()

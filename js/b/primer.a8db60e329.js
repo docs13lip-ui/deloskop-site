@@ -814,7 +814,7 @@ function FINORG_TEKST(otg) {
 return 'Для банков и страховых организаций предел ' + (otg ? 'отсрочки' : 'предоплаты') + ' не считаем: за их устойчивостью следит Банк России.';
 }
 var FINORG_SSYLKA = 'Лицензию и отчётность — на сайте Банка России';
-function kakPoschitali(f, t, pc, reasonsList, np, napr, pv) {
+function kakPoschitali(f, t, pc, reasonsList, np, napr, pv, nv) {
 var R = pc.raschet || {}, kak = '', otg = napr === 'otgruzhaem', bankR = false;
 if (t === 'post' || t === 'stop') {
 var pr = f.status === 'LIQUIDATED' ? 'компания ликвидирована' : reorgPrekr(f) ? REORG_PR : (reasonsList[0] || (t === 'stop' ? 'стоп-признак в данных' : 'серьёзное замечание в данных'));
@@ -849,6 +849,9 @@ ne = predvTekst(pv, otg) +
 ne = 'Не проверяли: ' + np.spisok.join(', ') + '. Если они есть — ' + (otg ? 'в долг лучше не отгружать.' : 'вперёд лучше не платить.') +
 (np.nalogiNa ? ' Долги по налогам — нет в списке ФНС на\u00a0' + np.nalogiNa + '.' : '') +
 (np.provereno != null && np.iz ? ' Из внешних реестров ответили ' + np.provereno + ' из ' + np.iz + (np.data ? ' на ' + dataRu(np.data) : '') + '.' : '');
+} else if (nv && nv.length && (t === 'go' || t === 'cap')) {
+ne = 'Не проверяли в\u00a0этот раз: ' + nv.join(', ') + '. Оценка\u00a0— по\u00a0проверенным источникам; ' + (otg ? 'это не\u00a0гарантия оплаты' : NE_GARANTIYA) + '.' +
+(np && np.provereno != null && np.iz ? ' Из внешних реестров ответили ' + np.provereno + ' из ' + np.iz + (np.data ? ' на ' + dataRu(np.data) : '') + '.' : '');
 }
 if (otg && R.base !== 'finorg') kak = OBA_NAPRAVLENIYA + ' ' + kak;
 var out = { kak: kak, ne: ne,
@@ -911,7 +914,15 @@ return s && p ? 'суды и приставы' : s ? 'суды' : p ? 'прис�
 function zagNeVse(pv) { var k = neOtvetiliSudyFssp(pv); return 'Проверили не всё: ' + k + ' сегодня не\u00a0ответили'; }
 var NET_VYVODA = 'Вывода о рисках пока нет.';
 function sNetVyvoda(pv, t, sovet) { return neOtvetiliSudyFssp(pv) && t === 'go' ? NET_VYVODA + ' ' + sovet : sovet; }
-function headline(f, t, cap, malo, pv, ned) {
+var NE_GARANTIYA = 'это не\u00a0гарантия исполнения договора';
+var BEZ_SIGNALOV = 'Серьёзных сигналов в\u00a0проверенных источниках нет';
+function nvHeadline(t, cap, malo, otg) {
+if (t === 'go') return BEZ_SIGNALOV;
+if (malo) return otg ? 'Без отсрочки' : 'Оплата\u00a0— по\u00a0факту поставки';
+if (cap == null) return 'Есть замечания';
+return (otg ? 'Отсрочка' : 'Предоплата') + '\u00a0— по\u00a0нашей оценке не\u00a0больше ' + money(cap);
+}
+function headline(f, t, cap, malo, pv, ned, nv) {
 if (neOtvetiliSudyFssp(pv) && t === 'go') return zagNeVse(pv);
 if (ned && (t === 'go' || t === 'cap')) return t === 'cap' ? 'Предварительно: есть замечания' : 'Предварительно: данных мало';
 if (pv && t === 'go') return 'Предварительно: серьёзного не нашли';
@@ -920,11 +931,12 @@ if (f.status === 'LIQUIDATED') return 'Сделку не заключать';
 if (t === 'stop') return 'Не платите вперёд';
 if (t === 'post' && reorgPrekr(f)) return 'Только оплата по факту\u00a0— до проверки правопреемника';
 if (t === 'post') return 'Только оплата по факту';
+if (nv && (t === 'go' || t === 'cap')) return nvHeadline(t, cap, malo, false);
 if (t === 'cap' && malo) return 'Можно, оплата — по факту поставки';
 if (t === 'cap') return 'Можно, предоплата — до ' + money(cap);
 return 'Работать можно';
 }
-function headlineOtg(f, t, cap, malo, pv, ned) {
+function headlineOtg(f, t, cap, malo, pv, ned, nv) {
 if (neOtvetiliSudyFssp(pv) && t === 'go') return zagNeVse(pv);
 if (ned && (t === 'go' || t === 'cap')) return t === 'cap' ? 'Предварительно: есть замечания' : 'Предварительно: данных мало';
 if (pv && t === 'go') return 'Предварительно: серьёзного не нашли';
@@ -933,6 +945,7 @@ if (f.status === 'LIQUIDATED') return 'Сделку не заключать';
 if (t === 'stop') return 'Отгружайте только после оплаты';
 if (t === 'post' && reorgPrekr(f)) return 'Только по предоплате\u00a0— до проверки правопреемника';
 if (t === 'post') return 'Только по предоплате';
+if (nv && (t === 'go' || t === 'cap')) return nvHeadline(t, cap, malo, true);
 if (t === 'cap' && malo) return 'Можно, но без отсрочки';
 if (t === 'cap' && cap == null) return 'Можно, но есть замечания';
 if (t === 'cap') return 'Можно, отсрочка — до ' + money(cap);
@@ -967,25 +980,27 @@ if (regime === 'usn_dr') { var t = amount * USN_DR; return { soft: 0, hard: t * 
 var vat = amount * VAT / (1 + VAT), profit = (amount - vat) * PROFIT;
 return { soft: vat * (1 + FINE_SOFT), hard: (vat + profit) * (1 + FINE_HARD), vat: vat };
 }
-function prepayAdvice(amount, cap, t, pv) {
+function prepayAdvice(amount, cap, t, pv, nv) {
 amount = parseAmount(amount);
 if (!amount) return '';
 if (cap == null && (t === 'go' || t === 'cap')) return '';
 if (t === 'stop' || t === 'post' || cap === 0) return 'Предоплату не вносите: ' + money(amount) + ' — после поставки или через аккредитив.';
 if (pv) return 'Ориентир предварительный: пока не проверите то, чего мы не видели, — платите по факту поставки. После проверки — ' +
 (amount <= cap ? 'сумма укладывается в ориентир.' : 'вперёд не больше ' + money(cap) + ' (' + Math.max(1, Math.floor(cap / amount * 100)) + '% суммы).');
+if (nv && amount <= cap) return 'Сумма в\u00a0пределах нашей оценки по\u00a0проверенным источникам; ' + NE_GARANTIYA + '.';
 if (t === 'go' && amount <= cap) return 'Сумма в пределах ориентира — обычные условия подойдут.';
 if (amount <= cap) return 'Сумма в пределах ориентира: предоплата допустима.';
 var p = Math.max(1, Math.floor(cap / amount * 100));
 return 'Вперёд — не больше ' + money(cap) + ' (' + p + '% суммы), остальное — после поставки.';
 }
-function otgruzkaAdvice(amount, cap, t, pv) {
+function otgruzkaAdvice(amount, cap, t, pv, nv) {
 amount = parseAmount(amount);
 if (!amount) return '';
 if (cap == null && (t === 'go' || t === 'cap')) return '';
 if (t === 'stop' || t === 'post' || cap === 0) return 'В долг не отгружайте: ' + money(amount) + ' — после оплаты.';
 if (pv) return 'Ориентир предварительный: пока не проверите то, чего мы не видели, — отгружайте после оплаты. После проверки — ' +
 (amount <= cap ? 'сумма укладывается в ориентир.' : 'в долг не больше ' + money(cap) + ' (' + Math.max(1, Math.floor(cap / amount * 100)) + '% суммы).');
+if (nv && amount <= cap) return 'Сумма в\u00a0пределах нашей оценки по\u00a0проверенным источникам; это не\u00a0гарантия оплаты.';
 if (amount <= cap) return 'Сумма в пределах ориентира — отсрочка допустима.';
 var p = Math.max(1, Math.floor(cap / amount * 100));
 return 'В долг — не больше ' + money(cap) + ' (' + p + '% суммы), остальное — предоплатой.';
@@ -1090,8 +1105,22 @@ if (pv.ne.length) a.push('не проверяли ' + pv.ne.join(', '));
 if (pv.prichina) a.push(pv.prichina);
 return 'Ориентир предварительный: ' + a.join('; ') + '. Не проверено — не значит «в порядке»: ' + (otg ? 'в долг не отгружайте' : 'вперёд не платите') + ', пока не проверите' + (pv.baza && !pv.ne.length ? ' отчётность' : '') + '.';
 }
+var VLIYAYUT_DOP = [{ k: 'priostanovki', t: 'решения ФНС о\u00a0приостановке операций по\u00a0счетам' }, { k: 'mery', t: 'обеспечительные меры ФНС' }];
+function nepolno(r, t, pv, np) {
+if (t !== 'go' && t !== 'cap') return null;
+if (pv) return null;
+var dm = r && r.damia, out = [];
+(np && np.spisok || []).forEach(function (x) { out.push(x); });
+if (dm && typeof dm === 'object') KLYUCHEVYE.concat(VLIYAYUT_DOP).forEach(function (x) {
+var b = dm[x.k];
+if (!b || typeof b !== 'object') return;
+var st = b.sostoyanie || b.status;
+if (['found', 'not_found', 'not_applicable', 'provereno'].indexOf(st) < 0) out.push(x.t);
+});
+return out.length ? out : null;
+}
 var LIMIT_NALICHNYH = 100000;
-var NALICHNYE = 'Наличными — нельзя: по одному договору между компаниями и ИП наличными можно заплатить не больше 100 000 ₽ (п. 4 Указания Банка России от 09.12.2019 № 5348\u2011У). Всё, что больше, — только безналично.';
+var NALICHNYE = 'Наличными — не больше 100 000 ₽ по одному договору, остальное — безналично: так ограничены расчёты между компаниями и ИП (п. 4 Указания Банка России от 09.12.2019 № 5348\u2011У).';
 var SPOSOB = [{ id: 'bezn', t: 'Безналично' }, { id: 'nal', t: 'Наличными' }];
 function sNal(v, amount, sposob) {
 if (sposob === 'bezn' || sposob === 'nal') v.sposob = sposob;
@@ -1103,29 +1132,30 @@ function nalichnye(amount) { amount = parseAmount(amount); return amount && amou
 function decide(r, opts) {
 opts = opts || {};
 var f = facts(r), t = tone(f), np = neProvereno(r, f), pc = prepayCap(f, t, np), amount = parseAmount(opts.amount), regime = opts.regime || 'osno';
-var pv = predvaritelno(r, f, t, pc, np);
+var pv = predvaritelno(r, f, t, pc, np), nv = nepolno(r, t, pv, np);
 var list = docs(f, t, amount, regime);
 if (opts.napravlenie === 'otgruzhaem') {
 list = docsOtg(f, t, amount, pc.cap);
 return sNal(sFinorg(pc, {
 napravlenie: 'otgruzhaem',
 facts: f, tone: t, cap: pc.cap, malo: !!pc.malo, capRule: pc.rule, raschet: pc.raschet, neProvereno: np,
-kak: kakPoschitali(f, t, pc, reasons(f), np, 'otgruzhaem', pv),
-headline: headlineOtg(f, t, pc.cap, pc.malo, pv, pc.nedostatochno), reasons: reasons(f), advice: sNetVyvoda(pv, t, adviceOtg(f, t, pc.malo)),
-amount: amount, regime: regime, stake: null, prepay: pc.nedostatochno && amount ? NEDOST_SOVET(true) : otgruzkaAdvice(amount, pc.cap, t, pv),
+kak: kakPoschitali(f, t, pc, reasons(f), np, 'otgruzhaem', pv, nv),
+headline: headlineOtg(f, t, pc.cap, pc.malo, pv, pc.nedostatochno, nv), reasons: reasons(f), advice: sNetVyvoda(pv, t, adviceOtg(f, t, pc.malo)),
+amount: amount, regime: regime, stake: null, prepay: pc.nedostatochno && amount ? NEDOST_SOVET(true) : otgruzkaAdvice(amount, pc.cap, t, pv, nv),
 docs: list, letter: letterOtg(f, list, amount)
-}, pv), amount, opts.sposob);
+}, pv, nv), amount, opts.sposob);
 }
 return sNal(sFinorg(pc, {
 facts: f, tone: t, cap: pc.cap, malo: !!pc.malo, capRule: pc.rule, raschet: pc.raschet, neProvereno: np,
-kak: kakPoschitali(f, t, pc, reasons(f), np, null, pv),
-headline: headline(f, t, pc.cap, pc.malo, pv, pc.nedostatochno), reasons: reasons(f), advice: sNetVyvoda(pv, t, advice(f, t, pc.malo)),
-amount: amount, regime: regime, stake: atStake(amount, regime), prepay: pc.nedostatochno && amount ? NEDOST_SOVET(false) : prepayAdvice(amount, pc.cap, t, pv),
+kak: kakPoschitali(f, t, pc, reasons(f), np, null, pv, nv),
+headline: headline(f, t, pc.cap, pc.malo, pv, pc.nedostatochno, nv), reasons: reasons(f), advice: sNetVyvoda(pv, t, advice(f, t, pc.malo)),
+amount: amount, regime: regime, stake: atStake(amount, regime), prepay: pc.nedostatochno && amount ? NEDOST_SOVET(false) : prepayAdvice(amount, pc.cap, t, pv, nv),
 docs: list, letter: letter(f, list, amount, { kartochka: opts.kartochka, data: dataRu(r.checked_at) || '' })
-}, pv), amount, opts.sposob);
+}, pv, nv), amount, opts.sposob);
 }
-function sFinorg(pc, v, pv) {
+function sFinorg(pc, v, pv, nv) {
 if (pc.finorg) v.finorg = true; if (pv) v.predvaritelno = pv;
+if (nv) v.nepolno = nv;
 if (pc.nedostatochno) v.nedostatochno = true;
 v.predel = { sostoyanie: pc.finorg ? 'finorg' : pc.nedostatochno ? 'insufficient_data' : pc.cap > 0 ? 'positive' : 'zero', pravilo: PRAVILO };
 return v;

@@ -592,6 +592,21 @@ def _rukovodit_s(D):
     return None
 
 
+NDS_STROKA = re.compile(r"^\s*Уплачено:\s*Налог на добавленную стоимость\s*$")
+
+
+def nds_uplacheno(D):
+    """nds-uplacheno-v1: сумма строки «Уплачено: Налог на добавленную стоимость» раздела «Налоги…» досье или None.
+    Только эта строка: «…на товары, ввозимые…» — другой налог (ввоз), его не складываем."""
+    for sek in (D or {}).get("sections") or []:
+        for row in sek.get("rows") or []:
+            if isinstance(row, (list, tuple)) and len(row) >= 2 and NDS_STROKA.match(str(row[0])):
+                m = re.fullmatch(r"\s*(\d[\d\s\u00a0\u202f]*)\s*₽\s*", str(row[1] or ""))
+                v = float(re.sub(r"\D", "", m.group(1))) if m else None
+                return v if v and v > 0 else None
+    return None
+
+
 def opf_iz_dosie(r):
     """kartochki-opf-v1: строка «Организационно-правовая форма» раздела «Профиль» досье /api/check (или пусто)."""
     for sek in ((r.get("dossier") or {}).get("sections") or []):
@@ -767,6 +782,13 @@ def iz_check(r):
     t = k["fakty"].get("nalogi")
     if t and not t.get("god") and dd.get("nalogi") and (dd["nalogi"].month, dd["nalogi"].day) == (12, 31):
         t["god"] = dd["nalogi"].year
+    # nds-uplacheno-v1 ([Ночные-2] 19.11, решение владельца 19.11 п. 2 «НДС поставщика»): строка досье «Уплачено: Налог
+    # на добавленную стоимость» — тот же набор ФНС «уплаченные налоги», что и итог V23. Только факт суммы — без вывода
+    # о режиме и вычете (слова — ✎ [Право · Налоговый]). Нет строки — молчим: «не нашли» ≠ «не платит».
+    if t:
+        nds = nds_uplacheno(D)
+        if nds and (not t.get("znachenie") or nds <= t["znachenie"]):
+            t["nds"] = nds
     # финансы по годам: досье (бухотчётность) или явное поле выгрузки
     ch = D.get("charts") or {}
     for p in (r.get("finansy") or ch.get("revenue") or []):
@@ -1069,7 +1091,8 @@ def vyvody(k):
     t = F.get("nalogi")
     if t and t.get("znachenie") and t["znachenie"] > 0 and t.get("data"):
         g = t.get("god")
-        out.append(_v("V23", "ok", "Уплатила налогов и взносов — %s%s" % (dengi(t["znachenie"]), (" за%s%d" % (NB, g)) if g else ""), t["istochnik"], t["data"]))
+        nds = (", в том числе НДС — %s" % dengi(t["nds"])) if t.get("nds") else ""
+        out.append(_v("V23", "ok", "Уплатила налогов и взносов — %s%s%s" % (dengi(t["znachenie"]), (" за%s%d" % (NB, g)) if g else "", nds), t["istochnik"], t["data"]))
     n = F.get("nedoimka")
     if n and n.get("data"):
         v = n.get("znachenie")
@@ -3144,7 +3167,7 @@ def zn_frazy(f):
     else:
         up = _zn_v(f, "ok", "Уплатила налогов и взносов")
         bez = _zn_v(f, "ok", "Налоговой задолженности")
-        m = re.search(r"— (.*?)(?: за (\d{4}))?$", up or "")
+        m = re.search(r"— (.*?)(?: за (\d{4}))?(?:, в том числе НДС — .*)?$", up or "")  # nds-uplacheno-v1
         d = re.search(r"\(на (.*?)\)", bez or "")
         if m and d:
             out.append("%s компания уплатила налогов и взносов на %s, а задолженности перед бюджетом в данных ФНС на %s "
@@ -4060,7 +4083,7 @@ def un_frazy(f):
     else:
         up = _zn_v(f, "ok", "Уплатила налогов и взносов")
         bez = _zn_v(f, "ok", "Налоговой задолженности")
-        m = re.search(r"— (.*?)(?: за (\d{4}))?$", up or "")
+        m = re.search(r"— (.*?)(?: за (\d{4}))?(?:, в том числе НДС — .*)?$", up or "")  # nds-uplacheno-v1
         d = re.search(r"\(на (.*?)\)", bez or "")
         if m and d:
             out.append("%s от %s в бюджет поступило %s налогов и взносов; на %s долга перед бюджетом в данных ФНС не было." % (

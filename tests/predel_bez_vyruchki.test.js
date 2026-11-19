@@ -33,7 +33,8 @@ test('(а) отчёт есть, выручка null, 16 лет, «можно с 
   assert.strictEqual(d.cap, 0);
   assert.strictEqual(d.malo, true);
   assert.strictEqual(d.raschet.base, 'nol');
-  assert.strictEqual(d.headline, 'Можно, оплата — по факту поставки');
+  // dostovernost-v1 (аудит 19.11): долги в образце не проверены — «Можно» в выводе нет
+  assert.strictEqual(d.headline, 'Оплата\u00a0— по\u00a0факту поставки');
   const k = d.kak.kak;
   assert.match(k, /Как посчитали: отчёт за 2025 в ГИР БО есть, но выручки в нём нет\. Две недели нулевой выручки — 0 ₽, поэтому советуем платить по факту поставки\./);
 });

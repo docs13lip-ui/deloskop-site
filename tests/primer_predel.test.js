@@ -32,7 +32,8 @@ const ozhid = tekst(v.headline);
 test('данные примера дают предел — вывод с суммой, а не «предварительно»', () => {
   assert.strictEqual(r.company.inn, '0000000000');
   assert.ok(v.cap > 0, 'предел не посчитался');
-  assert.match(ozhid, /^Можно, предоплата — до \d[\d ]* ₽$/, ozhid);
+  assert.match(ozhid, /^Предоплата — по нашей оценке не больше \d[\d ]* ₽$/, ozhid); // dostovernost-v1: приостановки не проверены — без «Можно»
+  assert.ok(!/можно/i.test(ozhid), 'при неполной проверке «Можно» в выводе нет');
 });
 
 test('главная: вывод в разметке начинается с того же предела, что дорисует модуль', () => {
@@ -51,9 +52,9 @@ test('/kak-vidit-bank/: оба вывода «Примера» — тот же �
 });
 
 test('других сумм предела у «Примера» на страницах нет', () => {
-  const chislo = ozhid.replace(/^.*до /, '');
+  const chislo = ozhid.replace(/^.*больше /, '');
   for (const [imya, s] of [['index.html', G], ['kak-vidit-bank', S]]) {
-    const vstr = tekst(s).match(/Можно, предоплата — до [\d ]+ ₽/g) || [];
+    const vstr = tekst(s).match(/(?:Можно, предоплата — до|Предоплата — по нашей оценке не больше) [\d ]+ ₽/g) || [];
     vstr.forEach((x) => assert.ok(x.endsWith(chislo), imya + ': «' + x + '»'));
   }
 });

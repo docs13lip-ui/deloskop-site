@@ -251,7 +251,7 @@
     var rez = KALK.rasschitat(M, x.fakty, x.dostupno);
     var n = 0, k;
     for (k in M.istochniki) if (x.dostupno[k]) n++;
-    var out = { polnota: rez.polnota, istochnikov: n, vsego: Object.keys(M.istochniki).length, versiya: M.versiya, neUchityvali: neUchityvali(x, c) };
+    var out = { polnota: rez.polnota, istochnikov: n, vsego: Object.keys(M.istochniki).length, versiya: M.versiya, neUchityvali: neUchityvali(x, c, r) };
     if (rez.stop) { out.rezhim = 'stop'; out.stop = rez.stop.tekst; out.ton = 'bad'; return out; }
     if (rez.indeks == null && !rez.sokrashchennaya) { out.rezhim = 'net'; return out; } // нет ЕГРЮЛ — не считаем
     if (x.neizvestnye.length) { out.rezhim = 'neizv'; out.signaly = x.neizvestnye.map(function (s) { return t(s); }); return out; }
@@ -275,11 +275,29 @@
     if (S && typeof S.bank === 'function') return S.bank(c);
     return /^64\.1(\.|\d|$)/.test(String((c || {}).okved || ''));
   }
-  function neUchityvali(x, c) {
-    var a = [], b = [];
+  // dostovernost-v1 (аудит 19.11, п. 22 (а)): суды, приставы и ЕФРСБ подключены (через Checko) — «источник не подключён»
+  // было неправдой. Причину берём из ответа: блока реестра нет — «сведений в ответе нет»; блок есть, но реестр не ответил или
+  // сведения устарели — «реестры не ответили»; ЕИС заморожен (реестр источников) — «не обновляется с даты».
+  var BLOK = { sudy: 'sudy', fssp: 'fssp', fedresurs: 'bankrotstvo', eis: 'rnp' };
+  function zamorozhenS(id) {
+    var I = root && root.DlkIstochniki, R = I && I.REESTR;
+    if (!R) try { R = typeof require === 'function' ? require('./istochniki.js').REESTR : null; } catch (e) { R = null; }
+    var z = R && R[id];
+    return z && z.sostoyanie === 'zamorozhen' && z.s ? z.s.split('-').reverse().join('.') : '';
+  }
+  function neUchityvali(x, c, r) {
+    var b = [], dm = (r && r.damia) || {}, netOtv = [], neOtv = [];
     // istochniki-v1: статус банкротства из ЕГРЮЛ учли — не учли только сообщения ЕФРСБ (намерения кредиторов, ход процедуры)
-    Object.keys(NE_PODKL).forEach(function (k) { if (!x.dostupno[k]) a.push(k === 'fedresurs' && x.bankrIzEgryul ? 'сообщения ЕФРСБ' : NE_PODKL[k]); });
-    if (a.length) b.push(a.join(', ') + ' — источник не' + NB + 'подключён');
+    Object.keys(NE_PODKL).forEach(function (k) {
+      if (x.dostupno[k]) return;
+      var t = k === 'fedresurs' && x.bankrIzEgryul ? 'сообщения ЕФРСБ' : NE_PODKL[k], bl = dm[BLOK[k]];
+      var z = k === 'eis' ? zamorozhenS('eis') : '';
+      if (bl && typeof bl === 'object' && !bl.iz_egryul && z) b.push(t + ' — сведения ЕИС на' + NB + z + ', источник сейчас не' + NB + 'обновляется');
+      else if (bl && typeof bl === 'object' && !bl.iz_egryul) neOtv.push(t);
+      else netOtv.push(t);
+    });
+    if (neOtv.length) b.unshift(neOtv.join(', ') + ' — реестры не' + NB + 'ответили');
+    if (netOtv.length) b.unshift(netOtv.join(', ') + ' — сведений в' + NB + 'ответе нет');
     if (!x.dostupno.fns) b.push('налоги и штат — свежего набора ФНС в' + NB + 'ответе нет');
     // v1.2 ([команда] 16:07 разд. 1 п. 1): у банка «её нет» звучит как упрёк — пишем, куда он её сдаёт.
     // v1.3 ([команда] 04.10 11:30 разд. 1.4): «а не в ГИР БО» неполно — Банк России передаёт её в ГИР БО
@@ -313,7 +331,8 @@
   }
   // первый пункт «Не учитывали», которого не хватает именно для полноты (без «не подключён» и «налоговой нагрузки»)
   function neHvataet(v) {
-    var a = (v.neUchityvali || []).filter(function (x) { return !/не\s?подключён/.test(x) && !/^налоговая нагрузка/.test(x); });
+    // dostovernost-v1: строки о внешних реестрах (суды, приставы, ЕФРСБ, ЕИС) — не про полноту
+    var a = (v.neUchityvali || []).filter(function (x) { return !/не[\s\u00a0]?подключён|— сведений в[\s\u00a0]ответе нет|— реестры не[\s\u00a0]ответили|— сведения ЕИС/.test(x) && !/^налоговая нагрузка/.test(x); });
     return a.length ? a[0] : '';
   }
 

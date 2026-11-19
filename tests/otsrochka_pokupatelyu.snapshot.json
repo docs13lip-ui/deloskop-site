@@ -1,5 +1,5 @@
 {
- "_kak": "sha256 от JSON.stringify(Usloviya.decide(...)) до комплекта (main c7bd42c + склейка NBSP в reasonText), по ответам tests/otsrochka_fixtures.js; с zapros-dokumentov-v1 (12.11.2026) — без поля letter (сверено: без письма хэши до и после комплекта совпали); с chestnyj-nol-v1 (13.11.2026) обновлён только go — заголовок «Проверили не всё…» и «Вывода о рисках пока нет.» в совете (приставы в образце не проверены)",
+ "_kak": "sha256 от JSON.stringify(Usloviya.decide(...)) до комплекта (main c7bd42c + склейка NBSP в reasonText), по ответам tests/otsrochka_fixtures.js; с zapros-dokumentov-v1 (12.11.2026) — без поля letter (сверено: без письма хэши до и после комплекта совпали); с chestnyj-nol-v1 (13.11.2026) обновлён только go — заголовок «Проверили не всё…» и «Вывода о рисках пока нет.» в совете (приставы в образце не проверены); с dostovernost-v1 (19.11.2026) обновлён только capMalo — заголовок без «Можно» (долги в образце не проверены) и поле nepolno",
  "go": {
   "bez": "159117ad216dc5617880e2c9956f1f47aefd97f1ed47f226e5df99512ee4784b",
   "summa": "464be42b7ec359679076a575c658129d8b9907a70494960bb7ad2f4b2dc8ec00"
@@ -9,8 +9,8 @@
   "summa": "4db791c0d009bb59274ebef0679989887a84f16d7acd4350d2bde3f4e9187fb2"
  },
  "capMalo": {
-  "bez": "178c8a06c32f43ee5168dd35b29cecef3ce9222df826ce30738fcf0e514aea9c",
-  "summa": "19e14e6eeda822bf0c6aa1ba50919ec3c2f7fec59fcbe3f6e895cc86ca1dfdb2"
+  "bez": "1fd216089c985bc24397f2a244afa4de899618ce024db0c1b868031f8f7c2446",
+  "summa": "5cbdc512fd9ea9960e34f88fb1a023fc87e9003f16d67f47408325837f209c4d"
  },
  "post": {
   "bez": "4d7da83c5292e8d0b03381a568d57505404af187968eda54934eaed81a917853",

@@ -38,7 +38,8 @@ test('(б) заголовки «Они платят мне» — дословн�
   assert.strictEqual(otg(F.liquidated).headline, 'Сделку не заключать');
   assert.strictEqual(otg(F.stop).headline, 'Отгружайте только после оплаты');
   assert.strictEqual(otg(F.post).headline, 'Только по предоплате');
-  assert.strictEqual(otg(F.capMalo).headline, 'Можно, но без отсрочки');
+  // dostovernost-v1 (аудит 19.11): в образце capMalo долги не проверены — «Можно» в выводе нет (снимок capMalo обновлён ради этой строки)
+  assert.strictEqual(otg(F.capMalo).headline, 'Без отсрочки');
   // predvaritelno-v1 (аудит 22.10): в образцах go и cap долги не проверены (у cap и выручки нет) — заголовок «Предварительно»
   assert.strictEqual(otg(F.cap).headline, 'Предварительно: есть замечания');
   // chestnyj-nol-v1 (13.11): в образце go приставы не проверены — положительного вывода нет

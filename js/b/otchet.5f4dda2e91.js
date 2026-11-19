@@ -5871,7 +5871,7 @@ var x = izOtveta(r);
 var rez = KALK.rasschitat(M, x.fakty, x.dostupno);
 var n = 0, k;
 for (k in M.istochniki) if (x.dostupno[k]) n++;
-var out = { polnota: rez.polnota, istochnikov: n, vsego: Object.keys(M.istochniki).length, versiya: M.versiya, neUchityvali: neUchityvali(x, c) };
+var out = { polnota: rez.polnota, istochnikov: n, vsego: Object.keys(M.istochniki).length, versiya: M.versiya, neUchityvali: neUchityvali(x, c, r) };
 if (rez.stop) { out.rezhim = 'stop'; out.stop = rez.stop.tekst; out.ton = 'bad'; return out; }
 if (rez.indeks == null && !rez.sokrashchennaya) { out.rezhim = 'net'; return out; }
 if (x.neizvestnye.length) { out.rezhim = 'neizv'; out.signaly = x.neizvestnye.map(function (s) { return t(s); }); return out; }
@@ -5890,10 +5890,25 @@ var S = root && root.Sushchestvennoe;
 if (S && typeof S.bank === 'function') return S.bank(c);
 return /^64\.1(\.|\d|$)/.test(String((c || {}).okved || ''));
 }
-function neUchityvali(x, c) {
-var a = [], b = [];
-Object.keys(NE_PODKL).forEach(function (k) { if (!x.dostupno[k]) a.push(k === 'fedresurs' && x.bankrIzEgryul ? 'сообщения ЕФРСБ' : NE_PODKL[k]); });
-if (a.length) b.push(a.join(', ') + ' — источник не' + NB + 'подключён');
+var BLOK = { sudy: 'sudy', fssp: 'fssp', fedresurs: 'bankrotstvo', eis: 'rnp' };
+function zamorozhenS(id) {
+var I = root && root.DlkIstochniki, R = I && I.REESTR;
+if (!R) try { R = typeof require === 'function' ? require('./istochniki.js').REESTR : null; } catch (e) { R = null; }
+var z = R && R[id];
+return z && z.sostoyanie === 'zamorozhen' && z.s ? z.s.split('-').reverse().join('.') : '';
+}
+function neUchityvali(x, c, r) {
+var b = [], dm = (r && r.damia) || {}, netOtv = [], neOtv = [];
+Object.keys(NE_PODKL).forEach(function (k) {
+if (x.dostupno[k]) return;
+var t = k === 'fedresurs' && x.bankrIzEgryul ? 'сообщения ЕФРСБ' : NE_PODKL[k], bl = dm[BLOK[k]];
+var z = k === 'eis' ? zamorozhenS('eis') : '';
+if (bl && typeof bl === 'object' && !bl.iz_egryul && z) b.push(t + ' — сведения ЕИС на' + NB + z + ', источник сейчас не' + NB + 'обновляется');
+else if (bl && typeof bl === 'object' && !bl.iz_egryul) neOtv.push(t);
+else netOtv.push(t);
+});
+if (neOtv.length) b.unshift(neOtv.join(', ') + ' — реестры не' + NB + 'ответили');
+if (netOtv.length) b.unshift(netOtv.join(', ') + ' — сведений в' + NB + 'ответе нет');
 if (!x.dostupno.fns) b.push('налоги и штат — свежего набора ФНС в' + NB + 'ответе нет');
 if (!x.dostupno.girbo) b.push(bank(c) ? 'бухотчётность — организация сдаёт в' + NB + 'Банк России, в' + NB + 'ГИР' + NB + 'БО её передаёт Банк России, доступ может быть ограничен (ч.' + NB + '9 и' + NB + '12 ст.' + NB + '18' + NB + '402-ФЗ)'
 : 'бухотчётность — за' + NB + 'прошлый год в' + NB + 'ответе её нет');
@@ -5918,7 +5933,7 @@ if (v && v.neSF) return (v.neSF === 'суды и приставы' ? 'Суды �
 return 'Собрано ' + v.polnota + NB + '% данных — число и' + NB + 'уровень покажем, когда наберётся ' + (v.porog || 60) + NB + '%';
 }
 function neHvataet(v) {
-var a = (v.neUchityvali || []).filter(function (x) { return !/не\s?подключён/.test(x) && !/^налоговая нагрузка/.test(x); });
+var a = (v.neUchityvali || []).filter(function (x) { return !/не[\s\u00a0]?подключён|— сведений в[\s\u00a0]ответе нет|— реестры не[\s\u00a0]ответили|— сведения ЕИС/.test(x) && !/^налоговая нагрузка/.test(x); });
 return a.length ? a[0] : '';
 }
 function htmlKolonka(v) {

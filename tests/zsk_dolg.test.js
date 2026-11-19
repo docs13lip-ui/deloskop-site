@@ -77,12 +77,15 @@ test('v1.1: шаг 3 без обещания исхода, «Сколько на
   assert.ok(avt.includes('Верховный суд отменил постановление округа в этой части и оставил в силе решение апелляции.'));
   const sos = s.slice(s.indexOf('<h2>Читайте также</h2>'), s.indexOf('</main>'));
   assert.ok(sos.length > 30, 'блок «Читайте также»');
-  assert.strictEqual((sos.match(/class="pk"/g) || []).length, 3);
+  // razbor-statyi-v1 (19.11): + статья, которая сама ссылается на разбор («Зоны риска ЗСК») — 2 разбора + 2 статьи.
+  assert.strictEqual((sos.match(/class="pk"/g) || []).length, 4);
+  assert.ok(sos.includes('href="/115-fz/zsk-zony-riska/"'));
   assert.ok(sos.includes('href="/115-fz/proverit-kontragenta-zsk-po-inn/"'));
   assert.ok(un(sos).includes('ЗСК контрагента: как проверить поставщика по ИНН перед оплатой'), 'заголовок — из <h1> статьи');
 });
 
-test('statyi в dela.json: только статьи сайта вне /praktika/, страница существует; у остальных разборов — «Похожие разборы»', () => {
+// razbor-statyi-v1 (19.11): кроме statyi «Читайте также» берёт статьи, которые ссылаются на разбор (ssylki_s_sajta) — теперь у всех 43.
+test('statyi в dela.json: только статьи сайта вне /praktika/, страница существует; «Читайте также», если есть статья', () => {
   const D = JSON.parse(chitat('praktika/dela.json'));
   for (const r of D.razbory) {
     for (const u of r.statyi || []) {
@@ -90,6 +93,7 @@ test('statyi в dela.json: только статьи сайта вне /praktika
       assert.ok(fs.existsSync(path.join(ROOT, u, 'index.html')), r.slug + ': нет ' + u);
     }
     const h = chitat(`praktika/${r.razdel}/${r.slug}/index.html`);
-    assert.ok(h.includes(r.statyi ? '<h2>Читайте также</h2>' : '<h2>Похожие разборы</h2>'), r.slug);
+    const obratno = Object.entries(D.ssylki_s_sajta).some(([f, sp]) => /^(nalogi|115-fz)\/[a-z0-9-]+\/index\.html$/.test(f) && sp.includes(r.slug));
+    assert.ok(h.includes(r.statyi || obratno ? '<h2>Читайте также</h2>' : '<h2>Похожие разборы</h2>'), r.slug);
   }
 });

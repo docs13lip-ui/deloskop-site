@@ -731,7 +731,7 @@ html:not(.rezhim-otcheta) .hero .uv{width:100%;margin-top:0}
             <div class="pill"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5L6.5 11.5L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Без&nbsp;серьёзных сигналов</div>
             <div class="ex-ix__pod">по&nbsp;признакам из&nbsp;реестров</div>
           </div>
-          <div class="ex-vt"><div class="verdict" data-usl-demo>Можно, предоплата&nbsp;— до&nbsp;900&nbsp;000&nbsp;₽. Руководитель сменился недавно: перед оплатой запросите решение о&nbsp;его назначении.</div></div>
+          <div class="ex-vt"><div class="verdict" data-usl-demo>Предоплата&nbsp;— по&nbsp;нашей оценке не&nbsp;больше 900&nbsp;000&nbsp;₽. Руководитель сменился недавно: перед оплатой запросите решение о&nbsp;его назначении.</div></div>
         </div>
         <div class="ex-pl" role="group" aria-label="Насколько полна проверка" data-polnota-primer="6/8"><div class="ex-pl__bar" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div><p class="ex-pl__t"><b>Проверено 6 из&nbsp;8&nbsp;групп источников.</b> РНП и&nbsp;приостановки&nbsp;— на&nbsp;12.10.2026. «Не&nbsp;проверяли»&nbsp;— не&nbsp;то&nbsp;же, что «не&nbsp;нашли».</p></div>
         <div class="ex-vid" role="tablist" aria-label="Чьими глазами смотреть" data-pod="Так мы группируем открытые сведения. Банк и налоговая нам не сообщают, как они оценивают компанию." hidden><button type="button" role="tab" aria-selected="true" data-vid="svodka">Все факты</button><button type="button" role="tab" aria-selected="false" tabindex="-1" data-vid="bank" data-zag="Что увидит банк">Глазами банка</button><button type="button" role="tab" aria-selected="false" tabindex="-1" data-vid="nalog" data-zag="Что увидит инспекция">Глазами налоговой</button></div>
@@ -930,7 +930,9 @@ html:not(.rezhim-otcheta) .hero .uv{width:100%;margin-top:0}
     try{Usloviya.mount(ex,{risk_level:'low',company:{inn:'0000000000',name_short:'ООО «Пример»',status:'ACTIVE',reg_date:'2019-04-01'},
       signals:[{title:'Руководитель сменился недавно',status:'warn',detail:'Внимание'}],
       // vitrina-primer-v1: пример — полный образец (выручка и реестры есть), а не «Предварительно» при зелёном кольце
-      dossier:{kpi:[{label:'Выручка за 2025',value:48000000}]},damia:{fssp:{status:'not_found'},nalogi:{status:'not_found'},sudy:{status:'not_found'},bankrotstvo:{status:'not_found'}}},{compact:true});}catch(e){ex.className='verdict';}
+      dossier:{kpi:[{label:'Выручка за 2025',value:48000000}]},damia:{fssp:{status:'not_found'},nalogi:{status:'not_found'},sudy:{status:'not_found'},bankrotstvo:{status:'not_found'},
+      // dostovernost-v1: как в строке полноты примера — приостановки на 12.10.2026, сегодня не проверяли: вывод без «Можно»
+      priostanovki:{status:'ne_provereno',sostoyanie:'not_checked'},mery:{status:'ne_provereno',sostoyanie:'not_checked'}}},{compact:true});}catch(e){ex.className='verdict';}
   }
   // пример «Условий сделки» — когда страница загрузилась и браузер свободен (не спорит с первым экраном)
   window.addEventListener('load',function(){var ric=window.requestIdleCallback||function(f){setTimeout(f,200)};ric(function(){kogdaPrimer(primerUslovij)},{timeout:2500});});

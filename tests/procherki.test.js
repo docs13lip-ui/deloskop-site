@@ -38,7 +38,7 @@ test('раздел 8, компания действует: остаётся «н
   const x = razdel(P.sobrat(demo('ACTIVE'), opt), 'sudy');
   assert.strictEqual(x.status, 'not_checked');
   assert.match(x.prichina, /По ЕГРЮЛ записи о банкротстве нет/);
-  assert.match(x.prichina, /Картотеку арбитражных дел .* не подключили/);
+  assert.match(x.prichina, /Картотеку арбитражных дел .* не проверяли/); // dostovernost-v1: картотека подключена — «не подключили» неправда
   assert.ok(!/не банкрот|судов нет|дел нет/i.test(x.prichina));
 });
 
@@ -88,8 +88,10 @@ test('на сайте нет обещаний проверки судов, ба�
   }
 });
 
-test('/indeks/: над группой «Суды и долги» — честная строка, что в балл не входит', () => {
-  assert.match(chitat('indeks/index.html'), /class="gr-net"><td colspan="3">Источники этой группы мы(?: |&nbsp;)пока не&nbsp;подключили/);
+test('/indeks/: над группой «Суды и долги» — строка из реестра источников (dostovernost-v1), без «не подключили»', () => {
+  const h = chitat('indeks/index.html');
+  assert.match(h, /class="gr-net"><td colspan="3"><!--ist-gruppa-->/);
+  assert.ok(!/class="gr-net"><td colspan="3">Источники этой группы мы/.test(h));
 });
 
 test('главная: ни «следом подключаем», ни раздела об источниках (bez-otkuda-v1, 13.11)', () => {

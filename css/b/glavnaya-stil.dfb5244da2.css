@@ -20,6 +20,7 @@
 .ot-rq .rkv{margin:0}
 .ot-vd{padding:28px 40px;background:var(--warn-bg,#FFF4E0);-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .ot-vd--ok{background:var(--ok-bg,#E8F5EE)}.ot-vd--bad{background:var(--bad-bg,#FDECEA)}
+.ot-vd--nejtr{background:var(--surface-2,#EDE8DA)}
 .ot-ix{grid-column:1/4;border-right:1px solid rgba(0,0,0,.08);padding-right:24px;display:flex;flex-direction:column;gap:8px;min-width:0}
 .ot-ix__lab{font-size:13px;color:var(--ink2,#3A4868)}
 .ot-ix__big{font-size:64px;line-height:1;font-weight:600;letter-spacing:-.03em}
@@ -328,6 +329,7 @@ padding:8px 16px;border-radius:16px;background:var(--surface-2,#EDE8DA);color:va
 .lip-o__t::before{content:"";display:inline-block;width:8px;height:8px;margin-right:8px;border-radius:50%;vertical-align:2px;background:var(--warn-dot,#B86E00)}
 .lip-o[data-ton=ok] .lip-o__t::before{background:var(--ok-dot,#16723F)}
 .lip-o[data-ton=bad] .lip-o__t::before{background:var(--bad-dot,#B3261E)}
+.lip[data-ton=nejtr] .lip__t::before,.lip-o[data-ton=nejtr] .lip-o__t::before{background:var(--muted,#5B6783)}
 .lip-o__s{grid-area:s;color:var(--accent,#12305F);font-size:13px;white-space:nowrap}
 .lip-o:hover .lip-o__s{text-decoration:underline}
 .lip-o:focus-visible{outline:3px solid var(--accent,#12305F);outline-offset:2px}

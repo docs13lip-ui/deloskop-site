@@ -3356,7 +3356,8 @@ def shablon_glavnyj_fakt(t):
     out = []
     for ton, p in _SH_V.findall(t):
         s = re.sub(r"\s+", " ", _sh_txt(p)).rstrip(".")
-        if s and not _SH_VOZRAST_V.match(s) and not re.match(r"^(Выручка|Доход)\b", s):
+        # nds-fakt-v1: справочная строка о НДС («…сверьте со счётом») — совет к счёту, не факт для сниппета
+        if s and not _SH_VOZRAST_V.match(s) and not re.match(r"^(Выручка|Доход)\b", s) and not re.match(r"^В\s\d{4} уплачивала НДС", s):
             out.append(s)
             kor = re.sub(r" \((?:на|по состоянию на) [^)]*\)$", "", s)  # «(на 1 сентября 2026)» — дата есть на странице
             if kor != s:
@@ -7373,3 +7374,54 @@ _korotko_po_vesu_bez_godov = korotko_po_vesu
 
 def korotko_po_vesu(t):  # noqa: F811 — razbor-gody-v1: и до shablon_v2 — description берёт «Разбор» уже без строк другого года (перепечатка сходится с первого прохода)
     return razbor_gody(_korotko_po_vesu_bez_godov(t))
+
+
+# nds-fakt-v1 ([Ночные-2] 19.11, слова [Право · Налоговый] 19.11 разд. 3 (1), claude/Право_аудит_НДС_оплата_1С_Разбор57_19.11.md):
+# при строке «в том числе НДС» (nds-uplacheno-v1) — под ней справочно «В {год} уплачивала НДС (данные ФНС). Вероятно,
+# выставляет счета с НДС — сверьте со счётом.» Не «плательщик НДС» и не «покупатель может принять к вычету» (❌ [Право]:
+# факт за прошлый год, режим мог смениться). Без года уплаты — строки нет. Упрощенцы (разд. 3 (2)) — только при режиме из
+# набора ФНС «спецрежимы» с датой: в /api/check его нет — не пишем.
+def nds_fakt_tekst(god):
+    return "В%s%d уплачивала НДС (данные ФНС). Вероятно, выставляет счета с%sНДС%s— сверьте со%sсчётом." % (NB, god, NB, NB, NB)
+
+
+_nds_fakt_vyvody_bez = vyvody
+
+
+def vyvody(k):  # noqa: F811 — nds-fakt-v1: справочная строка под V23 с НДС
+    V = _nds_fakt_vyvody_bez(k)
+    t = (k.get("fakty") or {}).get("nalogi") or {}
+    if not (t.get("nds") and t.get("god")) or any(x["kod"] == "V23n" for x in V):
+        return V
+    out = []
+    for x in V:
+        out.append(x)
+        if x["kod"] == "V23":
+            out.append(_v("V23n", "info", nds_fakt_tekst(int(t["god"])), x["istochnik"], x["data"], s_chislom=False))
+    return out
+
+
+_NDS_FAKT_V23 = re.compile(r'(<li class="co-v co-v--ok"><span class="co-v__z"(?: role="img")? aria-label="хорошо"></span>'
+                           r'<div><p>Уплатила налогов и взносов[^<]*? за(?:&nbsp;| | )(\d{4}), в том числе НДС[^<]*</p>'
+                           r'(<span class="co-src">[^<]*</span>)</div></li>)(?!<li class="co-v co-v--info"><span class="co-v__z"'
+                           r'(?: role="img")? aria-label="справочно"></span><div><p>В(?:&nbsp;| | )\d{4} уплачивала НДС)')
+
+
+def nds_fakt_korotko(t):
+    """nds-fakt-v1: опубликованная карточка → под строкой «…, в том числе НДС — X» справочная строка словами [Право ·
+    Налоговый] 19.11 разд. 3 (1), как у новых (V23n). Источник — тот же. Повтор ничего не меняет."""
+    if not t or "в том числе НДС" not in t:
+        return t
+
+    def zam(m):
+        li = m.group(1)
+        tekst = nds_fakt_tekst(int(m.group(2)))
+        if "&nbsp;" in li:
+            tekst = tekst.replace(NB, "&nbsp;")
+        # строка — из той же строки V23 (класс, знак, источник), как nalog_ostatok_korotko: разметка как у новых
+        nov = li.replace("co-v--ok", "co-v--info", 1).replace(ZNAK["ok"][1], ZNAK["info"][1], 1)
+        if 'role="img"' not in nov:
+            nov = nov.replace('co-v__z" aria', 'co-v__z" role="img" aria', 1)
+        i, j = nov.index("<p>") + 3, nov.index("</p>")
+        return li + nov[:i] + tekst + nov[j:]
+    return _NDS_FAKT_V23.sub(zam, t)

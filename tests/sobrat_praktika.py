@@ -283,7 +283,31 @@ def statya_k(url):
     if not m:
         raise SystemExit("statyi: нет <h1> на %s" % url)
     h1 = html.unescape(re.sub(r"<[^>]+>", "", m.group(1))).strip()
-    return """<a class="pk" href="%s"><span class="pk__q">%s</span><span class="pk__m">Статья Делоскопа</span></a>""" % (e(url), e(h1))
+    return """<a class="pk" href="%s"><span class="pk__q">%s</span><span class="pk__m">%s</span></a>""" % (
+        e(url), e(h1), VID_STRANICY.get(url, "Статья Делоскопа"))
+
+
+# razbor-statyi-v1: калькулятор и справочник — не статьи; подпись карточки говорит, что человек найдёт по ссылке.
+VID_STRANICY = {"/nalogi/nagruzka/": "Калькулятор Делоскопа", "/nalogi/nagruzka-po-otraslyam-2025/": "Справочник Делоскопа"}
+
+
+# razbor-statyi-v1 (19.11.2026, [Ночные-2], Н4 решения владельца 18.11 — «из разборов и статей — к инструменту по теме»):
+# статьи и калькуляторы /nalogi/ и /115-fz/ ссылались на разборы («Как это решают суды», поле ssylki_s_sajta), а разборы
+# обратно — почти никогда (поле statyi было у 1 из 43): читатель разбора не видел статью или инструмент своей темы,
+# поисковик — взаимной связи. Теперь в «Читайте также» разбора после явных statyi — до STATEJ_OBRATNO статей, которые сами
+# называют этот разбор; первыми — самые узкие (меньше разборов в их списке), при равенстве — по адресу. Новых слов нет:
+# заголовок карточки — <h1> статьи (statya_k). Хабы, /pasport/ и /skoraya-115-fz/ не берём — у них своё место.
+STATEJ_OBRATNO = 2
+STATYA_FAJL = re.compile(r"^(?:nalogi|115-fz)/[a-z0-9-]+/index\.html$")
+
+
+def statyi_razbora(r, D):
+    """Адреса статей для «Читайте также» разбора: явные statyi + обратные из ssylki_s_sajta (без повторов)."""
+    yavnye = list(r.get("statyi", []))
+    kand = sorted((len(spisok), f) for f, spisok in D.get("ssylki_s_sajta", {}).items()
+                  if STATYA_FAJL.match(f) and r["slug"] in spisok)
+    obratno = [u for u in ("/" + f[:-len("index.html")] for _, f in kand) if u not in yavnye]
+    return yavnye + obratno[:STATEJ_OBRATNO]
 
 
 def razbor(r, D, po_slug, F=None):
@@ -308,7 +332,7 @@ def razbor(r, D, po_slug, F=None):
     k = r["knopka"]
     zakon = "\n".join(norma(z) for z in r["zakon"])
     sverka = max(d["sverka"] for d in r["dela"])
-    sos = "\n".join([pk(po_slug[s]) for s in r["pohozhie"]] + [statya_k(u) for u in r.get("statyi", [])])
+    sos = "\n".join([pk(po_slug[s]) for s in r["pohozhie"]] + [statya_k(u) for u in statyi_razbora(r, D)])
     kartochki = "\n".join(kartochka(d, i + 1, len(r["dela"])) for i, d in enumerate(r["dela"]))
     stranica = golova(r["title"], r["description"], url, ld) + """<main class="pr" id="main">
 %(kr)s
@@ -344,7 +368,7 @@ def razbor(r, D, po_slug, F=None):
 """ % {"kr": kroshki_html(kr), "h1": e(r["h1"]), "data": r["data"], "data_ru": data_ru(r["data"]), "min": minut_ru(r["minut"]),
        "lid": e(r["lid"]), "kart": kartochki, "telo": telo, "kz": e(k["zagolovok"]), "kt": e(k["tekst"]), "ku": e(k["url"]),
        "deystvie": deystvie(k), "slezh": slezh_attr(k), "slezh_js": '<script src="/js/slezh-knopka.js" defer></script>\n' if k.get("slezh") else "", "zakon": zakon, "faq": faq, "sv": sverka, "sv_ru": data_ru(sverka), "sver_fraza": sver_fraza(r, sverka), "sos": sos,
-       "sos_z": "Читайте также" if r.get("statyi") else "Похожие разборы"}
+       "sos_z": "Читайте также" if statyi_razbora(r, D) else "Похожие разборы"}
     return url, stranica
 
 

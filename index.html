@@ -1002,7 +1002,7 @@ html:not(.rezhim-otcheta) .hero .uv{width:100%;margin-top:0}
     if(cb)cb.onclick=function(e){
       if(shR){try{navigator.clipboard.writeText(Shchit.kratko(shR)+' — deloskop.ru');e.target.textContent='Скопировано'}catch(_){}return;}
       var u=window.Usloviya?Usloviya.decide(r):null;
-      var t=name+' (ИНН '+c.inn+'): '+({low:'Без серьёзных сигналов',medium:'Есть вопросы',high:'Есть серьёзные сигналы'}[r.risk_level]||'')+'. '+(u?u.headline+'. '+u.advice:(r.verdict||''))+' — проверено на deloskop.ru';
+      var t=name+' (ИНН '+c.inn+'): '+(u&&u.pered?'':({low:'Без серьёзных сигналов',medium:'Есть вопросы',high:'Есть серьёзные сигналы'}[r.risk_level]||'')+'. ')+(u?u.headline+'. '+u.advice:(r.verdict||''))+' — проверено на deloskop.ru';
       try{navigator.clipboard.writeText(t);e.target.textContent='Скопировано'}catch(_){}};
     // лист «Отчёт о проверке» на всю ширину: шапка → вывод → факты, динамика, все данные; справа — как посчитали и откуда данные (js/otchet.js)
     if(window.Otchet){try{Otchet.razlozhit(report,r,{svoj:!!shR,shR:shR,usl:ub,api:CAPI})}catch(e){}}

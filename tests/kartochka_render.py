@@ -679,6 +679,9 @@ def iz_check(r):
             detal = "%d%s%s" % (n_ip, NB, plural(n_ip, "производство", "производства", "производств"))
             if ost:
                 detal += (", остаток долга по%s%d самым свежим — %s" % (NB, chast[0], dengi(ost))) if chast else (", остаток долга — %s" % dengi(ost))
+            elif ost == 0 and not chast and dn.get("ostatok_tochno") is True and ohv in ("", "vse"):
+                # minusy-gir-bo-v1 ([Право] 18.11 12:20 (5)): точный ноль по всем производствам — «остаток долга — 0 ₽»
+                detal += ", остаток долга — 0" + NB + "₽"
         else:
             detal = ""
         if not nashli or detal:
@@ -6821,3 +6824,170 @@ def un_mesyac(im, za, r1, pr1, dl):  # noqa: F811 — otrasl-na-kartochke-v1: п
         return ("Прибыль %s %s больше её выручки (%s в месяц): сделку с %s по выручке не соизмерить — перед крупной оплатой "
                 "сверьте, с каким юрлицом %s договор, и запросите у %s свежую отчётность." % (im, za, dengi(r1 / 12), im, im, im))
     return _un_mesyac_bez_golovy(im, za, r1, pr1, dl)
+
+
+# ---------------------------------------------------------------- minusy-gir-bo-v1 ([Ночные-2] 18.11)
+# [Право] 18.11 12:20 (claude/Право_✎_итог_Экопэт_дополните_карточку_связь_Разбор55_18.11.md), разд. 1:
+# (4) у «Экопэт» 3904087321 отчёт писал «Плюсов 9, минусов 2» (замечания ГИР БО «Убыток» и «Отрицательные чистые активы»),
+#     карточка — «Существенных минусов не нашли». Верно (а): карточка берёт оба в минусы — только за последний открытый год
+#     и только если он не старше «год сбора − 2»; в «существенные» они не входят (суммы с выручкой не соотносятся). Ведут
+#     строки к «Финансам» (#fin) и «Балансу» (#bal), не к реестрам. Слова — факт с источником, без оценки. На карточке число —
+#     строка 1300 «Капитал и резервы» (её же показывает «Коротко»), поэтому «Собственный капитал … — отрицательный», а не
+#     «чистые активы» (расчёт по приказу № 84н мы не делаем) — ✎ [Право].
+# (5) приставы: «Производства у приставов: N, остаток долга — 0 ₽» — только при ostatok_tochno и охвате «все»; в итог первого
+#     экрана (аналог «Главного») не поднимаем — вес неимущественного требования не знаем; в «Небольшие суммы» тоже нет.
+# (2) итог: «… — по K проверенным источникам, проверено ДД.ММ.ГГГГ»; если набор ФНС о налогах старше 30 дней от даты сбора —
+#     строка «Налоги и долги — по наборам ФНС на ДД.ММ.ГГГГ» под итогом (одно «на дату» обещало свежесть шире данных).
+# (3) «Так бывает у головных…» — не ставим компаниям в ликвидации или банкротстве (статус не «Действующая» или ЕФРСБ).
+MG_UBYTOK = re.compile(r'<li class="co-v co-v--warn"><span class="co-v__z"[^>]*></span><div><p>Убыток за' + _NO_SP + r'(\d{4})'
+                       + _NO_SP + r'?— ([^<]*?₽)(?:, [^<]*)?</p><span class="co-src">([^<·]*?) · сведения на' + _NO_SP
+                       + r'(\d\d\.\d\d\.\d{4})')
+MG_KAPITAL = re.compile(r'<li class="co-v co-v--warn"><span class="co-v__z"[^>]*></span><div><p>Собственный капитал на'
+                        + _NO_SP + r'31\.12\.(\d{4})' + _NO_SP + r'?— минус ([^<:]*?₽):[^<]*</p><span class="co-src">([^<·]*?) · сведения на'
+                        + _NO_SP + r'(\d\d\.\d\d\.\d{4})')
+MG_KUDA = {"ubytok": "#fin", "kapital": "#bal"}
+MG_NOL = "остаток долга — 0" + NB + "₽"
+MG_SVEZHEST_DNEJ = 30
+
+
+def _mg_txt(s):
+    return html.unescape(s).replace(" ", NB)
+
+
+def _mg_ist(s):
+    s = _mg_txt(s).strip()
+    return "ГИР" + NB + "БО" if s.startswith("ГИР") else s
+
+
+def mg_minusy(t, eg_d):
+    """Убыток и отрицательный капитал последнего года ГИР БО из «Коротко» — строки минусов (k, текст, источник, дата)."""
+    tek = int(eg_d[-4:]) if re.fullmatch(r"\d\d\.\d\d\.\d{4}", eg_d or "") else None
+    out = []
+    mu = MG_UBYTOK.search(t or "")
+    if mu and tek and int(mu.group(1)) >= tek - 2:
+        out.append(("ubytok", "Убыток за%s%s%s— %s (%s, сведения на%s%s)" % (NB, mu.group(1), NB, _mg_txt(mu.group(2)), _mg_ist(mu.group(3)),
+                                                                          NB, mu.group(4)), _mg_txt(mu.group(3)).strip(), mu.group(4)))
+    mk = MG_KAPITAL.search(t or "")
+    if mk and tek and int(mk.group(1)) >= tek - 2:
+        out.append(("kapital", "Собственный капитал на%s31.12.%s%s— отрицательный: −%s (%s)" % (NB, mk.group(1), NB, _mg_txt(mk.group(2)),
+                                                                                          _mg_ist(mk.group(3))), _mg_txt(mk.group(3)).strip(), mk.group(4)))
+    return out
+
+
+def mg_nol(x):
+    return x[0] == "fssp" and x[1].replace(NB, " ").endswith(MG_NOL.replace(NB, " "))
+
+
+_mg_pm_stroki_bez = plyusy_minusy_stroki
+
+
+def plyusy_minusy_stroki(t):  # noqa: F811 — minusy-gir-bo-v1: + убыток и отрицательный капитал ГИР БО в минусах
+    S = _mg_pm_stroki_bez(t)
+    if not S:
+        return S
+    mo = _PM_OKVED.search(t or "")
+    dop = [x for x in mg_minusy(t, mo.group(2) if mo else "") if x[0] not in {y[0] for y in S["minusy"]}]
+    mel = S.get("melkoe") or []
+    # «0 ₽ у приставов» к выручке не соотнести — не «небольшая сумма»
+    S["melkoe"] = [x for x in mel if not mg_nol(x)]
+    if dop:
+        i = next((j for j, x in enumerate(S["minusy"]) if x in mel), len(S["minusy"]))
+        S["minusy"] = S["minusy"][:i] + [(k, _pm_nb(tx), ist, d) for k, tx, ist, d in dop] + S["minusy"][i:]
+    return S
+
+
+_mg_pm_li_bez = _pm_li
+
+
+def _pm_li(x):  # noqa: F811 — minusy-gir-bo-v1: убыток и капитал ведут к «Финансам» и «Балансу»
+    h = _mg_pm_li_bez(x)
+    return h.replace('href="#reestry"', 'href="%s"' % MG_KUDA[x[0]], 1) if x[0] in MG_KUDA else h
+
+
+_mg_it_li_bez = _it_li
+
+
+def _it_li(x, mod):  # noqa: F811
+    h = _mg_it_li_bez(x, mod)
+    return h.replace('href="#reestry"', 'href="%s"' % MG_KUDA[x[0]], 1) if x[0] in MG_KUDA else h
+
+
+_MG_NALOG_D = re.compile(r'<div class="fact"><span>Задолженность по' + _NO_SP + r'налогам</span><span class="fact__v">[^<]*</span>'
+                         r'<span class="fact__src co-src">[^<]*?сведения на' + _NO_SP + r'(\d\d\.\d\d\.\d{4})')
+
+
+def mg_nabor_star(t, eg_d):
+    """Дата набора ФНС о налогах, если он старше даты сбора больше чем на 30 дней, иначе None."""
+    m = _MG_NALOG_D.search(t or "")
+    if not m or not re.fullmatch(r"\d\d\.\d\d\.\d{4}", eg_d or ""):
+        return None
+    a, b = (dt.datetime.strptime(x, "%d.%m.%Y") for x in (m.group(1), eg_d))
+    return m.group(1) if (b - a).days > MG_SVEZHEST_DNEJ else None
+
+
+_mg_itog_bez = itog_html
+
+
+def itog_html(S, inn, eg_d):  # noqa: F811 — minusy-gir-bo-v1: «проверено ДД.ММ.ГГГГ»; «0 ₽ у приставов» — не в главном
+    if S and S.get("minusy") and any(mg_nol(x) for x in S["minusy"]):
+        # строка остаётся в «Плюсах и минусах» и в счёте минусов, но не в списке первого экрана
+        nol = [x for x in S["minusy"] if mg_nol(x)]
+        S2 = dict(S, minusy=[x for x in S["minusy"] if not mg_nol(x)] + nol, melkoe=list(S.get("melkoe") or []) + nol)
+        h = _mg_itog_bez(S2, inn, eg_d)
+        if h:
+            # «Небольшие суммы» — без нуля: вернуть строку как была, если ноль — единственное «мелкое»
+            h = mg_bez_nolya_v_melkom(h, S, S2, inn, eg_d)
+    else:
+        h = _mg_itog_bez(S, inn, eg_d)
+    if not h:
+        return h
+    h = h.replace("проверенным источникам на" + NB + eg_d, "проверенным источникам, проверено" + NB + eg_d, 1)
+    return h
+
+
+def mg_bez_nolya_v_melkom(h, S, S2, inn, eg_d):
+    mel = S.get("melkoe") or []
+    i = h.find('<p class="caption co-itog__m">')
+    if i < 0:
+        return h
+    j = h.index("</p>", i) + len("</p>")
+    if not mel:
+        return h[:i] + h[j:]
+    S3 = dict(S2, melkoe=mel)
+    h3 = _mg_itog_bez(S3, inn, eg_d)
+    i3 = h3.find('<p class="caption co-itog__m">')
+    return h[:i] + h3[i3:h3.index("</p>", i3) + len("</p>")] + h[j:] if i3 >= 0 else h[:i] + h[j:]
+
+
+_mg_pervyj_bez = pervyj_ekran_kartochki
+
+
+def pervyj_ekran_kartochki(t):  # noqa: F811 — minusy-gir-bo-v1: строка о наборах ФНС старше 30 дней под итогом
+    t = _mg_pervyj_bez(t)
+    if not t or '<section class="co-itog"' not in t:
+        return t
+    t = re.sub(r'<p class="caption co-itog__n co-itog__nab">.*?</p>', "", t)
+    mo = _PM_OKVED.search(t)
+    d = mg_nabor_star(t, mo.group(2) if mo else "")
+    if not d:
+        return t
+    i = t.index('<section class="co-itog"')
+    k = t.find('<p class="caption co-itog__n">', i)
+    if k < 0:
+        return t
+    k = t.index("</p>", k) + len("</p>")
+    return t[:k] + ('<p class="caption co-itog__n co-itog__nab">Налоги и%sдолги%s— по%sнаборам ФНС на%s%s.</p>' % (NB, NB, NB, NB, d)) + t[k:]
+
+
+_mg_chto_bez = chto_za_html
+
+
+def chto_za_html(t):  # noqa: F811 — minusy-gir-bo-v1 ([Право] 18.11 12:20 (3)): в ликвидации и банкротстве общего правила нет
+    s = _mg_chto_bez(t)
+    if "головных" not in s:
+        return s
+    S = plyusy_minusy_stroki(t)
+    if S and any(x[0] in ("status", "bankrotstvo") for x in S["minusy"]):
+        i = s.index(" Так бывает у")
+        return s[:i] + "</p><!--/co-chto-->"
+    return s

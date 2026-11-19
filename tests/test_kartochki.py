@@ -743,6 +743,8 @@ class TestObshchijRender(unittest.TestCase):
             fajl = pathlib.Path(d, adres.strip("/"), "index.html").read_text(encoding="utf-8")
             # kartochki-unik-v9: WebPage с датой изменения текста ставит только сборка сайта (дату знает файл, не API)
             fajl = K._WP_BLOK.sub("", fajl)
+            # perelinkovka-v1: «Рядом в Делоскопе» тоже ставит только сборка (нужны все карточки, их ворота и хабы)
+            fajl = K.ubrat_ryadom(fajl)
             self.assertEqual(K.bez_nevidimyh(txt), fajl, adres)  # API отдаёт знаки, сайт хранит сущности — браузер видит одно и то же
 
     def test_api_ip_i_vorota(self):
@@ -1349,7 +1351,8 @@ class TestDoborV35(unittest.TestCase):
         izm = [p for p in do if p.startswith("company/") and p != "company/index.html" and do[p] != posle[p]]
         for put in izm:
             a, b = do[put].decode(), posle[put].decode()
-            self.assertEqual(K._SOS.sub(r"\1\3", a), K._SOS.sub(r"\1\3", b), "добор изменил не только соседей: " + put)
+            self.assertEqual(K.ubrat_ryadom(K._SOS.sub(r"\1\3", a)), K.ubrat_ryadom(K._SOS.sub(r"\1\3", b)),
+                             "добор изменил не только соседей и «Рядом в Делоскопе»: " + put)
 
     def test_bez_dobavit_stiraet_kak_ranshe(self):
         z = O.nabor(6)

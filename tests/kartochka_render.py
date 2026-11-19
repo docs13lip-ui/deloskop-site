@@ -6991,3 +6991,208 @@ def chto_za_html(t):  # noqa: F811 — minusy-gir-bo-v1 ([Право] 18.11 12:2
         i = s.index(" Так бывает у")
         return s[:i] + "</p><!--/co-chto-->"
     return s
+
+
+# ---------------------------------------------------------------- kartochka-dejstviya-v1 ([Ночные-2] 18.11)
+# (1) ✎ [Ночные] 18.11 (otchet-p7-v1, п. 7 плана 18.11 «на карточке»): у отчёта по ИНН есть «Следить» и «Сравнить»,
+#     у карточки /company/ — только «Открыть отчёт» и «Собрать Паспорт». Под «Открыть отчёт» — две тихие кнопки:
+#     «Следить за компанией» (/cabinet.html?inn=ИНН#watch — та же форма, что в отчёте, js/sledit.js) и «Сравнить
+#     с другой» (/sravnit/?a=ИНН — js/sravnenie.js). Обе rel="nofollow": кабинет и /sravnit/?… закрыты для роботов.
+#     Цели Метрики — data-cel (kartochka_sled, kartochka_sravnit), слушает js/rekvizity-kartochki.js.
+# (2) ✎ [Ночные] 18.11 (kroshki-v1, Н2): видимый путь карточки «Делоскоп › Компании › Регион › Отрасль», а в разметке
+#     BreadcrumbList — «Делоскоп › Компании › название». Теперь разметка = ссылки видимого пути: регион и отрасль
+#     входят, когда в крошках они ссылкой на хаб (/company/region|otrasl/…/), текстом — нет. Так сторож kroshki-v1
+#     (tests/test_kroshki.py: ссылки на экране = родители в разметке) можно сделать строгим и для карточек.
+_KD_SIDE = re.compile(r'(<aside class="co-side card"><h2 class="co-h3">Полный отчёт</h2>.*?<a class="btn btn--secondary co-w100" '
+                      r'href="/\?inn=(\d{10})">Открыть отчёт</a>)(?:<p class="co-dejstv">.*?</p>)?(</aside>)', re.S)
+
+
+def dejstviya_html(inn):
+    return ('<p class="co-dejstv"><a class="btn btn--ghost co-w100" href="/cabinet.html?inn=%s#watch" rel="nofollow" '
+            'data-cel="kartochka_sled">Следить за%sкомпанией</a><a class="btn btn--ghost co-w100" href="/sravnit/?a=%s" '
+            'rel="nofollow" data-cel="kartochka_sravnit">Сравнить с%sдругой</a></p>' % (inn, NB, inn, NB))
+
+
+def dejstviya_kartochki(t):
+    """«Следить» и «Сравнить» под «Открыть отчёт»; повторный вызов ничего не меняет."""
+    if not t:
+        return t
+    return _KD_SIDE.sub(lambda m: m.group(1) + dejstviya_html(m.group(2)) + m.group(3), t, count=1)
+
+
+_KD_KROSH = re.compile(r'<nav class="co-krosh caption" aria-label="Навигация"[^>]*>(.*?)</nav>', re.S)
+_KD_HAB = re.compile(r'<a href="(/%s/(?:region|otrasl)/[a-z0-9-]+/)">([^<]+)</a>' % PAPKA)
+_KD_LD = re.compile(r'(<script type="application/ld\+json">)(\{"@context": "https://schema.org", "@graph": .*?)(</script>)', re.S)
+
+
+def kroshki_ld_otrasl(t):
+    """BreadcrumbList карточки = «Делоскоп › Компании › [Регион] › [Отрасль] › название» — звенья, что в крошках ссылкой
+    на хаб; хаб пропал — уровень снят."""
+    if not t:
+        return t
+    mk, ml = _KD_KROSH.search(t), _KD_LD.search(t)
+    if not mk or not ml:
+        return t
+    try:
+        ld = json.loads(ml.group(2).replace("<\\/", "</"))
+    except ValueError:
+        return t
+    bc = next((x for x in ld.get("@graph") or [] if isinstance(x, dict) and x.get("@type") == "BreadcrumbList"), None)
+    el = (bc or {}).get("itemListElement") or []
+    if len(el) < 3:
+        return t
+    el = sorted(el, key=lambda x: x.get("position", 0))
+    baza, kart = el[:2], el[-1]
+    if not str(kart.get("item", "")).startswith(SAJT + "/%s/" % PAPKA) or re.search(r"/(?:otrasl|region)/", str(kart.get("item", ""))):
+        return t
+    haby = [{"@type": "ListItem", "item": SAJT + a, "name": html.unescape(n).replace(NB, " ")} for a, n in _KD_HAB.findall(mk.group(1))]
+    nov = baza + haby + [kart]
+    nov = [dict(x, position=i + 1) for i, x in enumerate(nov)]
+    if nov == el:
+        return t
+    bc["itemListElement"] = nov
+    s = json.dumps(ld, ensure_ascii=False, sort_keys=True).replace("</", "<\\/")
+    return t[:ml.start(2)] + s + t[ml.end(2):]
+
+
+_kd_html_bez = html_kartochki
+
+
+def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None, segodnya=None):  # noqa: F811 — kartochka-dejstviya-v1
+    """+ «Следить» и «Сравнить» под «Открыть отчёт» — и в ответе API (API = файл); отрасль в BreadcrumbList ставит сборка
+    после ssylki_kroshek (ссылка на хаб известна только ей)."""
+    return dejstviya_kartochki(_kd_html_bez(k, V, sosedi, kom, normy, cena, segodnya))
+
+
+# ---------------------------------------------------------------- perelinkovka-v1 (решение владельца 18.11, разд. 6 Н4)
+# Внизу карточки — «Рядом в Делоскопе»: «В отрасли», «В регионе», «Близкие по выручке», до RYADOM_N в каждом. Компании,
+# что уже стоят справа в «Похожих» и «Ещё …», и сама карточка — не повторяются; одна компания — в одном списке. Внутри —
+# ближе по обороту (как напечатан), затем ИНН: добор и полная сборка дают одни и те же байты. Карточки за воротами
+# индексации (noindex) не предлагаем. Заголовок списка — ссылкой на хаб группы, если хаб есть. Блок — навигация, не сведения
+# о компании: в отпечаток текста (dateModified) не входит. Ставит его последний проход сборки (kartochki.py), идемпотентно.
+RYADOM_N = 5
+RYADOM_METKA = '<section class="co-sec co-ryadom"'
+RYADOM_BLOK = re.compile(r'<section class="co-sec co-ryadom".*?</section><!--/ryadom-->\n?', re.S)
+_RYADOM_PERED = '<section class="co-sec co-ogov caption">'
+
+
+def _ry_blizost(k):
+    d = math.log1p(_dohod_kart(k))
+    return lambda y: (abs(math.log1p(_dohod_kart(y)) - d), y["inn"])
+
+
+def ryadom_spiski(k, vse, uzhe=(), zakryty=()):
+    """→ [(вид, имя группы, [карточки])] — непустые списки в порядке «отрасль, регион, выручка»."""
+    nelzya = {k["inn"]} | set(uzhe) | set(zakryty)
+    pul = [y for y in vse if y["inn"] not in nelzya]
+    kl = _ry_blizost(k)
+    out = []
+    otr = hab_otrasl(k)
+    if otr != HAB_NET_OTRASLI:
+        s = sorted((y for y in pul if hab_otrasl(y) == otr), key=kl)[:RYADOM_N]
+        if s:
+            out.append(("otrasl", otr, s))
+    vzyato = {y["inn"] for _, _, s in out for y in s}
+    rg = k.get("region")
+    if rg:
+        s = sorted((y for y in pul if y.get("region") == rg and y["inn"] not in vzyato), key=kl)[:RYADOM_N]
+        if s:
+            out.append(("region", rg, s))
+    vzyato |= {y["inn"] for _, _, s in out for y in s}
+    if _dohod_kart(k) > 0:
+        s = sorted((y for y in pul if _dohod_kart(y) > 0 and y["inn"] not in vzyato), key=kl)[:RYADOM_N]
+        if s:
+            out.append(("vyruchka", "", s))
+    return out
+
+
+def _ry_oborot(y):
+    d, g = _dohod_kart(y), _god_dohoda(y)
+    if not d:
+        return ""
+    return "оборот " + e(dengi(d)).replace("&nbsp;", NB) + ((" за%s%d" % (NB, g)) if g else "")
+
+
+def _ry_li(y, vid):
+    mesto = e(y.get("gorod") or y.get("region") or "")
+    otr = hab_otrasl(y)
+    otr = "" if otr == HAB_NET_OTRASLI else e(otr)
+    ob = _ry_oborot(y)
+    if vid == "otrasl":
+        chasti = [mesto, ob]
+    elif vid == "region":
+        chasti = [otr, ob]
+    else:
+        chasti = [ob, mesto]
+    pod = " · ".join(c for c in chasti if c)
+    return '<li><a href="%s">%s</a>%s</li>' % (adres_str(y), e(y["name"]),
+                                             ('<span class="caption">%s</span>' % pod) if pod else "")
+
+
+# mesto-na-rynke-v1 (решение владельца 18.11, разд. 3 п. 11; замер справочников — «место в регионе и отрасли»): в колонке
+# «В отрасли» и «В регионе» — место компании по обороту среди карточек той же группы с оборотом за тот же год. Честно:
+# «в базе Делоскопа» и число компаний; меньше MESTO_OT таких карточек — места не пишем (сравнивать не с чем). Оборот —
+# как напечатан на карточках (выручка ГИР БО или доходы ФНС). Место меняется с каждой волной карточек — поэтому оно
+# в блоке «Рядом в Делоскопе», вне отпечатка текста: dateModified от новых карточек не сдвигается.
+MESTO_OT = 10
+# п. 20: у компании с чистой прибылью больше выручки (строка «…к такой компании не применимы», otrasl-na-kartochke-v1)
+# место по обороту ничего не говорит о масштабе — не пишем (не повторить ошибку «93 211 %» справочника).
+MESTO_NE_PRIMENIMO = "co-otrs--golova"
+
+
+def mesto_v_gruppe(k, vse, vid):
+    """→ (место, из скольких, год) по обороту среди карточек группы vid ("otrasl" | "region") с оборотом за тот же год; нет — None."""
+    d, g = _dohod_kart(k), _god_dohoda(k)
+    if not d or not g:
+        return None
+    gr = hab_otrasl(k) if vid == "otrasl" else (k.get("region") or "")
+    if not gr or gr == HAB_NET_OTRASLI:
+        return None
+    pul = [y for y in vse if _dohod_kart(y) > 0 and _god_dohoda(y) == g
+           and (hab_otrasl(y) if vid == "otrasl" else (y.get("region") or "")) == gr]
+    if k["inn"] not in {y["inn"] for y in pul}:
+        pul.append(k)
+    if len(pul) < MESTO_OT:
+        return None
+    return 1 + sum(1 for y in pul if _dohod_kart(y) > d), len(pul), g
+
+
+def mesto_html(m, vid):
+    if not m:
+        return ""
+    n, iz, g = m
+    return ('<p class="co-ryadom__m caption">По обороту за%s%d год — %d-е место из%s%d %s %s в%sбазе Делоскопа</p>' % (
+        NB, g, n, NB, iz, plural(iz, "компании", "компаний", "компаний"),
+        "этой отрасли" if vid == "otrasl" else "этого региона", NB))
+
+
+def ryadom_html(k, spiski, kg=None, mesta=None):
+    if not spiski:
+        return ""
+    kg = kg or {}
+    mesta = mesta or {}
+    kol = []
+    for vid, imya, s in spiski:
+        if vid == "vyruchka":
+            zag = "Близкие по выручке"
+        else:
+            zag = ("В отрасли: " if vid == "otrasl" else "В регионе: ") + e(imya)
+            hab = kg.get((vid, imya))
+            if hab:
+                zag = '<a href="%s">%s</a>' % (hab, zag)
+        kol.append('<div class="co-ryadom__k"><h3 class="co-ryadom__h">%s</h3>%s<ul class="co-sos co-sos--ryadom">%s</ul></div>' % (
+            zag, mesto_html(mesta.get(vid), vid), "".join(_ry_li(y, vid) for y in s)))
+    return ('<section class="co-sec co-ryadom" aria-labelledby="ryadom"><h2 id="ryadom">Рядом в&nbsp;Делоскопе</h2>'
+            '<div class="co-ryadom__g">%s</div></section><!--/ryadom-->\n' % "".join(kol))
+
+
+def ubrat_ryadom(t):
+    return RYADOM_BLOK.sub("", t)
+
+
+def vstavit_ryadom(t, blok):
+    """Страница карточки → та же с блоком «Рядом в Делоскопе» перед оговоркой; пустой блок — блока нет. Повтор — те же байты."""
+    t = ubrat_ryadom(t)
+    if not blok or _RYADOM_PERED not in t:
+        return t
+    return t.replace(_RYADOM_PERED, blok + _RYADOM_PERED, 1)

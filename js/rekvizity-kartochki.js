@@ -22,6 +22,10 @@
   }
 
   function zapusk(doc) {
+    // kartochka-dejstviya-v1: цели Метрики у «Следить» и «Сравнить» (data-cel) — до кнопки реквизитов, она может отсутствовать
+    Array.prototype.forEach.call(doc.querySelectorAll('.co-dejstv [data-cel]'), function (a) {
+      a.addEventListener('click', function () { try { if (self.dlkGoal) self.dlkGoal(a.getAttribute('data-cel')); } catch (e) {} });
+    });
     var sek = doc.querySelector('.co-rekv'), k = sek && sek.querySelector('[data-rk-kop]');
     if (!k) return;
     var ok = sek.querySelector('.co-rekv__ok'), src = sek.querySelector('.co-src');

@@ -374,6 +374,8 @@ _WP_MAIN = re.compile(r"<main\b[^>]*>(.*?)</main>", re.S)
 _WP_SKRIPT = re.compile(r"<script\b.*?</script>|<style\b.*?</style>", re.S)
 # «Похожие компании» — подписи соседей меняются с каждым добором; это не изменение сведений о самой компании
 _WP_SOSEDI = re.compile(r'<aside class="co-side card" aria-labelledby="sos">.*?</aside>', re.S)
+# kartochka-dejstviya-v1: «Следить» и «Сравнить» — кнопки шаблона, не сведения о компании: отпечаток и дата прежние
+_WP_DEJSTV = re.compile(r'<p class="co-dejstv">.*?</p>', re.S)
 _WP_LD = re.compile(r'<script type="application/ld\+json">(.*?)</script>\n?', re.S)
 _WP_TITLE = re.compile(r"<title>(.*?)</title>", re.S)
 _WP_CANON = re.compile(r'<link rel="canonical" href="([^"]+)"')
@@ -381,7 +383,7 @@ _WP_CANON = re.compile(r'<link rel="canonical" href="([^"]+)"')
 
 def otpechatok_teksta(t):
     """16 знаков sha256 видимого текста <main> карточки (без тегов, скриптов, вида пробелов); нет <main> — None."""
-    t = razvernut_kartochku(_WP_BLOK.sub("", t))  # svernut-kartochki-v1: свёртка текст не меняет — отпечаток и дата прежние
+    t = ubrat_ryadom(_WP_DEJSTV.sub("", razvernut_kartochku(_WP_BLOK.sub("", t))))  # perelinkovka-v1: «Рядом в Делоскопе» — навигация, не сведения  # svernut-kartochki-v1: свёртка текст не меняет — отпечаток и дата прежние
     m = _WP_MAIN.search(t)
     if not m:
         return None
@@ -590,6 +592,13 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
 
     def zapisat_k(put, txt):
         p_ = os.path.basename(os.path.dirname(put))
+        if RYADOM_METKA not in txt and os.path.isfile(put):
+            # perelinkovka-v1: «Рядом в Делоскопе» ставит последний проход сборки; до него страница держит прежний блок —
+            # та же сборка тех же данных не переписывает файл дважды (детерминированность и счёт изменённых страниц)
+            with open(put, encoding="utf-8") as fh_:
+                b_ = RYADOM_BLOK.search(fh_.read())
+            if b_:
+                txt = vstavit_ryadom(txt, b_.group(0))
         txt, d_t = vstavit_webpage(tipograf_kartochki(bez_nevidimyh(txt), chisla=True), den_, prezhnie.get(p_))  # kartochki-tipograf-v1
         if d_t:
             daty_teksta["/%s/%s/" % (PAPKA, p_)] = d_t
@@ -646,6 +655,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         txt = ss.sobrat_stranicu(bez_tipografa(html_kartochki(k, k["_V"], sos_, kom, normy, cena)), r, podval, shapka)  # kartochki-chisla-v1: NB_T — при записи
         txt = ssylki_kroshek(txt, kg)
         txt = pochinit_vozrast(txt, den)
+        txt = kroshki_ld_otrasl(dejstviya_kartochki(txt))  # kartochka-dejstviya-v1: «Следить», «Сравнить»; отрасль в BreadcrumbList
         txt = oglavlenie_kartochki(rekvizity_kartochki(txt))  # oglavlenie-kartochki-v1: скрипт — внутри <main>, как у реквизитов · rekvizity-kartochki-v1: скрипт кнопки — внутри <main> готовой страницы (блок с КПП и адресом — уже из html_kartochki)
         # kartochki-indeks-v2 ([Ночные-2] 14.11): ворота индексации — по готовой странице, как у опубликованных (t2 ниже).
         # В шаблоне они считались до svodka_zel: «комментарий команды» ещё был <div class="kom …>, потом зелёные
@@ -696,6 +706,7 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         t2 = chto_za_kompaniyu(t2)  # chto-za-kompaniya-v1: под ОКВЭД — выручка и штат; итог — словами [Право] 18.11 (2), как у новых
         t2 = otrasl_na_kartochke(t2)  # otrasl-na-kartochke-v1: «против средних по отрасли» и «Разбор» без долей больше 100 % выручки, как у новых
         t2 = oglavlenie_kartochki(t2)  # oglavlenie-kartochki-v1: оглавление по разделам страницы, как у новых
+        t2 = kroshki_ld_otrasl(dejstviya_kartochki(t2))  # kartochka-dejstviya-v1: «Следить» и «Сравнить» под «Открыть отчёт»; отрасль в BreadcrumbList, как у новых
         x["_noindex"] = noindex_html(t2)
         if BEZ_OBOLOCHKI in t2:
             # «голое» тело из комплекта — оболочка той же sobrat_stranicu
@@ -718,11 +729,18 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         with open(os.path.join(papka, x["_papka"], "index.html"), encoding="utf-8") as fh:
             teksty[x["inn"]] = bez_tipografa(fh.read())  # kartochki-chisla-v1
     # kartochki-vhod-v1: у каждой открытой карточки — не меньше VHOD_MIN входящих ссылок с других карточек
-    svyazi = svyazi_vse(vse_d, {i for i, t in teksty.items() if noindex_html(t)})
+    zakryty_ = {i for i, t in teksty.items() if noindex_html(t)}
+    svyazi = svyazi_vse(vse_d, zakryty_)
     for x in vse_d:
         put = os.path.join(papka, x["_papka"], "index.html")
         sos_, esh_ = svyazi[x["inn"]]
-        izm += zapisat_k(put, _SOS.sub(lambda m: m.group(1) + sosedi_html(x, sos_, esh_) + m.group(3), teksty[x["inn"]], count=1))
+        t_ = _SOS.sub(lambda m: m.group(1) + sosedi_html(x, sos_, esh_) + m.group(3), teksty[x["inn"]], count=1)
+        # perelinkovka-v1 (Н4): внизу — «В отрасли», «В регионе», «Близкие по выручке», без повторов с правой колонкой
+        uzhe_ = {y["inn"] for y in sos_} | {y["inn"] for y in esh_}
+        mesta_ = {} if MESTO_NE_PRIMENIMO in teksty[x["inn"]] else {
+            v_: mesto_v_gruppe(x, vse_d, v_) for v_ in ("otrasl", "region")}  # mesto-na-rynke-v1
+        t_ = vstavit_ryadom(t_, ryadom_html(x, ryadom_spiski(x, vse_d, uzhe_, zakryty_), kg, mesta_))
+        izm += zapisat_k(put, t_)
     # kartochki-stati-v1: обратная перелинковка — в одном разделе карточки строка «По теме раздела: «статья»» (подбор —
     # tests/sobrat_stati_kartochki.py, по тем же карточкам, что статьи → карточки); последним шагом, до sitemap: дата
     # изменения текста WebPage и lastmod учитывают строку

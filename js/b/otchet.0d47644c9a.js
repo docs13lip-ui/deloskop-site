@@ -4134,6 +4134,7 @@ var NB = ' ';
 var MAKS = 3;
 var MELKO = 0.001;
 var KRUPNO = 0.1;
+var POROG_ISKOV = 0.01;
 var TYAZHELYE = ['status', 'damia_bankrotstvo', 'damia_priostanovki', 'damia_rnp', 'damia_mery', 'address'];
 function esc(t) {
 return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) {
@@ -4246,6 +4247,7 @@ var M = S.minusy.map(function (x, i) {
 var sm = summa(r, x.k), d = V && sm > 0 ? sm / V.summa : null;
 var ves = TYAZHELYE.indexOf(x.k) >= 0 ? 3 : nolTochno(r, x.k, sm) ? 1 : d == null ? 2 : d >= KRUPNO ? 3 : d >= MELKO ? 2 : 0;
 var sush = TYAZHELYE.indexOf(x.k) >= 0 || (d != null && d >= MELKO);
+if (x.k === 'damia_sudy' && d != null && d < POROG_ISKOV) { sush = false; if (ves > 0) ves = -1; }
 return { znak: 'minus', k: x.k, t: x.t, ist: x.ist, data: x.data, dolya: d != null ? dolyaTekst(d, V.god) : '', ves: ves, i: i,
 sush: sush, summa: sm, d: d };
 }).sort(function (a, b) { return b.ves - a.ves || a.i - b.i; });
@@ -4259,7 +4261,7 @@ glavnoe.push({ znak: 'plus', k: x.k, t: x.t, ist: x.ist, data: x.data, dolya: ''
 [glavnoe, melkoe].forEach(function (L) { L.forEach(function (x) { delete x.ves; delete x.i; delete x.sush; delete x.summa; delete x.d; }); });
 return { glavnoe: glavnoe, melkoe: melkoe, god: V ? V.god : null, plyusov: S.plyusy.length, minusov: S.minusy.length, itog: it };
 }
-var ZAPROS = { director_change: ['powerNew'], tax_debt: ['taxCert'], damia_fssp: ['fssp'], damia_priostanovki: ['unblock'], address: ['fixRecord', 'premises'], zsk: ['bank'] };
+var ZAPROS = { director_change: ['powerNew'], tax_debt: ['taxCert'], damia_fssp: ['fssp'], damia_sudy: ['sudy'], damia_priostanovki: ['unblock'], address: ['fixRecord', 'premises'], zsk: ['bank'] };
 var ZAPROS_MAKS = 3;
 function zapros(G, docs) {
 if (!G || !Array.isArray(G.glavnoe) || !Array.isArray(docs)) return [];
@@ -4283,7 +4285,7 @@ return '<li class="gl1__s gl1__s--' + x.znak + '" data-gl="' + esc(x.k) + '"><sp
 }
 function zaprosHtml(Z) {
 if (!Array.isArray(Z) || !Z.length) return '';
-return '<div class="gl1__z" data-zapros="' + Z.length + '"><p class="gl1__zh">Что запросить по' + NB + 'этим минусам</p><ul>' +
+return '<div class="gl1__z" data-zapros="' + Z.length + '"><p class="gl1__zh">Что можно запросить у' + NB + 'компании</p><ul>' +
 Z.map(function (d) { return '<li data-doc="' + esc(d.id) + '">' + tire(d.t) + '</li>'; }).join('') + '</ul>' +
 '<button type="button" class="gl1__zv">Весь список и' + NB + 'готовое письмо' + NB + '↓</button></div>';
 }
@@ -4408,7 +4410,7 @@ try { if (self.dlkGoal) self.dlkGoal('glavnoe_zapros'); } catch (x) {}
 return nov;
 }
 return { sobrat: sobrat, zapros: zapros, ZAPROS: ZAPROS, html: html, mount: mount, stil: stil, podpisatDoli: podpisatDoli, dolyaTekst: dolyaTekst, vyruchka: vyruchka,
-summa: summa, itog: itog, istochnikov: istochnikov, CSS: CSS, MAKS: MAKS, MELKO: MELKO, KRUPNO: KRUPNO };
+summa: summa, itog: itog, istochnikov: istochnikov, CSS: CSS, MAKS: MAKS, MELKO: MELKO, KRUPNO: KRUPNO, POROG_ISKOV: POROG_ISKOV };
 });
 ;
 /* --- /js/rekvizity-kompanii.js --- */
@@ -4560,7 +4562,7 @@ function fraza(x) {
 var k = x.k, n = chislo(x.c), nol = x.c === '0', pod = x.pod || '';
 if (x.ton === 'ne') {
 var m = /сведения на\s(\d{2}\.\d{2}\.\d{4})/.exec(x.e || '');
-return m ? 'Сведения устарели — на' + NB + m[1] : 'Сегодня не' + NB + 'проверяли';
+return m ? 'Сведения устарели — на' + NB + m[1] : 'Не' + NB + 'проверяли в' + NB + 'этот раз';
 }
 if (k === 'sudy') {
 if (nol) return 'Незавершённых дел, где компания — ответчик, не' + NB + 'нашли';

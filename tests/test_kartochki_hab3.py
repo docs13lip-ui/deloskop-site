@@ -54,7 +54,7 @@ class TestHabV3(unittest.TestCase):
         self.assertEqual([x["position"] for x in il["itemListElement"]], list(range(1, len(urls) + 1)))
 
     def test_details_bez_js(self):
-        for sek in re.findall(r'<section class="co-sec"><h2>.*?</section>', self.hub):
+        for sek in re.findall(r'<section class="co-sec"(?: id="[^"]*")?><h2>.*?</section>', self.hub):
             vidno = sek.split("<details")[0]
             self.assertLessEqual(len(adresa(vidno)), K.HAB_VIDNO + 1, "в отрасли видно больше HAB_VIDNO")
             if "<details" in sek:

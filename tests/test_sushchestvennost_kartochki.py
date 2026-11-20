@@ -55,7 +55,7 @@ class TestFunkcii(unittest.TestCase):
         if not t:
             self.skipTest("нет карточки «Магнита»")
         B = K.ss_baza(t)
-        self.assertEqual((B["god"], B["golovnaya"]), (2025, True))
+        self.assertEqual((B["god"], B["golovnaya"]), (2024, True))  # ne-svereno-kartochki-v1: 2025 не сверен
         bank = t.replace('<span class="num">68.20.21</span>', '<span class="num">64.19</span>', 1)
         self.assertIsNone(K.ss_baza(bank), "банк — доли нет (правило юриста 12.11 п. 3)")
         staraya = re.sub(r"(ЕГРЮЛ · сведения на(?:&#160;|&nbsp;| | )\d{2}\.\d{2}\.)2026(</p>)", r"\g<1>2028\2", t, count=1)
@@ -114,7 +114,7 @@ class TestOpublikovannye(unittest.TestCase):
         for m in re.finditer(r"\(([\d,]+) % выручки за", tt):
             self.assertLess(float(m.group(1).replace(",", ".")), 10, "п. 20: ни одной доли от 10 %")
         itog = re.search(r'<section class="co-itog".*?</section>', t, re.S).group(0)
-        self.assertIn("Небольшие суммы (меньше 0,1 % выручки за 2025 год):", txt(itog))
+        self.assertIn("Небольшие суммы (меньше 0,1 % выручки за 2024 год):", txt(itog))  # ne-svereno-kartochki-v1
         self.assertNotIn('co-itog__l--minus', itog, "единственный минус «Магнита» — мелкий, не в главном")
         proverit(self, t, "magnit")
 

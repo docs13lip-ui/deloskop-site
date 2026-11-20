@@ -1021,6 +1021,12 @@ resources: { t: 'Подтверждение ресурсов: люди, скла
 experience: { t: '2–3 исполненных похожих договора или отзывы клиентов', why: 'опыт и деловая репутация — прямо названы ФНС среди признаков реальной компании', ask: 'Копии 2–3 исполненных договоров, похожих на наш (цены можно скрыть), или отзывы клиентов' },
 regime: { t: 'Подтверждение режима налогообложения', why: 'для вычета НДС нужен счёт-фактура от плательщика НДС; на УСН — уведомление о переходе', ask: 'Подтверждение режима налогообложения (для УСН — уведомление о переходе)' },
 sudy: { t: 'Пояснение по делам, где компания\u00a0— ответчик', why: 'суть требований и как идут дела', ask: 'Пояснение по делам, где компания — ответчик: суть требований и как идут дела' },
+postavka: { t: 'Договор поставки и\u00a0УПД', why: 'что и на каких условиях вам поставят; УПД подтверждает каждую поставку', ask: 'Проект договора поставки; УПД — на каждую поставку' },
+smeta: { t: 'Смета и\u00a0акт выполненных работ', why: 'документы под предмет сделки: работы или услуги', ask: 'Смета; акт выполненных работ (оказанных услуг) — по итогам' },
+sro: { t: 'Выписка из\u00a0реестра членов СРО, если работы этого требуют', why: 'для строительных работ', ask: 'Выписка из реестра членов СРО, если работы по договору этого требуют' },
+egrn: { t: 'Выписка из\u00a0ЕГРН или договор с\u00a0собственником', why: 'на помещение или имущество, которое сдают вам в аренду', ask: 'Выписка из ЕГРН на сдаваемое помещение или договор с собственником' },
+grafik: { t: 'График поставки', why: 'когда придёт товар, за который вы платите вперёд', ask: 'График поставки' },
+obesp: { t: 'Обеспечение, если договор его предусматривает', why: 'на случай, если поставки не будет', ask: 'Обеспечение исполнения договора, если договор его предусматривает' },
 chek: { t: 'Кассовый чек на каждый платёж', why: 'при наличных касса обязательна и между компаниями', ask: 'Кассовый чек на каждый платёж наличными' },
 fssp: { t: 'Пояснение по долгам у приставов', why: 'как и когда погасят: при аресте счёта ваша предоплата застрянет', ask: 'Информация о погашении исполнительных производств или план погашения' },
 unblock: { t: 'Решение ФНС об отмене приостановления операций по счёту', why: 'пока счёт заблокирован налоговой, компания не сможет тратить ваши деньги', ask: 'Решение ФНС об отмене приостановления операций по счёту' },
@@ -1146,6 +1152,17 @@ var x = nalichnye(amount); if (x) { v.nalichnye = x; if (sposob === 'nal') v.nal
 if (sposob === 'nal' && !prodavec && parseAmount(amount)) v.chek = CHEK;
 return v;
 }
+var PREDMET = [{ id: 'tovary', t: 'Товары', docs: ['postavka'] }, { id: 'raboty', t: 'Работы или услуги', docs: ['smeta', 'sro'] },
+{ id: 'arenda', t: 'Аренда', docs: ['egrn'] }, { id: 'avans', t: 'Предоплата за будущую поставку', docs: ['postavka', 'grafik', 'obesp'] }];
+var PREDMET_ID = {}; PREDMET.forEach(function (x) { PREDMET_ID[x.id] = x; });
+function sPredmet(list, predmet) {
+var p = PREDMET_ID[predmet]; if (!p) return list;
+var est = {}; list.forEach(function (d) { est[d.id] = 1; });
+var nov = p.docs.filter(function (id) { return !est[id]; }).map(docItem);
+if (predmet === 'raboty') list = list.filter(function (d) { return d.id !== 'license'; });
+var i = 0; while (i < list.length && (list[i].id === 'power' || list[i].id === 'powerNew' || list[i].id === 'card')) i++;
+return list.slice(0, i).concat(nov, list.slice(i));
+}
 function nalichnye(amount) { amount = parseAmount(amount); return amount && amount > LIMIT_NALICHNYH ? NALICHNYE : null; }
 function decide(r, opts) {
 opts = opts || {};
@@ -1155,6 +1172,7 @@ var itG = opts.itogG !== undefined && opts.itogG !== null ? opts.itogG : itogStr
 var nvKak = nv || (pv && pv.baza === 'staraya' ? nepolno(r, t, null, null) : null);
 var list = docs(f, t, amount, regime);
 if (opts.sposob === 'nal' && opts.napravlenie !== 'otgruzhaem' && !list.some(function (d) { return d.id === 'chek'; })) list.push(docItem('chek'));
+if (opts.napravlenie !== 'otgruzhaem' && PREDMET_ID[opts.predmet]) list = sPredmet(list, opts.predmet);
 if (opts.napravlenie === 'otgruzhaem') {
 list = docsOtg(f, t, amount, pc.cap);
 return sPered(sNal(sFinorg(pc, {
@@ -1166,13 +1184,13 @@ amount: amount, regime: regime, stake: null, prepay: pc.nedostatochno && amount 
 docs: list, letter: letterOtg(f, list, amount)
 }, pv, nv), amount, opts.sposob), itG);
 }
-return sPered(sNal(sFinorg(pc, {
+return sPr(sPered(sNal(sFinorg(pc, {
 facts: f, tone: t, cap: pc.cap, malo: !!pc.malo, capRule: pc.rule, raschet: pc.raschet, neProvereno: np,
 kak: kakPoschitali(f, t, pc, reasons(f), np, null, pv, nvKak),
 headline: headline(f, t, pc.cap, pc.malo, pv, pc.nedostatochno, nv), reasons: reasons(f), advice: sNetVyvoda(pv, t, advice(f, t, pc.malo)),
 amount: amount, regime: regime, stake: atStake(amount, regime), prepay: pc.nedostatochno && amount ? NEDOST_SOVET(false) : prepayAdvice(amount, pc.cap, t, pv, nv),
 docs: list, letter: letter(f, list, amount, { kartochka: opts.kartochka, data: dataRu(r.checked_at) || '' })
-}, pv, nv), amount, opts.sposob), itG);
+}, pv, nv), amount, opts.sposob), itG), opts.predmet);
 }
 function sFinorg(pc, v, pv, nv) {
 if (pc.finorg) v.finorg = true; if (pv) v.predvaritelno = pv;
@@ -1209,6 +1227,8 @@ var CSS = '' +
 '.usl-out .usl-nal1{font-weight:600}' +
 '.usl-sp{grid-column:1/-1;display:flex;align-items:center;gap:10px}.usl-sp>span{flex:none}.usl-sp .usl-napr{flex:0 1 auto;min-width:0}.usl-sp>span{font-size:13px;color:var(--muted,#5B6783)}.usl-sp .usl-napr{margin:0}.usl-sp .usl-napr button{min-height:32px;font-size:13px;padding:0 12px}' +
 '@media (max-width:640px),(pointer:coarse){.usl-sp .usl-napr button{min-height:44px;font-size:15px}}@media (max-width:520px){.usl-sp{flex-wrap:wrap;gap:6px}.usl-sp .usl-napr{flex:1 1 100%}.usl-sp .usl-napr button{flex:1 1 auto;padding:0 6px}}' +
+'.usl-pr .usl-napr{display:grid;grid-template-columns:auto auto;gap:2px}' +
+'@media (max-width:520px){.usl-pr .usl-napr{grid-template-columns:1fr 1fr}.usl-pr .usl-napr button{white-space:normal;text-align:center;line-height:1.2;padding:4px 6px}}' +
 '.usl-out .z{color:var(--ok,#16723F)}' +
 '.usl details{border-top:1px solid #E3DDCD;padding-top:10px}' +
 '.usl summary{cursor:pointer;font-weight:600;font-size:15px;list-style:none;display:flex;justify-content:space-between;gap:10px}' +
@@ -1301,6 +1321,7 @@ var re = PRO_TO_ZHE[S[0].k];
 return { rezhim: zag ? 'zag' : 'pod', minus: sMalenkoj(S[0].t) + (S[0].dolya ? ' (' + S[0].dolya + ')' : ''), itog: it.t, n: S.length, bylo: headline,
 esche: R.filter(function (x) { return !(re && re.test(String(x))); }) };
 }
+function sPr(v, predmet) { if (PREDMET_ID[predmet]) v.predmet = predmet; return v; }
 function sPered(v, it) {
 var p = peredOplatoj(it, v.tone, v.reasons, v.headline);
 if (!p) return v;
@@ -1355,7 +1376,7 @@ o = o || {};
 if (!r || !r.company || !r.company.inn) throw new Error('usloviya: нет данных о компании');
 var doc = el.ownerDocument; injectCss(doc);
 var uid = 'usl' + Math.random().toString(36).slice(2, 7);
-var st = { amount: o.amount || 0, regime: store('usl.regime') || 'osno', napravlenie: store('usl.napr') === 'otgruzhaem' ? 'otgruzhaem' : 'platim', sposob: null };
+var st = { amount: o.amount || 0, regime: store('usl.regime') || 'osno', napravlenie: store('usl.napr') === 'otgruzhaem' ? 'otgruzhaem' : 'platim', sposob: null, predmet: null };
 var celi = {};
 var box = doc.createElement('section');
 box.setAttribute('aria-label', 'Условия сделки');
@@ -1400,7 +1421,9 @@ box.innerHTML = napr +
 '<div class="usl-in"><input id="' + uid + 'a" inputmode="numeric" autocomplete="off" placeholder="например, 500 000" value="' + (st.amount ? esc(money(st.amount).replace(/ ₽$/, '')) : '') + '"><span>₽</span></div>' +
 (otg ? '' : '<select aria-label="Ваш режим налогов">' + sel + '</select>') +
 '<div class="usl-sp"><span id="' + uid + 's">' + (otg ? 'Как платят вам' : 'Как платите') + '</span><div class="usl-napr" role="group" aria-labelledby="' + uid + 's">' + SPOSOB.map(function (x) {
-return '<button type="button" data-sposob="' + x.id + '" aria-pressed="' + (x.id === st.sposob) + '">' + esc(x.t) + '</button>'; }).join('') + '</div></div>' + '</div>' +
+return '<button type="button" data-sposob="' + x.id + '" aria-pressed="' + (x.id === st.sposob) + '">' + esc(x.t) + '</button>'; }).join('') + '</div></div>' +
+(otg ? '' : '<div class="usl-sp usl-pr"><span id="' + uid + 'p">Что покупаете</span><div class="usl-napr" role="group" aria-labelledby="' + uid + 'p">' + PREDMET.map(function (x) {
+return '<button type="button" data-predmet="' + x.id + '" aria-pressed="' + (x.id === st.predmet) + '">' + esc(x.t) + '</button>'; }).join('') + '</div></div>') + '</div>' +
 (v.amount && (v.prepay || stake || v.nalichnye || v.karta || v.chek) ? '<div class="usl-out" aria-live="polite">' + (v.nalPervoj ? '<div class="usl-nal usl-nal1">' + esc(v.nalichnye) + '</div>' : '') +
 (v.chek ? '<div class="usl-nal">' + esc(v.chek) + '</div>' : '') + (v.karta ? '<div class="usl-nal">' + esc(v.karta) + '</div>' : '') + (v.prepay ? '<div>' + esc(v.prepay) + '</div>' : '') + stake + (v.nalichnye && !v.nalPervoj ? '<div class="usl-nal">' + esc(v.nalichnye) + '</div>' : '') + '</div>' : '')) +
 '<div class="usl-kak" data-u="kak"><p>' + esc(v.kak.kak) + '</p>' +
@@ -1435,6 +1458,16 @@ draw();
 var nb = box.querySelector('[data-sposob="' + n + '"]'); if (nb) nb.focus();
 });
 });
+Array.prototype.forEach.call(box.querySelectorAll('[data-predmet]'), function (b) {
+b.addEventListener('click', function () {
+var n = b.getAttribute('data-predmet');
+st.predmet = st.predmet === n ? null : n;
+if (st.predmet && !celi.pr) { celi.pr = 1; cel('usl_predmet'); }
+var d0 = box.querySelector('details'); if (st.predmet && d0) d0.open = true;
+draw();
+var nb = box.querySelector('[data-predmet="' + n + '"]'); if (nb) nb.focus();
+});
+});
 Array.prototype.forEach.call(box.querySelectorAll('[data-napr]'), function (b) {
 b.addEventListener('click', function () {
 var n = b.getAttribute('data-napr');
@@ -1467,7 +1500,7 @@ var last = draw();
 return { update: function (a) { if (a != null) st.amount = parseAmount(a); last = draw(); return last; }, get result() { return last; } };
 }
 return {
-decide: decide, mount: mount, nalichnye: nalichnye, SPOSOB: SPOSOB, NALICHNYE: NALICHNYE, LIMIT_NALICHNYH: LIMIT_NALICHNYH, rynokStroka: rynokStroka, facts: facts, tone: tone, reorgPrekr: reorgPrekr, REORG_PREKRASHCHENIE: REORG_PREKRASHCHENIE, REORG_SDELAT: REORG_SDELAT, REORG_DOLG: REORG_DOLG, prepayCap: prepayCap, atStake: atStake,
+decide: decide, mount: mount, nalichnye: nalichnye, SPOSOB: SPOSOB, PREDMET: PREDMET.map(function (x) { return { id: x.id, t: x.t }; }), NALICHNYE: NALICHNYE, LIMIT_NALICHNYH: LIMIT_NALICHNYH, rynokStroka: rynokStroka, facts: facts, tone: tone, reorgPrekr: reorgPrekr, REORG_PREKRASHCHENIE: REORG_PREKRASHCHENIE, REORG_SDELAT: REORG_SDELAT, REORG_DOLG: REORG_DOLG, prepayCap: prepayCap, atStake: atStake,
 docs: docs, letter: letter, LETTER_NELZYA: LETTER_NELZYA, kartaKartochek: kartaKartochek, parseAmount: parseAmount, money: money, moneyKrupno: moneyKrupno, niceFloor: niceFloor, kindOf: kindOf, signalId: signalId, SIGNALY: SIGNALY.map(function (x) { return x[0]; }),
 neProvereno: neProvereno, kakPoschitali: kakPoschitali, otgruzkaAdvice: otgruzkaAdvice, NAPR: NAPR, bezPovtora: bezPovtora, chestnoPoyasnenie: chestnoPoyasnenie, poGlavnomu: poGlavnomu, peredOplatoj: peredOplatoj, poyasneniePered: poyasneniePered, neProverenyKlyuchevye: neProverenyKlyuchevye, vVyvode: vVyvode, STATYA: STATYA, FORMULA: FORMULA,
 predvaritelno: predvaritelno, neOtvetiliSudyFssp: neOtvetiliSudyFssp, NET_VYVODA: NET_VYVODA, METODIKA: { DELITEL: DELITEL, POTOLKI: POTOLKI, OSTOROZHNO: OSTOROZHNO, MINIMUM: MINIMUM, PRAVILO: PRAVILO },

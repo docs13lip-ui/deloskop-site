@@ -233,10 +233,16 @@
       burger.addEventListener("click", function () {
         m.showModal(); burger.setAttribute("aria-expanded", "true"); document.documentElement.classList.add("is-locked");
       });
+      // kompanii-shapka-v1: ссылка-якорь на эту же страницу («По регионам» на /company/) — пока лист открыт,
+      // страница заперта (is-locked) и браузер к якорю не прокручивает; прокручиваем сами после закрытия
+      var yakor = null;
       m.addEventListener("close", function () {
-        burger.setAttribute("aria-expanded", "false"); document.documentElement.classList.remove("is-locked"); burger.focus();
+        burger.setAttribute("aria-expanded", "false"); document.documentElement.classList.remove("is-locked");
+        if (yakor) { var t = yakor; yakor = null; t.scrollIntoView(); } else burger.focus();
       });
       m.addEventListener("click", function (e) {
+        var a = e.target.closest("a[href*='#']");
+        if (a && a.hash && a.pathname === location.pathname) yakor = document.getElementById(a.hash.slice(1));
         if (e.target === m || e.target.closest("[data-close]") || e.target.closest("a")) shut();
         // поиск первым в меню: закрыть лист и открыть ту же строку поиска, что у лупы в шапке
         if (e.target.closest("[data-mnav-poisk]")) {

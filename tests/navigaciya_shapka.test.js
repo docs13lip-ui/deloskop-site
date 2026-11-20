@@ -14,7 +14,7 @@ const NAV = P.slice(P.indexOf('<ul class="shapka__list">'), P.indexOf('</nav>'))
 // разделы сайта из Н1 — каждый должен быть в одном из четырёх списков (нажатие 1 — раздел, 2 — ссылка)
 const NUZHNO = {
   'Проверка': ['/#inn', '/proverit-schet/', '/kontragenty-iz-vypiski/', '/proverka-spiska/', '/pasport/kontragent/', '/sravnit/'],
-  'Компании': ['/company/', '/reyting/'],  // отрасли и регионы — после Н5: хабы групп пока появляются и исчезают с числом карточек
+  'Компании': ['/company/', '/company/#po-otraslyam', '/company/#po-regionam', '/reyting/'],  // kompanii-shapka-v1: отрасли и регионы — якорями каталога /company/ (постоянные), не хабами групп
   'Знания': ['/praktika/', '/nalogi/', '/115-fz/', '/zhurnal/'],
   'О сервисе': ['/indeks/', '/tochnost/', '/vse-vozmozhnosti/', '/tarify/', '/obnovleniya/'],
 };
@@ -72,4 +72,15 @@ test('поведение: раскрытие с клавиатуры, Esc воз
   assert.ok(!/@media \(max-width:860px\)/.test(css), 'прежняя граница 860 px осталась');
   // строка поиска в шапке — на широком экране, кроме главной (там своя строка #inn)
   assert.match(css, /body:has\(#inn\) \.shapka \.shapka__poisk-t/);
+});
+
+test('kompanii-shapka-v1: якорь на эту же страницу из меню телефона — после закрытия листа прокрутка к цели', () => {
+  const js = chitat('js/shapka.js');
+  assert.ok(/a\.pathname === location\.pathname\) yakor = document\.getElementById\(a\.hash\.slice\(1\)\)/.test(js), 'нет запоминания якоря');
+  assert.ok(/if \(yakor\) \{ var t = yakor; yakor = null; t\.scrollIntoView\(\); \}/.test(js), 'нет прокрутки после закрытия');
+  for (const h of ['/company/#po-otraslyam', '/company/#po-regionam']) {
+    const id = h.split('#')[1];
+    assert.ok(chitat('company/index.html').includes('id="' + id + '"'), 'на /company/ нет якоря ' + id);
+    assert.ok(P.includes('class="mnav__link" href="' + h + '"'), 'в меню телефона нет ' + h);
+  }
 });

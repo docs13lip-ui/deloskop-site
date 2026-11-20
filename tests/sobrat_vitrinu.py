@@ -136,6 +136,16 @@ GEROI = {
         f'<circle cx="138" cy="50" r="26" {N} stroke-width="12" stroke-dasharray="8 8.34"/>'
         f'<circle cx="138" cy="50" r="21" {P}/><circle cx="138" cy="50" r="8" {A}/>'
     ),
+    # vhod-spisok-v1 (19.11.2026): «Проверка справочника контрагентов» — лист таблицы: столбец ИНН, строки и итог
+    # точкой у каждой; проблемные — первыми (как на /proverka-spiska/), поэтому сверху красная и жёлтая.
+    "spisok": (
+        f'<rect x="30" y="34" width="132" height="112" rx="10" transform="rotate(-5 96 90)" {S}/>'
+        f'<rect x="38" y="18" width="132" height="120" rx="10" {P}/>'
+        f'<path d="M38 42h132M84 42v96" {L} stroke-width="3"/><rect x="48" y="27" width="26" height="7" rx="3.5" {A}/>'
+        f'<path d="M50 60h22M50 82h22M50 104h22M50 126h16M96 60h40M96 82h48M96 104h36M96 126h44" {L} stroke-width="4"/>'
+        f'<circle cx="156" cy="60" r="6" {BD}/><circle cx="156" cy="82" r="6" {WR}/>'
+        f'<circle cx="156" cy="104" r="6" {OK}/><circle cx="156" cy="126" r="6" {OK}/>'
+    ),
 }
 
 

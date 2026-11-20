@@ -3319,7 +3319,7 @@ else if (s.status === 'warn' || s.status === 'bad') minus('age', 'На рынк�
 }
 var D = r.dossier || {};
 if (!fl) (Array.isArray(D.strengths) ? D.strengths : []).forEach(function (t) {
-var mm = /^Руководитель не менялся\s+(\d+\s*(?:год|года|лет))/.exec(String(t || '').replace(/ /g, ' '));
+var mm = /^Руководитель не менялся\s+(\d+\s*(?:года|год|лет))(?![а-яё])/.exec(String(t || '').replace(/ /g, ' '));
 if (mm) plus('rukovoditel', 'Руководитель не менялся ' + mm[1].replace(/\s+/, NB), reestr);
 });
 s = signal(r, 'tax_debt');

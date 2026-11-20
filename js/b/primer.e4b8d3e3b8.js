@@ -226,9 +226,17 @@ else if (s.status && s.status !== 'ok') { f.spravka = SPRAVKA_STATUSY; f.spravka
 add(f);
 });
 var o = otchetnost(r), st = fl ? null : staraya(r, opt.segodnya);
+var ub = ubytki(r), kp = kapital(r), lk = likvidnost(r), starye = [], staryeVlozheny = false;
+if (st) {
+if (ub && ub.god <= st.god) { starye.push('Убыток за' + NB + godySerii(ub) + '.'); ub = null; }
+if (kp && kp.znach < 0 && kp.god <= st.god) { starye.push('Собственный капитал на' + NB + '31.12.' + kp.god + ' — минус ' + dengi(-kp.znach) + '.'); kp = null; }
+if (lk && lk.znach > 0 && lk.znach < 1 && lk.god <= st.god) { starye.push('Текущая ликвидность на' + NB + '31.12.' + lk.god + ' — ' + chislo(lk.znach, 2) + '.'); lk = null; }
+}
+var STARYE_DANNYE = 'Это старые данные — о' + NB + 'нынешнем положении компании они не' + NB + 'говорят.';
 function starayaFakt(f, s) {
 if (!s) return f;
 f.nazv += ' · последняя открытая'; f.ton = 'warn'; f.pod = s.tekst.replace(/^.*?год\. /, '');
+if (starye.length) { f.pod = starye.join(' ') + ' ' + STARYE_DANNYE + ' ' + f.pod; staryeVlozheny = true; }
 f.spravka = SPRAVKA_GIRBO; f.spravkaT = 'почему так бывает'; f.spravkaCel = 'girbo_pochemu';
 return f;
 }
@@ -251,13 +259,12 @@ ist: 'ГИР БО ФНС', data: '31.12.' + bv.god }, st));
 add({ k: 'otchetnost', nazv: 'Бухотчётность', znach: 'Нет в ответе ГИР БО', ton: 'neutral', ist: 'ГИР БО ФНС', data: dataPr,
 spravka: SPRAVKA_GIRBO, spravkaT: 'почему так бывает', spravkaCel: 'girbo_pochemu' });
 }
-var kp = kapital(r);
+if (starye.length && !staryeVlozheny) add({ k: 'otchetnost_staraya', nazv: 'Последняя открытая отчётность — за' + NB + st.god + NB + 'год', ton: 'neutral',
+znach: starye.join(' '), pod: STARYE_DANNYE, ist: 'ГИР БО ФНС', data: '31.12.' + st.god });
 if (kp && kp.znach < 0) add({ k: 'kapital', nazv: 'Собственный капитал на' + NB + '31.12.' + kp.god, ton: 'warn',
 znach: 'Минус ' + dengi(-kp.znach) + ': обязательства больше активов', ist: 'ГИР БО ФНС, баланс', data: '31.12.' + kp.god });
-var lk = likvidnost(r);
 if (lk && lk.znach > 0 && lk.znach < 1) add({ k: 'likvidnost', nazv: 'Текущая ликвидность', ton: 'warn',
 znach: chislo(lk.znach, 2) + ': краткосрочные долги больше оборотных средств', ist: 'ГИР БО ФНС, баланс', data: '31.12.' + lk.god });
-var ub = ubytki(r);
 if (ub) add({ k: 'ubytki', nazv: 'Убыток ' + ub.n + NB + skl(ub.n, 'год', 'года', 'лет') + ' подряд', ton: 'warn',
 znach: 'По годовой отчётности за ' + godySerii(ub), ist: 'ГИР БО ФНС, отчёт о финансовых результатах', data: '31.12.' + ub.god });
 var sk = skachokVniz(r, opt);

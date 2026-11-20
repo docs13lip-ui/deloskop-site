@@ -59,7 +59,8 @@ class TestKartochki(unittest.TestCase):
         self.assertNotIn("1299", s)
         self.assertNotIn("раз больше выручки за 2025", s)
         self.assertNotIn("сделка от", s)
-        self.assertIn("больше выручки в 13 раз", s)
+        # ne-svereno-kartochki-v1 (21.11): выручка 2025 = 2024 до рубля — не сверена, на карточке последний сверенный 2024
+        self.assertIn("больше выручки в 155 раз", s)
 
     def test_golovnye_bez_dolej_bolshe_100(self):
         n = 0

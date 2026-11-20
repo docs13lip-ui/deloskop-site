@@ -623,6 +623,53 @@ def kommercheskaya(k):
                 or (k.get("opf") or "").strip().lower() in OPF_POLNYE)
 
 
+# ---------------------------------------------------------------- ne-svereno-kartochki-v1 ([Ночные-2] 21.11)
+# «Магнит» 2309085638 (живой /api/check 21.11): charts.revenue 2024 и 2025 = 412 062 000 ₽, ne_svereno [{god 2025,
+# pokazateli ['vyruchka']}] — отчёт по ИНН брал 2024, карточка печатала 2025 и выводы из него. Сторож без сервера:
+# выручка двух соседних лет равна до рубля и не меньше 1 млн ₽ — поздний год не сверен (из 407 карточек — только «Магнит»).
+NE_SVERENO_OT = 1_000_000
+
+
+def ne_svereno_vyruchka(r, finansy):
+    """[{god, prichina: 'server' | 'kopiya', tekst}] — годы выручки ГИР БО, которые на карточку не берём."""
+    out = {}
+    dg = (r.get("dengi") or {}).get("vyruchka") if isinstance(r.get("dengi"), dict) else None
+    spiski = [r.get("ne_svereno"), (dg or {}).get("ne_svereno") if isinstance(dg, dict) else None]
+    for sp in spiski:
+        for x in sp if isinstance(sp, list) else []:
+            if not isinstance(x, dict):
+                continue
+            g = _god(x.get("god"))
+            pk = x.get("pokazateli")
+            if g and (pk is None or "vyruchka" in (pk if isinstance(pk, list) else [pk])):
+                out.setdefault(g, {"god": g, "prichina": "server", "tekst": str(x.get("tekst") or "")})
+    po_godu = {x["god"]: x["dohod"] for x in finansy}
+    for g, v in po_godu.items():
+        v0 = po_godu.get(g - 1)
+        if v0 is not None and v is not None and v >= NE_SVERENO_OT and round(v) == round(v0):
+            out[g] = {"god": g, "prichina": "kopiya", "tekst": "", "kak": g - 1}
+    return [out[g] for g in sorted(out) if g in po_godu]
+
+
+def ne_svereno_html(k):
+    """Оговорка под таблицей финансов: год выручки не сверен — факт, прибыль года и действие. Пусто — нет оговорки."""
+    ns = k.get("finansy_ne_svereno") or []
+    if not ns:
+        return ""
+    x = ns[-1]
+    g = x["god"]
+    if x.get("prichina") == "kopiya":
+        t = "Выручку за%s%d год не показываем: в%sоткрытых данных она совпадает с%s%d годом до%sрубля, сверить её не удалось." % (
+            NB, g, NB, NB, x["kak"], NB)
+    else:
+        t = "Выручку за%s%d год не показываем: в%sоткрытых данных она не сверена." % (NB, g, NB)
+    pr = (k.get("pribyl_ryad") or {}).get(g)
+    if pr is not None:
+        t += " %s за%s%d год — %s (ГИР%sБО)." % ("Чистая прибыль" if pr >= 0 else "Убыток", NB, g, dengi(abs(pr)), NB)
+    t += " До крупной оплаты запросите у%sкомпании отчёт о%sфинансовых результатах за%s%d год." % (NB, NB, NB, g)
+    return '<p class="small co-fin-nesver" data-god="%d">%s</p>' % (g, t)
+
+
 def iz_check(r):
     """Ответ /api/check (или запись выгрузки в том же формате) → словарь карточки. Ничего не выдумываем:
     факт без даты сведений получает статус ne_provereno и в ворота не идёт."""
@@ -797,6 +844,16 @@ def iz_check(r):
             k["finansy"].append({"god": int(g), "dohod": v})
     k["finansy"].sort(key=lambda x: x["god"])
     k["finansy_istochnik"] = r.get("finansy_istochnik") or ("ГИР БО, бухгалтерская отчётность" if ch.get("revenue") else "")
+    # ne-svereno-kartochki-v1 ([Ночные-2] 21.11, ТЗ [Ночные запуски] 21.11 00:40): год выручки, который сервер пометил
+    # `ne_svereno` (или свой сторож: два соседних года равны до рубля), на карточку не идёт — ни в вывод «Выручка за Г»,
+    # ни в динамику, доли и место на рынке. Год остаётся оговоркой под таблицей (прибыль и баланс года — как были).
+    k["finansy_ne_svereno"] = ne_svereno_vyruchka(r, k["finansy"])
+    if k["finansy_ne_svereno"]:
+        gody_ns = {x["god"] for x in k["finansy_ne_svereno"]}
+        k["finansy"] = [x for x in k["finansy"] if x["god"] not in gody_ns]
+        d_ns = k["fakty"].get("dohod") or {}
+        if d_ns.get("god") in gody_ns and GIRBO_KPI.search(str(d_ns.get("zagolovok") or "")):
+            del k["fakty"]["dohod"]
     # kartochki-v2: в kpi нет «Выручка за …», а ряд по годам из ГИР БО в досье есть (charts.revenue) — тот же факт,
     # строка 2110 последнего года; дата сведений — 31.12 этого года, изменение — к предыдущему году ряда.
     d0 = k["fakty"].get("dohod") or {}
@@ -2072,7 +2129,7 @@ def html_kartochki(k, V, sosedi, kom=None, normy=None, cena=None):
                   'Это расход по отчётности, а не сумма, уплаченная в бюджет.</p>' % (NB, nl["god"], dengi(nl["znachenie"]))) if (s_pr and nl) else ""
         fin_blok = ('<section class="co-sec" aria-labelledby="fin"><h2 id="fin">%s</h2>%s<div class="table-wrap"><table class="table">'
                     '<thead><tr><th>Год</th><th>%s</th>%s</tr></thead><tbody>%s</tbody></table></div>%s%s</section>' % (
-                        e(zag).replace("&nbsp;", NB), svg_stolbcy(fin, sl), sl, "<th>Чистая прибыль</th>" if s_pr else "", tab, nl_str,
+                        e(zag).replace("&nbsp;", NB), svg_stolbcy(fin, sl), sl, "<th>Чистая прибыль</th>" if s_pr else "", tab, nl_str + ne_svereno_html(k),
                         _istochnik_stroka(k.get("finansy_istochnik") or "ГИР БО", k.get("finansy_data"),
                                           "podtverzhdeno" if k.get("finansy_data") else "ne_provereno")))
     elif (k["fakty"].get("dohod") or {}).get("znachenie") is not None:
@@ -3107,6 +3164,10 @@ def zn_fakty(t):
             if h and zn_summa(h.group(2)):
                 ryad = [{"god": int(h.group(1)) if h.group(1) else None, "dohod": zn_summa(h.group(2)), "pribyl": None, "fns": True}]
         f["ryad"] = sorted(ryad, key=lambda x: x["god"] or 0)
+        # ne-svereno-kartochki-v1: год ГИР БО с несверенной выручкой — тоже открытая отчётность (прибыль, баланс):
+        # давность считаем по нему, а не по последнему году таблицы
+        ns = re.search(r'class="small co-fin-nesver" data-god="(\d{4})"', fin.group(0))
+        f["god_otch"] = int(ns.group(1)) if ns else None
         f["dl_tochno"] = _zn_dl_tochno(f["V"])
         f["dl_h2"] = _zn_dl_h2(fin.group(0), f["ryad"])
         o = _ZN_OTRASL.search(fin.group(0))
@@ -3213,7 +3274,7 @@ def zn_frazy(f):
         out.append(t)
 
     # 3. Давность отчётности
-    if g1 and na and na.year - g1 >= 2:
+    if g1 and na and na.year - max(g1, f.get("god_otch") or 0) >= 2:  # ne-svereno-kartochki-v1
         out.append("У %s последняя открытая отчётность — за %d год, о %d годе она ничего не говорит: до подписания "
                    "договора попросите у компании бухгалтерскую отчётность за %d год." % (f["imya"], g1, na.year - 1, na.year - 1))
 
@@ -4130,10 +4191,11 @@ def un_frazy(f):
     # отчётности называем числами; причину для компании не называем (основания закрытия разные, мы их не видим) — только
     # общая строка о ст. 18 402-ФЗ, без номера части до сверки [Право]
     # «Старше двух лет» (≥ 3 года до года сведений) — новый абзац; за позапрошлый год — прежний (2025-ю могли ещё не открыть)
-    if g1 and na and na.year - g1 == 2:
+    go = max(g1 or 0, f.get("god_otch") or 0)  # ne-svereno-kartochki-v1: год несверенной выручки — тоже отчётность
+    if g1 and na and go == g1 and na.year - g1 == 2:
         out.append("У %s последняя открытая отчётность — за %d год, о %d годе она ничего не говорит: до подписания "
                    "договора попросите у компании бухгалтерскую отчётность за %d год." % (im, g1, na.year - 1, na.year - 1))
-    elif g1 and na and na.year - g1 >= 3:
+    elif g1 and na and go == g1 and na.year - g1 >= 3:
         prichina = ("Так бывает по разным причинам, в том числе законным: в ряде случаев доступ к отчётности в ГИР БО "
                     "ограничен (ст." + NB + "18 Федерального закона №" + NB + "402-ФЗ).")
         gody = "%d–%d годы" % (g1 + 1, na.year - 1)
@@ -7445,6 +7507,8 @@ def staraya_god(f):
     if not ryad or not na or ryad[-1].get("fns"):
         return None
     g1 = ryad[-1].get("god")
+    if g1 and (f.get("god_otch") or 0) > g1:  # ne-svereno-kartochki-v1: прибыль и баланс того года — отчётность есть
+        return None
     return (g1, na.year) if g1 and na.year - g1 >= 3 else None
 
 

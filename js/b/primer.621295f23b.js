@@ -669,12 +669,15 @@ revenue: null, staff: null, bad: {}, warn: {}, list: []
 if (c.state_code != null && String(c.state_code).trim()) f.kod = String(c.state_code).trim();
 if (f.kind === 'LEGAL' && /^64\.1(\.|\d|$)/.test(String(c.okved || ''))) { f.kredit = true; f.okved = String(c.okved); if (/^\d{13}$/.test(String(c.ogrn || ''))) f.ogrn = String(c.ogrn); }
 if (f.kind === 'LEGAL' && (f.kredit || /^65\.[12](\.|\d|$)/.test(String(c.okved || '')))) { f.finorg = true; f.okved = String(c.okved); if (/^\d{13}$/.test(String(c.ogrn || ''))) f.ogrn = String(c.ogrn); }
+Object.defineProperty(f, 'godProverki', { value: godProverki(r), enumerable: false, writable: true });
 (r.signals || []).forEach(function (s) {
 if (s.status !== 'bad' && s.status !== 'warn') {
 if (signalId(s).id === 'shtat' || /численност|сотрудник/i.test(s.title || '')) { var z = num(s.detail); if (z != null) f.staff = z; }
 return;
 }
 var si = signalId(s), k = si.kind;
+var ost = si.id === 'tax_debt' ? nalogOstatok(r, s) : null;
+if (ost) { Object.defineProperty(f, 'nalogOstatok', { value: ost, enumerable: false, writable: true }); return; }
 f[s.status][k] = (f[s.status][k] || 0) + 1;
 var el = { kind: k, status: s.status, title: s.title || '', detail: s.detail || '' };
 Object.defineProperty(el, 'sid', { value: si.id, enumerable: false });
@@ -698,6 +701,14 @@ if (dmNajdeno(dm.priostanovki)) f.zaprosBlock = true;
 var ds = (dm.sudy && dm.sudy.dannye) || {};
 if (dmNajdeno(dm.sudy) && Number(ds.otvetchik_nezaversheno) > 0) f.zaprosSudy = true;
 return f;
+}
+var OSTATOK_DO = 500;
+function nalogOstatok(r, s) {
+var L = r && r.dengi && Array.isArray(r.dengi.sostavlyayushchie) ? r.dengi.sostavlyayushchie : [], x = null, d = null;
+for (var i = 0; i < L.length; i++) if (L[i] && L[i].vid === 'nedoimka' && num(L[i].summa) !== null) { x = num(L[i].summa); d = L[i].data_nabora || null; break; }
+if (x === null) { var m = /^[\d\s\u00a0,]+₽/.exec(String(s && s.detail || '')); if (m) x = num(m[0].replace(/\s/g, '')); }
+if (x === null || !(x > 0) || x >= OSTATOK_DO) return null;
+return { summa: x, data: (s && s.as_of) || d };
 }
 function dmNajdeno(b) {
 if (!b || typeof b !== 'object') return false;
@@ -728,7 +739,7 @@ if (warns || f.level === 'medium' || f.zsk === 'medium' || f.status === 'REORGAN
 return 'go';
 }
 var OSTOROZHNO = false;
-var PRAVILO = 'usloviya-2026-10-30';
+var PRAVILO = 'usloviya-2026-11-20';
 var DELITEL = 26;
 var MINIMUM = 10000;
 var POTOLKI = [[6, 100000], [12, 300000], [36, 1000000], [Infinity, 3000000]];
@@ -744,6 +755,9 @@ var cap, rule, R = { tone: t, byAge: byAge, ageMonths: f.ageMonths, revenue: f.r
 if (f.vyruchkaNol) {
 R.base = 'nol'; R.otchetGod = f.otchetGod || null; R.malo = true; R.itog = 0;
 return { cap: 0, malo: true, rule: 'отчёт сдан, выручки в нём нет — две недели нулевой выручки: 0 ₽, советуем платить по факту', raschet: R };
+}
+if (f.revenue && f.revenueYear && f.godProverki - +f.revenueYear > STARAYA_LET) {
+return { cap: null, nedostatochno: true, staraya: +f.revenueYear, rule: STARAYA_TEKST(+f.revenueYear, false), raschet: { tone: t, base: 'staraya', revenueYear: +f.revenueYear } };
 }
 if (f.revenue) {
 cap = f.revenue / DELITEL; rule = 'не больше двух недель выручки компании'; R.base = 'revenue'; R.dveNedeli = cap;
@@ -838,6 +852,8 @@ kak = 'Как посчитали: выручка' + (R.revenueYear ? ' за ' + 
 kak = 'Как посчитали: выручки в отчётности нет — берём потолок по возрасту (' + ageText(R.ageMonths) + '): ' + money(R.byAge) + polovina + '.';
 } else if (R.base === 'insufficient_data') {
 kak = NEDOST_KAK(otg);
+} else if (R.base === 'staraya') {
+kak = 'Как посчитали: не считали. ' + STARAYA_TEKST(R.revenueYear, otg);
 } else {
 kak = 'Как посчитали: потолок ' + money(R.byAge) + polovina + '.';
 }
@@ -867,6 +883,9 @@ return out;
 function NEDOST_KAK(otg) {
 return 'Как посчитали: не считали. Выручка и возраст компании неизвестны, а положительный предел из одних неизвестных мы не выводим. ' +
 'Чего не хватает: дата регистрации (выписка из ЕГРЮЛ) и бухгалтерская отчётность за прошлый год (ГИР БО или копия от компании).';
+}
+function STARAYA_TEKST(god, otg) {
+return 'Предел не считаем: последняя выручка в\u00a0открытой отчётности\u00a0— за\u00a0' + god + '. До свежей отчётности\u00a0— ' + (otg ? 'отгружайте после оплаты.' : 'по\u00a0факту поставки.');
 }
 function NEDOST_SOVET(otg) {
 return otg ? 'Предел отсрочки не посчитан: оснований мало. Пока не увидите выписку и отчётность покупателя, отгружайте после оплаты.'
@@ -1047,7 +1066,7 @@ add('card');
 if (f.bad.nedost || f.warn.nedost) { add('fixRecord'); add('premises'); }
 if (f.bad.mass || f.warn.mass) add('premises');
 if (f.bad.block || f.warn.block || f.zaprosBlock) add('unblock');
-if (f.bad.dolg || f.warn.dolg) add('taxCert');
+if (f.bad.dolg || f.warn.dolg || f.nalogOstatok) add('taxCert');
 if (f.bad.fssp || f.warn.fssp || f.zaprosFssp) add('fssp');
 if (f.zaprosSudy) add('sudy');
 if (f.zsk === 'medium' || f.zsk === 'high') add('bank');
@@ -1064,7 +1083,7 @@ function add(id) { if (ids.indexOf(id) < 0) ids.push(id); }
 add(f.bad.director || f.warn.director ? 'powerNew' : 'power');
 if (f.bad.fssp || f.warn.fssp || f.zaprosFssp) add('fssp');
 if (f.zaprosSudy) add('sudy');
-if (f.bad.dolg || f.warn.dolg) add('taxCert');
+if (f.bad.dolg || f.warn.dolg || f.nalogOstatok) add('taxCert');
 if (f.bad.block || f.warn.block || f.zaprosBlock) add('unblock');
 if (f.zsk === 'medium' || f.zsk === 'high') add('bank');
 if (f.bad.nedost || f.warn.nedost) { add('fixRecord'); add('premises'); }
@@ -1180,7 +1199,7 @@ napravlenie: 'otgruzhaem',
 facts: f, tone: t, cap: pc.cap, malo: !!pc.malo, capRule: pc.rule, raschet: pc.raschet, neProvereno: np,
 kak: kakPoschitali(f, t, pc, reasons(f), np, 'otgruzhaem', pv, nvKak),
 headline: headlineOtg(f, t, pc.cap, pc.malo, pv, pc.nedostatochno, nv), reasons: reasons(f), advice: sNetVyvoda(pv, t, adviceOtg(f, t, pc.malo)),
-amount: amount, regime: regime, stake: null, prepay: pc.nedostatochno && amount ? NEDOST_SOVET(true) : otgruzkaAdvice(amount, pc.cap, t, pv, nv),
+amount: amount, regime: regime, stake: null, prepay: pc.staraya && amount ? STARAYA_TEKST(pc.staraya, true) : pc.nedostatochno && amount ? NEDOST_SOVET(true) : otgruzkaAdvice(amount, pc.cap, t, pv, nv),
 docs: list, letter: letterOtg(f, list, amount)
 }, pv, nv), amount, opts.sposob), itG);
 }
@@ -1188,7 +1207,7 @@ return sPr(sPered(sNal(sFinorg(pc, {
 facts: f, tone: t, cap: pc.cap, malo: !!pc.malo, capRule: pc.rule, raschet: pc.raschet, neProvereno: np,
 kak: kakPoschitali(f, t, pc, reasons(f), np, null, pv, nvKak),
 headline: headline(f, t, pc.cap, pc.malo, pv, pc.nedostatochno, nv), reasons: reasons(f), advice: sNetVyvoda(pv, t, advice(f, t, pc.malo)),
-amount: amount, regime: regime, stake: atStake(amount, regime), prepay: pc.nedostatochno && amount ? NEDOST_SOVET(false) : prepayAdvice(amount, pc.cap, t, pv, nv),
+amount: amount, regime: regime, stake: atStake(amount, regime), prepay: pc.staraya && amount ? STARAYA_TEKST(pc.staraya, false) : pc.nedostatochno && amount ? NEDOST_SOVET(false) : prepayAdvice(amount, pc.cap, t, pv, nv),
 docs: list, letter: letter(f, list, amount, { kartochka: opts.kartochka, data: dataRu(r.checked_at) || '' })
 }, pv, nv), amount, opts.sposob), itG), opts.predmet);
 }
@@ -1196,7 +1215,8 @@ function sFinorg(pc, v, pv, nv) {
 if (pc.finorg) v.finorg = true; if (pv) v.predvaritelno = pv;
 if (nv) v.nepolno = nv;
 if (pc.nedostatochno) v.nedostatochno = true;
-v.predel = { sostoyanie: pc.finorg ? 'finorg' : pc.nedostatochno ? 'insufficient_data' : pc.cap > 0 ? 'positive' : 'zero', pravilo: PRAVILO };
+if (pc.staraya) { v.staraya = pc.staraya; v.predelNe = STARAYA_TEKST(pc.staraya, v.napravlenie === 'otgruzhaem'); }
+v.predel = { sostoyanie: pc.finorg ? 'finorg' : pc.staraya ? 'staraya' : pc.nedostatochno ? 'insufficient_data' : pc.cap > 0 ? 'positive' : 'zero', pravilo: PRAVILO };
 return v;
 }
 var CSS = '' +
@@ -1307,6 +1327,12 @@ if (!S.length || !it.t) return t;
 if (S.length > 1) return it.t + ' — первыми в\u00a0«Главном»';
 return it.t + ': ' + S[0].t + (S[0].dolya ? ' (' + S[0].dolya + ')' : '');
 }
+var ODIN_NALOG = /^Есть один момент:\s*задолженн\S*\s+по\s+налог/i;
+function bezOstatka(f, poyasnenie) {
+var t = String(poyasnenie == null ? '' : poyasnenie), o = f && f.nalogOstatok;
+if (!o || !ODIN_NALOG.test(t)) return t;
+return 'Долг по\u00a0налогам\u00a0— ' + String(Math.round(o.summa)) + '\u00a0₽' + (dataRu(o.data) ? ' на\u00a0' + dataRu(o.data) : '') + ' (ФНС). Небольшая сумма\u00a0— уточните у\u00a0компании, погашена ли';
+}
 var BEZ_MINUSOV = /^(Работать можно|Серьёзных сигналов|Предварительно: серьёзного не\s*нашли)/;
 var PRO_TO_ZHE = { tax_debt: /налог/i, damia_fssp: /пристав|ФССП/i, damia_sudy: /суд|иск|ответчик/i, address: /адрес/i, status: /статус|ликвид|банкрот|реорган/i };
 function sMalenkoj(t) { t = String(t || ''); return /^[А-ЯЁA-Z][А-ЯЁA-Z]/.test(t) ? t : t.charAt(0).toLowerCase() + t.slice(1); }
@@ -1395,8 +1421,8 @@ var v = decide(r, st), f = v.facts;
 var neVse = v.tone === 'go' && !!neOtvetiliSudyFssp(v.predvaritelno);
 var PP = win && win.Perepoverit, zavtra = neVse && !o.compact && PP && PP.srokZavtra ? PP.srokZavtra(r) : null;
 box.className = 'usl ' + v.tone + (v.nedostatochno || neVse || v.pered ? ' ned' : '');
-var why = v.pered ? poyasneniePered(v.pered, chestnoPoyasnenie(r, bezPovtora(r && r.verdict, v.pered.bylo)))
-: v.reasons.length ? v.reasons.join(', ') : poGlavnomu(st.itogG, chestnoPoyasnenie(r, bezPovtora(r && r.verdict, v.headline)));
+var why = v.pered ? poyasneniePered(v.pered, bezOstatka(v.facts, chestnoPoyasnenie(r, bezPovtora(r && r.verdict, v.pered.bylo))))
+: v.reasons.length ? v.reasons.join(', ') : poGlavnomu(st.itogG, bezOstatka(v.facts, chestnoPoyasnenie(r, bezPovtora(r && r.verdict, v.headline))));
 var stake = '';
 if (v.stake) {
 stake = v.stake.utochnit === 'nds'
@@ -1503,7 +1529,7 @@ return {
 decide: decide, mount: mount, nalichnye: nalichnye, SPOSOB: SPOSOB, PREDMET: PREDMET.map(function (x) { return { id: x.id, t: x.t }; }), NALICHNYE: NALICHNYE, LIMIT_NALICHNYH: LIMIT_NALICHNYH, rynokStroka: rynokStroka, facts: facts, tone: tone, reorgPrekr: reorgPrekr, REORG_PREKRASHCHENIE: REORG_PREKRASHCHENIE, REORG_SDELAT: REORG_SDELAT, REORG_DOLG: REORG_DOLG, prepayCap: prepayCap, atStake: atStake,
 docs: docs, letter: letter, LETTER_NELZYA: LETTER_NELZYA, kartaKartochek: kartaKartochek, parseAmount: parseAmount, money: money, moneyKrupno: moneyKrupno, niceFloor: niceFloor, kindOf: kindOf, signalId: signalId, SIGNALY: SIGNALY.map(function (x) { return x[0]; }),
 neProvereno: neProvereno, kakPoschitali: kakPoschitali, otgruzkaAdvice: otgruzkaAdvice, NAPR: NAPR, bezPovtora: bezPovtora, chestnoPoyasnenie: chestnoPoyasnenie, poGlavnomu: poGlavnomu, peredOplatoj: peredOplatoj, poyasneniePered: poyasneniePered, neProverenyKlyuchevye: neProverenyKlyuchevye, vVyvode: vVyvode, STATYA: STATYA, FORMULA: FORMULA,
-predvaritelno: predvaritelno, neOtvetiliSudyFssp: neOtvetiliSudyFssp, NET_VYVODA: NET_VYVODA, METODIKA: { DELITEL: DELITEL, POTOLKI: POTOLKI, OSTOROZHNO: OSTOROZHNO, MINIMUM: MINIMUM, PRAVILO: PRAVILO },
+bezOstatka: bezOstatka, STARAYA_TEKST: STARAYA_TEKST, predvaritelno: predvaritelno, neOtvetiliSudyFssp: neOtvetiliSudyFssp, NET_VYVODA: NET_VYVODA, METODIKA: { DELITEL: DELITEL, POTOLKI: POTOLKI, OSTOROZHNO: OSTOROZHNO, MINIMUM: MINIMUM, PRAVILO: PRAVILO },
 RATES: { VAT: VAT, PROFIT: PROFIT, USN_DR: USN_DR }
 };
 });

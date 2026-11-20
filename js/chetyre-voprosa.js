@@ -167,6 +167,7 @@
     else if (sost === 'positive' && v.nepolno) a = 'Предоплата — по нашей оценке не больше' + NB + money(v.cap) + '; это не гарантия исполнения договора. Не проверяли в' + NB + 'этот раз: ' + v.nepolno.join(', ') + '. Расчёт по' + NB + 'правилу от' + NB + dp + '.';
     else if (sost === 'positive') a = 'Предоплата — до' + NB + money(v.cap) + '. Расчёт по' + NB + 'правилу от' + NB + dp + '.';
     else if (sost === 'zero') a = 'Без предоплаты. Основание: ' + ((v.reasons && v.reasons[0]) || v.capRule || 'правило Делоскопа') + '.';
+    else if (sost === 'staraya' && v.predelNe) a = v.predelNe;   // predel-staraya-v1: слова юристов 19.11 вечер разд. 1 (2)
     else if (sost === 'finorg') a = 'Сумму аванса не' + NB + 'считаем: это банк или страховая организация.';
     else a = 'Сумму аванса не' + NB + 'считаем: неизвестны возраст и' + NB + 'выручка компании. Запросите у' + NB + 'контрагента последнюю бухгалтерскую отчётность.';
     return { ton: ton, tekst: v.headline || '', avans: a, pravilo: dp, docs: v.docs || [] };

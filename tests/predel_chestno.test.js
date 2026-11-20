@@ -29,23 +29,30 @@ function otvet(o) {
   return r;
 }
 
-test('(1) выручка старше двух лет — «Предварительно», причина с годом, приостановки и меры не теряются', () => {
+// predel-staraya-v1 (юристы 19.11 вечер разд. 1 (2)): при выручке старше двух лет числа предела нет — слова юристов
+test('(1) выручка старше двух лет — предел не считаем, год в строке, приостановки и меры не теряются', () => {
   const r = otvet({ god: 2021, prio: 'not_checked', mery: 'not_checked' });
   for (const napr of ['platim', 'otgruzhaem']) {
     const v = U.decide(r, { amount: 500000, napravlenie: napr });
-    assert.strictEqual(v.predvaritelno && v.predvaritelno.baza, 'staraya', napr);
+    assert.strictEqual(v.cap, null, napr);
+    assert.strictEqual(v.staraya, 2021, napr);
+    assert.strictEqual(v.predel.sostoyanie, 'staraya', napr);
+    const sl = napr === 'otgruzhaem' ? 'отгружайте после оплаты.' : 'по факту поставки.';
+    assert.strictEqual(nb(v.predelNe), 'Предел не считаем: последняя выручка в открытой отчётности — за 2021. До свежей отчётности — ' + sl, napr);
+    assert.ok(nb(v.kak.kak).endsWith(nb(v.predelNe)), napr);
+    assert.strictEqual(v.prepay, v.predelNe, napr);
     assert.match(nb(v.headline), /^Предварительно/, napr);
-    assert.match(nb(v.kak.ne), /последняя выручка в открытой отчётности — за 2021 год/, napr);
+    assert.ok(!/\d ₽/.test(nb(v.headline + ' ' + v.prepay + ' ' + v.kak.kak)), napr + ': суммы предела нет');
     assert.match(nb(v.kak.ne), /Не проверяли в этот раз: решения ФНС о приостановке операций по счетам, обеспечительные меры ФНС\./, napr);
-    assert.ok(!('nepolno' in v), napr + ': заголовок — «Предварительно», не «по нашей оценке»');
   }
 });
 
-test('(1) граница: выручка за год проверки −2 — ориентир прежний; −3 — предварительный', () => {
+test('(1) граница: выручка за год проверки −2 — ориентир прежний; −3 — не считаем', () => {
   const v2 = U.decide(otvet({ god: 2024 }), { amount: 500000 });
-  assert.ok(!v2.predvaritelno, 'за 2024 при проверке 2026 — не старая');
+  assert.ok(!v2.predvaritelno && !v2.staraya && v2.cap > 0, 'за 2024 при проверке 2026 — не старая');
   const v3 = U.decide(otvet({ god: 2023 }), { amount: 500000 });
-  assert.strictEqual(v3.predvaritelno && v3.predvaritelno.baza, 'staraya');
+  assert.strictEqual(v3.staraya, 2023);
+  assert.strictEqual(v3.cap, null);
 });
 
 test('(1) свежая выручка и все реестры ответили — вывод побайтно прежний', () => {
@@ -70,13 +77,15 @@ test('(2) «Четыре вопроса» отчёта: без «Предопл�
   assert.ok(!/Предоплата — до/.test(nb(a)), a);
   assert.match(nb(a), /по нашей оценке не больше .*не гарантия исполнения договора\. Не проверяли в этот раз: решения ФНС о приостановке/);
   const b = Q.vyvod(otvet({ god: 2021 })).avans;
-  assert.match(nb(b), /^Предоплата — предварительно не больше /);
+  assert.strictEqual(nb(b), 'Предел не считаем: последняя выручка в открытой отчётности — за 2021. До свежей отчётности — по факту поставки.');
   assert.match(nb(Q.vyvod(otvet()).avans), /^Предоплата — до \d/, 'полная проверка — как раньше');
 });
 
 test('(2) сравнение: «Сколько платить вперёд» без «До X» при неполной и предварительной', () => {
   const st = (r) => S.stroki(r, otvet(), {}).find((x) => x.k === 'predoplata').a;
   assert.match(nb(st(otvet({ prio: 'not_checked', mery: 'not_checked' })).t), /^Не больше /);
-  assert.match(nb(st(otvet({ god: 2021 })).t), /^Предварительно не больше /);
+  const s21 = st(otvet({ god: 2021 }));
+  assert.strictEqual(s21.t, 'Не считаем');
+  assert.match(nb(s21.pod), /за 2021 год$/);
   assert.match(nb(st(otvet()).t), /^До /);
 });

@@ -348,5 +348,5 @@ test('vyvod-glavnoe-v1: несколько существенных — итог
 test('vyvod-glavnoe-v1: usloviya берёт итог «Главного» при отрисовке (один раз за проверку) и только в пояснении без причин', () => {
   const src = fs.readFileSync(path.join(__dirname, '..', 'js', 'usloviya.js'), 'utf8');
   assert.ok(/st\.itogG = itogGlavnogo\(win, r\)/.test(src));
-  assert.ok(/v\.reasons\.length \? v\.reasons\.join\(', '\) : poGlavnomu\(st\.itogG, chestnoPoyasnenie\(/.test(src));
+  assert.ok(/v\.reasons\.length \? v\.reasons\.join\(', '\) : poGlavnomu\(st\.itogG, (bezOstatka\(v\.facts, )?chestnoPoyasnenie\(/.test(src));
 });

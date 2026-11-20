@@ -58,10 +58,20 @@
   function zaglavnaya(s) { s = String(s || ''); return s.charAt(0).toUpperCase() + s.slice(1); }
   function ip(r) { var c = (r && r.company) || {}; return c.kind === 'INDIVIDUAL' || String(c.inn || '').length === 12; }
 
+  // pdf-kartochka-v1 (аудит 20.11: PDF отчёта против карточки): если istochniki.js не загрузился (обрыв сети), ответ API
+  // приходит в своём словаре — status «polucheno» и итог в sostoyanie. Раньше такой блок считался «не подключён», и отчёт
+  // писал «Проверено 3 из 8… Источник пока не подключён» о судах и приставах, которые ответили и видны в «Плюсах и минусах».
+  // Теперь словарь API понимаем сами; без ответа — «не проверяли в этот раз», а «не подключён» — только когда блока нет.
+  var BEZ_MODULYA = 'Не' + NB + 'проверяли в' + NB + 'этот раз.';
   function statusBloka(b) {
     var I = modul('DlkIstochniki', './istochniki.js');
     if (b && b.status_edinyj) return b.status_edinyj;
-    return I ? I.statusIstochnika(b) : (b && (b.status === 'found' || b.status === 'not_found') ? b.status : 'not_connected');
+    if (I) return I.statusIstochnika(b);
+    if (!b || typeof b !== 'object') return 'not_connected';
+    var s = b.status === 'polucheno' || b.status === 'provereno' ? b.sostoyanie : b.status;
+    if (s === 'found' || s === 'not_found' || s === 'not_applicable' || s === 'stale') return s;
+    if (b.oshibka || s === 'error') return 'error';
+    return 'ne_v_etot_raz';
   }
 
   // ---------- 2. Группы источников ----------
@@ -105,7 +115,8 @@
       if (!g.damia) { o.tekst = 'Источник пока не' + NB + 'подключён.'; return o; }
       var bloki = g.damia.map(function (k) { return dm[k]; }).filter(function (b) { return b && typeof b === 'object' && !b.iz_egryul; });
       if (!bloki.length) { o.tekst = 'Источник пока не' + NB + 'подключён.'; return o; }
-      var st = bloki.map(statusBloka);
+      var st = bloki.map(statusBloka), bezMod = st.indexOf('ne_v_etot_raz') >= 0;
+      st = st.map(function (x) { return x === 'ne_v_etot_raz' ? 'not_connected' : x; });
       var staryj = bloki.filter(function (b, i) { return st[i] === 'stale' || b.ustarelo; });
       var dd = bloki.map(function (b) { return dmy(b.data_svedeniy); }).filter(Boolean).sort(function (a, b) { return iso(a) < iso(b) ? -1 : 1; });
       o.data = dd.length ? dd[0] : '';
@@ -116,7 +127,7 @@
       else if (st.indexOf('error') >= 0) o.status = 'error';
       else if (st.indexOf('user') >= 0) o.status = 'user';
       else o.status = 'not_connected';
-      if (o.status !== 'ok' && !o.tekst) o.tekst = 'Источник пока не' + NB + 'подключён.';
+      if (o.status !== 'ok' && !o.tekst) o.tekst = bezMod || o.status === 'error' ? BEZ_MODULYA : 'Источник пока не' + NB + 'подключён.';
       return o;
     });
   }

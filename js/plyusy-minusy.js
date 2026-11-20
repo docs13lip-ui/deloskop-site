@@ -156,10 +156,11 @@
       if (s.status === 'ok' && m >= 12) plus('age', 'На рынке ' + srok(m), s.source || reestr);
       else if (s.status === 'warn' || s.status === 'bad') minus('age', 'На рынке ' + srok(m), s.source || reestr);
     }
-    // руководитель — из сильных сторон сервера («Руководитель не менялся 17 лет 1 месяц» → «… 17 лет»)
+    // руководитель — из сильных сторон сервера («Руководитель не менялся 17 лет 1 месяц» → «… 17 лет»; «2 года 8 месяцев» → «2 года»,
+    // не «2 год»: «года» в выборе раньше «год»)
     var D = r.dossier || {};
     if (!fl) (Array.isArray(D.strengths) ? D.strengths : []).forEach(function (t) {
-      var mm = /^Руководитель не менялся\s+(\d+\s*(?:год|года|лет))/.exec(String(t || '').replace(/ /g, ' '));
+      var mm = /^Руководитель не менялся\s+(\d+\s*(?:года|год|лет))(?![а-яё])/.exec(String(t || '').replace(/ /g, ' '));
       if (mm) plus('rukovoditel', 'Руководитель не менялся ' + mm[1].replace(/\s+/, NB), reestr);
     });
 

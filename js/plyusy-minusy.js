@@ -100,6 +100,29 @@
     });
     return g;
   }
+  // последний год по любому ряду ГИР БО (выручка, прибыль, налог, баланс, расчёты) — как staraya() в js/sushchestvennoe.js
+  function poslGodGirbo(r) {
+    var D = (r && r.dossier) || {}, ch = D.charts || {}, g = null;
+    function vz(y) { y = parseInt(y, 10); if (isFinite(y) && y > 1990 && y < 2200 && (g === null || y > g)) g = y; }
+    ['revenue', 'profit', 'income_tax'].forEach(function (k) {
+      (Array.isArray(ch[k]) ? ch[k] : []).forEach(function (x) { if (x && num(x.value) !== null) vz(x.year); });
+    });
+    ['balance', 'debts'].forEach(function (k) { if (ch[k] && typeof ch[k] === 'object' && !Array.isArray(ch[k])) vz(ch[k].year); });
+    return g;
+  }
+  // замечания сервера о финансах из отчётности
+  var FIN = /убыт|капитал|чист\S*\s+актив|ликвидн|рентабельн|выручк/i;
+  // строка юриста 19.11: «Последняя открытая отчётность — за {год}: {факт}. Это старые данные — о нынешнем положении компании они не говорят.»
+  // Факт — серия убыточных лет до {год} из ряда прибыли; нет серии — замечание сервера как есть
+  function staryeFinansy(r, g, zam) {
+    var ch = (r && r.dossier && r.dossier.charts) || {}, po = {};
+    (Array.isArray(ch.profit) ? ch.profit : []).forEach(function (x) { var y = parseInt(x && x.year, 10), v = x ? num(x.value) : null; if (isFinite(y) && v !== null) po[y] = v; });
+    var n = 0;
+    while (po.hasOwnProperty(g - n) && po[g - n] < 0) n++;
+    var fakt = n >= 2 ? 'убыток за' + NB + (n === 2 ? (g - 1) + ' и ' + g : (g - n + 1) + '–' + g) + ' (ГИР' + NB + 'БО)' :
+      n === 1 && /убыт/i.test(zam) ? 'убыток за' + NB + g + ' (ГИР' + NB + 'БО)' : mal(zam) + ' (по' + NB + 'ответу проверки)';
+    return 'Последняя открытая отчётность — за' + NB + g + NB + 'год: ' + fakt + '. Это старые данные — о' + NB + 'нынешнем положении компании они не' + NB + 'говорят.';
+  }
   function godProverki(r, segodnya) {
     var t = Date.parse((r && r.checked_at) || '');
     var ms = isFinite(t) ? t : (segodnya || new Date()).getTime();
@@ -260,8 +283,16 @@
     // ---- замечания сервера, которых колонки не называют (например, недавняя смена руководителя) ----
     // povtor-rukovoditel-v1: признак «Руководитель сменился недавно» уже в минусах — замечание «Недавняя смена руководителя» второй раз не пишем
     var rukUzhe = M.some(function (x) { return /руководител|директор/i.test(x.t); });
+    // starye-ubytki-v1 (юрист 19.11 вечер, разд. 1 (1); ст. 152 ГК): последняя открытая отчётность старше двух лет —
+    // замечание сервера о финансах («Убытки несколько лет подряд») не минус без года, а факт с годом под колонками.
+    // Живой /api/check 21.11 (ООО, отчётность до 2021): минус «Убытки несколько лет подряд · по ответу проверки».
+    var gFin = poslGodGirbo(r), staraya = !fl && gFin !== null && gFin < gp - 2, finUzhe = false;
     (Array.isArray(D.concerns) ? D.concerns : []).forEach(function (t) {
       t = String(t || '').trim();
+      if (staraya && FIN.test(t)) {
+        if (!finUzhe) O.push({ k: 'otchetnost', t: staryeFinansy(r, gFin, t) });
+        finUzhe = true; return;
+      }
       if (t && !UZHE.test(t) && !((fl || rukUzhe) && /руководител|директор/i.test(t))) minus('dossier', t, 'по ответу проверки');
     });
 

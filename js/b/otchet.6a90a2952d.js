@@ -3276,6 +3276,25 @@ if (m && num(k.value) !== null && (g === null || +m[1] > g)) g = +m[1];
 });
 return g;
 }
+function poslGodGirbo(r) {
+var D = (r && r.dossier) || {}, ch = D.charts || {}, g = null;
+function vz(y) { y = parseInt(y, 10); if (isFinite(y) && y > 1990 && y < 2200 && (g === null || y > g)) g = y; }
+['revenue', 'profit', 'income_tax'].forEach(function (k) {
+(Array.isArray(ch[k]) ? ch[k] : []).forEach(function (x) { if (x && num(x.value) !== null) vz(x.year); });
+});
+['balance', 'debts'].forEach(function (k) { if (ch[k] && typeof ch[k] === 'object' && !Array.isArray(ch[k])) vz(ch[k].year); });
+return g;
+}
+var FIN = /убыт|капитал|чист\S*\s+актив|ликвидн|рентабельн|выручк/i;
+function staryeFinansy(r, g, zam) {
+var ch = (r && r.dossier && r.dossier.charts) || {}, po = {};
+(Array.isArray(ch.profit) ? ch.profit : []).forEach(function (x) { var y = parseInt(x && x.year, 10), v = x ? num(x.value) : null; if (isFinite(y) && v !== null) po[y] = v; });
+var n = 0;
+while (po.hasOwnProperty(g - n) && po[g - n] < 0) n++;
+var fakt = n >= 2 ? 'убыток за' + NB + (n === 2 ? (g - 1) + ' и ' + g : (g - n + 1) + '–' + g) + ' (ГИР' + NB + 'БО)' :
+n === 1 && /убыт/i.test(zam) ? 'убыток за' + NB + g + ' (ГИР' + NB + 'БО)' : mal(zam) + ' (по' + NB + 'ответу проверки)';
+return 'Последняя открытая отчётность — за' + NB + g + NB + 'год: ' + fakt + '. Это старые данные — о' + NB + 'нынешнем положении компании они не' + NB + 'говорят.';
+}
 function godProverki(r, segodnya) {
 var t = Date.parse((r && r.checked_at) || '');
 var ms = isFinite(t) ? t : (segodnya || new Date()).getTime();
@@ -3393,8 +3412,13 @@ if (z && (z.level === 'medium' || z.level === 'high') && z.title) minus('zsk', '
 var pd = r.podderzhka;
 if (pd && pd.status === 'najdeno' && !fl) plus('podderzhka', 'Есть в' + NB + 'реестре получателей поддержки МСП (ФНС)' + naDatu(pd.data_nabora), pd.istochnik, pd.data_nabora);
 var rukUzhe = M.some(function (x) { return /руководител|директор/i.test(x.t); });
+var gFin = poslGodGirbo(r), staraya = !fl && gFin !== null && gFin < gp - 2, finUzhe = false;
 (Array.isArray(D.concerns) ? D.concerns : []).forEach(function (t) {
 t = String(t || '').trim();
+if (staraya && FIN.test(t)) {
+if (!finUzhe) O.push({ k: 'otchetnost', t: staryeFinansy(r, gFin, t) });
+finUzhe = true; return;
+}
 if (t && !UZHE.test(t) && !((fl || rukUzhe) && /руководител|директор/i.test(t))) minus('dossier', t, 'по ответу проверки');
 });
 Object.keys(dm).forEach(function (k) {

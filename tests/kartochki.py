@@ -315,6 +315,53 @@ def skachok_nesveren(t):
     return bool(sk is not None and sk >= SKACHOK_POROG)
 
 
+# odinakovyj-ryad-v1 ([Ночные-2] 21.11; Очередь п. 539): ворота «одинаковая отчётность у разных ИНН» — по напечатанным
+# страницам. У «Меги» 7714451097, «Мерседес-Бенц РУС» 9701245358 и «Предприятия «Элтекс» 9704072022 живой /api/check
+# 21.11 отдаёт одну и ту же отчётность 2025 года (выручка, прибыль, баланс и расчёты — до рубля), у двух — и 2023–2024:
+# минимум у двух компаний цифры чужие. Отпечаток — последний год таблицы выручки, его выручка и прибыль и все суммы
+# баланса и расчётов на 31.12 того же года (7–9 чисел); совпал у двух и больше ИНН — все такие карточки снимаем до
+# сверки с ГИР БО, как ворота баланса, налогов и скачка (адрес → «мягкая 404» → живая проверка). Чьи цифры настоящие,
+# по странице не узнать — поэтому снимаем всех. Мало чисел (нет баланса, выручка < 1 млн ₽) — отпечатка нет.
+ODIN_RYAD_MIN_VYR = 1e6
+ODIN_RYAD_MIN_BALANS = 2
+_FIN_STR1 = re.compile(r'<tbody><tr><td>(\d{4})</td>(.*?)</tr>', re.S)
+
+
+def otpechatok_otchetnosti_html(t):
+    """→ (год, (выручка, прибыль…), (суммы баланса и расчётов на 31.12 года по возрастанию)) или None."""
+    t = bez_tipografa(t)
+    m = _FIN_TAB.search(t)
+    s = _FIN_STR1.search("<tbody>" + m.group(1)) if m else None
+    if not s:
+        return None
+    god, stroka = s.group(1), tuple(_summy(s.group(2)))
+    if not stroka or stroka[0] < ODIN_RYAD_MIN_VYR:
+        return None
+    sek = _BAL_SEK.search(t)
+    bal = []
+    for zag, tab in _BAL_TAB.findall(sek.group(1) if sek else ""):
+        if ("31.12." + god) in html.unescape(re.sub(r"<[^>]+>", "", zag)).replace(" ", " "):
+            bal.extend(_summy(tab))
+    if len(bal) < ODIN_RYAD_MIN_BALANS:
+        return None
+    return int(god), stroka, tuple(sorted(bal))
+
+
+def odinakovaya_otchetnost(teksty):
+    """{ИНН: страница} → {ИНН: [другие ИНН с тем же отпечатком]} — только совпавшие."""
+    po_otp = {}
+    for inn, t in teksty.items():
+        o = otpechatok_otchetnosti_html(t)
+        if o:
+            po_otp.setdefault(o, []).append(inn)
+    out = {}
+    for inns in po_otp.values():
+        if len(inns) > 1:
+            for i in inns:
+                out[i] = sorted(x for x in inns if x != i)
+    return out
+
+
 def kartochki_na_diske(koren=KOREN):
     """→ {ИНН: заглушка} опубликованных карточек: только то, что уже напечатано на странице."""
     papka = os.path.join(koren, PAPKA)
@@ -617,13 +664,18 @@ def sobrat(zapisi, koren=KOREN, limit=STUPENI[0], spros=None, kontrol=None, doba
         # kartochki-balans-sverka-v1: опубликованная карточка, чья страница не проходит ворота «выручка к балансу», уходит
         # так же, как ИНН, не прошедший ворота в свежем ответе (адрес → «мягкая 404» → живая проверка)
         nesv = set()
+        str_diska = {}
         for inn, x in na_diske.items():
             if inn in svezhie:
                 continue
             with open(os.path.join(papka, x["_papka"], "index.html"), encoding="utf-8") as fh:
                 t_ = fh.read()
+                str_diska[inn] = t_
                 if balans_nesveren(t_) or nalogi_nesvereny(t_) or skachok_nesveren(t_):  # kartochki-nalogi-sverka-v1, -skachok-v3
                     nesv.add(inn)
+        odin_ = odinakovaya_otchetnost(str_diska)  # odinakovyj-ryad-v1: одна отчётность у разных ИНН — снять всех до сверки
+        nesv |= set(odin_)
+        otchet["snyato_odinakovye"] = sorted(odin_)
         otchet["snyato_balans"] = sorted(nesv)
         svezhie |= nesv
         starye = [x for inn, x in sorted(na_diske.items()) if inn not in svezhie]
@@ -1149,6 +1201,8 @@ def main(argv):
         if o.get("snyato_balans"):  # kartochki-balans-sverka-v1
             print("Снято до сверки единиц ГИР БО (выручка ×%d+ к балансу, налоги < %s %% выручки того же года или скачок выручки ×%d+): %s." % (
                 BALANS_POROG, str(NALOGI_DOLYA_MIN * 100).replace(".", ","), SKACHOK_POROG, ", ".join(o["snyato_balans"])))
+        if o.get("snyato_odinakovye"):  # odinakovyj-ryad-v1
+            print("Из них одна и та же отчётность у разных ИНН (снято до сверки с ГИР БО): %s." % ", ".join(o["snyato_odinakovye"]))
     if o.get("nepolnye"):
         print("Из них по неполному ответу (реестр без финансов — анонимный доступ?): %d — не сняты, сведения прежние." % o["nepolnye"])
     if "sitemap_vsego" in o:

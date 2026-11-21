@@ -55,7 +55,10 @@
     // pomoglo-v1 (13.11): «Ответ помог?» под выводом отчёта — «Да» / «Нет» (js/pomoglo.js)
     otvet_pomog_da: 1, otvet_pomog_net: 1,
     // primer-otcheta-v1 (13.11): «Посмотреть пример отчёта» на главной — открыли отчёт по образцу
-    primer_otchet: 1 };
+    primer_otchet: 1,
+    // pereslat-v1 (21.11): «Переслать тому, кто платит» — отправили или скопировали строку (js/pereslat.js);
+    // пришли по такой ссылке — метка utm_source=pereslali в адресе (ниже, раз за показ страницы). ИНН и адрес не уходят.
+    pereslal: 1, prishel_po_peresylke: 1 };
   // Эти виды шлются по разу на компанию или на день (это решает память), а не по разу за показ страницы.
   // otvet_pomog_*: на главной за один показ страницы бывает несколько отчётов; один ответ на отчёт держит сам js/pomoglo.js.
   var MNOGO = { proverka_novaya: 1, perepoverka_7_60: 1, otvet_pomog_da: 1, otvet_pomog_net: 1 };
@@ -78,7 +81,10 @@
     return el.closest("[data-slezh-knopka]") ? "deystvie_slezhenie" : null;
   }
 
-  var api = { put: put, otkuda: otkuda, telo: telo, teloSobytiya: teloSobytiya, vidKlika: vidKlika, VIDY: VIDY };
+  // pereslat-v1: пришли по ссылке «Переслать тому, кто платит» — метка utm_source=pereslali (js/pereslat.js)
+  function prishelPoPeresylke(search) { return /(?:^\?|&)utm_source=pereslali(?:&|$)/.test(String(search || "")); }
+
+  var api = { put: put, prishelPoPeresylke: prishelPoPeresylke, otkuda: otkuda, telo: telo, teloSobytiya: teloSobytiya, vidKlika: vidKlika, VIDY: VIDY };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   if (!koren || !koren.document || !koren.location) return;
 
@@ -128,6 +134,8 @@
     sobytie(v);
   }, true);
   if (d.prerendering) d.addEventListener("prerenderingchange", pozzhe, { once: true }); else pozzhe();
+  // pereslat-v1: метку читаем сразу — главная потом меняет адрес (history.replaceState) и метка из него уходит
+  if (prishelPoPeresylke(l.search)) sobytie("prishel_po_peresylke");
   // вернулись «Назад» из кэша страниц — это новый просмотр
   koren.addEventListener("pageshow", function (e) { if (e && e.persisted) otpravit(); });
 })(typeof window !== "undefined" ? window : null);

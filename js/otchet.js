@@ -288,7 +288,11 @@
     }
     var g = null;
     try { g = svoj && o.shR && window.Shchit ? Shchit.glavnyj(o.shR) : null; } catch (e) { g = null; }
-    var ac = el(doc, 'div', 'ot-act', htmlDejstviya(r, svoj, g));
+    // pereslat-v1 (ТЗ 17.11): «Переслать тому, кто платит» — тихая кнопка последней в полосе действий,
+    // только у организации и не у своей компании; строка без вывода и Индекса (js/pereslat.js). Нет модуля — кнопки нет.
+    var PS = typeof self !== 'undefined' ? self.Pereslat : null, pereslat = !!(PS && PS.mozhno && PS.mozhno(r, svoj));
+    var ac = el(doc, 'div', 'ot-act', htmlDejstviya(r, svoj, g) + (pereslat ? PS.html() : ''));
+    if (pereslat) { try { PS.mount(ac.querySelector('[data-pereslat]'), r); } catch (e) { /* кнопка без обработчика не нужна */ var pb = ac.querySelector('[data-pereslat]'); if (pb) pb.parentNode.removeChild(pb); } }
     vd.appendChild(ix); vd.appendChild(vt); vd.appendChild(ac);
 
     var body = el(doc, 'div', 'ot-body'), main = el(doc, 'div', 'ot-main'), side = el(doc, 'aside', 'ot-side');

@@ -72,6 +72,8 @@
 /* dosje-glavnaya-v1: «Досье» — главная кнопка у вывода; на светлой синей кнопке — латунный кант снизу (латунь на светлом — украшение, не фон), в тёмной кнопка и так латунная */
 :root:not([data-theme=dark]) .ot-btn--dosje{box-shadow:inset 0 -2px 0 var(--mat-zhdu-t,#D9B45A)}
 .ot-lnk{display:flex;justify-content:center;align-items:center;min-height:44px;font-size:15px;color:var(--accent,#12305F);text-decoration:none}.ot-lnk:hover{color:var(--accent-hover,#0A1F45);text-decoration:underline}/* sravnit-v1 */
+/* pereslat-v1: «Переслать тому, кто платит» — та же тихая ссылка, но кнопка (копирует строку или открывает «Поделиться») */
+.ot-lnk--knopka{background:none;border:0;padding:0 8px;margin:0;font:inherit;font-size:15px;cursor:pointer;width:100%;border-radius:10px}
 /* sledit-v1 (13.11): форма «Следить за компанией» под главной кнопкой — почта, согласие, статус (js/sledit.js, за флагом SLEDIT) */
 .sl-f{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:10px;background:var(--surface,#fff);box-shadow:inset 0 0 0 1px var(--line,#E3DDCD);text-align:left}
 .sl-l{font-size:13px;font-weight:600;color:var(--ink-2,#3A4868)}

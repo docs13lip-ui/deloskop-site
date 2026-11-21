@@ -1,4 +1,4 @@
-/* Делоскоп · пакет «otchet» — собран tests/sobrat_js.py из 34 файлов (partials/sborka.json). Правьте исходники, не этот файл. */
+/* Делоскоп · пакет «otchet» — собран tests/sobrat_js.py из 35 файлов (partials/sborka.json). Правьте исходники, не этот файл. */
 /* --- /js/kommentarii.js --- */
 (function (root, factory) {
 var api = factory();
@@ -6026,6 +6026,118 @@ return { izOtveta: izOtveta, vid: vid, ball: ball, htmlKolonka: htmlKolonka, got
 rubli: rubli, TXT_NEIZV: TXT_NEIZV, ZAG_NEIZV: ZAG_NEIZV, ZAG_SOKR: ZAG_SOKR, ZAG_MALO: ZAG_MALO, txtSokr: txtSokr, neHvataet: neHvataet, strokaNe: strokaNe, podpis: podpis };
 });
 ;
+/* --- /js/pereslat.js --- */
+(function (root, factory) {
+if (typeof module === 'object' && module.exports) module.exports = factory();
+else root.Pereslat = factory();
+})(typeof self !== 'undefined' ? self : this, function () {
+'use strict';
+var SAJT = 'https://deloskop.ru';
+var METKI = 'utm_source=pereslali&utm_medium=ssylka';
+var NADPIS = 'Переслать тому, кто платит';
+var GOTOVO = 'Скопировано — вставьте в чат';
+var NE_VYSHLO = 'Не получилось скопировать';
+function inn10(r) {
+var c = r && r.company;
+if (!c || c.kind === 'INDIVIDUAL') return '';
+var i = String(c.inn == null ? '' : c.inn);
+return /^\d{10}$/.test(i) ? i : '';
+}
+function mozhno(r, svoj) { return !svoj && !!inn10(r); }
+function data(s) {
+s = String(s == null ? '' : s).trim();
+var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+if (m) return m[3] + '.' + m[2] + '.' + m[1];
+var t = Date.parse(s);
+if (!isFinite(t)) return '';
+var d = new Date(t + 3 * 3600 * 1000);
+var z = function (n) { return (n < 10 ? '0' : '') + n; };
+return z(d.getUTCDate()) + '.' + z(d.getUTCMonth() + 1) + '.' + d.getUTCFullYear();
+}
+function nazvanie(r, imya) {
+var c = (r && r.company) || {};
+var n = String(c.name_short || c.name_full || '').replace(/\s+/g, ' ').trim();
+if (!n) return '';
+if (imya && typeof imya.kavychki === 'function') { try { return imya.kavychki(n); } catch (e) {   } }
+return n.replace(/"([^"]+)"/g, '«$1»');
+}
+function adres(r, kartochki) {
+var i = inn10(r);
+if (!i) return '';
+var id = String((r && r.report_id) || '');
+if (/^[A-Za-z0-9_-]{8,24}$/.test(id)) return SAJT + '/report.html?id=' + encodeURIComponent(id) + '&' + METKI;
+var k = kartochki && kartochki[i];
+if (k && /^\/company\/\d{10}-[a-z0-9-]+\/$/.test(k)) return SAJT + k + '?' + METKI;
+return SAJT + '/?inn=' + i + '&' + METKI;
+}
+function stroka(r, imya) {
+var i = inn10(r);
+if (!i) return '';
+var n = nazvanie(r, imya), d = data(r && r.checked_at);
+return 'Проверка перед оплатой: ' + (n ? n + ', ' : '') + 'ИНН ' + i + '.' + (d ? ' Сведения на ' + d + '.' : '');
+}
+function tekst(r, kartochki, imya) {
+var s = stroka(r, imya);
+return s ? s + ' ' + adres(r, kartochki) : '';
+}
+function sposob(est_share, sensor, est_bufer) {
+if (est_share && sensor) return 'share';
+return est_bufer ? 'copy' : 'zapas';
+}
+function html() {
+return '<button class="ot-lnk ot-lnk--knopka" type="button" data-pereslat>' + NADPIS + '</button>';
+}
+function mount(knopka, r, o) {
+o = o || {};
+if (!knopka || !mozhno(r)) return false;
+var doc = knopka.ownerDocument, win = doc && doc.defaultView;
+if (!win) return false;
+var nav = win.navigator || {}, kart = null;
+var U = win.Usloviya;
+if (U && typeof U.kartochki === 'function') { try { U.kartochki(win, function (m) { kart = m; }); } catch (e) {   } }
+var t0 = null;
+function soobshchit(t) {
+if (!knopka.isConnected) return;
+knopka.textContent = t;
+clearTimeout(t0);
+t0 = setTimeout(function () { knopka.textContent = NADPIS; }, 3000);
+}
+function uchest() {
+try { if (typeof win.dlkSobytie === 'function') win.dlkSobytie('pereslal'); } catch (e) {}
+try { if (typeof win.dlkGoal === 'function') win.dlkGoal('pereslal'); } catch (e) {}
+}
+function zapas(t) {
+try {
+var p = doc.createElement('textarea');
+p.value = t; p.setAttribute('readonly', ''); p.style.position = 'fixed'; p.style.opacity = '0';
+doc.body.appendChild(p); p.select();
+var ok = doc.execCommand && doc.execCommand('copy');
+doc.body.removeChild(p);
+return !!ok;
+} catch (e) { return false; }
+}
+knopka.setAttribute('aria-live', 'polite');
+knopka.addEventListener('click', function () {
+var imya = win.DlkImya, s = stroka(r, imya), url = adres(r, kart), vse = s + ' ' + url;
+var sensor = !!(win.matchMedia && win.matchMedia('(pointer:coarse)').matches);
+var kak = o.sposob || sposob(!!nav.share, sensor, !!(nav.clipboard && nav.clipboard.writeText));
+if (kak === 'share') {
+nav.share({ title: 'Проверка перед оплатой', text: s, url: url }).then(uchest, function () {   });
+return;
+}
+if (kak === 'copy') {
+nav.clipboard.writeText(vse).then(function () { soobshchit(GOTOVO); uchest(); },
+function () { if (zapas(vse)) { soobshchit(GOTOVO); uchest(); } else soobshchit(NE_VYSHLO); });
+return;
+}
+if (zapas(vse)) { soobshchit(GOTOVO); uchest(); } else soobshchit(NE_VYSHLO);
+});
+return true;
+}
+return { SAJT: SAJT, METKI: METKI, NADPIS: NADPIS, GOTOVO: GOTOVO, mozhno: mozhno, data: data, nazvanie: nazvanie,
+adres: adres, stroka: stroka, tekst: tekst, sposob: sposob, html: html, mount: mount };
+});
+;
 /* --- /js/otchet.js --- */
 (function (root, factory) {
 if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -6253,7 +6365,9 @@ vt.appendChild(el(doc, 'a', 'ot-vt__kak', 'Как посчитали преде�
 }
 var g = null;
 try { g = svoj && o.shR && window.Shchit ? Shchit.glavnyj(o.shR) : null; } catch (e) { g = null; }
-var ac = el(doc, 'div', 'ot-act', htmlDejstviya(r, svoj, g));
+var PS = typeof self !== 'undefined' ? self.Pereslat : null, pereslat = !!(PS && PS.mozhno && PS.mozhno(r, svoj));
+var ac = el(doc, 'div', 'ot-act', htmlDejstviya(r, svoj, g) + (pereslat ? PS.html() : ''));
+if (pereslat) { try { PS.mount(ac.querySelector('[data-pereslat]'), r); } catch (e) {   var pb = ac.querySelector('[data-pereslat]'); if (pb) pb.parentNode.removeChild(pb); } }
 vd.appendChild(ix); vd.appendChild(vt); vd.appendChild(ac);
 var body = el(doc, 'div', 'ot-body'), main = el(doc, 'div', 'ot-main'), side = el(doc, 'aside', 'ot-side');
 side.setAttribute('aria-label', 'Справка к выводу');

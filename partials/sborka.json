@@ -67,6 +67,7 @@
       "js/pasport-oplata.js",
       "indeks/indeks.js",
       "js/indeks-otvet.js",
+      "js/pereslat.js",
       "js/otchet.js",
       "js/lipkaya.js",
       "js/sledit.js",

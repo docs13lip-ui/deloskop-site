@@ -1,6 +1,8 @@
 """nalog-ostatok-v1 ([Ночные-2] 18.11): задолженность по налогам меньше 500 ₽ на карточке /company/ — «Остаток», не минус
 ([Право · Налоговый] 18.11, разд. 5): «Задолженность по налогам по набору ФНС на {дата} — {X} ₽»; совет КНД 1120101 — без тревоги;
-норму (ст. 69–70 НК) в текст не пишем. От 500 ₽ — минус с долей выручки, как было."""
+норму (ст. 69–70 НК) в текст не пишем. От 500 ₽ — минус с долей выручки, как было.
+nalog-dolg-slova-v1 ([Ночные-2] 21.11): слова — [Право] 19.11 вечер, разд. 1 (5): «Долг по налогам — {сумма} ₽ на {дата} (ФНС).
+Небольшая сумма — уточните у компании, погашена ли»."""
 import datetime as dt
 import html
 import os
@@ -46,14 +48,22 @@ class TestOpublikovannye(unittest.TestCase):
             imya = p.parent.name
             pm = _PM.search(t).group(0)
             self.assertNotIn('data-pm="tax_debt"', pm.split('<p class="pm__ne pm__ost">')[0], imya + ": не в колонках")
-            self.assertIn("Остаток: задолженность по налогам по набору ФНС на ", txt(pm), imya)
-            self.assertRegex(txt(pm), r"Остаток: задолженность по налогам по набору ФНС на \d\d\.\d\d\.\d{4} — %d ₽\." % s, imya)
-            it = txt(_ITOG.search(t).group(0))
-            self.assertIn("Остаток: задолженность по налогам по набору ФНС на ", it, imya)
-            self.assertNotIn("Долг по налогам", it, imya + ": не в главном и не в «Небольших суммах»")
+            # nalog-dolg-slova-v1: слова [Право] 19.11 вечер, разд. 1 (5)
+            self.assertRegex(txt(pm), r"Долг по налогам — %d ₽ на \d\d\.\d\d\.\d{4} \(ФНС\)\. Небольшая сумма — уточните у компании, "
+                             r"погашена ли\." % s, imya)
+            self.assertNotIn("Остаток", txt(pm), imya + ": прежнее слово 18.11 снято")
+            itog = _ITOG.search(t).group(0)
+            ost = re.search(r'<p class="caption co-itog__n co-itog__o">(.*?)</p>', itog, re.S)
+            self.assertTrue(ost, imya + ": строка долга под «Не проверяли»")
+            self.assertRegex(txt(ost.group(1)), r"^Долг по налогам — %d ₽ на \d\d\.\d\d\.\d{4} \(ФНС\)\. Небольшая сумма" % s, imya)
+            self.assertNotIn("Долг по налогам", txt(itog.replace(ost.group(0), "")), imya + ": не в главном и не в «Небольших суммах»")
+            self.assertNotIn("Остаток", txt(itog), imya)
             kor = _KOR.search(t).group(0)
             self.assertIn("co-v--info", kor)
             self.assertNotIn("Задолженность перед бюджетом", kor, imya)
+            self.assertNotIn("по набору ФНС на", txt(kor), imya + ": «Коротко» — словами [Право] 19.11")
+            self.assertRegex(txt(kor), r"Долг по налогам — %d ₽ на \d\d\.\d\d\.\d{4}\. Небольшая сумма — уточните у компании, "
+                             r"погашена ли" % s, imya)
             for blok in (_PERED.search(t), _ZNACH.search(t)):
                 if blok:
                     self.assertFalse(TREVOGA.search(txt(blok.group(0))), imya + ": " + txt(blok.group(0))[:200])
@@ -81,7 +91,8 @@ class TestFunkcii(unittest.TestCase):
     def test_korotko_porog(self):
         a = K.nalog_ostatok_korotko(self.LI % "499")
         self.assertIn("co-v--info", a)
-        self.assertIn("Задолженность по" + NB + "налогам по" + NB + "набору ФНС на" + NB + "01.10.2026" + NB + "— 499" + NB + "₽", a)
+        self.assertIn("Долг по" + NB + "налогам" + NB + "— 499" + NB + "₽ на" + NB + "01.10.2026. Небольшая сумма" + NB +
+                      "— уточните у" + NB + "компании, погашена ли", a)
         self.assertEqual(K.nalog_ostatok_korotko(a), a)
         self.assertEqual(K.nalog_ostatok_korotko(self.LI % "500"), self.LI % "500")
 
@@ -95,7 +106,30 @@ class TestFunkcii(unittest.TestCase):
         finally:
             K._vyvody_bez_ostatka = orig
         self.assertEqual(V[0]["ton"], "info")
-        self.assertEqual(V[0]["tekst"], K.no_tekst(2, "01.10.2026"))
+        self.assertEqual(V[0]["tekst"], K.no_tekst(2, "01.10.2026", fns=False))
+
+    def test_slova_18_11_na_opublikovannyh(self):
+        """nalog-dolg-slova-v1: строка «Коротко» со словами 18.11 → слова [Право] 19.11; от 500 ₽ и повтор — без изменений."""
+        st = ('<li class="co-v co-v--info"><span class="co-v__z" role="img" aria-label="справочно"></span><div><p>Задолженность '
+              'по&nbsp;налогам по&nbsp;набору ФНС на&nbsp;01.10.2026&nbsp;— %s&nbsp;₽</p><span class="co-src">ФНС · сведения на'
+              '&#160;01.10.2026</span></div></li>')
+        a = K.nalog_ostatok_korotko(st % "8")
+        self.assertIn("<p>" + K.no_tekst(8, "01.10.2026", fns=False) + "</p>", a)
+        self.assertNotIn("набору ФНС", a)
+        self.assertEqual(K.nalog_ostatok_korotko(a), a)
+        self.assertEqual(K.nalog_ostatok_korotko(st % "500"), st % "500")
+
+    def test_pered_sovet(self):
+        """Совет о справке КНД 1120101 узнаёт новую строку «Коротко» (порядок «сумма — дата»)."""
+        orig = K._un_pered_bez_ostatka
+        try:
+            K._un_pered_bez_ostatka = lambda f: []
+            s = K.un_pered({"imya": "АО «Экопэт»", "V": [("info", K.no_tekst(1, "01.10.2026", fns=False))]})
+        finally:
+            K._un_pered_bez_ostatka = orig
+        self.assertEqual(len(s), 1)
+        self.assertIn("КНД 1120101", s[0])
+        self.assertIn("на" + NB + "01.10.2026" + NB + "— долг 1" + NB + "₽.", s[0])
 
 
 if __name__ == "__main__":

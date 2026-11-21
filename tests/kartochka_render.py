@@ -6220,8 +6220,16 @@ _NO_KOR = re.compile(r'<li class="co-v co-v--warn"><span class="co-v__z"(?: role
 _NO_PM = re.compile(r"^Долг по\s+налогам\s+(\d{1,3})\s*₽")
 
 
-def no_tekst(summa, d):
-    return "Задолженность по%sналогам по%sнабору ФНС на%s%s%s— %d%s₽" % (NB, NB, NB, d, NB, summa, NB)
+def no_tekst(summa, d, fns=True):
+    """nalog-dolg-slova-v1 ([Ночные-2] 21.11): слова [Право] 19.11 вечер, разд. 1 (5) — «Долг по налогам — {сумма} ₽ на {дата}
+    (ФНС). Небольшая сумма — уточните у компании, погашена ли». В «Коротко» источник стоит подписью строки — без «(ФНС)»."""
+    return "Долг по%sналогам%s— %d%s₽ на%s%s%s. Небольшая сумма%s— уточните у%sкомпании, погашена ли" % (
+        NB, NB, summa, NB, NB, d, " (ФНС)" if fns else "", NB, NB)
+
+
+# nalog-dolg-slova-v1: прежние слова 18.11 на опубликованных карточках — «Задолженность по налогам по набору ФНС на {дата} — X ₽»
+_NO_STAROE = re.compile(r"Задолженность по" + _NO_SP + r"налогам по" + _NO_SP + r"набору ФНС на" + _NO_SP + r"(\d\d\.\d\d\.\d{4})" +
+                        _NO_SP + r"?— (\d{1,3})" + _NO_SP + r"₽")
 
 
 def nalog_ostatok_korotko(t):
@@ -6234,8 +6242,13 @@ def nalog_ostatok_korotko(t):
         if 'role="img"' not in li:  # точка — значок с именем (kartochki-rol-znaka-v1)
             li = li.replace('co-v__z" aria', 'co-v__z" role="img" aria', 1)
         i, j = li.index("<p>") + 3, li.index("</p>")
-        return li[:i] + no_tekst(s, m.group(3)) + li[j:]
-    return _NO_KOR.sub(zam, t or "") if t else t
+        return li[:i] + no_tekst(s, m.group(3), fns=False) + li[j:]
+    if not t:
+        return t
+    t = _NO_KOR.sub(zam, t)
+    # nalog-dolg-slova-v1: строка «Коротко» со словами 18.11 → слова [Право] 19.11 (идемпотентно: новых слов regex не видит)
+    return _NO_STAROE.sub(lambda m: no_tekst(int(m.group(2)), m.group(1), fns=False)
+                          if 0 < int(m.group(2)) < NO_POROG else m.group(0), t)
 
 
 _vyvody_bez_ostatka = vyvody
@@ -6247,7 +6260,7 @@ def vyvody(k):  # noqa: F811 — nalog-ostatok-v1: V10 меньше 500 ₽ — 
     v = n.get("znachenie")
     if v and 0 < v < NO_POROG and n.get("data"):
         d = n["data"].strftime("%d.%m.%Y") if hasattr(n["data"], "strftime") else str(n["data"])
-        V = [_v("V10o", "info", no_tekst(int(round(v)), d), x["istochnik"], x["data"]) if x["kod"] == "V10" else x for x in V]
+        V = [_v("V10o", "info", no_tekst(int(round(v)), d, fns=False), x["istochnik"], x["data"]) if x["kod"] == "V10" else x for x in V]
     return V
 
 
@@ -6274,8 +6287,8 @@ def plyusy_minusy_stroki(t):  # noqa: F811 — nalog-ostatok-v1: налог < 50
 def no_ostatok_html(S, klass):
     if not S or not S.get("ostatok"):
         return ""
-    tx = "; ".join(x[1] for x in S["ostatok"])
-    return '<p class="%s"><span>Остаток:</span> %s.</p>' % (klass, html.escape(tx[:1].lower() + tx[1:], quote=False))
+    tx = " ".join(x[1] + "." for x in S["ostatok"])  # nalog-dolg-slova-v1: фраза [Право] целиком, без «Остаток:»
+    return '<p class="%s">%s</p>' % (klass, html.escape(tx, quote=False))
 
 
 _no_pm_html_bez = plyusy_minusy_html
@@ -6287,7 +6300,7 @@ def plyusy_minusy_html(S):  # noqa: F811 — nalog-ostatok-v1: «Остаток:
     if not h or not o:
         return h
     i = h.index('<p class="caption pm__ist">')
-    return h[:i] + o.replace("<span>", "<b>").replace("</span>", "</b>") + h[i:]
+    return h[:i] + o + h[i:]
 
 
 _no_itog_bez = itog_html
@@ -6307,7 +6320,8 @@ def itog_html(S, inn, eg_d):  # noqa: F811 — nalog-ostatok-v1: остаток 
     return h[:i] + no_ostatok_html(S, "caption co-itog__n co-itog__o") + h[i:]
 
 
-_NO_PERED_INFO = "Задолженность по налогам по набору ФНС на "
+_NO_PERED_INFO = "Долг по налогам — "  # nalog-dolg-slova-v1 (было «Задолженность по налогам по набору ФНС на »)
+_NO_PERED_RE = re.compile(r"^Долг по налогам — (\d{1,3}) ₽ на (\d\d\.\d\d\.\d{4})")
 _un_pered_bez_ostatka = un_pered
 
 
@@ -6316,12 +6330,12 @@ def un_pered(f):  # noqa: F811 — nalog-ostatok-v1: при остатке < 500
     o = next((x for t, x in f["V"] if t == "info" and x.replace(NB, " ").startswith(_NO_PERED_INFO)), None)
     if not o or any("1120101" in x for x in s):
         return s
-    m = re.search(r"на\W*(\d\d\.\d\d\.\d{4})\W*—\W*(\d{1,3})", o)
+    m = _NO_PERED_RE.match(o.replace(NB, " "))
     if not m:
         return s
     im = html.escape(un_kratkoe(f["imya"]), quote=False)
     sovet = ("Справку об%sисполнении обязанности по%sуплате налогов (КНД 1120101) можно попросить у%s%s на%sсвежую дату: "
-             "в%sнаборе ФНС на%s%s%s— остаток %s%s₽." % (NB, NB, NB, im, NB, NB, NB, m.group(1), NB, m.group(2), NB))
+             "в%sнаборе ФНС на%s%s%s— долг %s%s₽." % (NB, NB, NB, im, NB, NB, NB, m.group(2), NB, m.group(1), NB))
     return s if len(s) >= 3 else [sovet] + s
 
 

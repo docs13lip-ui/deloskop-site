@@ -1140,7 +1140,8 @@ var VIDY = { deystvie_dokumenty: 1, deystvie_dosje: 1, deystvie_slezhenie: 1, de
 proverka_novaya: 1, vozvrat_3_30: 1, proverka_dovedena: 1, vozvrat_1_7: 1,
 zapros_copy: 1,
 otvet_pomog_da: 1, otvet_pomog_net: 1,
-primer_otchet: 1 };
+primer_otchet: 1,
+pereslal: 1, prishel_po_peresylke: 1 };
 var MNOGO = { proverka_novaya: 1, perepoverka_7_60: 1, otvet_pomog_da: 1, otvet_pomog_net: 1 };
 var VKL = true;
 function teloSobytiya(vid, okr) {
@@ -1157,7 +1158,8 @@ b = el.closest("[data-cel]");
 if (b) return CEL[b.getAttribute("data-cel")] || null;
 return el.closest("[data-slezh-knopka]") ? "deystvie_slezhenie" : null;
 }
-var api = { put: put, otkuda: otkuda, telo: telo, teloSobytiya: teloSobytiya, vidKlika: vidKlika, VIDY: VIDY };
+function prishelPoPeresylke(search) { return /(?:^\?|&)utm_source=pereslali(?:&|$)/.test(String(search || "")); }
+var api = { put: put, prishelPoPeresylke: prishelPoPeresylke, otkuda: otkuda, telo: telo, teloSobytiya: teloSobytiya, vidKlika: vidKlika, VIDY: VIDY };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 if (!koren || !koren.document || !koren.location) return;
 var d = koren.document, n = koren.navigator || {}, l = koren.location;
@@ -1202,6 +1204,7 @@ if (VKL && !poslano.deystvie_pervoe) sobytie("deystvie_pervoe");
 sobytie(v);
 }, true);
 if (d.prerendering) d.addEventListener("prerenderingchange", pozzhe, { once: true }); else pozzhe();
+if (prishelPoPeresylke(l.search)) sobytie("prishel_po_peresylke");
 koren.addEventListener("pageshow", function (e) { if (e && e.persisted) otpravit(); });
 })(typeof window !== "undefined" ? window : null);
 ;
